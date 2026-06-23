@@ -119,18 +119,27 @@ import ExportDestinationFormView from './views/export/ExportDestinationForm.vue'
 import ExportRunsView from './views/export/ExportRuns.vue'
 import ExportRunDetailView from './views/export/ExportRunDetail.vue'
 
-// --- POS transactions (lib gap: list needs custom row navigation to the cart
-//     editor; detail needs lifecycle action buttons + tax breakdown; form is a
-//     bespoke cart editor with real-time totals). ---
-import PosTransactionDetailView from './views/pos/PosTransactionDetail.vue'
+// --- POS transactions. The detail page is now a declarative type:"detail" page
+//     (pipelinq-pos-mdm-detail-declarative): the transaction's flat fields
+//     auto-render, the line items are a relatedCollections table, and the
+//     status-gated action toolbar (bespoke /api/pos-transactions endpoints) +
+//     tax breakdown + tender panel + payment card + receipt modals live in one
+//     kind:'section' bodyWidget. The form is a bespoke cart editor. ---
+import PosTransactionActionsSection from './components/pos/PosTransactionActionsSection.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
-import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
+// --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
+//     declarative): refund fields auto-render; the manager-gated confirm/reject
+//     actions + the cross-schema "Returned items" join + totals are a section. ---
+import PosRefundActionsSection from './components/pos/PosRefundActionsSection.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
-// --- POS cash drawer (lib gap: index/detail pages cannot express the cash-shift
-//     lifecycle — declare float, record drops, blind count, variance reconcile). ---
+// --- POS cash drawer. The detail page is now a declarative type:"detail" page
+//     (pipelinq-pos-mdm-detail-declarative): the shift's float fields auto-render,
+//     the drops are a relatedCollections table, and the variance/diff projection
+//     + drop/count/reconcile actions (bespoke /api/pos-shifts endpoints) are a
+//     kind:'section' bodyWidget. ---
 import CashShiftListView from './views/pos/CashShiftList.vue'
-import CashShiftDetailView from './views/pos/CashShiftDetail.vue'
+import CashShiftActionsSection from './components/pos/CashShiftActionsSection.vue'
 
 // --- POS staff PIN + role permissions (pos-staff-pin-permissions). ---
 import PosRoleListView from './views/pos/PosRoleList.vue'
@@ -143,11 +152,14 @@ import PosStaffFormView from './views/pos/PosStaffForm.vue'
 //     CRUD inline (no separate detail route). ---
 import PosTenderTypeListView from './views/pos/PosTenderTypeList.vue'
 
-// --- POS end-of-day Z-report (lib gap: index/detail pages cannot express the
-//     server-authoritative Z-report aggregation + shillinq journal-raise status
-//     + manager-gated re-raise). The GL-mapping admin surface is delegated to
-//     shillinq (pipelinq-bookkeeping-to-shillinq) and removed here. ---
-import ZReportDetailView from './views/pos/ZReportDetail.vue'
+// --- POS end-of-day Z-report. The per-report page is now a declarative
+//     type:"detail" page (pipelinq-detail-pages-declarative-r3): the Z-report's
+//     flat fields auto-render via CnObjectDataWidget; the BTW + payment-method
+//     breakdown tables (array fields on the object) and the shillinq
+//     bookkeeping-status projection + manager-gated re-raise live in one
+//     kind:'section' bodyWidget (ZReportBookkeepingSection). The GL journal
+//     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
+import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
@@ -246,7 +258,10 @@ import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.v
 //     renderer from the manifest.d fragment at render time. ---
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
 import ResourceDetailView from './views/bookings/ResourceDetail.vue'
-import BookingDetailView from './views/bookings/BookingDetail.vue'
+// BookingDetail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
+// declarative); its TIME-WINDOW-gated admin actions + array-on-object tables +
+// computed timeline + notes editor stay in the page body via this kind:'section'.
+import BookingDetailSection from './components/bookings/BookingDetailSection.vue'
 
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
 //     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
@@ -270,9 +285,14 @@ import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import AvgDashboardView from './views/avg/AvgDashboard.vue'
 import AvgRequestDetailView from './views/avg/AvgRequestDetail.vue'
 import AvgIntakeView from './views/avg/AvgIntakeView.vue'
-// --- Master Data Management (MDM) bespoke steward views. ---
+// --- Master Data Management (MDM) bespoke steward views. The master-entity
+//     detail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
+//     declarative): the masterEntity register fields auto-render, the raw
+//     sourceRecord children are a relatedCollections table, and the server-
+//     computed golden-record + provenance + lineage projection + the conflict-
+//     resolution modal live in one kind:'section' bodyWidget. ---
 import MdmMasterEntityListView from './views/mdm/MdmMasterEntityListView.vue'
-import MdmMasterEntityDetailView from './views/mdm/MdmMasterEntityDetailView.vue'
+import MdmGoldenRecordSection from './components/mdm/MdmGoldenRecordSection.vue'
 import MdmDataQualityDashboard from './views/mdm/MdmDataQualityDashboard.vue'
 import MdmDuplicateCandidatesDashboard from './views/mdm/MdmDuplicateCandidatesDashboard.vue'
 import MdmSyncQueueAdmin from './views/mdm/MdmSyncQueueAdmin.vue'
@@ -651,13 +671,14 @@ const registry = {
 		_note: 'External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config.',
 	},
 
-	// --- POS transactions. The PosTransactions list is now a declarative
-	//     type:"index" page (pipelinq-declarative-pages-round1); only the
-	//     bespoke cart-editor detail/form views stay registered. ---
-	PosTransactionDetailView: {
-		kind: 'page',
-		component: PosTransactionDetailView,
-		_note: 'POS receipt detail with context-sensitive lifecycle buttons (confirm/settle/refund/park/resume), per-rate tax breakdown and totals; lib detail page cannot express POS lifecycle actions.',
+	// --- POS transactions. The PosTransactions list + detail are now declarative
+	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
+	//     declarative); only the bespoke cart-editor form view + the detail's
+	//     in-body action section stay registered. ---
+	PosTransactionActionsSection: {
+		kind: 'section',
+		component: PosTransactionActionsSection,
+		_note: 'POS transaction in-body section for the declarative type:"detail" PosTransactionDetail page. The status-gated action toolbar (confirm/park/resume/settle/refund/print/email) POSTs to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects — NOT OR /transition, and posTransaction has no x-openregister-lifecycle, so CnLifecycleActions cannot drive them. Also hosts the tax-breakdown + totals, the interactive TenderEntryPanel and the PaymentStatusCard. Self-fetches by @objectId.',
 	},
 	PosTransactionFormView: {
 		kind: 'page',
@@ -665,12 +686,13 @@ const registry = {
 		_note: 'Bespoke cart editor: inline line-item rows with product picker + real-time totals; lib has no cart/line-editor page type.',
 	},
 
-	// --- POS refunds / returns. The PosRefunds list is now a declarative
-	//     type:"index" page (pipelinq-declarative-pages-round1). ---
-	PosRefundDetailView: {
-		kind: 'page',
-		component: PosRefundDetailView,
-		_note: 'Refund detail with manager-gated confirm/reject lifecycle buttons, returned-line table, server-computed totals and the original-transaction context; lib detail page cannot express POS refund lifecycle actions.',
+	// --- POS refunds / returns. The PosRefunds list + detail are now declarative
+	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
+	//     declarative). ---
+	PosRefundActionsSection: {
+		kind: 'section',
+		component: PosRefundActionsSection,
+		_note: 'POS refund in-body section for the declarative type:"detail" PosRefundDetail page. Manager-gated Bevestigen/Afwijzen POST to bespoke /api/pos-refunds/{id}/{action} endpoints (posRefund has no x-openregister-lifecycle). Hosts the cross-schema "Returned items" JOIN (each posRefundLine enriched with its original posTransactionLine — relatedCollections renders ONE schema and cannot join) + the refund totals. Self-fetches by @objectId.',
 	},
 	PosRefundFormView: {
 		kind: 'page',
@@ -684,10 +706,10 @@ const registry = {
 		component: CashShiftListView,
 		_note: 'Cash-shift list; custom so rows navigate to the drawer-reconciliation detail and the empty state offers "Shift openen".',
 	},
-	CashShiftDetailView: {
-		kind: 'page',
-		component: CashShiftDetailView,
-		_note: 'Cash-shift detail: float declaration, drops panel, blind-count entry and the server-authoritative variance panel with manager-gated approve/reject; lib detail page cannot express the cash-drawer lifecycle.',
+	CashShiftActionsSection: {
+		kind: 'section',
+		component: CashShiftActionsSection,
+		_note: 'Cash-shift in-body section for the declarative type:"detail" CashShiftDetail page. The Geld verwijderen (drop) / Shift afsluiten en tellen (count) / reconcile actions POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints (cashShift has no x-openregister-lifecycle). Hosts the latest/pending cashDiff VARIANCE projection (relatedCollections lists ALL children — it cannot pick the single most-relevant diff with its tolerance verdict) + manager-gated approve/reject. Self-fetches by @objectId.',
 	},
 
 	// --- POS staff PIN + role permissions (pos-staff-pin-permissions). ---
@@ -719,13 +741,15 @@ const registry = {
 		_note: 'POS tender-type list (Contant / Betaalpas / Cadeaubon / ...) with inline create / edit / delete via PosTenderTypeFormDialog; admin-only configuration of available payment methods and their GL accounts.',
 	},
 
-	// --- POS end-of-day bookkeeping. The Z-report list is now a declarative
-	//     type:"index" page (pipelinq-views-to-declarative-r1); only the
-	//     bespoke aggregation detail view stays registered. ---
-	ZReportDetailView: {
-		kind: 'page',
-		component: ZReportDetailView,
-		_note: 'Z-report detail: server-authoritative summary, tax breakdown, payment-method breakdown, shillinq bookkeeping-status projection and the manager-gated re-raise action. The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
+	// --- POS end-of-day bookkeeping. The Z-report list is a declarative
+	//     type:"index" page and the per-report page is now a declarative
+	//     type:"detail" page (pipelinq-detail-pages-declarative-r3); only this
+	//     in-body section (breakdown tables + bookkeeping projection + re-raise)
+	//     stays as host-app code. ---
+	ZReportBookkeepingSection: {
+		kind: 'section',
+		component: ZReportBookkeepingSection,
+		_note: 'Z-report in-body section for the declarative type:"detail" ZReportDetail page: BTW + payment-method breakdown tables (array fields on the object, not FK children) plus the shillinq bookkeeping-status projection and the manager-gated, idempotent re-raise action (POST /api/pos-bookkeeping/post). Self-fetches by @objectId so it stays in sync after a re-raise. The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
 	},
 	PosCustomerSettingsView: {
 		kind: 'page',
@@ -938,13 +962,17 @@ const registry = {
 		component: ResourceDetailView,
 		_note: 'Resource detail + edit page with the 7-weekday workingHours grid, vacation list, validation (open<close, startDate<=endDate) and per-resource cache invalidation on save (REQ-APT-002).',
 	},
-	// --- The booking list is now a declarative type:"index" page
-	//     (pipelinq-views-to-declarative-r1); only the bespoke lifecycle
-	//     detail view stays registered. ---
-	BookingDetailView: {
-		kind: 'page',
-		component: BookingDetailView,
-		_note: 'Booking detail with context-sensitive lifecycle buttons (Reschedule / Cancel / Mark Completed / Mark No-show / Send Reminder / Confirm Deposit) wired to the BookingAdminController endpoints, inline notes editor, audit-trail card and a chronological timeline (REQ-APT-015).',
+	// --- Booking detail is now a declarative type:"detail" page
+	//     (pipelinq-pos-mdm-detail-declarative); the booking's flat fields
+	//     auto-render and this in-body section carries everything no primitive
+	//     expresses: the six TIME-WINDOW-gated admin actions (POST to bespoke
+	//     /api/bookings/{id}/{action} with side-effects, Reschedule navigates to
+	//     a new UUID), the inline notes editor, the resourceAssignments +
+	//     statusHistory array-on-object tables, and the computed timeline. ---
+	BookingDetailSection: {
+		kind: 'section',
+		component: BookingDetailSection,
+		_note: 'Booking in-body section for the declarative type:"detail" BookingDetail page. lifecycleActions is intentionally NOT used even though booking has an x-openregister-lifecycle: the real transitions POST to BookingService endpoints with side-effects (confirmation/reminder emails, no-show fees) and time-window gating, and Reschedule creates a new booking UUID — OR /transition would only flip status and bypass those. Self-fetches by @objectId.',
 	},
 
 	// --- KCC Werkplek — declarative agent workspace (pipelinq-werkplek-declarative).
@@ -1015,10 +1043,10 @@ const registry = {
 		component: MdmMasterEntityListView,
 		_note: 'Master entity list with entityType + low-quality filters and a data-quality badge per row.',
 	},
-	MdmMasterEntityDetailView: {
-		kind: 'page',
-		component: MdmMasterEntityDetailView,
-		_note: 'Golden record + source-record lineage + per-attribute provenance, with the conflict-resolution modal.',
+	MdmGoldenRecordSection: {
+		kind: 'section',
+		component: MdmGoldenRecordSection,
+		_note: 'MDM golden-record in-body section for the declarative type:"detail" MdmMasterEntityDetail page. The masterEntity register fields auto-render and its raw sourceRecord children are a relatedCollections table; this section adds the server-COMPUTED golden record (merge-rule survivorship) with per-attribute provenance + the derived lineage, fetched from GET /api/mdm/entities/{id} (a projection, not stored flat on the schema), plus the conflict-resolution modal that recomputes the golden record on save. Self-fetches by @objectId.',
 	},
 	MdmDataQualityDashboard: {
 		kind: 'page',
