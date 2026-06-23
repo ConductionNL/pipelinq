@@ -30,13 +30,16 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\SettingsService;
 use OCA\Pipelinq\Settings\AdminSettings;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\DataResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
+use Psr\Log\LoggerInterface;
 
 /**
  * First-time setup status + actions for the abstract setup wizard.
@@ -55,14 +58,20 @@ class SetupController extends Controller
     /**
      * Constructor.
      *
-     * @param string     $appName   The app id.
-     * @param IRequest   $request   The request.
-     * @param IAppConfig $appConfig App-config reader/writer.
+     * @param string          $appName         The app id.
+     * @param IRequest        $request         The request.
+     * @param IAppConfig      $appConfig       App-config reader/writer.
+     * @param SettingsService $settingsService Register/schema + default-data provisioning.
+     * @param IAppManager     $appManager      App installed/enabled lookup for integration detection.
+     * @param LoggerInterface $logger          Logger.
      */
     public function __construct(
         string $appName,
         IRequest $request,
         private readonly IAppConfig $appConfig,
+        private readonly SettingsService $settingsService,
+        private readonly IAppManager $appManager,
+        private readonly LoggerInterface $logger,
     ) {
         parent::__construct(appName: $appName, request: $request);
     }//end __construct()
@@ -77,7 +86,24 @@ class SetupController extends Controller
     #[AuthorizedAdminSetting(AdminSettings::class)]
     public function status(): DataResponse
     {
+        // Currency is the single REQUIRED step — once set the app is usable.
         $currencyDone = $this->config(key: 'currency') !== '';
+
+        // The register/schema id is written by the InitializeSettings repair step
+        // on install (loadSettings). A non-empty `register` key means provisioning
+        // has run; we surface it so the optional "Provision data" step shows done.
+        $registerDone = $this->config(key: 'register') !== '';
+
+        // Organisation step done once the operator has named the organisation.
+        $organisationDone = $this->config(key: 'receipt_company_name') !== '';
+
+        // Integrations step done once either optional integration URL is set, or
+        // when neither integration app is installed (nothing to configure).
+        $shillinqUrl      = $this->config(key: 'shillinq_app_url');
+        $xwikiUrl         = $this->config(key: 'xwiki_direct_url');
+        $hasShillinq      = $this->appManager->isInstalled('shillinq');
+        $hasXwiki         = $this->appManager->isInstalled('openconnector');
+        $integrationsDone = ($shillinqUrl !== '' || $xwikiUrl !== '' || ($hasShillinq === false && $hasXwiki === false));
 
         if ($currencyDone === true) {
             $this->appConfig->setValueString(Application::APP_ID, 'setup_completed_version', (string) self::SETUP_VERSION);
@@ -88,7 +114,10 @@ class SetupController extends Controller
                 'version'   => self::SETUP_VERSION,
                 'completed' => $currencyDone,
                 'steps'     => [
-                    'currency' => ['done' => $currencyDone],
+                    'currency'     => ['done' => $currencyDone],
+                    'provision'    => ['done' => $registerDone],
+                    'organisation' => ['done' => $organisationDone],
+                    'integrations' => ['done' => $integrationsDone],
                 ],
             ]
         );
@@ -133,11 +162,66 @@ class SetupController extends Controller
     #[AuthorizedAdminSetting(AdminSettings::class)]
     public function runAction(string $actionId): DataResponse
     {
+        if ($actionId === 'provision-register') {
+            return $this->provisionRegister();
+        }
+
         return new DataResponse(
             ['success' => false, 'message' => 'Unknown setup action: '.$actionId],
             Http::STATUS_NOT_FOUND,
         );
     }//end runAction()
+
+    /**
+     * Import the pipelinq register + schemas and (re)create the default
+     * pipelines, queues, skills, lead sources and request channels.
+     *
+     * This mirrors the InitializeSettings repair step that runs on install, but
+     * is invokable on demand from the wizard so an admin who only enabled
+     * OpenRegister AFTER pipelinq (when the install-time repair skipped
+     * provisioning) can complete setup without a CLI repair run. Idempotent —
+     * loadSettings/createDefault* are no-ops when the data already exists.
+     *
+     * @return DataResponse `{ success, message }`.
+     *
+     * @spec openspec/changes/pipelinq-setup-wizard-complete/specs/first-time-setup/spec.md
+     */
+    private function provisionRegister(): DataResponse
+    {
+        if ($this->appManager->isInstalled('openregister') === false) {
+            return new DataResponse(
+                [
+                    'success' => false,
+                    'message' => 'OpenRegister is not installed — install and enable it, then run this step.',
+                ],
+                Http::STATUS_PRECONDITION_FAILED,
+            );
+        }
+
+        try {
+            $result        = $this->settingsService->loadSettings(force: false);
+            $registerCount = count($result['registers'] ?? []);
+            $schemaCount   = count($result['schemas'] ?? []);
+
+            $this->settingsService->createDefaultPipelines();
+            $this->settingsService->createDefaultQueues();
+            $this->settingsService->createDefaultSkills();
+
+            $message = sprintf(
+                'Provisioned %d register(s) and %d schema(s); default pipelines, queues and skills are ready.',
+                $registerCount,
+                $schemaCount,
+            );
+
+            return new DataResponse(['success' => true, 'message' => $message]);
+        } catch (\Throwable $e) {
+            $this->logger->error('Pipelinq setup provisioning failed', ['exception' => $e->getMessage()]);
+            return new DataResponse(
+                ['success' => false, 'message' => 'Provisioning failed: '.$e->getMessage()],
+                Http::STATUS_INTERNAL_SERVER_ERROR,
+            );
+        }//end try
+    }//end provisionRegister()
 
     /**
      * Read a pipelinq app-config string value.
