@@ -215,7 +215,7 @@ import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.
 //     trailing-period filter wired to a domain-specific aggregation
 //     endpoint, and no pipeline KPI / stage-funnel page driving four
 //     bespoke ratio KPIs off lead-collection client-side aggregation). ---
-import SlaAttainmentDashboard from './views/sla/SlaAttainmentDashboard.vue'
+import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
 import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
 
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
@@ -293,7 +293,7 @@ import AvgIntakeView from './views/avg/AvgIntakeView.vue'
 //     resolution modal live in one kind:'section' bodyWidget. ---
 import MdmMasterEntityListView from './views/mdm/MdmMasterEntityListView.vue'
 import MdmGoldenRecordSection from './components/mdm/MdmGoldenRecordSection.vue'
-import MdmDataQualityDashboard from './views/mdm/MdmDataQualityDashboard.vue'
+import MdmDataQualitySection from './components/mdm/MdmDataQualitySection.vue'
 import MdmDuplicateCandidatesDashboard from './views/mdm/MdmDuplicateCandidatesDashboard.vue'
 import MdmSyncQueueAdmin from './views/mdm/MdmSyncQueueAdmin.vue'
 
@@ -802,10 +802,10 @@ const registry = {
 	},
 
 	// --- SLA engine — attainment dashboard (sla-engine-and-escalation Feature 12). ---
-	SlaAttainmentDashboard: {
-		kind: 'page',
-		component: SlaAttainmentDashboard,
-		_note: 'SLA attainment dashboard: overall attainment KPI + per-target and per-policy/tier/team breakdown table. Bucketed by day/week/month/quarter and fetched from GET /api/sla/attainment.',
+	SlaAttainmentBreakdownSection: {
+		kind: 'section',
+		component: SlaAttainmentBreakdownSection,
+		_note: 'In-body section for the declarative type:"dashboard" SlaAttainment page (pipelinq-dashboards-declarative). The four headline KPIs (overall attainment % + total/met/breached) are endpoint-bound stat widgets reading GET /api/sla/attainment, driven by the page bucket + groupBy pageFilters. This section renders the per-group breakdown table (by policy/tier/team/target/customer) the stat grid cannot express; it reads bucket + groupBy props (from @workspace.*) and self-fetches the same endpoint, re-querying on change. The SlaAttainmentService now defaults the period to the current bucket window when no explicit date param is sent, so the dashboard needs no client-side date math.',
 	},
 
 	// --- Klantbeeld 360 — per-pipeline sales analytics. ---
@@ -1048,10 +1048,10 @@ const registry = {
 		component: MdmGoldenRecordSection,
 		_note: 'MDM golden-record in-body section for the declarative type:"detail" MdmMasterEntityDetail page. The masterEntity register fields auto-render and its raw sourceRecord children are a relatedCollections table; this section adds the server-COMPUTED golden record (merge-rule survivorship) with per-attribute provenance + the derived lineage, fetched from GET /api/mdm/entities/{id} (a projection, not stored flat on the schema), plus the conflict-resolution modal that recomputes the golden record on save. Self-fetches by @objectId.',
 	},
-	MdmDataQualityDashboard: {
-		kind: 'page',
-		component: MdmDataQualityDashboard,
-		_note: 'Aggregate quality buckets, worst-entity table and sync-queue health with dead-letter retry.',
+	MdmDataQualitySection: {
+		kind: 'section',
+		component: MdmDataQualitySection,
+		_note: 'In-body section for the declarative type:"dashboard" MdmDataQuality page (pipelinq-dashboards-declarative). The four headline KPIs (average quality score + good/fair/poor buckets) are endpoint-bound stat widgets reading GET /api/mdm/dashboard; this section hosts what the stat grid cannot express — the lowest-quality master-entity table, the sync-queue health cards, and the dead-letter retry table (Retry POSTs to /api/mdm/sync-queue/{id}/retry, a re-queue side-effect). Self-fetches /api/mdm/dashboard.',
 	},
 	MdmDuplicateCandidatesDashboard: {
 		kind: 'page',

@@ -188,17 +188,20 @@ class SlaAttainmentService
         }
 
         return [
-            'attainment'       => $overallAttainment,
-            'total'            => $total,
-            'met'              => $met,
-            'breached'         => $breached,
-            'inFlightBreached' => $inFlight,
-            'closedBreached'   => $closed,
-            'range'            => [
+            'attainment'        => $overallAttainment,
+            // Same value scaled to a literal percent (0–100) so a declarative
+            // dashboard stat widget can render it with format.style "percent".
+            'attainmentPercent' => round(($overallAttainment * 100), 1),
+            'total'             => $total,
+            'met'               => $met,
+            'breached'          => $breached,
+            'inFlightBreached'  => $inFlight,
+            'closedBreached'    => $closed,
+            'range'             => [
                 'start' => $start->format(DateTimeInterface::ATOM),
                 'end'   => $end->format(DateTimeInterface::ATOM),
             ],
-            'details'          => [
+            'details'           => [
                 'byTarget' => $byTargetOut,
                 'byGroup'  => $byGroup,
             ],
@@ -217,11 +220,17 @@ class SlaAttainmentService
      */
     public function resolveBucketRange(string $bucket, array $params): array
     {
-        $tz = new DateTimeZone('UTC');
+        $tz  = new DateTimeZone('UTC');
+        $now = new DateTimeImmutable('now', $tz);
         switch ($bucket) {
             case 'day':
+                // An empty/missing date defaults to today so a declarative
+                // dashboard can drive the bucket select alone (no client-side
+                // date math); an explicitly supplied value must still be valid.
                 $date = (string) ($params['date'] ?? '');
-                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+                if ($date === '') {
+                    $date = $now->format('Y-m-d');
+                } else if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
                     throw new InvalidArgumentException('invalidDate');
                 }
 
@@ -230,6 +239,10 @@ class SlaAttainmentService
 
             case 'week':
                 $week = (string) ($params['week'] ?? '');
+                if ($week === '') {
+                    $week = $now->format('o-\WW');
+                }
+
                 if (preg_match('/^(\d{4})-W(\d{1,2})$/', $week, $matches) !== 1) {
                     throw new InvalidArgumentException('invalidWeek');
                 }
@@ -241,6 +254,10 @@ class SlaAttainmentService
 
             case 'month':
                 $month = (string) ($params['month'] ?? '');
+                if ($month === '') {
+                    $month = $now->format('Y-m');
+                }
+
                 if (preg_match('/^(\d{4})-(\d{2})$/', $month, $matches) !== 1) {
                     throw new InvalidArgumentException('invalidMonth');
                 }
@@ -250,6 +267,10 @@ class SlaAttainmentService
 
             case 'quarter':
                 $quarter = (string) ($params['quarter'] ?? '');
+                if ($quarter === '') {
+                    $quarter = sprintf('%s-Q%d', $now->format('Y'), (int) ceil(((int) $now->format('n')) / 3));
+                }
+
                 if (preg_match('/^(\d{4})-Q([1-4])$/', $quarter, $matches) !== 1) {
                     throw new InvalidArgumentException('invalidQuarter');
                 }
