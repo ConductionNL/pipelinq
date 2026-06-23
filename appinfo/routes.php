@@ -473,15 +473,6 @@ return [
         ['name' => 'brpAdmin#get',                 'url' => '/api/brp/settings',                  'verb' => 'GET'],
         ['name' => 'brpAdmin#save',                'url' => '/api/brp/settings',                  'verb' => 'POST'],
         ['name' => 'brpAdmin#rotateWebhookSecret', 'url' => '/api/brp/settings/webhook-secret',   'verb' => 'POST'],
-        // StUF-ZKN/BG adapter (stuf-zkn-bg-adapter — REQ-STUF-001..012).
-        // camelCase slug matches StufController class name. Specific routes precede any wildcard {slug} routes.
-        // The /inkomend endpoint is PublicPage so the zaaksysteem can post notifications
-        // without a user session; it authenticates via WSSE UsernameToken (verified in the controller).
-        ['name' => 'stuf#outbound',  'url' => '/api/stuf/outbound',  'verb' => 'POST'],
-        ['name' => 'stuf#inkomend',  'url' => '/api/stuf/inkomend',  'verb' => 'POST'],
-        ['name' => 'stuf#endpoints', 'url' => '/api/stuf/endpoints', 'verb' => 'GET'],
-        ['name' => 'stuf#messages',  'url' => '/api/stuf/messages',  'verb' => 'GET'],
-
         // KCC Werkplek — unified agent workspace (kcc-werkplek).
         // Specific routes precede any wildcard {path} catch-all (ADR-016).
         ['name' => 'kccWerkplek#stateAction',           'url' => '/api/kcc-werkplek/state',        'verb' => 'GET'],
