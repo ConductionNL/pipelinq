@@ -11,10 +11,44 @@
 	"pages": [
 		{
 			"id": "SlaAttainment",
+			"_note": "SLA attainment monitor as a declarative type:dashboard page (pipelinq-dashboards-declarative). The four headline KPIs (overall attainment %, total / met / breached targets) are endpoint-bound stat widgets reading GET /apps/pipelinq/api/sla/attainment; overall attainment reads the new server-derived attainmentPercent (0-100) so format.style 'percent' renders cleanly. Two pageFilters drive the query: period (bucket: day/week/month/quarter -> @page.bucket) and groupBy (policy/tier/team/target/customer -> @page.groupBy); the SlaAttainmentService now defaults the period to the CURRENT bucket window when no explicit date param is given, so one bucket select re-queries every KPI without client-side date math. The per-group breakdown table the stat grid cannot express lives in one kind:'section' bodyWidget (SlaAttainmentBreakdownSection) that reads the same bucket/groupBy (via @workspace.*) and self-fetches the endpoint.",
 			"route": "/sla/attainment",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "SLA attainment",
-			"component": "SlaAttainmentDashboard"
+			"config": {
+				"description": "Service Level Agreement performance per policy / tier / target",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"pageFilters": [
+					{ "key": "bucket", "label": "Period", "type": "select", "default": "month", "options": [
+						{ "value": "day", "label": "Day" },
+						{ "value": "week", "label": "Week" },
+						{ "value": "month", "label": "Month" },
+						{ "value": "quarter", "label": "Quarter" }
+					] },
+					{ "key": "groupBy", "label": "Group by", "type": "select", "default": "policy", "options": [
+						{ "value": "policy", "label": "Policy" },
+						{ "value": "tier", "label": "Customer tier" },
+						{ "value": "team", "label": "Team" },
+						{ "value": "target", "label": "Target kind" },
+						{ "value": "customer", "label": "Customer" }
+					] }
+				],
+				"widgets": [
+					{ "id": "sla-attainment", "type": "stat", "title": "Overall attainment", "content": { "label": "Overall attainment", "caption": "of all targets", "icon": "CheckCircle", "valueColor": "#0082c9", "format": { "style": "percent", "decimals": 1 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/sla/attainment", "path": "attainmentPercent", "params": { "bucket": "@page.bucket", "groupBy": "@page.groupBy" } } } },
+					{ "id": "sla-total", "type": "stat", "title": "Total", "content": { "label": "Total", "caption": "targets in period", "icon": "ChartLine", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/sla/attainment", "path": "total", "params": { "bucket": "@page.bucket", "groupBy": "@page.groupBy" } } } },
+					{ "id": "sla-met", "type": "stat", "title": "Met", "content": { "label": "Met", "caption": "on-time", "icon": "CheckCircle", "valueColor": "#2d7d46", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/sla/attainment", "path": "met", "params": { "bucket": "@page.bucket", "groupBy": "@page.groupBy" } } } },
+					{ "id": "sla-breached", "type": "stat", "title": "Breached", "content": { "label": "Breached", "caption": "over-deadline", "icon": "AlertOctagon", "valueColor": "#c0392b", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/sla/attainment", "path": "breached", "params": { "bucket": "@page.bucket", "groupBy": "@page.groupBy" } } } }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "sla-attainment", "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 2, "widgetId": "sla-total", "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 3, "widgetId": "sla-met", "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 4, "widgetId": "sla-breached", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false }
+				],
+				"bodyWidgets": [
+					{ "id": "sla-breakdown", "component": "SlaAttainmentBreakdownSection", "placement": "after-grid", "props": { "bucket": "@workspace.bucket", "groupBy": "@workspace.groupBy" } }
+				]
+			}
 		}
 	]
 }

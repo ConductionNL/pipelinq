@@ -215,7 +215,7 @@ import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.
 //     trailing-period filter wired to a domain-specific aggregation
 //     endpoint, and no pipeline KPI / stage-funnel page driving four
 //     bespoke ratio KPIs off lead-collection client-side aggregation). ---
-import SlaAttainmentDashboard from './views/sla/SlaAttainmentDashboard.vue'
+import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
 import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
 
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
@@ -802,10 +802,10 @@ const registry = {
 	},
 
 	// --- SLA engine — attainment dashboard (sla-engine-and-escalation Feature 12). ---
-	SlaAttainmentDashboard: {
-		kind: 'page',
-		component: SlaAttainmentDashboard,
-		_note: 'SLA attainment dashboard: overall attainment KPI + per-target and per-policy/tier/team breakdown table. Bucketed by day/week/month/quarter and fetched from GET /api/sla/attainment.',
+	SlaAttainmentBreakdownSection: {
+		kind: 'section',
+		component: SlaAttainmentBreakdownSection,
+		_note: 'In-body section for the declarative type:"dashboard" SlaAttainment page (pipelinq-dashboards-declarative). The four headline KPIs (overall attainment % + total/met/breached) are endpoint-bound stat widgets reading GET /api/sla/attainment, driven by the page bucket + groupBy pageFilters. This section renders the per-group breakdown table (by policy/tier/team/target/customer) the stat grid cannot express; it reads bucket + groupBy props (from @workspace.*) and self-fetches the same endpoint, re-querying on change. The SlaAttainmentService now defaults the period to the current bucket window when no explicit date param is sent, so the dashboard needs no client-side date math.',
 	},
 
 	// --- Klantbeeld 360 — per-pipeline sales analytics. ---
