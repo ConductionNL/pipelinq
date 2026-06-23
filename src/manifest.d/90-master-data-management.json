@@ -71,10 +71,28 @@
     },
     {
       "id": "MdmDataQuality",
+      "_note": "Master-data quality monitor as a declarative type:dashboard page (pipelinq-dashboards-declarative). The four headline KPIs (average quality score + good/fair/poor entity buckets) are endpoint-bound stat widgets reading GET /apps/pipelinq/api/mdm/dashboard. The non-KPI surfaces the stat grid cannot express — the lowest-quality master-entity table, the sync-queue health cards, and the dead-letter retry table (Retry POSTs to /api/mdm/sync-queue/{id}/retry, a re-queue side-effect) — live in one kind:'section' bodyWidget (MdmDataQualitySection), which self-fetches the same endpoint so a Retry refreshes it in place. No period filter — the dashboard is an instance-wide snapshot.",
       "route": "/mdm/data-quality",
-      "type": "custom",
+      "type": "dashboard",
       "title": "Data quality",
-      "component": "MdmDataQualityDashboard"
+      "config": {
+        "documentationUrl": "https://pipelinq.conduction.nl",
+        "widgets": [
+          { "id": "mdm-avg-score", "type": "stat", "title": "Average quality score", "content": { "label": "Average quality score", "caption": "0.00 – 1.00", "icon": "ChartLine", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 2 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/mdm/dashboard", "path": "averageScore" } } },
+          { "id": "mdm-good", "type": "stat", "title": "Good", "content": { "label": "Good (> 0.8)", "caption": "entities", "icon": "CheckCircle", "valueColor": "#2d7d46", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/mdm/dashboard", "path": "buckets.good" } } },
+          { "id": "mdm-fair", "type": "stat", "title": "Fair", "content": { "label": "Fair (0.6 – 0.8)", "caption": "entities", "icon": "AlertCircle", "valueColor": "#c28a00", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/mdm/dashboard", "path": "buckets.fair" } } },
+          { "id": "mdm-poor", "type": "stat", "title": "Poor", "content": { "label": "Poor (< 0.6)", "caption": "entities", "icon": "AlertOctagon", "valueColor": "#c0392b", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/mdm/dashboard", "path": "buckets.poor" } } }
+        ],
+        "layout": [
+          { "id": 1, "widgetId": "mdm-avg-score", "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+          { "id": 2, "widgetId": "mdm-good", "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+          { "id": 3, "widgetId": "mdm-fair", "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+          { "id": 4, "widgetId": "mdm-poor", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false }
+        ],
+        "bodyWidgets": [
+          { "id": "mdm-data-quality-section", "component": "MdmDataQualitySection", "placement": "after-grid" }
+        ]
+      }
     },
     {
       "id": "MdmDuplicates",

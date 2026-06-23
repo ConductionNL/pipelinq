@@ -2,15 +2,19 @@
 SPDX-License-Identifier: EUPL-1.2
 SPDX-FileCopyrightText: 2026 Conduction B.V.
 -->
+<!--
+  Master-data DATA-QUALITY in-body section, hosted on the declarative
+  type:dashboard "Data quality" page via a kind:'section' bodyWidget
+  (pipelinq-dashboards-declarative). The four headline KPIs (average score +
+  good/fair/poor buckets) render as endpoint-bound stat widgets in the
+  dashboard grid; everything the stat grid cannot express lives here:
+  the lowest-quality master-entity table, the sync-queue health cards, and
+  the dead-letter retry table (whose Retry POSTs to
+  /api/mdm/sync-queue/{id}/retry with a re-queue side-effect). Self-fetches
+  GET /api/mdm/dashboard so a Retry refreshes the section in place.
+-->
 <template>
-	<div class="mdm-dq">
-		<div class="mdm-dq__header">
-			<h2>{{ t('pipelinq', 'Data quality dashboard') }}</h2>
-			<NcButton type="secondary" :disabled="loading" @click="fetchData">
-				{{ t('pipelinq', 'Refresh') }}
-			</NcButton>
-		</div>
-
+	<div class="mdm-dq-section">
 		<NcLoadingIcon v-if="loading" :size="32" />
 
 		<NcEmptyContent v-else-if="error"
@@ -18,46 +22,8 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			:description="error" />
 
 		<template v-else>
-			<div class="mdm-dq__cards">
-				<div class="mdm-dq__card">
-					<div class="mdm-dq__value">
-						{{ averageScore.toFixed(2) }}
-					</div>
-					<div class="mdm-dq__label">
-						{{ t('pipelinq', 'Average quality score') }}
-					</div>
-				</div>
-				<div class="mdm-dq__card mdm-dq__card--good">
-					<div class="mdm-dq__value">
-						{{ buckets.good }}
-					</div>
-					<div class="mdm-dq__label">
-						{{ t('pipelinq', 'Good (> 0.8)') }}
-					</div>
-				</div>
-				<div class="mdm-dq__card mdm-dq__card--fair">
-					<div class="mdm-dq__value">
-						{{ buckets.fair }}
-					</div>
-					<div class="mdm-dq__label">
-						{{ t('pipelinq', 'Fair (0.6 – 0.8)') }}
-					</div>
-				</div>
-				<div class="mdm-dq__card mdm-dq__card--poor">
-					<div class="mdm-dq__value">
-						{{ buckets.poor }}
-					</div>
-					<div class="mdm-dq__label">
-						<!-- sanitize:false — DOMPurify (t()'s default) encodes the
-						     literal "<" to "&lt;" since it reads as a malformed tag;
-						     this is a trusted static label with no markup/vars. -->
-						{{ t('pipelinq', 'Poor (< 0.6)', undefined, undefined, { sanitize: false }) }}
-					</div>
-				</div>
-			</div>
-
 			<h3>{{ t('pipelinq', 'Lowest quality master entities') }}</h3>
-			<table v-if="worstEntities.length" class="mdm-dq__table">
+			<table v-if="worstEntities.length" class="mdm-dq-section__table">
 				<thead>
 					<tr>
 						<th>{{ t('pipelinq', 'Name') }}</th>
@@ -70,7 +36,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 						<td>{{ entity.name || entity.masterId }}</td>
 						<td>{{ entity.entityType }}</td>
 						<td>
-							<span class="mdm-dq__badge" :class="badgeClass(entity.dataQualityScore)">
+							<span class="mdm-dq-section__badge" :class="badgeClass(entity.dataQualityScore)">
 								{{ entity.dataQualityScore.toFixed(2) }}
 							</span>
 						</td>
@@ -81,28 +47,28 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				:name="t('pipelinq', 'No master entities yet')" />
 
 			<h3>{{ t('pipelinq', 'Sync queue health') }}</h3>
-			<div class="mdm-dq__cards">
-				<div class="mdm-dq__card">
-					<div class="mdm-dq__value">
+			<div class="mdm-dq-section__cards">
+				<div class="mdm-dq-section__card">
+					<div class="mdm-dq-section__value">
 						{{ queueHealth.queued }}
 					</div>
-					<div class="mdm-dq__label">
+					<div class="mdm-dq-section__cardlabel">
 						{{ t('pipelinq', 'Queued') }}
 					</div>
 				</div>
-				<div class="mdm-dq__card">
-					<div class="mdm-dq__value">
+				<div class="mdm-dq-section__card">
+					<div class="mdm-dq-section__value">
 						{{ queueHealth.acknowledged }}
 					</div>
-					<div class="mdm-dq__label">
+					<div class="mdm-dq-section__cardlabel">
 						{{ t('pipelinq', 'Acknowledged') }}
 					</div>
 				</div>
-				<div class="mdm-dq__card mdm-dq__card--poor">
-					<div class="mdm-dq__value">
+				<div class="mdm-dq-section__card mdm-dq-section__card--poor">
+					<div class="mdm-dq-section__value">
 						{{ queueHealth['dead-letter'] }}
 					</div>
-					<div class="mdm-dq__label">
+					<div class="mdm-dq-section__cardlabel">
 						{{ t('pipelinq', 'Dead-letter') }}
 					</div>
 				</div>
@@ -110,7 +76,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 
 			<template v-if="deadLetters.length">
 				<h3>{{ t('pipelinq', 'Dead-letter items') }}</h3>
-				<table class="mdm-dq__table">
+				<table class="mdm-dq-section__table">
 					<thead>
 						<tr>
 							<th>{{ t('pipelinq', 'Target system') }}</th>
@@ -144,14 +110,12 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
 
 export default {
-	name: 'MdmDataQualityDashboard',
+	name: 'MdmDataQualitySection',
 	components: { NcButton, NcEmptyContent, NcLoadingIcon },
 	data() {
 		return {
 			loading: true,
 			error: '',
-			averageScore: 0,
-			buckets: { good: 0, fair: 0, poor: 0 },
 			worstEntities: [],
 			queueHealth: { queued: 0, sending: 0, acknowledged: 0, 'dead-letter': 0, failed: 0 },
 			deadLetters: [],
@@ -166,8 +130,6 @@ export default {
 			this.error = ''
 			try {
 				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/mdm/dashboard'))
-				this.averageScore = Number(data.averageScore || 0)
-				this.buckets = data.buckets || { good: 0, fair: 0, poor: 0 }
 				this.worstEntities = data.worstEntities || []
 				this.queueHealth = { ...this.queueHealth, ...(data.queueHealth || {}) }
 				this.deadLetters = data.deadLetters || []
@@ -178,9 +140,9 @@ export default {
 			}
 		},
 		badgeClass(score) {
-			if (score > 0.8) return 'mdm-dq__badge--good'
-			if (score >= 0.6) return 'mdm-dq__badge--fair'
-			return 'mdm-dq__badge--poor'
+			if (score > 0.8) return 'mdm-dq-section__badge--good'
+			if (score >= 0.6) return 'mdm-dq-section__badge--fair'
+			return 'mdm-dq-section__badge--poor'
 		},
 		async retry(item) {
 			try {
@@ -196,16 +158,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.mdm-dq {
-	padding: 20px;
-
-	&__header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 16px;
-	}
-
+.mdm-dq-section {
 	&__cards {
 		display: flex;
 		flex-wrap: wrap;
@@ -220,8 +173,6 @@ export default {
 		background: var(--color-background-hover);
 		text-align: center;
 
-		&--good { background: var(--color-success, #2d7d46); color: #fff; }
-		&--fair { background: var(--color-warning, #c28a00); color: #fff; }
 		&--poor { background: var(--color-error, #c0392b); color: #fff; }
 	}
 
@@ -230,7 +181,7 @@ export default {
 		font-weight: 700;
 	}
 
-	&__label {
+	&__cardlabel {
 		font-size: 13px;
 		opacity: 0.9;
 	}
