@@ -1663,35 +1663,92 @@
 		},
 		{
 			"id": "Rapportage",
-			"_note": "RapportageView.vue is a bespoke analytics surface: a CnDashboardPage whose widget slots are filled with custom-computed report blocks fetched once and shared across slots, rather than the manifest-declared widget set the standard 'dashboard' type supports.",
+			"_note": "Lead analytics as a declarative type:dashboard page (pipelinq-dashboards-declarative). The surface has no headline KPI cards to lift into endpoint stat widgets — its four bespoke widgets (pipeline-value funnel bar chart, source-performance table, lead-aging donut, win/loss pie + KPI block) are fed from ONE GET /api/rapportage/pipeline-stats fetch and the interactivity lives INSIDE the widgets (the funnel's OR-sourced pipeline selector filters in memory; the win/loss date-range selector re-fetches with dateFrom/dateTo). All four therefore live in one kind:'section' bodyWidget (LeadAnalyticsSection) which preserves the legacy single-fetch + in-widget filtering verbatim. KEPT-AS-NOTE: no page-level period pageFilter — the date window is derived inside the win/loss range selector (a from/to pair a static select cannot emit) and the pipeline selector's options are OR-sourced; missing primitives: derived-date-range pageFilter + OR-collection pageFilter options.",
 			"route": "/rapportage",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Analytics",
-			"component": "RapportageView"
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"bodyWidgets": [
+					{ "id": "lead-analytics", "component": "LeadAnalyticsSection", "placement": "before-grid" }
+				]
+			}
 		},
 		{
 			"id": "RapportageContactmomenten",
-			"_note": "RapportageDashboard.vue is a bespoke contact-reporting analytics view with a date-range selector, a custom KPI-card grid and hand-rendered channel bar charts; the standard 'dashboard' type only composes declared widgets and cannot host these custom-drawn charts.",
+			"_note": "Contact-reporting monitor as a declarative type:dashboard page (pipelinq-dashboards-declarative). The four headline KPIs (Total Contacts, FCR %, Avg Handling Time, SLA Compliance) are endpoint-bound stat widgets reading GET /apps/pipelinq/api/rapportage/kpis (avgHandlingTime is a pre-formatted 'H:MM' string the stat widget renders verbatim). A period pageFilter (today/week/month -> @page.period) drives the query; ReportingController now resolves that relative period to a from/to window server-side (today=[today,today], week=[Monday,today], month=[1st,today]) so one select re-queries every KPI without client-side date math. The hand-rendered per-channel bar chart + the CSV export the stat grid cannot express live in one kind:'section' bodyWidget (ChannelDistributionSection) that reads the same period (via @workspace.period) and self-fetches /api/rapportage/channels. The 60s auto-refresh + 'last updated' label of the legacy view are dropped (the page-level Refresh action covers manual reload).",
 			"route": "/rapportage/contactmomenten",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Contact reporting",
-			"component": "RapportageDashboardView"
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"pageFilters": [
+					{ "key": "period", "label": "Period", "type": "select", "default": "today", "options": [
+						{ "value": "today", "label": "Today" },
+						{ "value": "week", "label": "This week" },
+						{ "value": "month", "label": "This month" }
+					] }
+				],
+				"widgets": [
+					{ "id": "rap-total", "type": "stat", "title": "Total Contacts", "content": { "label": "Total Contacts", "caption": "contact moments", "icon": "MessageText", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/rapportage/kpis", "path": "total", "params": { "period": "@page.period" } } } },
+					{ "id": "rap-fcr", "type": "stat", "title": "FCR %", "content": { "label": "FCR %", "caption": "first-contact resolution", "icon": "CheckCircle", "format": { "style": "percent", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/rapportage/kpis", "path": "fcrRate", "params": { "period": "@page.period" } } } },
+					{ "id": "rap-aht", "type": "stat", "title": "Avg Handling Time", "content": { "label": "Avg Handling Time", "caption": "h:mm", "icon": "ClockOutline", "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/rapportage/kpis", "path": "avgHandlingTime", "params": { "period": "@page.period" } } } },
+					{ "id": "rap-sla", "type": "stat", "title": "SLA Compliance", "content": { "label": "SLA Compliance", "caption": "within target", "icon": "ShieldCheckOutline", "format": { "style": "percent", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/rapportage/kpis", "path": "slaCompliance", "params": { "period": "@page.period" } } } }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "rap-total", "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 2, "widgetId": "rap-fcr", "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 3, "widgetId": "rap-aht", "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 4, "widgetId": "rap-sla", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false }
+				],
+				"bodyWidgets": [
+					{ "id": "rap-channels", "component": "ChannelDistributionSection", "placement": "after-grid", "props": { "period": "@workspace.period" } }
+				]
+			}
 		},
 		{
 			"id": "ChannelAnalyticsView",
-			"_note": "ChannelAnalytics.vue is a bespoke analytics report: a date-range selector over a custom comparison data-table of per-channel metrics with colour-keyed channel dots; this tabular cross-channel comparison has no standard list/dashboard page-type representation.",
+			"_note": "Cross-channel comparison as a declarative type:dashboard page (pipelinq-dashboards-declarative). It has no headline KPI cards — the cross-channel comparison table (total / FCR / SLA per channel, colour-keyed) lives entirely in one kind:'section' bodyWidget (ChannelComparisonSection). Two pageFilters drive it: period (today/week/month -> @page.period, resolved to from/to server-side by ReportingController) and granularity (daily/weekly -> @page.granularity); the section reads both via @workspace.* and self-fetches /api/rapportage/channels + /api/rapportage/sla.",
 			"route": "/rapportage/channels",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Channel analytics",
-			"component": "ChannelAnalyticsView"
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"pageFilters": [
+					{ "key": "period", "label": "Period", "type": "select", "default": "month", "options": [
+						{ "value": "today", "label": "Today" },
+						{ "value": "week", "label": "This week" },
+						{ "value": "month", "label": "This month" }
+					] },
+					{ "key": "granularity", "label": "Granularity", "type": "select", "default": "daily", "options": [
+						{ "value": "daily", "label": "Daily" },
+						{ "value": "weekly", "label": "Weekly" }
+					] }
+				],
+				"bodyWidgets": [
+					{ "id": "channel-comparison", "component": "ChannelComparisonSection", "placement": "before-grid", "props": { "period": "@workspace.period", "granularity": "@workspace.granularity" } }
+				]
+			}
 		},
 		{
 			"id": "AgentPerformanceView",
-			"_note": "AgentPerformance.vue is a bespoke analytics report: a date-range selector over a sortable per-agent data-table (resolution time, volume, satisfaction); the sortable multi-metric leaderboard has no standard list/dashboard page-type representation.",
+			"_note": "Per-agent performance as a declarative type:dashboard page (pipelinq-dashboards-declarative). It has no headline KPI cards — the sortable per-agent leaderboard (contacts / avg time / FCR) plus the team-summary footer (total contacts, team FCR, both derived from the same agents map) live in one kind:'section' bodyWidget (AgentPerformanceSection). A period pageFilter (today/week/month -> @page.period, resolved to from/to server-side) drives the query; the section reads @workspace.period and self-fetches /api/rapportage/agents.",
 			"route": "/rapportage/agents",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Agent performance",
-			"component": "AgentPerformanceView"
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"pageFilters": [
+					{ "key": "period", "label": "Period", "type": "select", "default": "today", "options": [
+						{ "value": "today", "label": "Today" },
+						{ "value": "week", "label": "This week" },
+						{ "value": "month", "label": "This month" }
+					] }
+				],
+				"bodyWidgets": [
+					{ "id": "agent-performance", "component": "AgentPerformanceSection", "placement": "before-grid", "props": { "period": "@workspace.period" } }
+				]
+			}
 		},
 		{
 			"id": "Pipeline",
