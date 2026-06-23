@@ -77,13 +77,15 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface
         if (isset($sanitised['recipientBsn']) === true) {
             $sanitised['recipientBsn'] = '[REDACTED]';
         }
+
         if (isset($sanitised['body']) === true) {
             $sanitised['body'] = '[REDACTED-body-bytes='.strlen((string) $sanitised['body']).']';
         }
+
         if (isset($sanitised['attachments']) === true && is_array($sanitised['attachments']) === true) {
             $sanitised['attachments'] = [
-                '_redacted'    => true,
-                'count'        => count($sanitised['attachments']),
+                '_redacted' => true,
+                'count'     => count($sanitised['attachments']),
             ];
         }
 
@@ -102,7 +104,8 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface
             dormant: true,
             extras: [
                 'reason' => 'no-outbound-connector-bound',
-                'note'   => 'Bind LogiusConnector (or an openconnector source slug `logius-berichtenbox`) by overriding BerichtenboxAdapterInterface in Application::register() to enable real transport.',
+                'note'   => 'Bind LogiusConnector (or an openconnector source slug `logius-berichtenbox`) by overriding '
+                    .'BerichtenboxAdapterInterface in Application::register() to enable real transport.',
             ],
         );
     }//end dispatchMessage()
@@ -115,7 +118,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface
      * with PII; only the body length + the presence-of-signature
      * boolean go through.
      *
-     * @param string              $rawBody Raw inbound body bytes.
+     * @param string               $rawBody Raw inbound body bytes.
      * @param array<string,string> $headers Inbound headers.
      *
      * @return BerichtenboxResult The verification outcome.
@@ -142,7 +145,8 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface
             dormant: true,
             extras: [
                 'reason' => 'no-outbound-connector-bound',
-                'note'   => 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() to enable real webhook HMAC verification.',
+                'note'   => 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() '
+                    .'to enable real webhook HMAC verification.',
             ],
         );
     }//end verifyDeliveryWebhook()
@@ -177,13 +181,18 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface
             dormant: true,
             extras: [
                 'reason' => 'no-outbound-connector-bound',
-                'note'   => 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() to enable real mailbox reachability checks. NEVER log BSN values.',
+                'note'   => 'Bind LogiusConnector and override BerichtenboxAdapterInterface in Application::register() '
+                    .'to enable real mailbox reachability checks. NEVER log BSN values.',
             ],
         );
     }//end checkMailbox()
 
     /**
+     * Report whether this adapter is a dormant log-only stub.
+     *
      * @inheritDoc
+     *
+     * @return bool Always true for the log-only adapter.
      */
     public function isDormant(): bool
     {

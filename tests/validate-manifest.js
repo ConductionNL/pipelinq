@@ -30,10 +30,11 @@ const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'manifest.json')
 
 const SCHEMA_CANDIDATES = [
 	process.env.APP_MANIFEST_SCHEMA,
-	path.join(REPO_ROOT, 'node_modules', '@conduction', 'nextcloud-vue', 'src', 'schemas', 'app-manifest.schema.json'),
-	path.join(REPO_ROOT, '..', 'nextcloud-vue', 'src', 'schemas', 'app-manifest.schema.json'),
-	'/tmp/worktrees/nextcloud-vue-manifest-v1/src/schemas/app-manifest.schema.json',
-	'/tmp/worktrees/nextcloud-vue-page-type-extensions/src/schemas/app-manifest.schema.json',
+	// src/manifest.json is a v2 manifest — validate against the canonical v2
+	// schema (vendored; includes the setup block + metric cacheTtl).
+	path.join(REPO_ROOT, 'tests', 'schemas', 'app-manifest-v2.schema.json'),
+	path.join(REPO_ROOT, 'node_modules', '@conduction', 'nextcloud-vue', 'src', 'schemas', 'app-manifest-v2.schema.json'),
+	path.join(REPO_ROOT, '..', 'nextcloud-vue', 'src', 'schemas', 'app-manifest-v2.schema.json'),
 ].filter(Boolean)
 
 function findSchemaPath() {

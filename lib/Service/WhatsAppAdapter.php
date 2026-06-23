@@ -88,27 +88,27 @@ class WhatsAppAdapter
     /**
      * Send-result envelope statuses.
      */
-    public const STATUS_SENT                  = 'sent';
-    public const STATUS_CONSENT_MISSING       = 'consentMissing';
-    public const STATUS_BUDGET_EXCEEDED       = 'budgetExceeded';
-    public const STATUS_NO_PROVIDER           = 'noProviderAvailable';
+    public const STATUS_SENT            = 'sent';
+    public const STATUS_CONSENT_MISSING = 'consentMissing';
+    public const STATUS_BUDGET_EXCEEDED = 'budgetExceeded';
+    public const STATUS_NO_PROVIDER     = 'noProviderAvailable';
     public const STATUS_SESSION_WINDOW_EXPIRED = 'sessionWindowExpired';
-    public const STATUS_TEMPLATE_NOT_FOUND    = 'templateNotFound';
-    public const STATUS_TEMPLATE_NOT_APPROVED = 'templateNotApproved';
-    public const STATUS_TEMPLATE_MISMATCH     = 'templateParameterMismatch';
-    public const STATUS_FAILED                = 'failed';
+    public const STATUS_TEMPLATE_NOT_FOUND     = 'templateNotFound';
+    public const STATUS_TEMPLATE_NOT_APPROVED  = 'templateNotApproved';
+    public const STATUS_TEMPLATE_MISMATCH      = 'templateParameterMismatch';
+    public const STATUS_FAILED = 'failed';
 
     /**
      * Constructor.
      *
-     * @param ContainerInterface         $container         DI container.
-     * @param IAppConfig                 $appConfig         App config.
-     * @param ChannelProviderRepository  $providerRepo      Provider read-side.
-     * @param WhatsAppProviderClient     $providerClient    Vendor transport.
-     * @param ConsentService             $consentService    Opt-out gate.
-     * @param BudgetService              $budgetService     Budget gate.
-     * @param NotificationService        $notificationService Admin notifications.
-     * @param LoggerInterface            $logger            Logger.
+     * @param ContainerInterface        $container           DI container.
+     * @param IAppConfig                $appConfig           App config.
+     * @param ChannelProviderRepository $providerRepo        Provider read-side.
+     * @param WhatsAppProviderClient    $providerClient      Vendor transport.
+     * @param ConsentService            $consentService      Opt-out gate.
+     * @param BudgetService             $budgetService       Budget gate.
+     * @param NotificationService       $notificationService Admin notifications.
+     * @param LoggerInterface           $logger              Logger.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
      */
@@ -138,10 +138,10 @@ class WhatsAppAdapter
      * 5. Budget gate per provider attempt; on transient failure try
      *    the next priority. Persist + recordSend on success.
      *
-     * @param array<string, mixed> $contact     Contact row.
-     * @param string               $body        Free-form body (ignored when templateId set).
-     * @param string|null          $templateId  Template UUID/slug or null for free-form.
-     * @param array<int, string>   $parameters  Positional template parameters.
+     * @param array<string, mixed> $contact    Contact row.
+     * @param string               $body       Free-form body (ignored when templateId set).
+     * @param string|null          $templateId Template UUID/slug or null for free-form.
+     * @param array<int, string>   $parameters Positional template parameters.
      *
      * @return array{
      *     status: string,
@@ -250,11 +250,23 @@ class WhatsAppAdapter
                     'WhatsAppAdapter.send: permanent provider failure',
                     ['providerId' => $providerId, 'message' => $e->getMessage()]
                 );
+                if ($templateName !== '') {
+                    $failureBody = sprintf('[template:%s]', $templateName);
+                } else {
+                    $failureBody = $body;
+                }
+
+                if ($template !== null) {
+                    $failureTemplateId = $this->extractId(payload: $template);
+                } else {
+                    $failureTemplateId = '';
+                }
+
                 return $this->persistFailureAndAlert(
                     contactId: $contactId,
                     providerId: $providerId,
-                    body: ($templateName !== '' ? sprintf('[template:%s]', $templateName) : $body),
-                    templateId: ($template !== null ? $this->extractId(payload: $template) : ''),
+                    body: $failureBody,
+                    templateId: $failureTemplateId,
                     error: $e->getMessage(),
                 );
             } catch (Throwable $e) {
@@ -263,14 +275,26 @@ class WhatsAppAdapter
                     ['providerId' => $providerId, 'message' => $e->getMessage()]
                 );
                 continue;
+            }//end try
+
+            if ($templateName !== '') {
+                $outboundBody = sprintf('[template:%s]', $templateName);
+            } else {
+                $outboundBody = $body;
+            }
+
+            if ($template !== null) {
+                $outboundTemplateId = $this->extractId(payload: $template);
+            } else {
+                $outboundTemplateId = '';
             }
 
             $persisted = $this->persistOutbound(
                 contactId: $contactId,
                 providerId: $providerId,
-                body: ($templateName !== '' ? sprintf('[template:%s]', $templateName) : $body),
+                body: $outboundBody,
                 externalMessageId: $result['externalMessageId'],
-                templateId: ($template !== null ? $this->extractId(payload: $template) : ''),
+                templateId: $outboundTemplateId,
                 templateParameters: $parameters,
             );
 
@@ -285,11 +309,23 @@ class WhatsAppAdapter
             ];
         }//end foreach
 
+        if ($templateName !== '') {
+            $exhaustedBody = sprintf('[template:%s]', $templateName);
+        } else {
+            $exhaustedBody = $body;
+        }
+
+        if ($template !== null) {
+            $exhaustedTemplateId = $this->extractId(payload: $template);
+        } else {
+            $exhaustedTemplateId = '';
+        }
+
         return $this->persistFailureAndAlert(
             contactId: $contactId,
             providerId: '',
-            body: ($templateName !== '' ? sprintf('[template:%s]', $templateName) : $body),
-            templateId: ($template !== null ? $this->extractId(payload: $template) : ''),
+            body: $exhaustedBody,
+            templateId: $exhaustedTemplateId,
             error: 'all WhatsApp providers returned transient errors',
         );
     }//end send()
@@ -350,7 +386,7 @@ class WhatsAppAdapter
             channel: 'whatsapp',
         );
 
-        $now             = $this->nowIso();
+        $now = $this->nowIso();
         $windowExpiresAt = gmdate('Y-m-d\TH:i:s\Z', (time() + self::SESSION_WINDOW_SECONDS));
 
         $persisted = $this->persistMessage(
@@ -384,21 +420,21 @@ class WhatsAppAdapter
             // a session. We use the open session created by this very
             // inbound message.
             $this->sendOptOutAcknowledgement(contactId: $contactId, providerRow: $row);
-        } elseif ($this->consentService->isOptInKeyword(body: $body) === true) {
+        } else if ($this->consentService->isOptInKeyword(body: $body) === true) {
             $this->consentService->recordOptIn(
                 contactId: $contactId,
                 channel: 'whatsapp',
                 source: 'chat-reply',
                 evidence: sprintf('Inbound WhatsApp body "%s" matched opt-in keyword', $body),
             );
-        }
+        }//end if
 
         return [
             'status'             => 'received',
             'messageId'          => $this->extractId(payload: $persisted ?? []),
-            'conversationId'    => $conversationId,
+            'conversationId'     => $conversationId,
             'placeholderCreated' => $placeholder,
-            'optOutRecorded'    => $optOutRecorded,
+            'optOutRecorded'     => $optOutRecorded,
         ];
     }//end handleInboundWebhook()
 
@@ -468,7 +504,11 @@ class WhatsAppAdapter
         $latestTs = 0;
         foreach ($rows as $raw) {
             $arr = $this->toArray(value: $raw);
-            $ts  = strtotime((string) ($arr['sentAt'] ?? '')) ?: 0;
+            $ts  = strtotime((string) ($arr['sentAt'] ?? ''));
+            if ($ts === false) {
+                $ts = 0;
+            }
+
             if ($ts > $latestTs) {
                 $latestTs = $ts;
             }
@@ -511,6 +551,7 @@ class WhatsAppAdapter
                 $pinned[] = $row;
                 continue;
             }
+
             $rest[] = $row;
         }
 
@@ -667,7 +708,7 @@ class WhatsAppAdapter
                 'WhatsAppAdapter.sendOptOutAcknowledgement: best-effort failed',
                 ['contactId' => $contactId, 'exception' => $e->getMessage()]
             );
-        }
+        }//end try
     }//end sendOptOutAcknowledgement()
 
     /**
@@ -685,7 +726,7 @@ class WhatsAppAdapter
             return ['from' => '', 'body' => '', 'raw' => []];
         }
 
-        // Meta envelope: entry[0].changes[0].value.messages[0]
+        // Meta envelope: entry[0].changes[0].value.messages[0].
         $entry   = ($decoded['entry'][0] ?? []);
         $change  = ($entry['changes'][0] ?? []);
         $value   = ($change['value'] ?? []);
@@ -746,7 +787,7 @@ class WhatsAppAdapter
             $saved = $objectService->saveObject(
                 object: [
                     'phoneNumber' => $phone,
-                    'displayName' => 'Unknown (' . $phone . ')',
+                    'displayName' => 'Unknown ('.$phone.')',
                     'source'      => 'whatsapp-inbound',
                     'placeholder' => true,
                 ],
@@ -863,7 +904,7 @@ class WhatsAppAdapter
             return;
         }
 
-        $payload                    = $this->toArray(value: $existing);
+        $payload = $this->toArray(value: $existing);
         $payload['lastInboundAt']   = $this->nowIso();
         $payload['windowExpiresAt'] = $windowExpiresAt;
 
@@ -1003,7 +1044,11 @@ class WhatsAppAdapter
     private function getTenantId(): string
     {
         $tenantId = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
-        return ($tenantId !== '') ? $tenantId : 'default';
+        if ($tenantId !== '') {
+            return $tenantId;
+        }
+
+        return 'default';
     }//end getTenantId()
 
     /**
@@ -1017,7 +1062,11 @@ class WhatsAppAdapter
     private function resolveSchemaSlug(string $key, string $default): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-        return ($slug !== '') ? $slug : $default;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return $default;
     }//end resolveSchemaSlug()
 
     /**
@@ -1028,7 +1077,11 @@ class WhatsAppAdapter
     private function getRegisterSlug(): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        return ($slug !== '') ? $slug : self::DEFAULT_REGISTER_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
     /**

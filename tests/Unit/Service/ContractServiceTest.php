@@ -140,6 +140,57 @@ class ContractServiceTest extends TestCase
     }//end testUnknownStatusRejected()
 
     /**
+     * Legal graph edges declared in the schema are accepted (draft->active,
+     * active->draft, expiring->active), preserving prior reachability.
+     *
+     * @return void
+     */
+    public function testLegalGraphEdgesAccepted(): void
+    {
+        $this->service->assertTransitionAllowed(['status' => 'draft'], 'active');
+        $this->service->assertTransitionAllowed(['status' => 'active'], 'draft');
+        $this->service->assertTransitionAllowed(['status' => 'expiring'], 'active');
+        $this->addToAssertionCount(3);
+    }//end testLegalGraphEdgesAccepted()
+
+    /**
+     * The contract schema's `x-openregister-lifecycle` is the source of truth:
+     * the derived graph rejects an edge that the schema does not declare from a
+     * given source. (draft -> draft is a no-op and skipped; we assert a real
+     * illegal edge cannot be reached.) Because the graph mirrors prior
+     * reachability, every previously-legal edge stays legal and no new edge opens.
+     *
+     * @return void
+     */
+    public function testSchemaGraphIsSourceOfTruthForTerminal(): void
+    {
+        // `renewed` is declared terminal in the schema; deriving the terminal set
+        // from the schema must still reject any transition out of it.
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('terminal state "renewed"');
+        $this->service->assertTransitionAllowed(['status' => 'renewed'], 'active');
+    }//end testSchemaGraphIsSourceOfTruthForTerminal()
+
+    /**
+     * When the schema declaration is unreadable, terminal immutability still
+     * holds via the mirrored fallback constant (never regresses).
+     *
+     * @return void
+     */
+    public function testTerminalImmutabilityFallsBackWhenSchemaUnreadable(): void
+    {
+        $service = new ContractService(
+            $this->createMock(IAppConfig::class),
+            $this->createMock(ContainerInterface::class),
+            $this->createMock(LoggerInterface::class),
+            new \OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph(settingsDir: '/nonexistent/Settings'),
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $service->assertTransitionAllowed(['status' => 'churned'], 'active');
+    }//end testTerminalImmutabilityFallsBackWhenSchemaUnreadable()
+
+    /**
      * Contract numbers are unique and increment within the year.
      *
      * @return void

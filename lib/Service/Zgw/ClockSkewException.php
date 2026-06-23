@@ -48,9 +48,8 @@ class ClockSkewException extends ZgwException
     public function __construct(
         string $message,
         public readonly int $observedTime,
-        public readonly int $serverTime = 0,
+        public readonly int $serverTime=0,
     ) {
-        parent::__construct($message);
+        parent::__construct(message: $message);
     }//end __construct()
-
 }//end class

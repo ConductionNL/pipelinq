@@ -42,6 +42,7 @@ use Psr\Log\LoggerInterface;
  */
 class CallVoipAdapter implements CtiAdapterInterface
 {
+
     /**
      * Sliding-window timestamps of recent originateCall invocations (microsecond precision).
      *
@@ -76,6 +77,8 @@ class CallVoipAdapter implements CtiAdapterInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return string The platform identifier.
      */
     public function getPlatform(): string
     {
@@ -90,6 +93,10 @@ class CallVoipAdapter implements CtiAdapterInterface
      *     "from": "+31612345678", "to": "+31303033000",
      *     "timestamp": "2026-05-22T09:16:45Z", "duration": 327,
      *     "recording": { "url": "...", "expiresAt": "..." } }
+     *
+     * @param array $payload The inbound webhook payload.
+     *
+     * @return CtiWebhookResult The parsed webhook result.
      */
     public function handleInboundWebhook(array $payload): CtiWebhookResult
     {
@@ -108,26 +115,82 @@ class CallVoipAdapter implements CtiAdapterInterface
         $recordingUrl       = ($recording['url'] ?? null);
         $recordingExpiresAt = ($recording['expiresAt'] ?? null);
 
+        $fromNumber = null;
+        if (isset($payload['from']) === true) {
+            $fromNumber = (string) $payload['from'];
+        }
+
+        $toNumber = null;
+        if (isset($payload['to']) === true) {
+            $toNumber = (string) $payload['to'];
+        }
+
+        $extension = null;
+        if (isset($payload['extension']) === true) {
+            $extension = (string) $payload['extension'];
+        }
+
+        $userId = null;
+        if (isset($payload['userId']) === true) {
+            $userId = (string) $payload['userId'];
+        }
+
+        $durationSeconds = null;
+        if (isset($payload['duration']) === true) {
+            $durationSeconds = (int) $payload['duration'];
+        }
+
+        $recordingUrlString = null;
+        if ($recordingUrl !== null) {
+            $recordingUrlString = (string) $recordingUrl;
+        }
+
+        $recordingExpiresAtString = null;
+        if ($recordingExpiresAt !== null) {
+            $recordingExpiresAtString = (string) $recordingExpiresAt;
+        }
+
+        $presenceState = null;
+        if (isset($payload['presence']) === true) {
+            $presenceState = (string) $payload['presence'];
+        }
+
+        $queueName = null;
+        if (isset($payload['queue']) === true) {
+            $queueName = (string) $payload['queue'];
+        }
+
+        $agentSkill = null;
+        if (isset($payload['skill']) === true) {
+            $agentSkill = (string) $payload['skill'];
+        }
+
         return new CtiWebhookResult(
             eventType: $eventType,
             externalCallId: $callId,
             direction: $direction,
-            fromNumber: isset($payload['from']) === true ? (string) $payload['from'] : null,
-            toNumber: isset($payload['to']) === true ? (string) $payload['to'] : null,
-            extension: isset($payload['extension']) === true ? (string) $payload['extension'] : null,
-            userId: isset($payload['userId']) === true ? (string) $payload['userId'] : null,
-            durationSeconds: isset($payload['duration']) === true ? (int) $payload['duration'] : null,
-            recordingUrl: $recordingUrl !== null ? (string) $recordingUrl : null,
-            recordingExpiresAt: $recordingExpiresAt !== null ? (string) $recordingExpiresAt : null,
-            presenceState: isset($payload['presence']) === true ? (string) $payload['presence'] : null,
-            queueName: isset($payload['queue']) === true ? (string) $payload['queue'] : null,
-            agentSkill: isset($payload['skill']) === true ? (string) $payload['skill'] : null,
+            fromNumber: $fromNumber,
+            toNumber: $toNumber,
+            extension: $extension,
+            userId: $userId,
+            durationSeconds: $durationSeconds,
+            recordingUrl: $recordingUrlString,
+            recordingExpiresAt: $recordingExpiresAtString,
+            presenceState: $presenceState,
+            queueName: $queueName,
+            agentSkill: $agentSkill,
             raw: $payload,
         );
     }//end handleInboundWebhook()
 
     /**
      * {@inheritDoc}
+     *
+     * @param string $extension    The originating extension.
+     * @param string $targetNumber The number to dial.
+     * @param string $callerId     The caller ID to present.
+     *
+     * @return CtiCallResult The result of the originate request.
      */
     public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult
     {
@@ -160,9 +223,9 @@ class CallVoipAdapter implements CtiAdapterInterface
                     ],
                     'body'    => json_encode(
                         [
-                            'extension'    => $extension,
-                            'target'       => $targetNumber,
-                            'callerId'     => $callerId,
+                            'extension' => $extension,
+                            'target'    => $targetNumber,
+                            'callerId'  => $callerId,
                         ]
                     ),
                     'timeout' => 10,
@@ -171,11 +234,19 @@ class CallVoipAdapter implements CtiAdapterInterface
 
             $bodyContents = (string) $response->getBody();
             $body         = json_decode($bodyContents, true);
-            $callId       = is_array($body) === true ? ($body['callId'] ?? null) : null;
+            $callId       = null;
+            if (is_array($body) === true) {
+                $callId = ($body['callId'] ?? null);
+            }
+
+            $externalCallId = null;
+            if ($callId !== null) {
+                $externalCallId = (string) $callId;
+            }
 
             return new CtiCallResult(
                 success: true,
-                externalCallId: $callId !== null ? (string) $callId : null,
+                externalCallId: $externalCallId,
                 platform: $this->getPlatform(),
             );
         } catch (\Throwable $e) {
@@ -196,6 +267,11 @@ class CallVoipAdapter implements CtiAdapterInterface
      *
      * CallVoip pushes presence via webhook (event: "presence"), so there is no
      * client-side subscribe to do. Implementation is intentionally a no-op.
+     *
+     * @param string $userId    The user to subscribe.
+     * @param string $extension The extension to subscribe.
+     *
+     * @return void
      */
     public function subscribeToPresence(string $userId, string $extension): void
     {
@@ -206,6 +282,11 @@ class CallVoipAdapter implements CtiAdapterInterface
      * {@inheritDoc}
      *
      * Validates HMAC-SHA256(raw body, webhook_secret) using a constant-time compare.
+     *
+     * @param string $payload   The raw webhook body.
+     * @param string $signature The signature to verify.
+     *
+     * @return bool True when the signature is valid.
      */
     public function verifyWebhookSignature(string $payload, string $signature): bool
     {

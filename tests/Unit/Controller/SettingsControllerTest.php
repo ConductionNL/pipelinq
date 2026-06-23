@@ -20,8 +20,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\SettingsController;
-use OCA\Pipelinq\Service\ApiAuthService;
-use OCA\Pipelinq\Service\ObjectenAccessService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\JSONResponse;
@@ -55,20 +53,6 @@ class SettingsControllerTest extends TestCase
     private SettingsService $settingsService;
 
     /**
-     * Mock API auth service.
-     *
-     * @var ApiAuthService
-     */
-    private ApiAuthService $apiAuthService;
-
-    /**
-     * Mock objecten access service.
-     *
-     * @var ObjectenAccessService
-     */
-    private ObjectenAccessService $objectenAccessService;
-
-    /**
      * Set up the test.
      *
      * @return void
@@ -79,11 +63,9 @@ class SettingsControllerTest extends TestCase
         $container    = $this->createMock(originalClassName: ContainerInterface::class);
         $appManager   = $this->createMock(originalClassName: IAppManager::class);
         $groupManager = $this->createMock(originalClassName: IGroupManager::class);
-        $this->settingsService       = $this->createMock(originalClassName: SettingsService::class);
-        $this->apiAuthService        = $this->createMock(originalClassName: ApiAuthService::class);
-        $this->objectenAccessService = $this->createMock(originalClassName: ObjectenAccessService::class);
-        $userSession = $this->createMock(originalClassName: IUserSession::class);
-        $l10n        = $this->createMock(originalClassName: IL10N::class);
+        $this->settingsService = $this->createMock(originalClassName: SettingsService::class);
+        $userSession           = $this->createMock(originalClassName: IUserSession::class);
+        $l10n = $this->createMock(originalClassName: IL10N::class);
 
         $appManager->method('getInstalledApps')->willReturn(['openregister']);
         $groupManager->method('isAdmin')->willReturn(true);
@@ -100,8 +82,6 @@ class SettingsControllerTest extends TestCase
             appManager: $appManager,
             groupManager: $groupManager,
             settingsService: $this->settingsService,
-            apiAuthService: $this->apiAuthService,
-            objectenAccessService: $this->objectenAccessService,
             userSession: $userSession,
             l10n: $l10n,
             logger: $logger,
@@ -116,10 +96,6 @@ class SettingsControllerTest extends TestCase
     public function testIndexReturnsSettings(): void
     {
         $this->settingsService->method('getSettings')->willReturn(['register' => '1']);
-        $this->objectenAccessService->method('getAccessMap')->willReturn([]);
-        $this->apiAuthService->method('listTokens')->willReturn([]);
-        $this->apiAuthService->method('getOAuthConfig')->willReturn([]);
-        $this->apiAuthService->method('getMcpConfig')->willReturn([]);
 
         $response = $this->controller->index();
 
@@ -150,49 +126,21 @@ class SettingsControllerTest extends TestCase
     }//end testGetUserSettingsReturnsSettings()
 
     /**
-     * Test listTokens returns token list.
+     * Test that the settings read payload no longer carries the removed
+     * REST API token / OAuth admin maps (remove-dead-rest-api-auth).
      *
      * @return void
      *
-     * @spec openspec/changes/admin-settings/tasks.md#task-3.2
+     * @spec openspec/changes/remove-dead-rest-api-auth/tasks.md#task-4.2
      */
-    public function testListTokensReturnsTokenList(): void
-    {
-        $this->apiAuthService->method('listTokens')->willReturn(
-                [
-                    ['id' => 'uuid1', 'label' => 'Test', 'created' => '2026-01-01', 'lastUsed' => null],
-                ]
-                );
-
-        $response = $this->controller->listTokens();
-
-        $this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
-        $data = $response->getData();
-        $this->assertTrue(condition: $data['success']);
-        $this->assertCount(expectedCount: 1, haystack: $data['tokens']);
-    }//end testListTokensReturnsTokenList()
-
-    /**
-     * Test that index returns admin-only data for admin users.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/admin-settings/tasks.md#task-3.5
-     */
-    public function testIndexIncludesAdminDataForAdmins(): void
+    public function testIndexExcludesRemovedTokenAndOauthMaps(): void
     {
         $this->settingsService->method('getSettings')->willReturn(['register' => '1']);
-        $this->objectenAccessService->method('getAccessMap')->willReturn(['lead' => ['sales']]);
-        $this->apiAuthService->method('listTokens')->willReturn([]);
-        $this->apiAuthService->method('getOAuthConfig')->willReturn(['oauth_client_id' => '']);
-        $this->apiAuthService->method('getMcpConfig')->willReturn(['mcp_endpoint' => '']);
 
         $response = $this->controller->index();
 
         $data = $response->getData();
-        $this->assertArrayHasKey(key: 'objectenAccess', array: $data);
-        $this->assertArrayHasKey(key: 'apiTokens', array: $data);
-        $this->assertArrayHasKey(key: 'oauthConfig', array: $data);
-        $this->assertArrayHasKey(key: 'mcpConfig', array: $data);
-    }//end testIndexIncludesAdminDataForAdmins()
+        $this->assertArrayNotHasKey(key: 'apiTokens', array: $data);
+        $this->assertArrayNotHasKey(key: 'oauthConfig', array: $data);
+    }//end testIndexExcludesRemovedTokenAndOauthMaps()
 }//end class

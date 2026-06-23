@@ -76,7 +76,11 @@ active ──(window opens)──► expiring ──(lead won)──► renewed 
   `RecurringRevenueService` (MRR/ARR/churn aggregation), `RenewalWindowJob`
   (nightly `TimedJob`), `ContractController` (create + guarded transition +
   metrics; per-object IDOR authorization; ADR-022 — no CRUD pass-throughs).
-- Frontend: declarative `contract` index/detail pages + nav (manifest fragment),
-  `MrrKpiWidget` + `RenewalsDueWidget` dashboard widgets, shared
-  `recurringRevenue.js` normalization helper.
+- Frontend: declarative `contract` index/detail pages + nav (manifest fragment).
+  The dashboard recurring-revenue tile is a declarative `type: "stat"` widget that
+  reads the recurring **run-rate** (`SUM(maandWaarde)` over shillinq's
+  `SalesOrderLine` where `nature == "RECURRING"`) directly from OpenRegister — see
+  [recurring-revenue.md](../recurring-revenue.md). The former bespoke
+  `MrrKpiWidget` / `RenewalsDueWidget` widgets and the `recurringRevenue.js`
+  normalization helper were retired in favour of this cross-app aggregation.
 - Spec: `openspec/specs/contract-renewal-tracking/spec.md`.

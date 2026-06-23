@@ -23,7 +23,6 @@ The KCC werkplek is a composite view that orchestrates data from multiple source
 - **BRP/KVK enrichment**: Retrieved via OpenConnector sources for person/business lookup
 - **Kennisartikel**: OpenRegister object in the `pipelinq` register using the `kennisartikel` schema (see kennisbank spec)
 - **Taak/Terugbelverzoek**: OpenRegister object for backoffice routing and callback requests
-
 ## Requirements
 
 ---
@@ -119,31 +118,35 @@ The system MUST display all open zaken (cases) for the identified citizen/busine
 
 ### Requirement: Contact Moment Registration
 
-The system MUST allow agents to register a contactmoment during or immediately after a citizen interaction, capturing channel, subject, and outcome.
+The active-interaction registration MUST be a single library `interaction-form` widget that
+persists a contactmoment to OpenRegister and drives the rest of the page. Its client picker
+MUST allow creating a client inline from the typed search term (no dead "no results" path).
+Selecting or creating a client MUST write the client into the page workspace context, and
+typing the summary MUST stream the summary text into the page workspace context, so sibling
+widgets react.
 
 **Feature tier**: MVP
 
-#### Scenario: Register a phone contact
+#### Scenario: Register a contactmoment from the interaction widget
 
-- GIVEN an agent has identified citizen "Jan de Vries" during a phone call
-- WHEN the agent fills in the contactmoment form with kanaal "telefoon", onderwerp "Vraag over vergunning", and toelichting "Burger belt over status bouwvergunning Keizersgracht 100"
-- THEN the system MUST create an OpenRegister contactmoment object linked to the client
-- AND the contactmoment MUST record the agent identity, timestamp, channel, and duration
-- AND the contactmoment MUST appear in the client's interaction history
+- GIVEN an agent has a channel, a client, and a subject filled in the interaction widget
+- WHEN the agent clicks Register
+- THEN the system MUST persist a contactmoment to OpenRegister with the channel, client, subject, summary, and outcome
+- AND MUST clear the per-interaction fields (subject/summary/outcome) while keeping the client for follow-ups
 
-#### Scenario: Link contact to existing case
+#### Scenario: Create a client inline from the search term
 
-- GIVEN an agent is registering a contactmoment for citizen "Jan de Vries" who has open zaak "Bouwvergunning #2024-001"
-- WHEN the agent selects the zaak in the "Koppel aan zaak" field
-- THEN the contactmoment MUST store a reference to the zaak UUID
-- AND the contactmoment MUST appear in both the client history and the zaak history
+- GIVEN an agent types a client name in the interaction widget's client picker that matches no existing client
+- WHEN the agent picks the "Create '<name>'" option
+- THEN the system MUST create a new client object with that name and select it
+- AND MUST write the new client id into the page workspace context (`selectedClient`)
 
-#### Scenario: Register contact without identification
+#### Scenario: Selecting a client reveals their overview
 
-- GIVEN a caller who refuses to identify themselves
-- WHEN the agent registers the contactmoment with kanaal "telefoon" and onderwerp "Anonieme melding overlast"
-- THEN the system MUST allow creating a contactmoment without a linked client
-- AND the contactmoment MUST still record agent, timestamp, channel, and content
+- GIVEN an agent selects (or creates) a client in the interaction widget
+- WHEN the workspace context's `selectedClient` is set
+- THEN the client-overview widgets (that client's requests and recent contact moments) MUST load and display that client's records
+- AND before any client is selected, those widgets MUST show a prompt instead of fetching the whole register
 
 ---
 
@@ -225,31 +228,36 @@ The system MUST provide quick-action buttons for common KCC operations to minimi
 
 ### Requirement: Workspace Layout and Navigation
 
-The KCC werkplek MUST present a structured multi-panel layout that allows agents to identify a client, view context, and register a contact simultaneously without leaving the workspace.
+The KCC werkplek MUST be rendered as a single declarative `type: "dashboard"` page on the
+standard library page chrome (one page header, one `actionsComponent` action bar, one scroll
+region), composed of library widgets on the dashboard grid — NOT a bespoke multi-panel page
+with independently-scrolling columns. Work is split into separate **Requests** and **Tasks**
+widgets; a **queue filter** widget narrows both; an **active-interaction** form, a
+**knowledge-base** search, and **client-overview** lists complete the grid. The page MUST
+scroll as one region with no cut-off action buttons.
 
 **Feature tier**: MVP
 
-#### Scenario: Three-panel workspace layout
+#### Scenario: Declarative dashboard with separate work widgets
 
-- GIVEN an agent opens the KCC werkplek and begins a new contact
-- WHEN the workspace is fully loaded
-- THEN the system MUST display three panels: an identification/search panel (left), a client context panel with klantbeeld-360 (center), and an active contact registration panel (right)
-- AND each panel MUST be independently scrollable so the agent can browse case history while completing the contact form
-- AND the layout MUST be responsive, collapsing to a tabbed view on screens narrower than 1280px
+- GIVEN an agent opens the KCC werkplek
+- WHEN the page loads
+- THEN the system MUST render a `type: "dashboard"` page with a standard page header and an action bar (`actionsComponent`)
+- AND Requests and Tasks MUST be two distinct `object-list` widgets (not a single fused inbox)
+- AND the page MUST be a single scroll region with no action buttons clipped off-screen
 
-#### Scenario: Panel resizing for focus
+#### Scenario: Queue filter narrows the work lists
 
-- GIVEN an agent is reviewing a lengthy case history in the center panel
-- WHEN the agent drags the panel divider to expand the center panel
-- THEN the system MUST resize panels proportionally while maintaining a minimum width of 300px per panel
-- AND panel size preferences MUST persist across sessions via Nextcloud user preferences
+- GIVEN the werkplek is loaded and the queue filter widget lists the agent's queues with open-request counts
+- WHEN the agent clicks a queue
+- THEN the Requests and Tasks widgets MUST re-query filtered to that queue (via the `@workspace.selectedQueue` page context written by the filter)
+- AND clicking "All queues" MUST clear the filter so both lists show all of the agent's work
 
-#### Scenario: Keyboard navigation between panels
+#### Scenario: Standard chrome carries the availability toggle
 
-- GIVEN an agent is working in the identification panel
-- WHEN the agent presses Tab or a configurable keyboard shortcut (e.g., Ctrl+1/2/3)
-- THEN focus MUST move to the corresponding panel
-- AND all interactive elements within each panel MUST be reachable via keyboard (WCAG AA)
+- GIVEN the werkplek is loaded
+- WHEN the agent looks at the page header
+- THEN the agent-availability toggle MUST be present in the header action bar (the page's `actionsComponent`), hydrated from `GET /api/kcc-werkplek/state`
 
 ---
 
@@ -418,35 +426,35 @@ The system MUST allow agents to switch or escalate a contact from one channel to
 
 ### Requirement: Knowledge Base Integration in Workspace
 
-The system MUST integrate the kennisbank (see kennisbank spec) directly into the KCC werkplek so agents can search for answers without leaving the workspace.
+The knowledge base MUST be a library `kb-search` widget bound to the active interaction
+summary: as the agent types the summary, the widget MUST search the knowledge endpoint
+(the OpenRegister xWiki integration leaf) on the live summary text. Manual typing in the
+widget's own search box MUST override the bound summary. The widget MUST degrade gracefully —
+an empty result or an unavailable/erroring backend MUST render an empty/unavailable state, never
+a page error.
 
-**Feature tier**: V1
-**Cross-reference**: `kennisbank/spec.md`
+**Feature tier**: MVP
 
-#### Scenario: Context-aware knowledge base search
+#### Scenario: Summary drives the knowledge search
 
-- GIVEN an agent is handling a contact about "paspoort verlengen" and has filled in onderwerp "Paspoort"
-- WHEN the agent clicks the kennisbank icon or presses a keyboard shortcut (e.g., Ctrl+K)
-- THEN a knowledge base search panel MUST open within the werkplek (overlay or side panel)
-- AND the search field MUST be pre-populated with the current onderwerp text
-- AND results MUST be ranked by relevance, showing article title, excerpt, and last-updated date
+- GIVEN the agent is typing a summary in the interaction widget
+- WHEN the summary text reaches the minimum length
+- THEN the knowledge base widget MUST query the configured endpoint with the summary text (debounced)
+- AND MUST render the returned articles as a clickable list
 
-#### Scenario: Insert FAQ answer into contact notes
+#### Scenario: Knowledge base degrades gracefully
 
-- GIVEN the agent has found knowledge article "Paspoort aanvragen - procedure en kosten"
-- WHEN the agent clicks "Gebruik antwoord" on the article
-- THEN the system MUST insert the article's summary text into the contactmoment toelichting field
-- AND the system MUST add a reference to the article on the contactmoment (for tracking which articles are used most)
-- AND the agent MUST be able to edit the inserted text before completing the contact
+- GIVEN the knowledge endpoint returns nothing, a 503, or a network error
+- WHEN the widget runs a search
+- THEN the widget MUST render an empty-or-unavailable state
+- AND MUST NOT raise a console error or break the page
 
-#### Scenario: No relevant article found
+#### Scenario: Manual search overrides the bound summary
 
-- GIVEN an agent searches the kennisbank for "vluchtelingenopvang procedure" and no matching articles exist
-- WHEN zero results are returned
-- THEN the system MUST display "Geen artikelen gevonden" with a "Suggestie indienen" button
-- AND clicking "Suggestie indienen" MUST create a kennisbank suggestion tagged with the search query and linked contactmoment
-
----
+- GIVEN a summary-driven suggestion is showing
+- WHEN the agent types their own query in the knowledge widget's search box
+- THEN the widget MUST search the typed query instead of the summary
+- AND clearing the box MUST hand control back to the bound summary
 
 ### Requirement: Escalation to Backoffice with SLA Tracking
 

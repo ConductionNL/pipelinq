@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-52
+ * @spec openspec/specs/klachtenregistratie/spec.md#Backend-SLA-Deadline-Service
  */
 
 declare(strict_types=1);
@@ -72,7 +72,7 @@ class ComplaintSlaService
      * @param string $category The complaint category.
      *
      * @return int The SLA hours, or 0 if not configured.
-     * @spec   openspec/changes/reverse-2026-05-26-be-complaint-sla/tasks.md#task-2
+     * @spec   openspec/specs/klachtenregistratie/spec.md#Backend-SLA-Deadline-Service
      */
     public function getSlaHoursForCategory(string $category): int
     {
@@ -107,7 +107,7 @@ class ComplaintSlaService
      * @param DateTimeInterface|null $from     The starting point (defaults to now).
      *
      * @return DateTimeImmutable|null The deadline, or null if no SLA configured.
-     * @spec   openspec/changes/reverse-2026-05-26-be-complaint-sla/tasks.md#task-1
+     * @spec   openspec/specs/klachtenregistratie/spec.md#Backend-SLA-Deadline-Service
      */
     public function calculateDeadline(
         string $category,
@@ -142,7 +142,7 @@ class ComplaintSlaService
      * @param DateTimeInterface|null $now       The reference time (defaults to now).
      *
      * @return bool True when the complaint is overdue.
-     * @spec   openspec/changes/reverse-2026-05-26-be-complaint-sla/tasks.md#task-3
+     * @spec   openspec/specs/klachtenregistratie/spec.md#Backend-SLA-Deadline-Service
      */
     public function isOverdue(array $complaint, ?DateTimeInterface $now=null): bool
     {
@@ -175,7 +175,7 @@ class ComplaintSlaService
      * @param string $status The complaint status value.
      *
      * @return bool True when the status is open.
-     * @spec   openspec/changes/reverse-2026-05-26-be-complaint-sla/tasks.md#task-3
+     * @spec   openspec/specs/klachtenregistratie/spec.md#Backend-SLA-Deadline-Service
      */
     public function isOpenStatus(string $status): bool
     {

@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IGroupManager;
 use OCP\IUserSession;
 use DateTime;
@@ -47,7 +48,16 @@ class CallbackService
     public const ATTEMPT_THRESHOLD = 3;
 
     /**
-     * Allowed status transitions.
+     * Schema slug whose `x-openregister-lifecycle` declares the Task status graph.
+     *
+     * @var string
+     */
+    private const TASK_SCHEMA_SLUG = 'task';
+
+    /**
+     * Fallback status-transition graph used only when the schema declaration is
+     * unreadable. The canonical source of truth is the Task schema's
+     * `x-openregister-lifecycle` annotation (ADR-031); this constant must mirror it.
      *
      * Keys are current statuses, values are arrays of allowed target statuses.
      *
@@ -75,16 +85,38 @@ class CallbackService
     /**
      * Constructor.
      *
-     * @param IGroupManager   $groupManager The group manager.
-     * @param IUserSession    $userSession  The user session.
-     * @param LoggerInterface $logger       The logger.
+     * @param IGroupManager        $groupManager   The group manager.
+     * @param IUserSession         $userSession    The user session.
+     * @param LoggerInterface      $logger         The logger.
+     * @param SchemaLifecycleGraph $lifecycleGraph Reads the Task status graph from its schema.
      */
     public function __construct(
         private IGroupManager $groupManager,
         private IUserSession $userSession,
         private LoggerInterface $logger,
+        private SchemaLifecycleGraph $lifecycleGraph=new SchemaLifecycleGraph(),
     ) {
     }//end __construct()
+
+    /**
+     * Resolve the Task status-transition graph from the schema declaration.
+     *
+     * The graph lives in the Task schema's `x-openregister-lifecycle` annotation
+     * (ADR-031), which OpenRegister's LifecycleValidationListener also enforces on
+     * save. Falls back to {@see ALLOWED_TRANSITIONS} only when the declaration is
+     * unreadable, so a broken register file never regresses behavior.
+     *
+     * @return array<string, array<int, string>> The `from => [to, ...]` map.
+     */
+    private function transitionGraph(): array
+    {
+        $graph = $this->lifecycleGraph->adjacencyFor(schemaSlug: self::TASK_SCHEMA_SLUG);
+        if ($graph === []) {
+            return self::ALLOWED_TRANSITIONS;
+        }
+
+        return $graph;
+    }//end transitionGraph()
 
     /**
      * Add a callback attempt to a task's attempts array.
@@ -206,7 +238,8 @@ class CallbackService
      */
     public function validateStatusTransition(string $currentStatus, string $targetStatus): array
     {
-        $allowed = self::ALLOWED_TRANSITIONS[$currentStatus] ?? [];
+        $graph   = $this->transitionGraph();
+        $allowed = $graph[$currentStatus] ?? [];
 
         if (in_array($targetStatus, $allowed, true) === false) {
             return [

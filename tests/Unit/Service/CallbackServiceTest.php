@@ -32,6 +32,7 @@ use Psr\Log\LoggerInterface;
  */
 class CallbackServiceTest extends TestCase
 {
+
     /**
      * The service under test.
      *
@@ -97,7 +98,7 @@ class CallbackServiceTest extends TestCase
     public function testAddAttemptAppendsEntry(): void
     {
         $taskData = ['attempts' => []];
-        $result = $this->service->addAttempt($taskData, 'niet_bereikbaar', 'Voicemail ingesproken');
+        $result   = $this->service->addAttempt($taskData, 'niet_bereikbaar', 'Voicemail ingesproken');
 
         $this->assertCount(1, $result['attempts']);
         $this->assertSame('niet_bereikbaar', $result['attempts'][0]['result']);
@@ -118,7 +119,7 @@ class CallbackServiceTest extends TestCase
                 ['timestamp' => '2024-01-01T10:00:00+00:00', 'result' => 'niet_bereikbaar', 'notes' => ''],
             ],
         ];
-        $result = $this->service->addAttempt($taskData, 'bereikt', 'Burger gesproken');
+        $result   = $this->service->addAttempt($taskData, 'bereikt', 'Burger gesproken');
 
         $this->assertCount(2, $result['attempts']);
         $this->assertSame('niet_bereikbaar', $result['attempts'][0]['result']);
@@ -133,7 +134,7 @@ class CallbackServiceTest extends TestCase
     public function testAddAttemptHandlesMissingAttemptsKey(): void
     {
         $taskData = ['subject' => 'Test'];
-        $result = $this->service->addAttempt($taskData, 'niet_bereikbaar');
+        $result   = $this->service->addAttempt($taskData, 'niet_bereikbaar');
 
         $this->assertCount(1, $result['attempts']);
     }//end testAddAttemptHandlesMissingAttemptsKey()
@@ -290,6 +291,30 @@ class CallbackServiceTest extends TestCase
         $result = $this->service->validateStatusTransition('afgerond', 'open');
         $this->assertTrue($result['valid']);
     }//end testValidateStatusTransitionReopen()
+
+    /**
+     * The allowed-transition set is sourced from the Task schema's
+     * x-openregister-lifecycle declaration (ADR-031), not a duplicate PHP map.
+     *
+     * Asserts a transition the schema does NOT declare (open -> verlopen) is
+     * rejected, and that the schema-derived graph equals the documented mirror
+     * constant — proving the declaration drives behavior.
+     *
+     * @return void
+     */
+    public function testTransitionGraphIsSourcedFromSchemaDeclaration(): void
+    {
+        // open -> verlopen is not declared anywhere; must be rejected.
+        $result = $this->service->validateStatusTransition('open', 'verlopen');
+        $this->assertFalse($result['valid']);
+        $this->assertStringContainsString('not allowed', $result['reason']);
+
+        // The schema declaration matches the documented mirror constant.
+        $graph = (new \OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph(
+            settingsDir: __DIR__.'/../../../lib/Settings'
+        ))->adjacencyFor(schemaSlug: 'task');
+        $this->assertSame(CallbackService::ALLOWED_TRANSITIONS, $graph);
+    }//end testTransitionGraphIsSourcedFromSchemaDeclaration()
 
     /**
      * Test applyClaim sets current user and updates status.

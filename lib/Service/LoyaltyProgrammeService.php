@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -38,16 +39,25 @@ use RuntimeException;
 class LoyaltyProgrammeService
 {
     /**
+     * Schema slug whose `x-openregister-lifecycle` declares the programme status graph.
+     *
+     * @var string
+     */
+    private const PROGRAMME_SCHEMA_SLUG = 'loyaltyProgramme';
+
+    /**
      * Constructor.
      *
-     * @param ContainerInterface $container The DI container.
-     * @param IAppConfig         $appConfig The app configuration.
-     * @param LoggerInterface    $logger    The logger.
+     * @param ContainerInterface   $container      The DI container.
+     * @param IAppConfig           $appConfig      The app configuration.
+     * @param LoggerInterface      $logger         The logger.
+     * @param SchemaLifecycleGraph $lifecycleGraph Reads the programme status graph from its schema.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
+        private SchemaLifecycleGraph $lifecycleGraph=new SchemaLifecycleGraph(),
     ) {
     }//end __construct()
 
@@ -102,14 +112,25 @@ class LoyaltyProgrammeService
      */
     public function activate(string $programmeId, string $activatedBy): array
     {
-        $errors = $this->validateForActivation(programmeId: $programmeId);
-        if ($errors !== []) {
-            throw new RuntimeException(implode('; ', $errors));
-        }
-
         $programme = $this->getProgramme(programmeId: $programmeId);
         if ($programme === null) {
             throw new RuntimeException('Programme not found.');
+        }
+
+        // Declarative transition guard (ADR-031): the concept -> actief edge is
+        // declared in the loyaltyProgramme schema's x-openregister-lifecycle map,
+        // which OpenRegister's LifecycleValidationListener also enforces on save.
+        // We assert it here so an out-of-state activation surfaces with a clear
+        // message before the (more expensive) business validation runs.
+        $current = (string) ($programme['status'] ?? 'concept');
+        $this->assertTransitionAllowed(from: $current, to: 'actief');
+
+        // Business activation guards stay in PHP: date-range coherence and the
+        // "at least one points rule" / "at least one redemption option" cross-object
+        // invariants cannot be expressed in the declarative lifecycle grammar.
+        $errors = $this->validateForActivation(programmeId: $programmeId);
+        if ($errors !== []) {
+            throw new RuntimeException(implode('; ', $errors));
         }
 
         $programme['status'] = 'actief';
@@ -120,6 +141,37 @@ class LoyaltyProgrammeService
 
         return $this->persist(payload: $programme, uuid: $programmeId);
     }//end activate()
+
+    /**
+     * Assert a programme status transition is permitted by the schema declaration.
+     *
+     * The allowed graph is read from the loyaltyProgramme schema's
+     * `x-openregister-lifecycle` annotation (ADR-031). Falls back to the single
+     * concept -> actief edge only when the declaration is unreadable, so a broken
+     * register file never regresses behavior.
+     *
+     * @param string $from Current status.
+     * @param string $to   Target status.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the transition is not allowed.
+     */
+    private function assertTransitionAllowed(string $from, string $to): void
+    {
+        $graph = $this->lifecycleGraph->adjacencyFor(schemaSlug: self::PROGRAMME_SCHEMA_SLUG);
+        if ($graph === []) {
+            // Fallback mirrors the schema's concept -> actief edge.
+            $graph = ['concept' => ['actief']];
+        }
+
+        $allowed = ($graph[$from] ?? []);
+        if (in_array($to, $allowed, true) === false) {
+            throw new RuntimeException(
+                sprintf("Cannot activate: transition from '%s' to '%s' is not allowed", $from, $to)
+            );
+        }
+    }//end assertTransitionAllowed()
 
     /**
      * Get a programme by UUID.
@@ -141,7 +193,11 @@ class LoyaltyProgrammeService
             return null;
         }
 
-        return $object === null ? null : $this->toArray($object);
+        if ($object === null) {
+            return null;
+        }
+
+        return $this->toArray(object: $object);
     }//end getProgramme()
 
     /**
@@ -170,7 +226,11 @@ class LoyaltyProgrammeService
             return 0;
         }
 
-        return is_array($rows) === true ? count($rows) : 0;
+        if (is_array($rows) === true) {
+            return count($rows);
+        }
+
+        return 0;
     }//end countByProgramme()
 
     /**
@@ -196,7 +256,7 @@ class LoyaltyProgrammeService
             uuid: $uuid
         );
 
-        return $this->toArray($saved);
+        return $this->toArray(object: $saved);
     }//end persist()
 
     /**

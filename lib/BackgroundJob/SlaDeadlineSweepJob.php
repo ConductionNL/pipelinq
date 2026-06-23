@@ -19,6 +19,7 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008
+ * @spec openspec/specs/klachtenregistratie/spec.md#Background-Job-for-SLA-Monitoring
  */
 
 declare(strict_types=1);
@@ -29,6 +30,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\ComplaintSlaService;
 use OCA\Pipelinq\Service\SlaEngineService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -59,15 +61,17 @@ class SlaDeadlineSweepJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory       $time      Time factory.
-     * @param SlaEngineService   $engine    SLA engine.
-     * @param ContainerInterface $container DI container (OR ObjectService).
-     * @param IAppConfig         $appConfig App config.
-     * @param LoggerInterface    $logger    PSR logger.
+     * @param ITimeFactory        $time         Time factory.
+     * @param SlaEngineService    $engine       SLA engine.
+     * @param ComplaintSlaService $complaintSla Per-category complaint SLA service.
+     * @param ContainerInterface  $container    DI container (OR ObjectService).
+     * @param IAppConfig          $appConfig    App config.
+     * @param LoggerInterface     $logger       PSR logger.
      */
     public function __construct(
         ITimeFactory $time,
         private SlaEngineService $engine,
+        private ComplaintSlaService $complaintSla,
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
@@ -210,6 +214,9 @@ class SlaDeadlineSweepJob extends TimedJob
      * @param object                              $objectService OR ObjectService.
      *
      * @return bool True when an escalation fired (for run stats).
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008
+     * @spec openspec/specs/klachtenregistratie/spec.md#Background-Job-for-SLA-Monitoring
      */
     private function processEntity(
         $entity,
@@ -231,6 +238,16 @@ class SlaDeadlineSweepJob extends TimedJob
                 $uuid = (string) $entity->getUuid();
             } else {
                 $uuid = (string) ($data['uuid'] ?? $data['id'] ?? '');
+            }
+
+            // Per-category complaint SLA monitoring (REQ-KL-009 / REQ-KL-010):
+            // complaints carry a category-derived `slaDeadline` (set from the
+            // `complaint_sla_{category}` config), not a policy `slaStatus`
+            // envelope. Re-check those here and log a warning for any open
+            // complaint whose deadline has passed, so overdue complaints are
+            // surfaced even when no escalation policy applies to them.
+            if ($type === 'klacht') {
+                $this->checkComplaintDeadline(data: $data, uuid: $uuid, now: $now);
             }
 
             $slaStatus = $data['slaStatus'] ?? null;
@@ -297,6 +314,43 @@ class SlaDeadlineSweepJob extends TimedJob
             return false;
         }//end try
     }//end processEntity()
+
+    /**
+     * Check a single complaint's per-category SLA deadline and log a
+     * warning when it is overdue.
+     *
+     * Realises REQ-KL-010 (background monitoring of overdue complaints)
+     * on top of the per-category deadline math in
+     * {@see ComplaintSlaService::isOverdue()} (REQ-KL-009). The check is
+     * read-only: it only emits a warning so the overdue state surfaces in
+     * the logs/notifications pipeline; the deadline itself is computed at
+     * complaint-creation time from `complaint_sla_{category}`.
+     *
+     * @param array<string, mixed> $data The complaint object array.
+     * @param string               $uuid The complaint UUID.
+     * @param DateTimeInterface    $now  The reference instant.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/klachtenregistratie/spec.md#Backend-SLA-Deadline-Service
+     * @spec openspec/specs/klachtenregistratie/spec.md#Background-Job-for-SLA-Monitoring
+     */
+    private function checkComplaintDeadline(array $data, string $uuid, DateTimeInterface $now): void
+    {
+        if ($this->complaintSla->isOverdue(complaint: $data, now: $now) === false) {
+            return;
+        }
+
+        $this->logger->warning(
+            'SlaDeadlineSweepJob: complaint past its SLA deadline',
+            [
+                'uuid'        => $uuid,
+                'category'    => (string) ($data['category'] ?? ''),
+                'status'      => (string) ($data['status'] ?? ''),
+                'slaDeadline' => (string) ($data['slaDeadline'] ?? ''),
+            ]
+        );
+    }//end checkComplaintDeadline()
 
     /**
      * Build an index of policies by their identity for O(1) lookup.

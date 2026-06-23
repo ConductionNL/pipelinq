@@ -49,6 +49,18 @@ use Psr\Log\LoggerInterface;
  * not yet replicate.
  *
  * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-3.1
+ *
+ * Seam 4 (declarative-notification migration) verdict — KEEP IMPERATIVE: OpenRegister's
+ * AnnotationNotificationDispatcher cannot express this service's per-recipient
+ * actor-suppression (`if ($author === $assigneeUserId) return;`) nor the per-category user
+ * opt-out ({@see self::SUBJECT_SETTING_MAP} → notify_assignments/notify_stage_status/
+ * notify_deals). Moving the assignee/stage/status notifications to `x-openregister-notifications`
+ * would notify the actor, ignore opt-outs, and double-fire against the dormant declarative
+ * `transition` rules. The broadcast/lifecycle notifications that ARE OR-expressible already live
+ * declaratively in pipelinq_register.json — only the OR-non-expressible directed notifications
+ * stay here.
+ *
+ * @spec openspec/changes/pipelinq-notifications-to-or/tasks.md#task-3.1
  */
 class NotificationService
 {

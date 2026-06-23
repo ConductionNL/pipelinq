@@ -118,7 +118,7 @@ class TenderPostedRetryJob extends TimedJob
                     ['exception' => $e->getMessage()]
                 );
             }
-        }
+        }//end foreach
 
         if ($count > 0) {
             $this->logger->info(

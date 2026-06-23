@@ -37,15 +37,25 @@ use Psr\Log\LoggerInterface;
  */
 class FakeDataDeletionObjectService
 {
-    /** @var array<string, array<string, mixed>> */
+
+    /**
+     * @var array<string, array<string, mixed>>
+     */
     public array $bookings = [];
 
-    /** @var array<int, array{uuid: string, payload: array<string, mixed>}> */
+    /**
+     * @var array<int, array{uuid: string, payload: array<string, mixed>}>
+     */
     public array $saves = [];
 
     public string $expectedRegister = '';
 
     public string $expectedSchema = '';
+
+    /**
+     * @var array<string, mixed>
+     */
+    public array $lastFilters = [];
 
     /**
      * Mirror OR ObjectService::findAll for the customerId filter only.
@@ -58,16 +68,19 @@ class FakeDataDeletionObjectService
     {
         $this->expectedRegister = $register;
         $this->expectedSchema   = $schema;
-        $customerId             = (string) ($filters['customerId'] ?? '');
+        $this->lastFilters      = $filters;
+        $customerId = (string) ($filters['customerId'] ?? '');
         if ($customerId === '') {
             return array_values($this->bookings);
         }
 
-        return array_values(array_filter(
+        return array_values(
+                array_filter(
             $this->bookings,
             static fn (array $b): bool => ($b['customerId'] ?? null) === $customerId
-        ));
-    }
+        )
+                );
+    }//end findAll()
 
     /**
      * Mirror OR ObjectService::saveObject.
@@ -79,19 +92,20 @@ class FakeDataDeletionObjectService
      */
     public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array
     {
-        $object['id']         = $uuid;
+        $object['id']          = $uuid;
         $this->bookings[$uuid] = $object;
-        $this->saves[]        = ['uuid' => $uuid, 'payload' => $object];
+        $this->saves[]         = ['uuid' => $uuid, 'payload' => $object];
 
         return $object;
-    }
-}
+    }//end saveObject()
+}//end class
 
 /**
  * Tests for DataDeletionService.
  */
 class DataDeletionServiceTest extends TestCase
 {
+
     /**
      * The service under test.
      */
@@ -123,16 +137,19 @@ class DataDeletionServiceTest extends TestCase
 
         $this->appConfig = $this->createMock(IAppConfig::class);
         $this->appConfig->method('getValueString')
-            ->willReturnCallback(static function (string $app, string $key, string $default = ''): string {
-                if ($app !== Application::APP_ID) {
-                    return $default;
-                }
-                return match ($key) {
-                    'register'       => 'pipelinq',
-                    'booking_schema' => 'booking',
-                    default          => $default,
-                };
-            });
+            ->willReturnCallback(
+                    static function (string $app, string $key, string $default=''): string {
+                        if ($app !== Application::APP_ID) {
+                            return $default;
+                        }
+
+                        return match ($key) {
+                            'register'       => 'pipelinq',
+                            'booking_schema' => 'booking',
+                            default          => $default,
+                        };
+                    }
+                    );
 
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -141,7 +158,7 @@ class DataDeletionServiceTest extends TestCase
             appConfig: $this->appConfig,
             logger: $logger,
         );
-    }
+    }//end setUp()
 
     /**
      * Returns the empty summary when the customer id is blank.
@@ -152,7 +169,7 @@ class DataDeletionServiceTest extends TestCase
 
         $this->assertSame(['bookings' => 0], $summary);
         $this->assertSame([], $this->objectService->saves, 'No saves should occur for an empty id.');
-    }
+    }//end testPseudonymizeRejectsEmptyCustomerId()
 
     /**
      * Replaces customer name, email, and phone with SHA-256 hashes.
@@ -178,7 +195,7 @@ class DataDeletionServiceTest extends TestCase
         $this->assertSame(hash('sha256', 'Sarah de Vries'), $stored['customerName']);
         $this->assertSame(hash('sha256', 'sarah@example.com'), $stored['customerEmail']);
         $this->assertSame(hash('sha256', '+31 6 1234 5678'), $stored['customerPhone']);
-    }
+    }//end testPseudonymizationHashesCustomerFields()
 
     /**
      * Retains the Booking record (no delete) and preserves aggregate fields.
@@ -229,6 +246,7 @@ class DataDeletionServiceTest extends TestCase
             $this->assertArrayHasKey('startAt', $b);
             $this->assertArrayHasKey('status', $b);
         }
+
         $this->assertSame(100.0, $total);
 
         // Each record carries a pseudonymisation timestamp.
@@ -236,7 +254,7 @@ class DataDeletionServiceTest extends TestCase
             $this->assertArrayHasKey('pseudonymizedAt', $b);
             $this->assertNotEmpty($b['pseudonymizedAt']);
         }
-    }
+    }//end testPseudonymizationRetainsRecordsAndAggregates()
 
     /**
      * Other customers' bookings are not touched.
@@ -261,7 +279,7 @@ class DataDeletionServiceTest extends TestCase
         $this->assertSame(hash('sha256', 'Sarah de Vries'), $this->objectService->bookings['b1']['customerName']);
         $this->assertSame('Other Person', $this->objectService->bookings['b2']['customerName']);
         $this->assertSame('other@example.com', $this->objectService->bookings['b2']['customerEmail']);
-    }
+    }//end testPseudonymizationOnlyTouchesMatchingCustomer()
 
     /**
      * Missing or empty fields are nulled (not hashed to a constant).
@@ -269,9 +287,9 @@ class DataDeletionServiceTest extends TestCase
     public function testPseudonymizationHandlesMissingFields(): void
     {
         $this->objectService->bookings['b1'] = [
-            'bookingId'     => 'b1',
-            'customerId'    => 'cust-7',
-            'customerName'  => 'Sarah',
+            'bookingId'    => 'b1',
+            'customerId'   => 'cust-7',
+            'customerName' => 'Sarah',
             // No email, no phone.
         ];
 
@@ -281,7 +299,7 @@ class DataDeletionServiceTest extends TestCase
         $this->assertSame(hash('sha256', 'Sarah'), $stored['customerName']);
         $this->assertNull($stored['customerEmail']);
         $this->assertNull($stored['customerPhone']);
-    }
+    }//end testPseudonymizationHandlesMissingFields()
 
     /**
      * Returns the empty summary (and skips) when register or schema not configured.
@@ -290,7 +308,7 @@ class DataDeletionServiceTest extends TestCase
     {
         $appConfig = $this->createMock(IAppConfig::class);
         $appConfig->method('getValueString')->willReturnCallback(
-            static fn (string $app, string $key, string $default = ''): string => $default
+            static fn (string $app, string $key, string $default=''): string => $default
         );
 
         $container = $this->createMock(ContainerInterface::class);
@@ -307,5 +325,32 @@ class DataDeletionServiceTest extends TestCase
 
         $this->assertSame(['bookings' => 0], $summary);
         $this->assertSame([], $this->objectService->saves);
-    }
-}
+    }//end testPseudonymizationSkipsWhenSchemaUnconfigured()
+
+    /**
+     * REQ-AVG-014 boundary: the Art-17 find delegates to OR's generic
+     * ObjectService::findAll with a PLAIN equality filter on `customerId`,
+     * scoped to the booking register + schema — NOT the admin-gated OR
+     * DsarService PII-index path (which soft-deletes whole objects). Pinning
+     * this guards against a future Seam-3 migration changing the find surface
+     * or the field-level pseudonymise-and-keep erasure semantics.
+     */
+    public function testFindUsesPlainCustomerIdEqualityScopedToBookingSchema(): void
+    {
+        $this->objectService->bookings['b1'] = [
+            'bookingId'    => 'b1',
+            'customerId'   => 'cust-7',
+            'customerName' => 'Sarah',
+        ];
+
+        $this->service->pseudonymizeCustomerBookings('cust-7');
+
+        // Exactly a plain equality filter on the customer identifier.
+        $this->assertSame(['customerId' => 'cust-7'], $this->objectService->lastFilters);
+        // Scoped to the configured booking register + schema (not a global PII scan).
+        $this->assertSame('pipelinq', $this->objectService->expectedRegister);
+        $this->assertSame('booking', $this->objectService->expectedSchema);
+        // The record is retained (no soft-delete / no object removal).
+        $this->assertArrayHasKey('b1', $this->objectService->bookings);
+    }//end testFindUsesPlainCustomerIdEqualityScopedToBookingSchema()
+}//end class

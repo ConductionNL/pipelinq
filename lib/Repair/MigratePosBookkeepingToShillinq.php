@@ -154,9 +154,9 @@ class MigratePosBookkeepingToShillinq implements IRepairStep
             );
             if ($result === 'raised') {
                 $raised++;
-            } elseif ($result === 'projected') {
+            } else if ($result === 'projected') {
                 $projected++;
-            } elseif ($result === 'pending') {
+            } else if ($result === 'pending') {
                 $pending++;
             }
         }
@@ -278,8 +278,14 @@ class MigratePosBookkeepingToShillinq implements IRepairStep
         $rows  = $this->readAll(objectService: $objectService, register: $register, schema: self::ZREPORT_SCHEMA);
         $index = [];
         foreach ($rows as $row) {
-            $id   = (string) ($row['id'] ?? $row['uuid'] ?? '');
-            $slug = (string) (($row['@self']['slug'] ?? '') ?: '');
+            $id      = (string) ($row['id'] ?? $row['uuid'] ?? '');
+            $slugRaw = (string) ($row['@self']['slug'] ?? '');
+            if ($slugRaw !== '') {
+                $slug = $slugRaw;
+            } else {
+                $slug = '';
+            }
+
             if ($id !== '') {
                 $index[$id] = $row;
             }

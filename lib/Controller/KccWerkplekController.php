@@ -49,10 +49,10 @@ class KccWerkplekController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest           $request            The HTTP request.
-     * @param KccWerkplekService $werkplekService    Workspace state service.
-     * @param IUserSession       $userSession        Active user session.
-     * @param LoggerInterface    $logger             Logger.
+     * @param IRequest           $request         The HTTP request.
+     * @param KccWerkplekService $werkplekService Workspace state service.
+     * @param IUserSession       $userSession     Active user session.
+     * @param LoggerInterface    $logger          Logger.
      *
      * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
      */
@@ -140,9 +140,9 @@ class KccWerkplekController extends Controller
         // Accept boolean, "true"/"false" strings or 0/1; reject everything else.
         if (is_bool($param) === true) {
             $available = $param;
-        } elseif (is_string($param) === true && in_array(strtolower($param), ['true', 'false', '1', '0'], true) === true) {
+        } else if (is_string($param) === true && in_array(strtolower($param), ['true', 'false', '1', '0'], true) === true) {
             $available = in_array(strtolower($param), ['true', '1'], true);
-        } elseif (is_int($param) === true && ($param === 0 || $param === 1)) {
+        } else if (is_int($param) === true && ($param === 0 || $param === 1)) {
             $available = ($param === 1);
         } else {
             return new JSONResponse(

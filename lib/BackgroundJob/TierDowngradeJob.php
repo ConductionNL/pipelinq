@@ -84,10 +84,10 @@ class TierDowngradeJob extends TimedJob
     protected function run($argument): void
     {
         $programmes = $this->getActiveProgrammes();
-        $now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+        $now        = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
 
         foreach ($programmes as $programme) {
-            $programmeId = $this->extractUuid($programme);
+            $programmeId = $this->extractUuid(object: $programme);
             if ($programmeId === null) {
                 continue;
             }
@@ -98,7 +98,7 @@ class TierDowngradeJob extends TimedJob
             );
 
             foreach ($accounts as $account) {
-                $accountId    = (string) $this->extractUuid($account);
+                $accountId     = (string) $this->extractUuid(object: $account);
                 $tierGeldigTot = (string) ($account['tierGeldigTot'] ?? '');
                 if ($accountId === '' || $tierGeldigTot === '' || $tierGeldigTot > $now) {
                     continue;
@@ -113,7 +113,7 @@ class TierDowngradeJob extends TimedJob
                     );
                 }
             }
-        }
+        }//end foreach
     }//end run()
 
     /**
@@ -141,10 +141,16 @@ class TierDowngradeJob extends TimedJob
         }
 
         $result = [];
-        foreach (is_array($rows) === true ? $rows : [] as $row) {
+        if (is_array($rows) === true) {
+            $rowsToIterate = $rows;
+        } else {
+            $rowsToIterate = [];
+        }
+
+        foreach ($rowsToIterate as $row) {
             if (is_array($row) === true) {
                 $result[] = $row;
-            } elseif (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+            } else if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
                 $s = $row->jsonSerialize();
                 if (is_array($s) === true) {
                     $result[] = $s;
@@ -168,6 +174,7 @@ class TierDowngradeJob extends TimedJob
         if (is_array($self) === true && isset($self['id']) === true) {
             return (string) $self['id'];
         }
+
         return $object['accountId'] ?? $object['programmeId'] ?? $object['uuid'] ?? $object['id'] ?? null;
     }//end extractUuid()
 }//end class

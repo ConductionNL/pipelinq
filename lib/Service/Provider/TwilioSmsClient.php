@@ -28,10 +28,9 @@ namespace OCA\Pipelinq\Service\Provider;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
- * TwilioSmsClient — Twilio Messaging API client (via openconnector).
+ * TwilioSmsClient — Twilio Messaging API client (via OpenRegister dispatch leaf).
  *
  * Vendor key: `twilio`. Webhook signatures use `X-Twilio-Signature`
  * (HMAC-SHA1 of the URL + form-encoded body, base64-encoded). For
@@ -42,15 +41,24 @@ use Throwable;
  */
 class TwilioSmsClient implements SmsProviderClientInterface
 {
+    use MessageDispatchTrait;
+
+    /**
+     * Twilio Messages send path, relative to the source base URL.
+     *
+     * @var string
+     */
+    private const SEND_PATH = 'Messages.json';
+
     /**
      * Constructor.
      *
-     * @param ContainerInterface   $container   DI container (for SourceService).
-     * @param LoggerInterface      $logger      Logger.
-     * @param array<string, mixed> $credentials Decoded credentials bag.
-     * @param string               $fromNumber  Sender phone number (E.164).
+     * @param ContainerInterface   $container     DI container (for SourceService).
+     * @param LoggerInterface      $logger        Logger.
+     * @param array<string, mixed> $credentials   Decoded credentials bag.
+     * @param string               $fromNumber    Sender phone number (E.164).
      * @param string               $webhookSecret Shared HMAC secret for signature checks.
-     * @param string|null          $sourceId    openconnector source id (or null in tests).
+     * @param string|null          $sourceId      openconnector source id (or null in tests).
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
      */
@@ -74,6 +82,8 @@ class TwilioSmsClient implements SmsProviderClientInterface
      *
      * @throws TransientSmsProviderException On 5xx / network failure.
      * @throws PermanentSmsProviderException On 4xx / config failure.
+     *
+     * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#1.1
      */
     public function send(string $toNumber, string $body): array
     {
@@ -83,7 +93,11 @@ class TwilioSmsClient implements SmsProviderClientInterface
             'Body' => $body,
         ];
 
-        $result = $this->dispatchViaOpenConnector(action: 'send-sms', payload: $payload);
+        $result = $this->dispatchViaLeaf(
+            source: (string) ($this->sourceId ?? ''),
+            body: $payload,
+            path: self::SEND_PATH,
+        );
         $sid    = (string) ($result['sid'] ?? ($result['externalMessageId'] ?? ''));
 
         return [
@@ -127,56 +141,4 @@ class TwilioSmsClient implements SmsProviderClientInterface
     {
         return 'twilio';
     }//end getVendor()
-
-    /**
-     * Dispatch via openconnector SourceService when wired.
-     *
-     * @param string               $action  Action name.
-     * @param array<string, mixed> $payload Payload.
-     *
-     * @return array<string, mixed> Result.
-     *
-     * @throws TransientSmsProviderException On 5xx / network failure.
-     * @throws PermanentSmsProviderException On 4xx / config failure.
-     */
-    private function dispatchViaOpenConnector(string $action, array $payload): array
-    {
-        if ($this->sourceId === null || $this->sourceId === '') {
-            $this->logger->warning(
-                'TwilioSmsClient: no openconnector source id configured',
-                ['vendor' => $this->getVendor()]
-            );
-            throw new PermanentSmsProviderException('Twilio source not configured');
-        }
-
-        try {
-            $sourceService = $this->container->get('OCA\\OpenConnector\\Service\\SourceService');
-        } catch (Throwable $e) {
-            throw new TransientSmsProviderException('openconnector unavailable: ' . $e->getMessage());
-        }
-
-        if (method_exists($sourceService, 'executeAction') === false) {
-            throw new PermanentSmsProviderException('openconnector SourceService lacks executeAction');
-        }
-
-        try {
-            $result = $sourceService->executeAction($this->sourceId, $action, $payload);
-        } catch (Throwable $e) {
-            $message = $e->getMessage();
-            $code    = (int) $e->getCode();
-            $this->logger->warning(
-                'TwilioSmsClient.dispatchViaOpenConnector: failed',
-                ['code' => $code, 'message' => $message]
-            );
-
-            // 5xx or 0 (network/timeout) → transient → caller fails over.
-            if ($code === 0 || ($code >= 500 && $code < 600)) {
-                throw new TransientSmsProviderException($message, $code, $e);
-            }
-
-            throw new PermanentSmsProviderException($message, $code, $e);
-        }
-
-        return is_array($result) ? $result : [];
-    }//end dispatchViaOpenConnector()
 }//end class
