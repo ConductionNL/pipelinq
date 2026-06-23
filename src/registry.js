@@ -651,7 +651,7 @@ const registry = {
 	LoyaltyReportingView: {
 		kind: 'page',
 		component: LoyaltyReportingView,
-		_note: 'Programme reporting dashboard: active accounts, points issued/redeemed/expired, breakage %, redemption rate, outstanding-points liability (IFRS 15 / RJ 270), tier distribution, period selector, CSV export. Server-side LoyaltyReportingService is the source of truth (REQ-LOY-008, REQ-LOY-009).',
+		_note: 'KEPT CUSTOM (pipelinq-dashboards-declarative): programme reporting (active accounts, points issued/redeemed/expired, breakage %, redemption rate, outstanding-points liability per IFRS 15 / RJ 270, tier distribution, CSV export). The 8 KPIs come from one summary endpoint GET /api/loyalty/reporting/{programmeId}/kpis, but {programmeId} is a PATH segment requiring a programme UUID picked from a DYNAMIC selector (options from the OR loyaltyProgramme collection); pageFilters only support static options, so @page.programmeId cannot enumerate programmes, and there is no all-programmes aggregate. Missing primitives: an OR-collection-sourced pageFilter (dynamic options) + a relative-window period token (30d/90d/365d -> from/to). Same dynamic-selector blocker as PipelineAnalytics/Forecast; kept custom.',
 	},
 	LoyaltyAccountCreationView: {
 		kind: 'page',
@@ -812,7 +812,7 @@ const registry = {
 	PipelineAnalyticsView: {
 		kind: 'page',
 		component: PipelineAnalyticsView,
-		_note: 'Per-pipeline KPI cards (Total Pipeline Value / Win Rate / Avg Deal Size / Active Opportunities) and a horizontal stage-funnel CnChartWidget; client-side aggregation is appropriate (< 500 leads per pipeline) and gives instant updates on pipeline switch.',
+		_note: 'KEPT CUSTOM (pipelinq-dashboards-declarative): per-pipeline KPI cards (Total Pipeline Value / Win Rate / Avg Deal Size / Active Opportunities) + a horizontal stage-funnel CnChartWidget, all derived CLIENT-SIDE from one pipeline\'s leads (<500) for instant updates on pipeline switch — there is no summary endpoint. Two missing primitives block a declarative conversion: (1) a derived/ratio stat source (Win Rate = won/(won+lost), Avg Deal Size = sum/count cannot be a single endpoint/OR-aggregation value), and (2) a pageFilter whose options come from an OR collection (the pipeline selector is dynamic, not a static option list). Converting today would drop the ratio KPIs or hardcode the pipeline list, so it stays custom.',
 	},
 
 	// --- Client / Contact 360 detail in-body sections (kind:'section').
