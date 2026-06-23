@@ -166,7 +166,7 @@
 						"props": { "bookingId": "@objectId" }
 					}
 				],
-				"sidebar": true
+				"sidebar": { "enabled": true }
 			}
 		}
 	]

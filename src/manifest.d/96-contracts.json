@@ -40,7 +40,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contract",
-				"sidebar": true
+				"sidebar": { "enabled": true }
 			}
 		}
 	]

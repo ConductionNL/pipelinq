@@ -27,7 +27,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "supplier",
-				"sidebar": true
+				"sidebar": { "enabled": true }
 			}
 		}
 	]
