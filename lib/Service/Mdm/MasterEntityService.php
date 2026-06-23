@@ -143,6 +143,24 @@ class MasterEntityService
         $entity['goldenRecord']        = $resolution['goldenRecord'];
         $entity['attributeProvenance'] = $resolution['attributeProvenance'];
 
+        // Materialise the most-recent provenance date so OpenRegister's
+        // freshness quality rule (x-openregister-quality) has a single date
+        // field to decay against; OR's per-object scorer cannot traverse the
+        // attributeProvenance map itself.
+        $entity['lastSourceUpdate'] = $this->latestProvenanceDate(
+            provenance: $resolution['attributeProvenance']
+        );
+
+        // Materialise flattened top-level match fields so OpenRegister's
+        // duplicate-detection similarity (x-openregister-dedup) can read them;
+        // OR's SimilarityCalculator reads top-level keys only, not nested
+        // goldenRecord.* paths.
+        $golden = $resolution['goldenRecord'];
+        $entity['matchName']      = (string) ($golden['name'] ?? '');
+        $entity['matchEmail']     = (string) ($golden['email'] ?? '');
+        $entity['matchKvkNumber'] = (string) ($golden['kvkNumber'] ?? '');
+        $entity['matchPhone']     = (string) ($golden['phone'] ?? '');
+
         return $this->repository->save(self::SCHEMA, $entity, $masterId);
     }//end recomputeGoldenRecord()
 
@@ -236,6 +254,33 @@ class MasterEntityService
             'attributeProvenance' => $provenance,
         ];
     }//end resolveGoldenRecord()
+
+    /**
+     * Find the most recent `lastUpdated` across all attribute provenance.
+     *
+     * Materialised onto the entity as `lastSourceUpdate` so OpenRegister's
+     * freshness quality rule can decay a single date field.
+     *
+     * @param array<string, mixed> $provenance The per-attribute provenance map.
+     *
+     * @return string The latest ISO timestamp, or empty string when none.
+     */
+    public function latestProvenanceDate(array $provenance): string
+    {
+        $latest = '';
+        foreach ($provenance as $meta) {
+            if (is_array($meta) === false) {
+                continue;
+            }
+
+            $lastUpdated = (string) ($meta['lastUpdated'] ?? '');
+            if ($lastUpdated > $latest) {
+                $latest = $lastUpdated;
+            }
+        }
+
+        return $latest;
+    }//end latestProvenanceDate()
 
     /**
      * Pick the winning candidate: highest tier, then most recent lastUpdated.
