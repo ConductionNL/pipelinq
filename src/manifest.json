@@ -327,8 +327,7 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
 					"enabled": true,
-					"showHeaderPicker": true,
-					"control": "pills",
+					"showHeaderPicker": false,
 					"persistKey": "pipelinq-commercial-range",
 					"default": { "preset": "month" },
 					"presets": [
@@ -355,20 +354,20 @@
 						{ "id": "won-vs-open",        "type": "delta", "title": "Won vs open", "content": { "label": "Won deals", "route": { "name": "Pipeline" }, "icon": "Trophy", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "goodDirection": "up", "current": { "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } }, "previous": { "filter": { "status": "open" } } } } }
 				],
 				"layout": [
-					{ "id": "c16", "widgetId": "pipeline-coverage",  "gridX": 0,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c5",  "widgetId": "weighted-forecast",  "gridX": 3,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c1",  "widgetId": "revenue",            "gridX": 6,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c13", "widgetId": "mrr",                "gridX": 9,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c17", "widgetId": "won-vs-open",        "gridX": 0,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c2",  "widgetId": "won-value",          "gridX": 4,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 8,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c16", "widgetId": "pipeline-coverage",  "gridX": 0,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c5",  "widgetId": "weighted-forecast",  "gridX": 3,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c1",  "widgetId": "revenue",            "gridX": 6,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c13", "widgetId": "mrr",                "gridX": 9,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c17", "widgetId": "won-vs-open",        "gridX": 0,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c2",  "widgetId": "won-value",          "gridX": 4,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 8,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
 					{ "id": "c7",  "widgetId": "revenue-over-time",   "gridX": 0,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c8",  "widgetId": "pipeline-by-stage",   "gridX": 6,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c9",  "widgetId": "revenue-by-category",  "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c10", "widgetId": "top-customers",        "gridX": 6,  "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
 					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "c15", "widgetId": "total-leads",       "gridX": 0,  "gridY": 16, "gridWidth": 3,  "gridHeight": 2, "showTitle": false }
+					{ "id": "c15", "widgetId": "total-leads",       "gridX": 0,  "gridY": 16, "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true }
 				]
 			},
 			"slots": {}
@@ -421,9 +420,9 @@
 					{ "id": "3",  "widgetId": "pipeline-value",        "gridX": 6, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
 					{ "id": "4",  "widgetId": "overdue",               "gridX": 9, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
 					{ "id": "14", "widgetId": "lead-conversion",       "gridX": 0, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "15", "widgetId": "avg-resolution",        "gridX": 3, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "15", "widgetId": "avg-resolution",        "gridX": 3, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
 					{ "id": "16", "widgetId": "contact-volume",        "gridX": 6, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "17", "widgetId": "satisfaction",          "gridX": 9, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "17", "widgetId": "satisfaction",          "gridX": 9, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
 					{ "id": "18", "widgetId": "leads-over-time",       "gridX": 0, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "19", "widgetId": "requests-by-category",  "gridX": 6, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "5",  "widgetId": "requests-by-status",    "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4 },
@@ -1289,14 +1288,23 @@
 		},
 		{
 			"id": "PosRefundDetail",
-			"_note": "PosRefundDetail.vue is a CnDetailPage composed with refund-specific CnDetailCard panels, a CnStatusBadge and refund-only actions; the declarative 'detail' type renders flat schema fields and cannot lay out these grouped refund cards.",
+			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields (reference / originalTransaction / cashier / status / refundReason / paymentMethod / refundAmount / totalTax / confirmedAt / rejectedAt / notes / …) auto-render in the body via CnObjectDataWidget. The parts no declarative primitive can express live in one kind:'section' bodyWidget (PosRefundActionsSection, after-data): the manager-gated Bevestigen / Afwijzen actions and the 'Returned items' table. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired — the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) the 'Returned items' table stays in the section because it is a CROSS-SCHEMA JOIN — each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer) and relatedCollections renders ONE schema and cannot resolve a column off a second schema. Missing primitives: a relatedCollections column resolved off a SECOND schema (cross-schema join lookup); the host-app-endpoint action toolbar (see PosTransactionDetail).",
 			"route": "/pos/refunds/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Retour",
-			"component": "PosRefundDetailView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posRefund"
+				"schema": "posRefund",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"bodyWidgets": [
+					{
+						"id": "pos-refund-actions",
+						"component": "PosRefundActionsSection",
+						"placement": "after-data",
+						"props": { "refundId": "@objectId" }
+					}
+				],
+				"sidebar": true
 			}
 		},
 		{
@@ -1313,14 +1321,39 @@
 		},
 		{
 			"id": "CashShiftDetail",
-			"_note": "CashShiftDetail.vue is a CnDetailPage with cash-drawer-specific CnDetailCard panels (opening/closing float, counted-vs-expected variance), CnStatusBadge and open/close actions; the standard 'detail' type cannot express this reconciliation layout.",
+			"_note": "Cash-shift record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The shift's flat float fields (reference / drawer / operator / managedBy / currency / floatAmount / floatAt / status / closedAt / reconciliationStatus / notes) auto-render in the body via CnObjectDataWidget; the drops render as a relatedCollections table (cashDrop, FK 'shift'). The parts no declarative primitive can express live in one kind:'section' bodyWidget (CashShiftActionsSection, after-related): the cash-reconciliation VARIANCE panel and the drop/count/reconcile actions. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired — Geld verwijderen (drop) / Shift afsluiten en tellen (count) / reconcile POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints that recompute variance server-side (NOT OR /transition); cashShift/cashDiff have no x-openregister-lifecycle; (2) the variance panel stays in the section because it is a LATEST/PENDING-child projection — relatedCollections lists ALL children and cannot pick + lay out the single most-relevant cashDiff with its tolerance verdict and inline approve/reject. Missing primitives: a host-app-endpoint action toolbar (see PosTransactionDetail); a 'latest/pending child object' projection primitive.",
 			"route": "/pos/shifts/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Shift",
-			"component": "CashShiftDetailView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "cashShift"
+				"schema": "cashShift",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"relatedCollections": [
+					{
+						"title": "Drops",
+						"register": "pipelinq",
+						"schema": "cashDrop",
+						"filter": { "shift": "@objectId" },
+						"sort": { "field": "droppedAt", "dir": "desc" },
+						"columns": [
+							{ "key": "reason", "label": "Reden" },
+							{ "key": "amount", "label": "Bedrag" },
+							{ "key": "droppedAt", "label": "Op" },
+							{ "key": "droppedBy", "label": "Door" }
+						],
+						"limit": 500
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "cash-shift-actions",
+						"component": "CashShiftActionsSection",
+						"placement": "after-related",
+						"props": { "shiftId": "@objectId" }
+					}
+				],
+				"sidebar": true
 			}
 		},
 		{
@@ -1359,14 +1392,24 @@
 		},
 		{
 			"id": "ZReportDetail",
-			"_note": "ZReportDetail.vue is a CnDetailPage with Z-report-specific CnDetailCard panels (per-tender totals, tax breakdown, drawer reconciliation) and CnStatusBadge; the declarative 'detail' type cannot lay out these aggregated accounting summaries.",
+			"_note": "Z-report per-day close as a declarative type:detail page (pipelinq-detail-pages-declarative-r3). The Z-report's flat fields (reference / reportDate / terminalId / transactionCount / status / subtotal / totalTax / total / bookkeepingStatus / shillinqJournalEntryId / notes) auto-render in the body via CnObjectDataWidget. CONVERTED: the BTW breakdown table, the payment-method breakdown table (both ARRAY fields on the object, not FK children, so not relatedCollections) and the shillinq bookkeeping-status projection + manager-gated idempotent re-raise action are one kind:'section' bodyWidget (ZReportBookkeepingSection, after-data). KEPT-AS-NOTE: (1) lifecycleActions is NOT wired — posZReport has no x-openregister-lifecycle and the only state-changing action is the re-raise, which POSTs to a bespoke pipelinq endpoint (idempotency key) not OR's /transition, so it stays inside the section (missing primitive: declarative action that POSTs to a host-app endpoint instead of OR /transition); (2) no summaryAggregates — the totals are fields ON the object, not aggregations over a related schema; (3) Z-reports are generated by the day-close job, never created/edited by hand, so the auto-body data widget is effectively read-only.",
 			"route": "/pos/z-reports/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Z-report",
-			"component": "ZReportDetailView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posZReport"
+				"schema": "posZReport",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"bodyWidgets": [
+					{
+						"id": "z-report-bookkeeping",
+						"component": "ZReportBookkeepingSection",
+						"title": "Boekhoudkundige afhandeling",
+						"placement": "after-data",
+						"props": { "zReportId": "@objectId" }
+					}
+				],
+				"sidebar": true
 			}
 		},
 		{
@@ -1411,14 +1454,41 @@
 		},
 		{
 			"id": "PosTransactionDetail",
-			"_note": "PosTransactionDetail.vue is a CnDetailPage with five receipt-specific CnDetailCard panels (line items, tenders, taxes, customer, linked refunds), CnStatusBadge and nine contextual actions (refund, reprint, email); the flat 'detail' type cannot host this grouped receipt layout.",
+			"_note": "POS transaction record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The transaction's flat fields (reference / cashier / terminalId / status / priceMode / subtotal / totalTax / total / notes / …) auto-render in the body via CnObjectDataWidget; the line items render as a relatedCollections table (posTransactionLine, FK 'transaction'). Everything no declarative primitive can express lives in one kind:'section' bodyWidget (PosTransactionActionsSection, after-related): the status-gated action toolbar (Bevestigen / Parkeren / Hervatten / Afrekenen / Retour registreren / Terugboeken / Print / Email Receipt), the tax-breakdown + totals, the interactive TenderEntryPanel (live add/remove split tenders + recompute) and the PaymentStatusCard. KEPT-AS-NOTE: lifecycleActions is NOT wired — the action buttons POST to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects (NOT OR's /transition), and posTransaction has no x-openregister-lifecycle. Missing primitive: a declarative action-toolbar whose buttons POST to a host-app endpoint (not OR /transition), status-gated client-side, with a custom-recompute reload; and an editable/interactive sub-grid primitive for the tender panel.",
 			"route": "/pos/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Transactie",
-			"component": "PosTransactionDetailView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posTransaction"
+				"schema": "posTransaction",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"relatedCollections": [
+					{
+						"title": "Line items",
+						"register": "pipelinq",
+						"schema": "posTransactionLine",
+						"filter": { "transaction": "@objectId" },
+						"sort": { "field": "sortOrder", "dir": "asc" },
+						"columns": [
+							{ "key": "description", "label": "Description" },
+							{ "key": "quantity", "label": "Qty" },
+							{ "key": "unitPrice", "label": "Unit price" },
+							{ "key": "discount", "label": "Discount %" },
+							{ "key": "taxRate", "label": "VAT %" },
+							{ "key": "lineTotal", "label": "Line total" }
+						],
+						"limit": 500
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "pos-transaction-actions",
+						"component": "PosTransactionActionsSection",
+						"placement": "after-related",
+						"props": { "transactionId": "@objectId" }
+					}
+				],
+				"sidebar": true
 			}
 		},
 		{
