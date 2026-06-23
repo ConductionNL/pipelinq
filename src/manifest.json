@@ -22,6 +22,32 @@
 			{ "id": "done", "type": "summary", "title": "All set", "healthCheck": true, "body": "Pipelinq is ready. Head to the Dashboard or Leads to get started." }
 		]
 	},
+	"walkthrough": {
+		"enabled": true,
+		"version": 1,
+		"completionConfigKey": "walkthrough_seen_version",
+		"tours": [
+			{
+				"id": "pipelinq:getting-started",
+				"title": "Getting started",
+				"trigger": "first-visit",
+				"minAppVersion": "1.0.0",
+				"steps": [
+					{ "id": "welcome", "placement": "center", "sinceVersion": "1.0.0", "title": "Welcome to Pipelinq", "body": "Let's walk the core sales journey together — from a product to a billed contract. You'll create each record yourself, in your own workspace.", "target": { "kind": "page", "ref": "Products" }, "advanceOn": { "type": "manual" } },
+					{ "id": "go-products", "sinceVersion": "1.0.0", "placement": "right", "body": "First, your catalogue. Open Products from the menu.", "task": "Click Products in the menu", "target": { "kind": "nav-item", "ref": "Products" }, "advanceOn": { "type": "route-match", "route": "Products" } },
+					{ "id": "create-product", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the product or service you sell — we'll put it on the quotation later.", "task": "Click New and save a product", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "product", "capture": { "productId": ":id" } } },
+					{ "id": "go-contacts", "sinceVersion": "1.0.0", "placement": "right", "body": "Now the customer. Open Contacts.", "task": "Click Contacts in the menu", "target": { "kind": "nav-item", "ref": "Contacts" }, "advanceOn": { "type": "route-match", "route": "Contacts" } },
+					{ "id": "create-contact", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the person or organisation you're selling to.", "task": "Click New and save a contact", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "contact", "capture": { "contactId": ":id" } } },
+					{ "id": "go-leads", "sinceVersion": "1.0.0", "placement": "right", "body": "A lead is a sales opportunity. Open Leads.", "task": "Click Leads in the menu", "target": { "kind": "nav-item", "ref": "Leads" }, "advanceOn": { "type": "route-match", "route": "Leads" } },
+					{ "id": "create-lead", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Create a lead for this opportunity and link the contact you just made.", "task": "Click New and save a lead", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "lead", "capture": { "leadId": ":id" } } },
+					{ "id": "move-pipeline", "sinceVersion": "1.0.0", "placement": "right", "allowManualNext": true, "body": "The pipeline shows every lead by stage. Drag your lead forward as it progresses.", "task": "Open the Pipeline and move your lead to the next stage", "target": { "kind": "nav-item", "ref": "Pipeline" }, "advanceOn": { "type": "route-match", "route": "Pipeline" } },
+					{ "id": "create-quote", "sinceVersion": "1.0.0", "placement": "right", "allowManualNext": true, "body": "Quote the lead. In Pipelinq a signable quotation IS the contract — one record, no duplication.", "task": "Open Contracts and create a quotation", "target": { "kind": "nav-item", "ref": "Contracts" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "contract", "capture": { "contractId": ":id" } } },
+					{ "id": "quote-is-contract", "sinceVersion": "1.0.0", "placement": "center", "title": "Your quote is the contract", "body": "Once the customer signs the quotation it becomes the contract automatically — the same record carries the agreed lines, price and signature.", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" } },
+					{ "id": "send-to-shillinq", "sinceVersion": "1.0.0", "placement": "center", "title": "Send it for billing", "body": "Finally, hand the signed contract to Shillinq for invoicing and ledger posting — that closes the loop from product to paid.", "task": "Use the contract's Send to billing action to hand off to Shillinq", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" } }
+				]
+			}
+		]
+	},
 	"observability": {
 		"health": {
 			"checks": [
