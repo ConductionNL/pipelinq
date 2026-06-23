@@ -99,12 +99,12 @@ interface BerichtenboxAdapterInterface
      * Verify an inbound Logius delivery-receipt webhook signature +
      * payload.
      *
-     * @param string              $rawBody Raw request body (signature
-     *                                     is computed over the
-     *                                     verbatim bytes).
+     * @param string               $rawBody Raw request body (signature
+     *                                      is computed over the
+     *                                      verbatim bytes).
      * @param array<string,string> $headers Request headers (Logius
-     *                                     signature is in
-     *                                     `X-Logius-Signature`).
+     *                                      signature is in
+     *                                      `X-Logius-Signature`).
      *
      * @return BerichtenboxResult The verification outcome.
      */

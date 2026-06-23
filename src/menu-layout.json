@@ -43,8 +43,6 @@
 		"MdmDuplicates": "Administration",
 		"MarketingGroup": "Administration",
 		"ExpensesGroup": "Administration",
-		"CtiSettings": "Administration",
-		"CtiEventLog": "Administration",
 		"BillingApproval": "Administration"
 	},
 	"removals": []

@@ -32,10 +32,42 @@
     },
     {
       "id": "MdmMasterEntityDetail",
+      "_note": "Master-entity steward view as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The masterEntity register object's flat fields (masterId / entityType / status / dataQualityScore / aliases / mergedFrom / lastReviewedAt / gdprNotes / …) auto-render in the body via CnObjectDataWidget; the raw source-record children render as a relatedCollections table (sourceRecord, FK 'currentMasterEntity'). The parts no declarative primitive can express live in one kind:'section' bodyWidget (MdmGoldenRecordSection, after-related): the server-COMPUTED golden record (merge-rule survivorship) with per-attribute provenance (sourceSystem + trustTier) and the derived linkage lineage, fetched from GET /api/mdm/entities/{id} (a projection, not stored flat on the schema), plus the 'Resolve conflicts' modal which recomputes the golden record on save. KEPT-AS-NOTE: the golden-record / provenance / lineage are a host-app PROJECTION (computed, not stored), so they stay in the section rather than the auto-body. Missing primitive: a type:detail variant whose body is sourced from a host-app projection endpoint rather than (only) the OR object. The instance-wide Data quality + Duplicate candidates dashboards stay their own pages — they are not entity-scoped in the source.",
       "route": "/mdm/master-entities/:id",
-      "type": "custom",
+      "type": "detail",
       "title": "Master entity",
-      "component": "MdmMasterEntityDetailView"
+      "config": {
+        "register": "pipelinq",
+        "schema": "masterEntity",
+        "documentationUrl": "https://pipelinq.conduction.nl",
+        "relatedCollections": [
+          {
+            "title": "Source records",
+            "register": "pipelinq",
+            "schema": "sourceRecord",
+            "filter": { "currentMasterEntity": "@objectId" },
+            "sort": { "field": "lastSeen", "dir": "desc" },
+            "columns": [
+              { "key": "sourceSystem", "label": "Source system" },
+              { "key": "nativeId", "label": "Native id" },
+              { "key": "lastSeen", "label": "Last seen" },
+              { "key": "linkageMethod", "label": "Linkage" },
+              { "key": "linkageConfidence", "label": "Confidence" }
+            ],
+            "limit": 200
+          }
+        ],
+        "bodyWidgets": [
+          {
+            "id": "mdm-golden-record",
+            "component": "MdmGoldenRecordSection",
+            "title": "Golden record",
+            "placement": "after-related",
+            "props": { "masterId": "@objectId" }
+          }
+        ],
+        "sidebar": true
+      }
     },
     {
       "id": "MdmDataQuality",

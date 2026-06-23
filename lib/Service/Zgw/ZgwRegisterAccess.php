@@ -54,10 +54,10 @@ class ZgwRegisterAccess
      */
     public const REGISTER = 'pipelinq';
 
-    public const SCHEMA_ENDPOINT  = 'zgwEndpoint';
-    public const SCHEMA_CLIENT    = 'zgwClient';
-    public const SCHEMA_ABONN     = 'nrcAbonnement';
-    public const SCHEMA_MAPPING   = 'zgwResourceMapping';
+    public const SCHEMA_ENDPOINT = 'zgwEndpoint';
+    public const SCHEMA_CLIENT   = 'zgwClient';
+    public const SCHEMA_ABONN    = 'nrcAbonnement';
+    public const SCHEMA_MAPPING  = 'zgwResourceMapping';
 
     /**
      * Cached ObjectService instance (or null when OR is unavailable).
@@ -69,10 +69,9 @@ class ZgwRegisterAccess
     /**
      * Has resolution been attempted? (separate flag so null is a real cached value)
      *
-     * @var bool
+     * @var boolean
      */
     private bool $resolved = false;
-
 
     /**
      * Constructor.
@@ -85,7 +84,6 @@ class ZgwRegisterAccess
         private LoggerInterface $logger,
     ) {
     }//end __construct()
-
 
     /**
      * Look up a single object by UUID or slug.
@@ -101,57 +99,66 @@ class ZgwRegisterAccess
         if ($os === null) {
             return null;
         }
+
         try {
             $result = $os->find(id: $id, register: self::REGISTER, schema: $schema);
         } catch (Throwable $e) {
             $this->logger->info('ZGW: find failed', ['schema' => $schema, 'id' => $id, 'err' => $e->getMessage()]);
             return null;
         }
-        return $this->toArray($result);
-    }//end find()
 
+        return $this->toArray(candidate: $result);
+    }//end find()
 
     /**
      * List objects matching a filter map.
      *
-     * @param string                $schema  Schema slug.
-     * @param array<string, mixed>  $filters Filter map (passed straight through to OR).
+     * @param string               $schema  Schema slug.
+     * @param array<string, mixed> $filters Filter map (passed straight through to OR).
      *
      * @return array<int, array<string, mixed>>
      */
-    public function findAll(string $schema, array $filters = []): array
+    public function findAll(string $schema, array $filters=[]): array
     {
         $os = $this->getObjectService();
         if ($os === null) {
             return [];
         }
+
         try {
             $rows = $os->findAll(filters: $filters, register: self::REGISTER, schema: $schema);
         } catch (Throwable $e) {
             $this->logger->info('ZGW: findAll failed', ['schema' => $schema, 'err' => $e->getMessage()]);
             return [];
         }
+
         $out = [];
-        foreach ((is_array($rows) === true ? $rows : []) as $row) {
-            $arr = $this->toArray($row);
+        if (is_array($rows) === true) {
+            $rowList = $rows;
+        } else {
+            $rowList = [];
+        }
+
+        foreach ($rowList as $row) {
+            $arr = $this->toArray(candidate: $row);
             if ($arr !== null) {
                 $out[] = $arr;
             }
         }
+
         return $out;
     }//end findAll()
-
 
     /**
      * Persist (create or update) an object.
      *
-     * @param string                $schema Schema slug.
-     * @param array<string, mixed>  $data   Object payload (without `@self`).
-     * @param string|null           $uuid   Existing UUID to update, or null to create.
+     * @param string               $schema Schema slug.
+     * @param array<string, mixed> $data   Object payload (without `@self`).
+     * @param string|null          $uuid   Existing UUID to update, or null to create.
      *
      * @return array<string, mixed>|null Saved object (or null on failure).
      */
-    public function save(string $schema, array $data, ?string $uuid = null): ?array
+    public function save(string $schema, array $data, ?string $uuid=null): ?array
     {
         $os = $this->getObjectService();
         if ($os === null) {
@@ -178,9 +185,9 @@ class ZgwRegisterAccess
             );
             return null;
         }
-        return $this->toArray($saved);
-    }//end save()
 
+        return $this->toArray(candidate: $saved);
+    }//end save()
 
     /**
      * Resolve a `ZgwClient` record for a given `ZgwEndpoint` payload.
@@ -195,9 +202,9 @@ class ZgwRegisterAccess
         if ($clientId === '') {
             return null;
         }
-        return $this->find(self::SCHEMA_CLIENT, $clientId);
-    }//end findClientForEndpoint()
 
+        return $this->find(schema: self::SCHEMA_CLIENT, id: $clientId);
+    }//end findClientForEndpoint()
 
     /**
      * Resolve the OR ObjectService once and cache it.
@@ -209,6 +216,7 @@ class ZgwRegisterAccess
         if ($this->resolved === true) {
             return $this->objectService;
         }
+
         $this->resolved = true;
         try {
             $this->objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
@@ -216,9 +224,9 @@ class ZgwRegisterAccess
             $this->logger->info('ZGW: OR ObjectService unavailable', ['err' => $e->getMessage()]);
             $this->objectService = null;
         }
+
         return $this->objectService;
     }//end getObjectService()
-
 
     /**
      * Normalise an OR record to an associative array.
@@ -236,6 +244,7 @@ class ZgwRegisterAccess
         if (is_array($candidate) === true) {
             return $candidate;
         }
+
         if (is_object($candidate) === true) {
             if (method_exists($candidate, 'jsonSerialize') === true) {
                 $serialised = $candidate->jsonSerialize();
@@ -243,16 +252,17 @@ class ZgwRegisterAccess
                     return $serialised;
                 }
             }
+
             if (method_exists($candidate, 'toArray') === true) {
                 $arr = $candidate->toArray();
                 if (is_array($arr) === true) {
                     return $arr;
                 }
             }
+
             return (array) $candidate;
         }
+
         return null;
     }//end toArray()
-
-
 }//end class

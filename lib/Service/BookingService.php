@@ -33,6 +33,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -68,6 +69,13 @@ class BookingService
      * @var string
      */
     public const BOOKING_SCHEMA_KEY = 'booking_schema';
+
+    /**
+     * Schema slug whose `x-openregister-lifecycle` declares the Booking status graph.
+     *
+     * @var string
+     */
+    private const BOOKING_SCHEMA_SLUG = 'booking';
 
     /**
      * App-config key for the Service schema id/slug.
@@ -738,33 +746,57 @@ class BookingService
     /**
      * The state-machine adjacency map.
      *
+     * Derived from the Booking schema's `x-openregister-lifecycle` declaration
+     * (ADR-031) — the single source of truth that OpenRegister's
+     * LifecycleValidationListener also enforces on save. `fullAdjacencyFor()` seeds
+     * a key for every declared state, so terminal states (completed / no-show /
+     * cancelled-* / rescheduled) appear with an empty target list — preserving the
+     * "Unknown source status" vs "Invalid status transition" distinction in
+     * {@see assertTransitionAllowed()}. Falls back to the mirrored constant only
+     * when the declaration is unreadable, so a broken register file never regresses.
+     *
      * @return array<string, array<int, string>>
      *
      * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
+     * @spec openspec/changes/pipelinq-lifecycle-batch-b/specs/openregister-integration/spec.md
      */
     public static function allowedTransitions(): array
     {
-        return [
-            'pending-deposit'       => [
-                'confirmed',
-                'cancelled-by-customer',
-                'cancelled-by-business',
-                'rescheduled',
-            ],
-            'confirmed'             => [
-                'completed',
-                'no-show',
-                'cancelled-by-customer',
-                'cancelled-by-business',
-                'rescheduled',
-            ],
-            'completed'             => [],
-            'no-show'               => [],
-            'cancelled-by-customer' => [],
-            'cancelled-by-business' => [],
-            'rescheduled'           => [],
-        ];
+        $graph = (new SchemaLifecycleGraph())->fullAdjacencyFor(schemaSlug: self::BOOKING_SCHEMA_SLUG);
+        if ($graph === []) {
+            return self::FALLBACK_TRANSITIONS;
+        }
+
+        return $graph;
     }//end allowedTransitions()
+
+    /**
+     * Fallback state-machine adjacency map used only when the schema declaration
+     * is unreadable. The canonical source of truth is the Booking schema's
+     * `x-openregister-lifecycle` annotation (ADR-031); this constant must mirror it.
+     *
+     * @var array<string, array<int, string>>
+     */
+    private const FALLBACK_TRANSITIONS = [
+        'pending-deposit'       => [
+            'confirmed',
+            'cancelled-by-customer',
+            'cancelled-by-business',
+            'rescheduled',
+        ],
+        'confirmed'             => [
+            'completed',
+            'no-show',
+            'cancelled-by-customer',
+            'cancelled-by-business',
+            'rescheduled',
+        ],
+        'completed'             => [],
+        'no-show'               => [],
+        'cancelled-by-customer' => [],
+        'cancelled-by-business' => [],
+        'rescheduled'           => [],
+    ];
 
     /**
      * Decide whether a cancellation triggers a charge.

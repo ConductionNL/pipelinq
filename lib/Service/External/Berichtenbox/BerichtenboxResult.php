@@ -39,27 +39,29 @@ final class BerichtenboxResult
     /**
      * Construct the result value-object.
      *
-     * @param string              $outcome             Outcome enum.
-     * @param string              $logiusKenmerk       Logius-side
-     *                                                 conversation /
-     *                                                 dispatch handle
-     *                                                 (synthetic for
-     *                                                 dormant).
-     * @param bool                $dormant             TRUE when the
-     *                                                 adapter was
-     *                                                 dormant.
-     * @param array<string,mixed> $extras              Provider-specific
-     *                                                 extras —
-     *                                                 deliveryStatus,
-     *                                                 deliveredAt,
-     *                                                 signatureVerified,
-     *                                                 mailboxLastUsedAt.
+     * @param string              $outcome       Outcome enum.
+     * @param string              $logiusKenmerk Logius-side
+     *                                           conversation
+     *                                           / dispatch
+     *                                           handle
+     *                                           (synthetic
+     *                                           for
+     *                                           dormant).
+     * @param bool                $dormant       TRUE when the
+     *                                           adapter was
+     *                                           dormant.
+     * @param array<string,mixed> $extras        Provider-specific
+     *                                           extras —
+     *                                           deliveryStatus,
+     *                                           deliveredAt,
+     *                                           signatureVerified,
+     *                                           mailboxLastUsedAt.
      */
     public function __construct(
         public readonly string $outcome,
         public readonly string $logiusKenmerk,
         public readonly bool $dormant,
-        public readonly array $extras = [],
+        public readonly array $extras=[],
     ) {
     }//end __construct()
 }//end class

@@ -96,12 +96,12 @@ class BsnAuditService
         string $verzoekreden,
         string $doelbinding,
         string $uitkomst,
-        string $actie = 'brp-lookup-uitgevoerd',
-        ?int $responseCode = null,
-        ?string $haalcentraalCorrelationId = null,
-        ?string $gekoppeldVerzoek = null,
-        ?string $actorRol = null,
-        bool $vogScreening = false,
+        string $actie='brp-lookup-uitgevoerd',
+        ?int $responseCode=null,
+        ?string $haalcentraalCorrelationId=null,
+        ?string $gekoppeldVerzoek=null,
+        ?string $actorRol=null,
+        bool $vogScreening=false,
     ): string {
         $now       = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         $bewaartot = $now->modify('+'.self::RETENTION_YEARS.' years');
@@ -116,8 +116,8 @@ class BsnAuditService
             'doelbinding'               => $doelbinding,
             'uitkomst'                  => $uitkomst,
             'responseCode'              => $responseCode,
-            'ipAdres'                   => self::anonymiseIp($this->request->getRemoteAddress()),
-            'userAgent'                 => 'Pipelinq/' . (Application::APP_ID) . ' (Nextcloud)',
+            'ipAdres'                   => self::anonymiseIp(ip: $this->request->getRemoteAddress()),
+            'userAgent'                 => 'Pipelinq/'.(Application::APP_ID).' (Nextcloud)',
             'haalcentraalCorrelationId' => $haalcentraalCorrelationId,
             'gekoppeldVerzoek'          => $gekoppeldVerzoek,
             'vogScreening'              => $vogScreening,
@@ -140,18 +140,18 @@ class BsnAuditService
             );
 
             $uuid = '';
-            if (is_array($saved)) {
+            if (is_array($saved) === true) {
                 $uuid = (string) ($saved['@self']['id'] ?? $saved['id'] ?? '');
-            } elseif (is_object($saved) && method_exists($saved, 'getUuid')) {
+            } else if (is_object($saved) === true && method_exists($saved, 'getUuid') === true) {
                 $uuid = (string) $saved->getUuid();
             }
 
             $this->logger->info(
                 'BSN audit record written',
                 [
-                    'actie'   => $actie,
-                    'actor'   => $actor,
-                    'bsn'     => $maskedBsn,
+                    'actie'    => $actie,
+                    'actor'    => $actor,
+                    'bsn'      => $maskedBsn,
                     'uitkomst' => $uitkomst,
                 ]
             );
@@ -163,14 +163,14 @@ class BsnAuditService
             $this->logger->error(
                 'BSN audit record write failed',
                 [
-                    'actie'  => $actie,
-                    'actor'  => $actor,
-                    'bsn'    => $maskedBsn,
-                    'error'  => $e->getMessage(),
+                    'actie' => $actie,
+                    'actor' => $actor,
+                    'bsn'   => $maskedBsn,
+                    'error' => $e->getMessage(),
                 ]
             );
             return '';
-        }
+        }//end try
     }//end recordLookup()
 
     /**
@@ -194,7 +194,7 @@ class BsnAuditService
             [$register, $schema] = $this->config();
             $oldHash = BsnValidationService::hash($rawBsn);
             // Pseudonym = HMAC(bsn, secret) — caller-side; we just bump it once.
-            $secret  = $this->appConfig->getValueString(
+            $secret = $this->appConfig->getValueString(
                 Application::APP_ID,
                 'brp.pseudonym_secret',
                 ''
@@ -206,6 +206,7 @@ class BsnAuditService
                 );
                 return 0;
             }
+
             $newHash = hash_hmac('sha256', $rawBsn, $secret);
 
             $records = $this->getObjectService()->findAll(
@@ -216,14 +217,22 @@ class BsnAuditService
 
             $count = 0;
             foreach (($records ?? []) as $record) {
-                $arr = is_array($record) ? $record : (method_exists($record, 'jsonSerialize') ? (array) $record->jsonSerialize() : []);
+                if (is_array($record) === true) {
+                    $arr = $record;
+                } else if (method_exists($record, 'jsonSerialize') === true) {
+                    $arr = (array) $record->jsonSerialize();
+                } else {
+                    $arr = [];
+                }
+
                 $uuid = (string) ($arr['@self']['id'] ?? $arr['id'] ?? '');
                 if ($uuid === '') {
                     continue;
                 }
+
                 // Immutable schema: callers MUST go through the system pseudonym path.
-                $arr['bsnHash'] = $newHash;
-                $arr['actie']   = 'brp-rtbf-gepseudonimiseerd';
+                $arr['bsnHash']  = $newHash;
+                $arr['actie']    = 'brp-rtbf-gepseudonimiseerd';
                 $arr['uitkomst'] = 'gepseudonimiseerd';
                 $this->getObjectService()->saveObject(
                     object: $arr,
@@ -233,7 +242,8 @@ class BsnAuditService
                     uuid: $uuid,
                 );
                 $count++;
-            }
+            }//end foreach
+
             return $count;
         } catch (Throwable $e) {
             $this->logger->error(
@@ -241,7 +251,7 @@ class BsnAuditService
                 ['error' => $e->getMessage()]
             );
             return 0;
-        }
+        }//end try
     }//end pseudonymise()
 
     /**
@@ -258,21 +268,29 @@ class BsnAuditService
         if ($ip === '') {
             return '';
         }
+
         if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
-            $parts = explode('.', $ip);
+            $parts    = explode('.', $ip);
             $parts[3] = '0';
             return implode('.', $parts);
         }
+
         // IPv6: zero the last 5 groups (preserves /48 prefix).
         if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) {
-            $bin    = inet_pton($ip);
+            $bin = inet_pton($ip);
             if ($bin === false) {
                 return '';
             }
-            $masked = substr($bin, 0, 6) . str_repeat("\0", 10);
+
+            $masked = substr($bin, 0, 6).str_repeat("\0", 10);
             $out    = inet_ntop($masked);
-            return $out === false ? '' : $out;
+            if ($out === false) {
+                return '';
+            }
+
+            return $out;
         }
+
         return '';
     }//end anonymiseIp()
 
@@ -290,6 +308,7 @@ class BsnAuditService
         if ($register === '' || $schema === '') {
             throw new \RuntimeException('bsnAuditRecord register/schema not configured.');
         }
+
         return [$register, $schema];
     }//end config()
 

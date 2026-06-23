@@ -64,7 +64,6 @@ class ZgwApiClient
      */
     private const DEFAULT_TIMEOUT = 30;
 
-
     /**
      * Constructor.
      *
@@ -78,7 +77,6 @@ class ZgwApiClient
         private LoggerInterface $logger,
     ) {
     }//end __construct()
-
 
     /**
      * Mint a per-request JWT following VNG-API-Common.
@@ -100,14 +98,16 @@ class ZgwApiClient
      *
      * @throws ZgwException When the vault reference cannot be resolved.
      */
-    public function mintJwt(array $client, int $expiresIn = 3600): string
+    public function mintJwt(array $client, int $expiresIn=3600): string
     {
-        $secret = $this->resolveClientSecret((string) ($client['secretKluisRef'] ?? ''));
+        $secret = $this->resolveClientSecret(reference: (string) ($client['secretKluisRef'] ?? ''));
         if ($secret === '') {
-            throw new ZgwException(sprintf(
+            throw new ZgwException(
+                    sprintf(
                 'ZGW: unable to resolve client secret for "%s"',
                 (string) ($client['clientIdentifier'] ?? '?')
-            ));
+            )
+                    );
         }
 
         $now    = time();
@@ -122,9 +122,8 @@ class ZgwApiClient
             'exp'                 => ($now + max(60, $expiresIn)),
         ];
 
-        return self::encodeJwt($header, $payload, $secret);
+        return self::encodeJwt(header: $header, payload: $payload, secret: $secret);
     }//end mintJwt()
-
 
     /**
      * Send a JSON request to a ZGW component.
@@ -138,13 +137,13 @@ class ZgwApiClient
      * map. The headers map is keyed lowercase for case-insensitive lookup
      * (e.g. `etag`, `location`).
      *
-     * @param string                $componentUrl Component base URL (no trailing slash).
-     * @param string                $method       HTTP method (GET/POST/PATCH/PUT/DELETE).
-     * @param string                $path         Path appended to the base URL (with leading slash).
-     * @param array<string, mixed>  $client       ZgwClient record.
-     * @param array<string, mixed>|null $body     Optional JSON-encodable body.
+     * @param string                    $componentUrl Component base URL (no trailing slash).
+     * @param string                    $method       HTTP method (GET/POST/PATCH/PUT/DELETE).
+     * @param string                    $path         Path appended to the base URL (with leading slash).
+     * @param array<string, mixed>      $client       ZgwClient record.
+     * @param array<string, mixed>|null $body         Optional JSON-encodable body.
      * @param array<string, string>     $extraHeaders Extra headers (e.g. If-Match).
-     * @param array<string, string|int> $query    Optional query parameters.
+     * @param array<string, string|int> $query        Optional query parameters.
      *
      * @return array{status:int, body:array<string,mixed>, headers:array<string,string>}
      *
@@ -157,24 +156,30 @@ class ZgwApiClient
         string $method,
         string $path,
         array $client,
-        ?array $body = null,
-        array $extraHeaders = [],
-        array $query = [],
+        ?array $body=null,
+        array $extraHeaders=[],
+        array $query=[],
     ): array {
         $expiresIn = (int) ($client['tokenLevensduurSeconden'] ?? 3600);
-        $jwt       = $this->mintJwt($client, $expiresIn);
+        $jwt       = $this->mintJwt(client: $client, expiresIn: $expiresIn);
 
         $url = rtrim($componentUrl, '/').'/'.ltrim($path, '/');
         if ($query !== []) {
-            $url .= (str_contains($url, '?') === true ? '&' : '?').http_build_query($query);
+            if (str_contains($url, '?') === true) {
+                $separator = '&';
+            } else {
+                $separator = '?';
+            }
+
+            $url .= $separator.http_build_query($query);
         }
 
         $headers = array_merge(
             [
-                'Authorization'      => 'Bearer '.$jwt,
-                'Accept'             => 'application/json',
-                'Accept-Crs'         => 'EPSG:4326',
-                'Content-Crs'        => 'EPSG:4326',
+                'Authorization' => 'Bearer '.$jwt,
+                'Accept'        => 'application/json',
+                'Accept-Crs'    => 'EPSG:4326',
+                'Content-Crs'   => 'EPSG:4326',
             ],
             $extraHeaders
         );
@@ -186,7 +191,7 @@ class ZgwApiClient
 
         if ($body !== null) {
             $options['headers']['Content-Type'] = 'application/json';
-            $options['body']                    = json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $options['body'] = json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
 
         $nextcloudClient = $this->clientService->newClient();
@@ -201,23 +206,27 @@ class ZgwApiClient
                 default  => throw new ZgwException('ZGW: unsupported HTTP method "'.$method.'"'),
             };
         } catch (Throwable $e) {
-            $this->translateTransportError($e, $url, $method);
-            // translateTransportError always throws; this is unreachable but keeps static analysis happy.
+            $this->translateTransportError(error: $e, url: $url, method: $method);
+            // TranslateTransportError always throws; this is unreachable but keeps static analysis happy.
             throw new ZgwException('ZGW: transport error', 0, $e);
         }
 
         $status  = (int) $response->getStatusCode();
         $rawBody = (string) $response->getBody();
-        $decoded = ($rawBody === '') ? [] : json_decode($rawBody, true);
+        if ($rawBody === '') {
+            $decoded = [];
+        } else {
+            $decoded = json_decode($rawBody, true);
+        }
+
         if (is_array($decoded) === false) {
             $decoded = ['raw' => $rawBody];
         }
 
-        $headerMap = self::normaliseHeaders($response->getHeaders());
+        $headerMap = self::normaliseHeaders(headers: $response->getHeaders());
 
         return ['status' => $status, 'body' => $decoded, 'headers' => $headerMap];
     }//end callComponent()
-
 
     /**
      * Resolve a vault reference (`vault://...`) to a raw secret string.
@@ -250,7 +259,6 @@ class ZgwApiClient
         return $this->appConfig->getValueString(Application::APP_ID, $key, '');
     }//end resolveClientSecret()
 
-
     /**
      * Translate a transport-level exception into a domain error.
      *
@@ -267,9 +275,14 @@ class ZgwApiClient
      */
     private function translateTransportError(Throwable $error, string $url, string $method): void
     {
-        $status   = (int) (method_exists($error, 'getCode') === true ? $error->getCode() : 0);
-        $message  = $error->getMessage();
-        $body     = '';
+        if (method_exists($error, 'getCode') === true) {
+            $status = (int) $error->getCode();
+        } else {
+            $status = 0;
+        }
+
+        $message = $error->getMessage();
+        $body    = '';
 
         // Many Nextcloud HTTP client exceptions expose the response on a
         // `getResponse()` accessor (Guzzle-flavoured); we sniff it here so
@@ -279,6 +292,7 @@ class ZgwApiClient
             if ($resp !== null && method_exists($resp, 'getStatusCode') === true) {
                 $status = (int) $resp->getStatusCode();
             }
+
             if ($resp !== null && method_exists($resp, 'getBody') === true) {
                 $body = (string) $resp->getBody();
             }
@@ -290,7 +304,7 @@ class ZgwApiClient
         );
 
         if ($status === 401 || $status === 403) {
-            if (self::looksLikeClockSkew($body) === true || self::looksLikeClockSkew($message) === true) {
+            if (self::looksLikeClockSkew(text: $body) === true || self::looksLikeClockSkew(text: $message) === true) {
                 throw new ClockSkewException(
                     sprintf('ZGW: JWT clock-skew rejection from %s (status %d)', $url, $status),
                     observedTime: time()
@@ -319,7 +333,6 @@ class ZgwApiClient
         );
     }//end translateTransportError()
 
-
     /**
      * Heuristic: does the body/message look like a VNG clock-skew fault?
      *
@@ -332,15 +345,16 @@ class ZgwApiClient
         if ($text === '') {
             return false;
         }
+
         $needles = ['JWT verlopen', 'JWT nog niet geldig', 'jwt verlopen', 'jwt nog niet geldig'];
         foreach ($needles as $needle) {
             if (stripos($text, $needle) !== false) {
                 return true;
             }
         }
+
         return false;
     }//end looksLikeClockSkew()
-
 
     /**
      * Lowercase header keys for case-insensitive lookup.
@@ -353,11 +367,15 @@ class ZgwApiClient
     {
         $out = [];
         foreach ($headers as $key => $value) {
-            $out[strtolower((string) $key)] = is_array($value) ? (string) ($value[0] ?? '') : (string) $value;
+            if (is_array($value) === true) {
+                $out[strtolower((string) $key)] = (string) ($value[0] ?? '');
+            } else {
+                $out[strtolower((string) $key)] = (string) $value;
+            }
         }
+
         return $out;
     }//end normaliseHeaders()
-
 
     /**
      * Encode a JWT (HS256). Extracted as a static helper so unit tests can
@@ -371,15 +389,14 @@ class ZgwApiClient
      */
     public static function encodeJwt(array $header, array $payload, string $secret): string
     {
-        $segments  = [];
-        $segments[] = self::base64UrlEncode((string) json_encode($header, JSON_UNESCAPED_SLASHES));
-        $segments[] = self::base64UrlEncode((string) json_encode($payload, JSON_UNESCAPED_SLASHES));
+        $segments   = [];
+        $segments[] = self::base64UrlEncode(input: (string) json_encode($header, JSON_UNESCAPED_SLASHES));
+        $segments[] = self::base64UrlEncode(input: (string) json_encode($payload, JSON_UNESCAPED_SLASHES));
         $signing    = implode('.', $segments);
         $signature  = hash_hmac('sha256', $signing, $secret, true);
-        $segments[] = self::base64UrlEncode($signature);
+        $segments[] = self::base64UrlEncode(input: $signature);
         return implode('.', $segments);
     }//end encodeJwt()
-
 
     /**
      * Decode a JWT segment (header or payload only).
@@ -396,14 +413,15 @@ class ZgwApiClient
         if (count($parts) !== 3) {
             return null;
         }
-        $header  = json_decode((string) self::base64UrlDecode($parts[0]), true);
-        $payload = json_decode((string) self::base64UrlDecode($parts[1]), true);
+
+        $header  = json_decode((string) self::base64UrlDecode(input: $parts[0]), true);
+        $payload = json_decode((string) self::base64UrlDecode(input: $parts[1]), true);
         if (is_array($header) === false || is_array($payload) === false) {
             return null;
         }
+
         return ['header' => $header, 'payload' => $payload];
     }//end inspectJwt()
-
 
     /**
      * Verify a JWT's HS256 signature.
@@ -419,12 +437,12 @@ class ZgwApiClient
         if (count($parts) !== 3) {
             return false;
         }
+
         $signing  = $parts[0].'.'.$parts[1];
         $expected = hash_hmac('sha256', $signing, $secret, true);
-        $actual   = self::base64UrlDecode($parts[2]);
+        $actual   = self::base64UrlDecode(input: $parts[2]);
         return ($actual !== null && hash_equals($expected, $actual) === true);
     }//end verifyJwt()
-
 
     /**
      * Base64-url encode.
@@ -438,7 +456,6 @@ class ZgwApiClient
         return rtrim(strtr(base64_encode($input), '+/', '-_'), '=');
     }//end base64UrlEncode()
 
-
     /**
      * Base64-url decode.
      *
@@ -450,9 +467,12 @@ class ZgwApiClient
     {
         $padded  = $input.str_repeat('=', (4 - (strlen($input) % 4)) % 4);
         $decoded = base64_decode(strtr($padded, '-_', '+/'), true);
-        return $decoded === false ? null : $decoded;
-    }//end base64UrlDecode()
+        if ($decoded === false) {
+            return null;
+        }
 
+        return $decoded;
+    }//end base64UrlDecode()
 
     /**
      * Effective HTTP timeout (seconds).
@@ -462,8 +482,10 @@ class ZgwApiClient
     private function getTimeout(): int
     {
         $value = $this->appConfig->getValueInt(Application::APP_ID, 'zgw.http_timeout', self::DEFAULT_TIMEOUT);
-        return $value > 0 ? $value : self::DEFAULT_TIMEOUT;
+        if ($value > 0) {
+            return $value;
+        }
+
+        return self::DEFAULT_TIMEOUT;
     }//end getTimeout()
-
-
 }//end class

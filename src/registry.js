@@ -33,8 +33,6 @@ import PipelineValueKpiWidget from './views/dashboard/widgets/PipelineValueKpiWi
 import OverdueKpiWidget from './views/dashboard/widgets/OverdueKpiWidget.vue'
 import RequestsByStatusWidget from './views/dashboard/widgets/RequestsByStatusWidget.vue'
 import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
-import MrrKpiWidget from './views/dashboard/widgets/MrrKpiWidget.vue'
-import RenewalsDueWidget from './views/dashboard/widgets/RenewalsDueWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
@@ -121,20 +119,27 @@ import ExportDestinationFormView from './views/export/ExportDestinationForm.vue'
 import ExportRunsView from './views/export/ExportRuns.vue'
 import ExportRunDetailView from './views/export/ExportRunDetail.vue'
 
-// --- POS transactions (lib gap: list needs custom row navigation to the cart
-//     editor; detail needs lifecycle action buttons + tax breakdown; form is a
-//     bespoke cart editor with real-time totals). ---
-import PosTransactionListView from './views/pos/PosTransactionList.vue'
-import PosTransactionDetailView from './views/pos/PosTransactionDetail.vue'
+// --- POS transactions. The detail page is now a declarative type:"detail" page
+//     (pipelinq-pos-mdm-detail-declarative): the transaction's flat fields
+//     auto-render, the line items are a relatedCollections table, and the
+//     status-gated action toolbar (bespoke /api/pos-transactions endpoints) +
+//     tax breakdown + tender panel + payment card + receipt modals live in one
+//     kind:'section' bodyWidget. The form is a bespoke cart editor. ---
+import PosTransactionActionsSection from './components/pos/PosTransactionActionsSection.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
-import PosRefundListView from './views/pos/PosRefundList.vue'
-import PosRefundDetailView from './views/pos/PosRefundDetail.vue'
+// --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
+//     declarative): refund fields auto-render; the manager-gated confirm/reject
+//     actions + the cross-schema "Returned items" join + totals are a section. ---
+import PosRefundActionsSection from './components/pos/PosRefundActionsSection.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 
-// --- POS cash drawer (lib gap: index/detail pages cannot express the cash-shift
-//     lifecycle — declare float, record drops, blind count, variance reconcile). ---
+// --- POS cash drawer. The detail page is now a declarative type:"detail" page
+//     (pipelinq-pos-mdm-detail-declarative): the shift's float fields auto-render,
+//     the drops are a relatedCollections table, and the variance/diff projection
+//     + drop/count/reconcile actions (bespoke /api/pos-shifts endpoints) are a
+//     kind:'section' bodyWidget. ---
 import CashShiftListView from './views/pos/CashShiftList.vue'
-import CashShiftDetailView from './views/pos/CashShiftDetail.vue'
+import CashShiftActionsSection from './components/pos/CashShiftActionsSection.vue'
 
 // --- POS staff PIN + role permissions (pos-staff-pin-permissions). ---
 import PosRoleListView from './views/pos/PosRoleList.vue'
@@ -147,12 +152,14 @@ import PosStaffFormView from './views/pos/PosStaffForm.vue'
 //     CRUD inline (no separate detail route). ---
 import PosTenderTypeListView from './views/pos/PosTenderTypeList.vue'
 
-// --- POS end-of-day Z-report (lib gap: index/detail pages cannot express the
-//     server-authoritative Z-report aggregation + shillinq journal-raise status
-//     + manager-gated re-raise). The GL-mapping admin surface is delegated to
-//     shillinq (pipelinq-bookkeeping-to-shillinq) and removed here. ---
-import ZReportListView from './views/pos/ZReportList.vue'
-import ZReportDetailView from './views/pos/ZReportDetail.vue'
+// --- POS end-of-day Z-report. The per-report page is now a declarative
+//     type:"detail" page (pipelinq-detail-pages-declarative-r3): the Z-report's
+//     flat fields auto-render via CnObjectDataWidget; the BTW + payment-method
+//     breakdown tables (array fields on the object) and the shillinq
+//     bookkeeping-status projection + manager-gated re-raise live in one
+//     kind:'section' bodyWidget (ZReportBookkeepingSection). The GL journal
+//     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
+import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
@@ -178,6 +185,7 @@ import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
 //     event log; cti-screenpop-adapter). ---
 import CtiSettingsView from './views/settings/CtiSettings.vue'
 import CtiEventLogView from './views/settings/CtiEventLog.vue'
+import CtiPageView from './views/settings/CtiPage.vue'
 
 // --- POS pluggable payment provider adapter (pos-payment-provider-adapter):
 //     admin-only credential form for Mollie / CCV / Adyen / Stripe with
@@ -201,21 +209,29 @@ import ExpenseDetailView from './views/expenses/ExpenseDetail.vue'
 //     bespoke color-swatch + DBA / active badge column layout the
 //     declarative type:"index" page cannot express. Donut widget for the
 //     dashboard (hours per billing category) registered as a slot. ---
-import BillingCategoryListView from './views/billingCategories/BillingCategoryList.vue'
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
 
 // --- Klantbeeld 360 (lib gap: no cross-module KPI dashboard with a
 //     trailing-period filter wired to a domain-specific aggregation
 //     endpoint, and no pipeline KPI / stage-funnel page driving four
-//     bespoke ratio KPIs off lead-collection client-side aggregation;
-//     ClientDetail + ContactDetail aggregate 5 cross-schema sections
-//     with per-section loading and a contact->client linking dialog,
-//     beyond what a declarative type:"detail" page can express). ---
-import AnalyticsDashboard from './views/analytics/AnalyticsDashboard.vue'
+//     bespoke ratio KPIs off lead-collection client-side aggregation). ---
 import SlaAttainmentDashboard from './views/sla/SlaAttainmentDashboard.vue'
 import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
-import ClientDetail from './views/clients/ClientDetail.vue'
-import ContactDetail from './views/contacts/ContactDetail.vue'
+
+// --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
+//     declarative). The ClientDetail / ContactDetail monolithic page-host views
+//     are gone — the pages are declarative type:"detail" manifest entries whose
+//     identity/account fields auto-render in the body, KPI chips come from
+//     `summaryAggregates`, related lists from `relatedCollections`, the parent-
+//     org link from `relationLinks`, and these rich sub-features stay in the
+//     page body via `bodyWidgets` (kind:'section'). Each reads the live object
+//     via props (token-resolved `@objectId`) — no page host needed. ---
+import ContactRelationships from './components/ContactRelationships.vue'
+import ActivityTimeline from './components/ActivityTimeline.vue'
+import CommunicationHistory from './components/CommunicationHistory.vue'
+import BookingsCard from './components/bookings/BookingsCard.vue'
+import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
+import BrpContactPanel from './components/BrpContactPanel.vue'
 
 // --- Project / WBS hierarchy (project-task-hierarchy):
 //     four schemas (project / projectPhase / projectTask / projectActivity)
@@ -224,7 +240,6 @@ import ContactDetail from './views/contacts/ContactDetail.vue'
 //     because the declarative type:"detail" cannot drive the cross-schema
 //     parallel relation fetch, the resolved-billable inheritance chain or
 //     the inline-add CnFormDialogs feeding three different schemas. ---
-import ProjectList from './views/projects/ProjectList.vue'
 import ProjectDetail from './views/projects/ProjectDetail.vue'
 import ProjectActivityList from './views/projects/ProjectActivityList.vue'
 
@@ -234,7 +249,6 @@ import ProjectActivityList from './views/projects/ProjectActivityList.vue'
 //     the monitor polls /api/blasts/:id every 2s and stops on terminal status.
 //     SegmentBuilder + SegmentRuleNode live under components/ for reuse by
 //     forthcoming SegmentEditor / dashboard surfaces (slice 08). ---
-import BlastListView from './views/blasts/BlastList.vue'
 import BlastFormView from './views/blasts/BlastForm.vue'
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
@@ -242,18 +256,22 @@ import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.v
 // --- Appointment booking — admin surface (appointment-booking 11 of 12).
 //     Service / Resource / Booking list + detail views; resolved by the v2
 //     renderer from the manifest.d fragment at render time. ---
-import ServiceListView from './views/bookings/ServiceList.vue'
 import ServiceDetailView from './views/bookings/ServiceDetail.vue'
-import ResourceListView from './views/bookings/ResourceList.vue'
 import ResourceDetailView from './views/bookings/ResourceDetail.vue'
-import BookingListView from './views/bookings/BookingList.vue'
-import BookingDetailView from './views/bookings/BookingDetail.vue'
+// BookingDetail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
+// declarative); its TIME-WINDOW-gated admin actions + array-on-object tables +
+// computed timeline + notes editor stay in the page body via this kind:'section'.
+import BookingDetailSection from './components/bookings/BookingDetailSection.vue'
 
-// --- KCC Werkplek (kcc-werkplek): unified KCC agent workspace combining
-//     inbox + contactmoment registration + inline knowledge search +
-//     availability toggle in a single three-panel page. Lib gap: no
-//     multi-panel workspace page type exists. ---
-import KccWerkplekPage from './views/werkplek/KccWerkplekPage.vue'
+// --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
+//     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
+//     queue filter, the active-interaction form, the summary-driven knowledge
+//     base and the client overview are all widgets on the standard dashboard
+//     grid (header + actions + single scroll region). Only two small host
+//     widgets remain: the queue filter (pipelinq-specific /state endpoint) and
+//     the header agent-availability toggle. ---
+import WerkplekQueueFilter from './views/werkplek/widgets/WerkplekQueueFilter.vue'
+import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 
 // --- xWiki integration (xwiki-integration): dashboard widget wrapper +
 //     reusable widget / sidebar / viewer / list components. ---
@@ -267,12 +285,28 @@ import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import AvgDashboardView from './views/avg/AvgDashboard.vue'
 import AvgRequestDetailView from './views/avg/AvgRequestDetail.vue'
 import AvgIntakeView from './views/avg/AvgIntakeView.vue'
-// --- Master Data Management (MDM) bespoke steward views. ---
+// --- Master Data Management (MDM) bespoke steward views. The master-entity
+//     detail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
+//     declarative): the masterEntity register fields auto-render, the raw
+//     sourceRecord children are a relatedCollections table, and the server-
+//     computed golden-record + provenance + lineage projection + the conflict-
+//     resolution modal live in one kind:'section' bodyWidget. ---
 import MdmMasterEntityListView from './views/mdm/MdmMasterEntityListView.vue'
-import MdmMasterEntityDetailView from './views/mdm/MdmMasterEntityDetailView.vue'
+import MdmGoldenRecordSection from './components/mdm/MdmGoldenRecordSection.vue'
 import MdmDataQualityDashboard from './views/mdm/MdmDataQualityDashboard.vue'
 import MdmDuplicateCandidatesDashboard from './views/mdm/MdmDuplicateCandidatesDashboard.vue'
 import MdmSyncQueueAdmin from './views/mdm/MdmSyncQueueAdmin.vue'
+
+// --- Contact-aware create overrides (kind:"create-override"). The
+//     client/contact schemas mark `contactsUid` REQUIRED, so a plain
+//     objectStore.saveObject() 400s. These handlers post the create-form to
+//     POST /api/contacts-sync/create (provisions the NC addressbook contact +
+//     fills the FK) and return the created object — the same path the bespoke
+//     ClientCreateDialog uses. CnPageRenderer resolves a manifest
+//     `config.createOverride` string to one of these and forwards it to
+//     CnIndexPage's createOverride prop, so the GENERIC Add button on the
+//     declarative Clients/Contacts index pages is contact-aware too. ---
+import { createWithContact } from './services/contactSyncApi.js'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
 
@@ -354,18 +388,6 @@ const registry = {
 		...KPI_WIDGET_META,
 		_note: 'KPI card for open leads (leads minus those in pipeline stages flagged isClosed). Renders <CnStatsBlock>.',
 	},
-	MrrKpiWidget: {
-		kind: 'widget',
-		component: MrrKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'MRR KPI card (contract-renewal-tracking) — current monthly recurring revenue with ARR sub-label, computed from active + expiring contracts. Renders <CnStatsBlock>.',
-	},
-	RenewalsDueWidget: {
-		kind: 'widget',
-		component: RenewalsDueWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Renewals-due list (contract-renewal-tracking) — expiring contracts by endDate with deep links and empty state; aggregation the declarative stats-block shorthand cannot express.',
-	},
 	OpenRequestsKpiWidget: {
 		kind: 'widget',
 		component: OpenRequestsKpiWidget,
@@ -406,13 +428,13 @@ const registry = {
 		kind: 'widget',
 		component: ClientOverviewWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Top-5 recent clients with a view-all link to ClientList.',
+		_note: 'Top-5 recent clients with a view-all link to the Clients index page.',
 	},
 	NaviAnalyticsWidget: {
 		kind: 'widget',
 		component: NaviAnalyticsWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnTableWidget / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
+		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnDataTable / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
 	},
 	LeadConversionKpiWidget: {
 		kind: 'widget',
@@ -649,16 +671,14 @@ const registry = {
 		_note: 'External integration sync configuration panel; lib gap: no settings rich-section type for complex integration config.',
 	},
 
-	// --- POS transactions. ---
-	PosTransactionListView: {
-		kind: 'page',
-		component: PosTransactionListView,
-		_note: 'POS receipt list; custom so rows navigate to the cart editor / detail and the empty state offers "Nieuwe transactie".',
-	},
-	PosTransactionDetailView: {
-		kind: 'page',
-		component: PosTransactionDetailView,
-		_note: 'POS receipt detail with context-sensitive lifecycle buttons (confirm/settle/refund/park/resume), per-rate tax breakdown and totals; lib detail page cannot express POS lifecycle actions.',
+	// --- POS transactions. The PosTransactions list + detail are now declarative
+	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
+	//     declarative); only the bespoke cart-editor form view + the detail's
+	//     in-body action section stay registered. ---
+	PosTransactionActionsSection: {
+		kind: 'section',
+		component: PosTransactionActionsSection,
+		_note: 'POS transaction in-body section for the declarative type:"detail" PosTransactionDetail page. The status-gated action toolbar (confirm/park/resume/settle/refund/print/email) POSTs to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects — NOT OR /transition, and posTransaction has no x-openregister-lifecycle, so CnLifecycleActions cannot drive them. Also hosts the tax-breakdown + totals, the interactive TenderEntryPanel and the PaymentStatusCard. Self-fetches by @objectId.',
 	},
 	PosTransactionFormView: {
 		kind: 'page',
@@ -666,16 +686,13 @@ const registry = {
 		_note: 'Bespoke cart editor: inline line-item rows with product picker + real-time totals; lib has no cart/line-editor page type.',
 	},
 
-	// --- POS refunds / returns. ---
-	PosRefundListView: {
-		kind: 'page',
-		component: PosRefundListView,
-		_note: 'Refund list; custom so rows navigate to the refund detail and the empty state offers "Nieuwe retour".',
-	},
-	PosRefundDetailView: {
-		kind: 'page',
-		component: PosRefundDetailView,
-		_note: 'Refund detail with manager-gated confirm/reject lifecycle buttons, returned-line table, server-computed totals and the original-transaction context; lib detail page cannot express POS refund lifecycle actions.',
+	// --- POS refunds / returns. The PosRefunds list + detail are now declarative
+	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
+	//     declarative). ---
+	PosRefundActionsSection: {
+		kind: 'section',
+		component: PosRefundActionsSection,
+		_note: 'POS refund in-body section for the declarative type:"detail" PosRefundDetail page. Manager-gated Bevestigen/Afwijzen POST to bespoke /api/pos-refunds/{id}/{action} endpoints (posRefund has no x-openregister-lifecycle). Hosts the cross-schema "Returned items" JOIN (each posRefundLine enriched with its original posTransactionLine — relatedCollections renders ONE schema and cannot join) + the refund totals. Self-fetches by @objectId.',
 	},
 	PosRefundFormView: {
 		kind: 'page',
@@ -689,10 +706,10 @@ const registry = {
 		component: CashShiftListView,
 		_note: 'Cash-shift list; custom so rows navigate to the drawer-reconciliation detail and the empty state offers "Shift openen".',
 	},
-	CashShiftDetailView: {
-		kind: 'page',
-		component: CashShiftDetailView,
-		_note: 'Cash-shift detail: float declaration, drops panel, blind-count entry and the server-authoritative variance panel with manager-gated approve/reject; lib detail page cannot express the cash-drawer lifecycle.',
+	CashShiftActionsSection: {
+		kind: 'section',
+		component: CashShiftActionsSection,
+		_note: 'Cash-shift in-body section for the declarative type:"detail" CashShiftDetail page. The Geld verwijderen (drop) / Shift afsluiten en tellen (count) / reconcile actions POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints (cashShift has no x-openregister-lifecycle). Hosts the latest/pending cashDiff VARIANCE projection (relatedCollections lists ALL children — it cannot pick the single most-relevant diff with its tolerance verdict) + manager-gated approve/reject. Self-fetches by @objectId.',
 	},
 
 	// --- POS staff PIN + role permissions (pos-staff-pin-permissions). ---
@@ -724,16 +741,15 @@ const registry = {
 		_note: 'POS tender-type list (Contant / Betaalpas / Cadeaubon / ...) with inline create / edit / delete via PosTenderTypeFormDialog; admin-only configuration of available payment methods and their GL accounts.',
 	},
 
-	// --- POS end-of-day bookkeeping. ---
-	ZReportListView: {
-		kind: 'page',
-		component: ZReportListView,
-		_note: 'Daily Z-report list with status / date / terminal filters; rows navigate to the per-report detail with the shillinq journal-raise status and manager-gated re-raise (pipelinq-bookkeeping-to-shillinq).',
-	},
-	ZReportDetailView: {
-		kind: 'page',
-		component: ZReportDetailView,
-		_note: 'Z-report detail: server-authoritative summary, tax breakdown, payment-method breakdown, shillinq bookkeeping-status projection and the manager-gated re-raise action. The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
+	// --- POS end-of-day bookkeeping. The Z-report list is a declarative
+	//     type:"index" page and the per-report page is now a declarative
+	//     type:"detail" page (pipelinq-detail-pages-declarative-r3); only this
+	//     in-body section (breakdown tables + bookkeeping projection + re-raise)
+	//     stays as host-app code. ---
+	ZReportBookkeepingSection: {
+		kind: 'section',
+		component: ZReportBookkeepingSection,
+		_note: 'Z-report in-body section for the declarative type:"detail" ZReportDetail page: BTW + payment-method breakdown tables (array fields on the object, not FK children) plus the shillinq bookkeeping-status projection and the manager-gated, idempotent re-raise action (POST /api/pos-bookkeeping/post). Self-fetches by @objectId so it stays in sync after a re-raise. The GL journal itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq).',
 	},
 	PosCustomerSettingsView: {
 		kind: 'page',
@@ -778,23 +794,11 @@ const registry = {
 	},
 
 	// --- Billing categories (billable-categories-and-tags). ---
-	BillingCategoryListView: {
-		kind: 'page',
-		component: BillingCategoryListView,
-		_note: 'Billing-category management list (REQ-BCT-001) with color-swatch + DBA / active / default badges and client-side billable→non-billable→internal sort.',
-	},
 	BillingCategoryWidget: {
 		kind: 'widget',
 		component: BillingCategoryWidget,
 		...PANEL_WIDGET_META,
 		_note: 'Donut chart of hours per billing category for the Dashboard (REQ-BCT-004). Clicking a segment navigates to the time entry list filtered by that category.',
-	},
-
-	// --- Klantbeeld 360 — cross-module analytics dashboard. ---
-	AnalyticsDashboard: {
-		kind: 'page',
-		component: AnalyticsDashboard,
-		_note: 'Cross-module KPI dashboard (Open Pipeline Value / Open Requests / Contactmomenten / Active Leads) with a trailing-period filter; driven by a server-side aggregation endpoint so large installations are not forced to fetch full collections client-side.',
 	},
 
 	// --- SLA engine — attainment dashboard (sla-engine-and-escalation Feature 12). ---
@@ -811,18 +815,41 @@ const registry = {
 		_note: 'Per-pipeline KPI cards (Total Pipeline Value / Win Rate / Avg Deal Size / Active Opportunities) and a horizontal stage-funnel CnChartWidget; client-side aggregation is appropriate (< 500 leads per pipeline) and gives instant updates on pipeline switch.',
 	},
 
-	// --- Klantbeeld 360 — Client 360 view. ---
-	ClientDetail: {
-		kind: 'page',
-		component: ClientDetail,
-		_note: 'Aggregates 5 cross-schema relation sections (leads / contactmomenten / requests / contacts / complaints) with per-section loading + per-section error state, summary statistics card and delete-with-link-warning dialog; declarative type:"detail" cannot express the parallel cross-schema fetches with section-isolation.',
+	// --- Client / Contact 360 detail in-body sections (kind:'section').
+	//     Registered for the declarative type:"detail" ClientDetail /
+	//     ContactDetail pages' `config.bodyWidgets`. Each is a self-fetching
+	//     sub-feature that reads the live object via props (token-resolved
+	//     `@objectId`). CnBodySections renders them as titled body sections
+	//     (NOT sidebar tabs) and also `provide`s `cnSectionContext`. ---
+	ContactRelationships: {
+		kind: 'section',
+		component: ContactRelationships,
+		_note: 'Outbound/inbound relationship graph for a client or contact; self-fetches by entityId/entityType.',
 	},
-
-	// --- Klantbeeld 360 — Contact detail with parent-organisation card. ---
-	ContactDetail: {
-		kind: 'page',
-		component: ContactDetail,
-		_note: 'Parent Organisation card with quick-link CnFormDialog for setting contact.client; declarative type:"detail" has no way to drive a searchable client-select dialog tied to the contact save flow.',
+	ActivityTimeline: {
+		kind: 'section',
+		component: ActivityTimeline,
+		_note: 'Chronological activity feed for an entity; self-fetches by entityType/entityId.',
+	},
+	CommunicationHistory: {
+		kind: 'section',
+		component: CommunicationHistory,
+		_note: 'Paginated contactmoment feed for an entity; self-fetches by entityType/entityId.',
+	},
+	BookingsCard: {
+		kind: 'section',
+		component: BookingsCard,
+		_note: 'Appointment-booking timeline for a customer (client); self-fetches by customerId (REQ-APT-014).',
+	},
+	ContactmomentQuickLog: {
+		kind: 'section',
+		component: ContactmomentQuickLog,
+		_note: 'Inline contactmoment quick-log form pre-bound to the client (clientId, inline mode). On save it emits @saved; in declarative mode the page is refreshed via the CnDetailPage Refresh action rather than an imperative re-fetch.',
+	},
+	BrpContactPanel: {
+		kind: 'section',
+		component: BrpContactPanel,
+		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
 
 	// --- BI export + data-warehouse sink. ---
@@ -866,7 +893,12 @@ const registry = {
 	CtiEventLogView: {
 		kind: 'page',
 		component: CtiEventLogView,
-		_note: 'CTI admin event-log inspector (last 30 days): platform + event-type filters, payload modal; lib gap: no audit/event-log page type that filters by platform.',
+		_note: 'CTI admin event-log inspector (last 30 days): platform + event-type filters, payload modal; lib gap: no audit/event-log page type that filters by platform. Kept registered so the legacy /settings/cti/event-log deep link stays reachable; the navigation now uses the merged CtiPageView.',
+	},
+	CtiPageView: {
+		kind: 'page',
+		component: CtiPageView,
+		_note: 'Merged CTI (telephony) settings page (pipelinq-cti-and-catalog-ia): composes the CtiSettings integration config and the CtiEventLog webhook log into one settings-section page so the former two Administration menu entries become one entry under Settings.',
 	},
 
 	// --- POS pluggable payment provider adapter (pos-payment-provider-adapter). ---
@@ -877,11 +909,6 @@ const registry = {
 	},
 
 	// --- Project / WBS hierarchy (project-task-hierarchy). ---
-	ProjectList: {
-		kind: 'page',
-		component: ProjectList,
-		_note: 'Project list view wrapping CnIndexPage with per-cell slot overrides for status pill, billable indicator, budget/logged progress and overdue-end-date treatment (REQ-PTH-006).',
-	},
 	ProjectDetail: {
 		kind: 'page',
 		component: ProjectDetail,
@@ -905,12 +932,9 @@ const registry = {
 		_note: 'StUF per-call audit log inspector (REQ-STUF-008): direction + bericht + status filters, inline envelope XML inspection, retries[] history and fout payload; CSV export. Lib gap: no envelope-style audit-log page type.',
 	},
 
-	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). ---
-	BlastListView: {
-		kind: 'page',
-		component: BlastListView,
-		_note: 'Blasts list (marketing-segmentation-and-blast 07): CnIndexPage with bespoke columns (name, channel, status, scheduledFor, sentAt) and a "New blast" header action routing to the multi-step wizard.',
-	},
+	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). The
+	//     Blasts list is now a declarative type:"index" page
+	//     (pipelinq-declarative-pages-round1). ---
 	BlastFormView: {
 		kind: 'page',
 		component: BlastFormView,
@@ -928,42 +952,45 @@ const registry = {
 	},
 
 	// --- Appointment booking — admin views (appointment-booking 11 of 12). ---
-	ServiceListView: {
-		kind: 'page',
-		component: ServiceListView,
-		_note: 'Service catalogue list with formatted duration / currency cells and a status badge; lib gap: declarative index page cannot express the duration / currency cell renderers.',
-	},
 	ServiceDetailView: {
 		kind: 'page',
 		component: ServiceDetailView,
 		_note: 'Service detail + edit page with the multiStep sub-table editor, deposit / cancellation policy cards and a best-effort availabilityCache invalidation hook on save (REQ-APT-015).',
-	},
-	ResourceListView: {
-		kind: 'page',
-		component: ResourceListView,
-		_note: 'Resource list (staff / room / equipment) with type + bookable + status badges.',
 	},
 	ResourceDetailView: {
 		kind: 'page',
 		component: ResourceDetailView,
 		_note: 'Resource detail + edit page with the 7-weekday workingHours grid, vacation list, validation (open<close, startDate<=endDate) and per-resource cache invalidation on save (REQ-APT-002).',
 	},
-	BookingListView: {
-		kind: 'page',
-		component: BookingListView,
-		_note: 'Booking list with formatted start-time and status badge; admins create bookings through the public portal on a customer\'s behalf, no inline create.',
-	},
-	BookingDetailView: {
-		kind: 'page',
-		component: BookingDetailView,
-		_note: 'Booking detail with context-sensitive lifecycle buttons (Reschedule / Cancel / Mark Completed / Mark No-show / Send Reminder / Confirm Deposit) wired to the BookingAdminController endpoints, inline notes editor, audit-trail card and a chronological timeline (REQ-APT-015).',
+	// --- Booking detail is now a declarative type:"detail" page
+	//     (pipelinq-pos-mdm-detail-declarative); the booking's flat fields
+	//     auto-render and this in-body section carries everything no primitive
+	//     expresses: the six TIME-WINDOW-gated admin actions (POST to bespoke
+	//     /api/bookings/{id}/{action} with side-effects, Reschedule navigates to
+	//     a new UUID), the inline notes editor, the resourceAssignments +
+	//     statusHistory array-on-object tables, and the computed timeline. ---
+	BookingDetailSection: {
+		kind: 'section',
+		component: BookingDetailSection,
+		_note: 'Booking in-body section for the declarative type:"detail" BookingDetail page. lifecycleActions is intentionally NOT used even though booking has an x-openregister-lifecycle: the real transitions POST to BookingService endpoints with side-effects (confirmation/reminder emails, no-show fees) and time-window gating, and Reschedule creates a new booking UUID — OR /transition would only flip status and bypass those. Self-fetches by @objectId.',
 	},
 
-	// --- KCC Werkplek — unified agent workspace (kcc-werkplek). ---
-	KccWerkplekPage: {
-		kind: 'page',
-		component: KccWerkplekPage,
-		_note: 'Three-panel KCC agent workspace combining inbox, contactmoment quick-log and inline knowledge search; lib gap: no multi-panel workspace page type and the aggregated state endpoint requires a bespoke controller.',
+	// --- KCC Werkplek — declarative agent workspace (pipelinq-werkplek-declarative).
+	//     The page is a type:"dashboard"; these two host widgets cover the
+	//     pieces that aren't pure OpenRegister data: the queue filter (reads the
+	//     aggregated /api/kcc-werkplek/state counts and writes selectedQueue into
+	//     the page workspace context) and the header agent-availability toggle. ---
+	WerkplekQueueFilter: {
+		kind: 'widget',
+		component: WerkplekQueueFilter,
+		...PANEL_WIDGET_META,
+		_note: 'Queue filter widget: lists queues + open-request counts from /api/kcc-werkplek/state and writes selectedQueue into the workspace context so the Requests/Tasks object-list widgets filter on @workspace.selectedQueue.',
+	},
+	WerkplekHeaderActions: {
+		kind: 'widget',
+		component: WerkplekHeaderActions,
+		...HEADER_ACTIONS_META,
+		_note: 'Workspace header actionsComponent: agent availability toggle, hydrated from /api/kcc-werkplek/state.',
 	},
 
 	// --- xWiki integration (xwiki-integration). ---
@@ -1016,10 +1043,10 @@ const registry = {
 		component: MdmMasterEntityListView,
 		_note: 'Master entity list with entityType + low-quality filters and a data-quality badge per row.',
 	},
-	MdmMasterEntityDetailView: {
-		kind: 'page',
-		component: MdmMasterEntityDetailView,
-		_note: 'Golden record + source-record lineage + per-attribute provenance, with the conflict-resolution modal.',
+	MdmGoldenRecordSection: {
+		kind: 'section',
+		component: MdmGoldenRecordSection,
+		_note: 'MDM golden-record in-body section for the declarative type:"detail" MdmMasterEntityDetail page. The masterEntity register fields auto-render and its raw sourceRecord children are a relatedCollections table; this section adds the server-COMPUTED golden record (merge-rule survivorship) with per-attribute provenance + the derived lineage, fetched from GET /api/mdm/entities/{id} (a projection, not stored flat on the schema), plus the conflict-resolution modal that recomputes the golden record on save. Self-fetches by @objectId.',
 	},
 	MdmDataQualityDashboard: {
 		kind: 'page',
@@ -1035,6 +1062,20 @@ const registry = {
 		kind: 'page',
 		component: MdmSyncQueueAdmin,
 		_note: 'Outbound sync queue with status filter and manual retry of failed / dead-letter items.',
+	},
+
+	// Contact-aware create for the generic Add button on the Clients index page.
+	createClientContactAware: {
+		kind: 'create-override',
+		handler: (formData) => createWithContact('client', formData),
+		_note: 'Routes a generic client create through POST /api/contacts-sync/create so the required contactsUid (FK to a NC addressbook contact) is provisioned + filled instead of 400ing on a straight OpenRegister save.',
+	},
+
+	// Contact-aware create for the generic Add button on the Contacts index page.
+	createContactContactAware: {
+		kind: 'create-override',
+		handler: (formData) => createWithContact('contact', formData),
+		_note: 'Same contact-FIRST path for the contact schema (also marks contactsUid REQUIRED).',
 	},
 }
 

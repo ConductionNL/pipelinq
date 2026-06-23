@@ -9,10 +9,6 @@ export const useSettingsStore = defineStore('settings', {
 		loading: false,
 		error: null,
 		initialized: false,
-		objectenAccess: {},
-		apiTokens: [],
-		oauthConfig: {},
-		mcpConfig: {},
 	}),
 	getters: {
 		isLoading: (state) => state.loading,
@@ -74,10 +70,6 @@ export const useSettingsStore = defineStore('settings', {
 				this.config = data.config || data
 				this.openRegisters = data.openRegisters ?? false
 				this.isAdmin = data.isAdmin ?? false
-				this.objectenAccess = data.objectenAccess ?? {}
-				this.apiTokens = data.apiTokens ?? []
-				this.oauthConfig = data.oauthConfig ?? {}
-				this.mcpConfig = data.mcpConfig ?? {}
 				this.initialized = true
 
 				return data

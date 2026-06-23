@@ -108,34 +108,45 @@ class BrpMonitorJob extends TimedJob
                 schema: $schema,
             );
 
-            $total    = 0;
-            $errors   = 0;
-            $hits     = 0;
+            $total     = 0;
+            $errors    = 0;
+            $hits      = 0;
             $cacheHits = 0;
             $durations = [];
             foreach (($records ?? []) as $rec) {
-                $arr = is_array($rec) ? $rec : (method_exists($rec, 'jsonSerialize') ? (array) $rec->jsonSerialize() : []);
+                if (is_array($rec) === true) {
+                    $arr = $rec;
+                } else if (method_exists($rec, 'jsonSerialize') === true) {
+                    $arr = (array) $rec->jsonSerialize();
+                } else {
+                    $arr = [];
+                }
+
                 $tijdstip = (string) ($arr['tijdstip'] ?? '');
                 if ($tijdstip === '') {
                     continue;
                 }
+
                 try {
                     $ts = new DateTimeImmutable($tijdstip);
                 } catch (Throwable $e) {
                     continue;
                 }
+
                 if ($ts < $window) {
                     continue;
                 }
+
                 $total++;
                 $uitkomst = (string) ($arr['uitkomst'] ?? '');
                 if ($uitkomst === 'fout' || $uitkomst === 'timeout') {
                     $errors++;
                 }
+
                 if ($uitkomst === 'geslaagd') {
                     $hits++;
                 }
-            }
+            }//end foreach
 
             // Cache-hit ratio is sourced from brpLookupVerzoek.responseInCache (more accurate).
             $verzoekSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
@@ -147,37 +158,62 @@ class BrpMonitorJob extends TimedJob
                     schema: $verzoekSchema,
                 );
                 foreach (($verzoeken ?? []) as $rec) {
-                    $arr = is_array($rec) ? $rec : (method_exists($rec, 'jsonSerialize') ? (array) $rec->jsonSerialize() : []);
+                    if (is_array($rec) === true) {
+                        $arr = $rec;
+                    } else if (method_exists($rec, 'jsonSerialize') === true) {
+                        $arr = (array) $rec->jsonSerialize();
+                    } else {
+                        $arr = [];
+                    }
+
                     $tijdstip = (string) ($arr['verzoekTijdstip'] ?? '');
                     try {
                         $ts = new DateTimeImmutable($tijdstip);
                     } catch (Throwable $e) {
                         continue;
                     }
+
                     if ($ts < $window) {
                         continue;
                     }
+
                     $totalVerzoek++;
                     if (($arr['responseInCache'] ?? false) === true) {
                         $cacheHits++;
                     }
-                    if (isset($arr['responseDuurMs'])) {
+
+                    if (isset($arr['responseDuurMs']) === true) {
                         $durations[] = (int) $arr['responseDuurMs'];
                     }
-                }
+                }//end foreach
+            }//end if
+
+            $errorRate = 0.0;
+            if ($total > 0) {
+                $errorRate = round($errors / $total, 4);
+            }
+
+            $cacheHitRatio = 0.0;
+            if ($totalVerzoek > 0) {
+                $cacheHitRatio = round($cacheHits / $totalVerzoek, 4);
+            }
+
+            $avgResponseMs = 0;
+            if (count($durations) > 0) {
+                $avgResponseMs = (int) round(array_sum($durations) / count($durations));
             }
 
             $report = [
-                'windowStart'         => $window->format(DATE_ATOM),
-                'windowEnd'           => $now->format(DATE_ATOM),
-                'totalLookups'        => $total,
-                'successfulLookups'   => $hits,
-                'errorCount'          => $errors,
-                'errorRate'           => $total > 0 ? round($errors / $total, 4) : 0.0,
-                'cacheHits'           => $cacheHits,
-                'cacheHitRatio'       => $totalVerzoek > 0 ? round($cacheHits / $totalVerzoek, 4) : 0.0,
-                'avgResponseMs'       => count($durations) > 0 ? (int) round(array_sum($durations) / count($durations)) : 0,
-                'generatedAt'         => $now->format(DATE_ATOM),
+                'windowStart'       => $window->format(DATE_ATOM),
+                'windowEnd'         => $now->format(DATE_ATOM),
+                'totalLookups'      => $total,
+                'successfulLookups' => $hits,
+                'errorCount'        => $errors,
+                'errorRate'         => $errorRate,
+                'cacheHits'         => $cacheHits,
+                'cacheHitRatio'     => $cacheHitRatio,
+                'avgResponseMs'     => $avgResponseMs,
+                'generatedAt'       => $now->format(DATE_ATOM),
             ];
 
             $this->appConfig->setValueString(
@@ -187,17 +223,17 @@ class BrpMonitorJob extends TimedJob
             );
 
             if ($report['errorRate'] >= self::ERROR_RATE_ALERT_THRESHOLD && $total > 0) {
-                $this->notifyAdmins($report);
+                $this->notifyAdmins(report: $report);
             }
         } catch (Throwable $e) {
             $this->logger->error('BRP monitor job failed', ['error' => $e->getMessage()]);
-        }
+        }//end try
     }//end run()
 
     /**
      * Send an admin notification when the error rate breaches the alert threshold.
      *
-     * @param array<string,mixed> $report
+     * @param array<string,mixed> $report Aggregated monitor report.
      *
      * @return void
      */
@@ -207,18 +243,22 @@ class BrpMonitorJob extends TimedJob
         if ($admins === null) {
             return;
         }
+
         foreach ($admins->getUsers() as $admin) {
             try {
                 $n = $this->notificationManager->createNotification();
                 $n->setApp(Application::APP_ID)
-                  ->setUser($admin->getUID())
-                  ->setObject('brp-monitor', 'error-rate')
-                  ->setSubject('brp_error_rate', [
-                      'errorRate'    => (string) $report['errorRate'],
-                      'totalLookups' => (string) $report['totalLookups'],
-                      'errorCount'   => (string) $report['errorCount'],
-                  ])
-                  ->setDateTime(new \DateTime());
+                    ->setUser($admin->getUID())
+                    ->setObject('brp-monitor', 'error-rate')
+                    ->setSubject(
+                          'brp_error_rate',
+                          [
+                              'errorRate'    => (string) $report['errorRate'],
+                              'totalLookups' => (string) $report['totalLookups'],
+                              'errorCount'   => (string) $report['errorCount'],
+                          ]
+                          )
+                    ->setDateTime(new \DateTime());
                 $this->notificationManager->notify($n);
             } catch (Throwable $e) {
                 $this->logger->warning('BRP monitor notify failed', ['admin' => $admin->getUID(), 'error' => $e->getMessage()]);
