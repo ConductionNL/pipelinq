@@ -288,4 +288,120 @@ class AvgRequestServiceTest extends TestCase
         $year = (int) (new DateTimeImmutable())->format('Y');
         $this->assertStringContainsString((string) ($year + AvgRequestService::RETENTION_YEARS), (string) $archived['retentieTot']);
     }//end testArchiveStampsRetention()
+
+    /**
+     * Pinning test (legal safety net): the avgVerzoek status-transition graph moved
+     * to the schema's `x-openregister-lifecycle` declaration MUST permit exactly the
+     * set the ad-hoc PHP check permitted before, and reject exactly the same set —
+     * with the same exception type and message.
+     *
+     * The historical contract: from any of the seven working states, `update()` may
+     * move the status to ANY of the nine enum states (no edge was ever closed
+     * between working states); the two terminal states (afgerond/gearchiveerd) are
+     * read-only and every update from them is rejected with the same "afgerond"
+     * message; an unknown target status is rejected.
+     *
+     * @return void
+     */
+    public function testStatusTransitionMatrixPreservesContract(): void
+    {
+        $this->groupManager->method('isAdmin')->willReturn(true);
+
+        $workingStates = [
+            'ingediend',
+            'in-behandeling',
+            'bewijs-verzamelen',
+            'redactie',
+            'bundle-genereren',
+            'wachten-op-verzoeker',
+            'weigering-opgesteld',
+        ];
+        $allStates = array_merge($workingStates, ['afgerond', 'gearchiveerd']);
+
+        // LEGAL: every working state -> every enum state succeeds and persists.
+        foreach ($workingStates as $from) {
+            foreach ($allStates as $to) {
+                $id = $this->seedRequest(status: $from);
+
+                $updated = $this->service->update(
+                    id: $id,
+                    patch: ['status' => $to],
+                    userId: 'handlerA'
+                );
+
+                $this->assertSame(
+                    $to,
+                    (string) $updated['status'],
+                    sprintf('Legal transition %s -> %s must succeed and persist', $from, $to)
+                );
+            }
+        }
+
+        // ILLEGAL (unknown target status): rejected with OCSBadRequestException.
+        $idUnknown = $this->seedRequest(status: 'in-behandeling');
+        try {
+            $this->service->update(id: $idUnknown, patch: ['status' => 'verzonnen-status'], userId: 'handlerA');
+            $this->fail('Unknown target status must be rejected');
+        } catch (OCSBadRequestException $e) {
+            $this->assertStringContainsString('Onbekende AVG-status', $e->getMessage());
+        }
+
+        // ILLEGAL (read-only terminal states): every update is rejected with the
+        // preserved "afgerond" message — the contract that existed before the refactor.
+        foreach (['afgerond', 'gearchiveerd'] as $terminal) {
+            $idTerminal = $this->seedRequest(status: $terminal);
+            try {
+                $this->service->update(id: $idTerminal, patch: ['status' => 'in-behandeling'], userId: 'handlerA');
+                $this->fail(sprintf('Update from terminal state %s must be rejected', $terminal));
+            } catch (OCSBadRequestException $e) {
+                $this->assertSame('Een afgerond verzoek kan niet meer worden gewijzigd.', $e->getMessage());
+            }
+        }
+    }//end testStatusTransitionMatrixPreservesContract()
+
+    /**
+     * The transition graph the service enforces is sourced from the bundled
+     * avgVerzoek schema declaration (not a hardcoded constant): the resolved graph
+     * matches the schema's `x-openregister-lifecycle`, with the two terminal states
+     * present as keys with empty target lists.
+     *
+     * @return void
+     */
+    public function testTransitionGraphSourcedFromSchema(): void
+    {
+        $graph = (new \OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph())
+            ->fullAdjacencyFor(schemaSlug: 'avgVerzoek');
+
+        $this->assertNotSame([], $graph, 'avgVerzoek must declare x-openregister-lifecycle');
+
+        // Seven working states each reach all nine enum states.
+        foreach (['ingediend', 'in-behandeling', 'redactie', 'bundle-genereren', 'weigering-opgesteld'] as $from) {
+            $this->assertContains('afgerond', $graph[$from] ?? [], sprintf('%s must reach afgerond', $from));
+            $this->assertContains('gearchiveerd', $graph[$from] ?? [], sprintf('%s must reach gearchiveerd', $from));
+            $this->assertCount(9, $graph[$from] ?? [], sprintf('%s must reach all nine states', $from));
+        }
+
+        // Terminal states are present with no outgoing transitions.
+        $this->assertSame([], $graph['afgerond'] ?? null);
+        $this->assertSame([], $graph['gearchiveerd'] ?? null);
+    }//end testTransitionGraphSourcedFromSchema()
+
+    /**
+     * Seed an avgVerzoek owned by handlerA at a given status, returning its id.
+     *
+     * @param string $status The initial status.
+     *
+     * @return string The seeded request id.
+     */
+    private function seedRequest(string $status): string
+    {
+        $saved = $this->objectService->saveObject(
+            object: ['behandelaar' => 'handlerA', 'status' => $status, 'artikel' => 'art-15-inzage'],
+            extend: [],
+            register: 'reg',
+            schema: AvgRepository::SCHEMA_VERZOEK
+        );
+
+        return (string) $saved['@self']['id'];
+    }//end seedRequest()
 }//end class

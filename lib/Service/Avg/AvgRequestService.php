@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Service\Avg;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
@@ -93,13 +94,74 @@ class AvgRequestService
     ];
 
     /**
+     * Schema slug whose `x-openregister-lifecycle` declares the request status graph.
+     *
+     * @var string
+     */
+    private const VERZOEK_SCHEMA_SLUG = 'avgVerzoek';
+
+    /**
+     * The two terminal (read-only) statuses. A request in either state may not be
+     * edited at all — enforced ahead of the graph check so the existing
+     * "afgerond" error contract is preserved verbatim.
+     *
+     * @var string[]
+     */
+    private const READ_ONLY_STATUSES = [
+        'afgerond',
+        'gearchiveerd',
+    ];
+
+    /**
+     * Fallback status-transition adjacency map, used only when the bundled schema
+     * declaration is unreadable. The canonical source of truth is the avgVerzoek
+     * schema's `x-openregister-lifecycle` annotation (ADR-031), which OpenRegister's
+     * LifecycleValidationListener also enforces on save. This constant MUST mirror it:
+     * each of the seven working states may move to any status; the two terminal
+     * states (afgerond/gearchiveerd) have no outgoing transitions (read-only).
+     *
+     * @var array<string, array<int, string>>
+     */
+    private const FALLBACK_TRANSITIONS = [
+        'ingediend'            => self::ALL_STATUSES,
+        'in-behandeling'       => self::ALL_STATUSES,
+        'bewijs-verzamelen'    => self::ALL_STATUSES,
+        'redactie'             => self::ALL_STATUSES,
+        'bundle-genereren'     => self::ALL_STATUSES,
+        'wachten-op-verzoeker' => self::ALL_STATUSES,
+        'weigering-opgesteld'  => self::ALL_STATUSES,
+        'afgerond'             => [],
+        'gearchiveerd'         => [],
+    ];
+
+    /**
+     * The full status enum, the target set every working state may move to.
+     *
+     * @var string[]
+     */
+    private const ALL_STATUSES = [
+        'ingediend',
+        'in-behandeling',
+        'bewijs-verzamelen',
+        'redactie',
+        'bundle-genereren',
+        'wachten-op-verzoeker',
+        'weigering-opgesteld',
+        'afgerond',
+        'gearchiveerd',
+    ];
+
+    /**
      * Constructor.
      *
-     * @param AvgRepository    $repository The AVG OR repository.
-     * @param DeadlineService  $deadline   The deadline computation service.
-     * @param AvgAccessService $access     The access-control service.
-     * @param AvgEventService  $events     The TermijnEvent recorder.
-     * @param LoggerInterface  $logger     The logger.
+     * @param AvgRepository             $repository     The AVG OR repository.
+     * @param DeadlineService           $deadline       The deadline computation service.
+     * @param AvgAccessService          $access         The access-control service.
+     * @param AvgEventService           $events         The TermijnEvent recorder.
+     * @param LoggerInterface           $logger         The logger.
+     * @param SchemaLifecycleGraph|null $lifecycleGraph Reads the declarative status
+     *                                                  graph from the bundled schema
+     *                                                  (defaults to the shipped helper).
      */
     public function __construct(
         private AvgRepository $repository,
@@ -107,7 +169,11 @@ class AvgRequestService
         private AvgAccessService $access,
         private AvgEventService $events,
         private LoggerInterface $logger,
+        private ?SchemaLifecycleGraph $lifecycleGraph=null,
     ) {
+        if ($this->lifecycleGraph === null) {
+            $this->lifecycleGraph = new SchemaLifecycleGraph();
+        }
     }//end __construct()
 
     /**
@@ -301,8 +367,19 @@ class AvgRequestService
             throw new OCSForbiddenException('Geen rechten om dit AVG-verzoek te wijzigen.');
         }
 
-        if (in_array(($request['status'] ?? ''), ['afgerond', 'gearchiveerd'], true) === true) {
+        $currentStatus = (string) ($request['status'] ?? '');
+        if (in_array($currentStatus, self::READ_ONLY_STATUSES, true) === true) {
             throw new OCSBadRequestException('Een afgerond verzoek kan niet meer worden gewijzigd.');
+        }
+
+        // When the patch moves the status, validate the transition against the
+        // declarative graph (avgVerzoek `x-openregister-lifecycle`, ADR-031) —
+        // the single source of truth that OpenRegister's LifecycleValidationListener
+        // also enforces on save. Only the transition GRAPH validation lives here;
+        // the side-effecting legal computations (deadline, retention, the
+        // retention-guarded delete, the allowed-FIELDS enforcement below) stay in PHP.
+        if (array_key_exists('status', $patch) === true) {
+            $this->assertStatusTransitionAllowed(from: $currentStatus, to: (string) $patch['status']);
         }
 
         $allowed = ['behandelaar', 'status', 'scope', 'specifiekeVraag', 'verzoekerNaam', 'verzoekerContact'];
@@ -318,6 +395,76 @@ class AvgRequestService
 
         return $this->repository->save(schemaKey: AvgRepository::SCHEMA_VERZOEK, object: $request, id: $id);
     }//end update()
+
+    /**
+     * Assert that a request status transition is permitted by the declared graph.
+     *
+     * The allowed-transition set is read from the avgVerzoek schema's
+     * `x-openregister-lifecycle` declaration (ADR-031) rather than a hardcoded
+     * PHP copy, so the schema is the single source of truth. The same illegal
+     * transition is rejected here (HTTP 400, {@see OCSBadRequestException}) as is
+     * rejected at the persistence boundary by OpenRegister's
+     * LifecycleValidationListener — declared once, enforced twice.
+     *
+     * @param string $from The current status.
+     * @param string $to   The requested target status.
+     *
+     * @return void
+     *
+     * @throws OCSBadRequestException When the target status is unknown or the
+     *                                from->to transition is not declared.
+     *
+     * @spec openspec/changes/pipelinq-avg-lifecycle-to-or/specs/openregister-integration/spec.md
+     */
+    public function assertStatusTransitionAllowed(string $from, string $to): void
+    {
+        // A no-op status change (status present in the patch but unchanged) is
+        // always permitted — it mirrors the prior behaviour where an unchanged
+        // status field passed straight through the allowed-fields copy.
+        if ($from === $to) {
+            return;
+        }
+
+        $graph = $this->allowedTransitions();
+
+        if (in_array($to, self::ALL_STATUSES, true) === false) {
+            throw new OCSBadRequestException(
+                sprintf('Onbekende AVG-status: %s.', $to)
+            );
+        }
+
+        $targets = ($graph[$from] ?? []);
+        if (in_array($to, $targets, true) === false) {
+            throw new OCSBadRequestException(
+                sprintf('Ongeldige statusovergang: %s -> %s.', $from, $to)
+            );
+        }
+    }//end assertStatusTransitionAllowed()
+
+    /**
+     * The avgVerzoek status-transition adjacency map.
+     *
+     * Derived from the avgVerzoek schema's `x-openregister-lifecycle` declaration
+     * (ADR-031) — the single source of truth that OpenRegister's
+     * LifecycleValidationListener also enforces on save. `fullAdjacencyFor()` seeds
+     * a key for every declared state, so the two terminal states
+     * (afgerond/gearchiveerd) appear with an empty target list. Falls back to the
+     * mirrored constant only when the bundled declaration is unreadable, so the
+     * guard never regresses.
+     *
+     * @return array<string, array<int, string>> The `from => [to, ...]` map.
+     *
+     * @spec openspec/changes/pipelinq-avg-lifecycle-to-or/specs/openregister-integration/spec.md
+     */
+    private function allowedTransitions(): array
+    {
+        $graph = $this->lifecycleGraph->fullAdjacencyFor(schemaSlug: self::VERZOEK_SCHEMA_SLUG);
+        if ($graph === []) {
+            return self::FALLBACK_TRANSITIONS;
+        }
+
+        return $graph;
+    }//end allowedTransitions()
 
     /**
      * Manually flag a request for DPIA review (handler / FG).
