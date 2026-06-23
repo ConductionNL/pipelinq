@@ -63,6 +63,7 @@
 		},
 		{
 			"id": "BlastPerformance",
+			"_note": "PerformanceDashboard.vue stays a custom page (pipelinq-dashboards-declarative kept-custom). It is a three-tab post-send analytics surface (Overview / A/B testing / Attribution), not a KPI dashboard: there are no headline metrics to lift into endpoint stat widgets, and the entire body is interactive tabbed content the declarative type:dashboard cannot express. Tab 2 computes a 2x2 chi-square p-value (analytic erfc survival fn) over click rates CLIENT-SIDE per A/B pair and gates the verdict on >=500 delivered + 24h elapsed; Tab 3 does an N+1 fan-out (one GET /api/blasts/:id/attribution per blast) and sums attributed deals/EUR; Tab 1 is a client-sortable table over blast totals with an id->name segment lookup. Missing primitives: (1) a tab-container body primitive (a dashboard cannot host a role=tablist switcher); (2) a client-side derived/statistical widget source (the chi-square significance verdict is not an endpoint scalar); (3) an N+1 per-row enrichment fetch (attribution is one request per listed blast, not a single aggregation endpoint).",
 			"route": "/blasts/performance",
 			"type": "custom",
 			"title": "Blast performance",
