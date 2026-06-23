@@ -3,7 +3,7 @@
 		{
 			"id": "KccWerkplek",
 			"label": "Customer Support",
-			"icon": "icon-comment",
+			"icon": "icon-category-dashboard",
 			"route": "KccWerkplek",
 			"order": 1
 		}

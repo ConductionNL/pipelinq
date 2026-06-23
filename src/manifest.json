@@ -105,7 +105,7 @@
 		{
 			"id": "OperationalDashboard",
 			"label": "Operational",
-			"icon": "icon-category-monitoring",
+			"icon": "icon-category-dashboard",
 			"route": "OperationalDashboard",
 			"order": 15
 		},
@@ -198,7 +198,6 @@
 			"label": "POS medewerkers",
 			"icon": "icon-user",
 			"route": "PosStaffList",
-			"section": "settings",
 			"order": 70
 		},
 		{
@@ -206,7 +205,6 @@
 			"label": "POS rollen",
 			"icon": "icon-rename",
 			"route": "PosRoleList",
-			"section": "settings",
 			"order": 71
 		},
 		{
@@ -242,7 +240,7 @@
 		},
 		{
 			"id": "AnalyticsGroup",
-			"label": "Analytics",
+			"label": "Reports & Compliance",
 			"icon": "icon-category-monitoring",
 			"order": 150
 		},
@@ -287,14 +285,12 @@
 			"label": "Pipelines",
 			"icon": "icon-category-organization",
 			"route": "Pipelines",
-			"section": "settings",
 			"order": 200
 		},
 		{
 			"id": "SettingsIntegrationsCaption",
 			"label": "Integrations",
 			"type": "caption",
-			"section": "settings",
 			"order": 205
 		},
 		{
@@ -302,7 +298,6 @@
 			"label": "BI export",
 			"icon": "icon-category-integration",
 			"route": "ExportJobs",
-			"section": "settings",
 			"order": 215
 		},
 		{
@@ -310,7 +305,6 @@
 			"label": "StUF endpoints",
 			"icon": "icon-category-integration",
 			"route": "StufEndpoints",
-			"section": "settings",
 			"order": 216
 		},
 		{
@@ -318,7 +312,6 @@
 			"label": "StUF audit log",
 			"icon": "icon-category-monitoring",
 			"route": "StufAuditLog",
-			"section": "settings",
 			"order": 217
 		},
 		{
@@ -342,6 +335,20 @@
 			"icon": "icon-toggle",
 			"href": "/index.php/apps/hrmq/expenses",
 			"order": 219
+		},
+		{
+			"id": "SettingsHelpCaption",
+			"label": "Help",
+			"type": "caption",
+			"order": 240
+		},
+		{
+			"id": "RestartTutorial",
+			"label": "Restart tutorial",
+			"icon": "icon-play",
+			"action": "replay-walkthrough",
+			"tourId": "pipelinq:getting-started",
+			"order": 241
 		}
 	],
 	"pages": [
@@ -368,11 +375,11 @@
 					]
 				},
 				"widgets": [
-					{ "id": "revenue",            "type": "stat", "title": "Revenue", "content": { "label": "Revenue", "route": { "name": "Leads" }, "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
-					{ "id": "won-value",          "type": "stat", "title": "Won Value", "content": { "label": "Won Value", "route": { "name": "Leads" }, "icon": "Trophy", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
+					{ "id": "revenue",            "type": "stat", "title": "Revenue", "content": { "label": "Revenue", "route": { "name": "Leads" }, "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
+					{ "id": "won-value",          "type": "stat", "title": "Won Value", "content": { "label": "Won Value", "route": { "name": "Leads" }, "icon": "Trophy", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
 					{ "id": "win-rate",           "type": "stat", "title": "Win Rate", "content": { "label": "Win Rate", "route": { "name": "Leads" }, "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "source": { "kind": "ratio", "register": "pipelinq", "schema": "lead", "metric": "count", "numerator": { "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } }, "denominator": { "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } } },
-					{ "id": "weighted-forecast",  "type": "stat", "title": "Weighted Forecast", "content": { "label": "Weighted Forecast", "route": { "name": "Leads" }, "icon": "ChartLine", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "kind": "weighted", "register": "pipelinq", "schema": "lead", "field": "value", "weightField": "probability", "divisor": 100, "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
-					{ "id": "mrr",                "type": "stat", "title": "Recurring revenue", "requiresApp": "shillinq", "content": { "label": "Recurring revenue (run-rate)", "route": { "name": "Contracts" }, "icon": "Repeat", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "shillinq", "schema": "SalesOrderLine", "metric": "sum", "field": "maandWaarde", "filter": { "nature": "RECURRING" } } } },
+					{ "id": "weighted-forecast",  "type": "stat", "title": "Weighted Forecast", "content": { "label": "Weighted Forecast", "route": { "name": "Leads" }, "icon": "ChartLine", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "kind": "weighted", "register": "pipelinq", "schema": "lead", "field": "value", "weightField": "probability", "divisor": 100, "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
+					{ "id": "mrr",                "type": "stat", "title": "Recurring revenue", "requiresApp": "shillinq", "content": { "label": "Recurring revenue (run-rate)", "route": { "name": "Contracts" }, "icon": "Repeat", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "shillinq", "schema": "SalesOrderLine", "metric": "sum", "field": "maandWaarde", "filter": { "nature": "RECURRING" } } } },
 						{ "id": "total-leads",        "type": "stats-block", "title": "Total Leads", "props": { "countLabel": "leads", "variant": "primary" }, "dataSource": { "register": "pipelinq", "schema": "lead", "aggregate": "count" } },
 						{ "id": "revenue-over-time", "type": "chart", "title": "Revenue over time", "content": { "chartKind": "area", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "bucket": { "field": "expectedCloseDate", "interval": "month", "metric": "sum", "metricField": "value" } } } },
 					{ "id": "pipeline-by-stage",  "type": "chart", "title": "Pipeline by stage", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "stage", "metric": "sum", "metricField": "value", "sort": "desc" } } } },
@@ -380,7 +387,7 @@
 					{ "id": "top-customers",      "type": "chart", "title": "Top customers by revenue", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "client", "metric": "sum", "metricField": "value", "sort": "desc", "limit": 5 } } } },
 					{ "id": "closing-soon",       "type": "object-list", "title": "Deals closing soon", "content": { "register": "pipelinq", "schema": "lead", "filter": { "status": "open" }, "sort": { "field": "expectedCloseDate", "dir": "asc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "value", "label": "Value" }, { "key": "stage", "label": "Stage" }] } },
 					{ "id": "recently-won-lost",  "type": "object-list", "title": "Recently won / lost", "content": { "register": "pipelinq", "schema": "lead", "filter": {}, "sort": { "field": "expectedCloseDate", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "status", "label": "Status" }, { "key": "value", "label": "Value" }] } },
-						{ "id": "pipeline-coverage", "type": "gauge", "title": "Pipeline coverage", "content": { "label": "Open pipeline vs target", "route": { "name": "Pipeline" }, "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "open" } }, "target": { "kind": "static", "value": 500000 }, "thresholds": { "warn": 60, "danger": 90, "invert": true } } },
+						{ "id": "pipeline-coverage", "type": "gauge", "title": "Pipeline coverage", "content": { "label": "Open pipeline vs target", "route": { "name": "Pipeline" }, "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "open" } }, "target": { "kind": "static", "value": 500000 }, "thresholds": { "warn": 60, "danger": 90, "invert": true } } },
 						{ "id": "won-vs-open",        "type": "delta", "title": "Won vs open", "content": { "label": "Won deals", "route": { "name": "Pipeline" }, "icon": "Trophy", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "goodDirection": "up", "current": { "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } }, "previous": { "filter": { "status": "open" } } } } }
 				],
 				"layout": [
@@ -427,7 +434,7 @@
 				"widgets": [
 					{ "id": "open-leads",            "type": "stat", "title": "Open Leads", "content": { "label": "Open Leads", "icon": "FilterVariant", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open" } } } },
 					{ "id": "open-requests",         "type": "stat", "title": "Requests", "content": { "label": "Requests", "icon": "ClipboardList", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "request", "metric": "count", "filter": {} } } },
-					{ "id": "pipeline-value",        "type": "stat", "title": "Pipeline Value", "content": { "label": "Pipeline Value", "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "EUR", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": {} } } },
+					{ "id": "pipeline-value",        "type": "stat", "title": "Pipeline Value", "content": { "label": "Pipeline Value", "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": {} } } },
 					{ "id": "overdue",               "type": "stat", "title": "Overdue", "content": { "label": "Overdue", "icon": "ScaleBalance", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open", "expectedCloseDate": { "lt": "@today" } } } } },
 					{ "id": "lead-conversion",       "type": "stat", "title": "Lead Conversion Rate", "content": { "label": "Lead Conversion Rate", "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "source": { "kind": "ratio", "register": "pipelinq", "schema": "lead", "metric": "count", "numerator": { "filter": { "status": "won" } }, "denominator": { "filter": {} } } } },
 					{ "id": "avg-resolution",        "type": "custom", "title": "Avg Request Resolution" },
