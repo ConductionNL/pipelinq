@@ -77,9 +77,9 @@ import QueueListView from './views/queues/QueueList.vue'
 import QueueDetailView from './views/queues/QueueDetail.vue'
 
 // --- Reporting dashboards (lib gap: no chart-widget page type). ---
-import RapportageDashboardView from './views/rapportage/RapportageDashboard.vue'
-import ChannelAnalyticsView from './views/rapportage/ChannelAnalytics.vue'
-import AgentPerformanceView from './views/rapportage/AgentPerformance.vue'
+import ChannelDistributionSection from './components/rapportage/ChannelDistributionSection.vue'
+import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
+import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
 
 // --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
 import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
@@ -92,9 +92,12 @@ import LeadForecastTab from './views/leads/LeadForecastTab.vue'
 import LeadListView from './views/leads/LeadList.vue'
 
 // --- Lead-management analytics dashboard (lead-management REQ-LM-006..008).
-//     RapportageView uses CnDashboardPage with four widget slots backed by
-//     the new RapportageController pipeline-stats endpoint. ---
-import RapportageView from './views/rapportage/RapportageView.vue'
+//     Declarative type:"dashboard" (pipelinq-dashboards-declarative): the four
+//     bespoke chart/table widgets are hosted in one kind:'section' bodyWidget
+//     (LeadAnalyticsSection) that self-fetches /api/rapportage/pipeline-stats
+//     once and keeps the in-widget filtering (pipeline selector + win/loss
+//     date-range re-fetch) the legacy view had. ---
+import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
 import PipelineFunnelWidget from './views/rapportage/PipelineFunnelWidget.vue'
 import SourcePerformanceWidget from './views/rapportage/SourcePerformanceWidget.vue'
 import LeadAgingWidget from './views/rapportage/LeadAgingWidget.vue'
@@ -192,18 +195,6 @@ import CtiPageView from './views/settings/CtiPage.vue'
 //     encrypted-at-rest secrets and a per-provider "Verbinding testen" button.
 //     Lib gap: no payment-provider-settings page type. ---
 import PaymentSettingsForm from './views/settings/PaymentSettingsForm.vue'
-// --- StUF-ZKN/BG adapter (stuf-zkn-bg-adapter): admin endpoint list with
-//     per-endpoint circuit-breaker health badge and per-call audit log
-//     (REQ-STUF-008, REQ-STUF-011). Lib gap: no envelope-style audit-log
-//     page type with CSV export and inline XML inspection. ---
-import StufEndpointsView from './views/settings/StufEndpoints.vue'
-import StufAuditLogView from './views/settings/StufAuditLog.vue'
-
-// --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap): list with
-//     apSyncStatus badge column, detail with embedded Shillinq AP card
-//     (REQ-AP-005 / REQ-AP-006).
-import ExpenseListView from './views/expenses/ExpenseList.vue'
-import ExpenseDetailView from './views/expenses/ExpenseDetail.vue'
 
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
@@ -568,21 +559,25 @@ const registry = {
 	// --- Surveys + Forms migrated to the OpenRegister forms leaf (NC Forms). ---
 	// See openspec/changes/migrate-forms-to-forms-leaf.
 
-	// --- Reporting dashboards. ---
-	RapportageDashboardView: {
-		kind: 'page',
-		component: RapportageDashboardView,
-		_note: 'KPI reporting dashboard with apexcharts; lib gap: no chart-widget page type.',
+	// --- Reporting dashboards (declarative type:"dashboard", pipelinq-dashboards-declarative).
+	//     The headline KPIs are endpoint-bound stat widgets; each bespoke chart/table is
+	//     hosted in-body as a kind:'section' bodyWidget reading the page period via
+	//     @workspace.period. The ReportingController resolves the relative period
+	//     (today/week/month) to a from/to window server-side, so no client-side date math. ---
+	ChannelDistributionSection: {
+		kind: 'section',
+		component: ChannelDistributionSection,
+		_note: 'In-body channel bar chart + CSV export for the declarative RapportageContactmomenten dashboard; the 4 KPIs (total/FCR/avg-handling-time/SLA) are endpoint stat widgets reading /api/rapportage/kpis. Reads @workspace.period and self-fetches /api/rapportage/channels.',
 	},
-	ChannelAnalyticsView: {
-		kind: 'page',
-		component: ChannelAnalyticsView,
-		_note: 'Channel breakdown analytics with apexcharts; lib gap: no chart-widget page type.',
+	ChannelComparisonSection: {
+		kind: 'section',
+		component: ChannelComparisonSection,
+		_note: 'In-body per-channel comparison table (total/FCR/SLA with colour dots) for the declarative ChannelAnalyticsView dashboard (no headline KPIs). Reads @workspace.period + @workspace.granularity and self-fetches /api/rapportage/channels + /api/rapportage/sla.',
 	},
-	AgentPerformanceView: {
-		kind: 'page',
-		component: AgentPerformanceView,
-		_note: 'Per-agent performance charts with apexcharts; lib gap: no chart-widget page type.',
+	AgentPerformanceSection: {
+		kind: 'section',
+		component: AgentPerformanceSection,
+		_note: 'In-body sortable per-agent leaderboard + team-summary footer for the declarative AgentPerformanceView dashboard (no headline KPIs — the summary is derived from the same agents map). Reads @workspace.period and self-fetches /api/rapportage/agents.',
 	},
 
 	// --- Pipeline board (kanban + list with in-memory search). ---
@@ -618,10 +613,10 @@ const registry = {
 	},
 
 	// --- Lead-management analytics. ---
-	RapportageView: {
-		kind: 'page',
-		component: RapportageView,
-		_note: 'Lead analytics dashboard using CnDashboardPage with four widgets backed by the rapportage pipeline-stats endpoint (REQ-LM-006/007/008).',
+	LeadAnalyticsSection: {
+		kind: 'section',
+		component: LeadAnalyticsSection,
+		_note: 'In-body lead-analytics surface (pipeline funnel + source table + aging donut + win/loss) for the declarative LeadAnalytics dashboard. Self-fetches /api/rapportage/pipeline-stats ONCE and distributes the four slices to the presentational child widgets, preserving the legacy view\'s in-widget filtering (funnel pipeline selector, win/loss date-range re-fetch). KEPT-IN-SECTION because the filters live INSIDE the widgets and the win/loss date-range derives dateFrom/dateTo no page-level period pageFilter can emit.',
 	},
 	PipelineFunnelWidget: {
 		kind: 'widget',
@@ -651,7 +646,7 @@ const registry = {
 	LoyaltyReportingView: {
 		kind: 'page',
 		component: LoyaltyReportingView,
-		_note: 'Programme reporting dashboard: active accounts, points issued/redeemed/expired, breakage %, redemption rate, outstanding-points liability (IFRS 15 / RJ 270), tier distribution, period selector, CSV export. Server-side LoyaltyReportingService is the source of truth (REQ-LOY-008, REQ-LOY-009).',
+		_note: 'KEPT CUSTOM (pipelinq-dashboards-declarative): programme reporting (active accounts, points issued/redeemed/expired, breakage %, redemption rate, outstanding-points liability per IFRS 15 / RJ 270, tier distribution, CSV export). The 8 KPIs come from one summary endpoint GET /api/loyalty/reporting/{programmeId}/kpis, but {programmeId} is a PATH segment requiring a programme UUID picked from a DYNAMIC selector (options from the OR loyaltyProgramme collection); pageFilters only support static options, so @page.programmeId cannot enumerate programmes, and there is no all-programmes aggregate. Missing primitives: an OR-collection-sourced pageFilter (dynamic options) + a relative-window period token (30d/90d/365d -> from/to). Same dynamic-selector blocker as PipelineAnalytics/Forecast; kept custom.',
 	},
 	LoyaltyAccountCreationView: {
 		kind: 'page',
@@ -781,18 +776,6 @@ const registry = {
 		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
 	},
 
-	// --- Expense → Shillinq AP (pipelinq-expense-to-shillinq-ap). ---
-	ExpenseListView: {
-		kind: 'page',
-		component: ExpenseListView,
-		_note: 'Expenses list with apSyncStatus badge column (REQ-AP-005).',
-	},
-	ExpenseDetailView: {
-		kind: 'page',
-		component: ExpenseDetailView,
-		_note: 'Expense detail with embedded Shillinq AP card + retry button on failed dispatches (REQ-AP-006).',
-	},
-
 	// --- Billing categories (billable-categories-and-tags). ---
 	BillingCategoryWidget: {
 		kind: 'widget',
@@ -812,7 +795,7 @@ const registry = {
 	PipelineAnalyticsView: {
 		kind: 'page',
 		component: PipelineAnalyticsView,
-		_note: 'Per-pipeline KPI cards (Total Pipeline Value / Win Rate / Avg Deal Size / Active Opportunities) and a horizontal stage-funnel CnChartWidget; client-side aggregation is appropriate (< 500 leads per pipeline) and gives instant updates on pipeline switch.',
+		_note: 'KEPT CUSTOM (pipelinq-dashboards-declarative): per-pipeline KPI cards (Total Pipeline Value / Win Rate / Avg Deal Size / Active Opportunities) + a horizontal stage-funnel CnChartWidget, all derived CLIENT-SIDE from one pipeline\'s leads (<500) for instant updates on pipeline switch — there is no summary endpoint. Two missing primitives block a declarative conversion: (1) a derived/ratio stat source (Win Rate = won/(won+lost), Avg Deal Size = sum/count cannot be a single endpoint/OR-aggregation value), and (2) a pageFilter whose options come from an OR collection (the pipeline selector is dynamic, not a static option list). Converting today would drop the ratio KPIs or hardcode the pipeline list, so it stays custom.',
 	},
 
 	// --- Client / Contact 360 detail in-body sections (kind:'section').
@@ -918,18 +901,6 @@ const registry = {
 		kind: 'page',
 		component: ProjectActivityList,
 		_note: 'Time-entry list for one project with date/user/task/billable filters and a totals row that applies the billable inheritance chain (REQ-PTH-004 / REQ-PTH-005 / REQ-PTH-008).',
-	},
-
-	// --- StUF-ZKN/BG adapter (stuf-zkn-bg-adapter). ---
-	StufEndpointsView: {
-		kind: 'page',
-		component: StufEndpointsView,
-		_note: 'StUF endpoint configuration list with per-endpoint circuit-breaker health badge (REQ-STUF-011); lib gap: no admin page type that shows the running circuit-breaker state alongside the endpoint row.',
-	},
-	StufAuditLogView: {
-		kind: 'page',
-		component: StufAuditLogView,
-		_note: 'StUF per-call audit log inspector (REQ-STUF-008): direction + bericht + status filters, inline envelope XML inspection, retries[] history and fout payload; CSV export. Lib gap: no envelope-style audit-log page type.',
 	},
 
 	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). The

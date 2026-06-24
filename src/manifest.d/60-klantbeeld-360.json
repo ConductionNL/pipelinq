@@ -54,6 +54,7 @@
 		},
 		{
 			"id": "PipelineAnalytics",
+			"_note": "KEPT CUSTOM (pipelinq-dashboards-declarative). Unlike the sibling AnalyticsDashboard, this view has NO summary endpoint: it fetches one pipeline's leads (<500) from OpenRegister and derives every KPI + the stage funnel CLIENT-SIDE for instant updates on pipeline switch (REQ-KB360-010..013). It cannot be expressed declaratively today for two reasons. (1) Two of the four KPIs are RATIOS over the fetched set — Win Rate = won / (won + lost) and Average Deal Size = sum(value) / count(open) — which a single endpoint/OR-aggregation stat source cannot compute; only Total Pipeline Value (SUM value where status=open) and Active Opportunities (COUNT where status=open) map to an aggregation. (2) The required pipeline selector has DYNAMIC options loaded from OR (one per pipeline object), whereas pageFilters only support STATIC option lists, and every widget must re-scope to the chosen pipeline id. Missing primitives: (a) a derived/ratio stat source (numerator/denominator over an aggregation, or a host summary endpoint) and (b) a pageFilter whose options are sourced from an OR collection (register/schema/labelField/valueField) feeding @page.<key> into every widget's filter. Until both exist, converting would either drop the ratio KPIs or hardcode the pipeline list — so the view stays custom and nothing is lost.",
 			"route": "/pipeline-analytics",
 			"type": "custom",
 			"title": "Pipeline Analytics",

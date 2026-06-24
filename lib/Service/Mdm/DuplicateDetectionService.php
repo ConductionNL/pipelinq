@@ -3,15 +3,22 @@
 /**
  * Pipelinq DuplicateDetectionService.
  *
- * Detects duplicate Master Entities by two complementary strategies:
- *   - Deterministic matching on natural keys (KvK, VAT, email, phone,
- *     registration number) → linkageConfidence 1.0.
- *   - Probabilistic fuzzy matching (Jaro-Winkler on name + TF-IDF cosine on
- *     address/phone) with configurable thresholds → computed confidence.
+ * Detects duplicate Master Entities by delegating the candidate comparison to
+ * OpenRegister's foundational, RBAC/tenant-scoped
+ * {@see \OCA\OpenRegister\Service\Quality\DuplicateDetectionService::findDuplicates()}
+ * — driven by the `x-openregister-dedup` annotation on the masterEntity schema
+ * (blocking key + per-field exact / normalized / levenshtein match rules). The
+ * raw OR result (`{objectA, objectB, score, matchedOn[]}`) is adapted into the
+ * pipelinq candidate DTO the Duplicate Candidates dashboard and the auto-merge
+ * job consume, so those surfaces are unchanged.
  *
- * Returns duplicate-candidate DTOs (never persisted schemas). High-confidence
- * candidates whose deciding attribute has a non-overridable trust rule can be
- * surfaced for same-day auto-merge.
+ * Kept app-side (not OR primitives): the `autoMergeEligible` decision (depends
+ * on the trust-tier rule's `manualOverrideAllowed`) and the higher-confidence
+ * pair de-duplication. The hand-rolled deterministic + probabilistic O(n^2)
+ * comparison loops were deleted; the pure {@see StringSimilarity} helper is
+ * retained only as a noted in-process fallback for when OpenRegister is
+ * unavailable (and as the bridge for Jaro-Winkler/TF-IDF, which OR does not yet
+ * model).
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Mdm
@@ -24,50 +31,82 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/master-data-management/specs.md#REQ-MDM-002
- * @spec openspec/changes/master-data-management/specs.md#REQ-MDM-003
+ * @spec openspec/changes/pipelinq-mdm-consume-or/specs/master-data-management/spec.md#requirement-or-backed-duplicate-detection
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Mdm;
 
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
 /**
- * Service for deterministic and probabilistic duplicate detection.
+ * Adapts OpenRegister's duplicate-detection service to the pipelinq MDM model.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.StaticAccess)           StringSimilarity is a pure, stateless
- *  algorithm helper; static access is the intended call style (no state to inject).
+ *  algorithm helper used only in the OR-unavailable fallback path; static access is
+ *  the intended call style (no state to inject).
  */
 class DuplicateDetectionService
 {
     /**
-     * Natural-key attributes used for deterministic matching.
+     * Natural-key attributes — when one of these is in OR's matchedOn the
+     * candidate is treated as a deterministic match (confidence-1.0 class).
      *
      * @var array<int, string>
      */
-    public const NATURAL_KEYS = ['kvkNumber', 'vatNumber', 'email', 'phone', 'registrationNumber'];
+    public const NATURAL_KEYS = ['matchKvkNumber', 'matchEmail', 'kvkNumber', 'vatNumber', 'email', 'phone', 'registrationNumber'];
 
     /**
-     * Default Jaro-Winkler name-similarity threshold.
+     * Flattened top-level match fields OpenRegister's similarity reads
+     * (mirrors the x-openregister-dedup annotation on the masterEntity schema).
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    private const MATCH_RULES = [
+        ['field' => 'matchKvkNumber', 'method' => 'exact', 'weight' => 0.4],
+        ['field' => 'matchEmail', 'method' => 'exact', 'weight' => 0.3],
+        ['field' => 'matchName', 'method' => 'normalized', 'weight' => 0.2],
+        ['field' => 'matchName', 'method' => 'levenshtein', 'weight' => 0.1],
+    ];
+
+    /**
+     * Default Jaro-Winkler name-similarity threshold (fallback path).
      *
      * @var float
      */
     public const DEFAULT_NAME_THRESHOLD = 0.88;
 
     /**
-     * Default TF-IDF address-similarity threshold.
+     * Default TF-IDF address-similarity threshold (fallback path).
      *
      * @var float
      */
     public const DEFAULT_ADDRESS_THRESHOLD = 0.85;
 
     /**
-     * Overall linkage-confidence threshold below which no candidate is emitted.
+     * Overall linkage-confidence threshold below which no candidate is emitted
+     * by the in-process fallback path (name-dominant blend).
      *
      * @var float
      */
     public const DEFAULT_LINKAGE_THRESHOLD = 0.85;
+
+    /**
+     * Threshold for the OpenRegister path. Mirrors the schema's
+     * x-openregister-dedup `threshold`. Lower than the fallback gate because
+     * OR's score is a weight-normalised mean: a pair agreeing on both natural
+     * keys (kvk weight 0.4 + email weight 0.3 = 0.7) but differing on the name
+     * formatting still scores ~0.7, so 0.7 captures natural-key collisions that
+     * the old deterministic loop flagged at confidence 1.0 without surfacing
+     * false positives (a single weak field cannot reach 0.7).
+     *
+     * @var float
+     */
+    public const OR_LINKAGE_THRESHOLD = 0.7;
 
     /**
      * Confidence at/above which a candidate is eligible for auto-merge.
@@ -81,15 +120,24 @@ class DuplicateDetectionService
      *
      * @param MasterEntityService       $masterEntities The master-entity service.
      * @param TrustConfigurationService $trust          The trust-tier service.
+     * @param MdmObjectRepository       $repository     The MDM object repository (register/schema ids).
+     * @param ContainerInterface        $container      The DI container (OR DuplicateDetectionService).
+     * @param LoggerInterface           $logger         The logger.
      */
     public function __construct(
         private MasterEntityService $masterEntities,
         private TrustConfigurationService $trust,
+        private MdmObjectRepository $repository,
+        private ContainerInterface $container,
+        private LoggerInterface $logger,
     ) {
     }//end __construct()
 
     /**
-     * Detect all duplicate candidates for an entity type (both strategies).
+     * Detect all duplicate candidates for an entity type via OpenRegister.
+     *
+     * Delegates to OR's findDuplicates() and adapts the result. Falls back to
+     * the in-process probabilistic path when OpenRegister is unavailable.
      *
      * @param string $entityType The entity type.
      *
@@ -99,11 +147,127 @@ class DuplicateDetectionService
     {
         $entities = $this->activeEntities(entityType: $entityType);
 
-        $deterministic = $this->detectDeterministicDuplicates(entityType: $entityType, entities: $entities);
-        $probabilistic = $this->detectProbabilisticDuplicates(entityType: $entityType, entities: $entities);
+        // Key by the OpenRegister object uuid (the `id` / `@self.id` field),
+        // because OR's findDuplicates() returns those uuids as objectA/objectB
+        // — not the domain masterId.
+        $byId = [];
+        foreach ($entities as $entity) {
+            $orId = (string) ($entity['id'] ?? ($entity['@self']['id'] ?? ''));
+            if ($orId !== '') {
+                $byId[$orId] = $entity;
+            }
+        }
 
-        return $this->dedupeCandidates(candidates: array_merge($deterministic, $probabilistic));
+        $pairs = $this->findOrDuplicates(entityType: $entityType);
+        if ($pairs === null) {
+            // OpenRegister unavailable — degrade to the in-process fallback.
+            return $this->fallbackDetect(entityType: $entityType, entities: $entities);
+        }
+
+        $candidates = [];
+        foreach ($pairs as $pair) {
+            $candidate = $this->adaptPair(entityType: $entityType, pair: $pair, byId: $byId);
+            if ($candidate !== null) {
+                $candidates[] = $candidate;
+            }
+        }
+
+        return $this->dedupeCandidates(candidates: $candidates);
     }//end detectDuplicates()
+
+    /**
+     * Call OpenRegister's findDuplicates() for the masterEntity schema.
+     *
+     * @param string $entityType The entity type (used to scope returned pairs).
+     *
+     * @return array<int, array<string, mixed>>|null The scored pairs, or null when OR is unavailable.
+     */
+    private function findOrDuplicates(string $entityType): ?array
+    {
+        try {
+            $service = $this->container->get('OCA\OpenRegister\Service\Quality\DuplicateDetectionService');
+        } catch (Throwable $e) {
+            $this->logger->warning('Pipelinq MDM: OpenRegister duplicate-detection service unavailable', ['exception' => $e->getMessage()]);
+            return null;
+        }
+
+        try {
+            $pairs = $service->findDuplicates(
+                $this->repository->register(),
+                $this->repository->schema(schemaSlug: MasterEntityService::SCHEMA),
+                self::MATCH_RULES,
+                self::OR_LINKAGE_THRESHOLD
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq MDM: OpenRegister findDuplicates failed',
+                ['entityType' => $entityType, 'exception' => $e->getMessage()]
+            );
+            return null;
+        }
+
+        if (is_array($pairs) === false) {
+            return [];
+        }
+
+        return $pairs;
+    }//end findOrDuplicates()
+
+    /**
+     * Adapt one OR pair ({objectA, objectB, score, matchedOn}) into the DTO.
+     *
+     * Skips pairs whose entities are not both active in the requested type.
+     *
+     * @param string                             $entityType The entity type.
+     * @param array<string, mixed>               $pair       The OR result pair.
+     * @param array<string, array<string,mixed>> $byId       Active entities keyed by master id.
+     *
+     * @return array<string, mixed>|null The candidate DTO, or null when not applicable.
+     */
+    private function adaptPair(string $entityType, array $pair, array $byId): ?array
+    {
+        $idA = (string) ($pair['objectA'] ?? '');
+        $idB = (string) ($pair['objectB'] ?? '');
+        if (isset($byId[$idA]) === false || isset($byId[$idB]) === false) {
+            return null;
+        }
+
+        $score     = (float) ($pair['score'] ?? 0.0);
+        $matchedOn = ($pair['matchedOn'] ?? []);
+        if (is_array($matchedOn) === false) {
+            $matchedOn = [];
+        }
+
+        $isDeterministic = false;
+        foreach ($matchedOn as $field) {
+            if (in_array((string) $field, self::NATURAL_KEYS, true) === true) {
+                $isDeterministic = true;
+                break;
+            }
+        }
+
+        $method     = 'probabilistic-match';
+        $confidence = round($score, 2);
+        if ($isDeterministic === true) {
+            $method     = 'deterministic-key';
+            $confidence = 1.0;
+        }
+
+        $primaryMatchedOn = '';
+        if (count($matchedOn) > 0) {
+            $primaryMatchedOn = (string) $matchedOn[0];
+        }
+
+        return $this->buildCandidate(
+            entityType: $entityType,
+            from: $byId[$idB],
+            into: $byId[$idA],
+            method: $method,
+            confidence: $confidence,
+            matchedOn: $primaryMatchedOn,
+            matchedValue: ''
+        );
+    }//end adaptPair()
 
     /**
      * Load the active Master Entities for a type (skips merged / deleted).
@@ -125,70 +289,23 @@ class DuplicateDetectionService
     }//end activeEntities()
 
     /**
-     * Deterministic detection: identical natural-key value across two entities.
+     * In-process fallback when OpenRegister is unavailable.
+     *
+     * Uses the retained pure {@see StringSimilarity} helper (Jaro-Winkler on
+     * name + TF-IDF on address), which OpenRegister does not yet model. This
+     * keeps the daily job degrading gracefully rather than producing no
+     * candidates at all when the OR service cannot be resolved.
      *
      * @param string                           $entityType The entity type.
-     * @param array<int, array<string, mixed>> $entities   The candidate entities.
+     * @param array<int, array<string, mixed>> $entities   The active entities.
      *
-     * @return array<int, array<string, mixed>> The deterministic candidates.
+     * @return array<int, array<string, mixed>> The candidate DTOs.
      */
-    public function detectDeterministicDuplicates(string $entityType, array $entities): array
+    private function fallbackDetect(string $entityType, array $entities): array
     {
-        $candidates = [];
-        foreach (self::NATURAL_KEYS as $key) {
-            $byValue = [];
-            foreach ($entities as $entity) {
-                $value = $this->goldenValue(entity: $entity, attribute: $key);
-                if ($value === '') {
-                    continue;
-                }
-
-                $byValue[$value][] = $entity;
-            }
-
-            foreach ($byValue as $value => $group) {
-                if (count($group) < 2) {
-                    continue;
-                }
-
-                // Emit a candidate for each unordered pair in the collision group.
-                $count = count($group);
-                for ($i = 0; $i < $count; $i++) {
-                    for ($j = ($i + 1); $j < $count; $j++) {
-                        $candidates[] = $this->buildCandidate(
-                            entityType: $entityType,
-                            from: $group[$j],
-                            into: $group[$i],
-                            method: 'deterministic-key',
-                            confidence: 1.0,
-                            matchedOn: $key,
-                            matchedValue: (string) $value
-                        );
-                    }
-                }
-            }//end foreach
-        }//end foreach
-
-        return $candidates;
-    }//end detectDeterministicDuplicates()
-
-    /**
-     * Probabilistic detection: fuzzy name + address/phone similarity.
-     *
-     * @param string                           $entityType The entity type.
-     * @param array<int, array<string, mixed>> $entities   The candidate entities.
-     * @param array<string, float>             $thresholds Optional threshold overrides.
-     *
-     * @return array<int, array<string, mixed>> The probabilistic candidates.
-     */
-    public function detectProbabilisticDuplicates(
-        string $entityType,
-        array $entities,
-        array $thresholds=[]
-    ): array {
-        $nameThreshold    = (float) ($thresholds['name'] ?? self::DEFAULT_NAME_THRESHOLD);
-        $addressThreshold = (float) ($thresholds['address'] ?? self::DEFAULT_ADDRESS_THRESHOLD);
-        $linkageThreshold = (float) ($thresholds['linkage'] ?? self::DEFAULT_LINKAGE_THRESHOLD);
+        $nameThreshold    = self::DEFAULT_NAME_THRESHOLD;
+        $addressThreshold = self::DEFAULT_ADDRESS_THRESHOLD;
+        $linkageThreshold = self::DEFAULT_LINKAGE_THRESHOLD;
 
         $candidates = [];
         $count      = count($entities);
@@ -217,16 +334,11 @@ class DuplicateDetectionService
             }//end for
         }//end for
 
-        return $candidates;
-    }//end detectProbabilisticDuplicates()
+        return $this->dedupeCandidates(candidates: $candidates);
+    }//end fallbackDetect()
 
     /**
-     * Compute a combined linkage confidence for a candidate pair.
-     *
-     * The name similarity (Jaro-Winkler) is the dominant signal, boosted by
-     * address agreement (TF-IDF) and an exact-phone bonus. The combined score
-     * is only returned when the name passes its own threshold, so wildly
-     * different names never reach the candidate stage regardless of address.
+     * Compute a combined linkage confidence for a candidate pair (fallback).
      *
      * @param array<string, mixed> $a                The first entity.
      * @param array<string, mixed> $b                The second entity.
@@ -276,6 +388,7 @@ class DuplicateDetectionService
      * Eligible when confidence is at/above the auto-merge threshold AND the
      * matched natural key has a trust rule with manualOverrideAllowed=false
      * (i.e. the data model treats it as authoritative and non-negotiable).
+     * Stays app-side: depends on the trust configuration, not OpenRegister.
      *
      * @param array<string, mixed> $candidate The candidate DTO.
      *
@@ -288,7 +401,7 @@ class DuplicateDetectionService
             return false;
         }
 
-        $matchedOn  = (string) ($candidate['matchedOn'] ?? '');
+        $matchedOn  = $this->canonicalAttribute(matchedOn: (string) ($candidate['matchedOn'] ?? ''));
         $entityType = (string) ($candidate['entityType'] ?? '');
         if ($matchedOn === '' || $entityType === '') {
             return false;
@@ -297,7 +410,7 @@ class DuplicateDetectionService
         $config = $this->trust->getTrustConfig(
             entityType: $entityType,
             attribute: $matchedOn,
-            sourceSystem: $this->bestSource(candidate: $candidate)
+            sourceSystem: $this->bestSource(candidate: $candidate, attribute: $matchedOn)
         );
         if ($config === null) {
             return false;
@@ -307,18 +420,40 @@ class DuplicateDetectionService
     }//end isAutoMergeEligible()
 
     /**
+     * Map a (possibly flattened) match field back to its canonical attribute.
+     *
+     * OpenRegister matches on the flattened `match*` projections; the trust
+     * configuration keys on the canonical golden-record attribute.
+     *
+     * @param string $matchedOn The matched-on field.
+     *
+     * @return string The canonical attribute name.
+     */
+    private function canonicalAttribute(string $matchedOn): string
+    {
+        $map = [
+            'matchKvkNumber' => 'kvkNumber',
+            'matchEmail'     => 'email',
+            'matchName'      => 'name',
+            'matchPhone'     => 'phone',
+        ];
+
+        return ($map[$matchedOn] ?? $matchedOn);
+    }//end canonicalAttribute()
+
+    /**
      * Best-effort source system for the matched value (for auto-merge lookup).
      *
      * @param array<string, mixed> $candidate The candidate DTO.
+     * @param string               $attribute The canonical attribute name.
      *
      * @return string The source system, or empty string.
      */
-    private function bestSource(array $candidate): string
+    private function bestSource(array $candidate, string $attribute): string
     {
         $provenance = ($candidate['intoEntity']['attributeProvenance'] ?? []);
-        $matchedOn  = (string) ($candidate['matchedOn'] ?? '');
-        if (is_array($provenance) === true && isset($provenance[$matchedOn]['sourceSystem']) === true) {
-            return (string) $provenance[$matchedOn]['sourceSystem'];
+        if (is_array($provenance) === true && isset($provenance[$attribute]['sourceSystem']) === true) {
+            return (string) $provenance[$attribute]['sourceSystem'];
         }
 
         return '';
@@ -362,7 +497,7 @@ class DuplicateDetectionService
 
     /**
      * De-duplicate candidates by unordered entity pair, keeping the higher
-     * confidence (deterministic outranks a weaker probabilistic match).
+     * confidence, and apply the (app-side) auto-merge eligibility gate.
      *
      * @param array<int, array<string, mixed>> $candidates The raw candidates.
      *
@@ -388,7 +523,7 @@ class DuplicateDetectionService
     }//end dedupeCandidates()
 
     /**
-     * Read a golden-record value as a trimmed string.
+     * Read a golden-record value as a trimmed string (fallback path).
      *
      * @param array<string, mixed> $entity    The master entity.
      * @param string               $attribute The attribute name.
@@ -406,7 +541,7 @@ class DuplicateDetectionService
     }//end goldenValue()
 
     /**
-     * Reduce a string to its digits (for phone comparison).
+     * Reduce a string to its digits (for phone comparison, fallback path).
      *
      * @param string $value The value.
      *

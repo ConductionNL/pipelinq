@@ -22,11 +22,16 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Avg;
 
+use OCA\Pipelinq\Service\Avg\AvgAccessService;
+use OCA\Pipelinq\Service\Avg\AvgEventService;
 use OCA\Pipelinq\Service\Avg\AvgRepository;
+use OCA\Pipelinq\Service\Avg\AvgRequestService;
 use OCA\Pipelinq\Service\Avg\BundleService;
+use OCA\Pipelinq\Service\Avg\DeadlineService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
@@ -76,10 +81,24 @@ class BundleServiceTest extends TestCase
         );
 
         $this->repository = AvgRepositoryFactory::build($this->objectService, $appConfig);
-        $this->service    = new BundleService(
+
+        $requests = new AvgRequestService(
+            repository: $this->repository,
+            deadline: new DeadlineService(orGdpr: OrGdprBridgeFactory::build(new FakeOrGdpr())),
+            access: new AvgAccessService(
+                groupManager: $this->createMock(IGroupManager::class),
+                appConfig: $appConfig
+            ),
+            events: new AvgEventService(repository: $this->repository, logger: new NullLogger()),
+            logger: new NullLogger()
+        );
+
+        $this->service = new BundleService(
             repository: $this->repository,
             container: AvgRepositoryFactory::container($this->objectService),
             appConfig: $appConfig,
+            orGdpr: OrGdprBridgeFactory::build(new FakeOrGdpr()),
+            requests: $requests,
             logger: new NullLogger()
         );
     }//end setUp()
