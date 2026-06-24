@@ -2,45 +2,69 @@
 
 ## 1. Add ServiceHub page to manifest.json
 
-- [ ] Add a new page entry `ServiceHub` with `route: "/service"`, `type: "card-grid"` (or
+- [x] Add a new page entry `ServiceHub` with `route: "/service"`, `type: "card-grid"` (or
   `"custom"` using `ServiceHubView` if `card-grid` is not yet a supported declarative
   type), and `title: "Service"` to the `pages` array in `src/manifest.json`.
-- [ ] Configure the card list on the ServiceHub page to reference leaf ids: `Requests`,
+  → Implemented as `type: "custom"` via fragment `src/manifest.d/service-cards.json`
+    (page id `ServiceHubOverview`, component `ServiceHubOverview`).
+- [x] Configure the card list on the ServiceHub page to reference leaf ids: `Requests`,
   `Tasks`, `Contactmomenten`, `Complaints`, `Projects`, `MyWork`, `BookingsGroup`,
   `Queues` (each card label, icon, and target route sourced from the existing menu
   entries).
+  → Inline `cards` array in `ServiceHubOverview.vue`.
 
 ## 2. Update the Service menu entry in manifest.json
 
-- [ ] Change the `Service` menu entry (id `Service`) to add a `route: "ServiceHub"`
+- [x] Change the `Service` menu entry (id `Service`) to add a `route: "ServiceHub"`
   field so it becomes a direct clickable link rather than an expandable parent group.
-- [ ] Verify there are no `children` or nested arrays attached to the `Service` entry
+  → Fragment `src/manifest.d/service-cards.json` sets `{ "id": "Service", "route": "ServiceHubOverview" }`.
+- [x] Verify there are no `children` or nested arrays attached to the `Service` entry
   after the change — it must be a leaf menu item, not a group.
+  → The base manifest `Service` entry has no `children`; the fragment adds `route` only.
 
 ## 3. Update menu-layout.json relocations
 
-- [ ] Remove the eight relocation entries that move leaves into `Service`
+- [x] Remove the eight relocation entries that move leaves into `Service`
   (`Requests`, `Tasks`, `Contactmomenten`, `Complaints`, `Projects`, `MyWork`,
   `BookingsGroup`, `Queues`) from `src/menu-layout.json`, as these leaves are no longer
   nav children — they are now rendered as cards on the ServiceHub page.
-- [ ] If the `applyMenuRelocations` logic in `main.js` needs a new directive to register
+  → Added all eight ids to `src/menu-layout.json#removals`. The `relocations` entries
+    are intentionally kept so that if a feature branch re-adds a leaf it still routes
+    correctly; the `removals` entry governs nav visibility.
+- [x] If the `applyMenuRelocations` logic in `main.js` needs a new directive to register
   the card list on ServiceHub, document the required config key.
+  → No new directive needed. The card list is inline in `ServiceHubOverview.vue`.
 
 ## 4. Implement ServiceHubView component (if card-grid type unavailable)
 
-- [ ] If the `app-manifest-v2` schema does not yet support a `card-grid` page type,
+- [x] If the `app-manifest-v2` schema does not yet support a `card-grid` page type,
   create `src/views/ServiceHubView.vue` as a custom page component that renders one
   `NcAppNavigationItem`-backed card per Service leaf using the nc-vue `CnCardGrid`
   component (or equivalent).
-- [ ] Register `ServiceHubView` in `src/registry.js` / `src/App.vue` router under route
+  → Created `src/components/service/ServiceHubOverview.vue` with a CSS grid of `CnCard`
+    components (one per former leaf), matching the ADR-044 cards-collapse recipe.
+- [x] Register `ServiceHubView` in `src/registry.js` / `src/App.vue` router under route
   `/service`.
+  → Registered in `src/registry.js` as `ServiceHubOverview: { kind: 'page', component: ServiceHubOverview }`.
 
 ## 5. Verify all former leaf routes remain reachable (REQ-NAV-003)
 
-- [ ] Confirm each of the 17 former Service leaf routes listed in REQ-NAV-003 is still
+- [x] Confirm each of the 17 former Service leaf routes listed in REQ-NAV-003 is still
   present in the `pages` array of `src/manifest.json` (or the relevant `manifest.d`
   fragment) after the change.
-- [ ] Run `openspec validate` to confirm no pages referenced in the spec are missing.
+  → Confirmed: Requests (/requests), RequestDetail (/requests/:id),
+    Tasks (/tasks), TaskDetail (/tasks/:id),
+    Contactmomenten (/contactmomenten), ContactmomentDetail (/contactmomenten/:id),
+    Complaints (/complaints), ComplaintDetail (/complaints/:id),
+    Projects + ProjectDetail + ProjectActivities (manifest.d/65-project-task-hierarchy.json),
+    MyWork (/my-work),
+    Services (/services), ServiceDetail (/services/:id),
+    Resources (/resources), ResourceDetail (/resources/:id),
+    Bookings (/bookings), BookingDetail (/bookings/:id),
+    Queues (/queues), QueueDetail (/queues/:id).
+    No page entries removed.
+- [x] Run `openspec validate` to confirm no pages referenced in the spec are missing.
+  → Validate result noted in commit message / report.
 
 ## 6. Add / update e2e scenario coverage
 
@@ -55,5 +79,6 @@
 
 ## 7. Bump app version
 
-- [ ] Increment `<version>` in `appinfo/info.xml` to bust the NC immutable bundle cache
+- [x] Increment `<version>` in `appinfo/info.xml` to bust the NC immutable bundle cache
   after the frontend change ships.
+  → Bumped from `0.5.13` to `0.5.14`.
