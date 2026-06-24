@@ -3,7 +3,7 @@
 	"$id": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"title": "Conduction App Manifest v2",
 	"description": "v2 schema for the JSON-driven page and navigation manifest consumed by @conduction/nextcloud-vue. Introduces a uniform widgets[] array on every page type with a per-slot grid coordinate system, a typed actions[] discriminator, and the required $schema field for version detection. v1 manifests continue to validate against app-manifest.schema.json (unchanged).",
-	"version": "2.11.0",
+	"version": "2.12.0",
 	"type": "object",
 	"required": ["$schema", "version", "menu", "pages"],
 	"additionalProperties": false,
@@ -115,6 +115,7 @@
 										"placement": { "type": "string", "enum": ["auto", "top", "bottom", "left", "right", "center"], "default": "auto", "description": "Coachmark placement; 'center' renders anchorless with no cutout." },
 										"optional": { "type": "boolean", "default": false, "description": "Skip gracefully when the target/condition is absent." },
 										"allowManualNext": { "type": "boolean", "default": false, "description": "Show a manual Next escape hatch on an enforced action step." },
+										"handoff": { "type": "object", "additionalProperties": false, "required": ["url"], "description": "Cross-app hand-off (ADR-043). When present, the coachmark primary action becomes 'Continue in {app}' and navigates to `url` carrying a cn_resume_tour/cn_resume_step token so the destination app resumes the named tour.", "properties": { "app": { "type": "string", "description": "Destination Conduction app id (label + intent)." }, "url": { "type": "string", "description": "Destination URL to navigate to." }, "tour": { "type": "string", "description": "Tour id to resume in the destination (defaults to this tour's id)." }, "step": { "type": "string", "description": "Step id to resume at (defaults to the destination tour's first step)." } } },
 										"target": {
 											"type": "object",
 											"additionalProperties": false,
@@ -383,8 +384,12 @@
 				},
 				"action": {
 					"type": "string",
-					"enum": ["user-settings"],
-					"description": "Built-in action to invoke when the entry is clicked. Closed enum."
+					"enum": ["user-settings", "replay-walkthrough"],
+					"description": "Built-in action to invoke when the entry is clicked. Closed enum. 'replay-walkthrough' re-runs the product walkthrough (ADR-043), optionally for a specific tourId."
+				},
+				"tourId": {
+					"type": "string",
+					"description": "Tour id for the 'replay-walkthrough' action (ADR-043); replays that tour from its first step. Omit to replay the default tour."
 				},
 				"visibleIf": {
 					"$ref": "#/$defs/visibleIfCondition",
@@ -433,7 +438,11 @@
 				"href": { "type": "string" },
 				"action": {
 					"type": "string",
-					"enum": ["user-settings"]
+					"enum": ["user-settings", "replay-walkthrough"]
+				},
+				"tourId": {
+					"type": "string",
+					"description": "Tour id for the 'replay-walkthrough' action (ADR-043)."
 				},
 				"visibleIf": {
 					"$ref": "#/$defs/visibleIfCondition"

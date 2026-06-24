@@ -77,11 +77,10 @@ class ReportingController extends Controller
             return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
         }
 
-        $from = $this->request->getParam('from', '');
-        $to   = $this->request->getParam('to', '');
+        [$from, $to] = $this->resolvePeriodRange();
 
         if ($from === '' || $to === '') {
-            return new JSONResponse(['message' => 'Missing required parameters: from, to'], Http::STATUS_BAD_REQUEST);
+            return new JSONResponse(['message' => 'Missing required parameters: from, to (or period)'], Http::STATUS_BAD_REQUEST);
         }
 
         // Validate date format.
@@ -113,12 +112,11 @@ class ReportingController extends Controller
             return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
         }
 
-        $from        = $this->request->getParam('from', '');
-        $to          = $this->request->getParam('to', '');
+        [$from, $to] = $this->resolvePeriodRange();
         $granularity = $this->request->getParam('granularity', 'daily');
 
         if ($from === '' || $to === '') {
-            return new JSONResponse(['message' => 'Missing required parameters: from, to'], Http::STATUS_BAD_REQUEST);
+            return new JSONResponse(['message' => 'Missing required parameters: from, to (or period)'], Http::STATUS_BAD_REQUEST);
         }
 
         if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
@@ -156,11 +154,10 @@ class ReportingController extends Controller
             return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
         }
 
-        $from = $this->request->getParam('from', '');
-        $to   = $this->request->getParam('to', '');
+        [$from, $to] = $this->resolvePeriodRange();
 
         if ($from === '' || $to === '') {
-            return new JSONResponse(['message' => 'Missing required parameters: from, to'], Http::STATUS_BAD_REQUEST);
+            return new JSONResponse(['message' => 'Missing required parameters: from, to (or period)'], Http::STATUS_BAD_REQUEST);
         }
 
         if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
@@ -274,6 +271,48 @@ class ReportingController extends Controller
             Http::STATUS_NOT_IMPLEMENTED,
         );
     }//end exportCsv()
+
+    /**
+     * Resolve an explicit (from, to) pair, defaulting from a relative `period`
+     * token (today / week / month) when both bounds are empty.
+     *
+     * Mirrors the legacy dashboard's client-side semantics so a declarative
+     * type:dashboard can drive the range with a single static `period`
+     * pageFilter instead of computing dates in JS: today = [today, today],
+     * week = [Monday-of-this-week, today], month = [1st-of-month, today]. An
+     * explicit from/to (e.g. the date-range pills) always wins.
+     *
+     * @return array{0: string, 1: string} The [from, to] YYYY-MM-DD pair.
+     */
+    private function resolvePeriodRange(): array
+    {
+        $from = (string) $this->request->getParam('from', '');
+        $to   = (string) $this->request->getParam('to', '');
+        if ($from !== '' || $to !== '') {
+            return [$from, $to];
+        }
+
+        $period = (string) $this->request->getParam('period', '');
+        if ($period === '') {
+            return ['', ''];
+        }
+
+        $now = new DateTimeImmutable('now');
+        $fmt = 'Y-m-d';
+        switch ($period) {
+            case 'today':
+                $today = $now->format($fmt);
+                return [$today, $today];
+            case 'week':
+                $dayNum = (int) $now->format('N');
+                $monday = $now->modify('-'.($dayNum - 1).' days');
+                return [$monday->format($fmt), $now->format($fmt)];
+            case 'month':
+                return [$now->format('Y-m-01'), $now->format($fmt)];
+            default:
+                return ['', ''];
+        }//end switch
+    }//end resolvePeriodRange()
 
     /**
      * Validate that a string is a parseable date or datetime.

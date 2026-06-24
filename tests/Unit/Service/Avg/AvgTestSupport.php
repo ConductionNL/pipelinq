@@ -26,7 +26,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Avg;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use OCA\Pipelinq\Service\Avg\AvgRepository;
+use OCA\Pipelinq\Service\Avg\OrGdprBridge;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -138,6 +141,191 @@ class FakeAvgObjectService
         unset($this->store[$schema][$uuid]);
 
         return true;
+    }
+}//end class
+
+/**
+ * In-memory fake of OpenRegister's canonical GDPR data-subject-rights capability.
+ *
+ * Stands in for BOTH `DataSubjectRequestService` and `DataSubjectDeadline` (the
+ * method sets don't overlap), so a real {@see OrGdprBridge} can be built over a
+ * container that returns this single fake for both OR service ids. It models OR's
+ * adopted semantics: EU art-12 one-month (+ two-month) deadline maths, NER-index
+ * subject discovery, a portable access export, and legal-hold-aware field-level
+ * pseudonymise erasure (the owning row is RETAINED, held rows reported back).
+ */
+class FakeOrGdpr
+{
+    /**
+     * The NER-discovery envelopes returned for any subject, shaped as OR's
+     * findSubjectData output: [{object: <json with @self>, gdprEntities: [...]}, ...].
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    public array $subjectData = [];
+
+    /**
+     * Objects flagged as held (legal-hold / immutable) — reported in `held`,
+     * never mutated. Keyed by the object uuid found in $subjectData @self.id.
+     *
+     * @var array<int, string>
+     */
+    public array $heldUuids = [];
+
+    /**
+     * Captured calls for assertions: each entry is [method, args].
+     *
+     * @var array<int, array{0: string, 1: array<string, mixed>}>
+     */
+    public array $calls = [];
+
+    /**
+     * EU art-12(3) base deadline: receivedAt + one month.
+     *
+     * @param DateTimeInterface $receivedAt When the request was received.
+     *
+     * @return DateTimeImmutable The base legal deadline.
+     */
+    public function computeDueAt(DateTimeInterface $receivedAt): DateTimeImmutable
+    {
+        return DateTimeImmutable::createFromInterface($receivedAt)->modify('+1 month');
+    }
+
+    /**
+     * Extend a deadline once by two months (EU art-12(3)).
+     *
+     * @param DateTimeInterface $dueAt The current base due date.
+     *
+     * @return DateTimeImmutable The extended deadline.
+     */
+    public function extend(DateTimeInterface $dueAt): DateTimeImmutable
+    {
+        return DateTimeImmutable::createFromInterface($dueAt)->modify('+2 months');
+    }
+
+    /**
+     * NER-index subject discovery.
+     *
+     * @param string      $subjectId The subject identifier value.
+     * @param string|null $type      Optional type filter.
+     *
+     * @return array<int, array<string, mixed>> The discovery envelopes.
+     */
+    public function findSubjectData(string $subjectId, ?string $type = null): array
+    {
+        $this->calls[] = ['findSubjectData', ['subjectId' => $subjectId, 'type' => $type]];
+
+        return $this->subjectData;
+    }
+
+    /**
+     * Portable access export built on the discovery envelopes.
+     *
+     * @param string      $subjectId The subject identifier value.
+     * @param string|null $type      Optional type filter.
+     *
+     * @return array<string, mixed> The export bundle.
+     */
+    public function assembleAccessExport(string $subjectId, ?string $type = null): array
+    {
+        $this->calls[] = ['assembleAccessExport', ['subjectId' => $subjectId, 'type' => $type]];
+
+        return [
+            'subject'     => $subjectId,
+            'type'        => $type,
+            'objectCount' => count($this->subjectData),
+            'objects'     => $this->subjectData,
+        ];
+    }
+
+    /**
+     * Legal-hold-aware field-level pseudonymise erasure (row retained).
+     *
+     * @param string      $subjectId The subject identifier value.
+     * @param string|null $type      Optional type filter.
+     * @param string      $eraseMode The erase mode (must be pseudonymise).
+     * @param bool         $dryRun    Whether this is a dry run.
+     *
+     * @return array<string, mixed> OR's erase summary.
+     */
+    public function erase(string $subjectId, ?string $type = null, string $eraseMode = 'pseudonymise', bool $dryRun = false): array
+    {
+        $this->calls[] = ['erase', ['subjectId' => $subjectId, 'type' => $type, 'eraseMode' => $eraseMode, 'dryRun' => $dryRun]];
+
+        $erased = [];
+        $held   = [];
+        foreach ($this->subjectData as $envelope) {
+            $uuid = (string) ($envelope['object']['@self']['id'] ?? $envelope['object']['@self']['uuid'] ?? '');
+            if (in_array($uuid, $this->heldUuids, true) === true) {
+                $held[] = ['uuid' => $uuid, 'reason' => 'legal-hold'];
+                continue;
+            }
+
+            $erased[] = ['uuid' => $uuid];
+        }
+
+        return [
+            'subject'      => $subjectId,
+            'eraseMode'    => $eraseMode,
+            'dryRun'       => $dryRun,
+            'matchedCount' => count($this->subjectData),
+            'erased'       => $erased,
+            'held'         => $held,
+            'failed'       => [],
+            'complete'     => true,
+        ];
+    }
+}//end class
+
+/**
+ * Factory for a real {@see OrGdprBridge} backed by a {@see FakeOrGdpr}.
+ */
+class OrGdprBridgeFactory
+{
+    /**
+     * Build a real OrGdprBridge over a container that returns the fake OR GDPR
+     * capability for both OR service ids.
+     *
+     * @param FakeOrGdpr $fake The fake OR GDPR capability.
+     *
+     * @return OrGdprBridge The bridge.
+     */
+    public static function build(FakeOrGdpr $fake): OrGdprBridge
+    {
+        $container = new class($fake) implements ContainerInterface {
+            /**
+             * @param FakeOrGdpr $fake The fake capability.
+             */
+            public function __construct(private FakeOrGdpr $fake)
+            {
+            }
+
+            /**
+             * @param string $id The service id.
+             *
+             * @return mixed The service.
+             */
+            public function get(string $id): mixed
+            {
+                if ($id === OrGdprBridge::OR_REQUEST_SERVICE || $id === OrGdprBridge::OR_DEADLINE) {
+                    return $this->fake;
+                }
+
+                throw new \RuntimeException('not found: '.$id);
+            }
+
+            /**
+             * @param string $id The service id.
+             *
+             * @return bool Whether the service exists.
+             */
+            public function has(string $id): bool
+            {
+                return ($id === OrGdprBridge::OR_REQUEST_SERVICE || $id === OrGdprBridge::OR_DEADLINE);
+            }
+        };
+
+        return new OrGdprBridge(container: $container, logger: new NullLogger());
     }
 }//end class
 

@@ -546,16 +546,6 @@ class Application extends App implements IBootstrap
                 $this->loadRoadmapFeatures()
             );
 
-            // Resolve the "Timesheet approval" billing entry point through the
-            // ADR-019 integration registry: the configured shillinq deployment
-            // URL (shillinq_app_url) overrides the hard-coded
-            // /index.php/apps/shillinq/ menu href in src/main.js
-            // (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-003). Empty when the
-            // integration is unconfigured, in which case the manifest default wins.
-            $appConfig   = $this->getContainer()->get(IAppConfig::class);
-            $shillinqUrl = trim($appConfig->getValueString('pipelinq', 'shillinq_app_url', ''));
-            $initialState->provideInitialState('shillinq_app_url', $shillinqUrl);
-
             $manifestPath = __DIR__.'/../../src/manifest.json';
             $dependencies = [];
             if (is_file($manifestPath) === true) {
