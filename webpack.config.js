@@ -75,7 +75,18 @@ webpackConfig.resolve = {
 	extensions: ['.vue', '.js'],
 	alias: {
 		'@': path.resolve(__dirname, 'src'),
-		...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
+		...(useLocalLib
+			? { '@conduction/nextcloud-vue': localLib }
+			// Published mode: the package's main entry is dist/, but src/main.js
+			// imports the integration-registry helpers from their 0-hop definition
+			// modules (`@conduction/nextcloud-vue/integrations/...`) rather than the
+			// barrel — the barrel's multi-hop re-exports of these functions resolve
+			// to `undefined` across pipelinq's split shared-nc-vue chunk. Those
+			// subpaths exist only under the package's published `src/` tree, so map
+			// the `integrations` subpath there. The registry installs onto the
+			// `window.OCA.OpenRegister.integrations` global, so resolving these from
+			// src/ shares the same singleton as the dist components (no dual instance).
+			: { '@conduction/nextcloud-vue/integrations': path.resolve(__dirname, 'node_modules/@conduction/nextcloud-vue/src/integrations') }),
 		// Deduplicate shared packages so the aliased library source uses
 		// the same instances as the app (prevents dual-Pinia / dual-Vue bugs).
 		'vue$': path.resolve(__dirname, 'node_modules/vue'),
