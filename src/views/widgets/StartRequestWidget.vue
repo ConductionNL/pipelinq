@@ -52,7 +52,7 @@
 			<ul>
 				<li v-for="req in recentRequests" :key="req.id">
 					<a :href="generateUrl('/apps/pipelinq/requests/' + req.id)">
-						{{ req.title || t('pipelinq', 'Untitled') }}
+						{{ toText(req.title) || t('pipelinq', 'Untitled') }}
 					</a>
 					<span class="recent-status">{{ req.status }}</span>
 				</li>
@@ -66,6 +66,7 @@ import { NcTextField, NcButton, NcSelect, NcNoteCard } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
+import { toText } from '../../utils/widgetText.js'
 
 export default {
 	name: 'StartRequestWidget',
@@ -131,6 +132,7 @@ export default {
 	},
 	methods: {
 		generateUrl,
+		toText,
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-54

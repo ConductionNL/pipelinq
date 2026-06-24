@@ -55,6 +55,7 @@ import { NcTextField, NcButton, NcSelect, NcNoteCard } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
+import { toText } from '../../utils/widgetText.js'
 
 export default {
 	name: 'CreateLeadWidget',
@@ -103,7 +104,7 @@ export default {
 		pipelineOptions() {
 			return this.pipelines.map((p) => ({
 				id: p.id,
-				label: p.title || t('pipelinq', 'Unnamed pipeline'),
+				label: toText(p.title) || t('pipelinq', 'Unnamed pipeline'),
 				stages: p.stages || [],
 			}))
 		},
