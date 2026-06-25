@@ -704,6 +704,64 @@ class BookingServiceTest extends TestCase
     }//end testMarkNoShowIncrementsCustomerNoShowCount()
 
     /**
+     * The booking state machine is now sourced from the Booking schema's
+     * `x-openregister-lifecycle` (ADR-031). allowedTransitions() must equal the
+     * prior hardcoded map so every legal/illegal edge is preserved exactly.
+     *
+     * @return void
+     */
+    public function testAllowedTransitionsSourcedFromSchema(): void
+    {
+        $this->assertSame(
+            expected: [
+                'pending-deposit'       => [
+                    'confirmed',
+                    'cancelled-by-customer',
+                    'cancelled-by-business',
+                    'rescheduled',
+                ],
+                'confirmed'             => [
+                    'completed',
+                    'no-show',
+                    'cancelled-by-customer',
+                    'cancelled-by-business',
+                    'rescheduled',
+                ],
+                'completed'             => [],
+                'no-show'               => [],
+                'cancelled-by-customer' => [],
+                'cancelled-by-business' => [],
+                'rescheduled'           => [],
+            ],
+            actual: BookingService::allowedTransitions()
+        );
+    }//end testAllowedTransitionsSourcedFromSchema()
+
+    /**
+     * Legal edges declared in the schema are accepted, and a transition out of a
+     * terminal state is rejected with the "Unknown source status" message (the
+     * terminal state is a key with an empty target list).
+     *
+     * @return void
+     */
+    public function testLegalAndTerminalBookingTransitions(): void
+    {
+        [$service] = $this->buildService();
+
+        // Legal edges (no exception).
+        $service->assertTransitionAllowed(from: 'pending-deposit', to: 'confirmed');
+        $service->assertTransitionAllowed(from: 'confirmed', to: 'completed');
+        $service->assertTransitionAllowed(from: 'confirmed', to: 'cancelled-by-business');
+        $this->addToAssertionCount(3);
+
+        // Out of a terminal state: completed has an empty target list, so any
+        // target is an invalid transition.
+        $this->expectException(exception: InvalidArgumentException::class);
+        $this->expectExceptionMessage(message: 'Invalid status transition: completed -> confirmed');
+        $service->assertTransitionAllowed(from: 'completed', to: 'confirmed');
+    }//end testLegalAndTerminalBookingTransitions()
+
+    /**
      * Status machine: confirmed -> pending-deposit is an invalid transition.
      * Reject it with InvalidArgumentException (REQ-APT-013 scenario 1).
      *

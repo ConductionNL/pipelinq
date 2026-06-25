@@ -36,6 +36,17 @@ use Psr\Log\LoggerInterface;
  * Notifications and citizen email drafts for the AVG workflow.
  *
  * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.7
+ *
+ * Seam 4 (declarative-notification migration) verdict — KEEP IMPERATIVE (GDPR/legal seam):
+ * the AVG deadline reminder/escalation/breach notifications cannot move to OpenRegister's
+ * scheduled `x-openregister-notifications` because the breach path mutates the request object
+ * (`termijnOverschreden`, `fgGeinformeerd`) and every milestone records an immutable
+ * `TermijnEvent` audit row that also serves as the dispatch idempotency guard
+ * ({@see \OCA\Pipelinq\Service\Avg\DeadlineTrackerService}); OR scheduled notifications do
+ * neither. The staged legal escalation chain (7-day -> <72h -> breach) is likewise
+ * non-expressible as independent OR rules.
+ *
+ * @spec openspec/changes/pipelinq-notifications-to-or/tasks.md#task-3.2
  */
 class AvgNotificationService
 {

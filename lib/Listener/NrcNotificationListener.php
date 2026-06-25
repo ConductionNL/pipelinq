@@ -57,7 +57,6 @@ class NrcNotificationListener
      */
     public const TARGET_DISPATCH_MS = 5000;
 
-
     /**
      * Constructor.
      *
@@ -74,7 +73,6 @@ class NrcNotificationListener
     ) {
     }//end __construct()
 
-
     /**
      * Dispatch a single inbound notification.
      *
@@ -88,9 +86,12 @@ class NrcNotificationListener
         $start = microtime(true);
 
         $endpointId = (string) ($abonnement['endpointId'] ?? '');
-        $endpoint   = $endpointId !== ''
-            ? $this->registers->find(ZgwRegisterAccess::SCHEMA_ENDPOINT, $endpointId)
-            : null;
+        if ($endpointId !== '') {
+            $endpoint = $this->registers->find(ZgwRegisterAccess::SCHEMA_ENDPOINT, $endpointId);
+        } else {
+            $endpoint = null;
+        }
+
         if ($endpoint === null) {
             $this->logger->warning(
                 'ZGW NRC: notification received for unknown endpoint',
@@ -99,18 +100,22 @@ class NrcNotificationListener
             return;
         }
 
-        $this->markReceived($abonnement);
+        $this->markReceived(abonnement: $abonnement);
 
         $kanaal   = (string) ($notification['kanaal'] ?? '');
         $resource = (string) ($notification['resource'] ?? '');
         $actie    = (string) ($notification['actie'] ?? '');
         try {
             match (true) {
-                ($kanaal === 'zaken' && $resource === 'zaak' && $actie === 'create')   => $this->onZaakCreated($endpoint, $notification),
-                ($kanaal === 'zaken' && $resource === 'status' && $actie === 'create') => $this->onStatusCreated($endpoint, $notification),
-                ($kanaal === 'besluiten' && $resource === 'besluit' && $actie === 'create') => $this->onBesluitCreated($endpoint, $notification),
-                ($kanaal === 'catalogi')                                              => $this->onCatalogiChange($endpoint, $notification),
-                default                                                                => null,
+                ($kanaal === 'zaken' && $resource === 'zaak' && $actie === 'create')
+                    => $this->onZaakCreated(endpoint: $endpoint, notification: $notification),
+                ($kanaal === 'zaken' && $resource === 'status' && $actie === 'create')
+                    => $this->onStatusCreated(endpoint: $endpoint, notification: $notification),
+                ($kanaal === 'besluiten' && $resource === 'besluit' && $actie === 'create')
+                    => $this->onBesluitCreated(endpoint: $endpoint, notification: $notification),
+                ($kanaal === 'catalogi')
+                    => $this->onCatalogiChange(endpoint: $endpoint, notification: $notification),
+                default => null,
             };
         } catch (Throwable $e) {
             $this->logger->error(
@@ -128,7 +133,6 @@ class NrcNotificationListener
         }
     }//end dispatch()
 
-
     /**
      * Update `laatstOntvangenOp` on the matching NrcAbonnement.
      *
@@ -140,13 +144,18 @@ class NrcNotificationListener
     {
         $uuid = (string) ($abonnement['@self']['uuid'] ?? $abonnement['id'] ?? '');
         $abonnement['laatstOntvangenOp'] = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+        if ($uuid !== '') {
+            $saveUuid = $uuid;
+        } else {
+            $saveUuid = null;
+        }
+
         $this->registers->save(
             ZgwRegisterAccess::SCHEMA_ABONN,
             $abonnement,
-            $uuid !== '' ? $uuid : null
+            $saveUuid
         );
     }//end markReceived()
-
 
     /**
      * Handle zaak.create — record mapping if it isn't already persisted.
@@ -162,6 +171,7 @@ class NrcNotificationListener
         if ($zaakUrl === '') {
             return;
         }
+
         $existing = $this->registers->findAll(
             ZgwRegisterAccess::SCHEMA_MAPPING,
             ['zgwUrl' => $zaakUrl]
@@ -169,9 +179,9 @@ class NrcNotificationListener
         if ($existing !== []) {
             return;
         }
+
         $this->logger->info('ZGW NRC: observed externally-created zaak', ['zaak' => $zaakUrl]);
     }//end onZaakCreated()
-
 
     /**
      * Handle status.create — fetch status, resolve omschrijving, update Request.
@@ -188,6 +198,7 @@ class NrcNotificationListener
         if ($statusUrl === '' || $zaakUrl === '') {
             return;
         }
+
         $mappings = $this->registers->findAll(
             ZgwRegisterAccess::SCHEMA_MAPPING,
             ['zgwUrl' => $zaakUrl]
@@ -195,6 +206,7 @@ class NrcNotificationListener
         if ($mappings === []) {
             return;
         }
+
         $mapping = $mappings[0];
         try {
             $status = $this->zrc->getStatus($endpoint, $statusUrl);
@@ -202,8 +214,13 @@ class NrcNotificationListener
             $this->logger->warning('ZGW NRC: failed to GET status', ['url' => $statusUrl, 'err' => $e->getMessage()]);
             return;
         }
+
         $statustypeUrl = (string) ($status['statustype'] ?? '');
-        $omsch         = $statustypeUrl !== '' ? $this->ztc->resolveOmschrijvingFromUrl($endpoint, $statustypeUrl) : null;
+        if ($statustypeUrl !== '') {
+            $omsch = $this->ztc->resolveOmschrijvingFromUrl($endpoint, $statustypeUrl);
+        } else {
+            $omsch = null;
+        }
 
         $requestId = (string) ($mapping['pipelinqId'] ?? '');
         if ($requestId === '' || $omsch === null) {
@@ -220,7 +237,6 @@ class NrcNotificationListener
         $this->registers->save('request', $request, $requestId);
     }//end onStatusCreated()
 
-
     /**
      * Handle besluit.create — observability log, mapping already persisted on outbound.
      *
@@ -235,6 +251,7 @@ class NrcNotificationListener
         if ($url === '') {
             return;
         }
+
         $existing = $this->registers->findAll(
             ZgwRegisterAccess::SCHEMA_MAPPING,
             ['zgwUrl' => $url]
@@ -242,9 +259,9 @@ class NrcNotificationListener
         if ($existing !== []) {
             return;
         }
+
         $this->logger->info('ZGW NRC: observed externally-created besluit', ['besluit' => $url]);
     }//end onBesluitCreated()
-
 
     /**
      * Handle catalogi changes — invalidate the ZTC cache.
@@ -256,17 +273,15 @@ class NrcNotificationListener
      */
     private function onCatalogiChange(array $endpoint, array $notification): void
     {
-        $resource = (string) ($notification['resource'] ?? '*');
+        $resource    = (string) ($notification['resource'] ?? '*');
         $resourceMap = [
-            'zaaktype'             => ZtcClient::RESOURCE_ZAAKTYPE,
-            'statustype'           => ZtcClient::RESOURCE_STATUSTYPE,
-            'roltype'              => ZtcClient::RESOURCE_ROLTYPE,
-            'resultaattype'        => ZtcClient::RESOURCE_RESULTAATTYPE,
-            'besluittype'          => ZtcClient::RESOURCE_BESLUITTYPE,
+            'zaaktype'      => ZtcClient::RESOURCE_ZAAKTYPE,
+            'statustype'    => ZtcClient::RESOURCE_STATUSTYPE,
+            'roltype'       => ZtcClient::RESOURCE_ROLTYPE,
+            'resultaattype' => ZtcClient::RESOURCE_RESULTAATTYPE,
+            'besluittype'   => ZtcClient::RESOURCE_BESLUITTYPE,
         ];
-        $bucket = $resourceMap[$resource] ?? '*';
+        $bucket      = $resourceMap[$resource] ?? '*';
         $this->ztc->invalidateCache($endpoint, $bucket);
     }//end onCatalogiChange()
-
-
 }//end class

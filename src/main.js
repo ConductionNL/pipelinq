@@ -13,6 +13,17 @@ import {
 	registerIcons,
 	registerTranslations,
 } from '@conduction/nextcloud-vue'
+// Import the integration-registry functions from their DEFINITION modules
+// (0 re-export hops) rather than the barrel: pipelinq splits the library into
+// a separate `shared-nc-vue.js` chunk and its 9 entry points have no shared
+// runtimeChunk, so the barrel's 3-hop re-exports of these functions resolve to
+// `undefined` across the chunk boundary (components, used directly, are fine).
+// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
+import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
+// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
+import { registerBuiltinIntegrations } from '@conduction/nextcloud-vue/integrations/builtin/index.js'
+// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
+import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations/builtin/leaves.js'
 import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
@@ -34,6 +45,16 @@ Vue.use(VueRouter)
 // Without this every schema `icon` name fails the CnIcon registry lookup
 // and falls back to a help-circle (page headers, empty states).
 registerIcons(appIcons)
+
+// Pluggable integration registry (ADR-019 / Phase 7). Install the registry +
+// register the built-in core/leaf integrations (xwiki / calendar / files /
+// notes / …) so manifest `type: 'integration'` widgets resolve from the
+// registry. Imported from the definition modules above (not the barrel) so the
+// bindings resolve across pipelinq's split-out `shared-nc-vue.js` chunk.
+installIntegrationRegistry()
+registerBuiltinIntegrations()
+registerLeafIntegrations()
+
 try {
 	registerTranslations()
 } catch (e) {
@@ -149,8 +170,34 @@ function mergeManifestFragments(base) {
 		}
 	})
 	merged.menu = applyMenuRelocations(merged.menu, menuLayout.relocations)
+	merged.menu = applyMenuSections(merged.menu, menuLayout.sections)
 	merged.menu = applyMenuRemovals(merged.menu, menuLayout.removals)
+	merged.menu = applySettingsSection(merged.menu, menuLayout.settingsSection)
 	return merged
+}
+
+/**
+ * Assign top-level menu leaves to a navigation section declared by
+ * `src/menu-layout.json#sections` (`{ menuEntryId: sectionName }`). Section
+ * `settings` makes the entry render inside the NC gear-icon settings foldout
+ * (CnAppNav) instead of as a top-level item — so genuinely-admin/config
+ * entries (e.g. AVG-verzoeken, the MDM steward views) live under Settings
+ * rather than a duplicate top-level Administration group, while operational
+ * groups (Marketing/Blasts) stay top-level. Fragments stay the source of WHAT
+ * exists (ADR-037); this map keeps the WHERE decision in the canonical layout
+ * file. Only top-level entries are sectioned; unknown ids are inert.
+ *
+ * @param {Array<object>} menu The merged menu (mutated in place).
+ * @param {Record<string, string>|undefined} sections Menu-entry id → section name.
+ * @return {Array<object>} The menu with sections applied.
+ */
+function applyMenuSections(menu, sections) {
+	if (!sections || typeof sections !== 'object') return menu
+	menu.forEach((node) => {
+		const section = sections[node.id]
+		if (section) node.section = section
+	})
+	return menu
 }
 
 /**
@@ -242,41 +289,71 @@ function applyMenuRemovals(menu, removals) {
 }
 
 /**
- * Resolve the "Timesheet approval" billing entry point (BillingApproval menu
- * entry) through the ADR-019 integration registry: the configured shillinq
- * deployment URL is provided as the `shillinq_app_url` initial state by
- * Application::boot(). When set it overrides the hard-coded
- * /index.php/apps/shillinq/ href in the manifest so the entry points at the
- * configured shillinq instance; when empty the manifest default wins
- * (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-003).
+ * Promote the menu entries listed in `src/menu-layout.json#settingsSection`
+ * into Nextcloud's settings foldout — the NcAppNavigationSettings gear at the
+ * bottom-left of the navigation, OUTSIDE the scrollable list. CnAppNav renders
+ * every TOP-LEVEL item carrying `section: "settings"` as a flat entry inside
+ * that foldout (with an auto-prepended "Personal settings"). This lifts each
+ * listed id out of wherever it currently sits, tags it `section: "settings"`,
+ * flattens it (the foldout has no nested groups), and appends it to the top
+ * level. Empty non-clickable groups left behind are dropped; a clickable group
+ * (one with route/href/action) is kept.
  *
- * @param {object} manifest The merged manifest (with `menu[]`).
- * @return {object} The manifest with the billing href resolved.
+ * @param {Array<object>} menu        The merged + relocated + pruned menu.
+ * @param {Array<string>|undefined} settingsIds Entry ids to move to the foldout.
+ * @return {Array<object>} The menu with the settings entries lifted out.
  */
-function applyRegistryBillingHref(manifest) {
-	let shillinqUrl = ''
-	try {
-		shillinqUrl = (loadState('pipelinq', 'shillinq_app_url', '') || '').trim()
-	} catch {
-		shillinqUrl = ''
+function applySettingsSection(menu, settingsIds) {
+	if (!Array.isArray(settingsIds) || settingsIds.length === 0) return menu
+	const want = new Set(settingsIds)
+	const isClickable = (n) => n.route !== undefined || n.href !== undefined || n.action !== undefined
+	const lifted = []
+	const strip = (nodes) => nodes.reduce((acc, n) => {
+		if (want.has(n.id)) {
+			const { children, ...leaf } = n
+			lifted.push({ ...leaf, section: 'settings' })
+			return acc
+		}
+		if (Array.isArray(n.children)) {
+			const children = strip(n.children)
+			if (children.length === 0 && n.children.length > 0 && !isClickable(n)) return acc
+			acc.push({ ...n, children })
+			return acc
+		}
+		acc.push(n)
+		return acc
+	}, [])
+	const remaining = strip(menu)
+	return [...remaining, ...lifted]
+}
+
+/**
+ * Seed the page-level app config onto every `type: "dashboard"` page's
+ * `config.appConfig`. CnPageRenderer forwards each `config.*` key to the
+ * dispatched page component's props, so this lands on CnDashboardPage's
+ * `appConfig` prop — the source the library's `@config.<key>` token resolver
+ * reads (via the `cnAppConfig` inject it provides to descendant stat widgets).
+ * Backed by the `config` initial state the app's Application::boot() provides
+ * (currently the reporting `currency` captured by the setup wizard, default
+ * EUR). With this seed a manifest widget's `format: { style: "currency",
+ * currency: "@config.currency" }` formats with the configured currency instead
+ * of the literal EUR fallback. An explicit per-page `config.appConfig` (none
+ * today) still wins.
+ *
+ * @param {object} manifest The merged manifest (with `pages[]`).
+ * @return {object} The same manifest, with dashboard pages' appConfig seeded.
+ */
+function seedDashboardAppConfig(manifest) {
+	const appConfig = loadState('pipelinq', 'config', {})
+	for (const page of manifest.pages || []) {
+		if (page.type === 'dashboard') {
+			page.config = { appConfig, ...(page.config || {}) }
+		}
 	}
-	if (!shillinqUrl) {
-		return manifest
-	}
-	const walk = (items) => {
-		if (!Array.isArray(items)) return
-		items.forEach((item) => {
-			if (item && item.id === 'BillingApproval') {
-				item.href = shillinqUrl
-			}
-			if (Array.isArray(item?.children)) walk(item.children)
-		})
-	}
-	walk(manifest.menu)
 	return manifest
 }
 
-const mergedManifest = applyRegistryBillingHref(mergeManifestFragments(bundledManifest))
+const mergedManifest = seedDashboardAppConfig(mergeManifestFragments(bundledManifest))
 
 /**
  * Build the vue-router config from the manifest. Each manifest page

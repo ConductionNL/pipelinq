@@ -160,11 +160,11 @@ class SnapshotGenerationService
         }
 
         return [
-            'period_id'         => $periodId,
-            'as_of'             => $asOfDate,
-            'generated'         => $persisted,
-            'errors'            => $errors,
-            'hierarchy_report'  => $hierarchyReport,
+            'period_id'        => $periodId,
+            'as_of'            => $asOfDate,
+            'generated'        => $persisted,
+            'errors'           => $errors,
+            'hierarchy_report' => $hierarchyReport,
         ];
     }//end generate()
 
@@ -314,16 +314,16 @@ class SnapshotGenerationService
         bool $partial,
         array $missing
     ): array {
-        $quota          = $this->quotaService->getQuotaAmount(ownerId: $ownerId, periodId: $periodId, level: $level);
-        $reference      = new DateTimeImmutable($asOfDate);
-        $daysRemaining  = $this->period->daysRemaining(periodId: $periodId, now: $reference);
-        $periodClosed   = $this->period->isClosed(periodId: $periodId, now: $reference);
-        $projected      = $this->quotaService->projectedAttainment(
+        $quota         = $this->quotaService->getQuotaAmount(ownerId: $ownerId, periodId: $periodId, level: $level);
+        $reference     = new DateTimeImmutable($asOfDate);
+        $daysRemaining = $this->period->daysRemaining(periodId: $periodId, now: $reference);
+        $periodClosed  = $this->period->isClosed(periodId: $periodId, now: $reference);
+        $projected     = $this->quotaService->projectedAttainment(
             closedWon: (float) $totals['closed_won_amount'],
             commit: (float) $totals['commit_amount'],
             bestCase: (float) $totals['best_case_amount']
         );
-        $atRisk         = false;
+        $atRisk        = false;
         if ($quota !== null && $quota > 0) {
             $atRisk = $this->quotaService->isAtRisk(projected: $projected, quota: $quota, daysRemaining: $daysRemaining);
         }

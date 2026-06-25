@@ -26,11 +26,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Service\Provider\MessageDispatchTrait;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
-use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * WhatsAppProviderClient — Meta + BSP transport abstraction.
@@ -57,6 +56,24 @@ use Throwable;
  */
 class WhatsAppProviderClient
 {
+    use MessageDispatchTrait;
+
+    /**
+     * Map a logical action to the vendor send path (relative to the source
+     * base URL). Send/template actions POST to `messages`; media
+     * upload/download to `media`; the template-approval read to
+     * `message_templates`.
+     *
+     * @var array<string, string>
+     */
+    private const ACTION_PATHS = [
+        'send-template'  => 'messages',
+        'send-text'      => 'messages',
+        'download-media' => 'media',
+        'upload-media'   => 'media',
+        'list-templates' => 'message_templates',
+    ];
+
     /**
      * Constructor.
      *
@@ -274,13 +291,18 @@ class WhatsAppProviderClient
     }//end verifySignature()
 
     /**
-     * Dispatch a call via openconnector SourceService.
+     * Dispatch a call via the OpenRegister MessageDispatchProvider leaf.
+     *
+     * The `channelProvider.sourceId` (a.k.a. `openconnectorSourceId`) is the
+     * OpenConnector source slug (`whatsapp-cloud-api` / `whatsapp-bsp`) the
+     * leaf routes through. The logical `$action` is mapped to the vendor send
+     * path; the connection + credentials live in OpenConnector (ADR-022).
      *
      * @param array<string, mixed> $channelProvider Provider row.
      * @param string               $action          Action name.
      * @param array<string, mixed> $payload         Payload.
      *
-     * @return array<string, mixed> Result.
+     * @return array<string, mixed> Result (raw provider response).
      *
      * @throws TransientSmsProviderException On transient.
      * @throws PermanentSmsProviderException On permanent.
@@ -289,34 +311,16 @@ class WhatsAppProviderClient
     {
         $sourceId = (string) ($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
         if ($sourceId === '') {
-            throw new PermanentSmsProviderException('WhatsApp provider source not configured');
+            throw new PermanentSmsProviderException(message: 'WhatsApp provider source not configured');
         }
 
-        try {
-            $sourceService = $this->container->get('OCA\\OpenConnector\\Service\\SourceService');
-        } catch (Throwable $e) {
-            throw new TransientSmsProviderException('openconnector unavailable: ' . $e->getMessage());
-        }
+        $path = self::ACTION_PATHS[$action] ?? 'messages';
 
-        if (method_exists($sourceService, 'executeAction') === false) {
-            throw new PermanentSmsProviderException('openconnector SourceService lacks executeAction');
-        }
-
-        try {
-            $result = $sourceService->executeAction($sourceId, $action, $payload);
-        } catch (Throwable $e) {
-            $code = (int) $e->getCode();
-            $this->logger->warning(
-                'WhatsAppProviderClient.dispatch: failed',
-                ['action' => $action, 'code' => $code, 'message' => $e->getMessage()]
-            );
-            if ($code === 0 || ($code >= 500 && $code < 600)) {
-                throw new TransientSmsProviderException($e->getMessage(), $code, $e);
-            }
-            throw new PermanentSmsProviderException($e->getMessage(), $code, $e);
-        }
-
-        return is_array($result) ? $result : [];
+        return $this->dispatchViaLeaf(
+            source: $sourceId,
+            body: $payload,
+            path: $path,
+        );
     }//end dispatch()
 
     /**

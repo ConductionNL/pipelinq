@@ -1,24 +1,24 @@
 {
 	"menu": [
 		{
-			"id": "CtiSettings",
-			"label": "CTI integration",
+			"id": "Cti",
+			"label": "CTI (telephony)",
 			"icon": "icon-phone",
-			"route": "CtiSettings",
-			"order": 220
-		},
-		{
-			"id": "CtiEventLog",
-			"label": "CTI event log",
-			"icon": "icon-history",
-			"route": "CtiEventLog",
-			"order": 221
+			"route": "Cti",
+			"order": 218
 		}
 	],
 	"pages": [
 		{
-			"id": "CtiSettings",
+			"id": "Cti",
 			"route": "/settings/cti",
+			"type": "custom",
+			"title": "CTI (telephony)",
+			"component": "CtiPageView"
+		},
+		{
+			"id": "CtiSettings",
+			"route": "/settings/cti/integration",
 			"type": "custom",
 			"title": "CTI integration",
 			"component": "CtiSettingsView"

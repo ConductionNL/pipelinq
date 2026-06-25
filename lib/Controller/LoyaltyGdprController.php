@@ -43,9 +43,9 @@ class LoyaltyGdprController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest          $request     The request.
+     * @param IRequest           $request     The request.
      * @param LoyaltyGdprService $gdprService The GDPR service.
-     * @param IUserSession      $userSession The user session.
+     * @param IUserSession       $userSession The user session.
      */
     public function __construct(
         IRequest $request,

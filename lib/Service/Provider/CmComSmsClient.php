@@ -26,10 +26,9 @@ namespace OCA\Pipelinq\Service\Provider;
 
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
- * CmComSmsClient — CM.com SMS via openconnector.
+ * CmComSmsClient — CM.com SMS via the OpenRegister dispatch leaf.
  *
  * Vendor key: `cm-com`. CM.com's status callbacks use a shared-secret
  * HMAC over the raw body.
@@ -38,6 +37,15 @@ use Throwable;
  */
 class CmComSmsClient implements SmsProviderClientInterface
 {
+    use MessageDispatchTrait;
+
+    /**
+     * CM.com messages send path, relative to the source base URL.
+     *
+     * @var string
+     */
+    private const SEND_PATH = 'messages';
+
     /**
      * Constructor.
      *
@@ -70,6 +78,8 @@ class CmComSmsClient implements SmsProviderClientInterface
      *
      * @throws TransientSmsProviderException On 5xx / network.
      * @throws PermanentSmsProviderException On 4xx / config.
+     *
+     * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#1.3
      */
     public function send(string $toNumber, string $body): array
     {
@@ -79,7 +89,11 @@ class CmComSmsClient implements SmsProviderClientInterface
             'body' => $body,
         ];
 
-        $result = $this->dispatchViaOpenConnector(action: 'send-sms', payload: $payload);
+        $result = $this->dispatchViaLeaf(
+            source: (string) ($this->sourceId ?? ''),
+            body: $payload,
+            path: self::SEND_PATH,
+        );
         $id     = (string) ($result['messageId'] ?? ($result['externalMessageId'] ?? ''));
 
         return [
@@ -115,48 +129,4 @@ class CmComSmsClient implements SmsProviderClientInterface
     {
         return 'cm-com';
     }//end getVendor()
-
-    /**
-     * Dispatch via openconnector.
-     *
-     * @param string               $action  Action name.
-     * @param array<string, mixed> $payload Payload.
-     *
-     * @return array<string, mixed> Result.
-     *
-     * @throws TransientSmsProviderException On transient.
-     * @throws PermanentSmsProviderException On permanent.
-     */
-    private function dispatchViaOpenConnector(string $action, array $payload): array
-    {
-        if ($this->sourceId === null || $this->sourceId === '') {
-            throw new PermanentSmsProviderException('CM.com source not configured');
-        }
-
-        try {
-            $sourceService = $this->container->get('OCA\\OpenConnector\\Service\\SourceService');
-        } catch (Throwable $e) {
-            throw new TransientSmsProviderException('openconnector unavailable: ' . $e->getMessage());
-        }
-
-        if (method_exists($sourceService, 'executeAction') === false) {
-            throw new PermanentSmsProviderException('openconnector SourceService lacks executeAction');
-        }
-
-        try {
-            $result = $sourceService->executeAction($this->sourceId, $action, $payload);
-        } catch (Throwable $e) {
-            $code = (int) $e->getCode();
-            $this->logger->warning(
-                'CmComSmsClient.dispatchViaOpenConnector: failed',
-                ['code' => $code, 'message' => $e->getMessage()]
-            );
-            if ($code === 0 || ($code >= 500 && $code < 600)) {
-                throw new TransientSmsProviderException($e->getMessage(), $code, $e);
-            }
-            throw new PermanentSmsProviderException($e->getMessage(), $code, $e);
-        }
-
-        return is_array($result) ? $result : [];
-    }//end dispatchViaOpenConnector()
 }//end class

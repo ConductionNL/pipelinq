@@ -77,6 +77,7 @@ class DutchHolidayCalendar
                     'extraHolidays entries must be ISO Y-m-d strings.'
                 );
             }
+
             $this->extraHolidays[] = $extra;
         }
     }//end __construct()
@@ -89,9 +90,9 @@ class DutchHolidayCalendar
      * Pinksteren+Pinkstermaandag, Goede Vrijdag, Bevrijdingsdag in
      * lustrum years), and any tenant extra-holidays.
      *
-     * @param DateTimeInterface $from             Anchor date (inclusive).
-     * @param int               $days             Number of working days to add (>=0).
-     * @param string            $tenantTimeZone   IANA TZ; default Europe/Amsterdam.
+     * @param DateTimeInterface $from           Anchor date (inclusive).
+     * @param int               $days           Number of working days to add (>=0).
+     * @param string            $tenantTimeZone IANA TZ; default Europe/Amsterdam.
      *
      * @return DateTimeImmutable The resulting date at 00:00 in the tenant TZ.
      */
@@ -114,7 +115,7 @@ class DutchHolidayCalendar
         $added = 0;
         while ($added < $days) {
             $current = $current->modify('+1 day');
-            if ($this->isWorkingDay($current) === true) {
+            if ($this->isWorkingDay(date: $current) === true) {
                 $added++;
             }
         }
@@ -137,7 +138,7 @@ class DutchHolidayCalendar
             return false;
         }
 
-        return $this->isHoliday($date) === false;
+        return $this->isHoliday(date: $date) === false;
     }//end isWorkingDay()
 
     /**
@@ -149,9 +150,9 @@ class DutchHolidayCalendar
      */
     public function isHoliday(DateTimeInterface $date): bool
     {
-        $md      = $date->format('m-d');
-        $ymd     = $date->format('Y-m-d');
-        $year    = (int) $date->format('Y');
+        $md   = $date->format('m-d');
+        $ymd  = $date->format('Y-m-d');
+        $year = (int) $date->format('Y');
 
         if (isset(self::FIXED_HOLIDAYS[$md]) === true) {
             return true;
@@ -166,7 +167,7 @@ class DutchHolidayCalendar
             return true;
         }
 
-        $variable = $this->variableHolidaysForYear($year);
+        $variable = $this->variableHolidaysForYear(year: $year);
         return in_array($ymd, $variable, true);
     }//end isHoliday()
 
@@ -179,11 +180,11 @@ class DutchHolidayCalendar
      */
     private function variableHolidaysForYear(int $year): array
     {
-        // easter_days() needs the calendar extension; fall back to a
+        // The easter_days() PHP function needs the calendar extension; fall back to a
         // pure-PHP Anonymous Gregorian implementation so the calculator
         // works in CI containers without ext-calendar.
-        $easterOffset = $this->easterOffset($year);
-        $easter = (new DateTimeImmutable($year.'-03-21'))
+        $easterOffset = $this->easterOffset(year: $year);
+        $easter       = (new DateTimeImmutable($year.'-03-21'))
             ->modify('+'.$easterOffset.' days');
 
         $goedeVrijdag      = $easter->modify('-2 days');
@@ -211,23 +212,23 @@ class DutchHolidayCalendar
      */
     private function easterOffset(int $year): int
     {
-        $a = ($year % 19);
-        $b = intdiv($year, 100);
-        $c = ($year % 100);
-        $d = intdiv($b, 4);
-        $e = ($b % 4);
-        $f = intdiv(($b + 8), 25);
-        $g = intdiv(($b - $f + 1), 3);
-        $h = ((19 * $a) + $b - $d - $g + 15) % 30;
-        $i = intdiv($c, 4);
-        $k = ($c % 4);
-        $l = (32 + (2 * $e) + (2 * $i) - $h - $k) % 7;
-        $m = intdiv(($a + (11 * $h) + (22 * $l)), 451);
+        $a     = ($year % 19);
+        $b     = intdiv($year, 100);
+        $c     = ($year % 100);
+        $d     = intdiv($b, 4);
+        $e     = ($b % 4);
+        $f     = intdiv(($b + 8), 25);
+        $g     = intdiv(($b - $f + 1), 3);
+        $h     = ((19 * $a) + $b - $d - $g + 15) % 30;
+        $i     = intdiv($c, 4);
+        $k     = ($c % 4);
+        $l     = (32 + (2 * $e) + (2 * $i) - $h - $k) % 7;
+        $m     = intdiv(($a + (11 * $h) + (22 * $l)), 451);
         $month = intdiv(($h + $l - (7 * $m) + 114), 31);
         $day   = ((($h + $l - (7 * $m) + 114) % 31) + 1);
 
-        $easter   = new DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $day));
-        $anchor   = new DateTimeImmutable(sprintf('%04d-03-21', $year));
+        $easter = new DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $day));
+        $anchor = new DateTimeImmutable(sprintf('%04d-03-21', $year));
         return (int) $anchor->diff($easter)->days;
     }//end easterOffset()
 }//end class

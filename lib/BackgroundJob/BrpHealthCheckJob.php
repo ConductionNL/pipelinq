@@ -101,38 +101,41 @@ class BrpHealthCheckJob extends TimedJob
             $expiry = $this->client->getCertificateExpiry();
             if ($expiry === null) {
                 $this->logger->info('BRP cert health check: cert not configured');
-                $this->saveStatus(['expiry' => null, 'status' => 'unconfigured', 'checkedAt' => $this->nowIso()]);
+                $this->saveStatus(status: ['expiry' => null, 'status' => 'unconfigured', 'checkedAt' => $this->nowIso()]);
                 return;
             }
+
             $now      = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             $daysLeft = (int) floor(($expiry->getTimestamp() - $now->getTimestamp()) / 86400);
 
             $status = 'ok';
             if ($daysLeft <= self::CRITICAL_THRESHOLD_DAYS) {
                 $status = 'critical';
-            } elseif ($daysLeft <= self::WARN_THRESHOLD_DAYS) {
+            } else if ($daysLeft <= self::WARN_THRESHOLD_DAYS) {
                 $status = 'warning';
             }
 
-            $this->saveStatus([
-                'expiry'    => $expiry->format(DATE_ATOM),
-                'daysLeft'  => $daysLeft,
-                'status'    => $status,
-                'checkedAt' => $this->nowIso(),
-            ]);
+            $this->saveStatus(
+                    status: [
+                        'expiry'    => $expiry->format(DATE_ATOM),
+                        'daysLeft'  => $daysLeft,
+                        'status'    => $status,
+                        'checkedAt' => $this->nowIso(),
+                    ]
+                    );
 
             if ($status !== 'ok') {
-                $this->notifyAdmins($daysLeft, $status, $expiry);
+                $this->notifyAdmins(daysLeft: $daysLeft, status: $status, expiry: $expiry);
             }
         } catch (Throwable $e) {
             $this->logger->error('BRP health check failed', ['error' => $e->getMessage()]);
-        }
+        }//end try
     }//end run()
 
     /**
      * Persist the health-check snapshot for the admin tile.
      *
-     * @param array<string,mixed> $status
+     * @param array<string,mixed> $status The health-check snapshot to persist.
      *
      * @return void
      */
@@ -160,17 +163,21 @@ class BrpHealthCheckJob extends TimedJob
         if ($admins === null) {
             return;
         }
+
         foreach ($admins->getUsers() as $admin) {
             try {
                 $n = $this->notificationManager->createNotification();
                 $n->setApp(Application::APP_ID)
-                  ->setUser($admin->getUID())
-                  ->setObject('brp-cert', $status)
-                  ->setSubject('brp_cert_'.$status, [
-                      'daysLeft' => $daysLeft,
-                      'expiry'   => $expiry->format('Y-m-d'),
-                  ])
-                  ->setDateTime(new \DateTime());
+                    ->setUser($admin->getUID())
+                    ->setObject('brp-cert', $status)
+                    ->setSubject(
+                          'brp_cert_'.$status,
+                          [
+                              'daysLeft' => $daysLeft,
+                              'expiry'   => $expiry->format('Y-m-d'),
+                          ]
+                          )
+                    ->setDateTime(new \DateTime());
                 $this->notificationManager->notify($n);
             } catch (Throwable $e) {
                 $this->logger->warning('BRP cert notify failed', ['admin' => $admin->getUID(), 'error' => $e->getMessage()]);

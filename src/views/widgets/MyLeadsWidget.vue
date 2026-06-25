@@ -19,6 +19,7 @@ import { generateUrl } from '@nextcloud/router'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import { initializeStores } from '../../store/store.js'
 import { formatDate } from '../../services/localeUtils.js'
+import { toText } from '../../utils/widgetText.js'
 
 export default {
 	name: 'MyLeadsWidget',
@@ -59,13 +60,13 @@ export default {
 					: ''
 				const subParts = [
 					priorityLabel,
-					lead.stage,
+					toText(lead.stage),
 					dueStr ? (isOverdue ? '⚠ ' + dueStr : dueStr) : '',
 				].filter(Boolean)
 
 				return {
 					id: lead.id,
-					mainText: lead.title || t('pipelinq', 'Untitled lead'),
+					mainText: toText(lead.title) || t('pipelinq', 'Untitled lead'),
 					subText: subParts.join(' · '),
 				}
 			})

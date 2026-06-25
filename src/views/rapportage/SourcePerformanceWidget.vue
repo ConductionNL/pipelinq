@@ -12,20 +12,20 @@
 		:name="t('pipelinq', 'No source data')"
 		:description="t('pipelinq', 'No lead source performance to report yet.')" />
 
-	<CnTableWidget
+	<CnDataTable
 		v-else
 		:rows="rows"
 		:columns="columns"
-		:sortable="true" />
+		borderless />
 </template>
 
 <script>
-import { CnTableWidget } from '@conduction/nextcloud-vue'
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import { NcEmptyContent } from '@nextcloud/vue'
 
 export default {
 	name: 'SourcePerformanceWidget',
-	components: { CnTableWidget, NcEmptyContent },
+	components: { CnDataTable, NcEmptyContent },
 	props: {
 		data: {
 			type: Array,
@@ -34,7 +34,7 @@ export default {
 	},
 	computed: {
 		/**
-		 * Column descriptors consumed by CnTableWidget. Each row is
+		 * Column descriptors consumed by CnDataTable. Each row is
 		 * rendered with sortable per-column behaviour.
 		 *
 		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-007

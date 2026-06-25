@@ -7,23 +7,14 @@ return [
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
         ['name' => 'settings#reimport', 'url' => '/api/settings/reimport', 'verb' => 'POST'],
+        // First-time setup wizard (ADR-042)
+        ['name' => 'setup#status',     'url' => '/api/setup/status',            'verb' => 'GET'],
+        ['name' => 'setup#saveConfig', 'url' => '/api/setup/config',            'verb' => 'POST'],
+        ['name' => 'setup#runAction',  'url' => '/api/setup/action/{actionId}', 'verb' => 'POST'],
 
         // User settings
         ['name' => 'settings#getUserSettings', 'url' => '/api/settings/user', 'verb' => 'GET'],
         ['name' => 'settings#updateUserSettings', 'url' => '/api/settings/user', 'verb' => 'PUT'],
-
-        // Admin — Objects API access control (per-schema group restrictions; ADR-005 / admin-settings spec).
-        ['name' => 'settings#getObjectenAccess', 'url' => '/api/settings/objecten-access', 'verb' => 'GET'],
-        ['name' => 'settings#saveObjectenAccess', 'url' => '/api/settings/objecten-access', 'verb' => 'POST'],
-
-        // Admin — REST API token management.
-        ['name' => 'settings#listTokens', 'url' => '/api/settings/api-tokens', 'verb' => 'GET'],
-        ['name' => 'settings#generateToken', 'url' => '/api/settings/api-tokens', 'verb' => 'POST'],
-        ['name' => 'settings#revokeToken', 'url' => '/api/settings/api-tokens/{id}', 'verb' => 'DELETE'],
-
-        // Admin — OAuth 2.0 and MCP server configuration.
-        ['name' => 'settings#saveOAuth', 'url' => '/api/settings/oauth', 'verb' => 'POST'],
-        ['name' => 'settings#saveMcp', 'url' => '/api/settings/mcp', 'verb' => 'POST'],
 
         // Admin — Shillinq project ledger manual re-dispatch (project-to-shillinq-ledger).
         ['name' => 'ledger#retry', 'url' => '/api/ledger/retry/{projectId}', 'verb' => 'POST'],
@@ -48,6 +39,9 @@ return [
         ['name' => 'contactSync#search', 'url' => '/api/contacts-sync/search', 'verb' => 'GET'],
         ['name' => 'contactSync#import', 'url' => '/api/contacts-sync/import', 'verb' => 'POST'],
         ['name' => 'contactSync#writeBack', 'url' => '/api/contacts-sync/write-back', 'verb' => 'POST'],
+        // Contact-FIRST create — provisions the NC contact and saves the object
+        // with the required contactsUid (client-contact unification).
+        ['name' => 'contactSync#create', 'url' => '/api/contacts-sync/create', 'verb' => 'POST'],
 
         // Email matching (leaf-first email-calendar-sync) — per-user settings + trigger + status.
         // The matching job links Nextcloud Mail messages to CRM entities via the OR `email` leaf.
@@ -479,15 +473,6 @@ return [
         ['name' => 'brpAdmin#get',                 'url' => '/api/brp/settings',                  'verb' => 'GET'],
         ['name' => 'brpAdmin#save',                'url' => '/api/brp/settings',                  'verb' => 'POST'],
         ['name' => 'brpAdmin#rotateWebhookSecret', 'url' => '/api/brp/settings/webhook-secret',   'verb' => 'POST'],
-        // StUF-ZKN/BG adapter (stuf-zkn-bg-adapter — REQ-STUF-001..012).
-        // camelCase slug matches StufController class name. Specific routes precede any wildcard {slug} routes.
-        // The /inkomend endpoint is PublicPage so the zaaksysteem can post notifications
-        // without a user session; it authenticates via WSSE UsernameToken (verified in the controller).
-        ['name' => 'stuf#outbound',  'url' => '/api/stuf/outbound',  'verb' => 'POST'],
-        ['name' => 'stuf#inkomend',  'url' => '/api/stuf/inkomend',  'verb' => 'POST'],
-        ['name' => 'stuf#endpoints', 'url' => '/api/stuf/endpoints', 'verb' => 'GET'],
-        ['name' => 'stuf#messages',  'url' => '/api/stuf/messages',  'verb' => 'GET'],
-
         // KCC Werkplek — unified agent workspace (kcc-werkplek).
         // Specific routes precede any wildcard {path} catch-all (ADR-016).
         ['name' => 'kccWerkplek#stateAction',           'url' => '/api/kcc-werkplek/state',        'verb' => 'GET'],
