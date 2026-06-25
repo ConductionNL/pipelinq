@@ -19,6 +19,11 @@
 //   - openspec/changes/pipelinq-manifest-v1/design.md
 //   - hydra/openspec/architecture/adr-036-manifest-v2.md
 
+// --- Service Hub — cards-collapse landing page (service-group-cards-collapse,
+//     ADR-044). Replaces the expandable Service nav group with a single
+//     top-level menu item linking to this card grid. ---
+import ServiceHubOverview from './components/service/ServiceHubOverview.vue'
+
 // --- MyWork — bespoke per-user surface mixing tasks + leads + requests. ---
 import MyWorkView from './views/MyWork.vue'
 import ProspectsView from './views/prospects/ProspectsView.vue'
@@ -348,6 +353,18 @@ const SIDEBAR_TAB_META = {
  * @type {Record<string, { kind: string, component: object, _note?: string }>}
  */
 const registry = {
+	// --- Service Hub — cards-collapse landing page (service-group-cards-collapse,
+	//     ADR-044). The former expandable Service nav group (Requests / Tasks /
+	//     Contactmomenten / Complaints / Projects / MyWork / BookingsGroup /
+	//     Queues) is collapsed into a single top-level menu item linking here.
+	//     All former leaf routes remain registered; the hub renders one CnCard
+	//     per leaf (REQ-NAV-001 / REQ-NAV-002 / REQ-NAV-003). ---
+	ServiceHubOverview: {
+		kind: 'page',
+		component: ServiceHubOverview,
+		_note: 'ADR-044 cards-collapse hub for the Service group: eight CnCards linking to the former Service child leaves (Requests/Tasks/Contactmomenten/Complaints/Projects/MyWork/BookingsGroup/Queues). Leaf routes stay registered.',
+	},
+
 	// --- MyWork — multi-entity user dashboard. ---
 	MyWorkView: {
 		kind: 'page',
