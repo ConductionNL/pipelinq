@@ -1,12 +1,18 @@
 const path = require('path')
 const fs = require('fs')
 const webpack = require('webpack')
+const TerserPlugin = require('terser-webpack-plugin')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
 const { VueLoaderPlugin } = require('vue-loader')
 
 const buildMode = process.env.NODE_ENV
 const isDev = buildMode === 'development'
-webpackConfig.devtool = isDev ? 'cheap-source-map' : 'source-map'
+// Production builds disable source maps entirely. The full `source-map` devtool
+// (and Terser's own source-map generation) added significant memory and time on
+// top of compilation, and emitted ~77 MB of .map files into js/. Dropping them
+// keeps the output minified while lowering peak memory. Dev keeps cheap, fast
+// line-level maps.
+webpackConfig.devtool = isDev ? 'cheap-source-map' : false
 
 // The base @nextcloud/webpack-vue-config hardcodes
 //   output.publicPath = '/apps/<appName>/js/'
@@ -152,6 +158,38 @@ webpackConfig.optimization = {
 			},
 		},
 	},
+}
+
+if (!isDev) {
+	// Minify with esbuild instead of Terser in production. Terser parses every
+	// chunk into a full JS AST held in the Node heap and runs `CPU cores - 1`
+	// parallel workers; across these large entrypoints the build peaked at ~12 GB
+	// in ~33s. esbuild minifies in native (Go) code with a tiny heap footprint and
+	// is ~10-100x faster, at the cost of only ~1-2% larger output. We reuse
+	// terser-webpack-plugin purely as the wiring and swap its engine to the
+	// built-in esbuild minifier.
+	webpackConfig.optimization.minimizer = [
+		new TerserPlugin({
+			minify: TerserPlugin.esbuildMinify,
+			// esbuild parallelizes internally (in Go), so terser-webpack-plugin's
+			// default `cpus-1` Node worker processes only add memory overhead.
+			// Disabling them lowers peak build RAM with no real speed cost.
+			parallel: false,
+			// esbuild minify options (NOT terserOptions). Keep legal/license
+			// comments at end-of-file so MIT/AGPL attribution required by our
+			// deps survives minification. (esbuild's sidecar-emitting 'linked'
+			// mode is unavailable here — terser-webpack-plugin drives esbuild via
+			// its transform API, which rejects 'linked'/'external'.)
+			terserOptions: {
+				legalComments: 'eof',
+			},
+		}),
+	]
+
+	// The base config keeps an in-memory cache (`cache: true`) in production.
+	// A one-shot build never reuses it, so it only inflates the webpack main
+	// process — the dominant memory consumer here. Disable it for the build.
+	webpackConfig.cache = false
 }
 
 module.exports = webpackConfig

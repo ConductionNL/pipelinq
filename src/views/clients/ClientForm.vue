@@ -4,6 +4,7 @@
 			<label for="client-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
 				id="client-name"
+				label-outside
 				:value="form.name"
 				:error="!!errors.name"
 				:helper-text="errors.name"
@@ -18,7 +19,7 @@
 				<NcSelect
 					v-model="form.type"
 					input-id="client-type"
-					:aria-label-combobox="t('pipelinq', 'Type')"
+					label-outside
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
 					data-testid="client-type-select"
@@ -31,6 +32,7 @@
 				<label for="client-email">{{ t('pipelinq', 'Email') }}</label>
 				<NcTextField
 					id="client-email"
+					label-outside
 					:value="form.email"
 					:error="!!errors.email"
 					:helper-text="errors.email"
@@ -45,6 +47,7 @@
 				<label for="client-phone">{{ t('pipelinq', 'Phone') }}</label>
 				<NcTextField
 					id="client-phone"
+					label-outside
 					:value="form.phone"
 					:error="!!errors.phone"
 					:helper-text="errors.phone"
@@ -55,6 +58,7 @@
 				<label for="client-website">{{ t('pipelinq', 'Website') }}</label>
 				<NcTextField
 					id="client-website"
+					label-outside
 					:value="form.website"
 					:error="!!errors.website"
 					:helper-text="errors.website"
@@ -67,6 +71,7 @@
 			<label for="client-address">{{ t('pipelinq', 'Address') }}</label>
 			<NcTextField
 				id="client-address"
+				label-outside
 				:value="form.address"
 				data-testid="client-address-input"
 				@update:value="v => form.address = v" />
@@ -80,7 +85,7 @@
 				data-testid="client-notes-input" />
 		</div>
 
-		<div class="client-form__actions">
+		<div v-if="showActions" class="client-form__actions">
 			<NcButton type="primary"
 				:disabled="!isValid"
 				data-testid="client-form-save"
@@ -121,6 +126,15 @@ export default {
 			type: Object,
 			default: () => ({}),
 		},
+		/**
+		 * Render the built-in Save / Cancel buttons. Set to `false` when the
+		 * host supplies its own action buttons (e.g. a parent NcDialog driving
+		 * the form via a ref + the `update:valid` event).
+		 */
+		showActions: {
+			type: Boolean,
+			default: true,
+		},
 	},
 	data() {
 		return {
@@ -155,6 +169,14 @@ export default {
 		},
 	},
 	watch: {
+		// Surface validity so a host (e.g. a parent NcDialog) can enable or
+		// disable its own submit button.
+		isValid: {
+			immediate: true,
+			handler(val) {
+				this.$emit('update:valid', val)
+			},
+		},
 		client: {
 			immediate: true,
 			/**
