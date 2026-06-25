@@ -19,7 +19,7 @@
 				v-if="clients.length > 5"
 				type="tertiary"
 				class="view-all-link"
-				@click="$router.push({ name: 'ClientList' })">
+				@click="$router.push({ name: 'Clients' })">
 				{{ t('pipelinq', 'View all clients ({count})', { count: clients.length }) }}
 			</NcButton>
 		</div>

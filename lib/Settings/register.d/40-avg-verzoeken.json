@@ -21,6 +21,135 @@
                 "summary": "A data-subject request (AVG/GDPR art. 15/16/17/18/20) with legal-deadline tracking",
                 "description": "Central request object for handling a citizen's GDPR rights request. The legal deadline (wettelijkeTermijnVerloopt) is server-computed at intake (30 days, optionally extended to 60). Lifecycle is server-authoritative; the DELETE path refuses removal while the 5-year retention window is active. Mapped to Schema.org Action.",
                 "@type": "schema:Action",
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "ingediend",
+                        "final": [
+                            "afgerond",
+                            "gearchiveerd"
+                        ],
+                        "transitions": {
+                            "naarInBehandeling": {
+                                "from": [
+                                    "ingediend",
+                                    "in-behandeling",
+                                    "bewijs-verzamelen",
+                                    "redactie",
+                                    "bundle-genereren",
+                                    "wachten-op-verzoeker",
+                                    "weigering-opgesteld"
+                                ],
+                                "to": "in-behandeling",
+                                "description": "Move the request into active handling (or keep it there)."
+                            },
+                            "naarBewijsVerzamelen": {
+                                "from": [
+                                    "ingediend",
+                                    "in-behandeling",
+                                    "bewijs-verzamelen",
+                                    "redactie",
+                                    "bundle-genereren",
+                                    "wachten-op-verzoeker",
+                                    "weigering-opgesteld"
+                                ],
+                                "to": "bewijs-verzamelen",
+                                "description": "Start (or return to) federated evidence collection."
+                            },
+                            "naarRedactie": {
+                                "from": [
+                                    "ingediend",
+                                    "in-behandeling",
+                                    "bewijs-verzamelen",
+                                    "redactie",
+                                    "bundle-genereren",
+                                    "wachten-op-verzoeker",
+                                    "weigering-opgesteld"
+                                ],
+                                "to": "redactie",
+                                "description": "Apply field-level redactions to the collected evidence."
+                            },
+                            "naarBundleGenereren": {
+                                "from": [
+                                    "ingediend",
+                                    "in-behandeling",
+                                    "bewijs-verzamelen",
+                                    "redactie",
+                                    "bundle-genereren",
+                                    "wachten-op-verzoeker",
+                                    "weigering-opgesteld"
+                                ],
+                                "to": "bundle-genereren",
+                                "description": "Generate the export bundle (driven by AvgRedactionController on redaction completion)."
+                            },
+                            "naarWachtenOpVerzoeker": {
+                                "from": [
+                                    "ingediend",
+                                    "in-behandeling",
+                                    "bewijs-verzamelen",
+                                    "redactie",
+                                    "bundle-genereren",
+                                    "wachten-op-verzoeker",
+                                    "weigering-opgesteld"
+                                ],
+                                "to": "wachten-op-verzoeker",
+                                "description": "Await a response or confirmation from the data subject."
+                            },
+                            "naarWeigeringOpgesteld": {
+                                "from": [
+                                    "ingediend",
+                                    "in-behandeling",
+                                    "bewijs-verzamelen",
+                                    "redactie",
+                                    "bundle-genereren",
+                                    "wachten-op-verzoeker",
+                                    "weigering-opgesteld"
+                                ],
+                                "to": "weigering-opgesteld",
+                                "description": "Draft a (full or partial) art. 23 denial."
+                            },
+                            "naarIngediend": {
+                                "from": [
+                                    "ingediend",
+                                    "in-behandeling",
+                                    "bewijs-verzamelen",
+                                    "redactie",
+                                    "bundle-genereren",
+                                    "wachten-op-verzoeker",
+                                    "weigering-opgesteld"
+                                ],
+                                "to": "ingediend",
+                                "description": "Return the request to the freshly-submitted state for correction."
+                            },
+                            "naarAfgerond": {
+                                "from": [
+                                    "ingediend",
+                                    "in-behandeling",
+                                    "bewijs-verzamelen",
+                                    "redactie",
+                                    "bundle-genereren",
+                                    "wachten-op-verzoeker",
+                                    "weigering-opgesteld"
+                                ],
+                                "to": "afgerond",
+                                "description": "Resolve the request. Terminal — read-only thereafter."
+                            },
+                            "naarGearchiveerd": {
+                                "from": [
+                                    "ingediend",
+                                    "in-behandeling",
+                                    "bewijs-verzamelen",
+                                    "redactie",
+                                    "bundle-genereren",
+                                    "wachten-op-verzoeker",
+                                    "weigering-opgesteld"
+                                ],
+                                "to": "gearchiveerd",
+                                "description": "Archive the request and stamp the 5-year retention date (AvgRequestService::archive). Terminal."
+                            }
+                        }
+                    }
+                },
                 "required": [
                     "artikel",
                     "status"

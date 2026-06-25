@@ -40,6 +40,7 @@ class SettingsService
 {
     private const CONFIG_KEYS = [
         'register',
+        'currency',
         'client_schema',
         'contact_schema',
         'lead_schema',
@@ -219,14 +220,14 @@ class SettingsService
         'pos_eod.z_report_time'                    => '23:59',
         'pos_eod.alert_email'                      => '',
         'pos_eod.max_retry_attempts'               => '5',
-        // xWiki integration (xwiki-integration). The default direct URL points at
+        // XWiki integration (xwiki-integration). The default direct URL points at
         // the dev compose stack so a fresh install renders content without manual
         // configuration; admins can override or clear it to disable the fallback.
         'xwiki_default_space'                      => '',
         'xwiki_cache_ttl'                          => '300',
         'xwiki_direct_url'                         => '',
         // SLA engine (sla-engine-and-escalation) — admin settings.
-        // @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008
+        // @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008 .
         'sla_sweep_interval_seconds'               => '300',
         'sla_business_hours_start'                 => '09:00',
         'sla_business_hours_end'                   => '17:00',

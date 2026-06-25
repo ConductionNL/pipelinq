@@ -26,7 +26,7 @@
 			@empty-action="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
-			@row-click="openRole"
+			@view="openRole"
 			@page-changed="onPageChange" />
 	</div>
 </template>

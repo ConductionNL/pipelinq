@@ -16,10 +16,32 @@
         "slug": "masterEntity",
         "title": "Master Entity",
         "icon": "AccountStarOutline",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "Single authoritative golden record per master entity (Contact / Account / Product / Vendor).",
         "description": "The golden record consolidated from one or more source-records via trust-tier resolution. Holds the winning attribute values (goldenRecord), per-attribute provenance, merge lineage, lifecycle status and a computed data-quality score. Mapped to Schema.org Thing.",
         "@type": "schema:Thing",
+        "x-openregister-quality": {
+          "field": "qualityScore",
+          "statusField": "qualityStatus",
+          "rules": [
+            { "type": "required", "field": "goldenRecord.name", "weight": 1 },
+            { "type": "required", "field": "goldenRecord.email", "weight": 1 },
+            { "type": "format", "field": "goldenRecord.email", "format": "email", "weight": 1 },
+            { "type": "format", "field": "goldenRecord.kvkNumber", "pattern": "^[0-9]{8}$", "weight": 1 },
+            { "type": "freshness", "field": "lastSourceUpdate", "halfLifeDays": 180, "weight": 2 }
+          ],
+          "thresholds": { "good": 0.8, "fair": 0.5 }
+        },
+        "x-openregister-dedup": {
+          "blockingKeys": [],
+          "matchRules": [
+            { "field": "matchKvkNumber", "method": "exact", "weight": 0.4 },
+            { "field": "matchEmail", "method": "exact", "weight": 0.3 },
+            { "field": "matchName", "method": "normalized", "weight": 0.2 },
+            { "field": "matchName", "method": "levenshtein", "weight": 0.1 }
+          ],
+          "threshold": 0.7
+        },
         "required": [
           "masterId",
           "entityType",
@@ -82,9 +104,58 @@
           "dataQualityScore": {
             "type": "number",
             "title": "Data quality score",
-            "description": "Computed score 0-1 (completeness*0.3 + freshness*0.4 + agreement*0.3).",
+            "description": "Computed score 0-1: a blend of OpenRegister's materialised qualityScore (completeness/format/freshness via x-openregister-quality) and the app-side cross-source agreement term.",
             "minimum": 0,
             "maximum": 1,
+            "facetable": true
+          },
+          "qualityScore": {
+            "type": "number",
+            "title": "OR quality score",
+            "description": "Per-object quality score 0-1 materialised by OpenRegister from the x-openregister-quality annotation (completeness/format/freshness). Blended into dataQualityScore with the agreement term.",
+            "minimum": 0,
+            "maximum": 1,
+            "facetable": true
+          },
+          "qualityStatus": {
+            "type": "string",
+            "title": "OR quality status",
+            "description": "Status label materialised by OpenRegister from qualityScore (good/fair/poor).",
+            "enum": ["good", "fair", "poor"],
+            "facetable": true
+          },
+          "lastSourceUpdate": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last source update",
+            "description": "Most recent attributeProvenance lastUpdated across all attributes; the date OpenRegister's freshness rule decays against."
+          },
+          "matchName": {
+            "type": "string",
+            "title": "Match: name",
+            "description": "Flattened goldenRecord.name top-level projection so OpenRegister's duplicate-detection similarity (x-openregister-dedup) can read it (OR similarity does not traverse nested paths).",
+            "maxLength": 512,
+            "facetable": true
+          },
+          "matchEmail": {
+            "type": "string",
+            "title": "Match: email",
+            "description": "Flattened goldenRecord.email top-level projection for OpenRegister duplicate detection.",
+            "maxLength": 255,
+            "facetable": true
+          },
+          "matchKvkNumber": {
+            "type": "string",
+            "title": "Match: KvK number",
+            "description": "Flattened goldenRecord.kvkNumber top-level projection for OpenRegister duplicate detection.",
+            "maxLength": 64,
+            "facetable": true
+          },
+          "matchPhone": {
+            "type": "string",
+            "title": "Match: phone",
+            "description": "Flattened goldenRecord.phone top-level projection for OpenRegister duplicate detection.",
+            "maxLength": 64,
             "facetable": true
           },
           "lastReviewedAt": {

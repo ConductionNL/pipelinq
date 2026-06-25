@@ -13,9 +13,11 @@ import { test, expect } from '@playwright/test'
  */
 test.describe('xWiki Integration', () => {
 	test('dashboard renders the knowledge-base widget or unavailable message', async ({ page }) => {
-		await page.goto('/apps/pipelinq/')
+		// The knowledge-base widget lives on the Operational overview dashboard
+		// after the IA dashboard split, not the landing Commercial overview.
+		await page.goto('/apps/pipelinq/#/operational')
 		// Wait for the manifest shell to mount before checking widgets.
-		await page.waitForLoadState('networkidle')
+		await page.locator('#content-vue').waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
 
 		// Either the widget title or the unavailable message must be visible.
 		const widgetTitle = page.getByText('Knowledge base', { exact: false }).first()
@@ -28,8 +30,8 @@ test.describe('xWiki Integration', () => {
 	})
 
 	test('client detail sidebar exposes the Knowledge base tab', async ({ page }) => {
-		await page.goto('/apps/pipelinq/clients')
-		await page.waitForLoadState('networkidle')
+		await page.goto('/apps/pipelinq/#/clients')
+		await page.locator('#content-vue').waitFor({ state: 'visible', timeout: 15000 }).catch(() => {})
 
 		// Open the first client detail row. The list view exposes rows as
 		// links; if there are no clients seeded, we still expect the index
@@ -38,7 +40,7 @@ test.describe('xWiki Integration', () => {
 		const firstRow = page.getByRole('row').nth(1)
 		if (await firstRow.isVisible().catch(() => false)) {
 			await firstRow.click()
-			await page.waitForLoadState('networkidle')
+			await page.locator('#content-vue').waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
 
 			// The sidebar tab is rendered with label "Knowledge base"
 			// (XWikiSidebarTab) — distinct from the leaf-flavoured

@@ -1,7 +1,5 @@
 <?php
 
-// SPDX-License-Identifier: EUPL-1.2
-
 /**
  * Pipelinq EntityActivityController.
  *
@@ -9,6 +7,7 @@
  * `CommunicationHistory.vue` panel and by third-party integrations.
  *
  * SPDX-FileCopyrightText: 2024 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller

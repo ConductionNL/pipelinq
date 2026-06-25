@@ -41,21 +41,62 @@ use Psr\Log\LoggerInterface;
  */
 class StaffFakeObjectService
 {
-    /** @var array<string, array<string, array<string, mixed>>> */
+
+    /**
+     * @var array<string, array<string, array<string, mixed>>>
+     */
     public array $store = [];
 
     public function find(string $id, string $register, string $schema): ?array
     {
         return $this->store[$schema][$id] ?? null;
-    }
+    }//end find()
 
     /**
+     * Mirror the real OR ObjectService::findAll(array $config) signature and
+     * resolve the schema from the metadata filters, then apply any remaining
+     * field filters (e.g. posRole) in-memory.
+     *
+     * @param array<string, mixed> $config Config with `filters`, `limit`.
+     *
      * @return array<int, array<string, mixed>>
      */
-    public function findAll(string $register, string $schema, int $limit = 100): array
+    public function findAll(array $config=[]): array
     {
-        return array_values($this->store[$schema] ?? []);
-    }
+        $filters = ($config['filters'] ?? []);
+        $schema  = (string) ($filters['schema'] ?? '');
+        unset($filters['register'], $filters['schema']);
+
+        $rows = array_values($this->store[$schema] ?? []);
+        if ($filters === []) {
+            return $rows;
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            foreach ($filters as $k => $v) {
+                if (($row[$k] ?? null) !== $v) {
+                    continue 2;
+                }
+            }
+
+            $out[] = $row;
+        }
+
+        return $out;
+    }//end findAll()
+
+    /**
+     * Count objects matching the config filters (real OR signature).
+     *
+     * @param array<string, mixed> $config Config with `filters`.
+     *
+     * @return int
+     */
+    public function count(array $config=[]): int
+    {
+        return count($this->findAll(config: $config));
+    }//end count()
 
     /**
      * @param array<string, mixed> $object
@@ -64,22 +105,23 @@ class StaffFakeObjectService
      */
     public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array
     {
-        $object['id']                  = $uuid;
+        $object['id'] = $uuid;
         $this->store[$schema][$uuid] = $object;
         return $object;
-    }
+    }//end saveObject()
 
     public function deleteObject(string $id, string $register, string $schema): void
     {
         unset($this->store[$schema][$id]);
-    }
-}
+    }//end deleteObject()
+}//end class
 
 /**
  * Tests for PosStaffService.
  */
 class PosStaffServiceTest extends TestCase
 {
+
     private StaffFakeObjectService $os;
 
     private IAppConfig $appConfig;
@@ -96,7 +138,7 @@ class PosStaffServiceTest extends TestCase
 
         $this->appConfig = $this->createMock(IAppConfig::class);
         $this->appConfig->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default = ''): string {
+            function (string $app, string $key, string $default=''): string {
                 $map = [
                     'register'        => 'reg-pipelinq',
                     'posRole_schema'  => 'sch-posRole',
@@ -107,12 +149,15 @@ class PosStaffServiceTest extends TestCase
         );
 
         $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturnCallback(function (string $id) {
-            if ($id === 'OCA\OpenRegister\Service\ObjectService') {
-                return $this->os;
-            }
-            throw new \RuntimeException('unknown service '.$id);
-        });
+        $container->method('get')->willReturnCallback(
+                function (string $id) {
+                    if ($id === 'OCA\OpenRegister\Service\ObjectService') {
+                        return $this->os;
+                    }
+
+                    throw new \RuntimeException('unknown service '.$id);
+                }
+                );
 
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -139,7 +184,7 @@ class PosStaffServiceTest extends TestCase
             'canRefund'          => true,
             'canNoSale'          => true,
         ];
-    }
+    }//end setUp()
 
     public function testSaveStaffHashesPinAndStripsHashOnResponse(): void
     {
@@ -162,7 +207,7 @@ class PosStaffServiceTest extends TestCase
         $this->assertNotEmpty($row['pinHash']);
         $this->assertTrue(password_verify('1234', $row['pinHash']));
         $this->assertNotSame('1234', $row['pinHash']);
-    }
+    }//end testSaveStaffHashesPinAndStripsHashOnResponse()
 
     public function testSaveStaffRejectsInvalidPinFormat(): void
     {
@@ -174,7 +219,7 @@ class PosStaffServiceTest extends TestCase
                 'pin'         => '12',
             ]
         );
-    }
+    }//end testSaveStaffRejectsInvalidPinFormat()
 
     public function testValidatePinSucceedsWithCorrectPinAndReturnsPermissions(): void
     {
@@ -191,7 +236,7 @@ class PosStaffServiceTest extends TestCase
         $this->assertSame('Carla Peters', $session['displayName']);
         $this->assertTrue($session['permissions']['canRefund']);
         $this->assertSame(15, $session['permissions']['maxDiscountPercent']);
-    }
+    }//end testValidatePinSucceedsWithCorrectPinAndReturnsPermissions()
 
     public function testValidatePinRejectsBadPin(): void
     {
@@ -205,7 +250,7 @@ class PosStaffServiceTest extends TestCase
 
         $this->expectException(OCSForbiddenException::class);
         $this->service->validatePin(staffId: $saved['id'], pin: '0000');
-    }
+    }//end testValidatePinRejectsBadPin()
 
     public function testFiveFailedAttemptsLocksAccount(): void
     {
@@ -236,7 +281,7 @@ class PosStaffServiceTest extends TestCase
         // 6th attempt — even with the right PIN — must be blocked.
         $this->expectException(OCSForbiddenException::class);
         $this->service->validatePin(staffId: $saved['id'], pin: '5678');
-    }
+    }//end testFiveFailedAttemptsLocksAccount()
 
     public function testInactiveAccountIsRejected(): void
     {
@@ -251,7 +296,7 @@ class PosStaffServiceTest extends TestCase
 
         $this->expectException(OCSForbiddenException::class);
         $this->service->validatePin(staffId: $saved['id'], pin: '5678');
-    }
+    }//end testInactiveAccountIsRejected()
 
     public function testEditPreservesPinWhenBlank(): void
     {
@@ -277,46 +322,54 @@ class PosStaffServiceTest extends TestCase
 
         $this->assertSame('Bob Janssen', $updated['displayName']);
         $this->assertSame($originalHash, $this->os->store['sch-posStaff'][$saved['id']]['pinHash']);
-    }
+    }//end testEditPreservesPinWhenBlank()
 
     public function testListStaffStripsHashFromEveryRow(): void
     {
-        $this->service->saveStaff(data: [
-            'displayName' => 'Anna',
-            'posRole'     => $this->roleId,
-            'pin'         => '1234',
-        ]);
-        $this->service->saveStaff(data: [
-            'displayName' => 'Bob',
-            'posRole'     => $this->roleId,
-            'pin'         => '5678',
-        ]);
+        $this->service->saveStaff(
+                data: [
+                    'displayName' => 'Anna',
+                    'posRole'     => $this->roleId,
+                    'pin'         => '1234',
+                ]
+                );
+        $this->service->saveStaff(
+                data: [
+                    'displayName' => 'Bob',
+                    'posRole'     => $this->roleId,
+                    'pin'         => '5678',
+                ]
+                );
 
         $rows = $this->service->listStaff();
         $this->assertCount(2, $rows);
         foreach ($rows as $row) {
             $this->assertArrayNotHasKey('pinHash', $row);
         }
-    }
+    }//end testListStaffStripsHashFromEveryRow()
 
     public function testDeleteRoleBlockedWhenStaffStillAssigned(): void
     {
-        $this->service->saveStaff(data: [
-            'displayName' => 'Anna',
-            'posRole'     => $this->roleId,
-            'pin'         => '1234',
-        ]);
+        $this->service->saveStaff(
+                data: [
+                    'displayName' => 'Anna',
+                    'posRole'     => $this->roleId,
+                    'pin'         => '1234',
+                ]
+                );
 
         $this->expectException(OCSForbiddenException::class);
         $this->roleService->deleteRole(id: $this->roleId);
-    }
+    }//end testDeleteRoleBlockedWhenStaffStillAssigned()
 
     public function testMaxDiscountPercentBoundsAreEnforced(): void
     {
         $this->expectException(OCSBadRequestException::class);
-        $this->roleService->saveRole(data: [
-            'name'               => 'Bad role',
-            'maxDiscountPercent' => 150,
-        ]);
-    }
-}
+        $this->roleService->saveRole(
+                data: [
+                    'name'               => 'Bad role',
+                    'maxDiscountPercent' => 150,
+                ]
+                );
+    }//end testMaxDiscountPercentBoundsAreEnforced()
+}//end class

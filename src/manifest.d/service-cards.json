@@ -1,0 +1,26 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2024 Conduction B.V.",
+		"change": "service-group-cards-collapse",
+		"adr": "ADR-037 modular manifest fragment — never edit src/manifest.json | ADR-044 cards-collapse",
+		"description": "Collapses the Service top-level navigation group into a single clickable menu item (ADR-044). The Service menu entry is given a route pointing to ServiceHubOverview so it behaves as a leaf, not an expandable parent group. The former child leaves (Requests, Tasks, Contactmomenten, Complaints, Projects, MyWork, BookingsGroup, Queues) become cards on the hub page. All leaf page routes remain registered; their ids are listed in src/menu-layout.json#removals so the nav nesting is removed while the pages stay routable."
+	},
+	"menu": [
+		{ "id": "Service", "route": "ServiceHubOverview" }
+	],
+	"pages": [
+		{
+			"id": "ServiceHubOverview",
+			"route": "/service",
+			"type": "custom",
+			"title": "Service",
+			"icon": "HeadsetOutline",
+			"component": "ServiceHubOverview",
+			"group": "Service",
+			"config": {
+				"register": "pipelinq"
+			}
+		}
+	]
+}

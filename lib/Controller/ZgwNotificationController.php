@@ -59,11 +59,11 @@ class ZgwNotificationController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest               $request   Request.
-     * @param ZgwRegisterAccess      $registers Register facade (NrcAbonnement lookup).
-     * @param ZgwApiClient           $api       For vault-ref resolution on callbackAuth.
-     * @param NrcNotificationListener $listener Per-kanaal dispatcher.
-     * @param LoggerInterface        $logger    PSR-3 logger.
+     * @param IRequest                $request   Request.
+     * @param ZgwRegisterAccess       $registers Register facade (NrcAbonnement lookup).
+     * @param ZgwApiClient            $api       For vault-ref resolution on callbackAuth.
+     * @param NrcNotificationListener $listener  Per-kanaal dispatcher.
+     * @param LoggerInterface         $logger    PSR-3 logger.
      */
     public function __construct(
         IRequest $request,
@@ -74,7 +74,6 @@ class ZgwNotificationController extends Controller
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
-
 
     /**
      * POST /api/zgw/notificaties/inbox — NRC callback ingest.
@@ -92,7 +91,7 @@ class ZgwNotificationController extends Controller
         // convention) instead of 401 to signal "webhook signature failure"
         // without overloading session-auth semantics.
         $authHeader = (string) $this->request->getHeader('Authorization');
-        $token      = self::extractBearer($authHeader);
+        $token      = self::extractBearer(headerValue: $authHeader);
         if ($token === '') {
             return new JSONResponse(
                 ['error' => 'Missing bearer token'],
@@ -100,7 +99,7 @@ class ZgwNotificationController extends Controller
             );
         }
 
-        $abonnement = $this->resolveAbonnementByBearer($token);
+        $abonnement = $this->resolveAbonnementByBearer(token: $token);
         if ($abonnement === null) {
             $this->logger->warning(
                 'ZGW NRC: inbox received with unknown bearer',
@@ -130,7 +129,6 @@ class ZgwNotificationController extends Controller
         );
     }//end inbox()
 
-
     /**
      * Walk all active NrcAbonnement records and return the one whose
      * callbackAuth (either a literal token or a vault reference) matches.
@@ -149,21 +147,24 @@ class ZgwNotificationController extends Controller
             if ((bool) ($row['actief'] ?? false) === false) {
                 continue;
             }
+
             $stored = (string) ($row['callbackAuth'] ?? '');
             if ($stored === '') {
                 continue;
             }
+
             $resolved = $this->api->resolveClientSecret($stored);
             if ($resolved === '') {
                 $resolved = $stored;
             }
+
             if (hash_equals($resolved, $token) === true) {
                 return $row;
             }
         }
+
         return null;
     }//end resolveAbonnementByBearer()
-
 
     /**
      * Strip the "Bearer " prefix from an Authorization header value.
@@ -177,12 +178,13 @@ class ZgwNotificationController extends Controller
         if ($headerValue === '') {
             return '';
         }
+
         if (stripos($headerValue, 'Bearer ') === 0) {
             return trim(substr($headerValue, 7));
         }
+
         return '';
     }//end extractBearer()
-
 
     /**
      * Read the raw request body.
@@ -195,8 +197,10 @@ class ZgwNotificationController extends Controller
     protected function readRawBody(): string
     {
         $body = file_get_contents('php://input');
-        return $body !== false ? $body : '';
+        if ($body !== false) {
+            return $body;
+        }
+
+        return '';
     }//end readRawBody()
-
-
 }//end class

@@ -3,11 +3,15 @@
 /**
  * Pipelinq EvidenceCollectionService.
  *
- * Federated personal-data evidence collection for an AVG request. Queries
- * OpenRegister for objects matching the data subject (BSN + scope) and, where
- * configured, external OpenConnector AVG-export endpoints and the BRP. Sources
+ * Federated personal-data evidence collection for an AVG request. Discovers the
+ * data subject's objects through OpenRegister's canonical NER-index discovery
+ * (`DataSubjectRequestService::findSubjectData`, RBAC + tenant scoped) instead of
+ * the earlier divergent BSN-equality `findAll` filter — an authorized behavioural
+ * change recorded in openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md. Where
+ * configured it also queries external OpenConnector AVG-export endpoints. Sources
  * that time out or are unreachable yield a `bron-onbereikbaar` BewijsItem rather
- * than aborting collection, and identical content is de-duplicated by hash.
+ * than aborting collection, and identical content is de-duplicated by hash. The
+ * BewijsItem packaging + scope overlay + dedup stay as the pipelinq app overlay.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Avg
@@ -56,9 +60,10 @@ class EvidenceCollectionService
      * Constructor.
      *
      * @param AvgRepository      $repository The AVG OR repository.
-     * @param ContainerInterface $container  The DI container (OR ObjectService).
+     * @param ContainerInterface $container  The DI container (OpenConnector probe).
      * @param IAppConfig         $appConfig  The app config.
      * @param AvgEventService    $events     The TermijnEvent recorder.
+     * @param OrGdprBridge       $orGdpr     Bridge onto OR's NER-index discovery.
      * @param LoggerInterface    $logger     The logger.
      */
     public function __construct(
@@ -66,6 +71,7 @@ class EvidenceCollectionService
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private AvgEventService $events,
+        private OrGdprBridge $orGdpr,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -114,16 +120,22 @@ class EvidenceCollectionService
     }//end collect()
 
     /**
-     * Query OpenRegister for objects matching the data subject and scope.
+     * Discover the data subject's objects via OR's canonical NER-index discovery.
      *
-     * Reuses OR's own aggregation (findAll with a BSN filter) rather than
-     * hand-rolling cross-entity SQL (ADR-022). Each hit becomes a BewijsItem.
+     * ADOPTS OpenRegister's `DataSubjectRequestService::findSubjectData` (the
+     * GdprEntity NER index ⋈ entity_relations, RBAC + tenant scoped) instead of
+     * the earlier divergent `findAll` BSN-equality filter. NER discovery is more
+     * complete: it returns every object the index has tied to the subject's PII
+     * (BSN/email/name), not only rows that happen to carry a literal `bsn`
+     * column. The scope filter + BewijsItem packaging stay as the pipelinq app
+     * overlay. Each envelope (object + the GdprEntity hits that matched) becomes a
+     * BewijsItem.
      *
      * @param array<string, mixed> $request The request payload.
      *
      * @return array{count: int} The number of items collected.
      *
-     * @spec openspec/changes/avg-verzoeken-workflow/tasks.md#3.1
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
      */
     public function collectFromOpenRegister(array $request): array
     {
@@ -136,19 +148,10 @@ class EvidenceCollectionService
             return ['count' => 0];
         }
 
-        try {
-            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $results       = $objectService->findAll(config: ['filters' => ['bsn' => $bsn], 'limit' => 500]);
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'Pipelinq AVG: OpenRegister evidence query failed',
-                ['exception' => $e->getMessage()]
-            );
-            return ['count' => 0];
-        }
+        $envelopes = $this->orGdpr->findSubjectData(subjectId: $bsn);
 
-        foreach (($results ?? []) as $result) {
-            $object   = $this->normalize(object: $result);
+        foreach ($envelopes as $envelope) {
+            $object   = $this->normalize(object: ($envelope['object'] ?? []));
             $register = (string) ($object['@self']['register'] ?? '');
             if ($scopes !== [] && in_array($register, $scopes, true) === false
                 && $this->scopeMatches(object: $object, scopes: $scopes) === false
@@ -161,7 +164,7 @@ class EvidenceCollectionService
                 bronApp: 'openregister',
                 bronRegister: $register,
                 bronObject: (string) ($object['@self']['id'] ?? $object['@self']['uuid'] ?? ''),
-                categorie: (string) ($object['@self']['schema'] ?? 'object'),
+                categorie: $this->categoryOf(object: $object, gdprEntities: (array) ($envelope['gdprEntities'] ?? [])),
                 preview: $this->previewOf(object: $object),
                 rechtsgrond: 'wettelijke taak'
             );
@@ -170,6 +173,29 @@ class EvidenceCollectionService
 
         return ['count' => $count];
     }//end collectFromOpenRegister()
+
+    /**
+     * Derive an evidence category from the owning object's schema and the NER hits.
+     *
+     * Prefers the most specific GdprEntity category the NER index attached to the
+     * object (e.g. `bsn`, `email`); falls back to the owning object's schema.
+     *
+     * @param array<string, mixed>             $object       The owning object.
+     * @param array<int, array<string, mixed>> $gdprEntities The matched NER hits.
+     *
+     * @return string The category.
+     */
+    private function categoryOf(array $object, array $gdprEntities): string
+    {
+        foreach ($gdprEntities as $hit) {
+            $category = trim((string) ($hit['category'] ?? ''));
+            if ($category !== '') {
+                return $category;
+            }
+        }
+
+        return (string) ($object['@self']['schema'] ?? 'object');
+    }//end categoryOf()
 
     /**
      * Best-effort query of one external OpenConnector AVG-export source.

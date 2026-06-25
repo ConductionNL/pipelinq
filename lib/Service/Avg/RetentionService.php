@@ -9,6 +9,15 @@
  * window a dossier and its children are hard-deleted. All operations are
  * server-authoritative and audit-logged.
  *
+ * The 5-year dossier-retention policy and the 30-day evidence-window SCHEDULE
+ * are pipelinq overlays that OpenRegister does not own and are kept verbatim.
+ * The PII-scrubbing STYLE, however, now ADOPTS OR's canonical value-replacement
+ * convention: the matched PII is overwritten with OR's `[erased]` token
+ * (the same token OR's `DataSubjectRequestService::erase` writes) rather than
+ * pipelinq's earlier bespoke Dutch token, so authoritative source-object
+ * erasure (OR's `erase`) and the cached-evidence retention pass converge on one
+ * representation. Recorded in openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md.
+ *
  * @category Service
  * @package  OCA\Pipelinq\Service\Avg
  *
@@ -48,6 +57,16 @@ class RetentionService
     public const DEFAULT_EVIDENCE_DAYS = 30;
 
     /**
+     * Replacement token written into a pseudonymised evidence preview.
+     *
+     * Mirrors OR's `DataSubjectRequestService` pseudonym token so the cached
+     * evidence representation matches the authoritative source-object erasure.
+     *
+     * @var string
+     */
+    public const PSEUDONYM_TOKEN = '[erased]';
+
+    /**
      * Constructor.
      *
      * @param AvgRepository   $repository The AVG OR repository.
@@ -72,7 +91,7 @@ class RetentionService
      */
     public function pseudonymizeEvidence(array $item): array
     {
-        $item['inhoudPreview']     = '[gepseudonimiseerd na retentietermijn]';
+        $item['inhoudPreview']     = self::PSEUDONYM_TOKEN;
         $item['contentHash']       = '';
         $item['gepseudonimiseerd'] = true;
 

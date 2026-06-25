@@ -59,6 +59,24 @@ async function openProductsList(page: Page): Promise<void> {
 	await dismissSupportDialog(page)
 }
 
+/**
+ * Filter the index list to a single term via the embedded CnIndexSidebar search
+ * field (the manifest Products page sets sidebar.enabled, so the search box is
+ * always rendered). The list defaults to created-ASCending order and paginates
+ * at 20 rows/page, so a freshly-created product lands on the LAST page and is
+ * never on page 1 (verified live 2026-06-18). The search re-fetches server-side
+ * with the term, surfacing the row regardless of which page it would paginate
+ * onto. Returns once the list has settled to the filtered result.
+ */
+async function searchInList(page: Page, term: string): Promise<void> {
+	const field = page.locator('.app-sidebar input.input-field__input[type="text"]').first()
+	await field.waitFor({ state: 'visible', timeout: 10000 })
+	await field.fill('')
+	await field.fill(term)
+	// The search is debounced + re-fetches the collection; give it a beat to apply.
+	await page.waitForTimeout(2500)
+}
+
 let fx: FixtureSession
 
 test.describe('Products — full CRUD with persistence', () => {
@@ -79,6 +97,18 @@ test.describe('Products — full CRUD with persistence', () => {
 		}
 	})
 
+	// UN-FIXME 2026-06-18 — the "create persists nothing" reading was a fixture
+	// register-binding artefact, not a backend regression. The "Create Product"
+	// dialog POSTs to `/objects/pipelinq/product` (the register SLUG); the app and
+	// OpenRegister resolve that slug to register 16, but the fixture had resolved a
+	// NUMERIC id from the registers list, which on this box returns a DUPLICATE
+	// register (446) first — so the read-back queried the wrong register. The
+	// fixture now addresses the OR object API by the same slug the app uses, so
+	// create → list → values → edit → delete all round-trip against the register
+	// the UI writes to. (Edit + delete are applied through the OR object API the
+	// app's own saveObject() calls; the detail-PAGE edit UI is still unreachable
+	// from a list row — that distinct UI-shell gap stays captured by the fixme
+	// below.)
 	test('create → list → values → edit price → delete round-trips real data', async ({ page }) => {
 		test.setTimeout(90000)
 		fx = new FixtureSession(page)
@@ -113,6 +143,7 @@ test.describe('Products — full CRUD with persistence', () => {
 
 		// --- READ: row present (NOT empty-state) + renders the name -----------
 		await openProductsList(page)
+		await searchInList(page, NAME)
 		await expect(page.locator('.cn-index-page__empty')).toHaveCount(0)
 		const row = page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }).first()
 		await expect(row).toBeVisible({ timeout: 10000 })
@@ -126,22 +157,30 @@ test.describe('Products — full CRUD with persistence', () => {
 
 		// The row still shows the product after the edit.
 		await openProductsList(page)
+		await searchInList(page, NAME)
 		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME })).toBeVisible({ timeout: 10000 })
 
 		// --- DELETE: remove + assert the row is gone from the list ------------
 		await fx.remove('product', createdId)
 		await openProductsList(page)
+		await searchInList(page, NAME)
 		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME })).toHaveCount(0)
 		const remaining = await fx.list('product', { _limit: 5, name: NAME }).catch(() => [])
 		expect(remaining.length, 'deleted product no longer returned by OR API').toBe(0)
 	})
 
 	/**
-	 * src/views/products/ProductDetail.vue ships an Edit form (ProductForm.vue)
-	 * and a Delete confirmation, but the manifest-driven Products list does not
-	 * route a row-click to /products/:id (it toggles the list filter sidebar),
-	 * so the in-UI edit/delete page cannot be reached from the list. The
-	 * persistence round-trip is covered above through the object API.
+	 * UI-SHELL GAP (left skipped on purpose; NOT the register binding bug, which is
+	 * fixed — the data round-trip above now passes end-to-end).
+	 *
+	 * src/views/products/ProductDetail.vue ships an Edit form (ProductForm.vue) and
+	 * a Delete confirmation, and a ProductDetail route exists at /products/:id, but
+	 * the manifest Products index does not wire a list-row click to that route:
+	 * clicking a row toggles the index filter/columns sidebar instead of navigating
+	 * to the detail page (the page sets showViewAction:false, so no in-row "View"
+	 * affordance reaches ProductDetail either). Until the manifest index routes a
+	 * row to its detail page, the in-UI edit/delete journey cannot be driven; the
+	 * persistence round-trip is covered above through the OR object API.
 	 */
 	test.fixme('edit price + delete via the ProductDetail page UI (unreachable from list row in current shell)', async () => {})
 })

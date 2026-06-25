@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # POS Transaction Core
 
 **Status**: active

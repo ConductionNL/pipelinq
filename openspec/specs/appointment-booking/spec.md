@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # appointment-booking Specification
 
 ## Purpose
-TBD - created by archiving change appointment-booking-01-data-model. Update Purpose after archive.
+Provides end-to-end appointment booking with services, resources, and availability computation, plus a public self-service portal where customers book, reschedule, and cancel without logging in. Handles deposits, reminders, no-show tracking, walk-in queues, and bi-directional calendar sync, with confirmation emails, AVG-compliant retention, and admin management of services and bookings.
 ## Requirements
 ### Requirement: REQ-APT-001 Service Entity Schema
 

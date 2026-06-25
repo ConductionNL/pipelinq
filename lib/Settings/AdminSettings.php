@@ -28,12 +28,15 @@ use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
-use OCP\Settings\ISettings;
+use OCP\Settings\IDelegatedSettings;
 
 /**
  * Admin settings for Pipelinq.
+ *
+ * Implements IDelegatedSettings so #[AuthorizedAdminSetting(AdminSettings::class)]
+ * can scope the controllers that mutate Pipelinq configuration (SetupController).
  */
-class AdminSettings implements ISettings
+class AdminSettings implements IDelegatedSettings
 {
     /**
      * Constructor.
@@ -91,4 +94,24 @@ class AdminSettings implements ISettings
     {
         return 10;
     }//end getPriority()
+
+    /**
+     * Human-readable name of the delegated settings section.
+     *
+     * @return string|null The section name, or null to use the section default.
+     */
+    public function getName(): ?string
+    {
+        return null;
+    }//end getName()
+
+    /**
+     * App config keys an authorized (delegated) admin may manage.
+     *
+     * @return array<string,string[]> Map of appId to allowed config keys.
+     */
+    public function getAuthorizedAppConfig(): array
+    {
+        return [];
+    }//end getAuthorizedAppConfig()
 }//end class

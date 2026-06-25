@@ -77,9 +77,11 @@ test('dashboard widget sections visible', async ({ page }) => {
 	// Requests-by-status / My Work / Client Overview are Operational widgets.
 	await gotoOperational(page)
 	const content = page.locator('#content-vue')
-	await expect(content.getByText('Requests by Status').first()).toBeVisible({ timeout: 15000 })
-	await expect(content.getByText('My Work').first()).toBeVisible()
-	await expect(content.getByText('Client Overview').first()).toBeVisible()
+	// Target the widget headings — a bare getByText also matches the hidden
+	// sidebar nav-entry spans (My Work / Requests) that share the same labels.
+	await expect(content.getByRole('heading', { name: 'Requests by Status' }).first()).toBeVisible({ timeout: 15000 })
+	await expect(content.getByRole('heading', { name: 'My Work' }).first()).toBeVisible()
+	await expect(content.getByRole('heading', { name: 'Client Overview' }).first()).toBeVisible()
 })
 
 // @e2e openspec/specs/dashboard/spec.md#no-requests-exist
@@ -91,14 +93,15 @@ test('dashboard shows no-requests empty state', async ({ page }) => {
 // @e2e openspec/specs/dashboard/spec.md#no-assigned-items
 test('dashboard my-work shows empty state when no assigned items', async ({ page }) => {
 	await gotoOperational(page)
-	// My Work widget renders (even if empty)
-	await expect(page.locator('#content-vue').getByText('My Work').first()).toBeVisible({ timeout: 15000 })
+	// My Work widget renders (even if empty). Target the heading so the hidden
+	// sidebar nav-entry span with the same label is not matched instead.
+	await expect(page.locator('#content-vue').getByRole('heading', { name: 'My Work' }).first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/dashboard/spec.md#display-recent-clients
 test('dashboard client overview section renders', async ({ page }) => {
 	await gotoOperational(page)
-	await expect(page.locator('#content-vue').getByText('Client Overview').first()).toBeVisible({ timeout: 15000 })
+	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Client Overview' }).first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/dashboard/spec.md#view-all-clients-link
@@ -130,10 +133,17 @@ test('dashboard loads without unhandled errors', async ({ page }) => {
 // @e2e openspec/specs/dashboard/spec.md#widget-grid-responsiveness
 test('dashboard navigation items visible', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
-	// Top-level grouped nav after the IA restructure surfaces the Sales/CRM
-	// and Point of Sale group headings; the Dashboard entry stays at the top.
-	await expect(page.locator('#app-navigation-vue').getByText('Dashboard').first()).toBeVisible()
+	const nav = page.locator('#app-navigation-vue')
+	await expect(nav).toBeVisible({ timeout: 15000 })
+	// After the IA restructure the landing dashboards are split into the
+	// "Commercial" and "Operational" top-level entries (the generic "Dashboard"
+	// entry was removed). Assert both are present as nav entries.
+	await expect(
+		nav.locator('a.app-navigation-entry-link[href$="#/"]').filter({ hasText: /^\s*Commercial\s*$/ }),
+	).toHaveCount(1, { timeout: 10000 })
+	await expect(
+		nav.locator('a.app-navigation-entry-link[href$="#/operational"]').filter({ hasText: /^\s*Operational\s*$/ }),
+	).toHaveCount(1)
 })
 
 /*

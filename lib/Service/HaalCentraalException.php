@@ -35,10 +35,11 @@ use RuntimeException;
  */
 class HaalCentraalException extends RuntimeException
 {
+
     /**
      * HTTP status returned by HaalCentraal (or 0 on transport / config errors).
      *
-     * @var int
+     * @var integer
      */
     private int $statusCode;
 
@@ -59,11 +60,11 @@ class HaalCentraalException extends RuntimeException
      */
     public function __construct(
         string $message,
-        int $statusCode = 0,
-        ?string $correlationId = null,
-        ?\Throwable $previous = null,
+        int $statusCode=0,
+        ?string $correlationId=null,
+        ?\Throwable $previous=null,
     ) {
-        parent::__construct($message, $statusCode, $previous);
+        parent::__construct(message: $message, code: $statusCode, previous: $previous);
         $this->statusCode    = $statusCode;
         $this->correlationId = $correlationId;
     }//end __construct()

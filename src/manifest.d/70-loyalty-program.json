@@ -11,6 +11,7 @@
 	"pages": [
 		{
 			"id": "LoyaltyReporting",
+			"_note": "KEPT CUSTOM (pipelinq-dashboards-declarative). The eight KPIs DO come from one summary endpoint (GET /api/loyalty/reporting/{programmeId}/kpis), but {programmeId} is a PATH segment that must be a specific loyalty-programme UUID chosen from a selector whose options are loaded dynamically from the OR loyaltyProgramme collection. A declarative stat widget can interpolate @page.<key> into the URL, but pageFilters only offer STATIC option lists — they cannot enumerate the programmes — and there is no 'all programmes' aggregate endpoint. The period control (30d / 90d / 365d) is also resolved to from/to ISO bounds client-side. The tier-distribution table + CSV export are bespoke. Missing primitives: (a) a pageFilter whose options come from an OR collection (so @page.programmeId can drive the URL path) and (b) a relative-window period token resolving to from/to. Until those exist, converting would hardcode a single programme — so the view stays custom and nothing is lost. (Same dynamic-selector blocker as PipelineAnalytics / Forecast.)",
 			"route": "/loyalty/reporting",
 			"type": "custom",
 			"title": "Loyalty reporting",

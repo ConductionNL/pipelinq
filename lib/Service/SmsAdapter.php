@@ -102,14 +102,14 @@ class SmsAdapter
     /**
      * Constructor.
      *
-     * @param ContainerInterface         $container         DI container.
-     * @param IAppConfig                 $appConfig         App config.
-     * @param ChannelProviderRepository  $providerRepo      Provider read-side.
-     * @param SmsProviderFactory         $providerFactory   Vendor client factory.
-     * @param ConsentService             $consentService    Opt-out gate.
-     * @param BudgetService              $budgetService     Budget gate.
-     * @param NotificationService        $notificationService Admin notifications.
-     * @param LoggerInterface            $logger            Logger.
+     * @param ContainerInterface        $container           DI container.
+     * @param IAppConfig                $appConfig           App config.
+     * @param ChannelProviderRepository $providerRepo        Provider read-side.
+     * @param SmsProviderFactory        $providerFactory     Vendor client factory.
+     * @param ConsentService            $consentService      Opt-out gate.
+     * @param BudgetService             $budgetService       Budget gate.
+     * @param NotificationService       $notificationService Admin notifications.
+     * @param LoggerInterface           $logger              Logger.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
      */
@@ -175,6 +175,7 @@ class SmsAdapter
                 if ($allowFailover === false) {
                     return ['status' => self::STATUS_BUDGET_EXCEEDED, 'providerId' => $providerId];
                 }
+
                 continue;
             }
 
@@ -198,6 +199,7 @@ class SmsAdapter
                         error: $e->getMessage(),
                     );
                 }
+
                 continue;
             } catch (PermanentSmsProviderException $e) {
                 $this->logger->warning(
@@ -223,8 +225,9 @@ class SmsAdapter
                         error: $e->getMessage(),
                     );
                 }
+
                 continue;
-            }
+            }//end try
 
             $persisted = $this->persistOutbound(
                 contactId: $contactId,
@@ -329,7 +332,7 @@ class SmsAdapter
                 evidence: sprintf('Inbound SMS body "%s" matched STOP keyword', $body),
             );
             $optOutRecorded = true;
-        } elseif ($this->consentService->isOptInKeyword(body: $body) === true) {
+        } else if ($this->consentService->isOptInKeyword(body: $body) === true) {
             $this->consentService->recordOptIn(
                 contactId: $contactId,
                 channel: 'sms',
@@ -341,9 +344,9 @@ class SmsAdapter
         return [
             'status'             => 'received',
             'messageId'          => $this->extractId(payload: $persisted ?? []),
-            'conversationId'    => $conversationId,
+            'conversationId'     => $conversationId,
             'placeholderCreated' => $placeholder,
-            'optOutRecorded'    => $optOutRecorded,
+            'optOutRecorded'     => $optOutRecorded,
         ];
     }//end handleInboundWebhook()
 
@@ -358,7 +361,11 @@ class SmsAdapter
     {
         if ($providerHint !== null && $providerHint !== '') {
             $row = $this->providerRepo->findByVendor(kind: 'sms', vendor: $providerHint);
-            return ($row === null) ? [] : [$row];
+            if ($row === null) {
+                return [];
+            }
+
+            return [$row];
         }
 
         return $this->providerRepo->listActive(kind: 'sms');
@@ -417,8 +424,8 @@ class SmsAdapter
         }
 
         return [
-            'status' => self::STATUS_FAILED,
-            'error'  => $error,
+            'status'     => self::STATUS_FAILED,
+            'error'      => $error,
             'providerId' => $providerId,
         ];
     }//end persistFailureAndAlert()
@@ -626,7 +633,7 @@ class SmsAdapter
             $saved = $objectService->saveObject(
                 object: [
                     'phoneNumber' => $phone,
-                    'displayName' => 'Unknown (' . $phone . ')',
+                    'displayName' => 'Unknown ('.$phone.')',
                     'source'      => 'sms-inbound',
                     'placeholder' => true,
                 ],
@@ -664,7 +671,11 @@ class SmsAdapter
 
         if ($trimmed[0] === '{' || $trimmed[0] === '[') {
             $decoded = json_decode($trimmed, true);
-            return is_array($decoded) ? $decoded : [];
+            if (is_array($decoded) === true) {
+                return $decoded;
+            }
+
+            return [];
         }
 
         $parsed = [];
@@ -699,7 +710,11 @@ class SmsAdapter
     private function getTenantId(): string
     {
         $tenantId = $this->appConfig->getValueString(Application::APP_ID, 'tenant_id', '');
-        return ($tenantId !== '') ? $tenantId : 'default';
+        if ($tenantId !== '') {
+            return $tenantId;
+        }
+
+        return 'default';
     }//end getTenantId()
 
     /**
@@ -713,7 +728,11 @@ class SmsAdapter
     private function resolveSchemaSlug(string $key, string $default): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-        return ($slug !== '') ? $slug : $default;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return $default;
     }//end resolveSchemaSlug()
 
     /**
@@ -724,7 +743,11 @@ class SmsAdapter
     private function getRegisterSlug(): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        return ($slug !== '') ? $slug : self::DEFAULT_REGISTER_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
     /**

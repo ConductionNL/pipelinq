@@ -71,10 +71,10 @@ class EligibilityService
     /**
      * Constructor.
      *
-     * @param ContainerInterface   $container           The DI container (OpenRegister lookup).
-     * @param IAppConfig           $appConfig           The app configuration.
-     * @param AvailabilityService  $availabilityService The availability seam (member 02).
-     * @param LoggerInterface      $logger              The logger.
+     * @param ContainerInterface  $container           The DI container (OpenRegister lookup).
+     * @param IAppConfig          $appConfig           The app configuration.
+     * @param AvailabilityService $availabilityService The availability seam (member 02).
+     * @param LoggerInterface     $logger              The logger.
      */
     public function __construct(
         private ContainerInterface $container,
@@ -133,7 +133,9 @@ class EligibilityService
      *
      * @param string $serviceId Service UUID/slug. Empty string returns an empty list.
      *
-     * @return array<int, array{stepIndex: int, durationMinutes: int, skillRequired: string, allowGap: bool, eligibleResources: array<int, array<string, mixed>>}>
+     * @return array<int, array{stepIndex: int, durationMinutes: int,
+     *     skillRequired: string, allowGap: bool,
+     *     eligibleResources: array<int, array<string, mixed>>}>
      *
      * @spec openspec/changes/appointment-booking-03-skill-routing-eligibility/specs/appointment-booking/spec.md#req-apt-004
      */
@@ -178,7 +180,7 @@ class EligibilityService
                 'allowGap'          => $step['allowGap'],
                 'eligibleResources' => $eligibleForStep,
             ];
-        }
+        }//end foreach
 
         return $out;
     }//end getEligibleResourcesPerStep()

@@ -32,6 +32,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
+use OCP\IURLGenerator;
 use OCP\Security\ICrypto;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -66,6 +67,16 @@ class HaalCentraalClient
     private const LOOKUP_TIMEOUT_SECONDS = 5;
 
     /**
+     * Sentinel returned by {@see lookupViaOpenRegister()} for an OR-200 with
+     * zero persons (BSN not found in BRP). Distinguishes "OR answered, nobody
+     * there" (→ not-found, return null) from "OR unusable" (→ null → legacy
+     * fallback). Never returned from {@see lookupPersoon()}.
+     *
+     * @var array<int,string>
+     */
+    private const OR_EMPTY_RESULT = ['__or_brp_empty__'];
+
+    /**
      * Cached access token (in-process only — re-fetched on cold boot).
      *
      * @var array{token: string, expiresAt: DateTimeImmutable}|null
@@ -79,12 +90,14 @@ class HaalCentraalClient
      * @param IAppConfig      $appConfig     App config.
      * @param ICrypto         $crypto        Crypto for decrypting stored secrets.
      * @param LoggerInterface $logger        Logger (never includes raw BSN).
+     * @param IURLGenerator   $urlGenerator  URL generator (resolves the OR BRP leaf endpoint).
      */
     public function __construct(
         private IClientService $clientService,
         private IAppConfig $appConfig,
         private ICrypto $crypto,
         private LoggerInterface $logger,
+        private IURLGenerator $urlGenerator,
     ) {
     }//end __construct()
 
@@ -94,6 +107,17 @@ class HaalCentraalClient
      * Throws HaalCentraalException on transport / auth / server errors so the caller
      * can decide how to surface the failure.
      *
+     * OR-first (ADR-022, safe-partial): the lookup tries the OpenRegister BRP leaf
+     * first. On HTTP 200 the leaf returns the raw HAL+JSON person under `results`
+     * plus the Wet-BRP audit metadata under `meta` ({ correlationId, durationMs,
+     * status }); the person is mapped through the EXACT SAME {@see normalisePerson()}
+     * as the legacy path, and the meta is attached as `_correlationId` /
+     * `_responseDurationMs` / `_responseStatus` so the caller persists a
+     * byte-identical `brpLookupVerzoek` audit record regardless of source. On a
+     * 503 (source unconfigured/down) / non-200 / OR-absent the method falls back
+     * to the legacy OAuth2 + mTLS direct HaalCentraal path below, unchanged, so
+     * configured envs keep working until an operator enables the OR source.
+     *
      * @param string      $bsn              Raw 9-digit BSN.
      * @param string|null $verzoekIdContext Optional context UUID for correlation logging.
      *
@@ -101,13 +125,30 @@ class HaalCentraalClient
      *
      * @throws HaalCentraalException
      *
+     * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-01
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
      */
-    public function lookupPersoon(string $bsn, ?string $verzoekIdContext = null): ?array
+    public function lookupPersoon(string $bsn, ?string $verzoekIdContext=null): ?array
     {
         $maskedBsn = BsnValidationService::mask($bsn);
-        $token     = $this->getAccessToken();
+
+        // OR-first: try the OpenRegister BRP leaf, which relays the raw HAL+JSON
+        // person plus the Wet-BRP audit metadata. Returns the same shape as the
+        // legacy path on success, or null to fall back to the legacy direct path.
+        $viaOr = $this->lookupViaOpenRegister(bsn: $bsn, maskedBsn: $maskedBsn);
+        if ($viaOr !== null) {
+            // Sentinel for an OR-200 with zero persons (BSN not in BRP) — the
+            // leaf returns 200 { results: [] }; preserve the legacy not-found
+            // semantics (return null) without falling through to the legacy call.
+            if ($viaOr === self::OR_EMPTY_RESULT) {
+                return null;
+            }
+
+            return $viaOr;
+        }
+
+        $token = $this->getAccessToken();
 
         $client = $this->buildHttpClient();
         $url    = $this->getBaseUrl().'/personen';
@@ -117,26 +158,31 @@ class HaalCentraalClient
             $response = $client->post(
                 $url,
                 [
-                    'headers' => [
+                    'headers'         => [
                         'Authorization' => 'Bearer '.$token,
                         'Accept'        => 'application/hal+json',
                         'Content-Type'  => 'application/json',
                         'User-Agent'    => 'Pipelinq/'.Application::APP_ID.' (Nextcloud)',
                     ],
-                    'body'            => json_encode([
-                        'type'                  => 'RaadpleegMetBurgerservicenummer',
-                        'burgerservicenummer'   => [$bsn],
-                        'fields'                => $this->getDefaultFields(),
-                    ], JSON_THROW_ON_ERROR),
+                    'body'            => json_encode(
+                            [
+                                'type'                => 'RaadpleegMetBurgerservicenummer',
+                                'burgerservicenummer' => [$bsn],
+                                'fields'              => $this->getDefaultFields(),
+                            ],
+                            JSON_THROW_ON_ERROR
+                            ),
                     'timeout'         => self::LOOKUP_TIMEOUT_SECONDS,
                     'connect_timeout' => 2,
                 ]
             );
             $duration = (int) ((microtime(true) - $start) * 1000);
 
-            $status   = (int) $response->getStatusCode();
-            $correlationId = self::firstHeader($response, 'X-Correlation-ID')
-                ?? self::firstHeader($response, 'x-correlation-id');
+            $status        = (int) $response->getStatusCode();
+            $correlationId = self::firstHeader(response: $response, name: 'X-Correlation-ID');
+            if ($correlationId === null) {
+                $correlationId = self::firstHeader(response: $response, name: 'x-correlation-id');
+            }
 
             if ($status === 404) {
                 $this->logger->info(
@@ -159,13 +205,14 @@ class HaalCentraalClient
             }
 
             $payload = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-            $persoon = $this->parseFirstPersoon($payload);
+            $persoon = $this->parseFirstPersoon(payload: $payload);
             if ($persoon === null) {
                 return null;
             }
-            $persoon['_correlationId'] = $correlationId;
+
+            $persoon['_correlationId']      = $correlationId;
             $persoon['_responseDurationMs'] = $duration;
-            $persoon['_responseStatus'] = $status;
+            $persoon['_responseStatus']     = $status;
             return $persoon;
         } catch (HaalCentraalException $e) {
             throw $e;
@@ -180,8 +227,124 @@ class HaalCentraalClient
                 null,
                 $e,
             );
-        }
+        }//end try
     }//end lookupPersoon()
+
+    /**
+     * Lookup a person via the OpenRegister BRP leaf (ADR-022, safe-partial).
+     *
+     * Calls `GET /apps/openregister/api/integrations/brp/person?bsn=<bsn>`
+     * server-side (internal, OCS-APIREQUEST, allow_local_address). The BSN is
+     * passed in the query (the leaf places it in the upstream request BODY and
+     * never logs it). On HTTP 200 the leaf returns
+     * `{ results: [<raw HAL+JSON person, 0..1>], total, meta: { correlationId,
+     * durationMs, status } }`. This method:
+     *   - maps `results[0]` through the SAME {@see normalisePerson()} the legacy
+     *     path uses (so the BrpPersoon output is identical for the same upstream
+     *     data), and
+     *   - attaches the audit metadata from `meta` exactly as the legacy path
+     *     derives it from the direct response — `meta.correlationId` →
+     *     `_correlationId`, `meta.durationMs` → `_responseDurationMs`,
+     *     `meta.status` → `_responseStatus` — so the caller persists a
+     *     byte-identical `brpLookupVerzoek` audit record.
+     *
+     * Returns:
+     *   - the normalised person array (with `_correlationId` /
+     *     `_responseDurationMs` / `_responseStatus`) on a 200 with a person,
+     *   - {@see OR_EMPTY_RESULT} on a 200 with zero persons (BSN not found —
+     *     the caller maps that to not-found / null without a legacy call), or
+     *   - null when the OR `brp-haalcentraal` source is not usable yet (OR
+     *     responds 503 with `details.cause`, or any non-200, or OR/openregister
+     *     is absent / connection refused) so the caller falls back to the legacy
+     *     OAuth2 + mTLS direct path and configured envs keep working.
+     *
+     * The raw BSN is NEVER logged here (only the masked BSN), mirroring the
+     * legacy path.
+     *
+     * @param string $bsn       Raw 9-digit BSN (placed in the leaf query; never logged).
+     * @param string $maskedBsn The masked BSN used for any logging.
+     *
+     * @return array<string,mixed>|null The normalised+stamped person, OR_EMPTY_RESULT, or null to fall back.
+     *
+     * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
+     */
+    private function lookupViaOpenRegister(string $bsn, string $maskedBsn): ?array
+    {
+        $params = http_build_query(['bsn' => $bsn]);
+        $url    = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/brp/person?'.$params);
+
+        try {
+            $client   = $this->clientService->newClient();
+            $response = $client->get(
+                    $url,
+                    [
+                        'timeout'         => self::LOOKUP_TIMEOUT_SECONDS,
+                        'connect_timeout' => 2,
+                        'headers'         => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
+                        'nextcloud'       => ['allow_local_address' => true],
+                    ]
+                    );
+        } catch (Throwable $e) {
+            // 503 (source not usable) surfaces as a client exception here, as
+            // does connection-refused / OR absent — fall back to the legacy path.
+            // Never log the raw BSN; only the masked variant.
+            $this->logger->debug(
+                'BRP OR leaf unavailable, falling back to legacy HaalCentraal path',
+                ['bsn' => $maskedBsn, 'error' => $e->getMessage()]
+            );
+            return null;
+        }//end try
+
+        $status = (int) $response->getStatusCode();
+        if ($status !== 200) {
+            return null;
+        }
+
+        $payload = json_decode((string) $response->getBody(), true);
+        if (is_array($payload) === false || isset($payload['results']) === false || is_array($payload['results']) === false) {
+            return null;
+        }
+
+        $results = $payload['results'];
+        if (empty($results) === true) {
+            // OR answered 200 but nobody is there — not-found, not a fallback.
+            return self::OR_EMPTY_RESULT;
+        }
+
+        $first = $results[0];
+        if (is_array($first) === false) {
+            return null;
+        }
+
+        $persoon = $this->normalisePerson(raw: $first);
+
+        if (is_array($payload['meta'] ?? null) === true) {
+            $meta = $payload['meta'];
+        } else {
+            $meta = [];
+        }
+
+        $correlationId = ($meta['correlationId'] ?? null);
+        if ($correlationId !== null) {
+            $correlationId = (string) $correlationId;
+        }
+
+        $persoon['_correlationId']      = $correlationId;
+        $persoon['_responseDurationMs'] = (int) ($meta['durationMs'] ?? 0);
+        $persoon['_responseStatus']     = (int) ($meta['status'] ?? 200);
+
+        $this->logger->info(
+            'BRP OR leaf lookup succeeded',
+            [
+                'bsn'           => $maskedBsn,
+                'correlationId' => $correlationId,
+                'duration_ms'   => $persoon['_responseDurationMs'],
+                'source'        => 'openregister-leaf',
+            ]
+        );
+
+        return $persoon;
+    }//end lookupViaOpenRegister()
 
     /**
      * Health-check: returns the certificate expiry (UTC) or null when unknown.
@@ -198,14 +361,17 @@ class HaalCentraalClient
         if ($certPath === '' || file_exists($certPath) === false) {
             return null;
         }
+
         $contents = @file_get_contents($certPath);
         if ($contents === false) {
             return null;
         }
+
         $info = @openssl_x509_parse($contents);
         if (is_array($info) === false || isset($info['validTo_time_t']) === false) {
             return null;
         }
+
         try {
             return (new DateTimeImmutable('@'.$info['validTo_time_t']))->setTimezone(new DateTimeZone('UTC'));
         } catch (Throwable $e) {
@@ -240,9 +406,9 @@ class HaalCentraalClient
             return $this->tokenCache['token'];
         }
 
-        $clientId         = $this->appConfig->getValueString(Application::APP_ID, 'brp.client_id', '');
-        $clientSecretEnc  = $this->appConfig->getValueString(Application::APP_ID, 'brp.client_secret_encrypted', '');
-        $oauthEndpoint    = $this->appConfig->getValueString(Application::APP_ID, 'brp.oauth_endpoint', self::DEFAULT_OAUTH_ENDPOINT);
+        $clientId        = $this->appConfig->getValueString(Application::APP_ID, 'brp.client_id', '');
+        $clientSecretEnc = $this->appConfig->getValueString(Application::APP_ID, 'brp.client_secret_encrypted', '');
+        $oauthEndpoint   = $this->appConfig->getValueString(Application::APP_ID, 'brp.oauth_endpoint', self::DEFAULT_OAUTH_ENDPOINT);
 
         if ($clientId === '' || $clientSecretEnc === '') {
             throw new HaalCentraalException(
@@ -267,16 +433,18 @@ class HaalCentraalClient
             $response = $client->post(
                 $oauthEndpoint,
                 [
-                    'headers' => [
-                        'Accept'        => 'application/json',
-                        'Content-Type'  => 'application/x-www-form-urlencoded',
+                    'headers'         => [
+                        'Accept'       => 'application/json',
+                        'Content-Type' => 'application/x-www-form-urlencoded',
                     ],
-                    'body' => http_build_query([
-                        'grant_type'    => 'client_credentials',
-                        'client_id'     => $clientId,
-                        'client_secret' => $clientSecret,
-                        'scope'         => 'haalcentraal.brp.personen',
-                    ]),
+                    'body'            => http_build_query(
+                            [
+                                'grant_type'    => 'client_credentials',
+                                'client_id'     => $clientId,
+                                'client_secret' => $clientSecret,
+                                'scope'         => 'haalcentraal.brp.personen',
+                            ]
+                            ),
                     'timeout'         => self::LOOKUP_TIMEOUT_SECONDS,
                     'connect_timeout' => 2,
                 ]
@@ -288,11 +456,16 @@ class HaalCentraalClient
                 null,
                 $e,
             );
-        }
+        }//end try
 
         $status  = (int) $response->getStatusCode();
         $payload = json_decode((string) $response->getBody(), true);
-        $token   = is_array($payload) ? (string) ($payload['access_token'] ?? '') : '';
+        if (is_array($payload) === true) {
+            $token = (string) ($payload['access_token'] ?? '');
+        } else {
+            $token = '';
+        }
+
         if ($status < 200 || $status >= 300 || $token === '') {
             throw new HaalCentraalException(
                 'BRP OAuth2-token aanvraag is mislukt.',
@@ -312,7 +485,7 @@ class HaalCentraalClient
      *
      * @return IClient
      */
-    private function buildHttpClient(bool $forToken = false): IClient
+    private function buildHttpClient(bool $forToken=false): IClient
     {
         $client = $this->clientService->newClient();
         // OCP\Http\Client clients don't expose mTLS options directly across versions;
@@ -327,15 +500,24 @@ class HaalCentraalClient
             if ($certPath !== '' && $keyPath !== '') {
                 // The NC client wrapper supports setDefaultOptions on newer cores; older
                 // cores fall back to TLS-without-cert which the RvIG endpoint will reject.
-                if (method_exists($client, 'setDefaultOptions')) {
-                    $client->setDefaultOptions([
-                        'cert'    => $certPath,
-                        'ssl_key' => $keyPath,
-                        'verify'  => $caBundle !== '' ? $caBundle : true,
-                    ]);
+                if (method_exists($client, 'setDefaultOptions') === true) {
+                    if ($caBundle !== '') {
+                        $verify = $caBundle;
+                    } else {
+                        $verify = true;
+                    }
+
+                    $client->setDefaultOptions(
+                            [
+                                'cert'    => $certPath,
+                                'ssl_key' => $keyPath,
+                                'verify'  => $verify,
+                            ]
+                            );
                 }
             }
-        }
+        }//end if
+
         return $client;
     }//end buildHttpClient()
 
@@ -387,55 +569,85 @@ class HaalCentraalClient
         if (is_array($payload) === false) {
             return null;
         }
+
         $list = $payload['personen'] ?? $payload['_embedded']['personen'] ?? [];
-        if (is_array($list) === false || empty($list)) {
+        if (is_array($list) === false || empty($list) === true) {
             return null;
         }
+
         $first = $list[0];
         if (is_array($first) === false) {
             return null;
         }
-        return $this->normalisePerson($first);
+
+        return $this->normalisePerson(raw: $first);
     }//end parseFirstPersoon()
 
     /**
      * Normalise a HaalCentraal person payload into the BrpPersoon schema shape.
      *
-     * @param array<string,mixed> $raw
+     * @param array<string,mixed> $raw The raw HaalCentraal person payload.
      *
      * @return array<string,mixed>
      */
     private function normalisePerson(array $raw): array
     {
-        $naam     = is_array($raw['naam'] ?? null) ? $raw['naam'] : [];
-        $geboorte = is_array($raw['geboorte'] ?? null) ? $raw['geboorte'] : [];
-        $vp       = is_array($raw['verblijfplaats'] ?? null) ? $raw['verblijfplaats'] : [];
-        $geslacht = is_array($raw['geslacht'] ?? null) ? (string) ($raw['geslacht']['code'] ?? '') : (string) ($raw['geslacht'] ?? '');
+        if (is_array($raw['naam'] ?? null) === true) {
+            $naam = $raw['naam'];
+        } else {
+            $naam = [];
+        }
+
+        if (is_array($raw['geboorte'] ?? null) === true) {
+            $geboorte = $raw['geboorte'];
+        } else {
+            $geboorte = [];
+        }
+
+        if (is_array($raw['verblijfplaats'] ?? null) === true) {
+            $vp = $raw['verblijfplaats'];
+        } else {
+            $vp = [];
+        }
+
+        if (is_array($raw['geslacht'] ?? null) === true) {
+            $geslacht = (string) ($raw['geslacht']['code'] ?? '');
+        } else {
+            $geslacht = (string) ($raw['geslacht'] ?? '');
+        }
+
+        if (is_array($geboorte['plaats'] ?? null) === true) {
+            $geboorteplaats = (string) ($geboorte['plaats']['omschrijving'] ?? '');
+        } else {
+            $geboorteplaats = (string) ($geboorte['plaats'] ?? '');
+        }
+
+        if (is_array($geboorte['land'] ?? null) === true) {
+            $geboorteland = (string) ($geboorte['land']['code'] ?? '');
+        } else {
+            $geboorteland = (string) ($geboorte['land'] ?? '');
+        }
 
         return [
-            'voornamen'        => (string) ($naam['voornamen'] ?? ''),
-            'voorletters'      => (string) ($naam['voorletters'] ?? ''),
-            'voorvoegsel'      => (string) ($naam['voorvoegsel'] ?? ''),
-            'geslachtsnaam'    => (string) ($naam['geslachtsnaam'] ?? ''),
-            'adellijkeTitel'   => (string) ($naam['adellijkeTitelPredicaat'] ?? ''),
-            'geboortedatum'    => (string) ($geboorte['datum']['datum'] ?? $geboorte['datum'] ?? ''),
-            'geboorteplaats'   => is_array($geboorte['plaats'] ?? null)
-                ? (string) ($geboorte['plaats']['omschrijving'] ?? '')
-                : (string) ($geboorte['plaats'] ?? ''),
-            'geboorteland'     => is_array($geboorte['land'] ?? null)
-                ? (string) ($geboorte['land']['code'] ?? '')
-                : (string) ($geboorte['land'] ?? ''),
-            'geslacht'         => self::mapGeslacht($geslacht),
-            'verblijfplaats'   => self::mapVerblijfplaats($vp),
-            'indicatieGeheim'  => (string) ($raw['indicatieGeheim'] ?? '0'),
-            'bronsysteem'      => 'HaalCentraal-BRP-v2.0',
+            'voornamen'       => (string) ($naam['voornamen'] ?? ''),
+            'voorletters'     => (string) ($naam['voorletters'] ?? ''),
+            'voorvoegsel'     => (string) ($naam['voorvoegsel'] ?? ''),
+            'geslachtsnaam'   => (string) ($naam['geslachtsnaam'] ?? ''),
+            'adellijkeTitel'  => (string) ($naam['adellijkeTitelPredicaat'] ?? ''),
+            'geboortedatum'   => (string) ($geboorte['datum']['datum'] ?? $geboorte['datum'] ?? ''),
+            'geboorteplaats'  => $geboorteplaats,
+            'geboorteland'    => $geboorteland,
+            'geslacht'        => self::mapGeslacht(code: $geslacht),
+            'verblijfplaats'  => self::mapVerblijfplaats(vp: $vp),
+            'indicatieGeheim' => (string) ($raw['indicatieGeheim'] ?? '0'),
+            'bronsysteem'     => 'HaalCentraal-BRP-v2.0',
         ];
     }//end normalisePerson()
 
     /**
      * Map HaalCentraal geslacht codes to schema enum values.
      *
-     * @param string $code
+     * @param string $code The HaalCentraal geslacht code.
      *
      * @return string
      */
@@ -445,53 +657,75 @@ class HaalCentraalClient
         if ($code === 'M' || $code === 'MAN') {
             return 'man';
         }
+
         if ($code === 'V' || $code === 'VROUW' || $code === 'F') {
             return 'vrouw';
         }
+
         return 'onbekend';
     }//end mapGeslacht()
 
     /**
      * Map a HaalCentraal verblijfplaats subtree to the schema shape.
      *
-     * @param array<string,mixed> $vp
+     * @param array<string,mixed> $vp The HaalCentraal verblijfplaats subtree.
      *
      * @return array<string,mixed>
      */
     private static function mapVerblijfplaats(array $vp): array
     {
-        $adres = is_array($vp['verblijfadres'] ?? null) ? $vp['verblijfadres'] : $vp;
-        $land  = $vp['land'] ?? ($adres['land'] ?? null);
+        if (is_array($vp['verblijfadres'] ?? null) === true) {
+            $adres = $vp['verblijfadres'];
+        } else {
+            $adres = $vp;
+        }
+
+        $land = $vp['land'] ?? ($adres['land'] ?? null);
+
+        if (isset($adres['huisnummer']) === true) {
+            $huisnummer = (int) $adres['huisnummer'];
+        } else {
+            $huisnummer = null;
+        }
+
+        if (is_array($land) === true) {
+            $landValue = (string) ($land['omschrijving'] ?? $land['code'] ?? '');
+        } else {
+            $landValue = (string) ($land ?? '');
+        }
+
         return [
-            'straat'                => (string) ($adres['officieleStraatnaam'] ?? $adres['straat'] ?? ''),
-            'huisnummer'            => isset($adres['huisnummer']) ? (int) $adres['huisnummer'] : null,
-            'huisletter'            => (string) ($adres['huisletter'] ?? ''),
-            'huisnummertoevoeging'  => (string) ($adres['huisnummertoevoeging'] ?? ''),
-            'postcode'              => (string) ($adres['postcode'] ?? ''),
-            'woonplaats'            => (string) ($adres['woonplaats'] ?? $adres['woonplaatsnaam'] ?? ''),
-            'land'                  => is_array($land) ? (string) ($land['omschrijving'] ?? $land['code'] ?? '') : (string) ($land ?? ''),
+            'straat'               => (string) ($adres['officieleStraatnaam'] ?? $adres['straat'] ?? ''),
+            'huisnummer'           => $huisnummer,
+            'huisletter'           => (string) ($adres['huisletter'] ?? ''),
+            'huisnummertoevoeging' => (string) ($adres['huisnummertoevoeging'] ?? ''),
+            'postcode'             => (string) ($adres['postcode'] ?? ''),
+            'woonplaats'           => (string) ($adres['woonplaats'] ?? $adres['woonplaatsnaam'] ?? ''),
+            'land'                 => $landValue,
         ];
     }//end mapVerblijfplaats()
 
     /**
      * Extract the first header value from an HTTP response (cross-version compat).
      *
-     * @param object $response
-     * @param string $name
+     * @param object $response The HTTP response object.
+     * @param string $name     The header name to read.
      *
      * @return string|null
      */
     private static function firstHeader(object $response, string $name): ?string
     {
-        if (method_exists($response, 'getHeader')) {
+        if (method_exists($response, 'getHeader') === true) {
             $value = $response->getHeader($name);
-            if (is_string($value) && $value !== '') {
+            if (is_string($value) === true && $value !== '') {
                 return $value;
             }
-            if (is_array($value) && isset($value[0])) {
+
+            if (is_array($value) === true && isset($value[0]) === true) {
                 return (string) $value[0];
             }
         }
+
         return null;
     }//end firstHeader()
 }//end class
