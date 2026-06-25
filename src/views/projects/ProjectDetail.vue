@@ -62,13 +62,12 @@
 			<div class="info-grid">
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Client') }}</label>
-					<a
+					<router-link
 						v-if="projectData.client"
 						class="client-link"
-						href="#"
-						@click.prevent="$router.push({ name: 'ClientDetail', params: { id: projectData.client } })">
+						:to="{ name: 'ClientDetail', params: { id: projectData.client } }">
 						{{ clientName }}
-					</a>
+					</router-link>
 					<span v-else>-</span>
 				</div>
 				<div class="info-field">

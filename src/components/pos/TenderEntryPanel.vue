@@ -323,17 +323,20 @@ export default {
 
 .tender-panel__summary--ok {
 	background: var(--color-success);
-	color: var(--color-primary-element-text);
+	border: 1px solid var(--color-success-hover);
+	color: var(--color-success-text);
 }
 
 .tender-panel__summary--warn {
 	background: var(--color-warning);
-	color: var(--color-primary-element-text);
+	border: 1px solid var(--color-warning-hover);
+	color: var(--color-warning-text);
 }
 
 .tender-panel__summary--error {
 	background: var(--color-error);
-	color: var(--color-primary-element-text);
+	border: 1px solid var(--color-error-hover);
+	color: var(--color-error-text);
 }
 
 .tender-panel__error {

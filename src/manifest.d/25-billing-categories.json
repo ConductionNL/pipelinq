@@ -67,7 +67,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "billingCategory",
-				"sidebar": true
+				"sidebar": { "enabled": true }
 			}
 		}
 	]

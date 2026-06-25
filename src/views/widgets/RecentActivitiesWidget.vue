@@ -19,6 +19,7 @@ import { generateUrl } from '@nextcloud/router'
 import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
 import { initializeStores } from '../../store/store.js'
 import { formatDate } from '../../services/localeUtils.js'
+import { toText } from '../../utils/widgetText.js'
 
 export default {
 	name: 'RecentActivitiesWidget',
@@ -56,7 +57,7 @@ export default {
 
 				return {
 					id: activity.entityType + '-' + activity.id,
-					mainText: activity.title || t('pipelinq', 'Untitled'),
+					mainText: toText(activity.title) || t('pipelinq', 'Untitled'),
 					subText: typeLabel + ' · ' + timeAgo,
 					_entityType: activity.entityType,
 					_entityId: activity.id,

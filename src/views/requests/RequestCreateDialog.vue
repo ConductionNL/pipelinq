@@ -1,22 +1,32 @@
 <template>
-	<div class="create-overlay" @click.self="$emit('close')">
-		<div class="create-dialog">
-			<div class="create-dialog__header">
-				<h3>{{ t('pipelinq', 'New Request') }}</h3>
-				<NcButton type="tertiary" @click="$emit('close')">
-					✕
-				</NcButton>
-			</div>
-
-			<div class="create-dialog__body">
-				<RequestForm @save="onSave" @cancel="$emit('close')" />
-			</div>
-		</div>
-	</div>
+	<NcDialog
+		:name="t('pipelinq', 'New Request')"
+		:open="true"
+		size="normal"
+		data-testid="request-create-dialog"
+		@closing="$emit('close')">
+		<RequestForm
+			ref="form"
+			:show-actions="false"
+			@save="onSave"
+			@update:valid="v => (valid = v)" />
+		<template #actions>
+			<NcButton data-testid="request-create-cancel" @click="$emit('close')">
+				{{ t('pipelinq', 'Cancel') }}
+			</NcButton>
+			<NcButton
+				type="primary"
+				:disabled="!valid || saving"
+				data-testid="request-create-save"
+				@click="submit">
+				{{ saving ? t('pipelinq', 'Creating…') : t('pipelinq', 'Create') }}
+			</NcButton>
+		</template>
+	</NcDialog>
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
+import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import RequestForm from './RequestForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -25,9 +35,16 @@ export default {
 	name: 'RequestCreateDialog',
 	components: {
 		NcButton,
+		NcDialog,
 		RequestForm,
 	},
 	emits: ['created', 'close'],
+	data() {
+		return {
+			valid: false,
+			saving: false,
+		}
+	},
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-1
@@ -38,59 +55,29 @@ export default {
 	},
 	methods: {
 		/**
+		 * Trigger the form's own validate-then-emit flow; @save fires onSave.
+		 */
+		submit() {
+			this.$refs.form.onSave()
+		},
+		/**
 		 * @param formData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-2
 		 */
 		async onSave(formData) {
-			const result = await this.objectStore.saveObject('request', formData)
-			if (result) {
-				this.$emit('created', result.id)
-			} else {
-				const error = this.objectStore.getError('request')
-				showError(error?.message || t('pipelinq', 'Failed to create request.'))
+			this.saving = true
+			try {
+				const result = await this.objectStore.saveObject('request', formData)
+				if (result) {
+					this.$emit('created', result.id)
+				} else {
+					const error = this.objectStore.getError('request')
+					showError(error?.message || t('pipelinq', 'Failed to create request.'))
+				}
+			} finally {
+				this.saving = false
 			}
 		},
 	},
 }
 </script>
-
-<style scoped>
-.create-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background: rgba(0, 0, 0, 0.5);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 10000;
-}
-
-.create-dialog {
-	background: var(--color-main-background);
-	border-radius: var(--border-radius-large);
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-	width: 640px;
-	max-width: 90vw;
-	max-height: 85vh;
-	overflow-y: auto;
-}
-
-.create-dialog__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 16px 20px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.create-dialog__header h3 {
-	margin: 0;
-}
-
-.create-dialog__body {
-	padding: 20px;
-}
-</style>
