@@ -1,0 +1,243 @@
+[
+  {
+    "slug": "dutch-government-interop",
+    "title": "Dutch government interop",
+    "title_nl": "Koppelen aan de overheid",
+    "summary": "Connect to StUF, ZGW, BRP and KVK out of the box.",
+    "summary_nl": "Koppel direct aan StUF, ZGW, BRP en KVK.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/brp-lookup/spec.md"
+  },
+  {
+    "slug": "self-hosted-open-source",
+    "title": "Self-hosted and open-source",
+    "title_nl": "Zelf gehost en open source",
+    "summary": "Own your customer data, with no per-seat licence.",
+    "summary_nl": "Je houdt je klantdata zelf in beheer, zonder licentie per gebruiker.",
+    "status": "stable"
+  },
+  {
+    "slug": "client-management",
+    "title": "Client and contact management",
+    "title_nl": "Klant- en contactbeheer",
+    "summary": "Keep every client and contact in one clean record.",
+    "summary_nl": "Je houdt elke klant en elk contact in een net dossier.",
+    "status": "stable",
+    "providedBy": "openregister",
+    "docsUrl": "openspec/specs/client-management/spec.md"
+  },
+  {
+    "slug": "pipeline",
+    "title": "Sales pipeline",
+    "title_nl": "Verkooppijplijn",
+    "summary": "Drag deals across stages and see the value at every step.",
+    "summary_nl": "Sleep deals door de fases en zie bij elke stap de waarde.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/pipeline/spec.md"
+  },
+  {
+    "slug": "commercial-dashboard",
+    "title": "Commercial dashboard and forecast",
+    "title_nl": "Commercieel dashboard en forecast",
+    "summary": "See your weighted forecast and win rate at a glance.",
+    "summary_nl": "Je ziet in een oogopslag je gewogen forecast en winkans.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/commercial-dashboard/spec.md"
+  },
+  {
+    "slug": "request-management",
+    "title": "Verzoek and klacht intake",
+    "title_nl": "Verzoek- en klachtafhandeling",
+    "summary": "Take in requests and complaints and hand them to Procest.",
+    "summary_nl": "Je neemt verzoeken en klachten aan en geeft ze door aan Procest.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/request-management/spec.md"
+  },
+  {
+    "slug": "kcc-werkplek",
+    "title": "KCC werkplek",
+    "title_nl": "KCC-werkplek",
+    "summary": "Handle every klantcontact from one agent screen.",
+    "summary_nl": "Je handelt elk klantcontact af vanaf een agentscherm.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/kcc-werkplek/spec.md"
+  },
+  {
+    "slug": "contactmomenten-rapportage",
+    "title": "Contactmomenten and reporting",
+    "title_nl": "Contactmomenten en rapportage",
+    "summary": "Log every interaction and report on contact volume.",
+    "summary_nl": "Je legt elk contactmoment vast en rapporteert over het volume.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/contactmomenten-rapportage/spec.md"
+  },
+  {
+    "slug": "omnichannel-registratie",
+    "title": "Omnichannel messaging",
+    "title_nl": "Omnichannel berichten",
+    "summary": "Reach clients on WhatsApp and SMS, with consent logged automatically.",
+    "summary_nl": "Je bereikt klanten via WhatsApp en sms, met toestemming automatisch vastgelegd.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/omnichannel-registratie/spec.md"
+  },
+  {
+    "slug": "sla-engine-and-escalation",
+    "title": "SLA and escalation",
+    "title_nl": "SLA en escalatie",
+    "summary": "Meet deadlines with automatic timers and escalation.",
+    "summary_nl": "Je haalt deadlines met automatische timers en escalatie.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/sla-engine-and-escalation/spec.md"
+  },
+  {
+    "slug": "contacts-sync",
+    "title": "Nextcloud Contacts sync",
+    "title_nl": "Synchroniseren met Contacten",
+    "summary": "Sync clients two-way with your address book, no second silo.",
+    "summary_nl": "Je synchroniseert klanten beide kanten op met je adresboek, zonder tweede silo.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/contacts-sync/spec.md"
+  },
+  {
+    "slug": "marketing-campaigns",
+    "title": "Marketing campaigns",
+    "title_nl": "Marketingcampagnes",
+    "summary": "Segment your audience and send measurable email blasts.",
+    "summary_nl": "Je segmenteert je publiek en verstuurt meetbare e-mailcampagnes.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/marketing-blast/spec.md"
+  },
+  {
+    "slug": "loyalty-programme",
+    "title": "Loyalty programme",
+    "title_nl": "Loyaliteitsprogramma",
+    "summary": "Reward returning customers with points, tiers and redemptions.",
+    "summary_nl": "Je beloont terugkerende klanten met punten, niveaus en inwisselacties.",
+    "status": "stable"
+  },
+  {
+    "slug": "point-of-sale",
+    "title": "Point of sale",
+    "title_nl": "Kassa",
+    "summary": "Sell at the counter with a Dutch-BTW-correct kassa.",
+    "summary_nl": "Je verkoopt aan de balie met een BTW-correcte kassa.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/pos-transaction-core/spec.md"
+  },
+  {
+    "slug": "product-service-catalog",
+    "title": "Product and service catalogue",
+    "title_nl": "Product- en dienstencatalogus",
+    "summary": "Manage your products and services in one catalogue.",
+    "summary_nl": "Je beheert je producten en diensten in een catalogus.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/product-service-catalog/spec.md"
+  },
+  {
+    "slug": "prospect-discovery",
+    "title": "Prospect discovery",
+    "title_nl": "Prospects ontdekken",
+    "summary": "Find new prospects from KVK and score them against your profile.",
+    "summary_nl": "Je vindt nieuwe prospects uit KVK en scoort ze tegen je profiel.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/prospect-discovery/spec.md"
+  },
+  {
+    "slug": "contract-renewal-tracking",
+    "title": "Contract and renewal tracking",
+    "title_nl": "Contract- en verlengingsbeheer",
+    "summary": "Never miss a renewal with automatic reminders.",
+    "summary_nl": "Je mist geen verlenging meer dankzij automatische herinneringen.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/contract-renewal-tracking/spec.md"
+  },
+  {
+    "slug": "master-data-management",
+    "title": "Master data management",
+    "title_nl": "Masterdatabeheer",
+    "summary": "Keep one golden customer record across your apps.",
+    "summary_nl": "Je houdt een gouden klantrecord over al je apps.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/master-data-management/spec.md"
+  },
+  {
+    "slug": "time-entry-core",
+    "title": "Time capture",
+    "title_nl": "Urenregistratie",
+    "summary": "Log hours on clients and leads, billed in Shillinq.",
+    "summary_nl": "Je schrijft uren op klanten en leads, gefactureerd in Shillinq.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/time-entry-core/spec.md"
+  },
+  {
+    "slug": "warehouse-export",
+    "title": "Warehouse export",
+    "title_nl": "Datawarehouse-export",
+    "summary": "Send your CRM data to your own data warehouse.",
+    "summary_nl": "Je stuurt je CRM-data naar je eigen datawarehouse.",
+    "status": "beta"
+  },
+  {
+    "slug": "avg-verzoeken-workflow",
+    "title": "AVG request tracking",
+    "title_nl": "AVG-verzoeken volgen",
+    "summary": "Track AVG requests and deadlines; redaction runs in Docudesk.",
+    "summary_nl": "Je volgt AVG-verzoeken en deadlines; het lakken gebeurt in Docudesk.",
+    "status": "beta",
+    "providedBy": "openregister",
+    "docsUrl": "openspec/specs/avg-verzoeken-workflow/spec.md"
+  },
+  {
+    "slug": "email-calendar-sync",
+    "title": "Email and calendar sync",
+    "title_nl": "E-mail- en agendakoppeling",
+    "summary": "Link your mailbox and calendar to contacts (early access).",
+    "summary_nl": "Je koppelt je mailbox en agenda aan contacten (vroege toegang).",
+    "status": "beta",
+    "docsUrl": "openspec/specs/email-calendar-sync/spec.md"
+  },
+  {
+    "slug": "appointment-booking",
+    "title": "Appointment booking",
+    "title_nl": "Afspraken inplannen",
+    "summary": "Book appointments with availability and reminders.",
+    "summary_nl": "Je plant afspraken met beschikbaarheid en herinneringen.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/appointment-booking/spec.md"
+  },
+  {
+    "slug": "public-booking-portal",
+    "title": "Public booking portal",
+    "title_nl": "Publiek afsprakenportaal",
+    "summary": "Let customers book and reschedule online themselves.",
+    "summary_nl": "Je laat klanten zelf online boeken en verzetten.",
+    "status": "soon"
+  },
+  {
+    "slug": "product-catalog-quoting",
+    "title": "Quoting",
+    "title_nl": "Offertes maken",
+    "summary": "Turn a catalogue selection into a quote and PDF.",
+    "summary_nl": "Je maakt van een catalogusselectie een offerte en pdf.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/product-catalog-quoting/spec.md"
+  },
+  {
+    "slug": "public-intake-forms",
+    "title": "Self-service intake forms",
+    "title_nl": "Zelfservice-intakeformulieren",
+    "summary": "Embed intake forms on your own website.",
+    "summary_nl": "Je plaatst intakeformulieren op je eigen website.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/public-intake-forms/spec.md"
+  },
+  {
+    "slug": "crm-workflow-automation",
+    "title": "Workflow automation",
+    "title_nl": "Workflowautomatisering",
+    "summary": "Trigger flows from CRM events.",
+    "summary_nl": "Je start flows vanuit CRM-gebeurtenissen.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/crm-workflow-automation/spec.md"
+  }
+]
