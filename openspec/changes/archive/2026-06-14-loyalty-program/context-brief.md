@@ -70,7 +70,7 @@ GIVEN een loyalty-programme met minimaal 30 dagen geschiedenis, WHEN een beheerd
 - **pipelinq voucher-engine**: redemption-codes en gift-card serials kunnen door dezelfde validator gaan.
 - **openconnector**: koppeling met externe loyalty-platformen (Piggy, LoyaltyLion) als hybride scenario, en met email/SMS-providers voor notificaties.
 - **financeq**: outstanding-points-liability boeking en gift-card-balans op de balans.
-- **mydash**: dashboards voor programma-economie, tier-verdeling, CLV.
+- **launchpad**: dashboards voor programma-economie, tier-verdeling, CLV.
 
 ## Target users
 
