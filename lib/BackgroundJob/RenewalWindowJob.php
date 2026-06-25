@@ -85,7 +85,7 @@ class RenewalWindowJob extends TimedJob
             return;
         }
 
-        $today      = date('Y-m-d');
+        $today       = date('Y-m-d');
         $transitions = 0;
 
         foreach ($contracts as $contract) {

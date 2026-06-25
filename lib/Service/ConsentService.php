@@ -262,7 +262,7 @@ class ConsentService
                     ['contactId' => $contactId, 'id' => $id, 'exception' => $e->getMessage()]
                 );
             }
-        }
+        }//end foreach
 
         return $deleted;
     }//end deleteForContact()
@@ -489,7 +489,11 @@ class ConsentService
     private function getRegisterSlug(): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        return ($slug !== '') ? $slug : self::DEFAULT_REGISTER_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
     /**
@@ -505,7 +509,11 @@ class ConsentService
             ''
         );
 
-        return ($slug !== '') ? $slug : self::DEFAULT_SCHEMA_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_SCHEMA_SLUG;
     }//end getSchemaSlug()
 
     /**

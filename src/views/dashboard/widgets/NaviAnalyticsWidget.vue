@@ -8,7 +8,7 @@
   - An input + submit row to ask natural-language questions
   - A scrollable conversation history
   - Each Navi response is rendered as a CnChartWidget (chart),
-    CnTableWidget (table), or plain text
+    CnDataTable (table), or plain text
   - Up to 3 suggested follow-up chips appear after each response;
     clicking one re-submits the suggestion automatically
 
@@ -46,11 +46,11 @@
 							:series="resolveSeries(msg.chartData)"
 							:title="''"
 							class="navi-widget__chart" />
-						<CnTableWidget
+						<CnDataTable
 							v-else-if="msg.resultType === 'table' && msg.tableData"
-							:title="''"
 							:columns="resolveTableColumns(msg.tableData)"
 							:rows="resolveTableRows(msg.tableData)"
+							borderless
 							class="navi-widget__table" />
 						<div
 							v-if="msg.suggestedFollowUps && msg.suggestedFollowUps.length"
@@ -93,7 +93,7 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcTextField } from '@nextcloud/vue'
-import { CnChartWidget, CnTableWidget } from '@conduction/nextcloud-vue'
+import { CnChartWidget, CnDataTable } from '@conduction/nextcloud-vue'
 
 /**
  * NaviAnalyticsWidget — conversational analytics chat panel.
@@ -107,7 +107,7 @@ export default {
 		NcButton,
 		NcTextField,
 		CnChartWidget,
-		CnTableWidget,
+		CnDataTable,
 	},
 	data() {
 		return {
@@ -194,7 +194,7 @@ export default {
 			return []
 		},
 		/**
-		 * Build a CnTableWidget-compatible columns spec from the backend payload.
+		 * Build a CnDataTable-compatible columns spec from the backend payload.
 		 *
 		 * @param {object} tableData - Raw tableData payload.
 		 * @return {Array} Columns array.
@@ -206,7 +206,7 @@ export default {
 			return tableData.columns.map((col, idx) => ({ key: 'col' + idx, label: col }))
 		},
 		/**
-		 * Build CnTableWidget-compatible row objects keyed by `col{idx}`.
+		 * Build CnDataTable-compatible row objects keyed by `col{idx}`.
 		 *
 		 * @param {object} tableData - Raw tableData payload.
 		 * @return {Array} Rows array.

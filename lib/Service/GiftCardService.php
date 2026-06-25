@@ -72,9 +72,9 @@ class GiftCardService
     public function issueGiftCard(
         ?string $programmeId,
         float $initialBalance,
-        int $expiryDays = 365,
-        string $kanaal = 'purchased',
-        ?string $uitgegevenAan = null
+        int $expiryDays=365,
+        string $kanaal='purchased',
+        ?string $uitgegevenAan=null
     ): array {
         if ($initialBalance <= 0) {
             throw new RuntimeException('Initial balance must be positive.');
@@ -108,7 +108,7 @@ class GiftCardService
         $saved = $this->persistCard(payload: $card, uuid: null);
 
         $this->logTransaction(
-            giftCardId: (string) $this->extractUuid($saved),
+            giftCardId: (string) $this->extractUuid(object: $saved),
             type: 'issue',
             bedrag: $initialBalance,
             balansNa: $initialBalance,
@@ -129,7 +129,7 @@ class GiftCardService
      *
      * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006-03
      */
-    public function activateGiftCard(string $giftCardId, ?string $posTransactionId = null): ?array
+    public function activateGiftCard(string $giftCardId, ?string $posTransactionId=null): ?array
     {
         $card = $this->getCard(giftCardId: $giftCardId);
         if ($card === null) {
@@ -137,11 +137,12 @@ class GiftCardService
         }
 
         if ((string) ($card['status'] ?? '') !== 'issued') {
-            return $card; // Already active or beyond.
+            return $card;
+            // Already active or beyond.
         }
 
         $card['status'] = 'active';
-        $saved = $this->persistCard(payload: $card, uuid: $giftCardId);
+        $saved          = $this->persistCard(payload: $card, uuid: $giftCardId);
 
         // No new ledger entry required for activation per REQ-LOY-006-03; the
         // initial 'issue' entry already records balansNa.
@@ -172,7 +173,7 @@ class GiftCardService
         string $giftCardId,
         string $pin,
         float $amount,
-        ?string $posTransactionId = null
+        ?string $posTransactionId=null
     ): array {
         if ($amount <= 0) {
             throw new RuntimeException('Redemption amount must be positive.');
@@ -187,12 +188,13 @@ class GiftCardService
         if ($status === 'blocked') {
             throw new RuntimeException('Gift card is blocked.');
         }
+
         if (in_array($status, ['active'], true) === false) {
             throw new RuntimeException('Gift card is not active.');
         }
 
         $vervaltOp = (string) ($card['vervaltOp'] ?? '');
-        $now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+        $now       = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         if ($vervaltOp !== '' && $vervaltOp < $now) {
             throw new RuntimeException('Gift card has expired.');
         }
@@ -249,7 +251,7 @@ class GiftCardService
     public function refundGiftCard(
         string $giftCardId,
         float $amount,
-        ?string $posTransactionId = null
+        ?string $posTransactionId=null
     ): array {
         if ($amount <= 0) {
             throw new RuntimeException('Refund amount must be positive.');
@@ -298,7 +300,7 @@ class GiftCardService
         }
 
         $card['status'] = 'blocked';
-        $saved = $this->persistCard(payload: $card, uuid: $giftCardId);
+        $saved          = $this->persistCard(payload: $card, uuid: $giftCardId);
 
         $this->logTransaction(
             giftCardId: $giftCardId,
@@ -335,6 +337,7 @@ class GiftCardService
         if ($card === null) {
             throw new RuntimeException('Gift card not found.');
         }
+
         if ($this->verifyPin(plaintext: $pin, hash: (string) ($card['pin'] ?? '')) === false) {
             throw new RuntimeException('Invalid PIN.');
         }
@@ -363,24 +366,42 @@ class GiftCardService
 
         $status = (string) ($card['status'] ?? '');
         if (in_array($status, ['blocked'], true) === true) {
-            return ['valid' => false, 'balance' => (float) ($card['currentBalans'] ?? 0), 'expiryDate' => $card['vervaltOp'] ?? null, 'giftCardId' => $this->extractUuid($card), 'reason' => 'Blocked'];
+            return [
+                'valid'      => false,
+                'balance'    => (float) ($card['currentBalans'] ?? 0),
+                'expiryDate' => ($card['vervaltOp'] ?? null),
+                'giftCardId' => $this->extractUuid(object: $card),
+                'reason'     => 'Blocked',
+            ];
         }
 
         $vervaltOp = (string) ($card['vervaltOp'] ?? '');
-        $now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+        $now       = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         if ($vervaltOp !== '' && $vervaltOp < $now) {
-            return ['valid' => false, 'balance' => (float) ($card['currentBalans'] ?? 0), 'expiryDate' => $vervaltOp, 'giftCardId' => $this->extractUuid($card), 'reason' => 'Expired'];
+            return [
+                'valid'      => false,
+                'balance'    => (float) ($card['currentBalans'] ?? 0),
+                'expiryDate' => $vervaltOp,
+                'giftCardId' => $this->extractUuid(object: $card),
+                'reason'     => 'Expired',
+            ];
         }
 
         if ($this->verifyPin(plaintext: $pin, hash: (string) ($card['pin'] ?? '')) === false) {
             return ['valid' => false, 'balance' => 0.0, 'expiryDate' => null, 'giftCardId' => null, 'reason' => 'Invalid PIN'];
         }
 
+        if ($vervaltOp !== '') {
+            $expiryDate = $vervaltOp;
+        } else {
+            $expiryDate = null;
+        }
+
         return [
             'valid'      => true,
             'balance'    => (float) ($card['currentBalans'] ?? 0),
-            'expiryDate' => $vervaltOp !== '' ? $vervaltOp : null,
-            'giftCardId' => $this->extractUuid($card),
+            'expiryDate' => $expiryDate,
+            'giftCardId' => $this->extractUuid(object: $card),
             'reason'     => null,
         ];
     }//end validateBySerial()
@@ -405,7 +426,11 @@ class GiftCardService
             return null;
         }
 
-        return $object === null ? null : $this->toArray($object);
+        if ($object === null) {
+            return null;
+        }
+
+        return $this->toArray(object: $object);
     }//end getCard()
 
     /**
@@ -433,8 +458,17 @@ class GiftCardService
             return null;
         }
 
-        $rows = is_array($rows) === true ? array_values($rows) : [];
-        return $rows === [] ? null : $this->toArray(reset($rows));
+        if (is_array($rows) === true) {
+            $rows = array_values($rows);
+        } else {
+            $rows = [];
+        }
+
+        if ($rows === []) {
+            return null;
+        }
+
+        return $this->toArray(object: reset($rows));
     }//end findBySerial()
 
     /**
@@ -462,7 +496,13 @@ class GiftCardService
             return [];
         }
 
-        return array_map([$this, 'toArray'], is_array($rows) === true ? array_values($rows) : []);
+        if (is_array($rows) === true) {
+            $rowList = array_values($rows);
+        } else {
+            $rowList = [];
+        }
+
+        return array_map([$this, 'toArray'], $rowList);
     }//end listForKlant()
 
     /**
@@ -478,6 +518,7 @@ class GiftCardService
         if ($hash === '') {
             return false;
         }
+
         return password_verify($plaintext, $hash);
     }//end verifyPin()
 
@@ -540,7 +581,7 @@ class GiftCardService
     private function generateUniqueSerial(): string
     {
         for ($i = 0; $i < 10; $i++) {
-            $candidate = 'GC-' . str_pad((string) random_int(0, 99999999), 8, '0', STR_PAD_LEFT);
+            $candidate = 'GC-'.str_pad((string) random_int(0, 99999999), 8, '0', STR_PAD_LEFT);
             if ($this->findBySerial(serial: $candidate) === null) {
                 return $candidate;
             }
@@ -582,7 +623,7 @@ class GiftCardService
             uuid: $uuid
         );
 
-        return $this->toArray($saved);
+        return $this->toArray(object: $saved);
     }//end persistCard()
 
     /**
@@ -613,6 +654,7 @@ class GiftCardService
         if (is_array($self) === true && isset($self['id']) === true) {
             return (string) $self['id'];
         }
+
         return $object['giftCardId'] ?? $object['uuid'] ?? $object['id'] ?? null;
     }//end extractUuid()
 
@@ -628,18 +670,21 @@ class GiftCardService
         if (is_array($object) === true) {
             return $object;
         }
+
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
             $s = $object->jsonSerialize();
             if (is_array($s) === true) {
                 return $s;
             }
         }
+
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
             $d = $object->getObject();
             if (is_array($d) === true) {
                 return $d;
             }
         }
+
         return [];
     }//end toArray()
 

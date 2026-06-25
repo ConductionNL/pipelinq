@@ -58,6 +58,8 @@ class AsteriskAdapter implements CtiAdapterInterface
 
     /**
      * {@inheritDoc}
+     *
+     * @return string Platform identifier.
      */
     public function getPlatform(): string
     {
@@ -72,6 +74,10 @@ class AsteriskAdapter implements CtiAdapterInterface
      *     "Uniqueid": "...", "Channel": "SIP/101-00001234",
      *     "CallerIDNum": "...", "ConnectedLineNum": "...",
      *     "Duration": "00:05:27" }
+     *
+     * @param array<string,mixed> $payload Raw decoded webhook body.
+     *
+     * @return CtiWebhookResult Normalised event.
      */
     public function handleInboundWebhook(array $payload): CtiWebhookResult
     {
@@ -100,29 +106,64 @@ class AsteriskAdapter implements CtiAdapterInterface
         }
 
         $presenceMap = [
-            'NOT_INUSE' => 'available',
-            'INUSE'     => 'on-call',
-            'BUSY'      => 'on-call',
-            'RINGING'   => 'on-call',
-            'ONHOLD'    => 'wrap-up',
+            'NOT_INUSE'   => 'available',
+            'INUSE'       => 'on-call',
+            'BUSY'        => 'on-call',
+            'RINGING'     => 'on-call',
+            'ONHOLD'      => 'wrap-up',
             'UNAVAILABLE' => 'offline',
         ];
         $presenceRaw = (string) ($payload['State'] ?? ($payload['DeviceState'] ?? ''));
         $presence    = ($presenceMap[$presenceRaw] ?? null);
 
+        $direction = null;
+        if (isset($payload['direction']) === true) {
+            $direction = (string) $payload['direction'];
+        }
+
+        $fromNumber = null;
+        if (isset($payload['CallerIDNum']) === true) {
+            $fromNumber = (string) $payload['CallerIDNum'];
+        }
+
+        $toNumber = null;
+        if (isset($payload['ConnectedLineNum']) === true) {
+            $toNumber = (string) $payload['ConnectedLineNum'];
+        }
+
+        $userId = null;
+        if (isset($payload['userId']) === true) {
+            $userId = (string) $payload['userId'];
+        }
+
+        $recordingUrl = null;
+        if (isset($payload['RecordingURL']) === true) {
+            $recordingUrl = (string) $payload['RecordingURL'];
+        }
+
+        $recordingExpiresAt = null;
+        if (isset($payload['RecordingExpiresAt']) === true) {
+            $recordingExpiresAt = (string) $payload['RecordingExpiresAt'];
+        }
+
+        $queueName = null;
+        if (isset($payload['Queue']) === true) {
+            $queueName = (string) $payload['Queue'];
+        }
+
         return new CtiWebhookResult(
             eventType: $eventType,
             externalCallId: (string) ($payload['Uniqueid'] ?? ($payload['uniqueid'] ?? '')),
-            direction: isset($payload['direction']) === true ? (string) $payload['direction'] : null,
-            fromNumber: isset($payload['CallerIDNum']) === true ? (string) $payload['CallerIDNum'] : null,
-            toNumber: isset($payload['ConnectedLineNum']) === true ? (string) $payload['ConnectedLineNum'] : null,
+            direction: $direction,
+            fromNumber: $fromNumber,
+            toNumber: $toNumber,
             extension: $extension,
-            userId: isset($payload['userId']) === true ? (string) $payload['userId'] : null,
+            userId: $userId,
             durationSeconds: $duration,
-            recordingUrl: isset($payload['RecordingURL']) === true ? (string) $payload['RecordingURL'] : null,
-            recordingExpiresAt: isset($payload['RecordingExpiresAt']) === true ? (string) $payload['RecordingExpiresAt'] : null,
+            recordingUrl: $recordingUrl,
+            recordingExpiresAt: $recordingExpiresAt,
             presenceState: $presence,
-            queueName: isset($payload['Queue']) === true ? (string) $payload['Queue'] : null,
+            queueName: $queueName,
             raw: $payload,
         );
     }//end handleInboundWebhook()
@@ -131,6 +172,12 @@ class AsteriskAdapter implements CtiAdapterInterface
      * {@inheritDoc}
      *
      * Posts to the configured ARI Originate endpoint with HTTP-basic auth.
+     *
+     * @param string $extension    The agent's telephony extension that should ring.
+     * @param string $targetNumber Destination phone number (E.164 preferred).
+     * @param string $callerId     Caller-ID to present on the outbound call.
+     *
+     * @return CtiCallResult Outcome including the new external call id.
      */
     public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult
     {
@@ -146,16 +193,21 @@ class AsteriskAdapter implements CtiAdapterInterface
             );
         }
 
+        $auth = null;
+        if ($user !== '') {
+            $auth = [$user, $pass];
+        }
+
         try {
             $client   = $this->clientService->newClient();
             $response = $client->post(
                 rtrim($baseUrl, '/').'/ari/channels',
                 [
-                    'auth'    => ($user !== '' ? [$user, $pass] : null),
+                    'auth'    => $auth,
                     'headers' => ['Content-Type' => 'application/json'],
                     'body'    => json_encode(
                         [
-                            'endpoint' => 'SIP/'.$extension,
+                            'endpoint'  => 'SIP/'.$extension,
                             'extension' => $targetNumber,
                             'context'   => $context,
                             'callerId'  => $callerId,
@@ -167,11 +219,19 @@ class AsteriskAdapter implements CtiAdapterInterface
 
             $bodyContents = (string) $response->getBody();
             $body         = json_decode($bodyContents, true);
-            $callId       = is_array($body) === true ? ($body['id'] ?? ($body['uniqueid'] ?? null)) : null;
+            $callId       = null;
+            if (is_array($body) === true) {
+                $callId = ($body['id'] ?? ($body['uniqueid'] ?? null));
+            }
+
+            $externalCallId = null;
+            if ($callId !== null) {
+                $externalCallId = (string) $callId;
+            }
 
             return new CtiCallResult(
                 success: true,
-                externalCallId: $callId !== null ? (string) $callId : null,
+                externalCallId: $externalCallId,
                 platform: $this->getPlatform(),
             );
         } catch (\Throwable $e) {
@@ -193,6 +253,11 @@ class AsteriskAdapter implements CtiAdapterInterface
      * Asterisk Stasis bridge pushes channel-state events to the configured
      * webhook URL automatically once the application is registered; nothing to
      * do here.
+     *
+     * @param string $userId    NC user UID.
+     * @param string $extension Agent extension.
+     *
+     * @return void
      */
     public function subscribeToPresence(string $userId, string $extension): void
     {
@@ -203,6 +268,11 @@ class AsteriskAdapter implements CtiAdapterInterface
      * {@inheritDoc}
      *
      * Validates a shared-secret query parameter against the configured secret.
+     *
+     * @param string $payload   Raw request body as received.
+     * @param string $signature Signature/token to validate.
+     *
+     * @return bool True when the signature is valid.
      */
     public function verifyWebhookSignature(string $payload, string $signature): bool
     {

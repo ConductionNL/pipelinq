@@ -191,7 +191,10 @@ class RoutingService
         $objectService = $this->getObjectService();
         $count         = 0;
 
-        // Open requests (filter terminal statuses PHP-side).
+        // Open requests: the "non-terminal" predicate is a NOT IN over
+        // TERMINAL_STATUSES, which OpenRegister's query engine cannot express
+        // (no NOT IN operator), and the comparison is case-folded in PHP. This
+        // leg therefore stays a PHP-side count over the assignee-filtered set.
         if ($requestSchemaId !== '') {
             try {
                 $requests = $objectService->findAll(
@@ -219,10 +222,11 @@ class RoutingService
             }//end try
         }//end if
 
-        // Open leads (status=open).
+        // Open leads (status=open) — push the COUNT down into OpenRegister
+        // since every predicate is a server-side equality filter.
         if ($leadSchemaId !== '') {
             try {
-                $leads = $objectService->findAll(
+                $count += $objectService->count(
                     [
                         'filters' => [
                             'register' => $registerId,
@@ -230,11 +234,8 @@ class RoutingService
                             'assignee' => $userId,
                             'status'   => 'open',
                         ],
-                        'limit'   => 999,
                     ]
                 );
-
-                $count += count($leads);
             } catch (\Throwable $e) {
                 $this->logger->error(
                     'RoutingService: failed to count open leads',

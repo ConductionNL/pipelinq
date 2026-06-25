@@ -42,49 +42,52 @@ The system MUST maintain a single authoritative golden record per Master Entity,
 
 ### Requirement: REQ-MDM-002 — Deterministic Duplicate Detection on Natural Keys
 
-The system MUST detect deterministic duplicates daily (or on source-record creation) by matching natural keys: KvK number, VAT number, BSN hash, email, phone.
+The system MUST detect deterministic duplicates by declaring exact-match rules on the natural keys (KvK number, email, …) in the `masterEntity` schema's `x-openregister-dedup` annotation and delegating detection to OpenRegister's `DuplicateDetectionService::findDuplicates()`. The app MUST NOT run a hand-rolled natural-key comparison loop. The app MUST adapt OR's `{objectA, objectB, score, matchedOn[]}` result into the existing duplicate-candidate DTO, classifying a pair whose `matchedOn` includes a natural key as `linkageMethod = deterministic-key`, `linkageConfidence = 1.0`. The app MUST retain (app-side, not OR) the auto-merge eligibility decision, which depends on the trust-tier rule's `manualOverrideAllowed`.
 
 **Feature tier**: MVP
-**Handoff**: Covered by `admin-settings-duplicate-prevention` (existing duplicate-prevention capability) and `contacts-sync` natural-key reconciliation.
+**Handoff**: Consumes OpenRegister `mdm-foundation`. Auto-merge gate + DTO adaptation stay in pipelinq.
 
 #### Scenario: Two entities with same KvK
 
 - GIVEN two Master Entities with masterId A and B, both carrying KvK number "12345678"
 - WHEN the duplicate detector runs
-- THEN a duplicate-candidate (DTO, not persisted schema) is generated with `linkageMethod = deterministic-key`, `linkageConfidence = 1.0`
+- THEN OpenRegister's `findDuplicates()` returns the pair (matched on the flattened `matchKvkNumber` field)
+- AND the app emits a duplicate-candidate DTO with `linkageMethod = deterministic-key`, `linkageConfidence = 1.0`
 - AND the candidate appears in the stewardship queue for data-steward approval
 - OR is auto-merged if `manualOverrideAllowed = false` for KvK conflicts in trust-configuration
 
-#### Scenario: Email collision across accounts
+#### Scenario: Hand-rolled deterministic loop is removed
 
-- GIVEN account "ABC B.V." (masterId X) with email "contact@abc.nl" and account "ABC New B.V." (masterId Y) with the same email
-- WHEN the detector runs
-- THEN a duplicate-candidate is generated with confidence 1.0
-- AND it is flagged as high-confidence for immediate stewardship review or auto-merge
+- WHEN the duplicate-detection service source is inspected
+- THEN it MUST NOT contain the imperative deterministic natural-key comparison loop (detection is delegated to OpenRegister)
 
 ---
 
 ### Requirement: REQ-MDM-003 — Probabilistic Duplicate Detection on Fuzzy Match
 
-The system MUST support probabilistic duplicate detection using Jaro-Winkler (name similarity) and TF-IDF cosine distance (address/phone agreement), with configurable thresholds.
+The system MUST support probabilistic duplicate detection via the `normalized` and `levenshtein` match methods declared in the `x-openregister-dedup` annotation and resolved by OpenRegister's `DuplicateDetectionService`. Because OpenRegister returns a weight-normalised mean of per-field similarities, the dedup threshold MUST be tuned (0.7) so that a pair agreeing on natural keys surfaces while a single weak field cannot. Jaro-Winkler / TF-IDF scoring that OpenRegister does not yet model MAY be retained as a noted in-process fallback path used only when OpenRegister is unavailable.
 
 **Feature tier**: MVP
-**Handoff**: Deferred — out of scope for current MDM handoff; tracked for a future change.
+**Handoff**: Primary path is OpenRegister `findDuplicates()`; Jaro-Winkler/TF-IDF retained only as the OR-unavailable fallback.
 
 #### Scenario: Name similarity fuzzy match
 
-- GIVEN two Master Entities: "Jansens Bouw BV" (postcode 1234AB, phone 020-1234567) and "Jansen's Bouw B.V." (postcode 1234AB, phone 020-1234567)
-- AND a `linkageConfidence` threshold of 0.85
-- WHEN the probabilistic detector runs
-- THEN a match-candidate is generated with `linkageMethod = probabilistic-match`, `linkageConfidence = 0.93` (computed: high name similarity via Jaro-Winkler + postcode + phone match)
-- AND it appears in the stewardship queue for human decision (above 0.95 can be configured for auto-merge)
+- GIVEN two Master Entities "Jansens Bouw BV" and "Jansen's Bouw B.V." sharing a natural key
+- WHEN the detector runs
+- THEN OpenRegister's `findDuplicates()` returns the pair with `linkageMethod = probabilistic-match` (or `deterministic-key` when a natural key matched)
+- AND it appears in the stewardship queue for human decision
 
-#### Scenario: TF-IDF address matching below threshold
+#### Scenario: Below threshold produces no candidate
 
-- GIVEN two entities with very different addresses but similar names
-- WHEN the detector computes TF-IDF cosine similarity on address tokens and gets 0.62 (below 0.85 threshold)
+- GIVEN two entities whose only weak signal is a partial name match below the dedup threshold
+- WHEN the detector runs
 - THEN NO candidate is generated (insufficient confidence)
-- AND the pair is not suggested for merge
+
+#### Scenario: Fallback path on OpenRegister unavailability
+
+- GIVEN OpenRegister's duplicate-detection service cannot be resolved
+- WHEN `detectDuplicates()` runs
+- THEN the app MUST degrade to the in-process Jaro-Winkler/TF-IDF fallback rather than failing
 
 ---
 
@@ -187,37 +190,33 @@ The system MUST queue changes to downstream apps via sync-queue-items, with auto
 
 ### Requirement: REQ-MDM-007 — Data-Quality-Score per Master Entity
 
-Each Master Entity MUST have a dataQualityScore (0-1) computed from completeness, freshness, and cross-source agreement.
+Each Master Entity MUST have a `dataQualityScore` (0-1). The generic field-quality dimensions (completeness, format, freshness) MUST be declared on the `masterEntity` schema via the OpenRegister `x-openregister-quality` annotation so OpenRegister materialises `qualityScore` and `qualityStatus` on save; the app MUST NOT re-implement those dimensions imperatively. The app MUST retain the cross-source agreement (conflict) term — which depends on the linked source records and is not expressible as a single-object OR rule — and MUST blend OpenRegister's materialised `qualityScore` with the agreement term into `dataQualityScore`. `MasterEntityService` MUST materialise `lastSourceUpdate` (the most recent provenance `lastUpdated`) so OpenRegister's freshness rule has a single date field to decay.
 
 **Feature tier**: MVP
-**Handoff**: Deferred — computation can be layered onto existing schemas in a future change.
+**Handoff**: Consumes OpenRegister `mdm-foundation` for completeness/format/freshness; agreement + trust weighting stay in pipelinq.
 
-#### Scenario: Completeness component
+#### Scenario: Quality annotation is declared and materialises on save
 
-- GIVEN a Master Entity account "Voorbeeld B.V." with required attributes [name, kvkNumber, email]
-- WHEN name and kvkNumber are filled, but email is missing
-- THEN completeness score = 2/3 ≈ 0.67
+- WHEN the pipelinq register is (re-)imported and a Master Entity is saved
+- THEN the `masterEntity` schema configuration MUST contain `x-openregister-quality`
+- AND OpenRegister MUST materialise `qualityScore` and `qualityStatus` onto the saved object
 
-#### Scenario: Freshness component
+#### Scenario: Freshness has a materialised date field
 
-- GIVEN a Master Entity whose last source update was 30 days ago
-- WHEN freshness is computed as `exp(-30 / 180)` ≈ 0.85
-- THEN the freshness component is 0.85
+- WHEN `MasterEntityService` recomputes a golden record
+- THEN it MUST materialise `lastSourceUpdate` as the most recent `attributeProvenance[*].lastUpdated`
 
-#### Scenario: Agreement component
+#### Scenario: Agreement term stays app-side and is blended
 
-- GIVEN a Master Entity with 5 attributes, 2 of which have conflicting source values
-- WHEN agreement = 1.0 - (2/5) = 0.6
-- THEN the agreement component is 0.6
+- GIVEN two non-withdrawn source records that disagree on an attribute
+- WHEN the data-quality score is recomputed
+- THEN the app MUST compute the agreement (1 − conflicting/total) term itself
+- AND `dataQualityScore` MUST combine OpenRegister's materialised `qualityScore` with the agreement term
 
-#### Scenario: Overall score
+#### Scenario: Imperative completeness/freshness scoring is removed
 
-- GIVEN completeness=0.67, freshness=0.85, agreement=0.6
-- WHEN dataQualityScore = (0.67*0.3 + 0.85*0.4 + 0.6*0.3)
-- THEN dataQualityScore ≈ 0.71
-- AND the entity appears on the data-quality dashboard in the "fair" range (0.6-0.8)
-
----
+- WHEN the data-quality scorer source is inspected
+- THEN it MUST NOT contain imperative completeness or freshness formulas (delegated to OpenRegister)
 
 ### Requirement: REQ-MDM-008 — Audit Trail per Merge and Gold-Record Mutation
 

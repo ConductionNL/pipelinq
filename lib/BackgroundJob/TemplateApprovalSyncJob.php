@@ -42,9 +42,9 @@ class TemplateApprovalSyncJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory                $time         Time factory.
-     * @param TemplateApprovalSyncService $syncService  Sync orchestrator.
-     * @param LoggerInterface             $logger       Logger.
+     * @param ITimeFactory                $time        Time factory.
+     * @param TemplateApprovalSyncService $syncService Sync orchestrator.
+     * @param LoggerInterface             $logger      Logger.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.1
      */

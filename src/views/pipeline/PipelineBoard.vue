@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <template>
-	<div class="pipeline-board">
+	<div class="pipeline-board" data-walkthrough-id="pipeline-board">
 		<div class="pipeline-board__header">
 			<h2>{{ t('pipelinq', 'Pipeline') }}</h2>
 			<div class="pipeline-board__controls">

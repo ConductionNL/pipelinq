@@ -83,29 +83,34 @@ class BrpCacheService
             $now    = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             $latest = null;
             foreach (($results ?? []) as $object) {
-                $arr        = self::toArray($object);
+                $arr        = self::toArray(object: $object);
                 $retentieTo = (string) ($arr['retentieTot'] ?? '');
                 if ($retentieTo === '') {
                     continue;
                 }
+
                 try {
                     $retentieDt = new DateTimeImmutable($retentieTo, new DateTimeZone('UTC'));
                 } catch (Throwable $e) {
                     continue;
                 }
+
                 if ($retentieDt <= $now) {
                     continue;
                 }
+
                 if ($latest === null) {
                     $latest = $arr;
                     continue;
                 }
+
                 $latestOpgehaald  = (string) ($latest['opgehaaldOp'] ?? '');
                 $currentOpgehaald = (string) ($arr['opgehaaldOp'] ?? '');
                 if ($currentOpgehaald > $latestOpgehaald) {
                     $latest = $arr;
                 }
-            }
+            }//end foreach
+
             return $latest;
         } catch (Throwable $e) {
             $this->logger->error(
@@ -113,7 +118,7 @@ class BrpCacheService
                 ['error' => $e->getMessage()]
             );
             return null;
-        }
+        }//end try
     }//end get()
 
     /**
@@ -126,13 +131,13 @@ class BrpCacheService
      *
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-04
      */
-    public function set(array $persoon, ?int $ttlHours = null): array
+    public function set(array $persoon, ?int $ttlHours=null): array
     {
         [$register, $schema] = $this->config();
 
-        $ttl       = $ttlHours ?? $this->getConfiguredTtlHours();
-        $now       = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $retentie  = $now->modify('+'.max(1, $ttl).' hours');
+        $ttl      = $ttlHours ?? $this->getConfiguredTtlHours();
+        $now      = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $retentie = $now->modify('+'.max(1, $ttl).' hours');
 
         $persoon['opgehaaldOp'] = $persoon['opgehaaldOp'] ?? $now->format(DATE_ATOM);
         $persoon['retentieTot'] = $retentie->format(DATE_ATOM);
@@ -143,7 +148,7 @@ class BrpCacheService
             register: $register,
             schema: $schema,
         );
-        return self::toArray($saved);
+        return self::toArray(object: $saved);
     }//end set()
 
     /**
@@ -168,15 +173,16 @@ class BrpCacheService
                 schema: $schema,
             );
 
-            $now    = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+            $now     = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             $expired = $now->modify('-1 second')->format(DATE_ATOM);
-            $count = 0;
+            $count   = 0;
             foreach (($results ?? []) as $object) {
-                $arr = self::toArray($object);
+                $arr  = self::toArray(object: $object);
                 $uuid = (string) ($arr['@self']['id'] ?? $arr['id'] ?? '');
                 if ($uuid === '') {
                     continue;
                 }
+
                 $arr['retentieTot'] = $expired;
                 $this->getObjectService()->saveObject(
                     object: $arr,
@@ -187,6 +193,7 @@ class BrpCacheService
                 );
                 $count++;
             }
+
             return $count;
         } catch (Throwable $e) {
             $this->logger->error(
@@ -194,7 +201,7 @@ class BrpCacheService
                 ['error' => $e->getMessage()]
             );
             return 0;
-        }
+        }//end try
     }//end invalidate()
 
     /**
@@ -209,25 +216,35 @@ class BrpCacheService
             'brp.cache_ttl_hours',
             (string) self::DEFAULT_TTL_HOURS,
         );
-        return $value >= 1 ? $value : self::DEFAULT_TTL_HOURS;
+        if ($value >= 1) {
+            return $value;
+        }
+
+        return self::DEFAULT_TTL_HOURS;
     }//end getConfiguredTtlHours()
 
     /**
      * Normalise an OR object (entity or array) to an array.
      *
-     * @param mixed $object
+     * @param mixed $object OR object (entity or array) to normalise.
      *
      * @return array<string,mixed>
      */
     private static function toArray(mixed $object): array
     {
-        if (is_array($object)) {
+        if (is_array($object) === true) {
             return $object;
         }
-        if (is_object($object) && method_exists($object, 'jsonSerialize')) {
+
+        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
             $serial = $object->jsonSerialize();
-            return is_array($serial) ? $serial : [];
+            if (is_array($serial) === true) {
+                return $serial;
+            }
+
+            return [];
         }
+
         return [];
     }//end toArray()
 
@@ -245,6 +262,7 @@ class BrpCacheService
         if ($register === '' || $schema === '') {
             throw new \RuntimeException('brpPersoon register/schema not configured.');
         }
+
         return [$register, $schema];
     }//end config()
 

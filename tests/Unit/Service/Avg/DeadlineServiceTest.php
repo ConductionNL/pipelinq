@@ -26,8 +26,15 @@ use DateTimeImmutable;
 use OCA\Pipelinq\Service\Avg\DeadlineService;
 use PHPUnit\Framework\TestCase;
 
+require_once __DIR__.'/AvgTestSupport.php';
+
 /**
  * Tests for DeadlineService.
+ *
+ * The base deadline maths now ADOPTS OpenRegister's canonical EU art-12(3)
+ * mechanic via OrGdprBridge: ONE MONTH from receipt for the base term and a
+ * single TWO-MONTH extension (not the earlier NL 30/60-day approximations).
+ * These tests assert the NEW (OR) behaviour.
  */
 class DeadlineServiceTest extends TestCase
 {
@@ -45,25 +52,28 @@ class DeadlineServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->service = new DeadlineService();
+        $this->service = new DeadlineService(
+            orGdpr: OrGdprBridgeFactory::build(new FakeOrGdpr())
+        );
     }//end setUp()
 
     /**
-     * The base deadline is 30 days after intake, end-of-day.
+     * The base deadline is ONE MONTH after intake (EU art-12), end-of-day.
      *
      * @return void
      */
-    public function testComputeDeadlineAdds30Days(): void
+    public function testComputeDeadlineAddsOneMonth(): void
     {
         $intake   = new DateTimeImmutable('2026-04-08T11:14:00+02:00');
         $deadline = $this->service->computeDeadline(submittedAt: $intake);
 
         $this->assertSame('2026-05-08', $deadline->format('Y-m-d'));
         $this->assertSame('23:59:59', $deadline->format('H:i:s'));
-    }//end testComputeDeadlineAdds30Days()
+    }//end testComputeDeadlineAddsOneMonth()
 
     /**
-     * The extension adds 60 days on top of the base term.
+     * The single extension adds TWO MONTHS on top of the one-month base term
+     * (EU art-12(3)): intake 2026-04-08 -> base 2026-05-08 -> extended 2026-07-08.
      *
      * @return void
      */
@@ -75,7 +85,7 @@ class DeadlineServiceTest extends TestCase
             extensionDays: DeadlineService::EXTENSION_DAYS
         );
 
-        $this->assertSame('2026-07-07', $deadline->format('Y-m-d'));
+        $this->assertSame('2026-07-08', $deadline->format('Y-m-d'));
     }//end testComputeDeadlineWithExtension()
 
     /**

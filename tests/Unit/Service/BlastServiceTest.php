@@ -36,10 +36,15 @@ use Psr\Log\LoggerInterface;
  */
 class BlastServiceTest extends TestCase
 {
+
     private ContainerInterface $container;
+
     private IAppConfig $appConfig;
+
     private SegmentService $segmentService;
+
     private LoggerInterface $logger;
+
     private object $objectService;
 
     /**
@@ -62,13 +67,20 @@ class BlastServiceTest extends TestCase
         $this->logger         = $this->createMock(LoggerInterface::class);
 
         $this->objectService = new class {
-            /** @var array<int, array<string, mixed>> */
+
+            /**
+             * @var array<int, array<string, mixed>>
+             */
             public array $saved = [];
 
-            /** @var array<string, array<string, mixed>> */
+            /**
+             * @var array<string, array<string, mixed>>
+             */
             public array $store = [];
 
-            /** @var array<int, array<string, mixed>> */
+            /**
+             * @var array<int, array<string, mixed>>
+             */
             public array $deliveries = [];
 
             /**
@@ -80,23 +92,58 @@ class BlastServiceTest extends TestCase
              *
              * @return array<string, mixed>|null Payload or null.
              */
-            public function find(string $id, $register = null, $schema = null): ?array
+            public function find(string $id, $register=null, $schema=null): ?array
             {
                 return ($this->store[$id] ?? null);
-            }
+            }//end find()
 
             /**
-             * Mock findAll() — returns delivery rows filtered by blastId
-             * and optional status / contactId.
+             * Mock findAll() — mirrors the real OR ObjectService signature
+             * (single $config array) and returns delivery rows filtered by
+             * blastId and optional status / contactId, honouring limit/offset.
              *
-             * @param array<string, mixed> $filters  Filter map.
-             * @param mixed                $register Register slug.
-             * @param mixed                $schema   Schema slug.
+             * @param array<string, mixed> $config Configuration with `filters`,
+             *                                     `limit`, `offset`.
              *
              * @return array<int, array<string, mixed>> Rows.
              */
-            public function findAll(array $filters = [], $register = null, $schema = null): array
+            public function findAll(array $config=[]): array
             {
+                $out = $this->matchDeliveries(filters: ($config['filters'] ?? []));
+
+                $offset = (int) ($config['offset'] ?? 0);
+                $limit  = $config['limit'] ?? null;
+                if ($offset > 0 || $limit !== null) {
+                    $out = array_slice($out, $offset, $limit);
+                }
+
+                return $out;
+            }//end findAll()
+
+            /**
+             * Mock count() — counts the rows the matching findAll would return,
+             * ignoring limit/offset.
+             *
+             * @param array<string, mixed> $config Configuration with `filters`.
+             *
+             * @return int
+             */
+            public function count(array $config=[]): int
+            {
+                return count($this->matchDeliveries(filters: ($config['filters'] ?? [])));
+            }//end count()
+
+            /**
+             * Filter the in-memory delivery rows by the given field filters,
+             * ignoring the OR metadata keys register/schema.
+             *
+             * @param array<string, mixed> $filters Filter map.
+             *
+             * @return array<int, array<string, mixed>> Matching rows.
+             */
+            private function matchDeliveries(array $filters): array
+            {
+                unset($filters['register'], $filters['schema']);
                 $out = [];
                 foreach ($this->deliveries as $delivery) {
                     foreach ($filters as $k => $v) {
@@ -104,10 +151,12 @@ class BlastServiceTest extends TestCase
                             continue 2;
                         }
                     }
+
                     $out[] = $delivery;
                 }
+
                 return $out;
-            }
+            }//end matchDeliveries()
 
             /**
              * Mock saveObject() — records the saved payload + writes it
@@ -120,16 +169,17 @@ class BlastServiceTest extends TestCase
              *
              * @return array<string, mixed> The saved payload.
              */
-            public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array
+            public function saveObject(array $object, $register=null, $schema=null, ?string $uuid=null): array
             {
                 if ($uuid === null || $uuid === '') {
-                    $uuid = ('saved-' . count($this->saved));
+                    $uuid = ('saved-'.count($this->saved));
                 }
-                $object['uuid'] = $uuid;
-                $this->saved[] = $object;
+
+                $object['uuid']     = $uuid;
+                $this->saved[]      = $object;
                 $this->store[$uuid] = $object;
                 return $object;
-            }
+            }//end saveObject()
         };
 
         $this->container->method('get')->willReturnCallback(
@@ -137,9 +187,10 @@ class BlastServiceTest extends TestCase
                 if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
                     return $this->objectService;
                 }
+
                 // ComplianceService and SourceService intentionally absent —
                 // BlastService should fall back to the closed-fail path.
-                throw new \RuntimeException('not registered: ' . $id);
+                throw new \RuntimeException('not registered: '.$id);
             }
         );
 
@@ -203,10 +254,11 @@ class BlastServiceTest extends TestCase
         $bCount = 0;
         $size   = 4000;
         for ($i = 0; $i < $size; $i++) {
-            if ($this->service->variantFor('contact-' . $i, 50) === 'B') {
+            if ($this->service->variantFor('contact-'.$i, 50) === 'B') {
                 $bCount++;
             }
         }
+
         $percent = ($bCount * 100.0 / $size);
         $this->assertGreaterThan(40.0, $percent, 'B share should be > 40% for a 50/50 split');
         $this->assertLessThan(60.0, $percent, 'B share should be < 60% for a 50/50 split');
@@ -225,7 +277,7 @@ class BlastServiceTest extends TestCase
             ['contactId' => 'contact-2', 'email' => 'b@example.test'],
             ['contactId' => 'contact-3', 'email' => 'c@example.test'],
         ];
-        $sliced = $this->service->sliceMembersForAb($members, 50, 'parent-blast', 'child-blast');
+        $sliced  = $this->service->sliceMembersForAb($members, 50, 'parent-blast', 'child-blast');
         $this->assertCount(3, $sliced);
         foreach ($sliced as $row) {
             $expected = $this->service->variantFor($row['member']['contactId'], 50) === 'B' ? 'child-blast' : 'parent-blast';
@@ -245,7 +297,7 @@ class BlastServiceTest extends TestCase
             ['contactId' => 'contact-1', 'email' => 'a@example.test'],
             ['contactId' => 'contact-2', 'email' => 'b@example.test'],
         ];
-        $sliced = $this->service->sliceMembersForAb($members, null, 'parent-blast', null);
+        $sliced  = $this->service->sliceMembersForAb($members, null, 'parent-blast', null);
         foreach ($sliced as $row) {
             $this->assertSame('parent-blast', $row['blastId']);
             $this->assertSame('A', $row['variant']);
@@ -262,17 +314,19 @@ class BlastServiceTest extends TestCase
     public function testSendBlastFailsClosedWhenComplianceUnavailable(): void
     {
         $blast = [
-            'uuid'      => 'blast-1',
-            'name'      => 'Q4',
-            'segmentId' => 'seg-1',
-            'templateId'=> 'tmpl-1',
-            'channel'   => 'email',
-            'status'    => 'draft',
+            'uuid'       => 'blast-1',
+            'name'       => 'Q4',
+            'segmentId'  => 'seg-1',
+            'templateId' => 'tmpl-1',
+            'channel'    => 'email',
+            'status'     => 'draft',
         ];
         $this->objectService->store['blast-1'] = $blast;
-        $this->segmentService->method('getMembersForBlast')->willReturn([
-            ['contactId' => 'c1', 'email' => 'c1@example.test'],
-        ]);
+        $this->segmentService->method('getMembersForBlast')->willReturn(
+                [
+                    ['contactId' => 'c1', 'email' => 'c1@example.test'],
+                ]
+                );
 
         $summary = $this->service->sendBlast('blast-1', false);
         $this->assertSame('skipped-no-consent', $summary['status']);
@@ -288,11 +342,11 @@ class BlastServiceTest extends TestCase
     public function testSendBlastRejectsNonDraftStatus(): void
     {
         $blast = [
-            'uuid'      => 'blast-sent',
-            'segmentId' => 'seg-1',
-            'templateId'=> 'tmpl-1',
-            'channel'   => 'email',
-            'status'    => 'sent',
+            'uuid'       => 'blast-sent',
+            'segmentId'  => 'seg-1',
+            'templateId' => 'tmpl-1',
+            'channel'    => 'email',
+            'status'     => 'sent',
         ];
         $this->objectService->store['blast-sent'] = $blast;
         $summary = $this->service->sendBlast('blast-sent', false);
@@ -360,7 +414,7 @@ class BlastServiceTest extends TestCase
             'status'    => 'sending',
         ];
         $this->objectService->store['blast-3'] = $blast;
-        $this->objectService->deliveries = [
+        $this->objectService->deliveries       = [
             ['uuid' => 'd1', 'blastId' => 'blast-3', 'contactId' => 'c1', 'status' => 'queued'],
             ['uuid' => 'd2', 'blastId' => 'blast-3', 'contactId' => 'c1', 'status' => 'sent'],
             ['uuid' => 'd3', 'blastId' => 'blast-3', 'contactId' => 'c2', 'status' => 'queued'],
@@ -375,13 +429,16 @@ class BlastServiceTest extends TestCase
             if ($row['uuid'] === 'd1') {
                 $statusForD1 = $row['status'];
             }
+
             if ($row['uuid'] === 'd2') {
                 $statusForD2 = $row['status'];
             }
+
             if ($row['uuid'] === 'd3') {
                 $statusForD3 = $row['status'];
             }
         }
+
         $this->assertSame('unsubscribed-before-send', $statusForD1);
         $this->assertNull($statusForD2, 'sent rows must not be touched');
         $this->assertNull($statusForD3, 'other contact rows must not be touched');
@@ -456,23 +513,25 @@ class BlastServiceTest extends TestCase
     public function testSendBlastQueuesCompliantSkipsNonCompliant(): void
     {
         $blast = [
-            'uuid'      => 'blast-q4',
-            'name'      => 'Q4 Outreach',
-            'segmentId' => 'seg-q4',
-            'templateId'=> 'tmpl-q4',
-            'channel'   => 'email',
-            'status'    => 'draft',
+            'uuid'       => 'blast-q4',
+            'name'       => 'Q4 Outreach',
+            'segmentId'  => 'seg-q4',
+            'templateId' => 'tmpl-q4',
+            'channel'    => 'email',
+            'status'     => 'draft',
         ];
         $this->objectService->store['blast-q4'] = $blast;
 
-        $this->segmentService->method('getMembersForBlast')->willReturn([
-            ['contactId' => 'c-yes', 'email' => 'yes@example.test'],
-            ['contactId' => 'c-no',  'email' => 'no@example.test'],
-        ]);
+        $this->segmentService->method('getMembersForBlast')->willReturn(
+                [
+                    ['contactId' => 'c-yes', 'email' => 'yes@example.test'],
+                    ['contactId' => 'c-no',  'email' => 'no@example.test'],
+                ]
+                );
 
         // Wire a ComplianceService stub via the container — c-no is in
         // the missingConsent list, c-yes passes.
-        $compliance = new class {
+        $compliance      = new class {
             public function checkSegmentCompliance(string $segmentId, string $channel): array
             {
                 return [
@@ -480,19 +539,21 @@ class BlastServiceTest extends TestCase
                     'missingConsent' => ['c-no'],
                     'missingCount'   => 1,
                 ];
-            }
+            }//end checkSegmentCompliance()
         };
-        $objectService = $this->objectService;
+        $objectService   = $this->objectService;
         $this->container = $this->createMock(ContainerInterface::class);
         $this->container->method('get')->willReturnCallback(
             function (string $id) use ($compliance, $objectService) {
                 if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
                     return $objectService;
                 }
+
                 if ($id === 'OCA\\Pipelinq\\Service\\ComplianceService') {
                     return $compliance;
                 }
-                throw new \RuntimeException('not registered: ' . $id);
+
+                throw new \RuntimeException('not registered: '.$id);
             }
         );
         $this->service = new BlastService(
@@ -551,27 +612,30 @@ class BlastServiceTest extends TestCase
         // 6 deterministic contact ids — at 50% some land in A, some in B.
         $members = [];
         for ($i = 1; $i <= 6; $i++) {
-            $members[] = ['contactId' => 'ab-' . $i, 'email' => 'ab' . $i . '@example.test'];
+            $members[] = ['contactId' => 'ab-'.$i, 'email' => 'ab'.$i.'@example.test'];
         }
+
         $this->segmentService->method('getMembersForBlast')->willReturn($members);
 
-        $compliance = new class {
+        $compliance      = new class {
             public function checkSegmentCompliance(string $segmentId, string $channel): array
             {
                 return ['compliant' => true, 'missingConsent' => [], 'missingCount' => 0];
-            }
+            }//end checkSegmentCompliance()
         };
-        $objectService = $this->objectService;
+        $objectService   = $this->objectService;
         $this->container = $this->createMock(ContainerInterface::class);
         $this->container->method('get')->willReturnCallback(
             function (string $id) use ($compliance, $objectService) {
                 if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
                     return $objectService;
                 }
+
                 if ($id === 'OCA\\Pipelinq\\Service\\ComplianceService') {
                     return $compliance;
                 }
-                throw new \RuntimeException('not registered: ' . $id);
+
+                throw new \RuntimeException('not registered: '.$id);
             }
         );
         $this->service = new BlastService(
@@ -590,11 +654,13 @@ class BlastServiceTest extends TestCase
         $this->assertGreaterThan(0, $summary['variantB']);
 
         // Variant child Blast was created with abVariantOf = parent id.
-        $variantId   = $summary['variantBlastId'];
-        $variantRow  = array_values(array_filter(
+        $variantId  = $summary['variantBlastId'];
+        $variantRow = array_values(
+                array_filter(
             $this->objectService->saved,
             fn (array $row) => ($row['uuid'] ?? null) === $variantId && isset($row['abVariantOf']),
-        ));
+        )
+                );
         $this->assertNotEmpty($variantRow);
         $this->assertSame('blast-ab', $variantRow[0]['abVariantOf']);
     }//end testSendBlastCreatesVariantChildOnAbSplit()
@@ -609,7 +675,7 @@ class BlastServiceTest extends TestCase
      */
     public function testDispatchBlastDeliveriesCallsOpenconnectorAndRespectsRateLimit(): void
     {
-        $blast = [
+        $blast    = [
             'uuid'              => 'blast-dispatch',
             'segmentId'         => 'seg-d',
             'templateId'        => 'tmpl-d',
@@ -627,7 +693,7 @@ class BlastServiceTest extends TestCase
         ];
         $this->objectService->store['blast-dispatch'] = $blast;
         $this->objectService->store['tmpl-d']         = $template;
-        $this->objectService->deliveries              = [
+        $this->objectService->deliveries = [
             ['uuid' => 'dx-1', 'blastId' => 'blast-dispatch', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
             ['uuid' => 'dx-2', 'blastId' => 'blast-dispatch', 'contactId' => 'c2', 'email' => 'c2@example.test', 'status' => 'queued'],
             ['uuid' => 'dx-3', 'blastId' => 'blast-dispatch', 'contactId' => 'c3', 'email' => 'c3@example.test', 'status' => 'queued'],
@@ -649,7 +715,10 @@ class BlastServiceTest extends TestCase
         );
 
         $sourceService = new class {
-            /** @var array<int, array<string, mixed>> */
+
+            /**
+             * @var array<int, array<string, mixed>>
+             */
             public array $calls = [];
 
             /**
@@ -663,7 +732,7 @@ class BlastServiceTest extends TestCase
             public function find(string $id): ?array
             {
                 return ['uuid' => $id, 'sendRateLimit' => 1];
-            }
+            }//end find()
 
             /**
              * Mock executeAction — captures every send-mail call and
@@ -678,34 +747,39 @@ class BlastServiceTest extends TestCase
             public function executeAction(string $sourceId, string $action, array $payload): array
             {
                 $this->calls[] = ['sourceId' => $sourceId, 'action' => $action, 'payload' => $payload];
-                return ['providerId' => 'p-' . count($this->calls)];
-            }
+                return ['providerId' => 'p-'.count($this->calls)];
+            }//end executeAction()
         };
 
-        $objectService = $this->objectService;
+        $objectService   = $this->objectService;
         $this->container = $this->createMock(ContainerInterface::class);
         $this->container->method('get')->willReturnCallback(
             function (string $id) use ($sourceService, $objectService) {
                 if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
                     return $objectService;
                 }
+
                 if ($id === 'OCA\\OpenConnector\\Service\\SourceService') {
                     return $sourceService;
                 }
-                throw new \RuntimeException('not registered: ' . $id);
+
+                throw new \RuntimeException('not registered: '.$id);
             }
         );
 
         // Use a throttle-counting subclass to assert the rate-limit hook
         // is invoked between batches without sleeping the test.
         $service = new class ($this->container, $this->appConfig, $this->segmentService, $this->logger) extends BlastService {
-            /** @var int */
+
+            /**
+             * @var integer
+             */
             public int $throttleCalls = 0;
 
             protected function throttle(float $seconds): void
             {
                 $this->throttleCalls++;
-            }
+            }//end throttle()
         };
 
         $dispatched = $service->dispatchBlastDeliveries('blast-dispatch', 100);
@@ -747,7 +821,7 @@ class BlastServiceTest extends TestCase
      */
     public function testDispatchBlastDeliveriesFailsClosedWhenSourceServiceUnavailable(): void
     {
-        $blast = [
+        $blast    = [
             'uuid'              => 'blast-no-oc',
             'segmentId'         => 'seg-no-oc',
             'templateId'        => 'tmpl-no-oc',
@@ -756,7 +830,7 @@ class BlastServiceTest extends TestCase
             'connectorSourceId' => 'oc-source-missing',
         ];
         $template = [
-            'uuid' => 'tmpl-no-oc',
+            'uuid'     => 'tmpl-no-oc',
             'bodyHtml' => '<p>{{email}}</p>',
             'bodyText' => '{{email}}',
         ];
@@ -787,9 +861,9 @@ class BlastServiceTest extends TestCase
     public function testUpdateBlastTotalsZeroesAllStatusesWhenNoDeliveries(): void
     {
         $blast = [
-            'uuid'    => 'blast-empty',
-            'status'  => 'sending',
-            'totals'  => ['sent' => 99, 'delivered' => 50],
+            'uuid'   => 'blast-empty',
+            'status' => 'sending',
+            'totals' => ['sent' => 99, 'delivered' => 50],
         ];
         $this->objectService->store['blast-empty'] = $blast;
 

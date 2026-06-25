@@ -58,10 +58,10 @@ class ZrcClient
     /**
      * Constructor.
      *
-     * @param ZgwApiClient      $api        Base transport.
-     * @param ZgwRegisterAccess $registers  Register facade.
-     * @param AcClient          $ac         Scope cache (pre-flight guards).
-     * @param LoggerInterface   $logger     PSR-3 logger.
+     * @param ZgwApiClient      $api       Base transport.
+     * @param ZgwRegisterAccess $registers Register facade.
+     * @param AcClient          $ac        Scope cache (pre-flight guards).
+     * @param LoggerInterface   $logger    PSR-3 logger.
      */
     public function __construct(
         private ZgwApiClient $api,
@@ -70,7 +70,6 @@ class ZrcClient
         private LoggerInterface $logger,
     ) {
     }//end __construct()
-
 
     /**
      * Create a zaak (POST /zaken) and persist a ZgwResourceMapping.
@@ -91,8 +90,8 @@ class ZrcClient
      */
     public function createZaak(array $endpoint, array $zaakData, string $pipelinqRequestId): array
     {
-        $client = $this->requireClient($endpoint);
-        $zrcUrl = $this->requireComponentUrl($endpoint, 'zrc');
+        $client = $this->requireClient(endpoint: $endpoint);
+        $zrcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
 
         $zaaktypeUrl = (string) ($zaakData['zaaktype'] ?? '');
         if ($zaaktypeUrl !== '') {
@@ -109,7 +108,7 @@ class ZrcClient
 
         $url  = (string) ($response['headers']['location'] ?? $response['body']['url'] ?? '');
         $etag = (string) ($response['headers']['etag'] ?? '');
-        $uuid = self::extractUuid($url);
+        $uuid = self::extractUuid(url: $url);
 
         $mapping = [
             'pipelinqEntiteit'      => 'request',
@@ -125,7 +124,6 @@ class ZrcClient
         $saved = $this->registers->save(ZgwRegisterAccess::SCHEMA_MAPPING, $mapping);
         return $saved ?? $mapping;
     }//end createZaak()
-
 
     /**
      * GET a zaak and refresh the cached ETag.
@@ -143,7 +141,8 @@ class ZrcClient
         if ($url === '') {
             throw new ZgwException('ZGW: mapping has no zgwUrl');
         }
-        $client = $this->requireClient($endpoint);
+
+        $client = $this->requireClient(endpoint: $endpoint);
 
         $response = $this->api->callComponent(
             componentUrl: $url,
@@ -154,14 +153,13 @@ class ZrcClient
 
         $etag = (string) ($response['headers']['etag'] ?? '');
         if ($etag !== '' && isset($mapping['@self']['uuid']) === true) {
-            $this->saveEtag($mapping, $etag);
-        } elseif ($etag !== '' && isset($mapping['id']) === true) {
-            $this->saveEtag($mapping, $etag);
+            $this->saveEtag(mapping: $mapping, etag: $etag);
+        } else if ($etag !== '' && isset($mapping['id']) === true) {
+            $this->saveEtag(mapping: $mapping, etag: $etag);
         }
 
         return $response['body'];
     }//end getZaak()
-
 
     /**
      * PATCH a zaak with optimistic concurrency.
@@ -183,14 +181,18 @@ class ZrcClient
     {
         $url    = (string) ($mapping['zgwUrl'] ?? '');
         $etag   = (string) ($mapping['etag'] ?? '');
-        $client = $this->requireClient($endpoint);
+        $client = $this->requireClient(endpoint: $endpoint);
 
         $zaaktypeUrl = (string) ($mapping['zaaktype'] ?? $updates['zaaktype'] ?? '');
         if ($zaaktypeUrl !== '') {
             $this->ac->require($endpoint, $zaaktypeUrl, self::SCOPE_BIJWERK);
         }
 
-        $extraHeaders = ($etag !== '') ? ['If-Match' => $etag] : [];
+        if ($etag !== '') {
+            $extraHeaders = ['If-Match' => $etag];
+        } else {
+            $extraHeaders = [];
+        }
 
         try {
             $response = $this->api->callComponent(
@@ -204,25 +206,30 @@ class ZrcClient
         } catch (OptimisticLockException) {
             $fresh = [];
             try {
-                $fresh = $this->getZaak($endpoint, $mapping);
+                $fresh = $this->getZaak(endpoint: $endpoint, mapping: $mapping);
             } catch (Throwable) {
-                // best effort — fresh representation may be empty.
+                // Best effort — fresh representation may be empty.
             }
+
             throw new OptimisticLockException(
                 message: sprintf('ZGW: optimistic lock failure on zaak %s', $url),
                 staleRepresentation: $updates,
                 freshRepresentation: $fresh,
-                conflictingField: self::diffField($updates, $fresh)
+                conflictingField: self::diffField(local: $updates, remote: $fresh)
             );
-        }
+        }//end try
 
         $newEtag = (string) ($response['headers']['etag'] ?? '');
         $mapping['laatsteSynchronisatie'] = self::nowIso();
-        $mapping['etag'] = ($newEtag !== '') ? $newEtag : $etag;
-        $this->saveEtag($mapping, $mapping['etag']);
+        if ($newEtag !== '') {
+            $mapping['etag'] = $newEtag;
+        } else {
+            $mapping['etag'] = $etag;
+        }
+
+        $this->saveEtag(mapping: $mapping, etag: $mapping['etag']);
         return $mapping;
     }//end updateZaak()
-
 
     /**
      * Append a status to a zaak.
@@ -235,8 +242,8 @@ class ZrcClient
      */
     public function addStatus(array $endpoint, array $zaakMap, array $statusData): string
     {
-        $client = $this->requireClient($endpoint);
-        $zrcUrl = $this->requireComponentUrl($endpoint, 'zrc');
+        $client = $this->requireClient(endpoint: $endpoint);
+        $zrcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
 
         $body = array_merge(
             ['zaak' => (string) ($zaakMap['zgwUrl'] ?? '')],
@@ -254,7 +261,6 @@ class ZrcClient
         return (string) ($response['headers']['location'] ?? $response['body']['url'] ?? '');
     }//end addStatus()
 
-
     /**
      * GET a status by URL (used by NRC dispatcher).
      *
@@ -265,7 +271,7 @@ class ZrcClient
      */
     public function getStatus(array $endpoint, string $statusUrl): array
     {
-        $client = $this->requireClient($endpoint);
+        $client   = $this->requireClient(endpoint: $endpoint);
         $response = $this->api->callComponent(
             componentUrl: $statusUrl,
             method: 'GET',
@@ -275,7 +281,6 @@ class ZrcClient
         return $response['body'];
     }//end getStatus()
 
-
     /**
      * Idempotently link a pipelinq Contact to a zaak as a rol.
      *
@@ -283,10 +288,10 @@ class ZrcClient
      * 2. Otherwise POST /rollen with the appropriate identification (inpBsn
      *    for natural persons, innNnpId for organisations).
      *
-     * @param array<string, mixed> $endpoint    ZgwEndpoint payload.
-     * @param array<string, mixed> $zaakMap     ZgwResourceMapping for the parent zaak.
-     * @param array<string, mixed> $contact     Pipelinq Contact payload.
-     * @param string               $roltypeUrl  Roltype URL (from ZtcClient::resolveRoltype).
+     * @param array<string, mixed> $endpoint       ZgwEndpoint payload.
+     * @param array<string, mixed> $zaakMap        ZgwResourceMapping for the parent zaak.
+     * @param array<string, mixed> $contact        Pipelinq Contact payload.
+     * @param string               $roltypeUrl     Roltype URL (from ZtcClient::resolveRoltype).
      * @param string               $roltoelichting Free-text role description.
      *
      * @return string Rol URL (existing or newly created).
@@ -296,12 +301,12 @@ class ZrcClient
         array $zaakMap,
         array $contact,
         string $roltypeUrl,
-        string $roltoelichting = 'Initiator',
+        string $roltoelichting='Initiator',
     ): string {
-        $client       = $this->requireClient($endpoint);
-        $zrcUrl       = $this->requireComponentUrl($endpoint, 'zrc');
-        $zaakUrl      = (string) ($zaakMap['zgwUrl'] ?? '');
-        [$betrType, $ident] = self::contactIdentification($contact);
+        $client  = $this->requireClient(endpoint: $endpoint);
+        $zrcUrl  = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
+        $zaakUrl = (string) ($zaakMap['zgwUrl'] ?? '');
+        [$betrType, $ident] = self::contactIdentification(contact: $contact);
 
         // Pre-flight: list existing rollen on the zaak.
         try {
@@ -312,14 +317,15 @@ class ZrcClient
                 client: $client,
                 query: ['zaak' => $zaakUrl, 'betrokkeneType' => $betrType]
             );
-            $rows = $existing['body']['results'] ?? $existing['body'];
+            $rows     = $existing['body']['results'] ?? $existing['body'];
             if (is_array($rows) === true) {
                 foreach ($rows as $row) {
                     if (is_array($row) === false) {
                         continue;
                     }
+
                     $hit = $row['betrokkeneIdentificatie'] ?? [];
-                    if (is_array($hit) === true && self::identMatches($hit, $ident) === true) {
+                    if (is_array($hit) === true && self::identMatches(a: $hit, b: $ident) === true) {
                         $url = (string) ($row['url'] ?? '');
                         if ($url !== '') {
                             return $url;
@@ -332,14 +338,14 @@ class ZrcClient
                 'ZGW ZRC: linkInitiator GET /rollen failed (will fall through to POST)',
                 ['err' => $e->getMessage()]
             );
-        }
+        }//end try
 
         $body = [
-            'zaak'                     => $zaakUrl,
-            'betrokkeneType'           => $betrType,
-            'betrokkeneIdentificatie'  => $ident,
-            'roltype'                  => $roltypeUrl,
-            'roltoelichting'           => $roltoelichting,
+            'zaak'                    => $zaakUrl,
+            'betrokkeneType'          => $betrType,
+            'betrokkeneIdentificatie' => $ident,
+            'roltype'                 => $roltypeUrl,
+            'roltoelichting'          => $roltoelichting,
         ];
 
         $response = $this->api->callComponent(
@@ -352,7 +358,6 @@ class ZrcClient
 
         return (string) ($response['headers']['location'] ?? $response['body']['url'] ?? '');
     }//end linkInitiator()
-
 
     /**
      * Translate a pipelinq Contact into ZGW betrokkeneType + identification map.
@@ -367,17 +372,18 @@ class ZrcClient
         if ($bsn !== '') {
             return ['natuurlijk_persoon', ['inpBsn' => $bsn]];
         }
+
         $rsin = (string) ($contact['rsin'] ?? $contact['kvk'] ?? '');
         if ($rsin !== '') {
             return ['niet_natuurlijk_persoon', ['innNnpId' => $rsin]];
         }
+
         // Fallback — register the contact as an organisation with their display name only.
         return [
             'niet_natuurlijk_persoon',
             ['statutaireNaam' => (string) ($contact['naam'] ?? $contact['name'] ?? 'Onbekend')],
         ];
     }//end contactIdentification()
-
 
     /**
      * Persist a refreshed ETag back to the OR `zgwResourceMapping` row.
@@ -392,15 +398,16 @@ class ZrcClient
         if ($etag === '') {
             return;
         }
+
         $uuid = (string) ($mapping['@self']['uuid'] ?? $mapping['id'] ?? '');
         if ($uuid === '') {
             return;
         }
-        $mapping['etag']                  = $etag;
+
+        $mapping['etag'] = $etag;
         $mapping['laatsteSynchronisatie'] = self::nowIso();
         $this->registers->save(ZgwRegisterAccess::SCHEMA_MAPPING, $mapping, $uuid);
     }//end saveEtag()
-
 
     /**
      * Resolve and return the ZgwClient for an endpoint, raising on miss.
@@ -415,15 +422,17 @@ class ZrcClient
     {
         $client = $this->registers->findClientForEndpoint($endpoint);
         if ($client === null) {
-            throw new ZgwException(sprintf(
+            throw new ZgwException(
+                    sprintf(
                 'ZGW: ZgwEndpoint "%s" references unknown clientId "%s"',
                 (string) ($endpoint['id'] ?? '?'),
                 (string) ($endpoint['clientId'] ?? '?')
-            ));
+            )
+                    );
         }
+
         return $client;
     }//end requireClient()
-
 
     /**
      * Return the URL for a named component, raising on miss.
@@ -441,9 +450,9 @@ class ZrcClient
         if ($url === '') {
             throw new ZgwException(sprintf('ZGW: endpoint missing "%s" component URL', $key));
         }
+
         return $url;
     }//end requireComponentUrl()
-
 
     /**
      * Compare two identification maps.
@@ -460,9 +469,9 @@ class ZrcClient
                 return true;
             }
         }
+
         return false;
     }//end identMatches()
-
 
     /**
      * Find the first field that differs between $local and $remote.
@@ -479,9 +488,9 @@ class ZrcClient
                 return (string) $key;
             }
         }
+
         return '';
     }//end diffField()
-
 
     /**
      * Extract the trailing UUID from a ZGW URL.
@@ -495,10 +504,19 @@ class ZrcClient
         if ($url === '') {
             return '';
         }
-        $tail = basename(parse_url($url, PHP_URL_PATH) ?: '');
-        return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $tail) === 1 ? $tail : '';
-    }//end extractUuid()
 
+        $path = parse_url($url, PHP_URL_PATH);
+        if ($path === false || $path === null || $path === '') {
+            $path = '';
+        }
+
+        $tail = basename($path);
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $tail) === 1) {
+            return $tail;
+        }
+
+        return '';
+    }//end extractUuid()
 
     /**
      * Current ISO 8601 timestamp (UTC).
@@ -509,6 +527,4 @@ class ZrcClient
     {
         return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
     }//end nowIso()
-
-
 }//end class

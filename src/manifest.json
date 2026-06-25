@@ -9,6 +9,45 @@
 		"timemanager",
 		"forms"
 	],
+	"setup": {
+		"enabled": true,
+		"version": 1,
+		"completionConfigKey": "setup_completed_version",
+		"steps": [
+			{ "id": "welcome", "type": "info", "title": "Welcome to Pipelinq", "body": "A few quick choices to get your CRM, pipeline and service desk ready. Only the reporting currency is required — everything else is optional and can be changed later in the admin settings." },
+			{ "id": "currency", "type": "choice", "title": "Reporting currency", "required": true, "configKey": "currency", "body": "Used to format revenue, forecast and pipeline amounts across dashboards and reports.", "options": [ { "value": "EUR", "label": "Euro (EUR)" }, { "value": "USD", "label": "US Dollar (USD)" }, { "value": "GBP", "label": "Pound Sterling (GBP)" }, { "value": "CHF", "label": "Swiss Franc (CHF)" } ] },
+			{ "id": "provision", "type": "run-action", "title": "Provision data", "action": "provision-register", "body": "Create the Pipelinq OpenRegister register and schemas, plus the default sales pipeline and stages, service queues, agent skills, lead sources and request channels. This normally runs automatically on install; run it here if OpenRegister was enabled after Pipelinq, or to repair a partial install. It is safe to run more than once." },
+			{ "id": "organisation", "type": "config-fields", "title": "Organisation", "body": "Your organisation details, printed on POS receipts and shown on reports. Optional — leave blank to skip.", "schema": { "type": "object", "properties": { "receipt_company_name": { "type": "string", "title": "Organisation name" }, "receipt_company_vat": { "type": "string", "title": "VAT number" }, "receipt_company_kvk": { "type": "string", "title": "Chamber of Commerce (KvK) number" } } } },
+			{ "id": "integrations", "type": "config-fields", "title": "Integrations", "body": "Optional connections to other Conduction apps. Set the Shillinq base URL to surface recurring-revenue metrics and route billing/ledger entries; set the XWiki URL to embed the knowledge base. Leave blank to disable.", "schema": { "type": "object", "properties": { "shillinq_app_url": { "type": "string", "title": "Shillinq base URL" }, "xwiki_direct_url": { "type": "string", "title": "XWiki base URL" } } } },
+			{ "id": "done", "type": "summary", "title": "All set", "healthCheck": true, "body": "Pipelinq is ready. Head to the Dashboard or Leads to get started." }
+		]
+	},
+	"walkthrough": {
+		"enabled": true,
+		"version": 1,
+		"completionConfigKey": "walkthrough_seen_version",
+		"tours": [
+			{
+				"id": "pipelinq:getting-started",
+				"title": "Getting started",
+				"trigger": "first-visit",
+				"minAppVersion": "1.0.0",
+				"steps": [
+					{ "id": "welcome", "placement": "center", "sinceVersion": "1.0.0", "title": "Welcome to Pipelinq", "body": "Let's walk the core sales journey together — from a product to a billed contract. You'll create each record yourself, in your own workspace.", "target": { "kind": "page", "ref": "Products" }, "advanceOn": { "type": "manual" } },
+					{ "id": "go-products", "sinceVersion": "1.0.0", "placement": "right", "body": "First, your catalogue. Open Products from the menu.", "task": "Click Products in the menu", "target": { "kind": "nav-item", "ref": "Products" }, "advanceOn": { "type": "route-match", "route": "Products" } },
+					{ "id": "create-product", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the product or service you sell — we'll put it on the quotation later.", "task": "Click New and save a product", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "product", "capture": { "productId": ":id" } } },
+					{ "id": "go-contacts", "sinceVersion": "1.0.0", "placement": "right", "body": "Now the customer. Open Contacts.", "task": "Click Contacts in the menu", "target": { "kind": "nav-item", "ref": "Contacts" }, "advanceOn": { "type": "route-match", "route": "Contacts" } },
+					{ "id": "create-contact", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the person or organisation you're selling to.", "task": "Click New and save a contact", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "contact", "capture": { "contactId": ":id" } } },
+					{ "id": "go-leads", "sinceVersion": "1.0.0", "placement": "right", "body": "A lead is a sales opportunity. Open Leads.", "task": "Click Leads in the menu", "target": { "kind": "nav-item", "ref": "Leads" }, "advanceOn": { "type": "route-match", "route": "Leads" } },
+					{ "id": "create-lead", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Create a lead for this opportunity and link the contact you just made.", "task": "Click New and save a lead", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "lead", "capture": { "leadId": ":id" } } },
+					{ "id": "move-pipeline", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "The pipeline shows every lead by stage. Drag your lead forward as it progresses.", "task": "Open the Pipeline and move your lead to the next stage", "target": { "kind": "element", "ref": "pipeline-board" }, "advanceOn": { "type": "manual" } },
+					{ "id": "create-quote", "sinceVersion": "1.0.0", "placement": "right", "allowManualNext": true, "body": "Quote the lead. In Pipelinq a signable quotation IS the contract — one record, no duplication.", "task": "Open Contracts and create a quotation", "target": { "kind": "nav-item", "ref": "Contracts" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "contract", "capture": { "contractId": ":id" } } },
+					{ "id": "quote-is-contract", "sinceVersion": "1.0.0", "placement": "center", "title": "Your quote is the contract", "body": "Once the customer signs the quotation it becomes the contract automatically — the same record carries the agreed lines, price and signature.", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" } },
+					{ "id": "send-to-shillinq", "sinceVersion": "1.0.0", "placement": "center", "title": "Send it for billing", "body": "Finally, hand the signed contract to Shillinq for invoicing and ledger posting — that closes the loop from product to paid.", "task": "Continue in Shillinq to invoice this contract", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" }, "handoff": { "app": "Shillinq", "url": "/index.php/apps/shillinq/" } }
+				]
+			}
+		]
+	},
 	"observability": {
 		"health": {
 			"checks": [
@@ -66,7 +105,7 @@
 		{
 			"id": "OperationalDashboard",
 			"label": "Operational",
-			"icon": "icon-category-monitoring",
+			"icon": "icon-category-dashboard",
 			"route": "OperationalDashboard",
 			"order": 15
 		},
@@ -159,7 +198,6 @@
 			"label": "POS medewerkers",
 			"icon": "icon-user",
 			"route": "PosStaffList",
-			"section": "settings",
 			"order": 70
 		},
 		{
@@ -167,7 +205,6 @@
 			"label": "POS rollen",
 			"icon": "icon-rename",
 			"route": "PosRoleList",
-			"section": "settings",
 			"order": 71
 		},
 		{
@@ -197,21 +234,15 @@
 		},
 		{
 			"id": "Catalog",
-			"label": "Catalog",
+			"label": "Product catalog",
 			"icon": "icon-category-app-bundles",
 			"order": 92
 		},
 		{
 			"id": "AnalyticsGroup",
-			"label": "Analytics",
+			"label": "Reports & Compliance",
 			"icon": "icon-category-monitoring",
 			"order": 150
-		},
-		{
-			"id": "Administration",
-			"label": "Administration",
-			"icon": "icon-settings",
-			"order": 200
 		},
 		{
 			"id": "Pipeline",
@@ -254,14 +285,12 @@
 			"label": "Pipelines",
 			"icon": "icon-category-organization",
 			"route": "Pipelines",
-			"section": "settings",
 			"order": 200
 		},
 		{
 			"id": "SettingsIntegrationsCaption",
 			"label": "Integrations",
 			"type": "caption",
-			"section": "settings",
 			"order": 205
 		},
 		{
@@ -269,24 +298,7 @@
 			"label": "BI export",
 			"icon": "icon-category-integration",
 			"route": "ExportJobs",
-			"section": "settings",
 			"order": 215
-		},
-		{
-			"id": "StufEndpoints",
-			"label": "StUF endpoints",
-			"icon": "icon-category-integration",
-			"route": "StufEndpoints",
-			"section": "settings",
-			"order": 216
-		},
-		{
-			"id": "StufAuditLog",
-			"label": "StUF audit log",
-			"icon": "icon-category-monitoring",
-			"route": "StufAuditLog",
-			"section": "settings",
-			"order": 217
 		},
 		{
 			"id": "FeaturesRoadmapMenu",
@@ -297,11 +309,32 @@
 			"order": 230
 		},
 		{
-			"id": "BillingApproval",
+			"id": "TimesheetApproval",
 			"label": "Timesheet approval",
 			"icon": "icon-category-monitoring",
-			"href": "/index.php/apps/shillinq/",
+			"href": "/index.php/apps/hrmq/timesheets/approval",
 			"order": 218
+		},
+		{
+			"id": "Expenses",
+			"label": "Expenses",
+			"icon": "icon-toggle",
+			"href": "/index.php/apps/hrmq/expenses",
+			"order": 219
+		},
+		{
+			"id": "SettingsHelpCaption",
+			"label": "Help",
+			"type": "caption",
+			"order": 240
+		},
+		{
+			"id": "RestartTutorial",
+			"label": "Restart tutorial",
+			"icon": "icon-play",
+			"action": "replay-walkthrough",
+			"tourId": "pipelinq:getting-started",
+			"order": 241
 		}
 	],
 	"pages": [
@@ -329,54 +362,39 @@
 					]
 				},
 				"widgets": [
-					{ "id": "revenue",            "type": "custom", "title": "Revenue" },
-					{ "id": "won-value",          "type": "custom", "title": "Won Value" },
-					{ "id": "win-rate",           "type": "custom", "title": "Win Rate" },
-					{ "id": "avg-deal",           "type": "custom", "title": "Avg Deal Size" },
-					{ "id": "weighted-forecast",  "type": "custom", "title": "Weighted Forecast" },
-					{ "id": "open-pipeline",      "type": "custom", "title": "Open Pipeline" },
-					{ "id": "mrr",                "type": "custom", "title": "Recurring revenue (MRR)" },
-						{ "id": "renewals-due",       "type": "custom", "title": "Renewals due" },
-						{ "id": "revenue-over-time",  "type": "custom", "title": "Revenue over time" },
-					{ "id": "pipeline-by-stage",  "type": "custom", "title": "Pipeline by stage" },
-					{ "id": "revenue-by-category", "type": "custom", "title": "Revenue by product category" },
-					{ "id": "top-customers",      "type": "custom", "title": "Top customers by revenue" },
-					{ "id": "closing-soon",       "type": "custom", "title": "Deals closing soon" },
-					{ "id": "recently-won-lost",  "type": "custom", "title": "Recently won / lost" }
+					{ "id": "revenue",            "type": "stat", "title": "Revenue", "content": { "label": "Revenue", "route": { "name": "Leads" }, "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
+					{ "id": "won-value",          "type": "stat", "title": "Won Value", "content": { "label": "Won Value", "route": { "name": "Leads" }, "icon": "Trophy", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
+					{ "id": "win-rate",           "type": "stat", "title": "Win Rate", "content": { "label": "Win Rate", "route": { "name": "Leads" }, "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "source": { "kind": "ratio", "register": "pipelinq", "schema": "lead", "metric": "count", "numerator": { "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } }, "denominator": { "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } } },
+					{ "id": "weighted-forecast",  "type": "stat", "title": "Weighted Forecast", "content": { "label": "Weighted Forecast", "route": { "name": "Leads" }, "icon": "ChartLine", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "kind": "weighted", "register": "pipelinq", "schema": "lead", "field": "value", "weightField": "probability", "divisor": 100, "filter": { "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } } } },
+					{ "id": "mrr",                "type": "stat", "title": "Recurring revenue", "requiresApp": "shillinq", "content": { "label": "Recurring revenue (run-rate)", "route": { "name": "Contracts" }, "icon": "Repeat", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "shillinq", "schema": "SalesOrderLine", "metric": "sum", "field": "maandWaarde", "filter": { "nature": "RECURRING" } } } },
+						{ "id": "total-leads",        "type": "stats-block", "title": "Total Leads", "props": { "countLabel": "leads", "variant": "primary" }, "dataSource": { "register": "pipelinq", "schema": "lead", "aggregate": "count" } },
+						{ "id": "revenue-over-time", "type": "chart", "title": "Revenue over time", "content": { "chartKind": "area", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "bucket": { "field": "expectedCloseDate", "interval": "month", "metric": "sum", "metricField": "value" } } } },
+					{ "id": "pipeline-by-stage",  "type": "chart", "title": "Pipeline by stage", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "stage", "metric": "sum", "metricField": "value", "sort": "desc" } } } },
+					{ "id": "revenue-by-category", "type": "chart", "title": "Revenue by source", "content": { "chartKind": "donut", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "source", "metric": "sum", "metricField": "value", "sort": "desc" } } } },
+					{ "id": "top-customers",      "type": "chart", "title": "Top customers by revenue", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "groupBy": { "field": "client", "metric": "sum", "metricField": "value", "sort": "desc", "limit": 5 } } } },
+					{ "id": "closing-soon",       "type": "object-list", "title": "Deals closing soon", "content": { "register": "pipelinq", "schema": "lead", "filter": { "status": "open" }, "sort": { "field": "expectedCloseDate", "dir": "asc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "value", "label": "Value" }, { "key": "stage", "label": "Stage" }] } },
+					{ "id": "recently-won-lost",  "type": "object-list", "title": "Recently won / lost", "content": { "register": "pipelinq", "schema": "lead", "filter": {}, "sort": { "field": "expectedCloseDate", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Deal" }, { "key": "status", "label": "Status" }, { "key": "value", "label": "Value" }] } },
+						{ "id": "pipeline-coverage", "type": "gauge", "title": "Pipeline coverage", "content": { "label": "Open pipeline vs target", "route": { "name": "Pipeline" }, "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "status": "open" } }, "target": { "kind": "static", "value": 500000 }, "thresholds": { "warn": 60, "danger": 90, "invert": true } } },
+						{ "id": "won-vs-open",        "type": "delta", "title": "Won vs open", "content": { "label": "Won deals", "route": { "name": "Pipeline" }, "icon": "Trophy", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "goodDirection": "up", "current": { "filter": { "status": "won", "expectedCloseDate": { "gte": "@workspace.dateFrom?", "lte": "@workspace.dateTo?" } } }, "previous": { "filter": { "status": "open" } } } } }
 				],
 				"layout": [
-					{ "id": "c1",  "widgetId": "revenue",            "gridX": 0,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c2",  "widgetId": "won-value",          "gridX": 4,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 8,  "gridY": 0,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c4",  "widgetId": "avg-deal",           "gridX": 0,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c5",  "widgetId": "weighted-forecast",  "gridX": 4,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c6",  "widgetId": "open-pipeline",      "gridX": 8,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "c16", "widgetId": "pipeline-coverage",  "gridX": 0,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c5",  "widgetId": "weighted-forecast",  "gridX": 3,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c1",  "widgetId": "revenue",            "gridX": 6,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c13", "widgetId": "mrr",                "gridX": 9,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c17", "widgetId": "won-vs-open",        "gridX": 0,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c2",  "widgetId": "won-value",          "gridX": 4,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 8,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
 					{ "id": "c7",  "widgetId": "revenue-over-time",   "gridX": 0,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c8",  "widgetId": "pipeline-by-stage",   "gridX": 6,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c9",  "widgetId": "revenue-by-category",  "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c10", "widgetId": "top-customers",        "gridX": 6,  "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c11", "widgetId": "closing-soon",       "gridX": 0,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
 					{ "id": "c12", "widgetId": "recently-won-lost",  "gridX": 6,  "gridY": 12, "gridWidth": 6,  "gridHeight": 4 },
-					{ "id": "c13", "widgetId": "mrr",                "gridX": 0,  "gridY": 16, "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
-					{ "id": "c14", "widgetId": "renewals-due",       "gridX": 4,  "gridY": 16, "gridWidth": 6,  "gridHeight": 4 }
+					{ "id": "c15", "widgetId": "total-leads",       "gridX": 0,  "gridY": 16, "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true }
 				]
 			},
-			"slots": {
-				"widget-revenue": "RevenueKpiWidget",
-				"widget-won-value": "WonValueKpiWidget",
-				"widget-win-rate": "WinRateKpiWidget",
-				"widget-avg-deal": "AvgDealSizeKpiWidget",
-				"widget-weighted-forecast": "WeightedForecastKpiWidget",
-				"widget-open-pipeline": "OpenPipelineKpiWidget",
-				"widget-revenue-over-time": "RevenueOverTimeChartWidget",
-				"widget-pipeline-by-stage": "PipelineByStageChartWidget",
-				"widget-revenue-by-category": "RevenueByCategoryChartWidget",
-				"widget-top-customers": "TopCustomersChartWidget",
-				"widget-closing-soon": "ClosingSoonWidget",
-				"widget-recently-won-lost": "RecentlyWonLostWidget",
-				"widget-mrr": "MrrKpiWidget",
-				"widget-renewals-due": "RenewalsDueWidget"
-			}
+			"slots": {}
 		},
 		{
 			"id": "OperationalDashboard",
@@ -402,24 +420,24 @@
 					]
 				},
 				"widgets": [
-					{ "id": "open-leads",            "type": "custom", "title": "Open Leads" },
-					{ "id": "open-requests",         "type": "custom", "title": "Open Requests" },
-					{ "id": "pipeline-value",        "type": "custom", "title": "Pipeline Value" },
-					{ "id": "overdue",               "type": "custom", "title": "Overdue" },
-					{ "id": "lead-conversion",       "type": "custom", "title": "Lead Conversion Rate" },
+					{ "id": "open-leads",            "type": "stat", "title": "Open Leads", "content": { "label": "Open Leads", "icon": "FilterVariant", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open" } } } },
+					{ "id": "open-requests",         "type": "stat", "title": "Requests", "content": { "label": "Requests", "icon": "ClipboardList", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "request", "metric": "count", "filter": {} } } },
+					{ "id": "pipeline-value",        "type": "stat", "title": "Pipeline Value", "content": { "label": "Pipeline Value", "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": {} } } },
+					{ "id": "overdue",               "type": "stat", "title": "Overdue", "content": { "label": "Overdue", "icon": "ScaleBalance", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open", "expectedCloseDate": { "lt": "@today" } } } } },
+					{ "id": "lead-conversion",       "type": "stat", "title": "Lead Conversion Rate", "content": { "label": "Lead Conversion Rate", "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "source": { "kind": "ratio", "register": "pipelinq", "schema": "lead", "metric": "count", "numerator": { "filter": { "status": "won" } }, "denominator": { "filter": {} } } } },
 					{ "id": "avg-resolution",        "type": "custom", "title": "Avg Request Resolution" },
-					{ "id": "contact-volume",        "type": "custom", "title": "Contact Moment Volume" },
+					{ "id": "contact-volume",        "type": "stat", "title": "Contact Moment Volume", "content": { "label": "Contacts", "icon": "Account", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "contact", "metric": "count", "filter": {} } } },
 					{ "id": "satisfaction",          "type": "custom", "title": "Customer Satisfaction" },
-					{ "id": "leads-over-time",       "type": "custom", "title": "Leads over time" },
-					{ "id": "requests-by-category",  "type": "custom", "title": "Requests by category" },
-					{ "id": "requests-by-status",    "type": "custom", "title": "Requests by Status" },
-					{ "id": "complaints",            "type": "custom", "title": "Complaints" },
-					{ "id": "my-work",               "type": "custom", "title": "My Work" },
-					{ "id": "client-overview",       "type": "custom", "title": "Client Overview" },
+					{ "id": "leads-over-time",       "type": "chart", "title": "Leads over time", "content": { "chartKind": "area", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "bucket": { "field": "expectedCloseDate", "interval": "month", "metric": "count" } } } },
+					{ "id": "requests-by-category",  "type": "chart", "title": "Requests by category", "content": { "chartKind": "donut", "dataSource": { "register": "pipelinq", "schema": "request", "filter": {}, "groupBy": { "field": "category", "metric": "count", "sort": "desc" } } } },
+					{ "id": "requests-by-status",    "type": "chart", "title": "Requests by Status", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "request", "filter": {}, "groupBy": { "field": "status", "metric": "count", "sort": "desc" } } } },
+					{ "id": "complaints",            "type": "object-list", "title": "Complaints", "content": { "register": "pipelinq", "schema": "complaint", "filter": {}, "sort": { "field": "priority", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Complaint" }, { "key": "status", "label": "Status" }, { "key": "priority", "label": "Priority" }] } },
+					{ "id": "my-work",               "type": "object-list", "title": "My Work", "content": { "register": "pipelinq", "schema": "lead", "filter": { "assignee": "@me" }, "sort": { "field": "expectedCloseDate", "dir": "asc" }, "limit": 6, "columns": [{ "key": "title", "label": "Lead" }, { "key": "priority", "label": "Priority" }, { "key": "stage", "label": "Stage" }] } },
+					{ "id": "client-overview",       "type": "object-list", "title": "Client Overview", "content": { "register": "pipelinq", "schema": "client", "filter": {}, "sort": { "field": "name", "dir": "asc" }, "limit": 6, "columns": [{ "key": "name", "label": "Client" }, { "key": "type", "label": "Type" }, { "key": "industry", "label": "Industry" }] } },
 					{ "id": "billing-categories",    "type": "custom", "title": "Hours by billing category" },
 					{ "id": "navi-analytics",        "type": "custom", "title": "Ask Navi" },
 					{ "id": "report-export",         "type": "custom", "title": "Report Export" },
-					{ "id": "xwiki-knowledge",       "type": "custom", "title": "Knowledge base" }
+					{ "id": "xwiki-knowledge",       "type": "integration", "integrationId": "xwiki", "title": "Knowledge base" }
 				],
 				"layout": [
 					{ "id": "1",  "widgetId": "open-leads",            "gridX": 0, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
@@ -427,9 +445,9 @@
 					{ "id": "3",  "widgetId": "pipeline-value",        "gridX": 6, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
 					{ "id": "4",  "widgetId": "overdue",               "gridX": 9, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
 					{ "id": "14", "widgetId": "lead-conversion",       "gridX": 0, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "15", "widgetId": "avg-resolution",        "gridX": 3, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "15", "widgetId": "avg-resolution",        "gridX": 3, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
 					{ "id": "16", "widgetId": "contact-volume",        "gridX": 6, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "17", "widgetId": "satisfaction",          "gridX": 9, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "17", "widgetId": "satisfaction",          "gridX": 9, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
 					{ "id": "18", "widgetId": "leads-over-time",       "gridX": 0, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "19", "widgetId": "requests-by-category",  "gridX": 6, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "5",  "widgetId": "requests-by-status",    "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4 },
@@ -443,24 +461,11 @@
 				]
 			},
 			"slots": {
-				"widget-open-leads": "OpenLeadsKpiWidget",
-				"widget-open-requests": "OpenRequestsKpiWidget",
-				"widget-pipeline-value": "PipelineValueKpiWidget",
-				"widget-overdue": "OverdueKpiWidget",
-				"widget-lead-conversion": "LeadConversionKpiWidget",
 				"widget-avg-resolution": "AvgResolutionKpiWidget",
-				"widget-contact-volume": "ContactVolumeKpiWidget",
 				"widget-satisfaction": "SatisfactionKpiWidget",
-				"widget-leads-over-time": "LeadsOverTimeChartWidget",
-				"widget-requests-by-category": "RequestsByCategoryChartWidget",
-				"widget-requests-by-status": "RequestsByStatusWidget",
-				"widget-complaints": "ComplaintsWidget",
-				"widget-my-work": "MyWorkWidget",
-				"widget-client-overview": "ClientOverviewWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
-				"widget-report-export": "ReportExportPanel",
-				"widget-xwiki-knowledge": "XWikiDashboardWidget"
+				"widget-report-export": "ReportExportPanel"
 			}
 		},
 		{
@@ -471,6 +476,12 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"createOverride": "createClientContactAware",
+				"fieldOverrides": {
+					"name": { "readOnly": false },
+					"email": { "readOnly": false },
+					"phone": { "readOnly": false }
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
@@ -497,14 +508,149 @@
 		},
 		{
 			"id": "ClientDetail",
-			"_note": "Bespoke 360-degree client record (ClientDetail.vue): edit/new mode toggle plus a custom header and eleven CnDetailCard panels wired to klantbeeld-360 relations (contacts, deals, contactmomenten, invoices) and inline NcDialog editors; the standard 'detail' page type renders a single object's fields and cannot host this aggregated multi-relation layout.",
+			"_note": "Client 360 record as a declarative type:detail page (pipelinq-client-contact-detail-declarative). Identity + account/relationship fields auto-render in the body (CnObjectDataWidget; name/email/phone/address/website are sourced from the linked NC contact and stay read-only via the index fieldOverrides). KPI chips come from summaryAggregates; related lists (contacts/leads/requests/projecten/contactmomenten/complaints, FK 'client') from relatedCollections; the rich sub-features (Relationships / Activity / Communication / Bookings / contactmoment quick-log) stay in the page body via bodyWidgets registered as kind:'section'. KEPT-AS-NOTE: (1) the 'Edit in Contacts' deep-link and the delete-with-linked-entity warning have no declarative primitive — the page Delete uses CnDetailPage's standard delete and 'Edit in Contacts' is reachable from the linked NC contact; (2) summaryAggregates filters are equality-only, so 'Open leads'=status:open (the lead enum is open|won|lost) and 'Open requests' counts status:new (in_progress not expressible as one equality chip); (3) the contactmoment quick-log no longer auto-refreshes the related list on save — use the page Refresh action.",
 			"route": "/clients/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Client",
-			"component": "ClientDetail",
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"summaryAggregates": [
+					{ "label": "Open leads", "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "client": "@objectId", "status": "open" } },
+					{ "label": "Open leads value", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "client": "@objectId", "status": "open" }, "format": "currency" },
+					{ "label": "Won leads", "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "client": "@objectId", "status": "won" } },
+					{ "label": "Won leads value", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "client": "@objectId", "status": "won" }, "format": "currency" },
+					{ "label": "New requests", "register": "pipelinq", "schema": "request", "metric": "count", "filter": { "client": "@objectId", "status": "new" } }
+				],
+				"relatedCollections": [
+					{
+						"title": "Contacts",
+						"register": "pipelinq",
+						"schema": "contact",
+						"filter": { "client": "@objectId" },
+						"columns": [
+							{ "key": "name", "label": "Name" },
+							{ "key": "role", "label": "Role" },
+							{ "key": "email", "label": "Email" },
+							{ "key": "phone", "label": "Phone" }
+						],
+						"limit": 50,
+						"rowRoute": "ContactDetail"
+					},
+					{
+						"title": "Leads",
+						"register": "pipelinq",
+						"schema": "lead",
+						"filter": { "client": "@objectId" },
+						"sort": { "field": "updatedAt", "dir": "desc" },
+						"columns": [
+							{ "key": "title", "label": "Title" },
+							{ "key": "stage", "label": "Stage" },
+							{ "key": "value", "label": "Value" },
+							{ "key": "probability", "label": "Probability" },
+							{ "key": "expectedCloseDate", "label": "Expected close" }
+						],
+						"limit": 10,
+						"rowRoute": "LeadDetail"
+					},
+					{
+						"title": "Requests",
+						"register": "pipelinq",
+						"schema": "request",
+						"filter": { "client": "@objectId" },
+						"sort": { "field": "requestedAt", "dir": "desc" },
+						"columns": [
+							{ "key": "title", "label": "Title" },
+							{ "key": "status", "label": "Status" },
+							{ "key": "priority", "label": "Priority" },
+							{ "key": "requestedAt", "label": "Requested" }
+						],
+						"limit": 10,
+						"rowRoute": "RequestDetail"
+					},
+					{
+						"title": "Projecten",
+						"register": "pipelinq",
+						"schema": "project",
+						"filter": { "client": "@objectId" },
+						"sort": { "field": "_dateCreated", "dir": "desc" },
+						"columns": [
+							{ "key": "name", "label": "Name" },
+							{ "key": "status", "label": "Status" },
+							{ "key": "billable", "label": "Billable" },
+							{ "key": "budgetHours", "label": "Budget hours" },
+							{ "key": "endDate", "label": "End date" }
+						],
+						"limit": 10,
+						"rowRoute": "ProjectDetail"
+					},
+					{
+						"title": "Contactmomenten",
+						"register": "pipelinq",
+						"schema": "contactmoment",
+						"filter": { "client": "@objectId" },
+						"sort": { "field": "contactedAt", "dir": "desc" },
+						"columns": [
+							{ "key": "subject", "label": "Subject" },
+							{ "key": "channel", "label": "Channel" },
+							{ "key": "contactedAt", "label": "Date" },
+							{ "key": "agent", "label": "Agent" },
+							{ "key": "outcome", "label": "Outcome" }
+						],
+						"limit": 10,
+						"rowRoute": "ContactmomentDetail"
+					},
+					{
+						"title": "Complaints",
+						"register": "pipelinq",
+						"schema": "complaint",
+						"filter": { "client": "@objectId" },
+						"sort": { "field": "_dateCreated", "dir": "desc" },
+						"columns": [
+							{ "key": "title", "label": "Title" },
+							{ "key": "status", "label": "Status" },
+							{ "key": "_dateCreated", "label": "Date" }
+						],
+						"limit": 50,
+						"rowRoute": "ComplaintDetail"
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "relationships",
+						"component": "ContactRelationships",
+						"title": "Relationships",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "client", "entityName": "@object.name" }
+					},
+					{
+						"id": "activity",
+						"component": "ActivityTimeline",
+						"title": "Activity",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "client" }
+					},
+					{
+						"id": "communication-history",
+						"component": "CommunicationHistory",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "client" }
+					},
+					{
+						"id": "bookings",
+						"component": "BookingsCard",
+						"placement": "after-related",
+						"props": { "customerId": "@objectId" }
+					},
+					{
+						"id": "contactmoment-quick-log",
+						"component": "ContactmomentQuickLog",
+						"title": "Log contactmoment",
+						"placement": "end",
+						"props": { "clientId": "@objectId", "inline": true }
+					}
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -693,7 +839,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "complaint",
-				"sidebar": true,
+				"sidebar": { "enabled": true },
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
@@ -705,6 +851,12 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
+				"createOverride": "createContactContactAware",
+				"fieldOverrides": {
+					"name": { "readOnly": false },
+					"email": { "readOnly": false },
+					"phone": { "readOnly": false }
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
@@ -730,15 +882,47 @@
 		},
 		{
 			"id": "ContactDetail",
-			"_note": "Bespoke contact record (ContactDetail.vue): edit/new mode with a custom header and CnDetailCard panels for linked client, contactmomenten and a CnFormDialog inline editor; the standard 'detail' type shows only one schema's fields and cannot express the cross-relation klantbeeld-360 layout.",
+			"_note": "Contact record as a declarative type:detail page (pipelinq-client-contact-detail-declarative). The contact-person fields (role, email, phone, client FK) auto-render in the body (CnObjectDataWidget; name/email/phone are read-only NC-contact mirror via the index fieldOverrides). The parent-organisation link is a relationLinks entry (fkField 'client', labelField 'name') — its search-and-link modal replaces the bespoke CnFormDialog organisation linker, and the linked client is shown by the auto data widget's 'client' field. BRP / Relationships / Communication stay in the page body via bodyWidgets registered as kind:'section'. KEPT-AS-NOTE: (1) the bespoke 'Parent Organisation' card also rendered the client name+type as a clickable deep-link; the declarative client FK shows the id/name in the data widget and relationLinks drives the link/relink — the separate type-line is dropped; (2) BrpContactPanel emits @contact-updated to trigger a re-fetch — in declarative mode the panel updates the contact server-side and the user refreshes via the page Refresh action; (3) 'Edit in Contacts' deep-link has no declarative primitive — identity is editable from the linked NC contact.",
 			"route": "/contacts/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Contact",
-			"component": "ContactDetail",
 			"config": {
 				"register": "pipelinq",
 				"schema": "contact",
-				"sidebar": true
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"relationLinks": [
+					{
+						"label": "Link to Organisation",
+						"title": "Link to Organisation",
+						"register": "pipelinq",
+						"schema": "client",
+						"fkField": "client",
+						"labelField": "name"
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "brp",
+						"component": "BrpContactPanel",
+						"title": "BSN / BRP",
+						"placement": "after-data",
+						"props": { "contactId": "@objectId" }
+					},
+					{
+						"id": "relationships",
+						"component": "ContactRelationships",
+						"title": "Relationships",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "contact", "entityName": "@object.name" }
+					},
+					{
+						"id": "communication-history",
+						"component": "CommunicationHistory",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "contact" }
+					}
+				],
+				"sidebar": { "enabled": true }
 			}
 		},
 		{
@@ -893,7 +1077,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "contactmoment",
-				"sidebar": true,
+				"sidebar": { "enabled": true },
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
@@ -949,7 +1133,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "task",
-				"sidebar": true,
+				"sidebar": { "enabled": true },
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
@@ -1005,20 +1189,37 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "product",
-				"sidebar": true,
+				"sidebar": { "enabled": true },
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
 		{
 			"id": "PosTransactions",
-			"_note": "PosTransactionList.vue is a CnIndexPage specialised for the point-of-sale receipt ledger (POS-specific columns, status badges and row actions wired to the posTransaction schema); kept as a host-app component while those POS column/action presets live outside the library.",
+			"_note": "POS receipt ledger as a declarative type:index page (pipelinq-declarative-pages-round1). Row view + Add both navigate to the bespoke cart editor routes (PosTransactionDetail / PosTransactionNew), which stay custom because they host interactive line-item editing.",
 			"route": "/pos",
-			"type": "custom",
+			"type": "index",
 			"title": "Kassabon",
-			"component": "PosTransactionListView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posTransaction"
+				"schema": "posTransaction",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"includeColumns": ["reference", "cashier", "terminalId", "status", "priceMode", "total", "created"],
+				"headerActions": [
+					{ "id": "create", "label": "Nieuwe transactie", "icon": "Plus", "handler": "navigate", "route": "PosTransactionNew" }
+				],
+				"actions": [
+					{ "id": "view", "label": "Openen", "icon": "Eye", "handler": "navigate", "route": "PosTransactionDetail" }
+				]
 			}
 		},
 		{
@@ -1047,14 +1248,31 @@
 		},
 		{
 			"id": "PosRefunds",
-			"_note": "PosRefundList.vue is a CnIndexPage specialised for the POS refund ledger (refund-specific columns and status badges on the posRefund schema); kept as a host-app component while those presets live outside the library.",
+			"_note": "POS refund ledger as a declarative type:index page (pipelinq-declarative-pages-round1). Row view navigates to the bespoke refund editor (PosRefundDetail); Add navigates to PosRefundNew. Both editors stay custom (interactive per-line refund selection).",
 			"route": "/pos/refunds",
-			"type": "custom",
+			"type": "index",
 			"title": "Retouren",
-			"component": "PosRefundListView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posRefund"
+				"schema": "posRefund",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"includeColumns": ["reference", "originalTransaction", "refundReason", "refundAmount", "status", "created"],
+				"headerActions": [
+					{ "id": "create", "label": "Nieuwe retour", "icon": "Plus", "handler": "navigate", "route": "PosRefundNew" }
+				],
+				"actions": [
+					{ "id": "view", "label": "Openen", "icon": "Eye", "handler": "navigate", "route": "PosRefundDetail" }
+				]
 			}
 		},
 		{
@@ -1095,14 +1313,23 @@
 		},
 		{
 			"id": "PosRefundDetail",
-			"_note": "PosRefundDetail.vue is a CnDetailPage composed with refund-specific CnDetailCard panels, a CnStatusBadge and refund-only actions; the declarative 'detail' type renders flat schema fields and cannot lay out these grouped refund cards.",
+			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields (reference / originalTransaction / cashier / status / refundReason / paymentMethod / refundAmount / totalTax / confirmedAt / rejectedAt / notes / …) auto-render in the body via CnObjectDataWidget. The parts no declarative primitive can express live in one kind:'section' bodyWidget (PosRefundActionsSection, after-data): the manager-gated Bevestigen / Afwijzen actions and the 'Returned items' table. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired — the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) the 'Returned items' table stays in the section because it is a CROSS-SCHEMA JOIN — each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer) and relatedCollections renders ONE schema and cannot resolve a column off a second schema. Missing primitives: a relatedCollections column resolved off a SECOND schema (cross-schema join lookup); the host-app-endpoint action toolbar (see PosTransactionDetail).",
 			"route": "/pos/refunds/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Retour",
-			"component": "PosRefundDetailView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posRefund"
+				"schema": "posRefund",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"bodyWidgets": [
+					{
+						"id": "pos-refund-actions",
+						"component": "PosRefundActionsSection",
+						"placement": "after-data",
+						"props": { "refundId": "@objectId" }
+					}
+				],
+				"sidebar": { "enabled": true }
 			}
 		},
 		{
@@ -1119,38 +1346,95 @@
 		},
 		{
 			"id": "CashShiftDetail",
-			"_note": "CashShiftDetail.vue is a CnDetailPage with cash-drawer-specific CnDetailCard panels (opening/closing float, counted-vs-expected variance), CnStatusBadge and open/close actions; the standard 'detail' type cannot express this reconciliation layout.",
+			"_note": "Cash-shift record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The shift's flat float fields (reference / drawer / operator / managedBy / currency / floatAmount / floatAt / status / closedAt / reconciliationStatus / notes) auto-render in the body via CnObjectDataWidget; the drops render as a relatedCollections table (cashDrop, FK 'shift'). The parts no declarative primitive can express live in one kind:'section' bodyWidget (CashShiftActionsSection, after-related): the cash-reconciliation VARIANCE panel and the drop/count/reconcile actions. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired — Geld verwijderen (drop) / Shift afsluiten en tellen (count) / reconcile POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints that recompute variance server-side (NOT OR /transition); cashShift/cashDiff have no x-openregister-lifecycle; (2) the variance panel stays in the section because it is a LATEST/PENDING-child projection — relatedCollections lists ALL children and cannot pick + lay out the single most-relevant cashDiff with its tolerance verdict and inline approve/reject. Missing primitives: a host-app-endpoint action toolbar (see PosTransactionDetail); a 'latest/pending child object' projection primitive.",
 			"route": "/pos/shifts/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Shift",
-			"component": "CashShiftDetailView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "cashShift"
+				"schema": "cashShift",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"relatedCollections": [
+					{
+						"title": "Drops",
+						"register": "pipelinq",
+						"schema": "cashDrop",
+						"filter": { "shift": "@objectId" },
+						"sort": { "field": "droppedAt", "dir": "desc" },
+						"columns": [
+							{ "key": "reason", "label": "Reden" },
+							{ "key": "amount", "label": "Bedrag" },
+							{ "key": "droppedAt", "label": "Op" },
+							{ "key": "droppedBy", "label": "Door" }
+						],
+						"limit": 500
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "cash-shift-actions",
+						"component": "CashShiftActionsSection",
+						"placement": "after-related",
+						"props": { "shiftId": "@objectId" }
+					}
+				],
+				"sidebar": { "enabled": true }
 			}
 		},
 		{
 			"id": "ZReports",
-			"_note": "ZReportList.vue is a CnIndexPage specialised for the daily Z-report (end-of-day close) ledger on the zReport schema; kept as a host-app component while those accounting-close presets live outside the library.",
+			"_note": "Daily Z-report (end-of-day close) ledger as a declarative type:index page (pipelinq-views-to-declarative-r1). Row click navigates to the bespoke ZReportDetail (per-tender totals / tax breakdown / resubmit), which stays custom. No Add (Z-reports are generated by the day-close job, not created by hand).",
 			"route": "/pos/z-reports",
-			"type": "custom",
+			"type": "index",
 			"title": "Boekhoudkundige Afhandeling",
-			"component": "ZReportListView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posZReport"
+				"schema": "posZReport",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"columns": [
+					"reference",
+					{ "key": "reportDate", "label": "Datum", "format": "date" },
+					"terminalId",
+					"transactionCount",
+					"total",
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "posted": "success", "submitted": "primary", "synced": "success", "pending": "warning", "failed": "error", "draft": "default", "open": "info" } } },
+					{ "key": "createdAt", "label": "Aangemaakt", "format": "date-time" }
+				],
+				"actions": [
+					{ "id": "view", "label": "Openen", "icon": "Eye", "handler": "navigate", "route": "ZReportDetail" }
+				]
 			}
 		},
 		{
 			"id": "ZReportDetail",
-			"_note": "ZReportDetail.vue is a CnDetailPage with Z-report-specific CnDetailCard panels (per-tender totals, tax breakdown, drawer reconciliation) and CnStatusBadge; the declarative 'detail' type cannot lay out these aggregated accounting summaries.",
+			"_note": "Z-report per-day close as a declarative type:detail page (pipelinq-detail-pages-declarative-r3). The Z-report's flat fields (reference / reportDate / terminalId / transactionCount / status / subtotal / totalTax / total / bookkeepingStatus / shillinqJournalEntryId / notes) auto-render in the body via CnObjectDataWidget. CONVERTED: the BTW breakdown table, the payment-method breakdown table (both ARRAY fields on the object, not FK children, so not relatedCollections) and the shillinq bookkeeping-status projection + manager-gated idempotent re-raise action are one kind:'section' bodyWidget (ZReportBookkeepingSection, after-data). KEPT-AS-NOTE: (1) lifecycleActions is NOT wired — posZReport has no x-openregister-lifecycle and the only state-changing action is the re-raise, which POSTs to a bespoke pipelinq endpoint (idempotency key) not OR's /transition, so it stays inside the section (missing primitive: declarative action that POSTs to a host-app endpoint instead of OR /transition); (2) no summaryAggregates — the totals are fields ON the object, not aggregations over a related schema; (3) Z-reports are generated by the day-close job, never created/edited by hand, so the auto-body data widget is effectively read-only.",
 			"route": "/pos/z-reports/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Z-report",
-			"component": "ZReportDetailView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posZReport"
+				"schema": "posZReport",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"bodyWidgets": [
+					{
+						"id": "z-report-bookkeeping",
+						"component": "ZReportBookkeepingSection",
+						"title": "Boekhoudkundige afhandeling",
+						"placement": "after-data",
+						"props": { "zReportId": "@objectId" }
+					}
+				],
+				"sidebar": { "enabled": true }
 			}
 		},
 		{
@@ -1195,14 +1479,41 @@
 		},
 		{
 			"id": "PosTransactionDetail",
-			"_note": "PosTransactionDetail.vue is a CnDetailPage with five receipt-specific CnDetailCard panels (line items, tenders, taxes, customer, linked refunds), CnStatusBadge and nine contextual actions (refund, reprint, email); the flat 'detail' type cannot host this grouped receipt layout.",
+			"_note": "POS transaction record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The transaction's flat fields (reference / cashier / terminalId / status / priceMode / subtotal / totalTax / total / notes / …) auto-render in the body via CnObjectDataWidget; the line items render as a relatedCollections table (posTransactionLine, FK 'transaction'). Everything no declarative primitive can express lives in one kind:'section' bodyWidget (PosTransactionActionsSection, after-related): the status-gated action toolbar (Bevestigen / Parkeren / Hervatten / Afrekenen / Retour registreren / Terugboeken / Print / Email Receipt), the tax-breakdown + totals, the interactive TenderEntryPanel (live add/remove split tenders + recompute) and the PaymentStatusCard. KEPT-AS-NOTE: lifecycleActions is NOT wired — the action buttons POST to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects (NOT OR's /transition), and posTransaction has no x-openregister-lifecycle. Missing primitive: a declarative action-toolbar whose buttons POST to a host-app endpoint (not OR /transition), status-gated client-side, with a custom-recompute reload; and an editable/interactive sub-grid primitive for the tender panel.",
 			"route": "/pos/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Transactie",
-			"component": "PosTransactionDetailView",
 			"config": {
 				"register": "pipelinq",
-				"schema": "posTransaction"
+				"schema": "posTransaction",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"relatedCollections": [
+					{
+						"title": "Line items",
+						"register": "pipelinq",
+						"schema": "posTransactionLine",
+						"filter": { "transaction": "@objectId" },
+						"sort": { "field": "sortOrder", "dir": "asc" },
+						"columns": [
+							{ "key": "description", "label": "Description" },
+							{ "key": "quantity", "label": "Qty" },
+							{ "key": "unitPrice", "label": "Unit price" },
+							{ "key": "discount", "label": "Discount %" },
+							{ "key": "taxRate", "label": "VAT %" },
+							{ "key": "lineTotal", "label": "Line total" }
+						],
+						"limit": 500
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "pos-transaction-actions",
+						"component": "PosTransactionActionsSection",
+						"placement": "after-related",
+						"props": { "transactionId": "@objectId" }
+					}
+				],
+				"sidebar": { "enabled": true }
 			}
 		},
 		{
@@ -1316,7 +1627,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "queue",
-				"sidebar": true,
+				"sidebar": { "enabled": true },
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
 		},
@@ -1348,35 +1659,92 @@
 		},
 		{
 			"id": "Rapportage",
-			"_note": "RapportageView.vue is a bespoke analytics surface: a CnDashboardPage whose widget slots are filled with custom-computed report blocks fetched once and shared across slots, rather than the manifest-declared widget set the standard 'dashboard' type supports.",
+			"_note": "Lead analytics as a declarative type:dashboard page (pipelinq-dashboards-declarative). The surface has no headline KPI cards to lift into endpoint stat widgets — its four bespoke widgets (pipeline-value funnel bar chart, source-performance table, lead-aging donut, win/loss pie + KPI block) are fed from ONE GET /api/rapportage/pipeline-stats fetch and the interactivity lives INSIDE the widgets (the funnel's OR-sourced pipeline selector filters in memory; the win/loss date-range selector re-fetches with dateFrom/dateTo). All four therefore live in one kind:'section' bodyWidget (LeadAnalyticsSection) which preserves the legacy single-fetch + in-widget filtering verbatim. KEPT-AS-NOTE: no page-level period pageFilter — the date window is derived inside the win/loss range selector (a from/to pair a static select cannot emit) and the pipeline selector's options are OR-sourced; missing primitives: derived-date-range pageFilter + OR-collection pageFilter options.",
 			"route": "/rapportage",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Analytics",
-			"component": "RapportageView"
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"bodyWidgets": [
+					{ "id": "lead-analytics", "component": "LeadAnalyticsSection", "placement": "before-grid" }
+				]
+			}
 		},
 		{
 			"id": "RapportageContactmomenten",
-			"_note": "RapportageDashboard.vue is a bespoke contact-reporting analytics view with a date-range selector, a custom KPI-card grid and hand-rendered channel bar charts; the standard 'dashboard' type only composes declared widgets and cannot host these custom-drawn charts.",
+			"_note": "Contact-reporting monitor as a declarative type:dashboard page (pipelinq-dashboards-declarative). The four headline KPIs (Total Contacts, FCR %, Avg Handling Time, SLA Compliance) are endpoint-bound stat widgets reading GET /apps/pipelinq/api/rapportage/kpis (avgHandlingTime is a pre-formatted 'H:MM' string the stat widget renders verbatim). A period pageFilter (today/week/month -> @page.period) drives the query; ReportingController now resolves that relative period to a from/to window server-side (today=[today,today], week=[Monday,today], month=[1st,today]) so one select re-queries every KPI without client-side date math. The hand-rendered per-channel bar chart + the CSV export the stat grid cannot express live in one kind:'section' bodyWidget (ChannelDistributionSection) that reads the same period (via @workspace.period) and self-fetches /api/rapportage/channels. The 60s auto-refresh + 'last updated' label of the legacy view are dropped (the page-level Refresh action covers manual reload).",
 			"route": "/rapportage/contactmomenten",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Contact reporting",
-			"component": "RapportageDashboardView"
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"pageFilters": [
+					{ "key": "period", "label": "Period", "type": "select", "default": "today", "options": [
+						{ "value": "today", "label": "Today" },
+						{ "value": "week", "label": "This week" },
+						{ "value": "month", "label": "This month" }
+					] }
+				],
+				"widgets": [
+					{ "id": "rap-total", "type": "stat", "title": "Total Contacts", "content": { "label": "Total Contacts", "caption": "contact moments", "icon": "MessageText", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/rapportage/kpis", "path": "total", "params": { "period": "@page.period" } } } },
+					{ "id": "rap-fcr", "type": "stat", "title": "FCR %", "content": { "label": "FCR %", "caption": "first-contact resolution", "icon": "CheckCircle", "format": { "style": "percent", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/rapportage/kpis", "path": "fcrRate", "params": { "period": "@page.period" } } } },
+					{ "id": "rap-aht", "type": "stat", "title": "Avg Handling Time", "content": { "label": "Avg Handling Time", "caption": "h:mm", "icon": "ClockOutline", "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/rapportage/kpis", "path": "avgHandlingTime", "params": { "period": "@page.period" } } } },
+					{ "id": "rap-sla", "type": "stat", "title": "SLA Compliance", "content": { "label": "SLA Compliance", "caption": "within target", "icon": "ShieldCheckOutline", "format": { "style": "percent", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/rapportage/kpis", "path": "slaCompliance", "params": { "period": "@page.period" } } } }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "rap-total", "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 2, "widgetId": "rap-fcr", "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 3, "widgetId": "rap-aht", "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 4, "widgetId": "rap-sla", "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false }
+				],
+				"bodyWidgets": [
+					{ "id": "rap-channels", "component": "ChannelDistributionSection", "placement": "after-grid", "props": { "period": "@workspace.period" } }
+				]
+			}
 		},
 		{
 			"id": "ChannelAnalyticsView",
-			"_note": "ChannelAnalytics.vue is a bespoke analytics report: a date-range selector over a custom comparison data-table of per-channel metrics with colour-keyed channel dots; this tabular cross-channel comparison has no standard list/dashboard page-type representation.",
+			"_note": "Cross-channel comparison as a declarative type:dashboard page (pipelinq-dashboards-declarative). It has no headline KPI cards — the cross-channel comparison table (total / FCR / SLA per channel, colour-keyed) lives entirely in one kind:'section' bodyWidget (ChannelComparisonSection). Two pageFilters drive it: period (today/week/month -> @page.period, resolved to from/to server-side by ReportingController) and granularity (daily/weekly -> @page.granularity); the section reads both via @workspace.* and self-fetches /api/rapportage/channels + /api/rapportage/sla.",
 			"route": "/rapportage/channels",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Channel analytics",
-			"component": "ChannelAnalyticsView"
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"pageFilters": [
+					{ "key": "period", "label": "Period", "type": "select", "default": "month", "options": [
+						{ "value": "today", "label": "Today" },
+						{ "value": "week", "label": "This week" },
+						{ "value": "month", "label": "This month" }
+					] },
+					{ "key": "granularity", "label": "Granularity", "type": "select", "default": "daily", "options": [
+						{ "value": "daily", "label": "Daily" },
+						{ "value": "weekly", "label": "Weekly" }
+					] }
+				],
+				"bodyWidgets": [
+					{ "id": "channel-comparison", "component": "ChannelComparisonSection", "placement": "before-grid", "props": { "period": "@workspace.period", "granularity": "@workspace.granularity" } }
+				]
+			}
 		},
 		{
 			"id": "AgentPerformanceView",
-			"_note": "AgentPerformance.vue is a bespoke analytics report: a date-range selector over a sortable per-agent data-table (resolution time, volume, satisfaction); the sortable multi-metric leaderboard has no standard list/dashboard page-type representation.",
+			"_note": "Per-agent performance as a declarative type:dashboard page (pipelinq-dashboards-declarative). It has no headline KPI cards — the sortable per-agent leaderboard (contacts / avg time / FCR) plus the team-summary footer (total contacts, team FCR, both derived from the same agents map) live in one kind:'section' bodyWidget (AgentPerformanceSection). A period pageFilter (today/week/month -> @page.period, resolved to from/to server-side) drives the query; the section reads @workspace.period and self-fetches /api/rapportage/agents.",
 			"route": "/rapportage/agents",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Agent performance",
-			"component": "AgentPerformanceView"
+			"config": {
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"pageFilters": [
+					{ "key": "period", "label": "Period", "type": "select", "default": "today", "options": [
+						{ "value": "today", "label": "Today" },
+						{ "value": "week", "label": "This week" },
+						{ "value": "month", "label": "This month" }
+					] }
+				],
+				"bodyWidgets": [
+					{ "id": "agent-performance", "component": "AgentPerformanceSection", "placement": "before-grid", "props": { "period": "@workspace.period" } }
+				]
+			}
 		},
 		{
 			"id": "Pipeline",
@@ -1511,30 +1879,6 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "exportRun"
-			}
-		},
-		{
-			"id": "StufEndpoints",
-			"_note": "StufEndpoints.vue is an in-app settings surface (NcSettingsSection listing the configured StUF SOAP endpoints and their toggles); it edits app configuration rather than register objects, so no object-oriented page type applies.",
-			"route": "/stuf/endpoints",
-			"type": "custom",
-			"title": "StUF endpoints",
-			"component": "StufEndpointsView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "stufEndpoint"
-			}
-		},
-		{
-			"id": "StufAuditLog",
-			"_note": "StufAuditLog.vue is a bespoke StUF message audit viewer inside an NcSettingsSection, with type/status NcSelect filters over the request/response envelope log; the message-envelope filtering and presentation has no standard list page-type equivalent.",
-			"route": "/stuf/audit-log",
-			"type": "custom",
-			"title": "StUF audit log",
-			"component": "StufAuditLogView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "stufMessage"
 			}
 		}
 	]

@@ -50,7 +50,6 @@ use RuntimeException;
  */
 class RapportageService
 {
-
     /**
      * Constructor.
      *
@@ -65,7 +64,6 @@ class RapportageService
     ) {
     }//end __construct()
 
-
     /**
      * Pipeline value per stage (count, total value, probability-weighted).
      *
@@ -77,7 +75,7 @@ class RapportageService
      */
     public function getStageValues(?string $pipelineId=null): array
     {
-        $leads = $this->fetchLeads();
+        $leads   = $this->fetchLeads();
         $buckets = [];
 
         foreach ($leads as $lead) {
@@ -97,14 +95,13 @@ class RapportageService
             $value       = (float) ($lead['value'] ?? 0);
             $probability = (float) ($lead['probability'] ?? 0);
             $buckets[$stage]['count']++;
-            $buckets[$stage]['totalValue']   += $value;
+            $buckets[$stage]['totalValue']    += $value;
             $buckets[$stage]['weightedValue'] += ($value * $probability / 100.0);
         }
 
         return array_values($buckets);
 
     }//end getStageValues()
-
 
     /**
      * Source performance: total / won / conversion / avg-won-value per source.
@@ -118,7 +115,7 @@ class RapportageService
      */
     public function getSourcePerformance(?string $dateFrom=null, ?string $dateTo=null): array
     {
-        $leads = $this->fetchLeads();
+        $leads     = $this->fetchLeads();
         $byCreated = $this->filterByCreated(leads: $leads, from: $dateFrom, to: $dateTo);
 
         $buckets = [];
@@ -164,7 +161,6 @@ class RapportageService
         return $result;
 
     }//end getSourcePerformance()
-
 
     /**
      * Aging buckets — distributes open leads across the 4 fixed buckets.
@@ -214,12 +210,11 @@ class RapportageService
 
             $buckets[$key]['count']++;
             $buckets[$key]['totalValue'] += (float) ($lead['value'] ?? 0);
-        }
+        }//end foreach
 
         return array_values($buckets);
 
     }//end getAgingBuckets()
-
 
     /**
      * Win/loss summary for closed leads within the optional date range.
@@ -233,7 +228,7 @@ class RapportageService
      */
     public function getWinLossAnalysis(?string $dateFrom=null, ?string $dateTo=null): array
     {
-        $leads = $this->fetchLeads();
+        $leads  = $this->fetchLeads();
         $closed = [];
         foreach ($leads as $lead) {
             $status = (string) ($lead['status'] ?? '');
@@ -277,7 +272,7 @@ class RapportageService
             $winRate = round(($wonCount / $total) * 100.0, 1);
         }
 
-        $avgWon  = 0.0;
+        $avgWon = 0.0;
         if ($wonCount > 0) {
             $avgWon = round($wonValueSum / $wonCount, 2);
         }
@@ -303,13 +298,12 @@ class RapportageService
 
     }//end getWinLossAnalysis()
 
-
     /**
      * Filter leads by `_dateCreated` within the optional bounds.
      *
      * @param array<int, array<string, mixed>> $leads The leads.
-     * @param string|null                       $from  ISO 8601 lower bound (inclusive).
-     * @param string|null                       $to    ISO 8601 upper bound (inclusive).
+     * @param string|null                      $from  ISO 8601 lower bound (inclusive).
+     * @param string|null                      $to    ISO 8601 upper bound (inclusive).
      *
      * @return array<int, array<string, mixed>>
      */
@@ -357,7 +351,6 @@ class RapportageService
 
     }//end filterByCreated()
 
-
     /**
      * Extract a unix timestamp from `_dateModified` / `_dateCreated` /
      * the OpenRegister `@self.updated` mirror.
@@ -395,7 +388,6 @@ class RapportageService
 
     }//end extractTimestamp()
 
-
     /**
      * Fetch all lead objects via OpenRegister ObjectService. Returns an
      * empty list when OpenRegister is unavailable (no exception leakage).
@@ -427,7 +419,6 @@ class RapportageService
 
     }//end fetchLeads()
 
-
     /**
      * Resolve the OpenRegister ObjectService from the container.
      *
@@ -443,7 +434,6 @@ class RapportageService
         }
 
     }//end getObjectService()
-
 
     /**
      * Normalise an OpenRegister entity (or array) to a plain array.
@@ -475,5 +465,4 @@ class RapportageService
         return [];
 
     }//end toArray()
-
 }//end class

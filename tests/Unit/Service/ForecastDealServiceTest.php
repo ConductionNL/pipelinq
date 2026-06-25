@@ -191,4 +191,61 @@ class ForecastDealServiceTest extends TestCase
         $this->assertFalse($this->service->isClosedCategory('commit'));
         $this->assertFalse($this->service->isClosedCategory(null));
     }//end testIsClosedCategory()
+
+    /**
+     * The open/closed partition and default are sourced from the lead schema's
+     * `x-pipelinq-forecast-lifecycle` annotation (ADR-031). With the real bundled
+     * schema, behavior is identical to the prior hardcoded constants: a
+     * closed->open move is rejected and the create-default is pipeline.
+     *
+     * @return void
+     */
+    public function testPartitionSourcedFromSchema(): void
+    {
+        // Default comes from the schema annotation (pipeline).
+        $created = $this->service->applyDefaultCategory(['title' => 'X']);
+        $this->assertSame('pipeline', $created['forecast_category']);
+
+        // best_case is a schema-declared OPEN category, so closed->best_case locks.
+        $error = $this->service->validateTransition(
+            oldData: ['forecast_category' => 'closed_lost'],
+            newData: ['forecast_category' => 'best_case', 'value' => 100]
+        );
+        $this->assertSame('forecast.error.closed_deal_locked', $error);
+
+        // closed_won is a schema-declared CLOSED category (not open), so a
+        // closed_lost -> closed_won move is NOT a closed->open unlock and passes
+        // the lock guard (it is a closed-to-closed correction).
+        $ok = $this->service->validateTransition(
+            oldData: ['forecast_category' => 'closed_lost'],
+            newData: ['forecast_category' => 'closed_won', 'value' => 100]
+        );
+        $this->assertNull($ok);
+    }//end testPartitionSourcedFromSchema()
+
+    /**
+     * When the schema is unreadable the service degrades to its mirrored
+     * fallback constants, so the closed-deal lock never silently disappears.
+     *
+     * @return void
+     */
+    public function testPartitionFallsBackWhenSchemaUnreadable(): void
+    {
+        $appConfig = $this->createMock(IAppConfig::class);
+        $appConfig->method('getValueInt')->willReturn(ForecastDealService::COMMIT_THRESHOLD_DEFAULT);
+        $service = new ForecastDealService(
+            appConfig: $appConfig,
+            lifecycleGraph: new \OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph(settingsDir: '/nonexistent/Settings'),
+        );
+
+        $this->assertTrue($service->isClosedCategory('closed_won'));
+        $error = $service->validateTransition(
+            oldData: ['forecast_category' => 'closed_won'],
+            newData: ['forecast_category' => 'commit', 'value' => 100]
+        );
+        $this->assertSame('forecast.error.closed_deal_locked', $error);
+
+        $created = $service->applyDefaultCategory(['title' => 'X']);
+        $this->assertSame('pipeline', $created['forecast_category']);
+    }//end testPartitionFallsBackWhenSchemaUnreadable()
 }//end class

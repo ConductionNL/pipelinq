@@ -40,16 +40,16 @@ final class ScreenPopResult
     /**
      * Constructor.
      *
-     * @param string                       $action     One of self::ACTION_*.
-     * @param array<int,array<string,mixed>> $matches  Matched contact / client objects (max 3).
-     * @param string|null                  $e164       Normalised E.164 phone number.
-     * @param string|null                  $rawNumber  Raw number as received.
+     * @param string                         $action    One of self::ACTION_*.
+     * @param array<int,array<string,mixed>> $matches   Matched contact / client objects (max 3).
+     * @param string|null                    $e164      Normalised E.164 phone number.
+     * @param string|null                    $rawNumber Raw number as received.
      */
     public function __construct(
         public readonly string $action,
-        public readonly array $matches = [],
-        public readonly ?string $e164 = null,
-        public readonly ?string $rawNumber = null,
+        public readonly array $matches=[],
+        public readonly ?string $e164=null,
+        public readonly ?string $rawNumber=null,
     ) {
     }//end __construct()
 

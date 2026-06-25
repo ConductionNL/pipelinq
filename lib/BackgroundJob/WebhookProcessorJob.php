@@ -151,7 +151,7 @@ class WebhookProcessorJob extends TimedJob
                         signature: $signature,
                         providerId: $providerId,
                     );
-                } elseif ($channel === 'sms') {
+                } else if ($channel === 'sms') {
                     $result = $this->smsAdapter->handleInboundWebhook(
                         rawBody: $body,
                         signature: $signature,
@@ -166,18 +166,24 @@ class WebhookProcessorJob extends TimedJob
                     ['id' => $id, 'exception' => $e->getMessage()]
                 );
                 $result = ['status' => 'processingFailed', 'error' => $e->getMessage()];
-            }
+            }//end try
 
             $arr['status']      = (string) ($result['status'] ?? 'processed');
             $arr['processedAt'] = gmdate('Y-m-d\TH:i:s\Z');
             $arr['result']      = $result;
 
             try {
+                if ($id === '') {
+                    $saveUuid = null;
+                } else {
+                    $saveUuid = $id;
+                }
+
                 $objectService->saveObject(
                     object: $arr,
                     register: $this->getRegisterSlug(),
                     schema: $this->getSchemaSlug(),
-                    uuid: ($id === '' ? null : $id),
+                    uuid: $saveUuid,
                 );
             } catch (Throwable $e) {
                 $this->logger->warning(
@@ -271,7 +277,11 @@ class WebhookProcessorJob extends TimedJob
     private function getRegisterSlug(): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        return ($slug !== '') ? $slug : self::DEFAULT_REGISTER_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
     /**
@@ -282,6 +292,10 @@ class WebhookProcessorJob extends TimedJob
     private function getSchemaSlug(): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, 'webhookQueue_schema', '');
-        return ($slug !== '') ? $slug : self::DEFAULT_SCHEMA_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_SCHEMA_SLUG;
     }//end getSchemaSlug()
 }//end class

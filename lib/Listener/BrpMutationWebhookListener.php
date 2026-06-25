@@ -50,10 +50,10 @@ class BrpMutationWebhookListener
     /**
      * Constructor.
      *
-     * @param IAppConfig       $appConfig    App config (webhook secret).
-     * @param BrpCacheService  $cacheService Cache service.
-     * @param BsnAuditService  $auditService Audit service.
-     * @param LoggerInterface  $logger       Logger.
+     * @param IAppConfig      $appConfig    App config (webhook secret).
+     * @param BrpCacheService $cacheService Cache service.
+     * @param BsnAuditService $auditService Audit service.
+     * @param LoggerInterface $logger       Logger.
      */
     public function __construct(
         private IAppConfig $appConfig,
@@ -111,6 +111,7 @@ class BrpMutationWebhookListener
             $this->logger->info('BRP webhook payload not valid JSON');
             return ['result' => self::RESULT_BAD_REQUEST, 'invalidated' => 0];
         }
+
         if (is_array($payload) === false) {
             return ['result' => self::RESULT_BAD_REQUEST, 'invalidated' => 0];
         }

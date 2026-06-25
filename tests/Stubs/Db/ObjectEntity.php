@@ -17,8 +17,17 @@ namespace OCA\OpenRegister\Db;
 
 /**
  * Stub for ObjectEntity with the methods used by Pipelinq tests.
+ *
+ * Declared CONCRETE (not abstract) with trivial method bodies so the stub is a
+ * safe stand-in even when a real OpenRegister class that `extends ObjectEntity`
+ * (e.g. Service\Notification\SystemEntityObjectAdapter) is eagerly loaded by
+ * Nextcloud in the same process: an abstract stub would make every such subclass
+ * "contains abstract methods and must be declared abstract" and fatal. The
+ * methods are real declared methods (not magic getters) so unit tests can mock
+ * them with `onlyMethods(['getSchema', ...])`; PHPUnit's createMock() overrides
+ * the bodies anyway.
  */
-abstract class ObjectEntity
+class ObjectEntity
 {
 
     /**
@@ -26,27 +35,46 @@ abstract class ObjectEntity
      *
      * @return array<string,mixed>
      */
-    abstract public function getObject(): array;
+    public function getObject(): array
+    {
+        return [];
+
+    }//end getObject()
+
 
     /**
      * Return the object UUID.
      *
      * @return string
      */
-    abstract public function getUuid(): string;
+    public function getUuid(): string
+    {
+        return '';
+
+    }//end getUuid()
+
 
     /**
      * Return the schema id/slug the object belongs to.
      *
      * @return string|null
      */
-    abstract public function getSchema(): ?string;
+    public function getSchema(): ?string
+    {
+        return null;
+
+    }//end getSchema()
+
 
     /**
      * Return a JSON-serializable representation of the entity.
      *
      * @return array<string,mixed>
      */
-    abstract public function jsonSerialize(): array;
+    public function jsonSerialize(): array
+    {
+        return [];
+
+    }//end jsonSerialize()
 
 }//end class

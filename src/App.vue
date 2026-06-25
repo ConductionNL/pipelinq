@@ -19,6 +19,7 @@
 		app-id="pipelinq"
 		:translate="translateForApp"
 		:permissions="permissions"
+		:persist-manifest-delta="persistManifestDelta"
 		:requires-apps="[]">
 		<template #sidebar>
 			<!--
@@ -49,6 +50,8 @@
 <script>
 import Vue from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
+import axios from '@nextcloud/axios'
 import { CnAppRoot, CnObjectSidebar, builtinIntegrations } from '@conduction/nextcloud-vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
@@ -176,6 +179,17 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Persist an in-app manifest edit (ADR-041). Called by CnAppRoot's editor
+		 * on Save with the minimal delta; PUTs it to OpenBuild's app-override
+		 * store so the edit survives reload (loaded back in main.js bootstrap).
+		 *
+		 * @param {object} delta The minimal manifest delta from the editor.
+		 * @return {Promise<void>}
+		 */
+		async persistManifestDelta(delta) {
+			await axios.put(generateUrl('/apps/openbuild/api/app-overrides/pipelinq'), delta)
+		},
 		/**
 		 * Translate function passed down to CnAppRoot / CnAppNav /
 		 * CnPageRenderer. Closes over the Nextcloud `translate` import

@@ -109,14 +109,14 @@ class CostReconciliationService
             } catch (Throwable $e2) {
                 return ['scanned' => 0, 'reconciled' => 0];
             }
-        }
+        }//end try
 
         $scanned    = 0;
         $reconciled = 0;
         foreach (($rows ?? []) as $raw) {
-            $arr      = $this->toArray(value: $raw);
-            $meta     = (array) ($arr['metadata'] ?? []);
-            $pending  = (bool) ($meta['costCurrencyPending'] ?? false);
+            $arr     = $this->toArray(value: $raw);
+            $meta    = (array) ($arr['metadata'] ?? []);
+            $pending = (bool) ($meta['costCurrencyPending'] ?? false);
             if ($pending === false) {
                 continue;
             }
@@ -140,11 +140,16 @@ class CostReconciliationService
 
             $id = $this->extractId(payload: $arr);
             try {
+                $uuid = $id;
+                if ($id === '') {
+                    $uuid = null;
+                }
+
                 $objectService->saveObject(
                     object: $arr,
                     register: $this->getRegisterSlug(),
                     schema: $this->getSchemaSlug(),
-                    uuid: ($id === '' ? null : $id),
+                    uuid: $uuid,
                 );
                 $reconciled++;
             } catch (Throwable $e) {
@@ -241,7 +246,11 @@ class CostReconciliationService
     private function getRegisterSlug(): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        return ($slug !== '') ? $slug : self::DEFAULT_REGISTER_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
     /**
@@ -252,7 +261,11 @@ class CostReconciliationService
     private function getSchemaSlug(): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, 'message_schema', '');
-        return ($slug !== '') ? $slug : self::DEFAULT_SCHEMA_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_SCHEMA_SLUG;
     }//end getSchemaSlug()
 
     /**

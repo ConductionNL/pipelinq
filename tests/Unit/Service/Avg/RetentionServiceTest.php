@@ -36,6 +36,7 @@ require_once __DIR__.'/AvgTestSupport.php';
  */
 class RetentionServiceTest extends TestCase
 {
+
     /**
      * The fake OR ObjectService.
      *
@@ -67,11 +68,11 @@ class RetentionServiceTest extends TestCase
         $this->objectService = new FakeAvgObjectService();
         $appConfig           = $this->createMock(IAppConfig::class);
         $appConfig->method('getValueString')->willReturnCallback(
-            static fn (string $app, string $key, string $default = '', bool $lazy = false): string
+            static fn (string $app, string $key, string $default='', bool $lazy=false): string
                 => ($key === 'register' ? 'reg' : $key)
         );
         $appConfig->method('getValueInt')->willReturnCallback(
-            static fn (string $app, string $key, int $default = 0, bool $lazy = false): int => $default
+            static fn (string $app, string $key, int $default=0, bool $lazy=false): int => $default
         );
 
         $this->repository = AvgRepositoryFactory::build($this->objectService, $appConfig);
@@ -105,7 +106,7 @@ class RetentionServiceTest extends TestCase
         $count = $this->service->pseudonymizeExpiredEvidence(now: new DateTimeImmutable());
         $this->assertSame(1, $count);
 
-        $items = $this->repository->findAll(schemaKey: AvgRepository::SCHEMA_BEWIJS_ITEM, filters: ['verzoekId' => 'v1']);
+        $items    = $this->repository->findAll(schemaKey: AvgRepository::SCHEMA_BEWIJS_ITEM, filters: ['verzoekId' => 'v1']);
         $previews = array_map(static fn (array $i): string => (string) $i['inhoudPreview'], $items);
         $this->assertContains('verse PII', $previews);
         $this->assertNotContains('oude PII', $previews);
@@ -118,7 +119,7 @@ class RetentionServiceTest extends TestCase
      */
     public function testDeletesExpiredDossiers(): void
     {
-        $request = $this->objectService->saveObject(
+        $request   = $this->objectService->saveObject(
             object: ['kenmerk' => 'AVG-2021-0001', 'retentieTot' => (new DateTimeImmutable('-1 day'))->format('c')],
             extend: [],
             register: 'reg',
@@ -148,4 +149,42 @@ class RetentionServiceTest extends TestCase
         $this->assertCount(0, $this->repository->findAll(schemaKey: AvgRepository::SCHEMA_TERMIJN_EVENT, filters: ['verzoekId' => $verzoekId]));
         $this->assertCount(1, $this->repository->findAll(schemaKey: AvgRepository::SCHEMA_VERZOEK));
     }//end testDeletesExpiredDossiers()
+
+    /**
+     * REQ-AVG-014 boundary: the evidence pseudonymisation cut-off is the
+     * app-owned `verzameldOp + N days` window (default 30), NOT OR's
+     * processing-activity / audit-trail `MAX(created)` mechanism. Pinning the
+     * exact cut-off (just-inside survives, just-outside pseudonymised) guards
+     * against a future Seam-3 migration onto OR's AvgRetentionService silently
+     * re-timing erasure.
+     *
+     * @return void
+     */
+    public function testEvidenceCutoffIsAppOwnedThirtyDayWindow(): void
+    {
+        $now = new DateTimeImmutable('2026-06-21T12:00:00+00:00');
+
+        // 29 days old — just inside the 30-day window, must be kept.
+        $this->objectService->saveObject(
+            object: ['verzoekId' => 'v1', 'inhoudPreview' => 'binnen-termijn', 'verzameldOp' => $now->modify('-29 days')->format('c')],
+            extend: [],
+            register: 'reg',
+            schema: AvgRepository::SCHEMA_BEWIJS_ITEM
+        );
+        // 31 days old — past the window, must be pseudonymised.
+        $this->objectService->saveObject(
+            object: ['verzoekId' => 'v1', 'inhoudPreview' => 'buiten-termijn', 'verzameldOp' => $now->modify('-31 days')->format('c')],
+            extend: [],
+            register: 'reg',
+            schema: AvgRepository::SCHEMA_BEWIJS_ITEM
+        );
+
+        $count = $this->service->pseudonymizeExpiredEvidence(now: $now);
+        $this->assertSame(1, $count, 'Exactly the over-30-day item is pseudonymised.');
+
+        $items    = $this->repository->findAll(schemaKey: AvgRepository::SCHEMA_BEWIJS_ITEM, filters: ['verzoekId' => 'v1']);
+        $previews = array_map(static fn (array $i): string => (string) $i['inhoudPreview'], $items);
+        $this->assertContains('binnen-termijn', $previews);
+        $this->assertNotContains('buiten-termijn', $previews);
+    }//end testEvidenceCutoffIsAppOwnedThirtyDayWindow()
 }//end class

@@ -62,12 +62,16 @@ class BundleService
      * @param AvgRepository      $repository The AVG OR repository.
      * @param ContainerInterface $container  The DI container (DocuDesk render).
      * @param IAppConfig         $appConfig  The app config.
+     * @param OrGdprBridge       $orGdpr     Bridge onto OR's canonical access export.
+     * @param AvgRequestService  $requests   Article -> OR request-type mapping.
      * @param LoggerInterface    $logger     The logger.
      */
     public function __construct(
         private AvgRepository $repository,
         private ContainerInterface $container,
         private IAppConfig $appConfig,
+        private OrGdprBridge $orGdpr,
+        private AvgRequestService $requests,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -119,8 +123,43 @@ class BundleService
             'categorieen'    => $byCategory,
         ];
 
+        $orExport = $this->orAccessExport(request: $request);
+        if ($orExport !== null) {
+            $manifest['inzageExport'] = $orExport;
+        }
+
         return ['manifest' => $manifest, 'count' => $count];
     }//end assemble()
+
+    /**
+     * Anchor the deliverable on OR's canonical access/portability export.
+     *
+     * For art-15 (inzage) and art-20 (portabiliteit) requests the manifest now
+     * carries OpenRegister's `DataSubjectRequestService::assembleAccessExport`
+     * — the authoritative, RBAC + tenant scoped inventory of the subject's
+     * objects with the PII attributes that triggered inclusion — alongside the
+     * federated BewijsItem categories. Pipelinq keeps the signing / one-time
+     * token / AP-dossier wrapper on top. Recorded in
+     * openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md.
+     *
+     * @param array<string, mixed> $request The request payload.
+     *
+     * @return array<string, mixed>|null The OR export, or null when not applicable.
+     */
+    private function orAccessExport(array $request): ?array
+    {
+        $orType = $this->requests->orRequestTypeFor((string) ($request['artikel'] ?? ''));
+        if ($orType !== 'access' && $orType !== 'portability') {
+            return null;
+        }
+
+        $subjectId = (string) ($request['verzoekerBsn'] ?? '');
+        if ($subjectId === '') {
+            return null;
+        }
+
+        return $this->orGdpr->assembleAccessExport(subjectId: $subjectId, type: null);
+    }//end orAccessExport()
 
     /**
      * Generate, seal and persist the export bundle for a request.

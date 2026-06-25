@@ -9,6 +9,70 @@
 				"description": "A recurring or one-off contract between the organization and a client. Drives MRR/ARR, renewal-window detection, renewal-lead automation and churn metrics. References an existing client object (identity is never duplicated). Field names contractNumber/startDate/endDate/value/status are read by the customer-portal contract reader without mapping.",
 				"@type": "object",
 				"type": "object",
+				"configuration": {
+					"x-openregister-lifecycle": {
+						"field": "status",
+						"initial": "draft",
+						"terminal": [
+							"renewed",
+							"churned",
+							"cancelled"
+						],
+						"transitions": {
+							"activate": {
+								"from": [
+									"draft",
+									"expiring"
+								],
+								"to": "active",
+								"description": "Activate a draft contract (or pull an expiring one back to active after a renewal)."
+							},
+							"backToDraft": {
+								"from": [
+									"active",
+									"expiring"
+								],
+								"to": "draft",
+								"description": "Return a contract to draft for correction."
+							},
+							"enterRenewalWindow": {
+								"from": [
+									"draft",
+									"active"
+								],
+								"to": "expiring",
+								"description": "Renewal engine marks the contract as approaching its end date (engine-only; ContractService also requires byEngine)."
+							},
+							"renew": {
+								"from": [
+									"draft",
+									"active",
+									"expiring"
+								],
+								"to": "renewed",
+								"description": "Close the contract as renewed (ContractService also requires a won renewal lead). Terminal."
+							},
+							"churn": {
+								"from": [
+									"draft",
+									"active",
+									"expiring"
+								],
+								"to": "churned",
+								"description": "Close the contract as churned (lost on renewal). Terminal."
+							},
+							"cancel": {
+								"from": [
+									"draft",
+									"active",
+									"expiring"
+								],
+								"to": "cancelled",
+								"description": "Cancel the contract (ContractService also requires a cancellationReason). Terminal."
+							}
+						}
+					}
+				},
 				"x-openregister-notifications": {
 					"contractExpiring": {
 						"trigger": {
