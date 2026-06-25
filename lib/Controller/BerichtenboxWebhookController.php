@@ -52,11 +52,11 @@ class BerichtenboxWebhookController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest            $request           Request.
-     * @param BerichtenboxService $berichtenbox      Berichtenbox service.
-     * @param LogiusConnector     $logius            Logius connector (signature
-     *                                               verification helper).
-     * @param LoggerInterface     $logger            Logger.
+     * @param IRequest            $request      Request.
+     * @param BerichtenboxService $berichtenbox Berichtenbox service.
+     * @param LogiusConnector     $logius       Logius connector (signature
+     *                                          verification helper).
+     * @param LoggerInterface     $logger       Logger.
      */
     public function __construct(
         IRequest $request,
@@ -210,12 +210,18 @@ class BerichtenboxWebhookController extends Controller
         if ($body !== false && $body !== '') {
             return $body;
         }
+
         // Test-runner / form-encoded fallback.
         $params = $this->request->getParams();
         if (is_array($params) === true) {
             $encoded = json_encode($params);
-            return ($encoded === false) ? '' : $encoded;
+            if ($encoded === false) {
+                return '';
+            }
+
+            return $encoded;
         }
+
         return '';
     }//end readRawBody()
 }//end class

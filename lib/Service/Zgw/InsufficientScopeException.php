@@ -51,15 +51,19 @@ class InsufficientScopeException extends ZgwException
     public function __construct(
         public readonly string $scope,
         public readonly string $zaaktypeUrl,
-        string $additionalInfo = '',
+        string $additionalInfo='',
     ) {
+        $suffix = '';
+        if ($additionalInfo !== '') {
+            $suffix = ' '.$additionalInfo;
+        }
+
         $msg = sprintf(
             'ZGW: missing scope "%s" on resource "%s".%s',
             $scope,
             $zaaktypeUrl,
-            $additionalInfo === '' ? '' : ' '.$additionalInfo
+            $suffix
         );
-        parent::__construct($msg);
+        parent::__construct(message: $msg);
     }//end __construct()
-
 }//end class

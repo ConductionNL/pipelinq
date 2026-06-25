@@ -39,6 +39,16 @@ use Psr\Log\LoggerInterface;
  * Filtered to the lead schema. Idempotent: a deal that already carries a
  * forecast_category is left untouched.
  *
+ * NOTE (pipelinq-lifecycle-batch-b / ADR-031): the create-default is now declared
+ * on the lead schema as `forecast_category.default = "pipeline"` with
+ * `defaultBehavior: "falsy"`, which OpenRegister applies DURING the create save
+ * (for a missing / null / empty-string value) — so by the time this listener runs
+ * the category is already defaulted and {@see ForecastDealService::applyDefaultCategory()}
+ * returns null (no re-save). The listener is retained as a backstop: it costs one
+ * idempotent check and guarantees the default even on any code path that bypasses
+ * the schema-default application. ForecastDealService reads the default value from
+ * the schema annotation, so the source of truth is the schema, not this listener.
+ *
  * @implements IEventListener<Event>
  */
 class DealCreatedListener implements IEventListener

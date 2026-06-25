@@ -19,7 +19,7 @@
 			:show-add="false"
 			@refresh="onRefresh"
 			@sort="onSort"
-			@row-click="openRun"
+			@view="openRun"
 			@page-changed="onPageChange">
 			<template #row-actions="{ row }">
 				<NcButton

@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # sla-engine-and-escalation Specification
 
 ## Purpose
-TBD - created by archiving change sla-engine-and-escalation. Update Purpose after archive.
+Resolves an immutable SLA policy per tracked object at creation, computes holiday-aware and business-hours deadlines, and pauses and resumes timers on status changes. Drives an idempotent escalation chain across email, notification, WhatsApp, and webhook channels as deadlines are consumed, reconciles silent deadline crossings through a scheduled sweep job, exposes attainment reporting, and records an audited, justification-gated history of policy changes, integrating with OpenRegister object events rather than polling.
 ## Requirements
 ### Requirement: Policy resolution at object creation
 

@@ -66,6 +66,22 @@ if (class_exists(ObjectService::class) === false) {
         }//end findAll()
 
         /**
+         * Count objects matching the given configuration.
+         *
+         * Mirrors the real OR ObjectService signature so test mocks that call
+         * `count(config: ['filters' => ...])` (the form used by pipelinq query
+         * pushdown) do not blow up with "Unknown named parameter".
+         *
+         * @param array<string, mixed> $config Configuration with `filters`, etc.
+         *
+         * @return int
+         */
+        public function count(array $config=[]): int
+        {
+            return 0;
+        }//end count()
+
+        /**
          * Save (create or update) an object.
          *
          * Mirrors the real OR ObjectService signature (parameter is `$object`,

@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # commercial-dashboard Specification
 
 ## Purpose
-TBD - created by archiving change commercial-dashboard. Update Purpose after archive.
+Provides a commercial overview dashboard as the default landing page, showing revenue, won value, win rate, average deal size, weighted forecast, and open pipeline value alongside trend charts and closing-soon/recently-won deal tables. Backed by an authenticated analytics endpoint and a seeded demo dataset, it splits commercial KPIs from the operational widgets, which move to a dedicated Operational overview.
 ## Requirements
 ### Requirement: Commercial overview KPI endpoint
 
@@ -81,7 +85,12 @@ The dashboard at route `/` SHALL be the Commercial overview: a six-
 tile KPI strip (revenue, won value, win rate, average deal size,
 weighted forecast, open pipeline value), the four commercial charts,
 and the two deal tables. It SHALL inherit the dashboard date-range
-and Refresh action.
+and Refresh action. The date-range header SHALL render as a compact
+pills control (`dateRange.control: "pills"`) — a segmented preset
+toggle (Last 7 / 30 / 90 / 365 days) rather than a select plus two
+date inputs. The KPI strip, charts, and tables SHALL be laid out
+without a dead vertical gap: the charts SHALL sit directly below the
+KPI rows.
 
 #### Scenario: Commercial dashboard renders KPIs and charts
 
@@ -90,6 +99,22 @@ and Refresh action.
 - **THEN** the KPI strip shows six EUR/percentage figures and the
   revenue, pipeline-by-stage, product-category and top-customer
   charts render
+
+#### Scenario: date range is a compact pills control
+
+- **GIVEN** the Commercial overview
+- **WHEN** the date-range header renders
+- **THEN** it shows a segmented pill row of presets (Last 7 / 30 / 90
+  / 365 days) with the active preset highlighted, and no "Range preset"
+  select or bare `YYYY-MM-DD` date inputs are shown
+- **AND** clicking a pill changes the dashboard's active date range
+
+#### Scenario: charts sit directly below the KPI rows
+
+- **GIVEN** the Commercial overview
+- **WHEN** the dashboard renders
+- **THEN** the chart row begins immediately after the KPI rows with
+  no empty grid rows between them
 
 ### Requirement: Operational dashboard preserved
 

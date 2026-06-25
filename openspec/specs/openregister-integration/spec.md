@@ -1,5 +1,5 @@
 ---
-status: implemented
+status: done
 ---
 
 # OpenRegister Integration Specification
@@ -1278,6 +1278,345 @@ Operations for Pinia store actions and getters MUST tolerate missing, empty, or 
 - WHEN it executes
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
+
+### Requirement: Server-Side Query Pushdown (Count / Sort / Paginate)
+
+Backend services MUST push counting, sorting, and pagination down into OpenRegister's query engine
+rather than fetching every matching object and counting / sorting / slicing in PHP. A service that
+needs only a count MUST call `ObjectService::count(['filters' => …])`; a service that needs the most
+recent or a page of objects MUST use `findAll`'s `sort`, `limit`, and `offset` config keys. Services
+MUST call `ObjectService` with its real single-`$config`-array signature
+(`findAll(config: […])` / `count(config: […])`), never the obsolete
+`findAll(register: …, schema: …, limit: …)` positional/named form.
+
+A predicate MAY remain in PHP **only** when OpenRegister's query engine cannot express it — namely
+`SUM`/`AVG` aggregation, `NOT IN`, sorting on a computed/coalesced value, or `DISTINCT` over the
+simple filter call path. Such a leg MUST carry an inline comment stating why it stays in PHP.
+
+**Feature tier**: MVP
+
+#### Scenario: Queue depth is counted server-side
+
+- GIVEN a queue holding more than one request
+- WHEN `QueueService::getQueueDepth()` is called
+- THEN it MUST call `ObjectService::count()` filtered to that queue
+- AND it MUST return the queue's true item count (NOT a value capped at 1 by a `limit: 1` fetch)
+
+#### Scenario: Active-staff-for-role count pushes the role filter down
+
+- GIVEN POS staff rows, some on the target role and some on other roles
+- WHEN `PosRoleService::countActiveStaffForRole()` is called
+- THEN the `posRole` equality MUST be applied server-side via `findAll(config:)`
+- AND staff on other roles MUST NOT be fetched into PHP
+- AND a staff row with a missing `isActive` field MUST still count as active (the `isActive` default stays in PHP)
+
+#### Scenario: Latest forecast snapshot is selected by server-side sort + limit
+
+- GIVEN multiple forecast snapshots for an owner / period / level
+- WHEN `ForecastService::latestSnapshot()` resolves the most recent snapshot
+- THEN it MUST request `sort` by `as_of_date` descending with `limit` 1
+- AND it MUST NOT fetch every snapshot and sort them in PHP
+
+#### Scenario: Paginated list uses a server-side total and page window
+
+- GIVEN more matching objects than one page holds
+- WHEN a paginated list (e.g. `BlastService::listBlasts`, `ForecastExportService::exportSnapshots`) is built
+- THEN the total MUST come from `ObjectService::count()`
+- AND the page MUST come from a `findAll` with `limit` and `offset`
+- AND the service MUST NOT fetch the full result set and `array_slice` it in PHP
+
+#### Scenario: An OR-unexpressible predicate stays in PHP with a stated reason
+
+- GIVEN a predicate OpenRegister cannot express (e.g. a `NOT IN` over terminal statuses, or a `SUM` with a per-row floor)
+- WHEN the service computes it
+- THEN that specific leg MAY remain a PHP loop
+- AND the code MUST carry an inline comment explaining why it cannot be pushed down
+
+### Requirement: Declarative Object Lifecycle State Machines
+
+Backend services that gate object `status` transitions MUST declare the transition graph in the
+schema's `configuration.x-openregister-lifecycle` annotation (ADR-031), rather than maintaining a
+hardcoded PHP adjacency map as the source of truth. OpenRegister's `LifecycleValidationListener`
+enforces the declared graph automatically on every `ObjectService::saveObject()`.
+
+A service MAY keep a thin PHP transition guard, but that guard MUST derive its allowed-transition
+set from the schema declaration (not from a duplicate hardcoded constant). A guard is retained ONLY
+to preserve an existing error contract (specific exception type, message, or HTTP status) or to
+validate before the object reaches `saveObject()`.
+
+A predicate MAY remain in a PHP guard **only** when the declarative lifecycle grammar cannot express
+it — namely cross-object business invariants such as date-range coherence, "at least one related
+rule exists", or "at least one redemption option exists". Such a predicate MUST carry an inline
+comment stating why it stays in PHP.
+
+**Feature tier**: MVP
+
+#### Scenario: Callback task transitions are sourced from the schema
+
+- GIVEN the Task schema declares `x-openregister-lifecycle` (open→in_behandeling→afgerond/verlopen, reopen)
+- WHEN `CallbackService::validateStatusTransition('open', 'in_behandeling')` is called
+- THEN it MUST return valid, having read the allowed set from the schema declaration
+- AND `validateStatusTransition('open', 'afgerond')` MUST return invalid with a "not allowed" reason
+- AND the controller MUST still surface an illegal transition as HTTP 400
+
+#### Scenario: Walk-in ticket lifecycle is declared and enforced
+
+- GIVEN the walkInTicket schema declares `x-openregister-lifecycle` (waiting→called/abandoned, called→served/abandoned; served/abandoned terminal)
+- WHEN `WalkInQueueService::assertTransitionAllowed('waiting', 'called')` is called
+- THEN it MUST pass, having derived the graph from the schema declaration
+- AND `assertTransitionAllowed('served', 'called')` MUST throw `InvalidArgumentException` with the existing message
+- AND a save that flips the ticket status to a value no transition allows MUST be rejected by OpenRegister's listener
+
+#### Scenario: Loyalty activation moves the graph edge to the schema but keeps business guards in PHP
+
+- GIVEN the loyaltyProgramme schema declares `x-openregister-lifecycle` including concept→actief
+- WHEN `LoyaltyProgrammeService::activate()` is called on a `concept` programme whose business guards pass
+- THEN the concept→actief edge MUST be validated against the schema declaration
+- AND the activation MUST succeed and persist `status = actief`
+- WHEN activation is attempted on a programme that fails a business guard (no rules, no redemption options, or incoherent dates)
+- THEN it MUST still raise the existing `RuntimeException` with the same message, because that guard cannot be expressed declaratively
+
+### Requirement: Money-Path Object Lifecycle State Machines Are Schema-Declared
+
+Revenue and booking services that gate an object's status transitions MUST declare the transition
+graph in the schema's `configuration.x-openregister-lifecycle` annotation (ADR-031) as the single
+source of truth, rather than a hardcoded PHP adjacency map. OpenRegister's
+`LifecycleValidationListener` enforces the declared graph automatically on every
+`ObjectService::saveObject()`. A thin PHP guard MAY be retained, but it MUST derive its
+allowed-transition set (and terminal set) from the schema declaration, and it is retained ONLY to
+preserve an existing error contract (exception type, message, HTTP status) or pre-save validation.
+
+The migration MUST be strictly behavior-preserving: no transition legal before the change becomes
+illegal, and none illegal before becomes legal. A conditional predicate MAY remain in a PHP guard
+ONLY when the declarative grammar cannot express it (engine-only origin, "requires a related won
+lead", "requires a non-empty reason", date-range coherence), and MUST carry an inline comment.
+
+When a schema needs a **second** independent state machine on a different field, and OpenRegister's
+single enforced lifecycle field is already claimed by another field, that second machine MUST NOT be
+declared as a second `x-openregister-lifecycle` (OpenRegister enforces only one lifecycle field per
+schema). It MUST instead be declared under an app-namespaced `configuration` key and enforced by the
+app, with the schema annotation remaining the source of truth for its state partition.
+
+**Feature tier**: MVP
+
+#### Scenario: Contract transitions derive terminal set and graph from the schema
+
+- GIVEN the contract schema declares `x-openregister-lifecycle` on `status` with
+  `terminal: [renewed, churned, cancelled]` and transitions covering every reachable
+  non-terminal→target edge the service permits today
+- WHEN `ContractService::assertTransitionAllowed(['status' => 'active'], 'expiring', byEngine: true)` is called
+- THEN it MUST pass, having read the terminal set + adjacency from the schema declaration
+- AND `assertTransitionAllowed(['status' => 'churned'], 'active')` MUST throw `InvalidArgumentException`
+  reporting the terminal state (terminal set sourced from the schema)
+- AND `assertTransitionAllowed(['status' => 'active'], 'renewed')` without a won renewal lead MUST still
+  throw `InvalidArgumentException` with the existing "requires a won renewal lead" message (a conditional
+  predicate kept in PHP)
+- AND a `saveObject()` that flips a `renewed` (terminal) contract's status back to `active` MUST be
+  rejected by OpenRegister's `LifecycleValidationListener` as defense-in-depth
+
+#### Scenario: Booking state machine is sourced from the schema and preserves its messages
+
+- GIVEN the booking schema declares `x-openregister-lifecycle` on `status` mirroring the prior
+  `allowedTransitions()` map (pending-deposit/confirmed sources; completed/no-show/cancelled-*/rescheduled terminal)
+- WHEN `BookingService::allowedTransitions()` is read
+- THEN it MUST equal the prior hardcoded map, having been derived from the schema declaration
+- AND `BookingService::assertTransitionAllowed('pending-deposit', 'confirmed')` MUST pass
+- AND `assertTransitionAllowed('confirmed', 'pending-deposit')` MUST throw `InvalidArgumentException`
+  with the existing "Invalid status transition" message
+- AND `assertTransitionAllowed('completed', 'confirmed')` MUST be rejected (terminal state has no outgoing edge)
+
+#### Scenario: Forecast-category partition moves to the schema but enforcement stays in PHP
+
+- GIVEN the lead schema already declares `x-openregister-lifecycle` on `status`, and OpenRegister enforces
+  only one lifecycle field per schema
+- AND the forecast-category open/closed partition and default are declared under the app-namespaced
+  `configuration.x-pipelinq-forecast-lifecycle` key on the lead schema
+- WHEN `ForecastDealService::validateTransition()` moves a `closed_won` deal to an open category
+- THEN it MUST be rejected with `forecast.error.closed_deal_locked`, having read the open/closed partition
+  from the schema annotation (not a hardcoded constant)
+- AND the `DealUpdatedListener` revert-after-write behavior MUST be unchanged (OpenRegister's listener does
+  NOT enforce this second field)
+- AND a new deal created without a `forecast_category` MUST default to `pipeline` via the schema property
+  `default` (`defaultBehavior: "falsy"`), with `DealCreatedListener` retained as an idempotent backstop
+
+### Requirement: Server-Side Aggregation Pushdown (Sum / Count / Group)
+
+Backend money / reporting services MUST push `SUM` and grouped `COUNT` work down into OpenRegister's
+ad-hoc aggregation runner rather than hydrating every matching object and reducing in PHP. A service
+that needs a total over a column MUST call
+`AggregationRunner::runAdhocByRef($registerRef, $schemaRef, AggregationQuery::create(metric: 'sum',
+field: …, filter: …))`; a service that needs per-key counts MUST add `groupBy: ['field' => …]`. The
+runner MUST be resolved from the DI container the same way `ObjectService` is. A pushed-down call
+MUST degrade to the prior fallback (`0` / empty / the original PHP reduce) when OpenRegister is
+unavailable, so the report still renders.
+
+A computation MAY remain a PHP loop **only** when the OpenRegister aggregation contract cannot
+express it — namely a per-row transformation before the aggregate (e.g. a `max(0, …)` floor or a
+per-row sign that is not reducible to a status split), an aggregate over a value nested inside a
+row's array property rather than a top-level column, a date window that is string-compared against a
+differently-formatted stored timestamp, a coalesced/defaulted/derived bucket key, or a case-folded
+`NOT IN`. Such a leg MUST carry an inline comment stating why it stays in PHP, and its numeric result
+MUST NOT change.
+
+**Feature tier**: MVP
+
+#### Scenario: Confirmed-sales total is summed server-side over a date window
+
+- GIVEN POS transactions with mixed statuses and confirmation timestamps
+- WHEN `CashShiftService::sumConfirmedSales(from, to)` computes the in-window sales total
+- THEN it MUST request `SUM(total)` via `runAdhocByRef` with `status IN (confirmed, settled)` and a `confirmedAt` `gte`/`lte` window
+- AND it MUST NOT fetch every transaction and sum them in PHP
+- AND the returned total MUST equal the prior PHP window-sum to the cent
+
+#### Scenario: Account balance is summed server-side over the full ledger
+
+- GIVEN a points ledger with credit, debit, and expiry entries for an account
+- WHEN `PointsLedgerService::getAccountBalance(accountId)` computes the live balance
+- THEN it MUST request `SUM(aantal)` via `runAdhocByRef` filtered by `accountId`
+- AND an account with no ledger entries MUST balance to 0 (the runner's `null` result casts to 0)
+- AND the returned balance MUST equal the prior sum over the full ledger history
+
+#### Scenario: Tier distribution is counted server-side with a default bucket preserved
+
+- GIVEN loyalty accounts for a programme, some with no `currentTierId`
+- WHEN `LoyaltyReportingService::getTierReport(programmeId)` builds the per-tier counts
+- THEN it MUST request a grouped `COUNT` by `currentTierId` via `runAdhocByRef`
+- AND accounts with a missing or empty `currentTierId` MUST be folded into the `unassigned` bucket
+- AND the per-tier counts MUST equal the prior PHP bucketing
+
+#### Scenario: Per-staff sales reproduce refund netting via a signed split sum
+
+- GIVEN final-status POS transactions (confirmed / settled / refunded) for several staff members
+- WHEN `PosStaffReportService::staffSalesReport()` aggregates per staff member
+- THEN the `transactionCount` MUST come from a grouped `COUNT` over all three final statuses
+- AND each staff total MUST be `SUM(total | confirmed,settled) − SUM(total | refunded)` (and likewise for tax), reconstructing the per-row refund sign
+- AND a transaction with an empty `staffMemberId` MUST be excluded
+- AND the per-staff `transactionCount` / `total` / `totalTax` MUST equal the prior PHP reduce
+
+#### Scenario: A per-row-floored or windowed-by-string sum stays in PHP with a stated reason
+
+- GIVEN an outstanding-points liability sum that applies a per-account `max(0, …)` floor, or a ledger
+  window that string-compares a stored timestamp OpenRegister normalises to a different format
+- WHEN the service computes it
+- THEN that specific leg MAY remain a PHP loop
+- AND the code MUST carry an inline comment explaining why it cannot be pushed down
+- AND its numeric result MUST be unchanged from before the refactor
+
+### Requirement: Server-Side COUNT / Facet and Filtered-List Pushdown (non-GDPR)
+
+Backend non-GDPR read services MUST push grouped `COUNT` work down into OpenRegister's ad-hoc
+aggregation runner, and filtered-list work into `ObjectService::findAll` filters, rather than
+hydrating every matching object and filtering / grouping / counting in PHP. A service that needs
+per-key counts MUST call `AggregationRunner::runAdhocByRef($registerRef, $schemaRef,
+AggregationQuery::create(metric: 'count', filter: …, groupBy: ['field' => …]))`; a service that needs
+a filtered subset MUST pass the equality / `IN` filters to `findAll(['filters' => …])`. The runner
+MUST be resolved from the DI container the same way `ObjectService` is. A pushed-down call MUST
+degrade to the prior fallback (empty list / empty counts / partial payload) when OpenRegister is
+unavailable, so the page still renders.
+
+A computation MAY remain a PHP loop **only** when the OpenRegister contract cannot express it —
+namely a **computed bucket key** (a group key derived in PHP, e.g. resolving a stored ref to a slug),
+a **cross-source merge** (combining separate schemas or an array property on a row), a date window
+that is **string-compared with an ISO-`T` / end-of-day boundary** or a **timezone-aware
+`DateTimeImmutable`** against a differently-formatted stored timestamp, a sort/paginate that MUST run
+**after a per-row IDOR filter**, an aggregate over a value that must be **computed per row** (e.g. an
+ISO-8601 duration sum), or a **case-folded** match. Such a leg MUST carry an inline comment stating
+why it stays in PHP, and its result MUST NOT change.
+
+The GDPR-scoped services (`AvgRequestService`, `DpiaDetectionService`, `ConsentService`,
+`OptOutService`, `RedactionService`, `EvidenceCollectionService`) are out of scope for this delta and
+MUST NOT be modified here.
+
+**Feature tier**: MVP
+
+#### Scenario: A user's open requests are filtered server-side
+
+- GIVEN requests with various assignees and statuses
+- WHEN `KccWerkplekService::getWorkspaceState(userId)` builds the agent's assigned-and-open list
+- THEN it MUST request the subset via `findAll` with `assignee = userId` and `status IN (new, in_progress)`
+- AND it MUST NOT fetch every request and filter them in PHP for this list
+- AND the returned `assignedRequests` MUST equal the prior PHP-filtered list (same rows, same order)
+
+#### Scenario: Open requests are counted per queue server-side with a computed slug bucket preserved
+
+- GIVEN open and closed requests referencing queues by slug or by id
+- WHEN `KccWerkplekService::getWorkspaceState(userId)` builds `queueCounts`
+- THEN it MUST request a grouped `COUNT` by the stored `queue` field via `runAdhocByRef`, filtered to `status IN (new, in_progress)`
+- AND each returned group key (the raw queue ref) MUST be re-mapped in PHP to the queue's slug and folded into `queueCounts[slug]`
+- AND `queueCounts` MUST stay seeded to 0 for every queue with a non-empty slug
+- AND a group whose key matches no queue (including the null/empty group) MUST NOT be counted
+- AND the per-queue counts MUST equal the prior PHP loop
+
+#### Scenario: A cross-source, computed-bucket, ISO-T-windowed, or post-IDOR leg stays in PHP with a stated reason
+
+- GIVEN a builder that buckets by a PHP-computed week key over pre-fetched rows that also drive an
+  empty-result guard, OR a timeline that merges several schemas with an end-of-day ISO-`T` date window,
+  OR a portal facade that sorts and paginates only after a per-row IDOR scope filter, OR a cache lookup
+  that selects the most-recent unexpired row via a timezone-aware `DateTimeImmutable` compare
+- WHEN the service computes it
+- THEN that specific leg MAY remain a PHP loop
+- AND the code MUST carry an inline comment explaining why it cannot be pushed down
+- AND its result MUST be unchanged from before the refactor
+
+### Requirement: AVG Request Status Lifecycle Is Schema-Declared
+
+The `avgVerzoek` schema MUST declare its `status` transition graph in
+`configuration.x-openregister-lifecycle` (ADR-031): `field: status`,
+`initial: ingediend`, `final: [afgerond, gearchiveerd]`, and a transition map in
+which each of the seven working states (ingediend, in-behandeling,
+bewijs-verzamelen, redactie, bundle-genereren, wachten-op-verzoeker,
+weigering-opgesteld) may move to any declared status, and the two terminal states
+have no outgoing transitions. The declared graph MUST mirror the permit set the
+service enforced before this change — no edge opened or closed.
+
+`AvgRequestService::update()` MUST derive its status-transition validation from
+this schema declaration (via `SchemaLifecycleGraph`), not from a hardcoded copy.
+An illegal status move MUST be rejected with `OCSBadRequestException` (HTTP 400),
+preserving the existing exception type and message contract. OpenRegister's
+`LifecycleValidationListener` enforces the same declared graph on
+`ObjectService::saveObject()` as defense-in-depth.
+
+The side-effecting legal computations MUST remain in PHP because the declarative
+lifecycle grammar cannot express them: the intake reference + legal-deadline
+computation, the archive 5-year `retentieTot` stamp, the retention-guarded delete
+with FG/DPO override, and the allowed-FIELDS enforcement on update. Per-transition
+RBAC `authorization` MUST NOT be added, because no individual edge is role-gated
+today — *who* may edit is gated once by `AvgAccessService` (handler / team lead /
+FG-DPO / admin), and per-edge authorization would change that contract.
+
+**Feature tier**: MVP
+
+#### Scenario: avgVerzoek lifecycle is declared and resolves from the schema
+
+- GIVEN the avgVerzoek schema declares `x-openregister-lifecycle` (field `status`, initial `ingediend`, final `afgerond`/`gearchiveerd`)
+- WHEN `SchemaLifecycleGraph::fullAdjacencyFor('avgVerzoek')` resolves the adjacency map
+- THEN each of the seven working states MUST reach all nine declared states
+- AND the two terminal states (`afgerond`, `gearchiveerd`) MUST be present as keys with empty target lists
+- `@e2e exclude` backend schema-resolution invariant; covered by AvgRequestServiceTest unit test
+
+#### Scenario: A legal status transition succeeds with preserved behaviour
+
+- GIVEN a request the acting handler may edit, in a working state (e.g. `redactie`)
+- WHEN `update()` patches `status` to a declared target (e.g. `bundle-genereren`)
+- THEN the transition MUST be validated against the schema-derived graph and persist the new status
+- `@e2e exclude` backend service-layer transition; covered by the unit transition-matrix test
+
+#### Scenario: An illegal status transition is rejected with the same error contract
+
+- GIVEN a request in a terminal state (`afgerond` or `gearchiveerd`)
+- WHEN `update()` is called with any status patch
+- THEN it MUST raise `OCSBadRequestException` with the message "Een afgerond verzoek kan niet meer worden gewijzigd."
+- AND WHEN `update()` is called with a status value not in the avgVerzoek enum
+- THEN it MUST raise `OCSBadRequestException` with an "Onbekende AVG-status" message
+- AND a `saveObject()` that flips the status to a value no declared transition allows MUST be rejected by OpenRegister's `LifecycleValidationListener`
+- `@e2e exclude` backend error-contract invariant; covered by the unit transition-matrix test + OR listener (defense-in-depth)
+
+#### Scenario: Legal computations stay in PHP
+
+- GIVEN an AVG request lifecycle action with a legal side-effect
+- WHEN intake computes the reference + `wettelijkeTermijnVerloopt`, or archive stamps `retentieTot`, or delete enforces the retention guard with DPO override
+- THEN these computations MUST run in `AvgRequestService` PHP, unchanged, because the declarative lifecycle grammar cannot express them
+- `@e2e exclude` backend legal-computation invariant; covered by existing AvgRequestServiceTest scenarios
 
 ## Requirements
 

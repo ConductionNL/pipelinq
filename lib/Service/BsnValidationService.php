@@ -73,7 +73,7 @@ class BsnValidationService
                 'elfproefScore'   => -1,
                 'errorCode'       => self::ERROR_LENGTH,
                 'errorMessage'    => 'Een BSN bestaat uit exact 9 cijfers.',
-                'maskedBsn'       => self::mask($bsnInput),
+                'maskedBsn'       => self::mask(bsnInput: $bsnInput),
             ];
         }
 
@@ -82,18 +82,26 @@ class BsnValidationService
         for ($i = 0; $i < 8; $i++) {
             $sum += ((int) $bsnInput[$i]) * (9 - $i);
         }
+
         // Last digit uses weight -1.
         $sum -= (int) $bsnInput[8];
 
         $modulo  = $sum % 11;
         $isValid = ($modulo === 0);
 
+        $errorCode    = null;
+        $errorMessage = null;
+        if ($isValid === false) {
+            $errorCode    = self::ERROR_CHECKSUM;
+            $errorMessage = 'Dit BSN voldoet niet aan de 11-proef (controlesom fout).';
+        }
+
         return [
             'isFormeelGeldig' => $isValid,
             'elfproefScore'   => $modulo,
-            'errorCode'       => $isValid ? null : self::ERROR_CHECKSUM,
-            'errorMessage'    => $isValid ? null : 'Dit BSN voldoet niet aan de 11-proef (controlesom fout).',
-            'maskedBsn'       => self::mask($bsnInput),
+            'errorCode'       => $errorCode,
+            'errorMessage'    => $errorMessage,
+            'maskedBsn'       => self::mask(bsnInput: $bsnInput),
         ];
     }//end validate()
 
@@ -115,9 +123,11 @@ class BsnValidationService
         if ($length === 0) {
             return '';
         }
+
         if ($length < 5) {
             return str_repeat('*', $length);
         }
+
         // Reveal characters 3..7 (1-indexed): chars at index 3..6.
         $reveal = substr($bsnInput, 3, 4);
         return '***'.$reveal.'*';

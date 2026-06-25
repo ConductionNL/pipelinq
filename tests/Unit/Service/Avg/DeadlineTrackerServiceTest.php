@@ -98,7 +98,7 @@ class DeadlineTrackerServiceTest extends TestCase
 
         $this->service = new DeadlineTrackerService(
             repository: $this->repository,
-            deadline: new DeadlineService(),
+            deadline: new DeadlineService(orGdpr: OrGdprBridgeFactory::build(new FakeOrGdpr())),
             events: $events,
             notifications: $notifications,
             logger: new NullLogger()

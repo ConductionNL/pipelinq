@@ -34,23 +34,6 @@ test('admin settings page renders the Integraties section with the Shillinq AP w
 	expect(hasIntegraties || hasShillinqLabel).toBe(true)
 })
 
-// @e2e openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-005
-test('expense list page mounts at /apps/pipelinq/#/expenses without server error', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/expenses')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 15000 })
-	await expect(page.locator('body')).not.toContainText('Uncaught Error', { timeout: 10000 })
-	// The CnIndexPage shell or its empty/loaded state always renders the page title.
-	const hasExpensesTitle = await page.getByText(/Expenses|Onkosten/i).first().isVisible({ timeout: 10000 }).catch(() => false)
-	expect(hasExpensesTitle).toBe(true)
-})
-
-// @e2e openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-006
-test('expense detail route mounts at /apps/pipelinq/#/expenses/new without server error', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/expenses/new')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 15000 })
-	await expect(page.locator('body')).not.toContainText('Uncaught Error', { timeout: 10000 })
-})
-
 /*
  * Per-scenario exclusions (covered by other test layers):
  *
@@ -65,6 +48,13 @@ test('expense detail route mounts at /apps/pipelinq/#/expenses/new without serve
  *   ShillinqApController retry endpoint (Newman-callable). Driving the AP
  *   webhook from a real browser would require a live Shillinq consumer.
  * @e2e exclude REQ-AP-007 — Seed data is asserted by the
- *   ConfigFileLoaderService merge in PHPUnit; once seeded, the list-view
- *   scenarios above exercise the UI rendering path.
+ *   ConfigFileLoaderService merge in PHPUnit.
+ * @e2e exclude REQ-AP-005 — The pipelinq expense LIST view was retired in the
+ *   pipelinq-hr-moveout-and-admin-dedupe change: expenses now live in the hrmq
+ *   app, and pipelinq's "Expenses" nav entry is a static deep-link to
+ *   /index.php/apps/hrmq/expenses. The list UI is hrmq's to cover.
+ * @e2e exclude REQ-AP-006 — The pipelinq expense DETAIL view (with the embedded
+ *   Shillinq AP card) was retired in pipelinq-hr-moveout-and-admin-dedupe;
+ *   expense detail is now an hrmq surface. The AP dispatch backend remains in
+ *   pipelinq (ShillinqApController/Service/listener) and is covered by PHPUnit.
  */

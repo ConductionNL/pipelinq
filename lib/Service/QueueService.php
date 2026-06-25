@@ -75,18 +75,19 @@ class QueueService
 
         try {
             $objectService = $this->getObjectService();
-            $results       = $objectService->findAll(
+
+            // Push the count down into OpenRegister's query engine. The previous
+            // implementation fetched findAll(limit: 1) and counted the result,
+            // which capped the reported depth at 1 (a bug) and over-fetched.
+            return $objectService->count(
                 [
                     'filters' => [
                         'register' => $registerId,
                         'schema'   => $schemaId,
                         'queue'    => $queueId,
                     ],
-                    'limit'   => 1,
                 ]
             );
-
-            return count($results);
         } catch (\Exception $e) {
             $this->logger->error(
                 'QueueService: Failed to get queue depth',

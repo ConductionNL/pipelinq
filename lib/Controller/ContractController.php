@@ -82,7 +82,7 @@ class ContractController extends Controller
         private ContainerInterface $container,
         private LoggerInterface $logger,
     ) {
-        parent::__construct(Application::APP_ID, $request);
+        parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
 
     /**
@@ -152,12 +152,12 @@ class ContractController extends Controller
         $newStatus = (string) $this->request->getParam('status', '');
         $reason    = (string) $this->request->getParam('cancellationReason', '');
 
-        $contract = $this->loadContract($id);
+        $contract = $this->loadContract(id: $id);
         if ($contract === null) {
             return new JSONResponse(['message' => 'Contract not found'], Http::STATUS_NOT_FOUND);
         }
 
-        if ($this->isAuthorized($user->getUID(), $contract) === false) {
+        if ($this->isAuthorized(uid: $user->getUID(), contract: $contract) === false) {
             return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
         }
 

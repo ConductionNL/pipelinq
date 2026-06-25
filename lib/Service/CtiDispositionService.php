@@ -130,10 +130,10 @@ class CtiDispositionService
     /**
      * Write the disposition back onto the contactmoment.
      *
-     * @param string $id       Contactmoment UUID.
-     * @param string $subject  Disposition subject.
-     * @param string $outcome  Outcome enum value.
-     * @param string $notes    Free-text notes.
+     * @param string $id      Contactmoment UUID.
+     * @param string $subject Disposition subject.
+     * @param string $outcome Outcome enum value.
+     * @param string $notes   Free-text notes.
      *
      * @return void
      */
@@ -183,7 +183,7 @@ class CtiDispositionService
         string $subject,
         string $notes,
         string $contactmomentId,
-        ?string $queueName = null,
+        ?string $queueName=null,
     ): ?string {
         $register   = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $taskSchema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
@@ -194,15 +194,15 @@ class CtiDispositionService
 
         try {
             $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-            $saved = $objectService->saveObject(
+            $saved         = $objectService->saveObject(
                 array_filter(
                     [
-                        'type'           => $type,
-                        'subject'        => $subject,
-                        'description'    => $notes,
-                        'status'         => 'open',
-                        'queueName'      => $queueName,
-                        'contactmoment'  => $contactmomentId,
+                        'type'          => $type,
+                        'subject'       => $subject,
+                        'description'   => $notes,
+                        'status'        => 'open',
+                        'queueName'     => $queueName,
+                        'contactmoment' => $contactmomentId,
                     ],
                     static fn($value): bool => ($value !== null && $value !== '')
                 ),
@@ -219,13 +219,17 @@ class CtiDispositionService
                 $id = $saved->getUuid();
             }
 
-            return $id !== null ? (string) $id : null;
+            if ($id !== null) {
+                return (string) $id;
+            }
+
+            return null;
         } catch (\Throwable $e) {
             $this->logger->error(
                 'CTI disposition: task save failed',
                 ['exception' => $e->getMessage(), 'contactmomentId' => $contactmomentId]
             );
             return null;
-        }
+        }//end try
     }//end createTask()
 }//end class

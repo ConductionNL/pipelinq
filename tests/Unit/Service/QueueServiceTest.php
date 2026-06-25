@@ -122,7 +122,7 @@ class QueueServiceTest extends TestCase
     private function createObjectServiceMock(): MockObject
     {
         $mock = $this->getMockBuilder(className: \stdClass::class)
-            ->addMethods(['findAll', 'saveObject'])
+            ->addMethods(['findAll', 'count', 'saveObject'])
             ->getMock();
 
         $this->container->method('get')->willReturn($mock);
@@ -154,24 +154,34 @@ class QueueServiceTest extends TestCase
     }//end testGetQueueDepthReturnsZeroWhenNotConfigured()
 
     /**
-     * Test getQueueDepth returns item count from ObjectService.
+     * Test getQueueDepth returns the true item count from ObjectService::count().
+     *
+     * Regression guard for issue #286: the previous implementation called
+     * findAll(limit: 1) then count()ed the PHP array, capping the reported
+     * depth at 1. The depth is now pushed down to OpenRegister's COUNT, so a
+     * queue holding more than one item reports its real depth.
      *
      * @return void
      */
     public function testGetQueueDepthReturnsItemCount(): void
     {
-        $this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
         $this->configureAppConfig();
 
         $objectService = $this->createObjectServiceMock();
-        $objectService->method('findAll')->willReturn(
-                [
-                    ['id' => 'item-1'],
-                    ['id' => 'item-2'],
-                    ['id' => 'item-3'],
-                ]
-                );
+        $objectService->expects($this->once())
+            ->method('count')
+            ->with(
+                    $this->callback(
+                    static function (array $config): bool {
+                        $filters = ($config['filters'] ?? []);
+                        return ($filters['queue'] ?? null) === 'queue-123'
+                        && array_key_exists('register', $filters)
+                        && array_key_exists('schema', $filters)
+                        && array_key_exists('limit', $config) === false;
+                    }
+                    )
+                    )
+            ->willReturn(3);
 
         $result = $this->buildService()->getQueueDepth(queueId: 'queue-123');
         $this->assertSame(expected: 3, actual: $result);

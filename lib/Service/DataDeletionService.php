@@ -3,12 +3,19 @@
 /**
  * Pipelinq DataDeletionService.
  *
- * AVG / GDPR right-to-be-forgotten for the appointment-booking module.
- * Pseudonymises the customer-identifying fields (`customerName`, `customerEmail`,
- * `customerPhone`) on every Booking linked to a customer with deterministic
- * SHA-256 hashes; never deletes Booking records (NL Boekhoudplicht — 7-year
- * retention). Aggregates (counts, totals, revenue) remain unchanged because the
- * underlying records are preserved.
+ * AVG / GDPR right-to-be-forgotten for the appointment-booking module. ADOPTS
+ * OpenRegister's canonical, legal-hold-aware erasure
+ * (`DataSubjectRequestService::erase` in `pseudonymise` mode) instead of the
+ * earlier divergent named-field SHA-256 hashing of `customerName` /
+ * `customerEmail` / `customerPhone`. This authorized behavioural change is
+ * recorded in openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md.
+ *
+ * OR's pseudonymise mode is a field-level VALUE overwrite (matching PII becomes
+ * the `[erased]` token) followed by a save — it never deletes the owning row,
+ * and it skips any object under an active legal hold / immutable archival
+ * status. That is exactly what keeps the NL Boekhoudplicht 7-year booking
+ * retention intact: the Booking row survives, only its PII is removed, so the
+ * accounting aggregates (counts, totals, revenue) stay valid.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -21,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/appointment-booking-12-compliance-i18n/specs/appointment-booking/spec.md#REQ-APT-017
+ * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
  */
 
 declare(strict_types=1);
@@ -30,237 +37,71 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\AppInfo\Application;
-use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
+use OCA\Pipelinq\Service\Avg\OrGdprBridge;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
-use Throwable;
 
 /**
- * AVG right-to-be-forgotten pseudonymisation for Bookings.
+ * AVG right-to-be-forgotten erasure for Bookings, via OR's canonical capability.
  *
- * @spec openspec/changes/appointment-booking-12-compliance-i18n/specs/appointment-booking/spec.md#REQ-APT-017
+ * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
  */
 class DataDeletionService
 {
     /**
-     * The booking schema config key (set by appointment-booking-01-data-model).
-     */
-    private const BOOKING_SCHEMA_KEY = 'booking_schema';
-
-    /**
      * Constructor.
      *
-     * @param ContainerInterface $container The DI container (lazy ObjectService).
-     * @param IAppConfig         $appConfig The app config (register + schema ids).
-     * @param LoggerInterface    $logger    The logger.
+     * @param OrGdprBridge    $orGdpr Bridge onto OR's legal-hold-aware erasure.
+     * @param LoggerInterface $logger The logger.
      */
     public function __construct(
-        private ContainerInterface $container,
-        private IAppConfig $appConfig,
+        private OrGdprBridge $orGdpr,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
 
     /**
-     * Pseudonymise a customer's identifying fields on every Booking they own.
+     * Erase a customer's identifying data via OR's pseudonymise erasure.
      *
-     * REQ-APT-017 / AVG (right-to-be-forgotten). The Booking record itself is
-     * retained (NL Boekhoudplicht — 7-year retention); only `customerName`,
-     * `customerEmail`, and `customerPhone` are replaced with deterministic
-     * SHA-256 hashes. Aggregates (counts, totals) are unchanged because rows
-     * remain in place.
+     * Delegates to OpenRegister's `DataSubjectRequestService::erase` in
+     * `pseudonymise` mode: OR discovers the customer's objects through its NER
+     * index (RBAC + tenant scoped), overwrites the matching PII values in place
+     * with the `[erased]` token, and RETAINS every row. Any Booking held by an
+     * active legal hold or immutable archival status (NL Boekhoudplicht 7-year
+     * retention) is reported back in the `held` bucket and left untouched — the
+     * row is never deleted. The customer identifier is never logged in full.
      *
-     * @param string $customerId The customer UID whose Bookings to pseudonymise.
+     * @param string $customerId The customer subject identifier whose data to erase.
+     * @param bool   $dryRun     When true, report matches/holds without mutating.
      *
-     * @return array<string, int> Summary {bookings: <count>} for logging/audit.
+     * @return array<string, int> Summary {bookings: <erased>, held: <held>} for logging/audit.
      *
-     * @spec openspec/changes/appointment-booking-12-compliance-i18n/specs/appointment-booking/spec.md#REQ-APT-017
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     *
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
      */
-    public function pseudonymizeCustomerBookings(string $customerId): array
+    public function pseudonymizeCustomerBookings(string $customerId, bool $dryRun=false): array
     {
-        $summary = ['bookings' => 0];
+        $summary = ['bookings' => 0, 'held' => 0];
 
         if ($customerId === '') {
             return $summary;
         }
 
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, self::BOOKING_SCHEMA_KEY, '');
-        if ($register === '' || $schema === '') {
-            $this->logger->warning(
-                'Pipelinq: AVG pseudonymisation skipped — booking register/schema not configured',
-                ['customerId' => $customerId]
-            );
+        $result = $this->orGdpr->erase(subjectId: $customerId, type: null, dryRun: $dryRun);
 
-            return $summary;
-        }
-
-        $bookings = $this->findBookingsForCustomer(register: $register, schema: $schema, customerId: $customerId);
-        foreach ($bookings as $booking) {
-            $uuid = (string) ($booking['bookingId'] ?? $booking['@self']['id'] ?? $booking['uuid'] ?? $booking['id'] ?? '');
-            if ($uuid === '') {
-                continue;
-            }
-
-            $payload = $this->pseudonymizeFields(booking: $booking);
-            if ($this->persist(register: $register, schema: $schema, payload: $payload, uuid: $uuid) === true) {
-                $summary['bookings']++;
-            }
-        }
+        $summary['bookings'] = count((array) ($result['erased'] ?? []));
+        $summary['held']     = count((array) ($result['held'] ?? []));
 
         $this->logger->info(
-            'Pipelinq: AVG booking pseudonymisation completed',
+            'Pipelinq: AVG booking erasure via OR completed',
             [
-                'customerId' => $customerId,
-                'summary'    => $summary,
-                'timestamp'  => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+                'summary'   => $summary,
+                'dryRun'    => $dryRun,
+                'complete'  => (bool) ($result['complete'] ?? false),
+                'timestamp' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
             ]
         );
 
         return $summary;
     }//end pseudonymizeCustomerBookings()
-
-    /**
-     * Replace the customer-identifying fields with SHA-256 hashes.
-     *
-     * Only `customerName`, `customerEmail`, `customerPhone` are touched; every
-     * other field (status, startAt, price, serviceId, resourceAssignments, etc.)
-     * is left untouched so aggregates remain valid. The `pseudonymizedAt` field
-     * records the timestamp of the operation.
-     *
-     * @param array<string, mixed> $booking The booking record.
-     *
-     * @return array<string, mixed> The pseudonymised payload.
-     */
-    private function pseudonymizeFields(array $booking): array
-    {
-        $payload = $booking;
-        foreach (['customerName', 'customerEmail', 'customerPhone'] as $field) {
-            $original = (string) ($payload[$field] ?? '');
-            if ($original === '') {
-                $payload[$field] = null;
-                continue;
-            }
-
-            $payload[$field] = hash('sha256', $original);
-        }
-
-        $payload['pseudonymizedAt'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-
-        return $payload;
-    }//end pseudonymizeFields()
-
-    /**
-     * Find all bookings owned by the given customer (paginated guard).
-     *
-     * @param string $register   The register id.
-     * @param string $schema     The booking schema id.
-     * @param string $customerId The customer UID.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function findBookingsForCustomer(string $register, string $schema, string $customerId): array
-    {
-        try {
-            $rows = $this->getObjectService()->findAll(
-                filters: ['customerId' => $customerId],
-                register: $register,
-                schema: $schema,
-                limit: 10000
-            );
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                'Pipelinq: AVG booking lookup failed',
-                ['customerId' => $customerId, 'exception' => $e->getMessage()]
-            );
-
-            return [];
-        }
-
-        if (is_array($rows) === false) {
-            return [];
-        }
-
-        return array_map(fn (mixed $row): array => $this->toArray($row), array_values($rows));
-    }//end findBookingsForCustomer()
-
-    /**
-     * Persist a pseudonymised booking via OR's ObjectService.
-     *
-     * @param string               $register The register id.
-     * @param string               $schema   The schema id.
-     * @param array<string, mixed> $payload  The payload.
-     * @param string               $uuid     The booking UUID.
-     *
-     * @return bool True when persisted.
-     */
-    private function persist(string $register, string $schema, array $payload, string $uuid): bool
-    {
-        try {
-            $this->getObjectService()->saveObject(
-                object: $payload,
-                extend: [],
-                register: $register,
-                schema: $schema,
-                uuid: $uuid
-            );
-
-            return true;
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                'Pipelinq: AVG booking persist failed',
-                ['uuid' => $uuid, 'exception' => $e->getMessage()]
-            );
-
-            return false;
-        }
-    }//end persist()
-
-    /**
-     * Normalise an OR entity or array into a plain associative array.
-     *
-     * @param mixed $object The OR entity or array.
-     *
-     * @return array<string, mixed>
-     */
-    private function toArray(mixed $object): array
-    {
-        if (is_array($object) === true) {
-            return $object;
-        }
-
-        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $serialised = $object->jsonSerialize();
-            if (is_array($serialised) === true) {
-                return $serialised;
-            }
-        }
-
-        if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $data = $object->getObject();
-            if (is_array($data) === true) {
-                return $data;
-            }
-        }
-
-        return [];
-    }//end toArray()
-
-    /**
-     * Lazily resolve the OR ObjectService.
-     *
-     * @return object The ObjectService.
-     *
-     * @throws \RuntimeException When OR is unavailable.
-     */
-    private function getObjectService(): object
-    {
-        try {
-            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-        } catch (Throwable $e) {
-            throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-        }
-    }//end getObjectService()
 }//end class

@@ -71,13 +71,6 @@ export function objectTypeGroups() {
 			registerSlug: 'pipelinq',
 		},
 		{
-			key: 'finance',
-			name: t(APP, 'Finance'),
-			description: t(APP, 'Expenses and accounts-payable sync'),
-			registerConfigKey: 'register',
-			registerSlug: 'pipelinq',
-		},
-		{
 			key: 'marketing',
 			name: t(APP, 'Marketing'),
 			description: t(APP, 'Marketing blasts and campaigns'),
@@ -142,8 +135,6 @@ export function objectTypes() {
 		{ slug: 'exportJob', group: 'export', label: t(APP, 'Export Job'), description: t(APP, 'BI / data-warehouse export jobs') },
 		{ slug: 'exportDestination', group: 'export', label: t(APP, 'Export Destination'), description: t(APP, 'BI export destinations (data warehouse / BI tool)') },
 		{ slug: 'exportRun', group: 'export', label: t(APP, 'Export Run'), description: t(APP, 'BI export run history') },
-		// Finance (pipelinq-expense-to-shillinq-ap)
-		{ slug: 'expense', group: 'finance', label: t(APP, 'Expense'), description: t(APP, 'Expenses synced to Shillinq accounts-payable') },
 		// Marketing (marketing-segmentation-and-blast)
 		{ slug: 'blast', group: 'marketing', label: t(APP, 'Blast'), description: t(APP, 'Marketing blasts / campaigns') },
 	]

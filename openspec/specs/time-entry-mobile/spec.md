@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # time-entry-mobile Specification
 
 ## Purpose
-TBD - created by archiving change time-entry-mobile. Update Purpose after archive.
+Provides a mobile, installable PWA timer that captures hours offline and submits them to the OpenRegister time-tracker leaf rather than a Pipelinq schema. The mobile-specific layer is limited to a PWA shell, an IndexedDB offline buffer, and a sync queue that idempotently flushes buffered captures to the leaf on reconnect, renders responsively with touch-sized controls, and attaches optional GPS as leaf capture metadata.
 ## Requirements
 ### Requirement: REQ-001 — Mobile capture persists to the time-tracker leaf, not a pipelinq schema
 

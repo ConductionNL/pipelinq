@@ -2,7 +2,7 @@
 	"_meta": {
 		"spdx-license": "EUPL-1.2",
 		"spdx-copyright": "2026 Conduction B.V.",
-		"description": "Canonical navigation layout applied AFTER all manifest.d fragments merge (see applyMenuRelocations in main.js). Fragments stay the source of WHAT exists in the menu (ADR-037); this file is the single place deciding WHERE entries live. relocations: sourceId -> targetGroupId (groups dissolve into the target, leaves move under it, a child group targeting its own parent flattens). removals: leaf menu-entry ids retired as duplicate navigation — their PAGES stay routable for deep links and e2e specs. Lives outside manifest.json because the app-manifest-v2 schema has additionalProperties:false at the root."
+		"description": "Canonical navigation layout applied AFTER all manifest.d fragments merge (see applyMenuRelocations in main.js). Fragments stay the source of WHAT exists in the menu (ADR-037); this file is the single place deciding WHERE entries live. relocations: sourceId -> targetGroupId (groups dissolve into the target, leaves move under it, a child group targeting its own parent flattens). sections: menu-entry id -> section name (assigns a top-level leaf to a navigation section — `settings` renders it inside the NC gear-icon foldout, so genuinely-admin/config entries live under Settings instead of a duplicate top-level Administration group). removals: leaf menu-entry ids retired as duplicate navigation — their PAGES stay routable for deep links and e2e specs. Lives outside manifest.json because the app-manifest-v2 schema has additionalProperties:false at the root."
 	},
 	"relocations": {
 		"Clients": "SalesCrm",
@@ -20,7 +20,6 @@
 		"MyWork": "Service",
 		"BookingsGroup": "Service",
 		"Queues": "Service",
-		"SlaAttainment": "Service",
 
 		"PosTransactions": "PointOfSale",
 		"PosRefunds": "PointOfSale",
@@ -36,16 +35,33 @@
 		"Analytics": "AnalyticsGroup",
 		"PipelineAnalytics": "AnalyticsGroup",
 		"BillingCategories": "AnalyticsGroup",
-
-		"AvgRequests": "Administration",
-		"MdmMasterEntities": "Administration",
-		"MdmDataQuality": "Administration",
-		"MdmDuplicates": "Administration",
-		"MarketingGroup": "Administration",
-		"ExpensesGroup": "Administration",
-		"CtiSettings": "Administration",
-		"CtiEventLog": "Administration",
-		"BillingApproval": "Administration"
+		"SlaAttainment": "AnalyticsGroup",
+		"MdmDataQuality": "AnalyticsGroup"
 	},
-	"removals": []
+	"sections": {},
+	"settingsSection": [
+		"Pipelines",
+		"SettingsIntegrationsCaption",
+		"ExportJobs",
+		"Cti",
+		"PosRoleList",
+		"PosStaffList",
+		"AvgRequests",
+		"MdmMasterEntities",
+		"MdmDuplicates",
+		"SettingsHelpCaption",
+		"RestartTutorial"
+	],
+	"_settingsSectionNote": "Promoted into the NC settings foldout (the bottom-left gear, OUTSIDE the scrollable nav) by applySettingsSection in main.js. Config/admin/integration/master-data-setup entries only; operational lists stay top-level. Pipelines (pipeline definitions/config), Integrations caption + BI export + CTI (integrations/connections), POS rollen + POS medewerkers (POS master-data/admin). KassakoppelingAuditList is an audit REPORT and stays in the main nav. AvgRequests (AVG/DSAR) and MdmDuplicates/MdmMasterEntities are EARMARKED to move out of pipelinq later: AVG-verzoeken -> OpenRegister's AVG/DSAR subsystem (admin-gated, different data model — a prior seam found pipelinq cannot cleanly consume it yet), and the MDM steward views -> the OR-MDM abstraction (not built yet). Kept in pipelinq under Settings until those OR seams land. MdmDataQuality is a data-quality DASHBOARD (a report), so it moves into the 'Reports & Compliance' group via relocations rather than the settings foldout. RestartTutorial (action:'replay-walkthrough', ADR-043) re-runs the product tour from the first step; it sits with the Help caption under Settings.",
+	"removals": [
+		"Requests",
+		"Tasks",
+		"Contactmomenten",
+		"Complaints",
+		"Projects",
+		"MyWork",
+		"BookingsGroup",
+		"Queues"
+	],
+	"_removalsNote": "Former Service group child leaves retired from the nav tree by ADR-044 cards-collapse (service-group-cards-collapse). The Service menu entry now links directly to ServiceHubOverview, which renders one CnCard per former leaf. All page routes (/requests, /tasks, /contactmomenten, /complaints, /projects, /my-work, /bookings, /queues, and their :id sub-routes) remain registered in the manifest for deep-linking and e2e coverage (REQ-NAV-003)."
 }

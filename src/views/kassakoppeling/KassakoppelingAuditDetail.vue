@@ -90,12 +90,11 @@
 
 		<CnDetailCard v-if="entry.transactionUuid" :title="t('pipelinq', 'Gekoppelde transactie')">
 			<p>
-				<a
-					href="#"
+				<router-link
 					data-testid="kassakoppeling-audit-transaction-link"
-					@click.prevent="openTransaction">
+					:to="{ name: 'PosTransactionDetail', params: { id: entry.transactionUuid } }">
 					{{ entry.transactionUuid }}
-				</a>
+				</router-link>
 			</p>
 			<p class="kk-audit-detail__hint">
 				{{ t('pipelinq', 'Klik om de gekoppelde POS-transactie te openen. Wanneer de transactie verwijderd is, blijft alleen de UUID-verwijzing zichtbaar.') }}
@@ -351,15 +350,6 @@ export default {
 			} finally {
 				this.busy = false
 			}
-		},
-		/**
-		 * Navigate to the linked POS transaction in pos-transaction-core.
-		 */
-		openTransaction() {
-			if (!this.entry.transactionUuid) {
-				return
-			}
-			this.$router.push({ name: 'PosTransactionDetail', params: { id: this.entry.transactionUuid } })
 		},
 		/**
 		 * Format an ISO timestamp using the nl-NL locale.

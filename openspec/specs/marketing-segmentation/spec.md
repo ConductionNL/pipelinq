@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # marketing-segmentation Specification
 
 ## Purpose
-TBD - created by archiving change marketing-segmentation-and-blast-01-schema-and-seed-config. Update Purpose after archive.
+Provides rule-based audience segments for marketing blasts, composed from AND/OR rule trees whose leaf predicates are validated against the entity schema before save. Segments are evaluated dynamically at send time rather than frozen as static lists, so newly matching contacts are auto-included and deleted contacts drop out, and the register seeds realistic Dutch example data across the six marketing schemas.
 ## Requirements
 ### Requirement: Seed Data Includes Realistic Examples
 

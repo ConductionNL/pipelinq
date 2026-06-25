@@ -91,7 +91,7 @@ class PhoneNormaliser
      *
      * @return array{e164: string|null, raw: string}
      */
-    public function normaliseForOrg(string $rawNumber, ?string $orgId = null): array
+    public function normaliseForOrg(string $rawNumber, ?string $orgId=null): array
     {
         $raw = trim($rawNumber);
         if ($raw === '') {

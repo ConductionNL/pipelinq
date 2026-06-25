@@ -33,6 +33,7 @@ use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
+use OCP\IURLGenerator;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -82,6 +83,8 @@ class XWikiService
      * @param ContainerInterface $container     PSR container (used to lazily
      *                                          load `OCA\Xwiki\SettingsManager`
      *                                          when the xWiki app is present).
+     * @param IURLGenerator      $urlGenerator  URL generator (resolves the OR
+     *                                          xWiki search endpoint — ADR-022).
      * @param LoggerInterface    $logger        Logger.
      */
     public function __construct(
@@ -89,6 +92,7 @@ class XWikiService
         private IAppConfig $appConfig,
         private ICacheFactory $cacheFactory,
         private ContainerInterface $container,
+        private IURLGenerator $urlGenerator,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -106,7 +110,7 @@ class XWikiService
      *
      * @return array<string, mixed> {results: array, total: int, limit: int, offset: int}
      *
-     * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+     * @spec openspec/changes/pipelinq-xwiki-through-or/specs/xwiki-proxy/spec.md
      */
     public function search(string $query, ?string $space=null, array $tags=[], int $limit=10, int $offset=0): array
     {
@@ -117,6 +121,18 @@ class XWikiService
         $cached   = $this->fromCache(key: $cacheKey);
         if ($cached !== null) {
             return $cached;
+        }
+
+        // OR-first (ADR-022, pipelinq-xwiki-through-or): prefer OpenRegister's
+        // OpenConnector-routed xWiki search so the consumer never holds a direct
+        // xWiki URL. When OR signals the `xwiki` source is not usable yet
+        // (openconnector-down / -source-missing / upstream-service-down) we fall
+        // back to the legacy SettingsManager/direct-URL path below so configured
+        // envs keep working until an operator enables the OR source. The
+        // post-fetch space/tags filters + caching are shared by both paths.
+        $orResults = $this->searchViaOpenRegister(query: $query, limit: $limit, offset: $offset);
+        if ($orResults !== null) {
+            return $this->finishSearch(results: $orResults, space: $space, tags: $tags, limit: $limit, offset: $offset, cacheKey: $cacheKey);
         }
 
         $base = $this->getBaseUrl();
@@ -139,6 +155,29 @@ class XWikiService
         $xml     = $this->fetchXml(url: $url);
         $results = $this->parseSearchResults(xml: $xml);
 
+        return $this->finishSearch(results: $results, space: $space, tags: $tags, limit: $limit, offset: $offset, cacheKey: $cacheKey);
+    }//end search()
+
+    /**
+     * Apply the shared space/tags client-side filter, slice to the limit, wrap
+     * in the standard `{results,total,limit,offset}` envelope and cache it.
+     *
+     * Used by both the OR-first path and the legacy direct path so the result
+     * shape + post-filter semantics stay identical regardless of source.
+     *
+     * @param array<int,array<string,mixed>> $results  Raw normalised result rows.
+     * @param string|null                    $space    Optional space filter.
+     * @param array<int,string>              $tags     Optional tag filter.
+     * @param int                            $limit    Max results.
+     * @param int                            $offset   Pagination offset.
+     * @param string                         $cacheKey Cache key to store under.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/pipelinq-xwiki-through-or/specs/xwiki-proxy/spec.md
+     */
+    private function finishSearch(array $results, ?string $space, array $tags, int $limit, int $offset, string $cacheKey): array
+    {
         if ($space !== null && $space !== '') {
             $results = array_values(array_filter($results, static fn(array $item): bool => ($item['space'] ?? '') === $space));
         }
@@ -170,7 +209,86 @@ class XWikiService
 
         $this->toCache(key: $cacheKey, value: $payload);
         return $payload;
-    }//end search()
+    }//end finishSearch()
+
+    /**
+     * Search xWiki via OpenRegister's OpenConnector-routed endpoint (ADR-022).
+     *
+     * Calls `GET /apps/openregister/api/integrations/xwiki/search` server-side.
+     * Returns the normalised result rows on success (HTTP 200), or `null` when
+     * the OR `xwiki` source is not usable yet — i.e. OR returns a 503 whose
+     * `details.cause` is `openconnector-down` / `openconnector-source-missing`
+     * / `upstream-service-down`, or OR/openregister is absent. A `null` return
+     * tells {@see search()} to fall back to the legacy direct path so configured
+     * envs keep working until an operator enables the OR source. The OR row
+     * shape (`{id|reference,title,space,url,...}`) is mapped to the widget shape
+     * (`{id,title,space,modified,url,tags}`).
+     *
+     * @param string $query  Full-text query.
+     * @param int    $limit  Max results.
+     * @param int    $offset Pagination offset.
+     *
+     * @return array<int,array<string,mixed>>|null Normalised rows, or null to fall back.
+     *
+     * @spec openspec/changes/pipelinq-xwiki-through-or/specs/xwiki-proxy/spec.md
+     */
+    private function searchViaOpenRegister(string $query, int $limit, int $offset): ?array
+    {
+        $params = http_build_query(['q' => $query, 'limit' => $limit, 'offset' => $offset]);
+        $url    = $this->urlGenerator->getAbsoluteURL('/apps/openregister/api/integrations/xwiki/search?'.$params);
+
+        try {
+            $client   = $this->clientService->newClient();
+            $response = $client->get(
+                    $url,
+                    [
+                        'timeout'         => 10,
+                        'connect_timeout' => 3,
+                        'headers'         => ['OCS-APIREQUEST' => 'true', 'Accept' => 'application/json'],
+                        'nextcloud'       => ['allow_local_address' => true],
+                    ]
+                    );
+        } catch (Throwable $e) {
+            // 503 (source not usable) surfaces as a client exception here — fall
+            // back to the legacy path. Also covers connection refused / OR absent.
+            $this->logger->debug('xWiki OR search unavailable, falling back to direct path', ['exception' => $e]);
+            return null;
+        }
+
+        $status = $response->getStatusCode();
+        if ($status !== 200) {
+            $this->logger->debug('xWiki OR search returned non-200, falling back', ['status' => $status]);
+            return null;
+        }
+
+        $decoded = json_decode((string) $response->getBody(), true);
+        if (is_array($decoded) === false || isset($decoded['results']) === false || is_array($decoded['results']) === false) {
+            return null;
+        }
+
+        $rows = [];
+        foreach ($decoded['results'] as $row) {
+            if (is_array($row) === false) {
+                continue;
+            }
+
+            $tags = [];
+            if (isset($row['tags']) === true && is_array($row['tags']) === true) {
+                $tags = $row['tags'];
+            }
+
+            $rows[] = [
+                'id'       => (string) ($row['id'] ?? $row['reference'] ?? ''),
+                'title'    => (string) ($row['title'] ?? $row['id'] ?? $row['reference'] ?? ''),
+                'space'    => (string) ($row['space'] ?? ''),
+                'modified' => (string) ($row['modified'] ?? ''),
+                'url'      => (string) ($row['url'] ?? ''),
+                'tags'     => $tags,
+            ];
+        }
+
+        return $rows;
+    }//end searchViaOpenRegister()
 
     /**
      * List pages in a space.

@@ -90,9 +90,9 @@ class EncryptionService
      * @param ContainerInterface $container The DI container (used to lazily
      *                                      resolve the openregister vault).
      * @param IConfig            $config    Nextcloud config service.
-     * @param ICrypto            $crypto   Nextcloud crypto helper (used only
-     *                                     for a system-secret-derived dev
-     *                                     fallback key).
+     * @param ICrypto            $crypto    Nextcloud crypto helper (used only
+     *                                      for a system-secret-derived dev
+     *                                      fallback key).
      * @param LoggerInterface    $logger    Logger.
      */
     public function __construct(
@@ -131,7 +131,7 @@ class EncryptionService
      */
     public function encrypt(string $plaintext, string $tenantId): string
     {
-        $key = $this->getEncryptionKey($tenantId);
+        $key = $this->getEncryptionKey(tenantId: $tenantId);
         $iv  = random_bytes(self::IV_BYTES);
         $tag = '';
 
@@ -170,10 +170,10 @@ class EncryptionService
             throw new RuntimeException('Malformed ciphertext payload.');
         }
 
-        $iv      = substr($raw, 0, self::IV_BYTES);
-        $tag     = substr($raw, -self::TAG_BYTES);
-        $cipher  = substr($raw, self::IV_BYTES, -self::TAG_BYTES);
-        $keys    = $this->getDecryptionKeys($tenantId);
+        $iv     = substr($raw, 0, self::IV_BYTES);
+        $tag    = substr($raw, -self::TAG_BYTES);
+        $cipher = substr($raw, self::IV_BYTES, -self::TAG_BYTES);
+        $keys   = $this->getDecryptionKeys(tenantId: $tenantId);
 
         foreach ($keys as $key) {
             $plain = openssl_decrypt(
@@ -205,7 +205,7 @@ class EncryptionService
      */
     public function hashBsn(string $plaintext, string $tenantId): string
     {
-        $hmacKey = $this->getHmacKey($tenantId);
+        $hmacKey = $this->getHmacKey(tenantId: $tenantId);
         return hash_hmac('sha256', $plaintext, $hmacKey);
     }//end hashBsn()
 
@@ -220,7 +220,7 @@ class EncryptionService
      */
     public function bsnEquals(string $candidate, string $hash, string $tenantId): bool
     {
-        return hash_equals($hash, $this->hashBsn($candidate, $tenantId));
+        return hash_equals($hash, $this->hashBsn(plaintext: $candidate, tenantId: $tenantId));
     }//end bsnEquals()
 
     /**
@@ -248,7 +248,7 @@ class EncryptionService
             }
         }
 
-        return $this->deriveKey($tenantId, 'enc.active');
+        return $this->deriveKey(tenantId: $tenantId, purpose: 'enc.active');
     }//end getEncryptionKey()
 
     /**
@@ -280,9 +280,9 @@ class EncryptionService
             }
         }
 
-        $keys[] = $this->deriveKey($tenantId, 'enc.active');
+        $keys[] = $this->deriveKey(tenantId: $tenantId, purpose: 'enc.active');
         // Allow a previous-generation derived key (in case the system secret rotated).
-        $keys[] = $this->deriveKey($tenantId, 'enc.previous');
+        $keys[] = $this->deriveKey(tenantId: $tenantId, purpose: 'enc.previous');
 
         return $keys;
     }//end getDecryptionKeys()
@@ -310,7 +310,7 @@ class EncryptionService
             }
         }
 
-        return $this->deriveKey($tenantId, 'hmac.bsn');
+        return $this->deriveKey(tenantId: $tenantId, purpose: 'hmac.bsn');
     }//end getHmacKey()
 
     /**

@@ -25,10 +25,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\XWikiService;
+use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
+use OCP\Http\Client\IResponse;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
+use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -41,17 +44,33 @@ class XWikiServiceTest extends TestCase
     /**
      * Build a XWikiService with stub dependencies.
      *
-     * @param string $directUrl Direct URL override (empty disables fallback).
+     * By default the injected HTTP client THROWS on every request, which makes
+     * the OR-first search path return null (unavailable) and fall back to the
+     * legacy direct path — preserving the original test semantics. Pass a
+     * pre-wired $clientService to exercise the OR-first path explicitly.
+     *
+     * @param string               $directUrl     Direct URL override (empty disables fallback).
+     * @param IClientService|null  $clientService Optional client-service override.
      *
      * @return XWikiService
      */
-    private function makeService(string $directUrl = ''): XWikiService
+    private function makeService(string $directUrl = '', ?IClientService $clientService = null): XWikiService
     {
-        $clientService = $this->createMock(IClientService::class);
-        $appConfig     = $this->createMock(IAppConfig::class);
-        $cacheFactory  = $this->createMock(ICacheFactory::class);
-        $container     = $this->createMock(ContainerInterface::class);
-        $logger        = $this->createMock(LoggerInterface::class);
+        if ($clientService === null) {
+            $clientService = $this->createMock(IClientService::class);
+            $throwingClient = $this->createMock(IClient::class);
+            $throwingClient->method('get')->willThrowException(new \RuntimeException('no http in unit test'));
+            $clientService->method('newClient')->willReturn($throwingClient);
+        }
+
+        $appConfig    = $this->createMock(IAppConfig::class);
+        $cacheFactory = $this->createMock(ICacheFactory::class);
+        $container    = $this->createMock(ContainerInterface::class);
+        $urlGenerator = $this->createMock(IURLGenerator::class);
+        $logger       = $this->createMock(LoggerInterface::class);
+
+        $urlGenerator->method('getAbsoluteURL')
+            ->willReturnCallback(static fn(string $path): string => 'http://localhost'.$path);
 
         $cache = $this->createMock(ICache::class);
         // Empty cache: always miss → service must perform "fetch" path.
@@ -72,8 +91,31 @@ class XWikiServiceTest extends TestCase
         // No OCA\Xwiki app registered in the container.
         $container->method('has')->willReturn(false);
 
-        return new XWikiService($clientService, $appConfig, $cacheFactory, $container, $logger);
+        return new XWikiService($clientService, $appConfig, $cacheFactory, $container, $urlGenerator, $logger);
     }//end makeService()
+
+    /**
+     * Build a client-service mock whose single GET returns a canned response.
+     *
+     * @param int    $status HTTP status code.
+     * @param string $body   Response body.
+     *
+     * @return IClientService
+     */
+    private function makeRespondingClientService(int $status, string $body): IClientService
+    {
+        $response = $this->createMock(IResponse::class);
+        $response->method('getStatusCode')->willReturn($status);
+        $response->method('getBody')->willReturn($body);
+
+        $client = $this->createMock(IClient::class);
+        $client->method('get')->willReturn($response);
+
+        $clientService = $this->createMock(IClientService::class);
+        $clientService->method('newClient')->willReturn($client);
+
+        return $clientService;
+    }//end makeRespondingClientService()
 
     /**
      * Unconfigured fallback should return empty result envelope without
@@ -262,4 +304,106 @@ class XWikiServiceTest extends TestCase
         $service = $this->makeService('');
         $this->assertSame('', $service->extractAndSanitiseHtml(''));
     }//end testExtractAndSanitiseHtmlEmpty()
+
+    /**
+     * OR-first: a 200 from the OpenRegister xWiki search endpoint is mapped to
+     * the widget result shape and returned WITHOUT touching the legacy direct
+     * path (pipelinq-xwiki-through-or).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pipelinq-xwiki-through-or/specs/xwiki-proxy/spec.md
+     */
+    public function testSearchPrefersOpenRegisterOnSuccess(): void
+    {
+        $body = json_encode(
+            [
+                'results' => [
+                    ['id' => 'Kennisbank.Paspoort', 'title' => 'Paspoort', 'space' => 'Kennisbank', 'url' => 'http://x/p', 'modified' => '2026-01-01'],
+                ],
+                'total'  => 1,
+                'limit'  => 5,
+                'offset' => 0,
+            ]
+        );
+        // Direct URL is empty → if the OR path were NOT taken, the result would
+        // be the empty envelope. A non-empty result proves OR-first was used.
+        $service = $this->makeService('', $this->makeRespondingClientService(200, $body));
+        $result  = $service->search('paspoort', null, [], 5, 0);
+
+        $this->assertCount(1, $result['results']);
+        $this->assertSame('Paspoort', $result['results'][0]['title']);
+        $this->assertSame('Kennisbank', $result['results'][0]['space']);
+        $this->assertSame('Kennisbank.Paspoort', $result['results'][0]['id']);
+        $this->assertSame([], $result['results'][0]['tags']);
+    }//end testSearchPrefersOpenRegisterOnSuccess()
+
+    /**
+     * OR-first space filter: results from OR are still passed through the shared
+     * client-side space filter (finishSearch), proving both paths share filtering.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pipelinq-xwiki-through-or/specs/xwiki-proxy/spec.md
+     */
+    public function testSearchViaOpenRegisterAppliesSpaceFilter(): void
+    {
+        $body = json_encode(
+            [
+                'results' => [
+                    ['id' => 'A.One', 'title' => 'One', 'space' => 'Kennisbank'],
+                    ['id' => 'B.Two', 'title' => 'Two', 'space' => 'Other'],
+                ],
+                'total'  => 2,
+                'limit'  => 10,
+                'offset' => 0,
+            ]
+        );
+        $service = $this->makeService('', $this->makeRespondingClientService(200, $body));
+        $result  = $service->search('q', 'Kennisbank', [], 10, 0);
+
+        $this->assertCount(1, $result['results']);
+        $this->assertSame('Kennisbank', $result['results'][0]['space']);
+    }//end testSearchViaOpenRegisterAppliesSpaceFilter()
+
+    /**
+     * Safe-partial fallback: when OR returns 503 (source dormant) the HTTP client
+     * throws, the OR path returns null, and search() falls back to the legacy
+     * direct path. With an empty direct URL that yields the empty envelope —
+     * proving a configured env with a real direct URL would keep working (no
+     * regression).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pipelinq-xwiki-through-or/specs/xwiki-proxy/spec.md
+     */
+    public function testSearchFallsBackToDirectPathWhenOrUnavailable(): void
+    {
+        // Default makeService injects a throwing client (simulates OR 503 / absent)
+        // AND an empty direct URL → empty envelope via the legacy fallback path.
+        $service = $this->makeService('');
+        $result  = $service->search('q', null, [], 7, 0);
+
+        $this->assertSame([], $result['results']);
+        $this->assertSame(0, $result['total']);
+        $this->assertSame(7, $result['limit']);
+    }//end testSearchFallsBackToDirectPathWhenOrUnavailable()
+
+    /**
+     * A non-200 (e.g. 500) from OR also triggers the legacy fallback rather than
+     * surfacing a broken result.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pipelinq-xwiki-through-or/specs/xwiki-proxy/spec.md
+     */
+    public function testSearchFallsBackOnNon200(): void
+    {
+        $service = $this->makeService('', $this->makeRespondingClientService(503, '{"error":"x","details":{"cause":"upstream-service-down"}}'));
+        $result  = $service->search('q', null, [], 5, 0);
+
+        // Direct URL empty → fallback yields empty envelope, no fatal.
+        $this->assertSame([], $result['results']);
+        $this->assertSame(0, $result['total']);
+    }//end testSearchFallsBackOnNon200()
 }//end class

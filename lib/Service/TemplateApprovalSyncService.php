@@ -62,12 +62,12 @@ class TemplateApprovalSyncService
     /**
      * Constructor.
      *
-     * @param ContainerInterface         $container         DI container.
-     * @param IAppConfig                 $appConfig         App config.
-     * @param ChannelProviderRepository  $providerRepo      Provider read-side.
-     * @param WhatsAppProviderClient     $providerClient    Vendor transport.
-     * @param NotificationService        $notificationService Admin notifications.
-     * @param LoggerInterface            $logger            Logger.
+     * @param ContainerInterface        $container           DI container.
+     * @param IAppConfig                $appConfig           App config.
+     * @param ChannelProviderRepository $providerRepo        Provider read-side.
+     * @param WhatsAppProviderClient    $providerClient      Vendor transport.
+     * @param NotificationService       $notificationService Admin notifications.
+     * @param LoggerInterface           $logger              Logger.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.8
      */
@@ -147,7 +147,7 @@ class TemplateApprovalSyncService
                 continue;
             }
 
-            $key       = $externalId . ':' . $language;
+            $key       = $externalId.':'.$language;
             $local     = ($localIndex[$key] ?? null);
             $newStatus = $this->normaliseStatus(remoteStatus: (string) ($remote['status'] ?? 'pending'));
 
@@ -162,15 +162,20 @@ class TemplateApprovalSyncService
                 'status'     => 'pending',
             ];
 
-            $oldStatus = (string) ($payload['status'] ?? 'pending');
-            $payload['category']      = (string) ($remote['category'] ?? ($payload['category'] ?? 'utility'));
-            $payload['body']          = (string) ($remote['body'] ?? ($payload['body'] ?? ''));
-            $payload['header']        = (string) ($remote['header'] ?? ($payload['header'] ?? ''));
-            $payload['buttons']       = $remote['buttons'] ?? ($payload['buttons'] ?? []);
-            $payload['status']        = $newStatus;
-            $payload['lastSyncedAt']  = $this->nowIso();
+            $oldStatus           = (string) ($payload['status'] ?? 'pending');
+            $payload['category'] = (string) ($remote['category'] ?? ($payload['category'] ?? 'utility'));
+            $payload['body']     = (string) ($remote['body'] ?? ($payload['body'] ?? ''));
+            $payload['header']   = (string) ($remote['header'] ?? ($payload['header'] ?? ''));
+            $payload['buttons']  = $remote['buttons'] ?? ($payload['buttons'] ?? []);
+            $payload['status']   = $newStatus;
+            $payload['lastSyncedAt'] = $this->nowIso();
 
-            $id = ($local !== null) ? $this->extractId(payload: $local) : null;
+            if ($local !== null) {
+                $id = $this->extractId(payload: $local);
+            } else {
+                $id = null;
+            }
+
             $this->saveObject(payload: $payload, id: $id);
             $updates++;
 
@@ -243,7 +248,8 @@ class TemplateApprovalSyncService
             if ($externalId === '') {
                 continue;
             }
-            $index[$externalId . ':' . $language] = $arr;
+
+            $index[$externalId.':'.$language] = $arr;
         }
 
         return $index;
@@ -402,7 +408,11 @@ class TemplateApprovalSyncService
     private function getRegisterSlug(): string
     {
         $slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        return ($slug !== '') ? $slug : self::DEFAULT_REGISTER_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_REGISTER_SLUG;
     }//end getRegisterSlug()
 
     /**
@@ -417,7 +427,11 @@ class TemplateApprovalSyncService
             'messageTemplate_schema',
             ''
         );
-        return ($slug !== '') ? $slug : self::DEFAULT_SCHEMA_SLUG;
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return self::DEFAULT_SCHEMA_SLUG;
     }//end getSchemaSlug()
 
     /**

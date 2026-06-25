@@ -205,6 +205,14 @@ class CashShiftServiceTest extends TestCase
                 return $this->webhooks;
             }
 
+            if ($id === 'OCA\OpenRegister\Service\Aggregation\AggregationRunner') {
+                // Aggregate over the live posTransaction store so the pushed-down
+                // SUM is computed from the same rows the PHP path used to read.
+                return new FakeAggregationRunner(
+                    array_values($this->objects->store['posTransaction_schema'] ?? [])
+                );
+            }
+
             throw new \RuntimeException('unknown service '.$id);
         });
 

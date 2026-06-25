@@ -48,9 +48,9 @@ class LoyaltyReportingController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest                 $request                The request.
-     * @param LoyaltyReportingService  $reportingService       The reporting service.
-     * @param IUserSession             $userSession            The user session.
+     * @param IRequest                $request          The request.
+     * @param LoyaltyReportingService $reportingService The reporting service.
+     * @param IUserSession            $userSession      The user session.
      */
     public function __construct(
         IRequest $request,
@@ -72,7 +72,7 @@ class LoyaltyReportingController extends Controller
      * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008-01
      */
     #[NoAdminRequired]
-    public function kpis(string $programmeId, ?string $from = null, ?string $to = null): JSONResponse
+    public function kpis(string $programmeId, ?string $from=null, ?string $to=null): JSONResponse
     {
         if ($this->userSession->getUser() === null) {
             return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
@@ -128,7 +128,7 @@ class LoyaltyReportingController extends Controller
      * @return JSONResponse
      */
     #[NoAdminRequired]
-    public function expiryForecast(string $programmeId, int $days = 30): JSONResponse
+    public function expiryForecast(string $programmeId, int $days=30): JSONResponse
     {
         if ($this->userSession->getUser() === null) {
             return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);

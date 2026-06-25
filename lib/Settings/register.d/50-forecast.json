@@ -12,12 +12,22 @@
         "schemas": {
             "lead": {
                 "slug": "lead",
+                "configuration": {
+                    "x-pipelinq-forecast-lifecycle": {
+                        "field": "forecast_category",
+                        "default": "pipeline",
+                        "open": ["commit", "best_case", "pipeline", "omitted"],
+                        "closed": ["closed_won", "closed_lost"],
+                        "description": "Forecast-category state machine for deal roll-up. NOTE: this is a SECOND state machine on the lead schema (the OR-enforced `x-openregister-lifecycle` already owns the `status` field, and OpenRegister supports only one enforced lifecycle field per schema). It is therefore declared under a pipelinq-namespaced key and enforced by ForecastDealService + the deal listeners (revert-after-write), NOT by OpenRegister's LifecycleValidationListener. Rules: a closed category locks (a closed deal cannot move to an open category without reopening); reopening a closed deal resets the category to the default; a `commit` above the org threshold requires a justification. ForecastDealService reads the open/closed partition and default from here (ADR-031 source-of-truth)."
+                    }
+                },
                 "properties": {
                     "forecast_category": {
                         "type": "string",
                         "enum": ["commit", "best_case", "pipeline", "closed_won", "closed_lost", "omitted"],
                         "default": "pipeline",
-                        "description": "Forecast confidence category for roll-up. Locked once a deal is closed_won/closed_lost; reopening resets it to pipeline."
+                        "defaultBehavior": "falsy",
+                        "description": "Forecast confidence category for roll-up. Defaults to pipeline on create (applied by OpenRegister's schema-default with falsy behavior, matching the prior listener default). Locked once a deal is closed_won/closed_lost; reopening resets it to pipeline."
                     },
                     "commit_justification": {
                         "type": "string",

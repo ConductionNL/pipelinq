@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # marketing-ui Specification
 
 ## Purpose
-TBD - created by archiving change marketing-segmentation-and-blast-07-segment-blast-views. Update Purpose after archive.
+Provides the marketing blast user interface: a SegmentBuilder for visually composing AND/OR rule trees with live validation and member-size estimates, a BlastForm wizard that walks the marketer through name, segment, template, channel, schedule, and A/B and gates sending on compliance, and a BlastMonitor that polls for real-time send progress, totals, and events and can cancel a sending blast.
 ## Requirements
 ### Requirement: Segment Builder UI Composes Rule Trees
 

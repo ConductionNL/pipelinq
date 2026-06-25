@@ -39,6 +39,7 @@ use RuntimeException;
  */
 class AdapterRegistry
 {
+
     /**
      * Map of platform identifier to fully-qualified adapter class name.
      *
@@ -69,7 +70,7 @@ class AdapterRegistry
     /**
      * Register a new adapter class for a platform identifier.
      *
-     * @param string                          $platform     Platform identifier (lower-case).
+     * @param string                            $platform     Platform identifier (lower-case).
      * @param class-string<CtiAdapterInterface> $adapterClass Adapter class name.
      *
      * @return void

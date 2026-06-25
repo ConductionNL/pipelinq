@@ -42,7 +42,6 @@ class BrcClient
 {
     public const SCOPE_AANMAKEN = 'besluiten.aanmaken';
 
-
     /**
      * Constructor.
      *
@@ -59,15 +58,14 @@ class BrcClient
     ) {
     }//end __construct()
 
-
     /**
      * Create a besluit (POST /besluiten) and persist a ZgwResourceMapping.
      *
-     * @param array<string, mixed> $endpoint     ZgwEndpoint payload.
-     * @param array<string, mixed> $zaakMapping  Mapping for the parent zaak.
-     * @param array<string, mixed> $besluitData  Body for POST /besluiten — MUST
-     *                                          include `besluittype` (URL),
-     *                                          `datum`, `ingangsdatum`,
+     * @param array<string, mixed> $endpoint    ZgwEndpoint payload.
+     * @param array<string, mixed> $zaakMapping Mapping for the parent zaak.
+     * @param array<string, mixed> $besluitData Body for POST /besluiten —
+     *                                          MUST include `besluittype`
+     *                                          (URL), `datum`, `ingangsdatum`,
      *                                          `verantwoordelijkeOrganisatie`.
      *
      * @return array<string, mixed> Saved ZgwResourceMapping (with zgwUrl, zgwUuid, etag).
@@ -76,8 +74,8 @@ class BrcClient
      */
     public function createBesluit(array $endpoint, array $zaakMapping, array $besluitData): array
     {
-        $client = $this->requireClient($endpoint);
-        $brcUrl = $this->requireComponentUrl($endpoint, 'brc');
+        $client = $this->requireClient(endpoint: $endpoint);
+        $brcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'brc');
 
         $besluittypeUrl = (string) ($besluitData['besluittype'] ?? '');
         if ($besluittypeUrl !== '') {
@@ -86,7 +84,7 @@ class BrcClient
 
         $body = array_merge(
             [
-                'zaak'                          => (string) ($zaakMapping['zgwUrl'] ?? ''),
+                'zaak'                         => (string) ($zaakMapping['zgwUrl'] ?? ''),
                 'verantwoordelijkeOrganisatie' => (string) ($endpoint['gemeenteCode'] ?? ''),
             ],
             $besluitData
@@ -102,7 +100,7 @@ class BrcClient
 
         $url  = (string) ($response['headers']['location'] ?? $response['body']['url'] ?? '');
         $etag = (string) ($response['headers']['etag'] ?? '');
-        $uuid = self::extractUuid($url);
+        $uuid = self::extractUuid(url: $url);
 
         $mapping = [
             'pipelinqEntiteit'      => 'request',
@@ -119,13 +117,12 @@ class BrcClient
         return $saved ?? $mapping;
     }//end createBesluit()
 
-
     /**
      * Link a besluit to an informatieobject (POST /besluitinformatieobjecten).
      *
-     * @param array<string, mixed> $endpoint        ZgwEndpoint payload.
-     * @param array<string, mixed> $besluitMapping  Mapping for the besluit.
-     * @param array<string, mixed> $eioMapping      Mapping for the EIO.
+     * @param array<string, mixed> $endpoint       ZgwEndpoint payload.
+     * @param array<string, mixed> $besluitMapping Mapping for the besluit.
+     * @param array<string, mixed> $eioMapping     Mapping for the EIO.
      *
      * @return string URL of the created link.
      */
@@ -134,8 +131,8 @@ class BrcClient
         array $besluitMapping,
         array $eioMapping,
     ): string {
-        $client = $this->requireClient($endpoint);
-        $brcUrl = $this->requireComponentUrl($endpoint, 'brc');
+        $client = $this->requireClient(endpoint: $endpoint);
+        $brcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'brc');
 
         $response = $this->api->callComponent(
             componentUrl: $brcUrl,
@@ -151,7 +148,6 @@ class BrcClient
         return (string) ($response['headers']['location'] ?? $response['body']['url'] ?? '');
     }//end linkBesluitInformatieobject()
 
-
     /**
      * Resolve and return the ZgwClient for an endpoint, raising on miss.
      *
@@ -165,15 +161,17 @@ class BrcClient
     {
         $client = $this->registers->findClientForEndpoint($endpoint);
         if ($client === null) {
-            throw new ZgwException(sprintf(
+            throw new ZgwException(
+                    sprintf(
                 'ZGW: ZgwEndpoint "%s" references unknown clientId "%s"',
                 (string) ($endpoint['id'] ?? '?'),
                 (string) ($endpoint['clientId'] ?? '?')
-            ));
+            )
+                    );
         }
+
         return $client;
     }//end requireClient()
-
 
     /**
      * Return the URL for a named component, raising on miss.
@@ -191,9 +189,9 @@ class BrcClient
         if ($url === '') {
             throw new ZgwException(sprintf('ZGW: endpoint missing "%s" component URL', $key));
         }
+
         return $url;
     }//end requireComponentUrl()
-
 
     /**
      * Extract the trailing UUID from a ZGW URL.
@@ -207,10 +205,19 @@ class BrcClient
         if ($url === '') {
             return '';
         }
-        $tail = basename(parse_url($url, PHP_URL_PATH) ?: '');
-        return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $tail) === 1 ? $tail : '';
-    }//end extractUuid()
 
+        $path = parse_url($url, PHP_URL_PATH);
+        if ($path === false || $path === null) {
+            $path = '';
+        }
+
+        $tail = basename($path);
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $tail) === 1) {
+            return $tail;
+        }
+
+        return '';
+    }//end extractUuid()
 
     /**
      * Current ISO 8601 timestamp (UTC).
@@ -221,6 +228,4 @@ class BrcClient
     {
         return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
     }//end nowIso()
-
-
 }//end class

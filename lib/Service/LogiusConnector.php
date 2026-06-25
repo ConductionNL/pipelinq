@@ -154,7 +154,7 @@ class LogiusConnector
             return $this->tokenCache[0];
         }
 
-        $tokenUrl = $this->appConfig->getValueString(
+        $tokenUrl     = $this->appConfig->getValueString(
             Application::APP_ID,
             self::CONFIG_TOKEN_URL,
             self::DEFAULT_BASE_URL.'/oauth/token'
@@ -171,8 +171,8 @@ class LogiusConnector
             $response = $client->post(
                 $tokenUrl,
                 [
-                    'auth' => [$clientId, $clientSecret],
-                    'body' => ['grant_type' => 'client_credentials'],
+                    'auth'    => [$clientId, $clientSecret],
+                    'body'    => ['grant_type' => 'client_credentials'],
                     'timeout' => 30,
                 ]
             );
@@ -184,7 +184,7 @@ class LogiusConnector
             throw new RuntimeException('Logius authentication failed: '.$e->getMessage(), 0, $e);
         }
 
-        $payload = $this->decodeJson($response);
+        $payload = $this->decodeJson(response: $response);
         if (isset($payload['access_token']) === false || is_string($payload['access_token']) === false) {
             throw new RuntimeException('Logius OAuth response missing access_token.');
         }
@@ -211,7 +211,7 @@ class LogiusConnector
      */
     public function sendMessage(array $message, string $tenantPkiCert, string $tenantPkiKey): array
     {
-        $this->validateOutboundPayload($message);
+        $this->validateOutboundPayload(message: $message);
 
         $body = [
             'messageId'   => (string) ($message['uuid'] ?? $message['id'] ?? $this->newUuidV4()),
@@ -228,17 +228,17 @@ class LogiusConnector
                 },
                 ($message['attachments'] ?? [])
             ),
-            'recipient' => ['bsn' => (string) ($message['bsnPlain'] ?? '')],
+            'recipient'   => ['bsn' => (string) ($message['bsnPlain'] ?? '')],
         ];
 
-        $baseUrl = $this->appConfig->getValueString(
+        $baseUrl  = $this->appConfig->getValueString(
             Application::APP_ID,
             self::CONFIG_BASE_URL,
             self::DEFAULT_BASE_URL
         );
         $endpoint = rtrim($baseUrl, '/').'/messages';
 
-        $signature = $this->signRequest($body, $tenantPkiCert, $tenantPkiKey);
+        $signature = $this->signRequest(body: $body, pkiCertPem: $tenantPkiCert, pkiKeyPem: $tenantPkiKey);
         $headers   = [
             'Authorization'         => 'Bearer '.$this->authenticate(),
             'Content-Type'          => 'application/json',
@@ -266,7 +266,7 @@ class LogiusConnector
             throw new RuntimeException('Logius sendMessage failed: '.$e->getMessage(), 0, $e);
         }
 
-        $raw = $this->decodeJson($response);
+        $raw = $this->decodeJson(response: $response);
         $logiusMessageId = (string) ($raw['logiusMessageId'] ?? $raw['messageId'] ?? '');
         if ($logiusMessageId === '') {
             throw new RuntimeException('Logius response missing logiusMessageId.');
@@ -302,7 +302,7 @@ class LogiusConnector
         // XHTML strict validation: must parse as well-formed XML.
         $previous = libxml_use_internal_errors(true);
         try {
-            $doc = new \DOMDocument();
+            $doc     = new \DOMDocument();
             $wrapped = '<?xml version="1.0" encoding="UTF-8"?><root>'.$body.'</root>';
             if ($doc->loadXML($wrapped) === false) {
                 throw new RuntimeException('body is not valid XHTML strict.');
@@ -322,10 +322,12 @@ class LogiusConnector
             if (is_array($att) === false) {
                 throw new RuntimeException('attachment entries must be arrays.');
             }
+
             $mime = (string) ($att['mime'] ?? '');
             if (in_array($mime, self::ALLOWED_MIME, true) === false) {
                 throw new RuntimeException('attachment mime must be PDF/PNG/JPG.');
             }
+
             $totalSize += (int) ($att['sizeBytes'] ?? 0);
         }
 
@@ -365,8 +367,8 @@ class LogiusConnector
         }
 
         $signature = '';
-        $payload = json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $signed = openssl_sign($payload, $signature, $key, OPENSSL_ALGO_SHA256);
+        $payload   = json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $signed    = openssl_sign($payload, $signature, $key, OPENSSL_ALGO_SHA256);
         if ($signed === false) {
             throw new RuntimeException('openssl_sign failed for Logius request.');
         }
@@ -385,7 +387,7 @@ class LogiusConnector
      */
     public function checkMailboxExists(string $bsn): bool
     {
-        $baseUrl = $this->appConfig->getValueString(
+        $baseUrl  = $this->appConfig->getValueString(
             Application::APP_ID,
             self::CONFIG_BASE_URL,
             self::DEFAULT_BASE_URL
@@ -413,7 +415,7 @@ class LogiusConnector
             throw new RuntimeException('Logius mailbox-check failed: '.$e->getMessage(), 0, $e);
         }
 
-        $payload = $this->decodeJson($response);
+        $payload = $this->decodeJson(response: $response);
         return (bool) ($payload['available'] ?? false);
     }//end checkMailboxExists()
 
@@ -480,12 +482,14 @@ class LogiusConnector
         if ($body === '') {
             return [];
         }
+
         $decoded = json_decode($body, true);
         if (json_last_error() !== JSON_ERROR_NONE || is_array($decoded) === false) {
             throw new RuntimeException(
                 'Logius response is not valid JSON: '.json_last_error_msg()
             );
         }
+
         return $decoded;
     }//end decodeJson()
 }//end class

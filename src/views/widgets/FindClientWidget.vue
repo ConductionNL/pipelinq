@@ -47,9 +47,9 @@
 						<Account v-else :size="18" />
 					</span>
 					<div class="client-details">
-						<span class="client-name">{{ client.name || t('pipelinq', 'Unnamed') }}</span>
+						<span class="client-name">{{ toText(client.name) || t('pipelinq', 'Unnamed') }}</span>
 						<span class="client-contact">
-							{{ [client.email, client.phone].filter(Boolean).join(' · ') }}
+							{{ [toText(client.email), toText(client.phone)].filter(Boolean).join(' · ') }}
 						</span>
 					</div>
 				</div>
@@ -101,8 +101,8 @@
 		<div v-if="actionClient" class="inline-action">
 			<NcNoteCard type="info">
 				{{ actionType === 'request'
-					? t('pipelinq', 'Creating request for {name}', { name: actionClient.name })
-					: t('pipelinq', 'Creating lead for {name}', { name: actionClient.name })
+					? t('pipelinq', 'Creating request for {name}', { name: toText(actionClient.name) })
+					: t('pipelinq', 'Creating lead for {name}', { name: toText(actionClient.name) })
 				}}
 			</NcNoteCard>
 			<NcTextField :value.sync="actionTitle"
@@ -140,6 +140,7 @@ import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.v
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import { initializeStores } from '../../store/store.js'
+import { toText } from '../../utils/widgetText.js'
 
 export default {
 	name: 'FindClientWidget',
@@ -191,9 +192,9 @@ export default {
 			if (!this.searchQuery) return this.clients.slice(0, 20)
 			const query = this.searchQuery.toLowerCase()
 			return this.clients.filter((client) => {
-				const name = (client.name || '').toLowerCase()
-				const email = (client.email || '').toLowerCase()
-				const phone = (client.phone || '').toLowerCase()
+				const name = toText(client.name).toLowerCase()
+				const email = toText(client.email).toLowerCase()
+				const phone = toText(client.phone).toLowerCase()
 				return name.includes(query) || email.includes(query) || phone.includes(query)
 			}).slice(0, 20)
 		},
@@ -202,6 +203,7 @@ export default {
 		await this.fetchData()
 	},
 	methods: {
+		toText,
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-38
 		 */

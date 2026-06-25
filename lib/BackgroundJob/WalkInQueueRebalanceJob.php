@@ -48,9 +48,9 @@ class WalkInQueueRebalanceJob extends Job
     /**
      * Constructor.
      *
-     * @param ITimeFactory       $time     The time factory (parent contract).
-     * @param WalkInQueueService $service  The walk-in queue service.
-     * @param LoggerInterface    $logger   The logger.
+     * @param ITimeFactory       $time    The time factory (parent contract).
+     * @param WalkInQueueService $service The walk-in queue service.
+     * @param LoggerInterface    $logger  The logger.
      */
     public function __construct(
         ITimeFactory $time,
