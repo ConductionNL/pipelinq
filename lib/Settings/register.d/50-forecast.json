@@ -1,201 +1,442 @@
 {
-    "components": {
-        "registers": {
-            "pipelinq": {
-                "schemas": [
-                    "forecastSnapshot",
-                    "forecastOverride",
-                    "salesQuota"
-                ]
-            }
-        },
-        "schemas": {
-            "lead": {
-                "slug": "lead",
-                "configuration": {
-                    "x-pipelinq-forecast-lifecycle": {
-                        "field": "forecast_category",
-                        "default": "pipeline",
-                        "open": ["commit", "best_case", "pipeline", "omitted"],
-                        "closed": ["closed_won", "closed_lost"],
-                        "description": "Forecast-category state machine for deal roll-up. NOTE: this is a SECOND state machine on the lead schema (the OR-enforced `x-openregister-lifecycle` already owns the `status` field, and OpenRegister supports only one enforced lifecycle field per schema). It is therefore declared under a pipelinq-namespaced key and enforced by ForecastDealService + the deal listeners (revert-after-write), NOT by OpenRegister's LifecycleValidationListener. Rules: a closed category locks (a closed deal cannot move to an open category without reopening); reopening a closed deal resets the category to the default; a `commit` above the org threshold requires a justification. ForecastDealService reads the open/closed partition and default from here (ADR-031 source-of-truth)."
-                    }
-                },
-                "properties": {
-                    "forecast_category": {
-                        "type": "string",
-                        "enum": ["commit", "best_case", "pipeline", "closed_won", "closed_lost", "omitted"],
-                        "default": "pipeline",
-                        "defaultBehavior": "falsy",
-                        "description": "Forecast confidence category for roll-up. Defaults to pipeline on create (applied by OpenRegister's schema-default with falsy behavior, matching the prior listener default). Locked once a deal is closed_won/closed_lost; reopening resets it to pipeline."
-                    },
-                    "commit_justification": {
-                        "type": "string",
-                        "description": "Free-text justification required when forecast_category is commit and value exceeds the org commit threshold. Visible to the rep's manager."
-                    }
-                }
-            },
-            "forecastSnapshot": {
-                "slug": "forecastSnapshot",
-                "title": "Forecast Snapshot",
-                "version": "1.0.0",
-                "summary": "An immutable point-in-time freeze of a rep/team/division/company forecast for a fiscal period.",
-                "description": "Generated automatically every Monday 06:00 (org timezone) and on demand. Captures commit/best_case/pipeline/closed_won amounts in the reporting currency plus the contributing deal ids. Never modified after creation; trend and accuracy analysis read the history. Roll-up levels sum the level below.",
-                "@type": "Thing",
-                "required": ["period_id", "as_of_date", "owner_id", "level"],
-                "properties": {
-                    "period_id": {"type": "string", "description": "Identifier of the fiscal period (e.g. Q2-2026)."},
-                    "as_of_date": {"type": "string", "format": "date", "description": "ISO 8601 date the snapshot was taken."},
-                    "owner_id": {"type": "string", "description": "NC user UID (rep) or team/division/company identifier."},
-                    "level": {"type": "string", "enum": ["rep", "team", "division", "company"], "description": "Hierarchy level of this snapshot."},
-                    "commit_amount": {"type": "number", "default": 0, "description": "Total commit forecast in the reporting currency."},
-                    "best_case_amount": {"type": "number", "default": 0, "description": "Total best_case forecast."},
-                    "pipeline_amount": {"type": "number", "default": 0, "description": "Total pipeline forecast."},
-                    "closed_won_amount": {"type": "number", "default": 0, "description": "Cumulative closed_won for the period."},
-                    "quota_amount": {"type": "number", "description": "Quota for this owner/period (null if unset)."},
-                    "currency": {"type": "string", "default": "EUR", "description": "ISO 4217 reporting currency of all amounts."},
-                    "deal_snapshot_ids": {"type": "array", "items": {"type": "string"}, "description": "UUIDs of contributing deal objects (audit trail)."},
-                    "partial": {"type": "boolean", "default": false, "description": "True if a child snapshot was missing at generation time."},
-                    "missing_reps": {"type": "array", "items": {"type": "string"}, "description": "Names/UIDs of missing children when partial."}
-                }
-            },
-            "forecastOverride": {
-                "slug": "forecastOverride",
-                "title": "Forecast Override",
-                "version": "1.0.0",
-                "summary": "A manager-supplied amount that replaces the calculated roll-up at a level for a category.",
-                "description": "Immutable audit record. The original calculated amount stays visible alongside the override for transparency. Overrides cascade upward: a parent roll-up uses the child's override value, not its calculated value. Does not modify the underlying deals.",
-                "@type": "Thing",
-                "required": ["period_id", "owner_id", "override_owner_id", "level", "category", "override_amount", "original_amount", "reason", "created_by"],
-                "properties": {
-                    "period_id": {"type": "string", "description": "Identifier of the fiscal period."},
-                    "owner_id": {"type": "string", "description": "NC user UID of the manager who owns the override."},
-                    "override_owner_id": {"type": "string", "description": "NC user UID or team/division id of the entity being overridden."},
-                    "level": {"type": "string", "enum": ["rep", "team", "division"], "description": "Level at which the override applies."},
-                    "category": {"type": "string", "enum": ["commit", "best_case"], "description": "Category overridden."},
-                    "override_amount": {"type": "number", "description": "Manager-supplied amount in the reporting currency."},
-                    "original_amount": {"type": "number", "description": "Calculated amount before the override (visual diff)."},
-                    "reason": {"type": "string", "description": "Manager's justification for the override."},
-                    "created_by": {"type": "string", "description": "NC user UID of the manager who created the override."},
-                    "created_at": {"type": "string", "format": "date-time", "description": "ISO timestamp the override was created."}
-                }
-            },
-            "salesQuota": {
-                "slug": "salesQuota",
-                "title": "Sales Quota",
-                "version": "1.0.0",
-                "summary": "A quarterly quota target for a rep, team or division.",
-                "description": "Defines the target attainment amount per owner and period. Quota hierarchy (sum of rep quotas vs team quota) is advisory, validated as a data-quality check, never enforced as a constraint.",
-                "@type": "Thing",
-                "required": ["owner_id", "period_id", "level", "quota_amount", "currency", "set_by"],
-                "properties": {
-                    "owner_id": {"type": "string", "description": "NC user UID (rep) or team/division identifier."},
-                    "period_id": {"type": "string", "description": "Identifier of the fiscal period."},
-                    "level": {"type": "string", "enum": ["rep", "team", "division"], "description": "Hierarchy level of this quota."},
-                    "quota_amount": {"type": "number", "description": "Target amount in the reporting currency."},
-                    "currency": {"type": "string", "default": "EUR", "description": "ISO 4217 currency code."},
-                    "effective_from": {"type": "string", "format": "date", "description": "ISO date the quota becomes active."},
-                    "effective_to": {"type": "string", "format": "date", "description": "ISO date the quota expires."},
-                    "set_by": {"type": "string", "description": "NC user UID of the person who set this quota."},
-                    "created_at": {"type": "string", "format": "date-time", "description": "ISO timestamp the quota was created."}
-                }
-            }
-        },
-        "objects": [
-            {
-                "@self": {"register": "pipelinq", "schema": "lead", "slug": "forecast-lead-commit-bakker"},
-                "title": "Implementatie ERP - Bakker BV",
-                "value": 75000,
-                "status": "open",
-                "assignee": "john.doe",
-                "expectedCloseDate": "2026-04-30",
-                "forecast_category": "commit",
-                "commit_justification": "Bakker BV CFO signed contract draft. Close date April 30 locked. Decision-maker confirmed budget approved."
-            },
-            {
-                "@self": {"register": "pipelinq", "schema": "lead", "slug": "forecast-lead-bestcase-vanderberg"},
-                "title": "Upgrade licenties - Van der Berg Groep",
-                "value": 25000,
-                "status": "open",
-                "assignee": "jane.smith",
-                "expectedCloseDate": "2026-05-15",
-                "forecast_category": "best_case"
-            },
-            {
-                "@self": {"register": "pipelinq", "schema": "lead", "slug": "forecast-lead-pipeline-arnhem"},
-                "title": "Feasibility study - Gemeente Arnhem",
-                "value": 12000,
-                "status": "open",
-                "assignee": "john.doe",
-                "expectedCloseDate": "2026-06-30",
-                "forecast_category": "pipeline"
-            },
-            {
-                "@self": {"register": "pipelinq", "schema": "forecastSnapshot", "slug": "forecast-snapshot-rep-week1"},
-                "period_id": "Q2-2026",
-                "as_of_date": "2026-05-20",
-                "owner_id": "john.doe",
-                "level": "rep",
-                "commit_amount": 75000,
-                "best_case_amount": 25000,
-                "pipeline_amount": 12000,
-                "closed_won_amount": 50000,
-                "quota_amount": 150000,
-                "currency": "EUR",
-                "deal_snapshot_ids": ["forecast-lead-commit-bakker", "forecast-lead-bestcase-vanderberg", "forecast-lead-pipeline-arnhem"],
-                "partial": false
-            },
-            {
-                "@self": {"register": "pipelinq", "schema": "forecastSnapshot", "slug": "forecast-snapshot-team-week1"},
-                "period_id": "Q2-2026",
-                "as_of_date": "2026-05-20",
-                "owner_id": "sales-team-east",
-                "level": "team",
-                "commit_amount": 175000,
-                "best_case_amount": 55000,
-                "pipeline_amount": 42000,
-                "closed_won_amount": 110000,
-                "quota_amount": 450000,
-                "currency": "EUR",
-                "partial": false
-            },
-            {
-                "@self": {"register": "pipelinq", "schema": "forecastOverride", "slug": "forecast-override-bakker"},
-                "period_id": "Q2-2026",
-                "owner_id": "manager.alice",
-                "override_owner_id": "john.doe",
-                "level": "rep",
-                "category": "commit",
-                "override_amount": 60000,
-                "original_amount": 75000,
-                "reason": "Bakker BV deal has execution risk. Reducing commit based on vendor survey results.",
-                "created_by": "manager.alice",
-                "created_at": "2026-05-20T09:15:00Z"
-            },
-            {
-                "@self": {"register": "pipelinq", "schema": "salesQuota", "slug": "forecast-quota-rep-johndoe"},
-                "owner_id": "john.doe",
-                "period_id": "Q2-2026",
-                "level": "rep",
-                "quota_amount": 150000,
-                "currency": "EUR",
-                "effective_from": "2026-04-01",
-                "effective_to": "2026-06-30",
-                "set_by": "director.bob",
-                "created_at": "2026-04-01T00:00:00Z"
-            },
-            {
-                "@self": {"register": "pipelinq", "schema": "salesQuota", "slug": "forecast-quota-team-east"},
-                "owner_id": "sales-team-east",
-                "period_id": "Q2-2026",
-                "level": "team",
-                "quota_amount": 450000,
-                "currency": "EUR",
-                "effective_from": "2026-04-01",
-                "effective_to": "2026-06-30",
-                "set_by": "director.bob",
-                "created_at": "2026-04-01T00:00:00Z"
-            }
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "forecastSnapshot",
+          "forecastOverride",
+          "salesQuota"
         ]
-    }
+      }
+    },
+    "schemas": {
+      "lead": {
+        "slug": "lead",
+        "configuration": {
+          "x-pipelinq-forecast-lifecycle": {
+            "field": "forecast_category",
+            "default": "pipeline",
+            "open": [
+              "commit",
+              "best_case",
+              "pipeline",
+              "omitted"
+            ],
+            "closed": [
+              "closed_won",
+              "closed_lost"
+            ],
+            "description": "Forecast-category state machine for deal roll-up. NOTE: this is a SECOND state machine on the lead schema (the OR-enforced `x-openregister-lifecycle` already owns the `status` field, and OpenRegister supports only one enforced lifecycle field per schema). It is therefore declared under a pipelinq-namespaced key and enforced by ForecastDealService + the deal listeners (revert-after-write), NOT by OpenRegister's LifecycleValidationListener. Rules: a closed category locks (a closed deal cannot move to an open category without reopening); reopening a closed deal resets the category to the default; a `commit` above the org threshold requires a justification. ForecastDealService reads the open/closed partition and default from here (ADR-031 source-of-truth)."
+          }
+        },
+        "properties": {
+          "forecast_category": {
+            "type": "string",
+            "enum": [
+              "commit",
+              "best_case",
+              "pipeline",
+              "closed_won",
+              "closed_lost",
+              "omitted"
+            ],
+            "default": "pipeline",
+            "defaultBehavior": "falsy",
+            "description": "Forecast confidence category for roll-up. Defaults to pipeline on create (applied by OpenRegister's schema-default with falsy behavior, matching the prior listener default). Locked once a deal is closed_won/closed_lost; reopening resets it to pipeline.",
+            "title": "Forecast Category"
+          },
+          "commit_justification": {
+            "type": "string",
+            "description": "Free-text justification required when forecast_category is commit and value exceeds the org commit threshold. Visible to the rep's manager.",
+            "title": "Commit Justification"
+          }
+        }
+      },
+      "forecastSnapshot": {
+        "slug": "forecastSnapshot",
+        "title": "Forecast Snapshot",
+        "version": "1.0.0",
+        "summary": "An immutable point-in-time freeze of a rep/team/division/company forecast for a fiscal period.",
+        "description": "Generated automatically every Monday 06:00 (org timezone) and on demand. Captures commit/best_case/pipeline/closed_won amounts in the reporting currency plus the contributing deal ids. Never modified after creation; trend and accuracy analysis read the history. Roll-up levels sum the level below.",
+        "@type": "Thing",
+        "required": [
+          "period_id",
+          "as_of_date",
+          "owner_id",
+          "level"
+        ],
+        "properties": {
+          "period_id": {
+            "type": "string",
+            "description": "Identifier of the fiscal period (e.g. Q2-2026).",
+            "title": "Period ID"
+          },
+          "as_of_date": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO 8601 date the snapshot was taken.",
+            "title": "As Of Date"
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "NC user UID (rep) or team/division/company identifier.",
+            "title": "Owner ID"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "rep",
+              "team",
+              "division",
+              "company"
+            ],
+            "description": "Hierarchy level of this snapshot.",
+            "title": "Level"
+          },
+          "commit_amount": {
+            "type": "number",
+            "default": 0,
+            "description": "Total commit forecast in the reporting currency.",
+            "title": "Commit Amount"
+          },
+          "best_case_amount": {
+            "type": "number",
+            "default": 0,
+            "description": "Total best_case forecast.",
+            "title": "Best Case Amount"
+          },
+          "pipeline_amount": {
+            "type": "number",
+            "default": 0,
+            "description": "Total pipeline forecast.",
+            "title": "Pipeline Amount"
+          },
+          "closed_won_amount": {
+            "type": "number",
+            "default": 0,
+            "description": "Cumulative closed_won for the period.",
+            "title": "Closed Won Amount"
+          },
+          "quota_amount": {
+            "type": "number",
+            "description": "Quota for this owner/period (null if unset).",
+            "title": "Quota Amount"
+          },
+          "currency": {
+            "type": "string",
+            "default": "EUR",
+            "description": "ISO 4217 reporting currency of all amounts.",
+            "title": "Currency"
+          },
+          "deal_snapshot_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "UUIDs of contributing deal objects (audit trail).",
+            "title": "Deal Snapshot Ids"
+          },
+          "partial": {
+            "type": "boolean",
+            "default": false,
+            "description": "True if a child snapshot was missing at generation time.",
+            "title": "Partial"
+          },
+          "missing_reps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Names/UIDs of missing children when partial.",
+            "title": "Missing Reps"
+          }
+        }
+      },
+      "forecastOverride": {
+        "slug": "forecastOverride",
+        "title": "Forecast Override",
+        "version": "1.0.0",
+        "summary": "A manager-supplied amount that replaces the calculated roll-up at a level for a category.",
+        "description": "Immutable audit record. The original calculated amount stays visible alongside the override for transparency. Overrides cascade upward: a parent roll-up uses the child's override value, not its calculated value. Does not modify the underlying deals.",
+        "@type": "Thing",
+        "required": [
+          "period_id",
+          "owner_id",
+          "override_owner_id",
+          "level",
+          "category",
+          "override_amount",
+          "original_amount",
+          "reason",
+          "created_by"
+        ],
+        "properties": {
+          "period_id": {
+            "type": "string",
+            "description": "Identifier of the fiscal period.",
+            "title": "Period ID"
+          },
+          "owner_id": {
+            "type": "string",
+            "description": "NC user UID of the manager who owns the override.",
+            "title": "Owner ID"
+          },
+          "override_owner_id": {
+            "type": "string",
+            "description": "NC user UID or team/division id of the entity being overridden.",
+            "title": "Override Owner ID"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "rep",
+              "team",
+              "division"
+            ],
+            "description": "Level at which the override applies.",
+            "title": "Level"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "commit",
+              "best_case"
+            ],
+            "description": "Category overridden.",
+            "title": "Category"
+          },
+          "override_amount": {
+            "type": "number",
+            "description": "Manager-supplied amount in the reporting currency.",
+            "title": "Override Amount"
+          },
+          "original_amount": {
+            "type": "number",
+            "description": "Calculated amount before the override (visual diff).",
+            "title": "Original Amount"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Manager's justification for the override.",
+            "title": "Reason"
+          },
+          "created_by": {
+            "type": "string",
+            "description": "NC user UID of the manager who created the override.",
+            "title": "Created By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO timestamp the override was created.",
+            "title": "Created At"
+          }
+        }
+      },
+      "salesQuota": {
+        "slug": "salesQuota",
+        "title": "Sales Quota",
+        "version": "1.0.0",
+        "summary": "A quarterly quota target for a rep, team or division.",
+        "description": "Defines the target attainment amount per owner and period. Quota hierarchy (sum of rep quotas vs team quota) is advisory, validated as a data-quality check, never enforced as a constraint.",
+        "@type": "Thing",
+        "required": [
+          "owner_id",
+          "period_id",
+          "level",
+          "quota_amount",
+          "currency",
+          "set_by"
+        ],
+        "properties": {
+          "owner_id": {
+            "type": "string",
+            "description": "NC user UID (rep) or team/division identifier.",
+            "title": "Owner ID"
+          },
+          "period_id": {
+            "type": "string",
+            "description": "Identifier of the fiscal period.",
+            "title": "Period ID"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "rep",
+              "team",
+              "division"
+            ],
+            "description": "Hierarchy level of this quota.",
+            "title": "Level"
+          },
+          "quota_amount": {
+            "type": "number",
+            "description": "Target amount in the reporting currency.",
+            "title": "Quota Amount"
+          },
+          "currency": {
+            "type": "string",
+            "default": "EUR",
+            "description": "ISO 4217 currency code.",
+            "title": "Currency"
+          },
+          "effective_from": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO date the quota becomes active.",
+            "title": "Effective From"
+          },
+          "effective_to": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO date the quota expires.",
+            "title": "Effective To"
+          },
+          "set_by": {
+            "type": "string",
+            "description": "NC user UID of the person who set this quota.",
+            "title": "Set By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO timestamp the quota was created.",
+            "title": "Created At"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "forecast-lead-commit-bakker"
+        },
+        "title": "Implementatie ERP - Bakker BV",
+        "value": 75000,
+        "status": "open",
+        "assignee": "john.doe",
+        "expectedCloseDate": "2026-04-30",
+        "forecast_category": "commit",
+        "commit_justification": "Bakker BV CFO signed contract draft. Close date April 30 locked. Decision-maker confirmed budget approved."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "forecast-lead-bestcase-vanderberg"
+        },
+        "title": "Upgrade licenties - Van der Berg Groep",
+        "value": 25000,
+        "status": "open",
+        "assignee": "jane.smith",
+        "expectedCloseDate": "2026-05-15",
+        "forecast_category": "best_case"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "forecast-lead-pipeline-arnhem"
+        },
+        "title": "Feasibility study - Gemeente Arnhem",
+        "value": 12000,
+        "status": "open",
+        "assignee": "john.doe",
+        "expectedCloseDate": "2026-06-30",
+        "forecast_category": "pipeline"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "forecastSnapshot",
+          "slug": "forecast-snapshot-rep-week1"
+        },
+        "period_id": "Q2-2026",
+        "as_of_date": "2026-05-20",
+        "owner_id": "john.doe",
+        "level": "rep",
+        "commit_amount": 75000,
+        "best_case_amount": 25000,
+        "pipeline_amount": 12000,
+        "closed_won_amount": 50000,
+        "quota_amount": 150000,
+        "currency": "EUR",
+        "deal_snapshot_ids": [
+          "forecast-lead-commit-bakker",
+          "forecast-lead-bestcase-vanderberg",
+          "forecast-lead-pipeline-arnhem"
+        ],
+        "partial": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "forecastSnapshot",
+          "slug": "forecast-snapshot-team-week1"
+        },
+        "period_id": "Q2-2026",
+        "as_of_date": "2026-05-20",
+        "owner_id": "sales-team-east",
+        "level": "team",
+        "commit_amount": 175000,
+        "best_case_amount": 55000,
+        "pipeline_amount": 42000,
+        "closed_won_amount": 110000,
+        "quota_amount": 450000,
+        "currency": "EUR",
+        "partial": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "forecastOverride",
+          "slug": "forecast-override-bakker"
+        },
+        "period_id": "Q2-2026",
+        "owner_id": "manager.alice",
+        "override_owner_id": "john.doe",
+        "level": "rep",
+        "category": "commit",
+        "override_amount": 60000,
+        "original_amount": 75000,
+        "reason": "Bakker BV deal has execution risk. Reducing commit based on vendor survey results.",
+        "created_by": "manager.alice",
+        "created_at": "2026-05-20T09:15:00Z"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "salesQuota",
+          "slug": "forecast-quota-rep-johndoe"
+        },
+        "owner_id": "john.doe",
+        "period_id": "Q2-2026",
+        "level": "rep",
+        "quota_amount": 150000,
+        "currency": "EUR",
+        "effective_from": "2026-04-01",
+        "effective_to": "2026-06-30",
+        "set_by": "director.bob",
+        "created_at": "2026-04-01T00:00:00Z"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "salesQuota",
+          "slug": "forecast-quota-team-east"
+        },
+        "owner_id": "sales-team-east",
+        "period_id": "Q2-2026",
+        "level": "team",
+        "quota_amount": 450000,
+        "currency": "EUR",
+        "effective_from": "2026-04-01",
+        "effective_to": "2026-06-30",
+        "set_by": "director.bob",
+        "created_at": "2026-04-01T00:00:00Z"
+      }
+    ]
+  }
 }
