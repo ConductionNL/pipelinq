@@ -99,8 +99,8 @@ class TemplateApprovalSyncService
         $totalChanges = 0;
         foreach ($providers as $provider) {
             $summary       = $this->syncOne(channelProvider: $provider);
-            $totalUpdates += (int) ($summary['templatesUpdated'] ?? 0);
-            $totalChanges += (int) ($summary['statusChanges'] ?? 0);
+            $totalUpdates += (int) $summary['templatesUpdated'];
+            $totalChanges += (int) $summary['statusChanges'];
         }
 
         return [
@@ -295,10 +295,16 @@ class TemplateApprovalSyncService
     /**
      * Persist a template row.
      *
+     * Return value is kept for future callers that need the saved row; the
+     * current call site at syncTemplate() intentionally discards it.
+     *
      * @param array<string, mixed> $payload Payload.
      * @param string|null          $id      Existing id or null.
      *
      * @return array<string, mixed>|null Saved row.
+     *
+     * @psalm-suppress UnusedReturnValue — call site at syncTemplate() discards
+     *   the saved row; the return type is preserved for future use.
      */
     private function saveObject(array $payload, ?string $id): ?array
     {

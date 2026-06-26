@@ -176,7 +176,7 @@ class MailboxResolver
         }
 
         $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        foreach (($rows ?? []) as $row) {
+        foreach ($rows as $row) {
             $data = $this->toArray(row: $row);
             if ($data === null) {
                 continue;

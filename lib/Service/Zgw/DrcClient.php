@@ -42,7 +42,6 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -66,14 +65,12 @@ class DrcClient
      * @param ZgwRegisterAccess $registers Register facade.
      * @param AcClient          $ac        Scope cache (pre-flight guards).
      * @param IAppConfig        $appConfig App config (threshold tuning).
-     * @param LoggerInterface   $logger    PSR-3 logger.
      */
     public function __construct(
         private ZgwApiClient $api,
         private ZgwRegisterAccess $registers,
         private AcClient $ac,
         private IAppConfig $appConfig,
-        private LoggerInterface $logger,
     ) {
     }//end __construct()
 

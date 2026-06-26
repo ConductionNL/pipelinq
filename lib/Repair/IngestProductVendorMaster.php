@@ -487,11 +487,7 @@ class IngestProductVendorMaster implements IRepairStep
                     );
 
             foreach ($searchTerms as $term) {
-                if ($term === '') {
-                    continue;
-                }
-
-                $results = $contactsManager->search($term, ['X-KVK', 'X-VAT', 'EMAIL', 'UID'], []);
+                $results = $contactsManager->search((string) $term, ['X-KVK', 'X-VAT', 'EMAIL', 'UID'], []);
                 if (empty($results) === false) {
                     $first = reset($results);
                     if (isset($first['UID']) === true && $first['UID'] !== '') {
@@ -725,10 +721,6 @@ class IngestProductVendorMaster implements IRepairStep
         string $barcode,
     ): ?array {
         foreach (array_filter(['sku' => $sku, 'barcode' => $barcode]) as $field => $value) {
-            if ($value === '') {
-                continue;
-            }
-
             $results = $objectService->findAll(
                 limit: 1,
                 offset: 0,

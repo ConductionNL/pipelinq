@@ -236,10 +236,6 @@ class BlastWebhookController extends Controller
     {
         $accepted = 0;
         foreach ($events as $event) {
-            if (is_array($event) === false) {
-                continue;
-            }
-
             $normalised = $this->webhookProcessor->normaliseSendGrid(event: $event);
             try {
                 $this->blastSendJob->enqueueWebhookEvent(provider: 'sendgrid', event: $normalised);

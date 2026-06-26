@@ -63,6 +63,7 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader && is_dir(__DIR__ . '/
 foreach ([
     'Db/ObjectEntity.php',
     'Service/ObjectService.php',
+    'Service/Integration/Providers/MessageDispatchProvider.php',
 ] as $stubRelativePath) {
     $stubFile = __DIR__ . '/Stubs/' . $stubRelativePath;
     if (is_file($stubFile) === true) {

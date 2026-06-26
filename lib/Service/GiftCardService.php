@@ -83,9 +83,6 @@ class GiftCardService
         $serial = $this->generateUniqueSerial();
         $pin    = $this->generatePin();
         $hash   = password_hash($pin, PASSWORD_BCRYPT, ['cost' => 10]);
-        if ($hash === false) {
-            throw new RuntimeException('Failed to hash PIN.');
-        }
 
         $tz  = new DateTimeZone('UTC');
         $now = (new DateTimeImmutable('now', $tz))->format('c');

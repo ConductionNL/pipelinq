@@ -281,7 +281,7 @@ class LoyaltyEngineService
             'status'      => 'credited',
             'points'      => $toAward,
             'ruleId'      => $this->extractUuid(object: $rule),
-            'tierChanged' => $tierResult['changed'] ?? false,
+            'tierChanged' => $tierResult['changed'],
             'multiplier'  => $multiplier,
         ];
     }//end processForProgramme()

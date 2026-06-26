@@ -101,7 +101,7 @@ class PhoneNormaliser
         $country = $this->resolveDefaultCountry();
 
         // Strip everything except digits and a single leading '+'.
-        $hasPlus = (strlen($raw) > 0 && $raw[0] === '+');
+        $hasPlus = ($raw[0] === '+');
         $digits  = preg_replace('/[^0-9]/', '', $raw);
         if ($digits === null || $digits === '') {
             $this->logFailure(rawNumber: $rawNumber, reason: 'no digits in input');

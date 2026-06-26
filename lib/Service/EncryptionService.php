@@ -34,8 +34,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCP\IConfig;
-use OCP\Security\ICrypto;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -87,18 +85,11 @@ class EncryptionService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container The DI container (used to lazily
-     *                                      resolve the openregister vault).
-     * @param IConfig            $config    Nextcloud config service.
-     * @param ICrypto            $crypto    Nextcloud crypto helper (used only
-     *                                      for a system-secret-derived dev
-     *                                      fallback key).
-     * @param LoggerInterface    $logger    Logger.
+     * @param IConfig         $config Nextcloud config service.
+     * @param LoggerInterface $logger Logger.
      */
     public function __construct(
-        private readonly ContainerInterface $container,
         private readonly IConfig $config,
-        private readonly ICrypto $crypto,
         private readonly LoggerInterface $logger,
     ) {
     }//end __construct()

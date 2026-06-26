@@ -203,10 +203,6 @@ class WebhookProcessorService
     {
         $handled = 0;
         foreach ($events as $raw) {
-            if (is_array($raw) === false) {
-                continue;
-            }
-
             $normalised = $this->normaliseSendGrid(event: $raw);
             if ($this->processEvent(event: $normalised, provider: 'sendgrid') === true) {
                 $handled++;

@@ -67,14 +67,14 @@ class HaalCentraalClient
     private const LOOKUP_TIMEOUT_SECONDS = 5;
 
     /**
-     * Sentinel returned by {@see lookupViaOpenRegister()} for an OR-200 with
-     * zero persons (BSN not found in BRP). Distinguishes "OR answered, nobody
-     * there" (→ not-found, return null) from "OR unusable" (→ null → legacy
+     * Sentinel key used in the array returned by {@see lookupViaOpenRegister()} for
+     * an OR-200 with zero persons (BSN not found in BRP). Distinguishes "OR answered,
+     * nobody there" (→ not-found, return null) from "OR unusable" (→ null → legacy
      * fallback). Never returned from {@see lookupPersoon()}.
      *
-     * @var array<int,string>
+     * @var string
      */
-    private const OR_EMPTY_RESULT = ['__or_brp_empty__'];
+    private const OR_EMPTY_SENTINEL_KEY = '__or_brp_empty__';
 
     /**
      * Cached access token (in-process only — re-fetched on cold boot).
@@ -141,7 +141,7 @@ class HaalCentraalClient
             // Sentinel for an OR-200 with zero persons (BSN not in BRP) — the
             // leaf returns 200 { results: [] }; preserve the legacy not-found
             // semantics (return null) without falling through to the legacy call.
-            if ($viaOr === self::OR_EMPTY_RESULT) {
+            if (isset($viaOr[self::OR_EMPTY_SENTINEL_KEY]) === true) {
                 return null;
             }
 
@@ -308,7 +308,8 @@ class HaalCentraalClient
         $results = $payload['results'];
         if (empty($results) === true) {
             // OR answered 200 but nobody is there — not-found, not a fallback.
-            return self::OR_EMPTY_RESULT;
+            // Return the sentinel using a named key so PHPStan can type it correctly.
+            return [self::OR_EMPTY_SENTINEL_KEY => true];
         }
 
         $first = $results[0];

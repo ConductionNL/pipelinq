@@ -106,14 +106,11 @@ class ExpenseApprovalListener implements IEventListener
                 $entity = $event->getObject();
             }
 
-            if ($entity === null || $this->isExpense(entity: $entity) === false) {
+            if ($this->isExpense(entity: $entity) === false) {
                 return;
             }
 
             $data = $entity->getObject();
-            if (is_array($data) === false) {
-                return;
-            }
 
             // Only fire for approved expenses (REQ-AP-002).
             if (($data['status'] ?? '') !== 'approved') {

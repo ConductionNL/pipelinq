@@ -228,10 +228,6 @@ class NrcSubscriptionService
     {
         $out = [];
         foreach ($kanalen as $entry) {
-            if (is_array($entry) === false) {
-                continue;
-            }
-
             $naam = (string) ($entry['naam'] ?? '');
             if ($naam === '') {
                 continue;
