@@ -151,7 +151,7 @@ class EvidenceCollectionService
         $envelopes = $this->orGdpr->findSubjectData(subjectId: $bsn);
 
         foreach ($envelopes as $envelope) {
-            $object   = $this->normalize(object: ($envelope['object'] ?? []));
+            $object   = $this->normalize(object: $envelope['object']);
             $register = (string) ($object['@self']['register'] ?? '');
             if ($scopes !== [] && in_array($register, $scopes, true) === false
                 && $this->scopeMatches(object: $object, scopes: $scopes) === false
@@ -164,7 +164,7 @@ class EvidenceCollectionService
                 bronApp: 'openregister',
                 bronRegister: $register,
                 bronObject: (string) ($object['@self']['id'] ?? $object['@self']['uuid'] ?? ''),
-                categorie: $this->categoryOf(object: $object, gdprEntities: (array) ($envelope['gdprEntities'] ?? [])),
+                categorie: $this->categoryOf(object: $object, gdprEntities: $envelope['gdprEntities']),
                 preview: $this->previewOf(object: $object),
                 rechtsgrond: 'wettelijke taak'
             );

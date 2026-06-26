@@ -208,7 +208,7 @@ class ContactVcardService
                 continue;
             }
 
-            foreach (($results ?? []) as $hit) {
+            foreach ($results as $hit) {
                 $uid = (string) ($hit['UID'] ?? '');
                 if ($uid !== '') {
                     return $uid;

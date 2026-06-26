@@ -445,7 +445,7 @@ class LogiusConnector
         }
 
         $headerName = 'X-Logius-Signature';
-        $provided   = (string) ($request->getHeader($headerName) ?? '');
+        $provided   = (string) $request->getHeader($headerName);
         if ($provided === '') {
             return false;
         }

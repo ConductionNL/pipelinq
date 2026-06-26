@@ -856,9 +856,9 @@ class CtiService
      * @param string           $platform Adapter platform.
      * @param CtiWebhookResult $event    Normalised event.
      *
-     * @return string|null Always null (presence does not own a contactmoment).
+     * @return null Always null (presence does not own a contactmoment).
      */
-    private function syncPresenceFromEvent(string $platform, CtiWebhookResult $event): ?string
+    private function syncPresenceFromEvent(string $platform, CtiWebhookResult $event): null
     {
         if ($event->userId === null && $event->extension === null) {
             return null;

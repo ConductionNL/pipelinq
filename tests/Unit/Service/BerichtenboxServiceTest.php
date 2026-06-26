@@ -43,7 +43,6 @@ use OCA\Pipelinq\Service\MailboxResolver;
 use OCA\Pipelinq\Service\TemplateRenderer;
 use OCP\IAppConfig;
 use OCP\IConfig;
-use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -72,9 +71,7 @@ class BerichtenboxServiceTest extends TestCase
         $config = $this->createMock(IConfig::class);
         $config->method('getSystemValue')->willReturn('berichtenbox-service-test-secret');
         return new EncryptionService(
-            $this->createMock(ContainerInterface::class),
             $config,
-            $this->createMock(ICrypto::class),
             $this->createMock(LoggerInterface::class)
         );
     }//end realEncryption()

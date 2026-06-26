@@ -333,7 +333,7 @@ class PosPaymentService
             paymentMethod: $paymentMethod
         );
 
-        if (($result['status'] ?? '') === 'failed') {
+        if ($result['status'] === 'failed') {
             // Provider failure — DO NOT mutate the transaction state.
             return [
                 'transaction' => $transaction,
@@ -345,7 +345,7 @@ class PosPaymentService
             id: $transactionId,
             patch: [
                 'paymentProvider'  => $providerName,
-                'paymentSessionId' => (string) ($result['sessionId'] ?? ''),
+                'paymentSessionId' => $result['sessionId'],
                 'paymentStatus'    => 'pending',
                 'paymentMethod'    => $paymentMethod,
             ]
@@ -379,14 +379,14 @@ class PosPaymentService
         $provider = $this->getPaymentProvider(name: $providerName);
         $result   = $provider->capture(sessionId: $sessionId);
 
-        if (($result['status'] ?? '') === 'failed') {
+        if ($result['status'] === 'failed') {
             return [
                 'transaction' => $transaction,
                 'payment'     => $result,
             ];
         }
 
-        $newStatus = (string) ($result['status'] ?? 'captured');
+        $newStatus = $result['status'];
         $updated   = $this->saveTransaction(
             id: $transactionId,
             patch: ['paymentStatus' => $newStatus]
@@ -437,7 +437,7 @@ class PosPaymentService
         $provider = $this->getPaymentProvider(name: $providerName);
         $result   = $provider->refund(sessionId: $sessionId, reason: $reason);
 
-        if (($result['status'] ?? '') === 'failed') {
+        if ($result['status'] === 'failed') {
             return [
                 'transaction' => $transaction,
                 'payment'     => $result,
@@ -455,7 +455,7 @@ class PosPaymentService
 
         $this->emitRefundedEvent(
             transaction: $updated,
-            refundId: (string) ($result['refundId'] ?? ''),
+            refundId: $result['refundId'],
             reason: $reason
         );
 
@@ -521,9 +521,9 @@ class PosPaymentService
         }
 
         $envelope  = $provider->parseWebhook(payload: $decoded);
-        $sessionId = (string) ($envelope['sessionId'] ?? '');
-        $eventId   = (string) ($envelope['eventId'] ?? '');
-        $status    = (string) ($envelope['status'] ?? 'pending');
+        $sessionId = $envelope['sessionId'];
+        $eventId   = $envelope['eventId'];
+        $status    = $envelope['status'];
 
         if ($sessionId === '') {
             // Unknown payload — log + 200 so providers don't retry forever.

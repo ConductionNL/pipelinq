@@ -41,7 +41,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -63,7 +62,6 @@ class LoyaltyController extends Controller
      * @param LoyaltyProgrammeService $programmeService      The programme service.
      * @param IUserSession            $userSession           The user session.
      * @param IL10N                   $l10n                  The localiser.
-     * @param LoggerInterface         $logger                The logger.
      */
     public function __construct(
         IRequest $request,
@@ -74,7 +72,6 @@ class LoyaltyController extends Controller
         private LoyaltyProgrammeService $programmeService,
         private IUserSession $userSession,
         private IL10N $l10n,
-        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()

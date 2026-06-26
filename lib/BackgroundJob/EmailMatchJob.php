@@ -97,8 +97,8 @@ class EmailMatchJob extends TimedJob
                 $userId = $user->getUID();
                 try {
                     $result        = $this->emailMatchService->runForUser(userId: $userId);
-                    $totalLinked  += (int) ($result['linked'] ?? 0);
-                    $totalScanned += (int) ($result['scanned'] ?? 0);
+                    $totalLinked  += (int) $result['linked'];
+                    $totalScanned += (int) $result['scanned'];
                 } catch (Throwable $e) {
                     $userErrors++;
                     $this->emailMatchService->writeStatus(

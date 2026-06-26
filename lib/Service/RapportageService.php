@@ -139,11 +139,8 @@ class RapportageService
 
         $result = [];
         foreach ($buckets as $row) {
-            $conversion = 0.0;
+            $conversion = round(($row['won'] / $row['total']) * 100.0, 1);
             $avgWon     = 0.0;
-            if ($row['total'] > 0) {
-                $conversion = round(($row['won'] / $row['total']) * 100.0, 1);
-            }
 
             if ($row['won'] > 0) {
                 $avgWon = round($row['wonValueSum'] / $row['won'], 2);

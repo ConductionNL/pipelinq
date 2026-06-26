@@ -467,7 +467,7 @@ class BerichtenboxService
                 continue;
             }
 
-            foreach (($rows ?? []) as $row) {
+            foreach ($rows as $row) {
                 $data = $this->toArray(row: $row);
                 if ($data === null) {
                     continue;
@@ -673,7 +673,7 @@ class BerichtenboxService
 
         $now    = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         $result = [];
-        foreach (($rows ?? []) as $row) {
+        foreach ($rows as $row) {
             $data = $this->toArray(row: $row);
             if ($data === null) {
                 continue;
@@ -723,7 +723,7 @@ class BerichtenboxService
         }
 
         $unread = [];
-        foreach (($rows ?? []) as $row) {
+        foreach ($rows as $row) {
             $data = $this->toArray(row: $row);
             if ($data === null) {
                 continue;
@@ -764,7 +764,7 @@ class BerichtenboxService
             return null;
         }
 
-        foreach (($rows ?? []) as $row) {
+        foreach ($rows as $row) {
             return $this->toArray(row: $row);
         }
 
@@ -828,7 +828,7 @@ class BerichtenboxService
             return null;
         }
 
-        foreach (($rows ?? []) as $row) {
+        foreach ($rows as $row) {
             return $this->toArray(row: $row);
         }
 
