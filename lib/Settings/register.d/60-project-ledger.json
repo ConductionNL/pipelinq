@@ -1,207 +1,226 @@
 {
-	"components": {
-		"registers": {
-			"pipelinq": {
-				"schemas": [
-					"project",
-					"projectPhase"
-				]
-			}
-		},
-		"schemas": {
-			"project": {
-				"slug": "project",
-				"title": "Project",
-				"version": "1.0.0",
-				"summary": "A billable or internal delivery project for a client, tracked through phases and synced to the Shillinq project ledger.",
-				"description": "Projects are the delivery vehicle for client work in Pipelinq. Each project carries budget (hours and amount), a billable flag, a start/end date window and a lifecycle status (open, in_progress, completed, cancelled). On creation and on every status change the project is dispatched to Shillinq's project ledger via OpenRegister's WebhookService; ledgerSyncStatus and ledgerSyncedAt record the outcome of that one-way integration.",
-				"@type": "Project",
-				"required": [
-					"name"
-				],
-				"properties": {
-					"name": {
-						"type": "string",
-						"description": "Human-readable project name."
-					},
-					"client": {
-						"type": "string",
-						"description": "UUID of the related client (pipelinq client schema)."
-					},
-					"description": {
-						"type": "string",
-						"description": "Free-text project description."
-					},
-					"status": {
-						"type": "string",
-						"enum": [
-							"open",
-							"in_progress",
-							"completed",
-							"cancelled"
-						],
-						"default": "open",
-						"description": "Project lifecycle status. Mapped to Shillinq ledger phase names on dispatch."
-					},
-					"billable": {
-						"type": "boolean",
-						"default": true,
-						"description": "Whether the project is billable to the client."
-					},
-					"budgetHours": {
-						"type": "number",
-						"default": 0,
-						"description": "Budgeted hours for the project."
-					},
-					"budgetAmount": {
-						"type": "number",
-						"default": 0,
-						"description": "Budgeted amount in the reporting currency."
-					},
-					"hourlyRate": {
-						"type": "number",
-						"default": 0,
-						"description": "Default hourly rate applied to the project."
-					},
-					"startDate": {
-						"type": "string",
-						"format": "date",
-						"description": "ISO 8601 project start date."
-					},
-					"endDate": {
-						"type": "string",
-						"format": "date",
-						"description": "ISO 8601 project end date."
-					},
-					"color": {
-						"type": "string",
-						"description": "Display colour (hex) for the project in the UI."
-					},
-					"ledgerSyncStatus": {
-						"type": "string",
-						"enum": [
-							"pending",
-							"synced",
-							"failed"
-						],
-						"description": "Shillinq ledger sync state. Null for projects created before the ledger integration was deployed."
-					},
-					"ledgerSyncedAt": {
-						"type": "string",
-						"format": "date-time",
-						"description": "ISO 8601 UTC timestamp of the last successful ledger sync delivery."
-					}
-				}
-			},
-			"projectPhase": {
-				"slug": "projectPhase",
-				"title": "Project Phase",
-				"version": "1.0.0",
-				"summary": "A named phase within a project with its own status; phase status changes are dispatched to the Shillinq ledger in the parent project's context.",
-				"description": "Phases break a project into delivery stages (e.g. discovery, build, hypercare). A phase carries its own status; when it changes, the ledger integration fetches the parent project and dispatches a status-changed event in the project's context rather than per phase.",
-				"@type": "Thing",
-				"required": [
-					"name",
-					"project"
-				],
-				"properties": {
-					"name": {
-						"type": "string",
-						"description": "Phase name."
-					},
-					"project": {
-						"type": "string",
-						"description": "UUID of the parent project."
-					},
-					"status": {
-						"type": "string",
-						"enum": [
-							"open",
-							"in_progress",
-							"completed",
-							"cancelled"
-						],
-						"default": "open",
-						"description": "Phase lifecycle status."
-					},
-					"sequence": {
-						"type": "integer",
-						"default": 0,
-						"description": "Ordering of the phase within the project."
-					},
-					"startDate": {
-						"type": "string",
-						"format": "date",
-						"description": "ISO 8601 phase start date."
-					},
-					"endDate": {
-						"type": "string",
-						"format": "date",
-						"description": "ISO 8601 phase end date."
-					}
-				}
-			}
-		},
-		"objects": [
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "project",
-					"slug": "project-digitalisering-amsterdam"
-				},
-				"name": "Digitalisering Dienstverlening",
-				"client": "@ref:client-entity-notes-demo",
-				"description": "Modernisering van de publieke dienstverlening via digitale kanalen",
-				"status": "in_progress",
-				"billable": true,
-				"budgetHours": 400,
-				"budgetAmount": 56000.00,
-				"hourlyRate": 140.00,
-				"startDate": "2026-02-01",
-				"endDate": "2026-08-31",
-				"color": "#4A90D9",
-				"ledgerSyncStatus": "synced",
-				"ledgerSyncedAt": "2026-05-20T14:32:00Z"
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "project",
-					"slug": "project-website-devries"
-				},
-				"name": "Website Herontwerp",
-				"client": "@ref:client-entity-notes-demo",
-				"description": "Redesign van de corporate website inclusief CMS-migratie",
-				"status": "open",
-				"billable": true,
-				"budgetHours": 160,
-				"budgetAmount": 19200.00,
-				"hourlyRate": 120.00,
-				"startDate": "2026-03-15",
-				"endDate": "2026-06-30",
-				"color": "#F5A623",
-				"ledgerSyncStatus": "pending",
-				"ledgerSyncedAt": null
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "project",
-					"slug": "project-hr-techbedrijf"
-				},
-				"name": "HR Systeem Implementatie",
-				"description": "Implementatie en migratie naar nieuw HR-platform",
-				"status": "completed",
-				"billable": false,
-				"budgetHours": 80,
-				"budgetAmount": 0,
-				"hourlyRate": 0,
-				"startDate": "2026-05-01",
-				"endDate": "2026-07-31",
-				"color": "#7ED321",
-				"ledgerSyncStatus": "failed",
-				"ledgerSyncedAt": "2026-05-15T09:12:00Z"
-			}
-		]
-	}
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "project",
+          "projectPhase"
+        ]
+      }
+    },
+    "schemas": {
+      "project": {
+        "slug": "project",
+        "title": "Project",
+        "version": "1.0.0",
+        "summary": "A billable or internal delivery project for a client, tracked through phases and synced to the Shillinq project ledger.",
+        "description": "Projects are the delivery vehicle for client work in Pipelinq. Each project carries budget (hours and amount), a billable flag, a start/end date window and a lifecycle status (open, in_progress, completed, cancelled). On creation and on every status change the project is dispatched to Shillinq's project ledger via OpenRegister's WebhookService; ledgerSyncStatus and ledgerSyncedAt record the outcome of that one-way integration.",
+        "@type": "Project",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable project name.",
+            "title": "Name"
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID of the related client (pipelinq client schema).",
+            "title": "Client"
+          },
+          "description": {
+            "type": "string",
+            "description": "Free-text project description.",
+            "title": "Description"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "in_progress",
+              "completed",
+              "cancelled"
+            ],
+            "default": "open",
+            "description": "Project lifecycle status. Mapped to Shillinq ledger phase names on dispatch.",
+            "title": "Status"
+          },
+          "billable": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the project is billable to the client.",
+            "title": "Billable"
+          },
+          "budgetHours": {
+            "type": "number",
+            "default": 0,
+            "description": "Budgeted hours for the project.",
+            "title": "Budget Hours"
+          },
+          "budgetAmount": {
+            "type": "number",
+            "default": 0,
+            "description": "Budgeted amount in the reporting currency.",
+            "title": "Budget Amount"
+          },
+          "hourlyRate": {
+            "type": "number",
+            "default": 0,
+            "description": "Default hourly rate applied to the project.",
+            "title": "Hourly Rate"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO 8601 project start date.",
+            "title": "Start Date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO 8601 project end date.",
+            "title": "End Date"
+          },
+          "color": {
+            "type": "string",
+            "description": "Display colour (hex) for the project in the UI.",
+            "title": "Color"
+          },
+          "ledgerSyncStatus": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "synced",
+              "failed"
+            ],
+            "description": "Shillinq ledger sync state. Null for projects created before the ledger integration was deployed.",
+            "title": "Ledger Sync Status"
+          },
+          "ledgerSyncedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 UTC timestamp of the last successful ledger sync delivery.",
+            "title": "Ledger Synced At"
+          }
+        }
+      },
+      "projectPhase": {
+        "slug": "projectPhase",
+        "title": "Project Phase",
+        "version": "1.0.0",
+        "summary": "A named phase within a project with its own status; phase status changes are dispatched to the Shillinq ledger in the parent project's context.",
+        "description": "Phases break a project into delivery stages (e.g. discovery, build, hypercare). A phase carries its own status; when it changes, the ledger integration fetches the parent project and dispatches a status-changed event in the project's context rather than per phase.",
+        "@type": "Thing",
+        "required": [
+          "name",
+          "project"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Phase name.",
+            "title": "Name"
+          },
+          "project": {
+            "type": "string",
+            "description": "UUID of the parent project.",
+            "title": "Project"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "in_progress",
+              "completed",
+              "cancelled"
+            ],
+            "default": "open",
+            "description": "Phase lifecycle status.",
+            "title": "Status"
+          },
+          "sequence": {
+            "type": "integer",
+            "default": 0,
+            "description": "Ordering of the phase within the project.",
+            "title": "Sequence"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO 8601 phase start date.",
+            "title": "Start Date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO 8601 phase end date.",
+            "title": "End Date"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "project",
+          "slug": "project-digitalisering-amsterdam"
+        },
+        "name": "Digitalisering Dienstverlening",
+        "client": "@ref:client-entity-notes-demo",
+        "description": "Modernisering van de publieke dienstverlening via digitale kanalen",
+        "status": "in_progress",
+        "billable": true,
+        "budgetHours": 400,
+        "budgetAmount": 56000.0,
+        "hourlyRate": 140.0,
+        "startDate": "2026-02-01",
+        "endDate": "2026-08-31",
+        "color": "#4A90D9",
+        "ledgerSyncStatus": "synced",
+        "ledgerSyncedAt": "2026-05-20T14:32:00Z"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "project",
+          "slug": "project-website-devries"
+        },
+        "name": "Website Herontwerp",
+        "client": "@ref:client-entity-notes-demo",
+        "description": "Redesign van de corporate website inclusief CMS-migratie",
+        "status": "open",
+        "billable": true,
+        "budgetHours": 160,
+        "budgetAmount": 19200.0,
+        "hourlyRate": 120.0,
+        "startDate": "2026-03-15",
+        "endDate": "2026-06-30",
+        "color": "#F5A623",
+        "ledgerSyncStatus": "pending",
+        "ledgerSyncedAt": null
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "project",
+          "slug": "project-hr-techbedrijf"
+        },
+        "name": "HR Systeem Implementatie",
+        "description": "Implementatie en migratie naar nieuw HR-platform",
+        "status": "completed",
+        "billable": false,
+        "budgetHours": 80,
+        "budgetAmount": 0,
+        "hourlyRate": 0,
+        "startDate": "2026-05-01",
+        "endDate": "2026-07-31",
+        "color": "#7ED321",
+        "ledgerSyncStatus": "failed",
+        "ledgerSyncedAt": "2026-05-15T09:12:00Z"
+      }
+    ]
+  }
 }

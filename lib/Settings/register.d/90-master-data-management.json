@@ -24,21 +24,63 @@
           "field": "qualityScore",
           "statusField": "qualityStatus",
           "rules": [
-            { "type": "required", "field": "goldenRecord.name", "weight": 1 },
-            { "type": "required", "field": "goldenRecord.email", "weight": 1 },
-            { "type": "format", "field": "goldenRecord.email", "format": "email", "weight": 1 },
-            { "type": "format", "field": "goldenRecord.kvkNumber", "pattern": "^[0-9]{8}$", "weight": 1 },
-            { "type": "freshness", "field": "lastSourceUpdate", "halfLifeDays": 180, "weight": 2 }
+            {
+              "type": "required",
+              "field": "goldenRecord.name",
+              "weight": 1
+            },
+            {
+              "type": "required",
+              "field": "goldenRecord.email",
+              "weight": 1
+            },
+            {
+              "type": "format",
+              "field": "goldenRecord.email",
+              "format": "email",
+              "weight": 1
+            },
+            {
+              "type": "format",
+              "field": "goldenRecord.kvkNumber",
+              "pattern": "^[0-9]{8}$",
+              "weight": 1
+            },
+            {
+              "type": "freshness",
+              "field": "lastSourceUpdate",
+              "halfLifeDays": 180,
+              "weight": 2
+            }
           ],
-          "thresholds": { "good": 0.8, "fair": 0.5 }
+          "thresholds": {
+            "good": 0.8,
+            "fair": 0.5
+          }
         },
         "x-openregister-dedup": {
           "blockingKeys": [],
           "matchRules": [
-            { "field": "matchKvkNumber", "method": "exact", "weight": 0.4 },
-            { "field": "matchEmail", "method": "exact", "weight": 0.3 },
-            { "field": "matchName", "method": "normalized", "weight": 0.2 },
-            { "field": "matchName", "method": "levenshtein", "weight": 0.1 }
+            {
+              "field": "matchKvkNumber",
+              "method": "exact",
+              "weight": 0.4
+            },
+            {
+              "field": "matchEmail",
+              "method": "exact",
+              "weight": 0.3
+            },
+            {
+              "field": "matchName",
+              "method": "normalized",
+              "weight": 0.2
+            },
+            {
+              "field": "matchName",
+              "method": "levenshtein",
+              "weight": 0.1
+            }
           ],
           "threshold": 0.7
         },
@@ -62,7 +104,12 @@
             "type": "string",
             "title": "Entity type",
             "description": "Type of master entity.",
-            "enum": ["contact", "account", "product", "vendor"],
+            "enum": [
+              "contact",
+              "account",
+              "product",
+              "vendor"
+            ],
             "facetable": true
           },
           "goldenRecord": {
@@ -79,19 +126,28 @@
             "type": "array",
             "title": "Aliases",
             "description": "Previous masterId values from merges, for backward-compat lookups.",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "mergedFrom": {
             "type": "array",
             "title": "Merged from",
             "description": "masterId values that were merged into this entity.",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "status": {
             "type": "string",
             "title": "Status",
             "description": "Lifecycle status.",
-            "enum": ["active", "merged-into-other", "soft-deleted", "quarantined"],
+            "enum": [
+              "active",
+              "merged-into-other",
+              "soft-deleted",
+              "quarantined"
+            ],
             "default": "active",
             "facetable": true
           },
@@ -121,7 +177,11 @@
             "type": "string",
             "title": "OR quality status",
             "description": "Status label materialised by OpenRegister from qualityScore (good/fair/poor).",
-            "enum": ["good", "fair", "poor"],
+            "enum": [
+              "good",
+              "fair",
+              "poor"
+            ],
             "facetable": true
           },
           "lastSourceUpdate": {
@@ -168,7 +228,9 @@
             "type": "array",
             "title": "Tags",
             "description": "Free-form labels.",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
           "gdprNotes": {
             "type": "string",
@@ -224,8 +286,14 @@
           "entityType": {
             "type": "string",
             "title": "Entity type",
-            "enum": ["contact", "account", "product", "vendor"],
-            "facetable": true
+            "enum": [
+              "contact",
+              "account",
+              "product",
+              "vendor"
+            ],
+            "facetable": true,
+            "description": "Entity Type for this record."
           },
           "currentMasterEntity": {
             "type": "string",
@@ -247,12 +315,14 @@
           "firstSeen": {
             "type": "string",
             "format": "date-time",
-            "title": "First seen"
+            "title": "First seen",
+            "description": "First Seen for this record."
           },
           "lastSeen": {
             "type": "string",
             "format": "date-time",
-            "title": "Last seen"
+            "title": "Last seen",
+            "description": "Last Seen for this record."
           },
           "lastChange": {
             "type": "string",
@@ -271,14 +341,21 @@
           "linkageMethod": {
             "type": "string",
             "title": "Linkage method",
-            "enum": ["deterministic-key", "probabilistic-match", "manual-assignment", "system-auto-merge"],
-            "facetable": true
+            "enum": [
+              "deterministic-key",
+              "probabilistic-match",
+              "manual-assignment",
+              "system-auto-merge"
+            ],
+            "facetable": true,
+            "description": "Linkage Method for this record."
           },
           "linkageConfidence": {
             "type": "number",
             "title": "Linkage confidence",
             "minimum": 0,
-            "maximum": 1
+            "maximum": 1,
+            "description": "Linkage Confidence for this record."
           },
           "withdrawn": {
             "type": "boolean",
@@ -297,13 +374,24 @@
         "summary": "Per (entityType, attribute, source) trust-tier rule.",
         "description": "Defines which source system wins for each attribute, with freshness decay, manual-override policy and effective date. Mapped to Schema.org DefinedTerm.",
         "@type": "schema:DefinedTerm",
-        "required": ["entityType", "attribute", "sourceSystem", "trustTier"],
+        "required": [
+          "entityType",
+          "attribute",
+          "sourceSystem",
+          "trustTier"
+        ],
         "properties": {
           "entityType": {
             "type": "string",
             "title": "Entity type",
-            "enum": ["contact", "account", "product", "vendor"],
-            "facetable": true
+            "enum": [
+              "contact",
+              "account",
+              "product",
+              "vendor"
+            ],
+            "facetable": true,
+            "description": "Entity Type for this record."
           },
           "attribute": {
             "type": "string",
@@ -316,13 +404,20 @@
             "type": "string",
             "title": "Source system",
             "maxLength": 64,
-            "facetable": true
+            "facetable": true,
+            "description": "Source System for this record."
           },
           "trustTier": {
             "type": "string",
             "title": "Trust tier",
-            "enum": ["gold", "silver", "bronze", "discard"],
-            "facetable": true
+            "enum": [
+              "gold",
+              "silver",
+              "bronze",
+              "discard"
+            ],
+            "facetable": true,
+            "description": "Trust Tier for this record."
           },
           "freshnessDecayDays": {
             "type": "integer",
@@ -333,17 +428,20 @@
           "manualOverrideAllowed": {
             "type": "boolean",
             "title": "Manual override allowed",
-            "default": true
+            "default": true,
+            "description": "Manual Override Allowed for this record."
           },
           "rationale": {
             "type": "string",
             "title": "Rationale",
-            "maxLength": 1024
+            "maxLength": 1024,
+            "description": "Rationale for this record."
           },
           "effectiveFrom": {
             "type": "string",
             "format": "date",
-            "title": "Effective from"
+            "title": "Effective from",
+            "description": "Effective From for this record."
           }
         }
       },
@@ -355,23 +453,36 @@
         "summary": "Log of a merge with pre-merge snapshot for reversal.",
         "description": "Records every merge (manual or auto) with the pre-merge snapshot, attribute-resolution log, downstream sync status and reversibility window. Mapped to Schema.org Action.",
         "@type": "schema:Action",
-        "required": ["mergedIntoMasterId", "mergedFromMasterIds", "mergedAt", "mergeReason", "preMergeSnapshot", "attributeResolutionLog", "reversible"],
+        "required": [
+          "mergedIntoMasterId",
+          "mergedFromMasterIds",
+          "mergedAt",
+          "mergeReason",
+          "preMergeSnapshot",
+          "attributeResolutionLog",
+          "reversible"
+        ],
         "properties": {
           "mergedIntoMasterId": {
             "type": "string",
             "title": "Merged into master ID",
             "maxLength": 64,
-            "facetable": true
+            "facetable": true,
+            "description": "Unique identifier for the associated merged into master."
           },
           "mergedFromMasterIds": {
             "type": "array",
             "title": "Merged from master IDs",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            },
+            "description": "Merged From Master Ids for this record."
           },
           "mergedAt": {
             "type": "string",
             "format": "date-time",
-            "title": "Merged at"
+            "title": "Merged at",
+            "description": "Timestamp when merged occurred."
           },
           "mergedBy": {
             "type": "string",
@@ -389,7 +500,8 @@
               "data-stewardship-review",
               "migration"
             ],
-            "facetable": true
+            "facetable": true,
+            "description": "Merge Reason for this record."
           },
           "preMergeSnapshot": {
             "type": "object",
@@ -399,27 +511,34 @@
           "attributeResolutionLog": {
             "type": "array",
             "title": "Attribute resolution log",
-            "items": { "type": "object" }
+            "items": {
+              "type": "object"
+            },
+            "description": "Attribute Resolution Log for this record."
           },
           "downstreamSyncStatus": {
             "type": "object",
-            "title": "Downstream sync status"
+            "title": "Downstream sync status",
+            "description": "Downstream Sync Status for this record."
           },
           "reversible": {
             "type": "boolean",
             "title": "Reversible",
             "default": true,
-            "facetable": true
+            "facetable": true,
+            "description": "Reversible for this record."
           },
           "reversedAt": {
             "type": "string",
             "format": "date-time",
-            "title": "Reversed at"
+            "title": "Reversed at",
+            "description": "Timestamp when reversed occurred."
           },
           "reversedBy": {
             "type": "string",
             "title": "Reversed by",
-            "maxLength": 128
+            "maxLength": 128,
+            "description": "Reversed By for this record."
           }
         }
       },
@@ -431,7 +550,13 @@
         "summary": "Outbound sync event to a downstream app with retry status.",
         "description": "One queued change per downstream app per Master Entity, delivered via openconnector with exponential-backoff retries and confirmation callbacks. Mapped to Schema.org Action.",
         "@type": "schema:Action",
-        "required": ["masterEntity", "targetSystem", "changeType", "payload", "status"],
+        "required": [
+          "masterEntity",
+          "targetSystem",
+          "changeType",
+          "payload",
+          "status"
+        ],
         "properties": {
           "masterEntity": {
             "type": "string",
@@ -444,60 +569,84 @@
             "type": "string",
             "title": "Target system",
             "maxLength": 64,
-            "facetable": true
+            "facetable": true,
+            "description": "Target System for this record."
           },
           "changeType": {
             "type": "string",
             "title": "Change type",
-            "enum": ["create", "update", "merge", "soft-delete", "reverse-merge"],
-            "facetable": true
+            "enum": [
+              "create",
+              "update",
+              "merge",
+              "soft-delete",
+              "reverse-merge"
+            ],
+            "facetable": true,
+            "description": "Change Type for this record."
           },
           "payload": {
             "type": "object",
-            "title": "Payload"
+            "title": "Payload",
+            "description": "Payload for this record."
           },
           "status": {
             "type": "string",
             "title": "Status",
-            "enum": ["queued", "sending", "sent", "acknowledged", "failed", "dead-letter"],
+            "enum": [
+              "queued",
+              "sending",
+              "sent",
+              "acknowledged",
+              "failed",
+              "dead-letter"
+            ],
             "default": "queued",
-            "facetable": true
+            "facetable": true,
+            "description": "Current lifecycle status of this record."
           },
           "attemptCount": {
             "type": "integer",
             "title": "Attempt count",
             "default": 0,
-            "minimum": 0
+            "minimum": 0,
+            "description": "Count of attempt count."
           },
           "lastAttemptAt": {
             "type": "string",
             "format": "date-time",
-            "title": "Last attempt at"
+            "title": "Last attempt at",
+            "description": "Timestamp when last attempt occurred."
           },
           "nextRetryAt": {
             "type": "string",
             "format": "date-time",
-            "title": "Next retry at"
+            "title": "Next retry at",
+            "description": "Timestamp when next retry occurred."
           },
           "errorMessage": {
             "type": "string",
             "title": "Error message",
-            "maxLength": 2048
+            "maxLength": 2048,
+            "description": "Error Message for this record."
           },
           "acknowledgedAt": {
             "type": "string",
             "format": "date-time",
-            "title": "Acknowledged at"
+            "title": "Acknowledged at",
+            "description": "Timestamp when acknowledged occurred."
           },
           "acknowledgmentReference": {
             "type": "string",
             "title": "Acknowledgment reference",
-            "maxLength": 255
+            "maxLength": 255,
+            "description": "Acknowledgment Reference for this record."
           },
           "priority": {
             "type": "number",
             "title": "Priority",
-            "default": 0
+            "default": 0,
+            "description": "Priority for this record."
           }
         }
       },
@@ -558,7 +707,11 @@
     },
     "objects": [
       {
-        "@self": { "register": "pipelinq", "schema": "masterEntity", "slug": "mdm-contact-maria-jansen" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "masterEntity",
+          "slug": "mdm-contact-maria-jansen"
+        },
         "masterId": "550e8400-e29b-41d4-a716-446655440001",
         "entityType": "contact",
         "goldenRecord": {
@@ -568,20 +721,47 @@
           "address": "Kerkstraat 42, 1234 AB Amsterdam, NL"
         },
         "attributeProvenance": {
-          "name": { "value": "Maria Jansen", "sourceSystem": "pipelinq-crm", "trustTier": "gold", "lastUpdated": "2026-04-15T10:30:00Z" },
-          "email": { "value": "m.jansen@voorbeeld.nl", "sourceSystem": "pipelinq-crm", "trustTier": "gold", "lastUpdated": "2026-04-15T10:30:00Z" },
-          "phone": { "value": "020-1234567", "sourceSystem": "shillinq-contacten", "trustTier": "silver", "lastUpdated": "2026-02-01T14:20:00Z" },
-          "address": { "value": "Kerkstraat 42, 1234 AB Amsterdam, NL", "sourceSystem": "pipelinq-crm", "trustTier": "silver", "lastUpdated": "2026-03-10T09:15:00Z" }
+          "name": {
+            "value": "Maria Jansen",
+            "sourceSystem": "pipelinq-crm",
+            "trustTier": "gold",
+            "lastUpdated": "2026-04-15T10:30:00Z"
+          },
+          "email": {
+            "value": "m.jansen@voorbeeld.nl",
+            "sourceSystem": "pipelinq-crm",
+            "trustTier": "gold",
+            "lastUpdated": "2026-04-15T10:30:00Z"
+          },
+          "phone": {
+            "value": "020-1234567",
+            "sourceSystem": "shillinq-contacten",
+            "trustTier": "silver",
+            "lastUpdated": "2026-02-01T14:20:00Z"
+          },
+          "address": {
+            "value": "Kerkstraat 42, 1234 AB Amsterdam, NL",
+            "sourceSystem": "pipelinq-crm",
+            "trustTier": "silver",
+            "lastUpdated": "2026-03-10T09:15:00Z"
+          }
         },
         "aliases": [],
         "mergedFrom": [],
         "status": "active",
         "dataQualityScore": 0.87,
         "lastReviewedAt": "2026-05-20T16:00:00Z",
-        "tags": ["important-client", "dutch-market"]
+        "tags": [
+          "important-client",
+          "dutch-market"
+        ]
       },
       {
-        "@self": { "register": "pipelinq", "schema": "masterEntity", "slug": "mdm-account-voorbeeld-bv" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "masterEntity",
+          "slug": "mdm-account-voorbeeld-bv"
+        },
         "masterId": "550e8400-e29b-41d4-a716-446655440002",
         "entityType": "account",
         "goldenRecord": {
@@ -594,46 +774,114 @@
           "email": "info@voorbeeld.nl"
         },
         "attributeProvenance": {
-          "name": { "value": "Voorbeeld B.V.", "sourceSystem": "kvk-api", "trustTier": "gold", "lastUpdated": "2026-05-10T11:45:00Z" },
-          "kvkNumber": { "value": "12345678", "sourceSystem": "kvk-api", "trustTier": "gold", "lastUpdated": "2026-05-10T11:45:00Z" },
-          "vatNumber": { "value": "NL123456789B01", "sourceSystem": "kvk-api", "trustTier": "gold", "lastUpdated": "2026-05-10T11:45:00Z" },
-          "billingAddress": { "value": "Bedrijfsplein 10, 5678 XY Utrecht, NL", "sourceSystem": "kvk-api", "trustTier": "gold", "lastUpdated": "2026-05-10T11:45:00Z" },
-          "registrationNumber": { "value": "50.04.12.345", "sourceSystem": "shillinq-debiteuren", "trustTier": "silver", "lastUpdated": "2026-04-28T13:20:00Z" },
-          "phone": { "value": "030-7654321", "sourceSystem": "shillinq-debiteuren", "trustTier": "silver", "lastUpdated": "2026-02-15T08:10:00Z" },
-          "email": { "value": "info@voorbeeld.nl", "sourceSystem": "pipelinq-crm", "trustTier": "bronze", "lastUpdated": "2025-12-01T15:30:00Z" }
+          "name": {
+            "value": "Voorbeeld B.V.",
+            "sourceSystem": "kvk-api",
+            "trustTier": "gold",
+            "lastUpdated": "2026-05-10T11:45:00Z"
+          },
+          "kvkNumber": {
+            "value": "12345678",
+            "sourceSystem": "kvk-api",
+            "trustTier": "gold",
+            "lastUpdated": "2026-05-10T11:45:00Z"
+          },
+          "vatNumber": {
+            "value": "NL123456789B01",
+            "sourceSystem": "kvk-api",
+            "trustTier": "gold",
+            "lastUpdated": "2026-05-10T11:45:00Z"
+          },
+          "billingAddress": {
+            "value": "Bedrijfsplein 10, 5678 XY Utrecht, NL",
+            "sourceSystem": "kvk-api",
+            "trustTier": "gold",
+            "lastUpdated": "2026-05-10T11:45:00Z"
+          },
+          "registrationNumber": {
+            "value": "50.04.12.345",
+            "sourceSystem": "shillinq-debiteuren",
+            "trustTier": "silver",
+            "lastUpdated": "2026-04-28T13:20:00Z"
+          },
+          "phone": {
+            "value": "030-7654321",
+            "sourceSystem": "shillinq-debiteuren",
+            "trustTier": "silver",
+            "lastUpdated": "2026-02-15T08:10:00Z"
+          },
+          "email": {
+            "value": "info@voorbeeld.nl",
+            "sourceSystem": "pipelinq-crm",
+            "trustTier": "bronze",
+            "lastUpdated": "2025-12-01T15:30:00Z"
+          }
         },
         "aliases": [],
         "mergedFrom": [],
         "status": "active",
         "dataQualityScore": 0.92,
         "lastReviewedAt": "2026-05-19T14:00:00Z",
-        "tags": ["regulated-supplier", "vip"]
+        "tags": [
+          "regulated-supplier",
+          "vip"
+        ]
       },
       {
-        "@self": { "register": "pipelinq", "schema": "masterEntity", "slug": "mdm-product-implementatieservice-40u" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "masterEntity",
+          "slug": "mdm-product-implementatieservice-40u"
+        },
         "masterId": "550e8400-e29b-41d4-a716-446655440003",
         "entityType": "product",
         "goldenRecord": {
           "name": "Implementatieservice - 40 uur",
           "sku": "IMPL-40",
-          "unitPrice": 75.00,
+          "unitPrice": 75.0,
           "description": "Professionele implementatie service, 40 uur consultancy"
         },
         "attributeProvenance": {
-          "name": { "value": "Implementatieservice - 40 uur", "sourceSystem": "pipelinq-products", "trustTier": "gold", "lastUpdated": "2026-04-05T10:00:00Z" },
-          "sku": { "value": "IMPL-40", "sourceSystem": "pipelinq-products", "trustTier": "gold", "lastUpdated": "2026-04-05T10:00:00Z" },
-          "unitPrice": { "value": 75.00, "sourceSystem": "pipelinq-products", "trustTier": "gold", "lastUpdated": "2026-05-15T12:30:00Z" },
-          "description": { "value": "Professionele implementatie service, 40 uur consultancy", "sourceSystem": "pipelinq-products", "trustTier": "silver", "lastUpdated": "2026-03-20T09:45:00Z" }
+          "name": {
+            "value": "Implementatieservice - 40 uur",
+            "sourceSystem": "pipelinq-products",
+            "trustTier": "gold",
+            "lastUpdated": "2026-04-05T10:00:00Z"
+          },
+          "sku": {
+            "value": "IMPL-40",
+            "sourceSystem": "pipelinq-products",
+            "trustTier": "gold",
+            "lastUpdated": "2026-04-05T10:00:00Z"
+          },
+          "unitPrice": {
+            "value": 75.0,
+            "sourceSystem": "pipelinq-products",
+            "trustTier": "gold",
+            "lastUpdated": "2026-05-15T12:30:00Z"
+          },
+          "description": {
+            "value": "Professionele implementatie service, 40 uur consultancy",
+            "sourceSystem": "pipelinq-products",
+            "trustTier": "silver",
+            "lastUpdated": "2026-03-20T09:45:00Z"
+          }
         },
         "aliases": [],
         "mergedFrom": [],
         "status": "active",
         "dataQualityScore": 0.95,
         "lastReviewedAt": "2026-05-21T11:00:00Z",
-        "tags": ["service-offering"]
+        "tags": [
+          "service-offering"
+        ]
       },
       {
-        "@self": { "register": "pipelinq", "schema": "trustConfiguration", "slug": "mdm-trust-account-billingaddress-kvk" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "trustConfiguration",
+          "slug": "mdm-trust-account-billingaddress-kvk"
+        },
         "entityType": "account",
         "attribute": "billingAddress",
         "sourceSystem": "kvk-api",
@@ -644,7 +892,11 @@
         "effectiveFrom": "2026-06-01"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "trustConfiguration", "slug": "mdm-trust-account-phone-shillinq" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "trustConfiguration",
+          "slug": "mdm-trust-account-phone-shillinq"
+        },
         "entityType": "account",
         "attribute": "phone",
         "sourceSystem": "shillinq-debiteuren",
@@ -655,7 +907,11 @@
         "effectiveFrom": "2026-06-01"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "trustConfiguration", "slug": "mdm-trust-account-vatnumber-kvk" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "trustConfiguration",
+          "slug": "mdm-trust-account-vatnumber-kvk"
+        },
         "entityType": "account",
         "attribute": "vatNumber",
         "sourceSystem": "kvk-api",

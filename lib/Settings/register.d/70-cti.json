@@ -1,240 +1,339 @@
 {
-    "components": {
-        "registers": {
-            "pipelinq": {
-                "schemas": [
-                    "ctiAdapterConfig",
-                    "ctiEventLog",
-                    "ctiAgentPresence"
-                ]
-            }
-        },
-        "schemas": {
-            "contactmoment": {
-                "slug": "contactmoment",
-                "properties": {
-                    "telephony_platform": {
-                        "type": "string",
-                        "enum": ["callvoip", "ringcentral", "asterisk", "other"],
-                        "description": "CTI platform that handled the call (cti-screenpop-adapter)."
-                    },
-                    "external_call_id": {
-                        "type": "string",
-                        "description": "Telephony platform's call UUID; primary key against duplicate webhook delivery."
-                    },
-                    "direction": {
-                        "type": "string",
-                        "enum": ["inbound", "outbound"],
-                        "description": "Call direction."
-                    },
-                    "from_number": {
-                        "type": "string",
-                        "description": "Caller phone number in E.164 format."
-                    },
-                    "to_number": {
-                        "type": "string",
-                        "description": "Callee phone number in E.164 format."
-                    },
-                    "started_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp when ringing began."
-                    },
-                    "answered_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp when the call was answered (null when no-answer/abandoned)."
-                    },
-                    "ended_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp when the call ended."
-                    },
-                    "duration_seconds": {
-                        "type": "integer",
-                        "description": "Talk duration in seconds (0 for missed/no-answer)."
-                    },
-                    "queue_name": {
-                        "type": "string",
-                        "description": "Inbound queue or campaign that routed the call."
-                    },
-                    "agent_skill": {
-                        "type": "string",
-                        "description": "Skill tag attached to the agent who handled the call."
-                    },
-                    "disposition_subject": {
-                        "type": "string",
-                        "description": "Free-text subject summarising the call reason."
-                    },
-                    "disposition_outcome": {
-                        "type": "string",
-                        "enum": ["resolved", "callback", "escalated", "wrong-number", "no-answer", "abandoned"],
-                        "description": "Agent-supplied call outcome that drives downstream workflow."
-                    },
-                    "disposition_notes": {
-                        "type": "string",
-                        "description": "Free-text notes captured by the agent on the disposition form."
-                    },
-                    "recording_url": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "URL of the telephony-platform-hosted recording (audio file never stored in pipelinq)."
-                    },
-                    "recording_retention_expires_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp past which the platform deletes the recording."
-                    },
-                    "cti_extension": {
-                        "type": "string",
-                        "description": "Agent extension that handled the call."
-                    }
-                }
-            },
-            "ctiAdapterConfig": {
-                "slug": "ctiAdapterConfig",
-                "title": "CTI Adapter Config",
-                "version": "1.0.0",
-                "summary": "Per-organisation telephony platform configuration for the CTI screen-pop / click-to-dial adapter.",
-                "description": "Singleton record per organisation. Credentials are NEVER stored here — credentials_ref points at an OpenConnector source that owns the secret. Updated only by Pipelinq admins via the CTI admin settings page.",
-                "@type": "Thing",
-                "required": ["platform", "api_base_url"],
-                "properties": {
-                    "platform": {
-                        "type": "string",
-                        "enum": ["callvoip", "ringcentral", "asterisk", "other"],
-                        "description": "Active telephony platform identifier."
-                    },
-                    "api_base_url": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "Base URL of the platform's REST API."
-                    },
-                    "auth_method": {
-                        "type": "string",
-                        "enum": ["basic", "oauth", "api_key", "webhook-secret"],
-                        "default": "webhook-secret",
-                        "description": "Authentication method used against the platform's REST API."
-                    },
-                    "credentials_ref": {
-                        "type": "string",
-                        "description": "OpenConnector source UUID/slug that stores the platform credentials."
-                    },
-                    "screen_pop_enabled": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Whether inbound calls should auto-navigate the agent's tab to klantbeeld."
-                    },
-                    "screen_pop_delay_ms": {
-                        "type": "integer",
-                        "default": 0,
-                        "minimum": 0,
-                        "maximum": 5000,
-                        "description": "Delay before screen-pop fires so the agent hears the greeting first."
-                    },
-                    "click_to_dial_enabled": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Whether phone number fields render the click-to-dial icon."
-                    },
-                    "default_outbound_caller_id": {
-                        "type": "string",
-                        "description": "Caller-ID number presented on outbound click-to-dial calls."
-                    },
-                    "webhook_secret": {
-                        "type": "string",
-                        "description": "HMAC-SHA256 / shared-secret used to verify inbound webhook signatures."
-                    },
-                    "default_country_code": {
-                        "type": "string",
-                        "default": "NL",
-                        "description": "ISO 3166 country code used as the default for phone number normalisation."
-                    }
-                }
-            },
-            "ctiEventLog": {
-                "slug": "ctiEventLog",
-                "title": "CTI Event Log",
-                "version": "1.0.0",
-                "summary": "Raw inbound CTI webhook events retained for 30 days for debugging and audit.",
-                "description": "Append-only debugging log. Records platform, event type, external call id, full payload and processing status. Auto-cleanup job purges records older than 30 days.",
-                "@type": "Thing",
-                "required": ["received_at", "platform", "event_type"],
-                "properties": {
-                    "received_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp when the webhook was received."
-                    },
-                    "platform": {
-                        "type": "string",
-                        "enum": ["callvoip", "ringcentral", "asterisk", "other"],
-                        "description": "Telephony platform that delivered the webhook."
-                    },
-                    "event_type": {
-                        "type": "string",
-                        "enum": ["ringing", "answered", "ended", "abandoned", "transferred", "presence", "recording"],
-                        "description": "Webhook event type."
-                    },
-                    "external_call_id": {
-                        "type": "string",
-                        "description": "Platform's call UUID, used to correlate event log with contactmoment."
-                    },
-                    "payload_json": {
-                        "type": "object",
-                        "description": "Full webhook body as received from the platform."
-                    },
-                    "processed_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp when processing finished."
-                    },
-                    "processing_error": {
-                        "type": "string",
-                        "description": "Error message captured when processing failed (null on success)."
-                    },
-                    "signature_valid": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Whether the webhook signature/auth check passed."
-                    }
-                }
-            },
-            "ctiAgentPresence": {
-                "slug": "ctiAgentPresence",
-                "title": "CTI Agent Presence",
-                "version": "1.0.0",
-                "summary": "Real-time agent presence state synced from the telephony platform.",
-                "description": "One record per logged-in agent extension. Updated on presence webhook delivery; queue-management subscribes to the cti_agent_presence updated event.",
-                "@type": "Thing",
-                "required": ["user_id", "presence_state"],
-                "properties": {
-                    "user_id": {
-                        "type": "string",
-                        "description": "Nextcloud user UID of the agent."
-                    },
-                    "extension": {
-                        "type": "string",
-                        "description": "Telephony extension number of the agent."
-                    },
-                    "presence_state": {
-                        "type": "string",
-                        "enum": ["available", "on-call", "wrap-up", "away", "offline"],
-                        "default": "offline",
-                        "description": "Current agent state."
-                    },
-                    "last_updated_at": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp of the last presence update."
-                    },
-                    "platform": {
-                        "type": "string",
-                        "enum": ["callvoip", "ringcentral", "asterisk", "other"],
-                        "description": "Telephony platform reporting the presence."
-                    }
-                }
-            }
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "ctiAdapterConfig",
+          "ctiEventLog",
+          "ctiAgentPresence"
+        ]
+      }
+    },
+    "schemas": {
+      "contactmoment": {
+        "slug": "contactmoment",
+        "properties": {
+          "telephony_platform": {
+            "type": "string",
+            "enum": [
+              "callvoip",
+              "ringcentral",
+              "asterisk",
+              "other"
+            ],
+            "description": "CTI platform that handled the call (cti-screenpop-adapter).",
+            "title": "Telephony Platform"
+          },
+          "external_call_id": {
+            "type": "string",
+            "description": "Telephony platform's call UUID; primary key against duplicate webhook delivery.",
+            "title": "External Call ID"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "inbound",
+              "outbound"
+            ],
+            "description": "Call direction.",
+            "title": "Direction"
+          },
+          "from_number": {
+            "type": "string",
+            "description": "Caller phone number in E.164 format.",
+            "title": "From Number"
+          },
+          "to_number": {
+            "type": "string",
+            "description": "Callee phone number in E.164 format.",
+            "title": "To Number"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when ringing began.",
+            "title": "Started At"
+          },
+          "answered_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the call was answered (null when no-answer/abandoned).",
+            "title": "Answered At"
+          },
+          "ended_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the call ended.",
+            "title": "Ended At"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "description": "Talk duration in seconds (0 for missed/no-answer).",
+            "title": "Duration Seconds"
+          },
+          "queue_name": {
+            "type": "string",
+            "description": "Inbound queue or campaign that routed the call.",
+            "title": "Queue Name"
+          },
+          "agent_skill": {
+            "type": "string",
+            "description": "Skill tag attached to the agent who handled the call.",
+            "title": "Agent Skill"
+          },
+          "disposition_subject": {
+            "type": "string",
+            "description": "Free-text subject summarising the call reason.",
+            "title": "Disposition Subject"
+          },
+          "disposition_outcome": {
+            "type": "string",
+            "enum": [
+              "resolved",
+              "callback",
+              "escalated",
+              "wrong-number",
+              "no-answer",
+              "abandoned"
+            ],
+            "description": "Agent-supplied call outcome that drives downstream workflow.",
+            "title": "Disposition Outcome"
+          },
+          "disposition_notes": {
+            "type": "string",
+            "description": "Free-text notes captured by the agent on the disposition form.",
+            "title": "Disposition Notes"
+          },
+          "recording_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the telephony-platform-hosted recording (audio file never stored in pipelinq).",
+            "title": "Recording URL"
+          },
+          "recording_retention_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp past which the platform deletes the recording.",
+            "title": "Recording Retention Expires At"
+          },
+          "cti_extension": {
+            "type": "string",
+            "description": "Agent extension that handled the call.",
+            "title": "Cti Extension"
+          }
         }
+      },
+      "ctiAdapterConfig": {
+        "slug": "ctiAdapterConfig",
+        "title": "CTI Adapter Config",
+        "version": "1.0.0",
+        "summary": "Per-organisation telephony platform configuration for the CTI screen-pop / click-to-dial adapter.",
+        "description": "Singleton record per organisation. Credentials are NEVER stored here — credentials_ref points at an OpenConnector source that owns the secret. Updated only by Pipelinq admins via the CTI admin settings page.",
+        "@type": "Thing",
+        "required": [
+          "platform",
+          "api_base_url"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": [
+              "callvoip",
+              "ringcentral",
+              "asterisk",
+              "other"
+            ],
+            "description": "Active telephony platform identifier.",
+            "title": "Platform"
+          },
+          "api_base_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Base URL of the platform's REST API.",
+            "title": "API Base URL"
+          },
+          "auth_method": {
+            "type": "string",
+            "enum": [
+              "basic",
+              "oauth",
+              "api_key",
+              "webhook-secret"
+            ],
+            "default": "webhook-secret",
+            "description": "Authentication method used against the platform's REST API.",
+            "title": "Auth Method"
+          },
+          "credentials_ref": {
+            "type": "string",
+            "description": "OpenConnector source UUID/slug that stores the platform credentials.",
+            "title": "Credentials Ref"
+          },
+          "screen_pop_enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether inbound calls should auto-navigate the agent's tab to klantbeeld.",
+            "title": "Screen Pop Enabled"
+          },
+          "screen_pop_delay_ms": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 5000,
+            "description": "Delay before screen-pop fires so the agent hears the greeting first.",
+            "title": "Screen Pop Delay Ms"
+          },
+          "click_to_dial_enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether phone number fields render the click-to-dial icon.",
+            "title": "Click To Dial Enabled"
+          },
+          "default_outbound_caller_id": {
+            "type": "string",
+            "description": "Caller-ID number presented on outbound click-to-dial calls.",
+            "title": "Default Outbound Caller ID"
+          },
+          "webhook_secret": {
+            "type": "string",
+            "description": "HMAC-SHA256 / shared-secret used to verify inbound webhook signatures.",
+            "title": "Webhook Secret"
+          },
+          "default_country_code": {
+            "type": "string",
+            "default": "NL",
+            "description": "ISO 3166 country code used as the default for phone number normalisation.",
+            "title": "Default Country Code"
+          }
+        }
+      },
+      "ctiEventLog": {
+        "slug": "ctiEventLog",
+        "title": "CTI Event Log",
+        "version": "1.0.0",
+        "summary": "Raw inbound CTI webhook events retained for 30 days for debugging and audit.",
+        "description": "Append-only debugging log. Records platform, event type, external call id, full payload and processing status. Auto-cleanup job purges records older than 30 days.",
+        "@type": "Thing",
+        "required": [
+          "received_at",
+          "platform",
+          "event_type"
+        ],
+        "properties": {
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the webhook was received.",
+            "title": "Received At"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "callvoip",
+              "ringcentral",
+              "asterisk",
+              "other"
+            ],
+            "description": "Telephony platform that delivered the webhook.",
+            "title": "Platform"
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "ringing",
+              "answered",
+              "ended",
+              "abandoned",
+              "transferred",
+              "presence",
+              "recording"
+            ],
+            "description": "Webhook event type.",
+            "title": "Event Type"
+          },
+          "external_call_id": {
+            "type": "string",
+            "description": "Platform's call UUID, used to correlate event log with contactmoment.",
+            "title": "External Call ID"
+          },
+          "payload_json": {
+            "type": "object",
+            "description": "Full webhook body as received from the platform.",
+            "title": "Payload Json"
+          },
+          "processed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when processing finished.",
+            "title": "Processed At"
+          },
+          "processing_error": {
+            "type": "string",
+            "description": "Error message captured when processing failed (null on success).",
+            "title": "Processing Error"
+          },
+          "signature_valid": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the webhook signature/auth check passed.",
+            "title": "Signature Valid"
+          }
+        }
+      },
+      "ctiAgentPresence": {
+        "slug": "ctiAgentPresence",
+        "title": "CTI Agent Presence",
+        "version": "1.0.0",
+        "summary": "Real-time agent presence state synced from the telephony platform.",
+        "description": "One record per logged-in agent extension. Updated on presence webhook delivery; queue-management subscribes to the cti_agent_presence updated event.",
+        "@type": "Thing",
+        "required": [
+          "user_id",
+          "presence_state"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "Nextcloud user UID of the agent.",
+            "title": "User ID"
+          },
+          "extension": {
+            "type": "string",
+            "description": "Telephony extension number of the agent.",
+            "title": "Extension"
+          },
+          "presence_state": {
+            "type": "string",
+            "enum": [
+              "available",
+              "on-call",
+              "wrap-up",
+              "away",
+              "offline"
+            ],
+            "default": "offline",
+            "description": "Current agent state.",
+            "title": "Presence State"
+          },
+          "last_updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of the last presence update.",
+            "title": "Last Updated At"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "callvoip",
+              "ringcentral",
+              "asterisk",
+              "other"
+            ],
+            "description": "Telephony platform reporting the presence.",
+            "title": "Platform"
+          }
+        }
+      }
     }
+  }
 }
