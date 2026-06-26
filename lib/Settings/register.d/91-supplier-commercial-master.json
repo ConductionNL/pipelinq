@@ -1,216 +1,216 @@
 {
-	"components": {
-		"registers": {
-			"pipelinq": {
-				"schemas": [
-					"supplier"
-				]
-			}
-		},
-		"schemas": {
-			"supplier": {
-				"slug": "supplier",
-				"title": "Supplier",
-				"icon": "TruckDeliveryOutline",
-				"version": "1.0.0",
-				"summary": "Commercial supplier profile linked to a Nextcloud Contact identity.",
-				"description": "Holds the commercial master data for a supplier: catalogue membership, terms-of-trade, category, lead time, and preferred-product list. The supplier's identity (name, address, KvK, VAT, contact persons) lives in a Nextcloud addressbook contact referenced by contactsUid — the 'Contact is a Nextcloud entity' rule. AP/financial fields (IBAN, payment method, credit limit, tax-withholding) are NOT here; those remain on shillinq's Vendor AP profile, keyed by the same contactsUid.",
-				"@type": "schema:Organization",
-				"required": [
-					"contactsUid"
-				],
-				"properties": {
-					"contactsUid": {
-						"type": "string",
-						"title": "Contacts UID",
-						"description": "Foreign key to the Nextcloud addressbook contact that is the authoritative identity for this supplier. Resolved/created via ContactVcardService.",
-						"maxLength": 255,
-						"facetable": true
-					},
-					"supplierId": {
-						"type": "string",
-						"title": "Supplier ID",
-						"description": "pipelinq-stable UUID; defaults to and equals the OpenRegister object UUID. This is the FK other pipelinq objects (e.g. product.preferredSupplier) store.",
-						"maxLength": 64,
-						"visible": false
-					},
-					"displayName": {
-						"type": "string",
-						"title": "Display name",
-						"description": "Denormalised copy of the NC contact name. Kept in sync from the contact on every write; the contact is authoritative.",
-						"maxLength": 255
-					},
-					"category": {
-						"type": "string",
-						"title": "Category",
-						"description": "What the supplier supplies.",
-						"enum": [
-							"goods",
-							"services",
-							"both"
-						],
-						"default": "goods",
-						"facetable": true
-					},
-					"status": {
-						"type": "string",
-						"title": "Status",
-						"description": "Lifecycle status of the supplier relationship.",
-						"enum": [
-							"active",
-							"inactive",
-							"blocked"
-						],
-						"default": "active",
-						"facetable": true
-					},
-					"termsOfTrade": {
-						"type": "object",
-						"title": "Terms of trade",
-						"description": "Commercial terms: incoterm, payment period, currency, minimum order value, and any blanket discount.",
-						"properties": {
-							"incoterm": {
-								"type": "string",
-								"title": "Incoterm",
-								"description": "ICC Incoterms® 2020 code (e.g. EXW, FCA, DAP, DDP).",
-								"maxLength": 10
-							},
-							"paymentTermDays": {
-								"type": "integer",
-								"title": "Payment term (days)",
-								"description": "Net payment term in calendar days.",
-								"minimum": 0
-							},
-							"currency": {
-								"type": "string",
-								"title": "Currency",
-								"description": "ISO 4217 currency code for this supplier's invoices.",
-								"default": "EUR",
-								"maxLength": 3,
-								"minLength": 3
-							},
-							"minimumOrderValue": {
-								"type": "number",
-								"title": "Minimum order value",
-								"description": "Minimum order value in the supplier currency.",
-								"minimum": 0
-							},
-							"discountPercent": {
-								"type": "number",
-								"title": "Blanket discount (%)",
-								"description": "Blanket trade discount percentage off list prices.",
-								"minimum": 0,
-								"maximum": 100
-							}
-						}
-					},
-					"leadTimeDays": {
-						"type": "integer",
-						"title": "Lead time (days)",
-						"description": "Default procurement lead time from order placement to delivery, in calendar days.",
-						"minimum": 0
-					},
-					"catalog": {
-						"type": "array",
-						"title": "Supplier catalog",
-						"description": "Products available from this supplier. Each entry cross-references a pipelinq product master by productId.",
-						"items": {
-							"type": "object",
-							"required": [
-								"productId"
-							],
-							"properties": {
-								"productId": {
-									"type": "string",
-									"title": "Product ID",
-									"description": "FK to the pipelinq product master (product.productId).",
-									"maxLength": 64
-								},
-								"supplierSku": {
-									"type": "string",
-									"title": "Supplier SKU",
-									"description": "Supplier's own article/item code for this product.",
-									"maxLength": 100
-								},
-								"listPrice": {
-									"type": "number",
-									"title": "List price",
-									"description": "Supplier's list price per unit in the terms currency.",
-									"minimum": 0
-								},
-								"currency": {
-									"type": "string",
-									"title": "Currency",
-									"description": "ISO 4217 currency code for this catalog entry (falls back to termsOfTrade.currency).",
-									"maxLength": 3,
-									"minLength": 3
-								},
-								"moq": {
-									"type": "integer",
-									"title": "Minimum order quantity",
-									"description": "Minimum order quantity (units) for this catalog item.",
-									"minimum": 1,
-									"default": 1
-								}
-							}
-						},
-						"visible": false
-					},
-					"preferred": {
-						"type": "boolean",
-						"title": "Preferred supplier",
-						"description": "Whether this is a preferred (frame-agreement) supplier.",
-						"default": false,
-						"facetable": true
-					},
-					"masterEntityRef": {
-						"type": "string",
-						"title": "Master entity ref",
-						"description": "Optional FK into the MDM masterEntity (entityType vendor), so this supplier can join the golden-record layer.",
-						"maxLength": 64,
-						"visible": false
-					},
-					"notes": {
-						"type": "string",
-						"title": "Notes",
-						"description": "Free-text notes about this supplier relationship.",
-						"visible": false
-					}
-				}
-			}
-		},
-		"objects": [
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "supplier",
-					"slug": "supplier-leverancier-demo"
-				},
-				"contactsUid": "demo-leverancier-bv-001",
-				"supplierId": "demo-leverancier-bv-001",
-				"displayName": "Demo Leverancier B.V.",
-				"category": "goods",
-				"status": "active",
-				"termsOfTrade": {
-					"incoterm": "DAP",
-					"paymentTermDays": 30,
-					"currency": "EUR",
-					"minimumOrderValue": 50.00,
-					"discountPercent": 5
-				},
-				"leadTimeDays": 5,
-				"catalog": [
-					{
-						"productId": "product-a4-papier-500vel",
-						"supplierSku": "PP-A4-500",
-						"listPrice": 4.95,
-						"currency": "EUR",
-						"moq": 5
-					}
-				],
-				"preferred": true,
-				"notes": "Demo seed supplier for testing the supplier commercial master."
-			}
-		]
-	}
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "supplier"
+        ]
+      }
+    },
+    "schemas": {
+      "supplier": {
+        "slug": "supplier",
+        "title": "Supplier",
+        "icon": "TruckDeliveryOutline",
+        "version": "1.0.0",
+        "summary": "Commercial supplier profile linked to a Nextcloud Contact identity.",
+        "description": "Holds the commercial master data for a supplier: catalogue membership, terms-of-trade, category, lead time, and preferred-product list. The supplier's identity (name, address, KvK, VAT, contact persons) lives in a Nextcloud addressbook contact referenced by contactsUid — the 'Contact is a Nextcloud entity' rule. AP/financial fields (IBAN, payment method, credit limit, tax-withholding) are NOT here; those remain on shillinq's Vendor AP profile, keyed by the same contactsUid.",
+        "@type": "schema:Organization",
+        "required": [
+          "contactsUid"
+        ],
+        "properties": {
+          "contactsUid": {
+            "type": "string",
+            "title": "Contacts UID",
+            "description": "Foreign key to the Nextcloud addressbook contact that is the authoritative identity for this supplier. Resolved/created via ContactVcardService.",
+            "maxLength": 255,
+            "facetable": true
+          },
+          "supplierId": {
+            "type": "string",
+            "title": "Supplier ID",
+            "description": "pipelinq-stable UUID; defaults to and equals the OpenRegister object UUID. This is the FK other pipelinq objects (e.g. product.preferredSupplier) store.",
+            "maxLength": 64,
+            "visible": false
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Display name",
+            "description": "Denormalised copy of the NC contact name. Kept in sync from the contact on every write; the contact is authoritative.",
+            "maxLength": 255
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "What the supplier supplies.",
+            "enum": [
+              "goods",
+              "services",
+              "both"
+            ],
+            "default": "goods",
+            "facetable": true
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Lifecycle status of the supplier relationship.",
+            "enum": [
+              "active",
+              "inactive",
+              "blocked"
+            ],
+            "default": "active",
+            "facetable": true
+          },
+          "termsOfTrade": {
+            "type": "object",
+            "title": "Terms of trade",
+            "description": "Commercial terms: incoterm, payment period, currency, minimum order value, and any blanket discount.",
+            "properties": {
+              "incoterm": {
+                "type": "string",
+                "title": "Incoterm",
+                "description": "ICC Incoterms® 2020 code (e.g. EXW, FCA, DAP, DDP).",
+                "maxLength": 10
+              },
+              "paymentTermDays": {
+                "type": "integer",
+                "title": "Payment term (days)",
+                "description": "Net payment term in calendar days.",
+                "minimum": 0
+              },
+              "currency": {
+                "type": "string",
+                "title": "Currency",
+                "description": "ISO 4217 currency code for this supplier's invoices.",
+                "default": "EUR",
+                "maxLength": 3,
+                "minLength": 3
+              },
+              "minimumOrderValue": {
+                "type": "number",
+                "title": "Minimum order value",
+                "description": "Minimum order value in the supplier currency.",
+                "minimum": 0
+              },
+              "discountPercent": {
+                "type": "number",
+                "title": "Blanket discount (%)",
+                "description": "Blanket trade discount percentage off list prices.",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          },
+          "leadTimeDays": {
+            "type": "integer",
+            "title": "Lead time (days)",
+            "description": "Default procurement lead time from order placement to delivery, in calendar days.",
+            "minimum": 0
+          },
+          "catalog": {
+            "type": "array",
+            "title": "Supplier catalog",
+            "description": "Products available from this supplier. Each entry cross-references a pipelinq product master by productId.",
+            "items": {
+              "type": "object",
+              "required": [
+                "productId"
+              ],
+              "properties": {
+                "productId": {
+                  "type": "string",
+                  "title": "Product ID",
+                  "description": "FK to the pipelinq product master (product.productId).",
+                  "maxLength": 64
+                },
+                "supplierSku": {
+                  "type": "string",
+                  "title": "Supplier SKU",
+                  "description": "Supplier's own article/item code for this product.",
+                  "maxLength": 100
+                },
+                "listPrice": {
+                  "type": "number",
+                  "title": "List price",
+                  "description": "Supplier's list price per unit in the terms currency.",
+                  "minimum": 0
+                },
+                "currency": {
+                  "type": "string",
+                  "title": "Currency",
+                  "description": "ISO 4217 currency code for this catalog entry (falls back to termsOfTrade.currency).",
+                  "maxLength": 3,
+                  "minLength": 3
+                },
+                "moq": {
+                  "type": "integer",
+                  "title": "Minimum order quantity",
+                  "description": "Minimum order quantity (units) for this catalog item.",
+                  "minimum": 1,
+                  "default": 1
+                }
+              }
+            },
+            "visible": false
+          },
+          "preferred": {
+            "type": "boolean",
+            "title": "Preferred supplier",
+            "description": "Whether this is a preferred (frame-agreement) supplier.",
+            "default": false,
+            "facetable": true
+          },
+          "masterEntityRef": {
+            "type": "string",
+            "title": "Master entity ref",
+            "description": "Optional FK into the MDM masterEntity (entityType vendor), so this supplier can join the golden-record layer.",
+            "maxLength": 64,
+            "visible": false
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "description": "Free-text notes about this supplier relationship.",
+            "visible": false
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "supplier",
+          "slug": "supplier-leverancier-demo"
+        },
+        "contactsUid": "demo-leverancier-bv-001",
+        "supplierId": "demo-leverancier-bv-001",
+        "displayName": "Demo Leverancier B.V.",
+        "category": "goods",
+        "status": "active",
+        "termsOfTrade": {
+          "incoterm": "DAP",
+          "paymentTermDays": 30,
+          "currency": "EUR",
+          "minimumOrderValue": 50.0,
+          "discountPercent": 5
+        },
+        "leadTimeDays": 5,
+        "catalog": [
+          {
+            "productId": "product-a4-papier-500vel",
+            "supplierSku": "PP-A4-500",
+            "listPrice": 4.95,
+            "currency": "EUR",
+            "moq": 5
+          }
+        ],
+        "preferred": true,
+        "notes": "Demo seed supplier for testing the supplier commercial master."
+      }
+    ]
+  }
 }

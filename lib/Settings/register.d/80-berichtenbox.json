@@ -1,314 +1,399 @@
 {
-    "components": {
-        "registers": {
-            "pipelinq": {
-                "schemas": [
-                    "berichtenboxMessage",
-                    "berichtenboxReply",
-                    "berichtenboxTemplate",
-                    "mailboxResolution",
-                    "deliveryAuditLog"
-                ]
-            }
-        },
-        "schemas": {
-            "berichtenboxMessage": {
-                "slug": "berichtenboxMessage",
-                "title": "BerichtenboxMessage",
-                "description": "Outbound message delivered to a burger via MijnOverheid Berichtenbox or email fallback (REQ-OUTBOUND-001).",
-                "version": "1.0.0",
-                "type": "object",
-                "required": ["bsnHash", "subject", "body", "templateId", "deliveryStatus"],
-                "properties": {
-                    "bsn": {
-                        "type": "string",
-                        "description": "Encrypted BSN (AES-256-GCM ciphertext, IV-prefixed, base64; per-tenant key via openregister key-vault)."
-                    },
-                    "bsnHash": {
-                        "type": "string",
-                        "description": "HMAC-SHA256 hash of the BSN for index lookups; never plaintext BSN in WHERE clauses."
-                    },
-                    "mailboxResolvedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the mailbox lookup was performed."
-                    },
-                    "mailboxAvailable": {
-                        "type": "boolean",
-                        "description": "Whether the burger has an active MijnOverheid mailbox."
-                    },
-                    "contactmomentId": {
-                        "type": "string",
-                        "description": "UUID reference to the linked Contactmoment."
-                    },
-                    "zaakId": {
-                        "type": "string",
-                        "description": "External zaak ID (e.g., Z-2026-0042)."
-                    },
-                    "subject": {
-                        "type": "string",
-                        "maxLength": 200,
-                        "description": "Rendered message subject (BBK 1.7: ≤200 chars)."
-                    },
-                    "body": {
-                        "type": "string",
-                        "description": "Rendered message body (XHTML strict per BBK 1.7)."
-                    },
-                    "templateId": {
-                        "type": "string",
-                        "description": "Reference to the BerichtenboxTemplate used."
-                    },
-                    "attachments": {
-                        "type": "array",
-                        "description": "Array of {filename, mime (PDF/PNG/JPG), sizeBytes, openregisterFileRef}.",
-                        "items": {
-                            "type": "object"
-                        }
-                    },
-                    "sentToBerichtenboxAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When successfully delivered to Berichtenbox."
-                    },
-                    "logiusMessageId": {
-                        "type": "string",
-                        "description": "Logius-assigned message ID (indexed for webhook lookup)."
-                    },
-                    "deliveryStatus": {
-                        "type": "string",
-                        "enum": [
-                            "queued",
-                            "sent",
-                            "read",
-                            "fallback-emailed",
-                            "failed",
-                            "opted-out"
-                        ],
-                        "description": "Delivery lifecycle state (indexed)."
-                    },
-                    "readAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When burger opened the message in MijnOverheid."
-                    },
-                    "fallbackTriggeredAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When 5-day fallback was triggered."
-                    },
-                    "fallbackEmail": {
-                        "type": "string",
-                        "format": "email",
-                        "description": "Email address to which fallback was sent."
-                    },
-                    "fallbackSentAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When fallback email was sent."
-                    },
-                    "failureReason": {
-                        "type": "string",
-                        "description": "Human-readable failure reason if deliveryStatus is failed."
-                    },
-                    "retryCount": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "description": "Number of dispatch attempts (capped at 5; REQ-RETRY-012)."
-                    },
-                    "nextRetryAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the next dispatch attempt is eligible (exponential backoff)."
-                    }
-                }
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "berichtenboxMessage",
+          "berichtenboxReply",
+          "berichtenboxTemplate",
+          "mailboxResolution",
+          "deliveryAuditLog"
+        ]
+      }
+    },
+    "schemas": {
+      "berichtenboxMessage": {
+        "slug": "berichtenboxMessage",
+        "title": "BerichtenboxMessage",
+        "description": "Outbound message delivered to a burger via MijnOverheid Berichtenbox or email fallback (REQ-OUTBOUND-001).",
+        "version": "1.0.0",
+        "type": "object",
+        "required": [
+          "bsnHash",
+          "subject",
+          "body",
+          "templateId",
+          "deliveryStatus"
+        ],
+        "properties": {
+          "bsn": {
+            "type": "string",
+            "description": "Encrypted BSN (AES-256-GCM ciphertext, IV-prefixed, base64; per-tenant key via openregister key-vault).",
+            "title": "BSN"
+          },
+          "bsnHash": {
+            "type": "string",
+            "description": "HMAC-SHA256 hash of the BSN for index lookups; never plaintext BSN in WHERE clauses.",
+            "title": "BSN Hash"
+          },
+          "mailboxResolvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the mailbox lookup was performed.",
+            "title": "Mailbox Resolved At"
+          },
+          "mailboxAvailable": {
+            "type": "boolean",
+            "description": "Whether the burger has an active MijnOverheid mailbox.",
+            "title": "Mailbox Available"
+          },
+          "contactmomentId": {
+            "type": "string",
+            "description": "UUID reference to the linked Contactmoment.",
+            "title": "Contactmoment ID"
+          },
+          "zaakId": {
+            "type": "string",
+            "description": "External zaak ID (e.g., Z-2026-0042).",
+            "title": "Zaak ID"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Rendered message subject (BBK 1.7: ≤200 chars).",
+            "title": "Subject"
+          },
+          "body": {
+            "type": "string",
+            "description": "Rendered message body (XHTML strict per BBK 1.7).",
+            "title": "Body"
+          },
+          "templateId": {
+            "type": "string",
+            "description": "Reference to the BerichtenboxTemplate used.",
+            "title": "Template ID"
+          },
+          "attachments": {
+            "type": "array",
+            "description": "Array of {filename, mime (PDF/PNG/JPG), sizeBytes, openregisterFileRef}.",
+            "items": {
+              "type": "object"
             },
-            "berichtenboxReply": {
-                "slug": "berichtenboxReply",
-                "title": "BerichtenboxReply",
-                "description": "Inbound reply from a burger via MijnOverheid Antwoord (REQ-INBOUND-006).",
-                "version": "1.0.0",
-                "type": "object",
-                "required": ["parentMessageId", "bodyText", "receivedAt", "bsnHash"],
-                "properties": {
-                    "parentMessageId": {
-                        "type": "string",
-                        "description": "UUID of the BerichtenboxMessage being replied to (indexed)."
-                    },
-                    "logiusReplyId": {
-                        "type": "string",
-                        "description": "Logius-assigned reply ID (indexed for dedup)."
-                    },
-                    "receivedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the reply was received from Logius."
-                    },
-                    "bsn": {
-                        "type": "string",
-                        "description": "Encrypted BSN."
-                    },
-                    "bsnHash": {
-                        "type": "string",
-                        "description": "HMAC-SHA256 of BSN."
-                    },
-                    "bodyText": {
-                        "type": "string",
-                        "description": "Plain-text reply content."
-                    },
-                    "attachments": {
-                        "type": "array",
-                        "items": {"type": "object"},
-                        "description": "Array of attachment refs."
-                    },
-                    "processedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the reply was processed (Contactmoment created, routed)."
-                    },
-                    "createdContactmomentId": {
-                        "type": "string",
-                        "description": "UUID of the Contactmoment that was created."
-                    },
-                    "processingError": {
-                        "type": "string",
-                        "description": "Error message if processing failed."
-                    }
-                }
-            },
-            "berichtenboxTemplate": {
-                "slug": "berichtenboxTemplate",
-                "title": "BerichtenboxTemplate",
-                "description": "Mustache template per zaaktype + status + language (REQ-TEMPLATE-013).",
-                "version": "1.0.0",
-                "type": "object",
-                "required": ["zaaktype", "status", "language", "subject", "body"],
-                "properties": {
-                    "zaaktype": {
-                        "type": "string",
-                        "description": "CIMS code or local zaaktype identifier (indexed)."
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "received",
-                            "in-behandeling",
-                            "meer-info-nodig",
-                            "afgehandeld",
-                            "afgewezen"
-                        ],
-                        "description": "Zaaktype status the template applies to (indexed)."
-                    },
-                    "language": {
-                        "type": "string",
-                        "enum": ["nl", "fy", "en"],
-                        "description": "Template language (ISO 639-1)."
-                    },
-                    "subject": {
-                        "type": "string",
-                        "maxLength": 200,
-                        "description": "Mustache subject template ({{zaakId}}, {{status}}, {{gemeente}})."
-                    },
-                    "body": {
-                        "type": "string",
-                        "description": "Mustache body template in XHTML strict (vars: {{zaakId}}, {{status}}, {{gemeente}}, {{deadline}}, {{deepLink}})."
-                    },
-                    "requiresDeepLink": {
-                        "type": "boolean",
-                        "description": "Whether to construct a deep-link to the burgerportaal."
-                    },
-                    "deepLinkBase": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "Base URL for deep-link construction (e.g., https://burgerportaal.gemeente.nl/zaak?id=)."
-                    }
-                }
-            },
-            "mailboxResolution": {
-                "slug": "mailboxResolution",
-                "title": "MailboxResolution",
-                "description": "Cache of BSN→mailbox lookups with Logius TTL (REQ-MAILBOX-002).",
-                "version": "1.0.0",
-                "type": "object",
-                "required": ["bsnHash", "mailboxAvailable", "resolvedAt", "expiresAt"],
-                "properties": {
-                    "bsn": {
-                        "type": "string",
-                        "description": "Encrypted BSN."
-                    },
-                    "bsnHash": {
-                        "type": "string",
-                        "description": "HMAC-SHA256 of BSN (indexed; (bsnHash, expiresAt) compound for cache lookups)."
-                    },
-                    "mailboxAvailable": {
-                        "type": "boolean",
-                        "description": "Whether the mailbox exists."
-                    },
-                    "resolvedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When this lookup was performed."
-                    },
-                    "expiresAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Cache TTL per Logius (typically now + 24h; indexed)."
-                    },
-                    "optedOut": {
-                        "type": "boolean",
-                        "description": "Whether burger has opted out of Berichtenbox."
-                    }
-                }
-            },
-            "deliveryAuditLog": {
-                "slug": "deliveryAuditLog",
-                "title": "DeliveryAuditLog",
-                "description": "Append-only audit trail per Archiefwet (REQ-AUDIT-009).",
-                "version": "1.0.0",
-                "type": "object",
-                "required": ["messageId", "event", "eventAt", "actor", "payloadHash", "retentionUntil"],
-                "properties": {
-                    "messageId": {
-                        "type": "string",
-                        "description": "UUID of the BerichtenboxMessage or BerichtenboxReply (indexed)."
-                    },
-                    "event": {
-                        "type": "string",
-                        "enum": [
-                            "queued",
-                            "sent",
-                            "read",
-                            "fallback",
-                            "failed",
-                            "opted-out",
-                            "reply-received",
-                            "processing-error"
-                        ],
-                        "description": "State change being audited (indexed)."
-                    },
-                    "eventAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Precise UTC timestamp of the event."
-                    },
-                    "actor": {
-                        "type": "string",
-                        "description": "'system' for automatic transitions, otherwise the ambtenaar ID."
-                    },
-                    "payloadHash": {
-                        "type": "string",
-                        "description": "SHA-256 hash of the message body at event time (integrity)."
-                    },
-                    "retentionUntil": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Archiefwet retention end (5/10/20yr per selectielijst; indexed)."
-                    },
-                    "reason": {
-                        "type": "string",
-                        "description": "Optional sub-classifier (e.g., '5-day-unread', 'no-mailbox')."
-                    }
-                }
-            }
+            "title": "Attachments"
+          },
+          "sentToBerichtenboxAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When successfully delivered to Berichtenbox.",
+            "title": "Sent To Berichtenbox At"
+          },
+          "logiusMessageId": {
+            "type": "string",
+            "description": "Logius-assigned message ID (indexed for webhook lookup).",
+            "title": "Logius Message ID"
+          },
+          "deliveryStatus": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "sent",
+              "read",
+              "fallback-emailed",
+              "failed",
+              "opted-out"
+            ],
+            "description": "Delivery lifecycle state (indexed).",
+            "title": "Delivery Status"
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When burger opened the message in MijnOverheid.",
+            "title": "Read At"
+          },
+          "fallbackTriggeredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When 5-day fallback was triggered.",
+            "title": "Fallback Triggered At"
+          },
+          "fallbackEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address to which fallback was sent.",
+            "title": "Fallback Email"
+          },
+          "fallbackSentAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When fallback email was sent.",
+            "title": "Fallback Sent At"
+          },
+          "failureReason": {
+            "type": "string",
+            "description": "Human-readable failure reason if deliveryStatus is failed.",
+            "title": "Failure Reason"
+          },
+          "retryCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of dispatch attempts (capped at 5; REQ-RETRY-012).",
+            "title": "Retry Count"
+          },
+          "nextRetryAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the next dispatch attempt is eligible (exponential backoff).",
+            "title": "Next Retry At"
+          }
         }
+      },
+      "berichtenboxReply": {
+        "slug": "berichtenboxReply",
+        "title": "BerichtenboxReply",
+        "description": "Inbound reply from a burger via MijnOverheid Antwoord (REQ-INBOUND-006).",
+        "version": "1.0.0",
+        "type": "object",
+        "required": [
+          "parentMessageId",
+          "bodyText",
+          "receivedAt",
+          "bsnHash"
+        ],
+        "properties": {
+          "parentMessageId": {
+            "type": "string",
+            "description": "UUID of the BerichtenboxMessage being replied to (indexed).",
+            "title": "Parent Message ID"
+          },
+          "logiusReplyId": {
+            "type": "string",
+            "description": "Logius-assigned reply ID (indexed for dedup).",
+            "title": "Logius Reply ID"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the reply was received from Logius.",
+            "title": "Received At"
+          },
+          "bsn": {
+            "type": "string",
+            "description": "Encrypted BSN.",
+            "title": "BSN"
+          },
+          "bsnHash": {
+            "type": "string",
+            "description": "HMAC-SHA256 of BSN.",
+            "title": "BSN Hash"
+          },
+          "bodyText": {
+            "type": "string",
+            "description": "Plain-text reply content.",
+            "title": "Body Text"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Array of attachment refs.",
+            "title": "Attachments"
+          },
+          "processedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the reply was processed (Contactmoment created, routed).",
+            "title": "Processed At"
+          },
+          "createdContactmomentId": {
+            "type": "string",
+            "description": "UUID of the Contactmoment that was created.",
+            "title": "Created Contactmoment ID"
+          },
+          "processingError": {
+            "type": "string",
+            "description": "Error message if processing failed.",
+            "title": "Processing Error"
+          }
+        }
+      },
+      "berichtenboxTemplate": {
+        "slug": "berichtenboxTemplate",
+        "title": "BerichtenboxTemplate",
+        "description": "Mustache template per zaaktype + status + language (REQ-TEMPLATE-013).",
+        "version": "1.0.0",
+        "type": "object",
+        "required": [
+          "zaaktype",
+          "status",
+          "language",
+          "subject",
+          "body"
+        ],
+        "properties": {
+          "zaaktype": {
+            "type": "string",
+            "description": "CIMS code or local zaaktype identifier (indexed).",
+            "title": "Zaaktype"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "received",
+              "in-behandeling",
+              "meer-info-nodig",
+              "afgehandeld",
+              "afgewezen"
+            ],
+            "description": "Zaaktype status the template applies to (indexed).",
+            "title": "Status"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "nl",
+              "fy",
+              "en"
+            ],
+            "description": "Template language (ISO 639-1).",
+            "title": "Language"
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Mustache subject template ({{zaakId}}, {{status}}, {{gemeente}}).",
+            "title": "Subject"
+          },
+          "body": {
+            "type": "string",
+            "description": "Mustache body template in XHTML strict (vars: {{zaakId}}, {{status}}, {{gemeente}}, {{deadline}}, {{deepLink}}).",
+            "title": "Body"
+          },
+          "requiresDeepLink": {
+            "type": "boolean",
+            "description": "Whether to construct a deep-link to the burgerportaal.",
+            "title": "Requires Deep Link"
+          },
+          "deepLinkBase": {
+            "type": "string",
+            "format": "uri",
+            "description": "Base URL for deep-link construction (e.g., https://burgerportaal.gemeente.nl/zaak?id=).",
+            "title": "Deep Link Base"
+          }
+        }
+      },
+      "mailboxResolution": {
+        "slug": "mailboxResolution",
+        "title": "MailboxResolution",
+        "description": "Cache of BSN→mailbox lookups with Logius TTL (REQ-MAILBOX-002).",
+        "version": "1.0.0",
+        "type": "object",
+        "required": [
+          "bsnHash",
+          "mailboxAvailable",
+          "resolvedAt",
+          "expiresAt"
+        ],
+        "properties": {
+          "bsn": {
+            "type": "string",
+            "description": "Encrypted BSN.",
+            "title": "BSN"
+          },
+          "bsnHash": {
+            "type": "string",
+            "description": "HMAC-SHA256 of BSN (indexed; (bsnHash, expiresAt) compound for cache lookups).",
+            "title": "BSN Hash"
+          },
+          "mailboxAvailable": {
+            "type": "boolean",
+            "description": "Whether the mailbox exists.",
+            "title": "Mailbox Available"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this lookup was performed.",
+            "title": "Resolved At"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Cache TTL per Logius (typically now + 24h; indexed).",
+            "title": "Expires At"
+          },
+          "optedOut": {
+            "type": "boolean",
+            "description": "Whether burger has opted out of Berichtenbox.",
+            "title": "Opted Out"
+          }
+        }
+      },
+      "deliveryAuditLog": {
+        "slug": "deliveryAuditLog",
+        "title": "DeliveryAuditLog",
+        "description": "Append-only audit trail per Archiefwet (REQ-AUDIT-009).",
+        "version": "1.0.0",
+        "type": "object",
+        "required": [
+          "messageId",
+          "event",
+          "eventAt",
+          "actor",
+          "payloadHash",
+          "retentionUntil"
+        ],
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "description": "UUID of the BerichtenboxMessage or BerichtenboxReply (indexed).",
+            "title": "Message ID"
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "sent",
+              "read",
+              "fallback",
+              "failed",
+              "opted-out",
+              "reply-received",
+              "processing-error"
+            ],
+            "description": "State change being audited (indexed).",
+            "title": "Event"
+          },
+          "eventAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Precise UTC timestamp of the event.",
+            "title": "Event At"
+          },
+          "actor": {
+            "type": "string",
+            "description": "'system' for automatic transitions, otherwise the ambtenaar ID.",
+            "title": "Actor"
+          },
+          "payloadHash": {
+            "type": "string",
+            "description": "SHA-256 hash of the message body at event time (integrity).",
+            "title": "Payload Hash"
+          },
+          "retentionUntil": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Archiefwet retention end (5/10/20yr per selectielijst; indexed).",
+            "title": "Retention Until"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Optional sub-classifier (e.g., '5-day-unread', 'no-mailbox').",
+            "title": "Reason"
+          }
+        }
+      }
     }
+  }
 }

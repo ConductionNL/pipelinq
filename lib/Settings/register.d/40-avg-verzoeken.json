@@ -1,774 +1,832 @@
 {
-    "components": {
-        "registers": {
-            "pipelinq": {
-                "schemas": [
-                    "avgVerzoek",
-                    "termijnEvent",
-                    "bewijsItem",
-                    "exportBundle",
-                    "weigering",
-                    "redactieActie"
-                ]
-            }
-        },
-        "schemas": {
-            "avgVerzoek": {
-                "slug": "avgVerzoek",
-                "title": "AVG Verzoek",
-                "icon": "ShieldAccount",
-                "version": "1.0.0",
-                "summary": "A data-subject request (AVG/GDPR art. 15/16/17/18/20) with legal-deadline tracking",
-                "description": "Central request object for handling a citizen's GDPR rights request. The legal deadline (wettelijkeTermijnVerloopt) is server-computed at intake (30 days, optionally extended to 60). Lifecycle is server-authoritative; the DELETE path refuses removal while the 5-year retention window is active. Mapped to Schema.org Action.",
-                "@type": "schema:Action",
-                "configuration": {
-                    "x-openregister-lifecycle": {
-                        "field": "status",
-                        "initial": "ingediend",
-                        "final": [
-                            "afgerond",
-                            "gearchiveerd"
-                        ],
-                        "transitions": {
-                            "naarInBehandeling": {
-                                "from": [
-                                    "ingediend",
-                                    "in-behandeling",
-                                    "bewijs-verzamelen",
-                                    "redactie",
-                                    "bundle-genereren",
-                                    "wachten-op-verzoeker",
-                                    "weigering-opgesteld"
-                                ],
-                                "to": "in-behandeling",
-                                "description": "Move the request into active handling (or keep it there)."
-                            },
-                            "naarBewijsVerzamelen": {
-                                "from": [
-                                    "ingediend",
-                                    "in-behandeling",
-                                    "bewijs-verzamelen",
-                                    "redactie",
-                                    "bundle-genereren",
-                                    "wachten-op-verzoeker",
-                                    "weigering-opgesteld"
-                                ],
-                                "to": "bewijs-verzamelen",
-                                "description": "Start (or return to) federated evidence collection."
-                            },
-                            "naarRedactie": {
-                                "from": [
-                                    "ingediend",
-                                    "in-behandeling",
-                                    "bewijs-verzamelen",
-                                    "redactie",
-                                    "bundle-genereren",
-                                    "wachten-op-verzoeker",
-                                    "weigering-opgesteld"
-                                ],
-                                "to": "redactie",
-                                "description": "Apply field-level redactions to the collected evidence."
-                            },
-                            "naarBundleGenereren": {
-                                "from": [
-                                    "ingediend",
-                                    "in-behandeling",
-                                    "bewijs-verzamelen",
-                                    "redactie",
-                                    "bundle-genereren",
-                                    "wachten-op-verzoeker",
-                                    "weigering-opgesteld"
-                                ],
-                                "to": "bundle-genereren",
-                                "description": "Generate the export bundle (driven by AvgRedactionController on redaction completion)."
-                            },
-                            "naarWachtenOpVerzoeker": {
-                                "from": [
-                                    "ingediend",
-                                    "in-behandeling",
-                                    "bewijs-verzamelen",
-                                    "redactie",
-                                    "bundle-genereren",
-                                    "wachten-op-verzoeker",
-                                    "weigering-opgesteld"
-                                ],
-                                "to": "wachten-op-verzoeker",
-                                "description": "Await a response or confirmation from the data subject."
-                            },
-                            "naarWeigeringOpgesteld": {
-                                "from": [
-                                    "ingediend",
-                                    "in-behandeling",
-                                    "bewijs-verzamelen",
-                                    "redactie",
-                                    "bundle-genereren",
-                                    "wachten-op-verzoeker",
-                                    "weigering-opgesteld"
-                                ],
-                                "to": "weigering-opgesteld",
-                                "description": "Draft a (full or partial) art. 23 denial."
-                            },
-                            "naarIngediend": {
-                                "from": [
-                                    "ingediend",
-                                    "in-behandeling",
-                                    "bewijs-verzamelen",
-                                    "redactie",
-                                    "bundle-genereren",
-                                    "wachten-op-verzoeker",
-                                    "weigering-opgesteld"
-                                ],
-                                "to": "ingediend",
-                                "description": "Return the request to the freshly-submitted state for correction."
-                            },
-                            "naarAfgerond": {
-                                "from": [
-                                    "ingediend",
-                                    "in-behandeling",
-                                    "bewijs-verzamelen",
-                                    "redactie",
-                                    "bundle-genereren",
-                                    "wachten-op-verzoeker",
-                                    "weigering-opgesteld"
-                                ],
-                                "to": "afgerond",
-                                "description": "Resolve the request. Terminal — read-only thereafter."
-                            },
-                            "naarGearchiveerd": {
-                                "from": [
-                                    "ingediend",
-                                    "in-behandeling",
-                                    "bewijs-verzamelen",
-                                    "redactie",
-                                    "bundle-genereren",
-                                    "wachten-op-verzoeker",
-                                    "weigering-opgesteld"
-                                ],
-                                "to": "gearchiveerd",
-                                "description": "Archive the request and stamp the 5-year retention date (AvgRequestService::archive). Terminal."
-                            }
-                        }
-                    }
-                },
-                "required": [
-                    "artikel",
-                    "status"
-                ],
-                "properties": {
-                    "kenmerk": {
-                        "type": "string",
-                        "description": "Human-readable request reference, e.g. AVG-2026-0001",
-                        "maxLength": 64,
-                        "title": "Kenmerk",
-                        "facetable": true
-                    },
-                    "ingediendOp": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the request was submitted",
-                        "title": "Ingediend op"
-                    },
-                    "ingediendVia": {
-                        "type": "string",
-                        "description": "Intake channel",
-                        "enum": ["webformulier", "handmatig", "email", "balie", "post"],
-                        "default": "handmatig",
-                        "title": "Ingediend via",
-                        "facetable": true
-                    },
-                    "verzoekerContact": {
-                        "type": "string",
-                        "description": "UUID reference to the linked Contact",
-                        "maxLength": 255,
-                        "title": "Verzoeker contact"
-                    },
-                    "verzoekerNaam": {
-                        "type": "string",
-                        "description": "Name of the data subject",
-                        "maxLength": 255,
-                        "title": "Verzoeker naam"
-                    },
-                    "verzoekerBsn": {
-                        "type": "string",
-                        "description": "BSN of the data subject (9 digits)",
-                        "maxLength": 9,
-                        "title": "Verzoeker BSN"
-                    },
-                    "verzoekerBsnGeverifieerd": {
-                        "type": "boolean",
-                        "description": "Whether the BSN was verified via BRP",
-                        "default": false,
-                        "title": "BSN geverifieerd",
-                        "facetable": true
-                    },
-                    "artikel": {
-                        "type": "string",
-                        "description": "GDPR article the request invokes",
-                        "enum": [
-                            "art-15-inzage",
-                            "art-16-rectificatie",
-                            "art-17-wissing",
-                            "art-18-beperking",
-                            "art-20-portabiliteit",
-                            "geen-avg"
-                        ],
-                        "title": "Artikel",
-                        "facetable": true
-                    },
-                    "specifiekeVraag": {
-                        "type": "string",
-                        "description": "The citizen's specific question / free-text request",
-                        "title": "Specifieke vraag"
-                    },
-                    "scope": {
-                        "type": "array",
-                        "description": "Data scopes the request applies to (e.g. parkeervergunningen)",
-                        "items": {"type": "string"},
-                        "title": "Scope"
-                    },
-                    "wettelijkeTermijnVerloopt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Server-computed legal deadline (intake + 30 days, +60 when extended)",
-                        "title": "Wettelijke termijn verloopt",
-                        "facetable": true
-                    },
-                    "verlengdMet": {
-                        "type": "integer",
-                        "description": "Extension in days (60 when extended, otherwise empty)",
-                        "title": "Verlengd met"
-                    },
-                    "verlengingsgrond": {
-                        "type": "string",
-                        "description": "Justification for the 60-day extension (art. 12 lid 3)",
-                        "title": "Verlengingsgrond"
-                    },
-                    "status": {
-                        "type": "string",
-                        "description": "Lifecycle status of the request",
-                        "enum": [
-                            "ingediend",
-                            "in-behandeling",
-                            "bewijs-verzamelen",
-                            "redactie",
-                            "bundle-genereren",
-                            "wachten-op-verzoeker",
-                            "weigering-opgesteld",
-                            "afgerond",
-                            "gearchiveerd"
-                        ],
-                        "default": "ingediend",
-                        "title": "Status",
-                        "facetable": true
-                    },
-                    "behandelaar": {
-                        "type": "string",
-                        "description": "Nextcloud UID / identifier of the assigned handler",
-                        "maxLength": 255,
-                        "title": "Behandelaar",
-                        "facetable": true
-                    },
-                    "fgGeinformeerd": {
-                        "type": "boolean",
-                        "description": "Whether the Data Protection Officer (FG) was notified",
-                        "default": false,
-                        "title": "FG geinformeerd"
-                    },
-                    "dpiaFlag": {
-                        "type": "boolean",
-                        "description": "Whether the request is flagged for DPIA review",
-                        "default": false,
-                        "title": "DPIA-flag",
-                        "facetable": true
-                    },
-                    "uitkomst": {
-                        "type": "string",
-                        "description": "Outcome of the request",
-                        "enum": ["toegekend", "gedeeltelijk", "geweigerd", "ingetrokken", ""],
-                        "title": "Uitkomst",
-                        "facetable": true
-                    },
-                    "afgerondOp": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the request was resolved",
-                        "title": "Afgerond op"
-                    },
-                    "bewijsbundel": {
-                        "type": "string",
-                        "description": "UUID reference to the ExportBundle",
-                        "maxLength": 255,
-                        "title": "Bewijsbundel"
-                    },
-                    "retentieTot": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Server-computed retention expiry (resolution + 5 years)",
-                        "title": "Retentie tot",
-                        "facetable": true
-                    },
-                    "termijnOverschreden": {
-                        "type": "boolean",
-                        "description": "Whether the legal deadline was breached",
-                        "default": false,
-                        "title": "Termijn overschreden",
-                        "facetable": true
-                    }
-                }
-            },
-            "termijnEvent": {
-                "slug": "termijnEvent",
-                "title": "Termijn Event",
-                "icon": "ClockAlert",
-                "version": "1.0.0",
-                "summary": "Immutable deadline-related audit event for an AVG request",
-                "description": "Append-only audit record documenting deadline events (receipt confirmation, escalation, breach, collection error). Written server-side by DeadlineTrackerService and the evidence collector.",
-                "@type": "schema:Event",
-                "required": ["verzoekId", "type"],
-                "properties": {
-                    "verzoekId": {
-                        "type": "string",
-                        "description": "UUID reference to the parent AvgVerzoek",
-                        "maxLength": 255,
-                        "title": "Verzoek",
-                        "facetable": true
-                    },
-                    "type": {
-                        "type": "string",
-                        "description": "Event type",
-                        "enum": [
-                            "ontvangstbevestiging-verstuurd",
-                            "herinnering-7dagen",
-                            "escalatie-3dagen",
-                            "termijn-overschreden",
-                            "verlenging-gecommuniceerd",
-                            "collectie-fout"
-                        ],
-                        "title": "Type",
-                        "facetable": true
-                    },
-                    "tijdstip": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the event occurred",
-                        "title": "Tijdstip"
-                    },
-                    "deadline": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "The deadline this event relates to",
-                        "title": "Deadline"
-                    },
-                    "automatisch": {
-                        "type": "boolean",
-                        "description": "Whether the event was raised by an automated job",
-                        "default": true,
-                        "title": "Automatisch"
-                    },
-                    "geslaagd": {
-                        "type": "boolean",
-                        "description": "Whether the action behind the event succeeded",
-                        "default": true,
-                        "title": "Geslaagd"
-                    },
-                    "details": {
-                        "type": "string",
-                        "description": "Human-readable detail of the event",
-                        "title": "Details"
-                    }
-                }
-            },
-            "bewijsItem": {
-                "slug": "bewijsItem",
-                "title": "Bewijs Item",
-                "icon": "FileDocument",
-                "version": "1.0.0",
-                "summary": "A single piece of collected personal-data evidence for an AVG request",
-                "description": "An individual record found during federated evidence collection. inhoudPreview holds PII and is pseudonymized by RetentionService 30 days after delivery while metadata is retained.",
-                "@type": "schema:CreativeWork",
-                "required": ["verzoekId", "bronApp"],
-                "properties": {
-                    "verzoekId": {
-                        "type": "string",
-                        "description": "UUID reference to the parent AvgVerzoek",
-                        "maxLength": 255,
-                        "title": "Verzoek",
-                        "facetable": true
-                    },
-                    "bronApp": {
-                        "type": "string",
-                        "description": "Source system the evidence came from",
-                        "maxLength": 128,
-                        "title": "Bron app",
-                        "facetable": true
-                    },
-                    "bronRegister": {
-                        "type": "string",
-                        "description": "Source register / dataset identifier",
-                        "maxLength": 255,
-                        "title": "Bron register"
-                    },
-                    "bronObject": {
-                        "type": "string",
-                        "description": "Source object identifier",
-                        "maxLength": 255,
-                        "title": "Bron object"
-                    },
-                    "categorie": {
-                        "type": "string",
-                        "description": "Category of the evidence (or bron-onbereikbaar on timeout)",
-                        "maxLength": 128,
-                        "title": "Categorie",
-                        "facetable": true
-                    },
-                    "verzameldOp": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the evidence was collected (empty on source timeout)",
-                        "title": "Verzameld op"
-                    },
-                    "rechtsgrond": {
-                        "type": "string",
-                        "description": "Legal basis under which the data was processed",
-                        "title": "Rechtsgrond"
-                    },
-                    "opgenomenInExport": {
-                        "type": "boolean",
-                        "description": "Whether this item is included in the export bundle",
-                        "default": true,
-                        "title": "Opgenomen in export",
-                        "facetable": true
-                    },
-                    "geredigeerd": {
-                        "type": "boolean",
-                        "description": "Whether a redaction was applied to this item",
-                        "default": false,
-                        "title": "Geredigeerd",
-                        "facetable": true
-                    },
-                    "redactiereden": {
-                        "type": "string",
-                        "description": "Reason for redaction, if any",
-                        "title": "Redactiereden"
-                    },
-                    "inhoudPreview": {
-                        "type": "string",
-                        "description": "Preview of the evidence content (pseudonymized after 30 days)",
-                        "title": "Inhoud preview"
-                    },
-                    "contentHash": {
-                        "type": "string",
-                        "description": "Content hash used for deduplication",
-                        "maxLength": 64,
-                        "title": "Content hash"
-                    },
-                    "gedupliceerd": {
-                        "type": "boolean",
-                        "description": "Whether this item was detected as a duplicate of another",
-                        "default": false,
-                        "title": "Gedupliceerd",
-                        "facetable": true
-                    },
-                    "gepseudonimiseerd": {
-                        "type": "boolean",
-                        "description": "Whether the content has been pseudonymized for retention",
-                        "default": false,
-                        "title": "Gepseudonimiseerd",
-                        "facetable": true
-                    }
-                }
-            },
-            "exportBundle": {
-                "slug": "exportBundle",
-                "title": "Export Bundle",
-                "icon": "PackageVariantClosed",
-                "version": "1.0.0",
-                "summary": "A finalized data-export bundle (JSON + PDF) with integrity hash",
-                "description": "The deliverable export for a data-subject request. sha256, ondertekend and downloadCode are written server-side by BundleService; the bundle is immutable once finalized. The one-time download token is validated server-side and the secure link expires after the configured window (default 30 days).",
-                "@type": "schema:DataDownload",
-                "required": ["verzoekId"],
-                "properties": {
-                    "verzoekId": {
-                        "type": "string",
-                        "description": "UUID reference to the parent AvgVerzoek",
-                        "maxLength": 255,
-                        "title": "Verzoek",
-                        "facetable": true
-                    },
-                    "samengesteldOp": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the bundle was assembled",
-                        "title": "Samengesteld op"
-                    },
-                    "samengesteldDoor": {
-                        "type": "string",
-                        "description": "UID of the handler who generated the bundle",
-                        "maxLength": 255,
-                        "title": "Samengesteld door"
-                    },
-                    "bevatItems": {
-                        "type": "integer",
-                        "description": "Number of evidence items in the bundle",
-                        "title": "Bevat items"
-                    },
-                    "formaat": {
-                        "type": "array",
-                        "description": "Formats included in the bundle",
-                        "items": {"type": "string"},
-                        "title": "Formaat"
-                    },
-                    "bestandsgrootte": {
-                        "type": "string",
-                        "description": "Human-readable bundle size",
-                        "maxLength": 32,
-                        "title": "Bestandsgrootte"
-                    },
-                    "sha256": {
-                        "type": "string",
-                        "description": "SHA-256 integrity hash of the finalized PDF",
-                        "maxLength": 64,
-                        "title": "SHA-256"
-                    },
-                    "ondertekend": {
-                        "type": "boolean",
-                        "description": "Whether the bundle was cryptographically signed",
-                        "default": false,
-                        "title": "Ondertekend",
-                        "facetable": true
-                    },
-                    "ondertekeningsType": {
-                        "type": "string",
-                        "description": "Signature scheme (e.g. PAdES-LTV) or sha256-manifest fallback",
-                        "maxLength": 32,
-                        "title": "Ondertekeningstype"
-                    },
-                    "uitgeleverdVia": {
-                        "type": "string",
-                        "description": "Delivery channel",
-                        "enum": ["veilige-download-link", "berichtenbox", "email", ""],
-                        "title": "Uitgeleverd via"
-                    },
-                    "uitgeleverdOp": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the bundle was delivered",
-                        "title": "Uitgeleverd op"
-                    },
-                    "downloadVerloopt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the secure download link expires",
-                        "title": "Download verloopt"
-                    },
-                    "downloadCodeHash": {
-                        "type": "string",
-                        "description": "Hash of the one-time download token (the raw token is never persisted)",
-                        "maxLength": 64,
-                        "title": "Download code hash"
-                    },
-                    "verzoekerOntvangstBevestigd": {
-                        "type": "boolean",
-                        "description": "Whether the data subject confirmed receipt (set on first download)",
-                        "default": false,
-                        "title": "Ontvangst bevestigd"
-                    }
-                }
-            },
-            "weigering": {
-                "slug": "weigering",
-                "title": "Weigering",
-                "icon": "CancelOutline",
-                "version": "1.0.0",
-                "summary": "A full or partial denial of an AVG request with art. 23 grounds",
-                "description": "Records a denial under GDPR art. 23 restrictions. The art. 23 motivation must be substantive and the AP appeal reference must be present before the denial can be finalized; both are enforced server-side by DenialService.",
-                "@type": "schema:Action",
-                "required": ["verzoekId", "weigering", "grond"],
-                "properties": {
-                    "verzoekId": {
-                        "type": "string",
-                        "description": "UUID reference to the parent AvgVerzoek",
-                        "maxLength": 255,
-                        "title": "Verzoek",
-                        "facetable": true
-                    },
-                    "weigering": {
-                        "type": "string",
-                        "description": "Scope of the denial",
-                        "enum": ["geheel", "gedeeltelijk"],
-                        "title": "Weigering",
-                        "facetable": true
-                    },
-                    "geweigerdeOnderdelen": {
-                        "type": "array",
-                        "description": "Scope parts that are denied (for partial denials)",
-                        "items": {"type": "string"},
-                        "title": "Geweigerde onderdelen"
-                    },
-                    "grond": {
-                        "type": "string",
-                        "description": "GDPR art. 23 exception ground",
-                        "enum": [
-                            "art-23-lid-1-sub-a",
-                            "art-23-lid-1-sub-b",
-                            "art-23-lid-1-sub-c",
-                            "art-23-lid-1-sub-d",
-                            "art-23-lid-1-sub-e",
-                            "art-23-lid-1-sub-f",
-                            "art-23-lid-1-sub-g",
-                            "art-23-lid-1-sub-h",
-                            "art-23-lid-1-sub-i",
-                            "art-23-lid-1-sub-j",
-                            "art-23-lid-3"
-                        ],
-                        "title": "Grond",
-                        "facetable": true
-                    },
-                    "toelichtingAvg23": {
-                        "type": "string",
-                        "description": "Substantive motivation for the chosen ground (min. length enforced server-side)",
-                        "title": "Toelichting AVG art. 23"
-                    },
-                    "verwijzingBezwaarProcedure": {
-                        "type": "boolean",
-                        "description": "Whether the appeal-procedure reference is included",
-                        "default": false,
-                        "title": "Verwijzing bezwaarprocedure"
-                    },
-                    "verwijzingAp": {
-                        "type": "string",
-                        "description": "URL to the AP complaint procedure (mandatory before finalization)",
-                        "format": "uri",
-                        "title": "Verwijzing AP"
-                    },
-                    "gefinaliseerd": {
-                        "type": "boolean",
-                        "description": "Whether the denial has been finalized (immutable thereafter)",
-                        "default": false,
-                        "title": "Gefinaliseerd",
-                        "facetable": true
-                    },
-                    "ondertekendDoor": {
-                        "type": "string",
-                        "description": "UID of the authorized signer",
-                        "maxLength": 255,
-                        "title": "Ondertekend door"
-                    },
-                    "ondertekendOp": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the denial was signed",
-                        "title": "Ondertekend op"
-                    }
-                }
-            },
-            "redactieActie": {
-                "slug": "redactieActie",
-                "title": "Redactie Actie",
-                "icon": "Marker",
-                "version": "1.0.0",
-                "summary": "A field-level redaction applied to an evidence item before export",
-                "description": "Audit record of a single field redaction with before/after values and the legal ground. Created server-side by RedactionService, which refuses to redact the data subject's own data without an art. 23 ground.",
-                "@type": "schema:Action",
-                "required": ["bewijsItemId", "veldpad", "grond"],
-                "properties": {
-                    "bundleId": {
-                        "type": "string",
-                        "description": "UUID reference to the ExportBundle (set when the bundle is generated)",
-                        "maxLength": 255,
-                        "title": "Bundle"
-                    },
-                    "bewijsItemId": {
-                        "type": "string",
-                        "description": "UUID reference to the redacted BewijsItem",
-                        "maxLength": 255,
-                        "title": "Bewijs item",
-                        "facetable": true
-                    },
-                    "veldpad": {
-                        "type": "string",
-                        "description": "JSONPath of the redacted field",
-                        "maxLength": 512,
-                        "title": "Veldpad"
-                    },
-                    "voorWaarde": {
-                        "type": "string",
-                        "description": "Value before redaction (kept for 4-eyes audit)",
-                        "title": "Voor-waarde"
-                    },
-                    "naWaarde": {
-                        "type": "string",
-                        "description": "Value after redaction",
-                        "title": "Na-waarde"
-                    },
-                    "uitgevoerdDoor": {
-                        "type": "string",
-                        "description": "UID of the handler who applied the redaction",
-                        "maxLength": 255,
-                        "title": "Uitgevoerd door"
-                    },
-                    "uitgevoerdOp": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the redaction was applied",
-                        "title": "Uitgevoerd op"
-                    },
-                    "grond": {
-                        "type": "string",
-                        "description": "Legal ground for the redaction",
-                        "enum": [
-                            "bescherming-rechten-derden",
-                            "wettelijke-verplichting",
-                            "bedrijfsgeheim",
-                            "art-23-eigen-gegevens"
-                        ],
-                        "title": "Grond",
-                        "facetable": true
-                    }
-                }
-            }
-        },
-        "objects": [
-            {
-                "@self": {"register": "pipelinq", "schema": "avgVerzoek", "slug": "avg-2026-0001"},
-                "kenmerk": "AVG-2026-0001",
-                "ingediendOp": "2026-04-08T11:14:00+02:00",
-                "ingediendVia": "webformulier",
-                "verzoekerNaam": "M.W. van der Berg",
-                "verzoekerBsn": "123456782",
-                "verzoekerBsnGeverifieerd": true,
-                "artikel": "art-15-inzage",
-                "specifiekeVraag": "Welke persoonsgegevens van mij zijn vastgelegd in het kader van mijn parkeervergunning-aanvraag van 2024?",
-                "scope": ["parkeervergunningen", "facturatie", "communicatie"],
-                "wettelijkeTermijnVerloopt": "2026-05-08T23:59:59+02:00",
-                "status": "in-behandeling",
-                "behandelaar": "admin",
-                "dpiaFlag": false,
-                "retentieTot": "2031-04-08T00:00:00+02:00"
-            },
-            {
-                "@self": {"register": "pipelinq", "schema": "termijnEvent", "slug": "avg-2026-0001-t0"},
-                "verzoekId": "avg-2026-0001",
-                "type": "ontvangstbevestiging-verstuurd",
-                "tijdstip": "2026-04-08T11:14:32+02:00",
-                "deadline": "2026-05-08T23:59:59+02:00",
-                "automatisch": true,
-                "geslaagd": true,
-                "details": "E-mail naar verzoeker bevestigt ontvangst en informeert over termijnen"
-            },
-            {
-                "@self": {"register": "pipelinq", "schema": "bewijsItem", "slug": "avg-2026-0001-007"},
-                "verzoekId": "avg-2026-0001",
-                "bronApp": "openregister",
-                "bronRegister": "parkeervergunningen",
-                "bronObject": "vergunning-2024-09-882",
-                "categorie": "vergunningsaanvraag",
-                "verzameldOp": "2026-04-09T14:02:11+02:00",
-                "rechtsgrond": "wettelijke taak - Wegenverkeerswet",
-                "opgenomenInExport": true,
-                "geredigeerd": false,
-                "inhoudPreview": "Aanvraag bewonersparkeren zone 7, ingediend op 12-09-2024, beschikking 25-09-2024..."
-            }
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "avgVerzoek",
+          "termijnEvent",
+          "bewijsItem",
+          "exportBundle",
+          "weigering",
+          "redactieActie"
         ]
-    }
+      }
+    },
+    "schemas": {
+      "avgVerzoek": {
+        "slug": "avgVerzoek",
+        "title": "AVG Verzoek",
+        "icon": "ShieldAccount",
+        "version": "1.0.0",
+        "summary": "A data-subject request (AVG/GDPR art. 15/16/17/18/20) with legal-deadline tracking",
+        "description": "Central request object for handling a citizen's GDPR rights request. The legal deadline (wettelijkeTermijnVerloopt) is server-computed at intake (30 days, optionally extended to 60). Lifecycle is server-authoritative; the DELETE path refuses removal while the 5-year retention window is active. Mapped to Schema.org Action.",
+        "@type": "schema:Action",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "ingediend",
+            "final": [
+              "afgerond",
+              "gearchiveerd"
+            ],
+            "transitions": {
+              "naarInBehandeling": {
+                "from": [
+                  "ingediend",
+                  "in-behandeling",
+                  "bewijs-verzamelen",
+                  "redactie",
+                  "bundle-genereren",
+                  "wachten-op-verzoeker",
+                  "weigering-opgesteld"
+                ],
+                "to": "in-behandeling",
+                "description": "Move the request into active handling (or keep it there)."
+              },
+              "naarBewijsVerzamelen": {
+                "from": [
+                  "ingediend",
+                  "in-behandeling",
+                  "bewijs-verzamelen",
+                  "redactie",
+                  "bundle-genereren",
+                  "wachten-op-verzoeker",
+                  "weigering-opgesteld"
+                ],
+                "to": "bewijs-verzamelen",
+                "description": "Start (or return to) federated evidence collection."
+              },
+              "naarRedactie": {
+                "from": [
+                  "ingediend",
+                  "in-behandeling",
+                  "bewijs-verzamelen",
+                  "redactie",
+                  "bundle-genereren",
+                  "wachten-op-verzoeker",
+                  "weigering-opgesteld"
+                ],
+                "to": "redactie",
+                "description": "Apply field-level redactions to the collected evidence."
+              },
+              "naarBundleGenereren": {
+                "from": [
+                  "ingediend",
+                  "in-behandeling",
+                  "bewijs-verzamelen",
+                  "redactie",
+                  "bundle-genereren",
+                  "wachten-op-verzoeker",
+                  "weigering-opgesteld"
+                ],
+                "to": "bundle-genereren",
+                "description": "Generate the export bundle (driven by AvgRedactionController on redaction completion)."
+              },
+              "naarWachtenOpVerzoeker": {
+                "from": [
+                  "ingediend",
+                  "in-behandeling",
+                  "bewijs-verzamelen",
+                  "redactie",
+                  "bundle-genereren",
+                  "wachten-op-verzoeker",
+                  "weigering-opgesteld"
+                ],
+                "to": "wachten-op-verzoeker",
+                "description": "Await a response or confirmation from the data subject."
+              },
+              "naarWeigeringOpgesteld": {
+                "from": [
+                  "ingediend",
+                  "in-behandeling",
+                  "bewijs-verzamelen",
+                  "redactie",
+                  "bundle-genereren",
+                  "wachten-op-verzoeker",
+                  "weigering-opgesteld"
+                ],
+                "to": "weigering-opgesteld",
+                "description": "Draft a (full or partial) art. 23 denial."
+              },
+              "naarIngediend": {
+                "from": [
+                  "ingediend",
+                  "in-behandeling",
+                  "bewijs-verzamelen",
+                  "redactie",
+                  "bundle-genereren",
+                  "wachten-op-verzoeker",
+                  "weigering-opgesteld"
+                ],
+                "to": "ingediend",
+                "description": "Return the request to the freshly-submitted state for correction."
+              },
+              "naarAfgerond": {
+                "from": [
+                  "ingediend",
+                  "in-behandeling",
+                  "bewijs-verzamelen",
+                  "redactie",
+                  "bundle-genereren",
+                  "wachten-op-verzoeker",
+                  "weigering-opgesteld"
+                ],
+                "to": "afgerond",
+                "description": "Resolve the request. Terminal — read-only thereafter."
+              },
+              "naarGearchiveerd": {
+                "from": [
+                  "ingediend",
+                  "in-behandeling",
+                  "bewijs-verzamelen",
+                  "redactie",
+                  "bundle-genereren",
+                  "wachten-op-verzoeker",
+                  "weigering-opgesteld"
+                ],
+                "to": "gearchiveerd",
+                "description": "Archive the request and stamp the 5-year retention date (AvgRequestService::archive). Terminal."
+              }
+            }
+          }
+        },
+        "required": [
+          "artikel",
+          "status"
+        ],
+        "properties": {
+          "kenmerk": {
+            "type": "string",
+            "description": "Human-readable request reference, e.g. AVG-2026-0001",
+            "maxLength": 64,
+            "title": "Kenmerk",
+            "facetable": true
+          },
+          "ingediendOp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the request was submitted",
+            "title": "Ingediend op"
+          },
+          "ingediendVia": {
+            "type": "string",
+            "description": "Intake channel",
+            "enum": [
+              "webformulier",
+              "handmatig",
+              "email",
+              "balie",
+              "post"
+            ],
+            "default": "handmatig",
+            "title": "Ingediend via",
+            "facetable": true
+          },
+          "verzoekerContact": {
+            "type": "string",
+            "description": "UUID reference to the linked Contact",
+            "maxLength": 255,
+            "title": "Verzoeker contact"
+          },
+          "verzoekerNaam": {
+            "type": "string",
+            "description": "Name of the data subject",
+            "maxLength": 255,
+            "title": "Verzoeker naam"
+          },
+          "verzoekerBsn": {
+            "type": "string",
+            "description": "BSN of the data subject (9 digits)",
+            "maxLength": 9,
+            "title": "Verzoeker BSN"
+          },
+          "verzoekerBsnGeverifieerd": {
+            "type": "boolean",
+            "description": "Whether the BSN was verified via BRP",
+            "default": false,
+            "title": "BSN geverifieerd",
+            "facetable": true
+          },
+          "artikel": {
+            "type": "string",
+            "description": "GDPR article the request invokes",
+            "enum": [
+              "art-15-inzage",
+              "art-16-rectificatie",
+              "art-17-wissing",
+              "art-18-beperking",
+              "art-20-portabiliteit",
+              "geen-avg"
+            ],
+            "title": "Artikel",
+            "facetable": true
+          },
+          "specifiekeVraag": {
+            "type": "string",
+            "description": "The citizen's specific question / free-text request",
+            "title": "Specifieke vraag"
+          },
+          "scope": {
+            "type": "array",
+            "description": "Data scopes the request applies to (e.g. parkeervergunningen)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Scope"
+          },
+          "wettelijkeTermijnVerloopt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Server-computed legal deadline (intake + 30 days, +60 when extended)",
+            "title": "Wettelijke termijn verloopt",
+            "facetable": true
+          },
+          "verlengdMet": {
+            "type": "integer",
+            "description": "Extension in days (60 when extended, otherwise empty)",
+            "title": "Verlengd met"
+          },
+          "verlengingsgrond": {
+            "type": "string",
+            "description": "Justification for the 60-day extension (art. 12 lid 3)",
+            "title": "Verlengingsgrond"
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of the request",
+            "enum": [
+              "ingediend",
+              "in-behandeling",
+              "bewijs-verzamelen",
+              "redactie",
+              "bundle-genereren",
+              "wachten-op-verzoeker",
+              "weigering-opgesteld",
+              "afgerond",
+              "gearchiveerd"
+            ],
+            "default": "ingediend",
+            "title": "Status",
+            "facetable": true
+          },
+          "behandelaar": {
+            "type": "string",
+            "description": "Nextcloud UID / identifier of the assigned handler",
+            "maxLength": 255,
+            "title": "Behandelaar",
+            "facetable": true
+          },
+          "fgGeinformeerd": {
+            "type": "boolean",
+            "description": "Whether the Data Protection Officer (FG) was notified",
+            "default": false,
+            "title": "FG geinformeerd"
+          },
+          "dpiaFlag": {
+            "type": "boolean",
+            "description": "Whether the request is flagged for DPIA review",
+            "default": false,
+            "title": "DPIA-flag",
+            "facetable": true
+          },
+          "uitkomst": {
+            "type": "string",
+            "description": "Outcome of the request",
+            "enum": [
+              "toegekend",
+              "gedeeltelijk",
+              "geweigerd",
+              "ingetrokken",
+              ""
+            ],
+            "title": "Uitkomst",
+            "facetable": true
+          },
+          "afgerondOp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the request was resolved",
+            "title": "Afgerond op"
+          },
+          "bewijsbundel": {
+            "type": "string",
+            "description": "UUID reference to the ExportBundle",
+            "maxLength": 255,
+            "title": "Bewijsbundel"
+          },
+          "retentieTot": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Server-computed retention expiry (resolution + 5 years)",
+            "title": "Retentie tot",
+            "facetable": true
+          },
+          "termijnOverschreden": {
+            "type": "boolean",
+            "description": "Whether the legal deadline was breached",
+            "default": false,
+            "title": "Termijn overschreden",
+            "facetable": true
+          }
+        }
+      },
+      "termijnEvent": {
+        "slug": "termijnEvent",
+        "title": "Termijn Event",
+        "icon": "ClockAlert",
+        "version": "1.0.0",
+        "summary": "Immutable deadline-related audit event for an AVG request",
+        "description": "Append-only audit record documenting deadline events (receipt confirmation, escalation, breach, collection error). Written server-side by DeadlineTrackerService and the evidence collector.",
+        "@type": "schema:Event",
+        "required": [
+          "verzoekId",
+          "type"
+        ],
+        "properties": {
+          "verzoekId": {
+            "type": "string",
+            "description": "UUID reference to the parent AvgVerzoek",
+            "maxLength": 255,
+            "title": "Verzoek",
+            "facetable": true
+          },
+          "type": {
+            "type": "string",
+            "description": "Event type",
+            "enum": [
+              "ontvangstbevestiging-verstuurd",
+              "herinnering-7dagen",
+              "escalatie-3dagen",
+              "termijn-overschreden",
+              "verlenging-gecommuniceerd",
+              "collectie-fout"
+            ],
+            "title": "Type",
+            "facetable": true
+          },
+          "tijdstip": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the event occurred",
+            "title": "Tijdstip"
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The deadline this event relates to",
+            "title": "Deadline"
+          },
+          "automatisch": {
+            "type": "boolean",
+            "description": "Whether the event was raised by an automated job",
+            "default": true,
+            "title": "Automatisch"
+          },
+          "geslaagd": {
+            "type": "boolean",
+            "description": "Whether the action behind the event succeeded",
+            "default": true,
+            "title": "Geslaagd"
+          },
+          "details": {
+            "type": "string",
+            "description": "Human-readable detail of the event",
+            "title": "Details"
+          }
+        }
+      },
+      "bewijsItem": {
+        "slug": "bewijsItem",
+        "title": "Bewijs Item",
+        "icon": "FileDocument",
+        "version": "1.0.0",
+        "summary": "A single piece of collected personal-data evidence for an AVG request",
+        "description": "An individual record found during federated evidence collection. inhoudPreview holds PII and is pseudonymized by RetentionService 30 days after delivery while metadata is retained.",
+        "@type": "schema:CreativeWork",
+        "required": [
+          "verzoekId",
+          "bronApp"
+        ],
+        "properties": {
+          "verzoekId": {
+            "type": "string",
+            "description": "UUID reference to the parent AvgVerzoek",
+            "maxLength": 255,
+            "title": "Verzoek",
+            "facetable": true
+          },
+          "bronApp": {
+            "type": "string",
+            "description": "Source system the evidence came from",
+            "maxLength": 128,
+            "title": "Bron app",
+            "facetable": true
+          },
+          "bronRegister": {
+            "type": "string",
+            "description": "Source register / dataset identifier",
+            "maxLength": 255,
+            "title": "Bron register"
+          },
+          "bronObject": {
+            "type": "string",
+            "description": "Source object identifier",
+            "maxLength": 255,
+            "title": "Bron object"
+          },
+          "categorie": {
+            "type": "string",
+            "description": "Category of the evidence (or bron-onbereikbaar on timeout)",
+            "maxLength": 128,
+            "title": "Categorie",
+            "facetable": true
+          },
+          "verzameldOp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the evidence was collected (empty on source timeout)",
+            "title": "Verzameld op"
+          },
+          "rechtsgrond": {
+            "type": "string",
+            "description": "Legal basis under which the data was processed",
+            "title": "Rechtsgrond"
+          },
+          "opgenomenInExport": {
+            "type": "boolean",
+            "description": "Whether this item is included in the export bundle",
+            "default": true,
+            "title": "Opgenomen in export",
+            "facetable": true
+          },
+          "geredigeerd": {
+            "type": "boolean",
+            "description": "Whether a redaction was applied to this item",
+            "default": false,
+            "title": "Geredigeerd",
+            "facetable": true
+          },
+          "redactiereden": {
+            "type": "string",
+            "description": "Reason for redaction, if any",
+            "title": "Redactiereden"
+          },
+          "inhoudPreview": {
+            "type": "string",
+            "description": "Preview of the evidence content (pseudonymized after 30 days)",
+            "title": "Inhoud preview"
+          },
+          "contentHash": {
+            "type": "string",
+            "description": "Content hash used for deduplication",
+            "maxLength": 64,
+            "title": "Content hash"
+          },
+          "gedupliceerd": {
+            "type": "boolean",
+            "description": "Whether this item was detected as a duplicate of another",
+            "default": false,
+            "title": "Gedupliceerd",
+            "facetable": true
+          },
+          "gepseudonimiseerd": {
+            "type": "boolean",
+            "description": "Whether the content has been pseudonymized for retention",
+            "default": false,
+            "title": "Gepseudonimiseerd",
+            "facetable": true
+          }
+        }
+      },
+      "exportBundle": {
+        "slug": "exportBundle",
+        "title": "Export Bundle",
+        "icon": "PackageVariantClosed",
+        "version": "1.0.0",
+        "summary": "A finalized data-export bundle (JSON + PDF) with integrity hash",
+        "description": "The deliverable export for a data-subject request. sha256, ondertekend and downloadCode are written server-side by BundleService; the bundle is immutable once finalized. The one-time download token is validated server-side and the secure link expires after the configured window (default 30 days).",
+        "@type": "schema:DataDownload",
+        "required": [
+          "verzoekId"
+        ],
+        "properties": {
+          "verzoekId": {
+            "type": "string",
+            "description": "UUID reference to the parent AvgVerzoek",
+            "maxLength": 255,
+            "title": "Verzoek",
+            "facetable": true
+          },
+          "samengesteldOp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the bundle was assembled",
+            "title": "Samengesteld op"
+          },
+          "samengesteldDoor": {
+            "type": "string",
+            "description": "UID of the handler who generated the bundle",
+            "maxLength": 255,
+            "title": "Samengesteld door"
+          },
+          "bevatItems": {
+            "type": "integer",
+            "description": "Number of evidence items in the bundle",
+            "title": "Bevat items"
+          },
+          "formaat": {
+            "type": "array",
+            "description": "Formats included in the bundle",
+            "items": {
+              "type": "string"
+            },
+            "title": "Formaat"
+          },
+          "bestandsgrootte": {
+            "type": "string",
+            "description": "Human-readable bundle size",
+            "maxLength": 32,
+            "title": "Bestandsgrootte"
+          },
+          "sha256": {
+            "type": "string",
+            "description": "SHA-256 integrity hash of the finalized PDF",
+            "maxLength": 64,
+            "title": "SHA-256"
+          },
+          "ondertekend": {
+            "type": "boolean",
+            "description": "Whether the bundle was cryptographically signed",
+            "default": false,
+            "title": "Ondertekend",
+            "facetable": true
+          },
+          "ondertekeningsType": {
+            "type": "string",
+            "description": "Signature scheme (e.g. PAdES-LTV) or sha256-manifest fallback",
+            "maxLength": 32,
+            "title": "Ondertekeningstype"
+          },
+          "uitgeleverdVia": {
+            "type": "string",
+            "description": "Delivery channel",
+            "enum": [
+              "veilige-download-link",
+              "berichtenbox",
+              "email",
+              ""
+            ],
+            "title": "Uitgeleverd via"
+          },
+          "uitgeleverdOp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the bundle was delivered",
+            "title": "Uitgeleverd op"
+          },
+          "downloadVerloopt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the secure download link expires",
+            "title": "Download verloopt"
+          },
+          "downloadCodeHash": {
+            "type": "string",
+            "description": "Hash of the one-time download token (the raw token is never persisted)",
+            "maxLength": 64,
+            "title": "Download code hash"
+          },
+          "verzoekerOntvangstBevestigd": {
+            "type": "boolean",
+            "description": "Whether the data subject confirmed receipt (set on first download)",
+            "default": false,
+            "title": "Ontvangst bevestigd"
+          }
+        }
+      },
+      "weigering": {
+        "slug": "weigering",
+        "title": "Weigering",
+        "icon": "CancelOutline",
+        "version": "1.0.0",
+        "summary": "A full or partial denial of an AVG request with art. 23 grounds",
+        "description": "Records a denial under GDPR art. 23 restrictions. The art. 23 motivation must be substantive and the AP appeal reference must be present before the denial can be finalized; both are enforced server-side by DenialService.",
+        "@type": "schema:Action",
+        "required": [
+          "verzoekId",
+          "weigering",
+          "grond"
+        ],
+        "properties": {
+          "verzoekId": {
+            "type": "string",
+            "description": "UUID reference to the parent AvgVerzoek",
+            "maxLength": 255,
+            "title": "Verzoek",
+            "facetable": true
+          },
+          "weigering": {
+            "type": "string",
+            "description": "Scope of the denial",
+            "enum": [
+              "geheel",
+              "gedeeltelijk"
+            ],
+            "title": "Weigering",
+            "facetable": true
+          },
+          "geweigerdeOnderdelen": {
+            "type": "array",
+            "description": "Scope parts that are denied (for partial denials)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Geweigerde onderdelen"
+          },
+          "grond": {
+            "type": "string",
+            "description": "GDPR art. 23 exception ground",
+            "enum": [
+              "art-23-lid-1-sub-a",
+              "art-23-lid-1-sub-b",
+              "art-23-lid-1-sub-c",
+              "art-23-lid-1-sub-d",
+              "art-23-lid-1-sub-e",
+              "art-23-lid-1-sub-f",
+              "art-23-lid-1-sub-g",
+              "art-23-lid-1-sub-h",
+              "art-23-lid-1-sub-i",
+              "art-23-lid-1-sub-j",
+              "art-23-lid-3"
+            ],
+            "title": "Grond",
+            "facetable": true
+          },
+          "toelichtingAvg23": {
+            "type": "string",
+            "description": "Substantive motivation for the chosen ground (min. length enforced server-side)",
+            "title": "Toelichting AVG art. 23"
+          },
+          "verwijzingBezwaarProcedure": {
+            "type": "boolean",
+            "description": "Whether the appeal-procedure reference is included",
+            "default": false,
+            "title": "Verwijzing bezwaarprocedure"
+          },
+          "verwijzingAp": {
+            "type": "string",
+            "description": "URL to the AP complaint procedure (mandatory before finalization)",
+            "format": "uri",
+            "title": "Verwijzing AP"
+          },
+          "gefinaliseerd": {
+            "type": "boolean",
+            "description": "Whether the denial has been finalized (immutable thereafter)",
+            "default": false,
+            "title": "Gefinaliseerd",
+            "facetable": true
+          },
+          "ondertekendDoor": {
+            "type": "string",
+            "description": "UID of the authorized signer",
+            "maxLength": 255,
+            "title": "Ondertekend door"
+          },
+          "ondertekendOp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the denial was signed",
+            "title": "Ondertekend op"
+          }
+        }
+      },
+      "redactieActie": {
+        "slug": "redactieActie",
+        "title": "Redactie Actie",
+        "icon": "Marker",
+        "version": "1.0.0",
+        "summary": "A field-level redaction applied to an evidence item before export",
+        "description": "Audit record of a single field redaction with before/after values and the legal ground. Created server-side by RedactionService, which refuses to redact the data subject's own data without an art. 23 ground.",
+        "@type": "schema:Action",
+        "required": [
+          "bewijsItemId",
+          "veldpad",
+          "grond"
+        ],
+        "properties": {
+          "bundleId": {
+            "type": "string",
+            "description": "UUID reference to the ExportBundle (set when the bundle is generated)",
+            "maxLength": 255,
+            "title": "Bundle"
+          },
+          "bewijsItemId": {
+            "type": "string",
+            "description": "UUID reference to the redacted BewijsItem",
+            "maxLength": 255,
+            "title": "Bewijs item",
+            "facetable": true
+          },
+          "veldpad": {
+            "type": "string",
+            "description": "JSONPath of the redacted field",
+            "maxLength": 512,
+            "title": "Veldpad"
+          },
+          "voorWaarde": {
+            "type": "string",
+            "description": "Value before redaction (kept for 4-eyes audit)",
+            "title": "Voor-waarde"
+          },
+          "naWaarde": {
+            "type": "string",
+            "description": "Value after redaction",
+            "title": "Na-waarde"
+          },
+          "uitgevoerdDoor": {
+            "type": "string",
+            "description": "UID of the handler who applied the redaction",
+            "maxLength": 255,
+            "title": "Uitgevoerd door"
+          },
+          "uitgevoerdOp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the redaction was applied",
+            "title": "Uitgevoerd op"
+          },
+          "grond": {
+            "type": "string",
+            "description": "Legal ground for the redaction",
+            "enum": [
+              "bescherming-rechten-derden",
+              "wettelijke-verplichting",
+              "bedrijfsgeheim",
+              "art-23-eigen-gegevens"
+            ],
+            "title": "Grond",
+            "facetable": true
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "avgVerzoek",
+          "slug": "avg-2026-0001"
+        },
+        "kenmerk": "AVG-2026-0001",
+        "ingediendOp": "2026-04-08T11:14:00+02:00",
+        "ingediendVia": "webformulier",
+        "verzoekerNaam": "M.W. van der Berg",
+        "verzoekerBsn": "123456782",
+        "verzoekerBsnGeverifieerd": true,
+        "artikel": "art-15-inzage",
+        "specifiekeVraag": "Welke persoonsgegevens van mij zijn vastgelegd in het kader van mijn parkeervergunning-aanvraag van 2024?",
+        "scope": [
+          "parkeervergunningen",
+          "facturatie",
+          "communicatie"
+        ],
+        "wettelijkeTermijnVerloopt": "2026-05-08T23:59:59+02:00",
+        "status": "in-behandeling",
+        "behandelaar": "admin",
+        "dpiaFlag": false,
+        "retentieTot": "2031-04-08T00:00:00+02:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "termijnEvent",
+          "slug": "avg-2026-0001-t0"
+        },
+        "verzoekId": "avg-2026-0001",
+        "type": "ontvangstbevestiging-verstuurd",
+        "tijdstip": "2026-04-08T11:14:32+02:00",
+        "deadline": "2026-05-08T23:59:59+02:00",
+        "automatisch": true,
+        "geslaagd": true,
+        "details": "E-mail naar verzoeker bevestigt ontvangst en informeert over termijnen"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "bewijsItem",
+          "slug": "avg-2026-0001-007"
+        },
+        "verzoekId": "avg-2026-0001",
+        "bronApp": "openregister",
+        "bronRegister": "parkeervergunningen",
+        "bronObject": "vergunning-2024-09-882",
+        "categorie": "vergunningsaanvraag",
+        "verzameldOp": "2026-04-09T14:02:11+02:00",
+        "rechtsgrond": "wettelijke taak - Wegenverkeerswet",
+        "opgenomenInExport": true,
+        "geredigeerd": false,
+        "inhoudPreview": "Aanvraag bewonersparkeren zone 7, ingediend op 12-09-2024, beschikking 25-09-2024..."
+      }
+    ]
+  }
 }
