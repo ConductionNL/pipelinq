@@ -1,162 +1,171 @@
 {
-	"components": {
-		"registers": {
-			"pipelinq": {
-				"schemas": [
-					"billingCategory"
-				]
-			}
-		},
-		"schemas": {
-			"billingCategory": {
-				"slug": "billingCategory",
-				"title": "Billing Category",
-				"icon": "TagOutline",
-				"version": "1.0.0",
-				"summary": "Structured billing classification for time entries (declarabel / niet-declarabel / intern / WBSO / DBA).",
-				"description": "A billingCategory provides the controlled vocabulary for classifying time entries. Replaces free-text tagging with consistent, reportable categories. Supports Dutch compliance flags: requiresWbsoRef for WBSO/RVO hour administration and isDba for Wet DBA contractor classification. Referenced by timeEntry.billingCategory (slug or UUID). REQ-BCT-001.",
-				"@type": "DefinedTerm",
-				"required": [
-					"name",
-					"code",
-					"type"
-				],
-				"properties": {
-					"name": {
-						"type": "string",
-						"description": "Display name of the category (e.g. Declarabel, WBSO O&O).",
-						"maxLength": 255,
-						"minLength": 1
-					},
-					"code": {
-						"type": "string",
-						"description": "Short machine-readable identifier (e.g. BILL, WBSO, DBA). Should be unique per active category.",
-						"maxLength": 64,
-						"minLength": 1
-					},
-					"type": {
-						"type": "string",
-						"description": "Classification type: billable, non-billable, or internal.",
-						"enum": [
-							"billable",
-							"non-billable",
-							"internal"
-						]
-					},
-					"color": {
-						"type": "string",
-						"description": "Hex color code (e.g. #28a745) used for badges and dashboard chart segments.",
-						"maxLength": 9
-					},
-					"description": {
-						"type": "string",
-						"description": "Explanation of when this category should be applied.",
-						"maxLength": 2000
-					},
-					"isDefault": {
-						"type": "boolean",
-						"description": "When true this category is pre-selected on new time entries. At most one active category should carry this flag.",
-						"default": false
-					},
-					"requiresWbsoRef": {
-						"type": "boolean",
-						"description": "When true, time entries in this category MUST carry a WBSO project reference for RVO submissions. REQ-BCT-003.",
-						"default": false
-					},
-					"isDba": {
-						"type": "boolean",
-						"description": "When true, marks hours as ZZP/DBA contractor work for Wet DBA tax compliance. REQ-BCT-005.",
-						"default": false
-					},
-					"isActive": {
-						"type": "boolean",
-						"description": "When true the category is available for selection on new time entries. Deactivated categories remain visible in the management list.",
-						"default": true
-					}
-				}
-			}
-		},
-		"objects": [
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "billingCategory",
-					"slug": "billing-category-declarabel"
-				},
-				"name": "Declarabel",
-				"code": "BILL",
-				"type": "billable",
-				"color": "#28a745",
-				"description": "Uren die rechtstreeks aan de klant worden gefactureerd op basis van het afgesproken uurtarief of vaste prijs.",
-				"isDefault": true,
-				"requiresWbsoRef": false,
-				"isDba": false,
-				"isActive": true
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "billingCategory",
-					"slug": "billing-category-niet-declarabel"
-				},
-				"name": "Niet-declarabel",
-				"code": "NON-BILL",
-				"type": "non-billable",
-				"color": "#dc3545",
-				"description": "Uren die intern worden gedragen en niet aan de klant worden doorbelast. Bijvoorbeeld: offertebegeleiding, interne overleggen, garantiewerk.",
-				"isDefault": false,
-				"requiresWbsoRef": false,
-				"isDba": false,
-				"isActive": true
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "billingCategory",
-					"slug": "billing-category-intern"
-				},
-				"name": "Intern",
-				"code": "INT",
-				"type": "internal",
-				"color": "#6c757d",
-				"description": "Interne overhead-uren: teamvergaderingen, administratie, opleidingen, verlof en ziekteverlof.",
-				"isDefault": false,
-				"requiresWbsoRef": false,
-				"isDba": false,
-				"isActive": true
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "billingCategory",
-					"slug": "billing-category-wbso"
-				},
-				"name": "WBSO O&O",
-				"code": "WBSO",
-				"type": "non-billable",
-				"color": "#007bff",
-				"description": "Speur- en ontwikkelingswerk (S&O) dat kwalificeert voor WBSO-tegemoetkoming via de RVO. Vereist een WBSO-projectreferentie op de tijdregel.",
-				"isDefault": false,
-				"requiresWbsoRef": true,
-				"isDba": false,
-				"isActive": true
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "billingCategory",
-					"slug": "billing-category-dba"
-				},
-				"name": "DBA Opdracht",
-				"code": "DBA",
-				"type": "billable",
-				"color": "#fd7e14",
-				"description": "Uren gewerkt door zelfstandige opdrachtnemers (ZZP) in het kader van de Wet DBA. Wordt apart gerapporteerd voor belastingcompliance.",
-				"isDefault": false,
-				"requiresWbsoRef": false,
-				"isDba": true,
-				"isActive": true
-			}
-		]
-	}
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "billingCategory"
+        ]
+      }
+    },
+    "schemas": {
+      "billingCategory": {
+        "slug": "billingCategory",
+        "title": "Billing Category",
+        "icon": "TagOutline",
+        "version": "1.0.0",
+        "summary": "Structured billing classification for time entries (declarabel / niet-declarabel / intern / WBSO / DBA).",
+        "description": "A billingCategory provides the controlled vocabulary for classifying time entries. Replaces free-text tagging with consistent, reportable categories. Supports Dutch compliance flags: requiresWbsoRef for WBSO/RVO hour administration and isDba for Wet DBA contractor classification. Referenced by timeEntry.billingCategory (slug or UUID). REQ-BCT-001.",
+        "@type": "DefinedTerm",
+        "required": [
+          "name",
+          "code",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name of the category (e.g. Declarabel, WBSO O&O).",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "description": "Short machine-readable identifier (e.g. BILL, WBSO, DBA). Should be unique per active category.",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Code"
+          },
+          "type": {
+            "type": "string",
+            "description": "Classification type: billable, non-billable, or internal.",
+            "enum": [
+              "billable",
+              "non-billable",
+              "internal"
+            ],
+            "title": "Type"
+          },
+          "color": {
+            "type": "string",
+            "description": "Hex color code (e.g. #28a745) used for badges and dashboard chart segments.",
+            "maxLength": 9,
+            "title": "Color"
+          },
+          "description": {
+            "type": "string",
+            "description": "Explanation of when this category should be applied.",
+            "maxLength": 2000,
+            "title": "Description"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "When true this category is pre-selected on new time entries. At most one active category should carry this flag.",
+            "default": false,
+            "title": "Is Default"
+          },
+          "requiresWbsoRef": {
+            "type": "boolean",
+            "description": "When true, time entries in this category MUST carry a WBSO project reference for RVO submissions. REQ-BCT-003.",
+            "default": false,
+            "title": "Requires Wbso Ref"
+          },
+          "isDba": {
+            "type": "boolean",
+            "description": "When true, marks hours as ZZP/DBA contractor work for Wet DBA tax compliance. REQ-BCT-005.",
+            "default": false,
+            "title": "Is Dba"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "When true the category is available for selection on new time entries. Deactivated categories remain visible in the management list.",
+            "default": true,
+            "title": "Is Active"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "billingCategory",
+          "slug": "billing-category-declarabel"
+        },
+        "name": "Declarabel",
+        "code": "BILL",
+        "type": "billable",
+        "color": "#28a745",
+        "description": "Uren die rechtstreeks aan de klant worden gefactureerd op basis van het afgesproken uurtarief of vaste prijs.",
+        "isDefault": true,
+        "requiresWbsoRef": false,
+        "isDba": false,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "billingCategory",
+          "slug": "billing-category-niet-declarabel"
+        },
+        "name": "Niet-declarabel",
+        "code": "NON-BILL",
+        "type": "non-billable",
+        "color": "#dc3545",
+        "description": "Uren die intern worden gedragen en niet aan de klant worden doorbelast. Bijvoorbeeld: offertebegeleiding, interne overleggen, garantiewerk.",
+        "isDefault": false,
+        "requiresWbsoRef": false,
+        "isDba": false,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "billingCategory",
+          "slug": "billing-category-intern"
+        },
+        "name": "Intern",
+        "code": "INT",
+        "type": "internal",
+        "color": "#6c757d",
+        "description": "Interne overhead-uren: teamvergaderingen, administratie, opleidingen, verlof en ziekteverlof.",
+        "isDefault": false,
+        "requiresWbsoRef": false,
+        "isDba": false,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "billingCategory",
+          "slug": "billing-category-wbso"
+        },
+        "name": "WBSO O&O",
+        "code": "WBSO",
+        "type": "non-billable",
+        "color": "#007bff",
+        "description": "Speur- en ontwikkelingswerk (S&O) dat kwalificeert voor WBSO-tegemoetkoming via de RVO. Vereist een WBSO-projectreferentie op de tijdregel.",
+        "isDefault": false,
+        "requiresWbsoRef": true,
+        "isDba": false,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "billingCategory",
+          "slug": "billing-category-dba"
+        },
+        "name": "DBA Opdracht",
+        "code": "DBA",
+        "type": "billable",
+        "color": "#fd7e14",
+        "description": "Uren gewerkt door zelfstandige opdrachtnemers (ZZP) in het kader van de Wet DBA. Wordt apart gerapporteerd voor belastingcompliance.",
+        "isDefault": false,
+        "requiresWbsoRef": false,
+        "isDba": true,
+        "isActive": true
+      }
+    ]
+  }
 }
