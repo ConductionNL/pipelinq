@@ -85,6 +85,8 @@
                 <referencedClass name="OCP\Migration\IRepairStep"/>
                 <!-- Nextcloud server internals -->
                 <referencedClass name="OC"/>
+                <referencedClass name="OC_App"/>
+                <referencedClass name="OC\App\AppStore\Fetcher\AppFetcher"/>
                 <!-- OCP types not yet present in the nextcloud/ocp Composer stub at this version -->
                 <referencedClass name="OCP\ICache"/>
                 <referencedClass name="OCP\AppFramework\PublicShareController"/>
