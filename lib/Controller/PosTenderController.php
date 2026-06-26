@@ -53,6 +53,7 @@ use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
+use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -438,7 +439,7 @@ class PosTenderController extends Controller
     {
         $user = $this->session->getUser();
         if ($user === null) {
-            throw new \OCP\AppFramework\OCS\OCSForbiddenException('Authentication required');
+            throw new OCSForbiddenException('Authentication required');
         }
     }//end requireAuthenticatedUser()
 

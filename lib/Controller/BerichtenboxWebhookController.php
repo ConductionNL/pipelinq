@@ -212,16 +212,12 @@ class BerichtenboxWebhookController extends Controller
         }
 
         // Test-runner / form-encoded fallback.
-        $params = $this->request->getParams();
-        if (is_array($params) === true) {
-            $encoded = json_encode($params);
-            if ($encoded === false) {
-                return '';
-            }
-
-            return $encoded;
+        $params  = $this->request->getParams();
+        $encoded = json_encode($params);
+        if ($encoded === false) {
+            return '';
         }
 
-        return '';
+        return $encoded;
     }//end readRawBody()
 }//end class

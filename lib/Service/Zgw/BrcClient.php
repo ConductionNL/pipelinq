@@ -33,8 +33,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
-use Psr\Log\LoggerInterface;
-
 /**
  * Typed Besluiten (BRC) client.
  */
@@ -48,13 +46,11 @@ class BrcClient
      * @param ZgwApiClient      $api       Base transport.
      * @param ZgwRegisterAccess $registers Register facade.
      * @param AcClient          $ac        Scope cache (pre-flight guards).
-     * @param LoggerInterface   $logger    PSR-3 logger.
      */
     public function __construct(
         private ZgwApiClient $api,
         private ZgwRegisterAccess $registers,
         private AcClient $ac,
-        private LoggerInterface $logger,
     ) {
     }//end __construct()
 

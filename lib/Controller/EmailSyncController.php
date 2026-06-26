@@ -168,8 +168,8 @@ class EmailSyncController extends Controller
             $result = $this->emailMatchService->runForUser(userId: $user->getUID());
             return new JSONResponse(
                 [
-                    'linked'  => (int) ($result['linked'] ?? 0),
-                    'scanned' => (int) ($result['scanned'] ?? 0),
+                    'linked'  => (int) $result['linked'],
+                    'scanned' => (int) $result['scanned'],
                 ]
             );
         } catch (Throwable $e) {

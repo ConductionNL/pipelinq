@@ -369,8 +369,8 @@ class WhatsAppAdapter
         }
 
         $extracted = $this->extractMetaMessage(rawBody: $rawBody);
-        $from      = (string) ($extracted['from'] ?? '');
-        $body      = (string) ($extracted['body'] ?? '');
+        $from      = $extracted['from'];
+        $body      = $extracted['body'];
 
         if ($from === '') {
             return ['status' => 'invalidPayload'];
@@ -451,10 +451,6 @@ class WhatsAppAdapter
     {
         $matches = [];
         preg_match_all('/\{\{(\d+)\}\}/u', $templateBody, $matches);
-        if (isset($matches[1]) === false) {
-            return 0;
-        }
-
         $unique = array_unique(array_map('intval', $matches[1]));
         return count($unique);
     }//end parseTemplatePlaceholders()

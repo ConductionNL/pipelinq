@@ -27,8 +27,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use Psr\Log\LoggerInterface;
-
 /**
  * CostCaptureService — webhook-cost extraction with EUR conversion.
  *
@@ -46,14 +44,12 @@ class CostCaptureService
      *
      * @param MessagingExchangeRateService $exchangeRate Currency conversion.
      * @param CostEstimationService        $estimator    Static price table.
-     * @param LoggerInterface              $logger       Logger.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.5
      */
     public function __construct(
         private MessagingExchangeRateService $exchangeRate,
         private CostEstimationService $estimator,
-        private LoggerInterface $logger,
     ) {
     }//end __construct()
 

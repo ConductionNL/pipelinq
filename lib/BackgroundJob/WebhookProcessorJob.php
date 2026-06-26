@@ -168,7 +168,7 @@ class WebhookProcessorJob extends TimedJob
                 $result = ['status' => 'processingFailed', 'error' => $e->getMessage()];
             }//end try
 
-            $arr['status']      = (string) ($result['status'] ?? 'processed');
+            $arr['status']      = (string) $result['status'];
             $arr['processedAt'] = gmdate('Y-m-d\TH:i:s\Z');
             $arr['result']      = $result;
 

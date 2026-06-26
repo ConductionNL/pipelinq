@@ -880,26 +880,6 @@ class CashShiftService
     }//end toArray()
 
     /**
-     * Parse an ISO 8601 string into a Unix timestamp, or null when unparseable.
-     *
-     * @param string $value The ISO 8601 timestamp.
-     *
-     * @return int|null The Unix timestamp, or null.
-     */
-    private function toTimestamp(string $value): ?int
-    {
-        if ($value === '') {
-            return null;
-        }
-
-        try {
-            return (new DateTimeImmutable($value))->getTimestamp();
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }//end toTimestamp()
-
-    /**
      * Current time as an ISO 8601 string.
      *
      * @return string The current timestamp.

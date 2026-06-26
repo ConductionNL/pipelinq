@@ -33,7 +33,6 @@ use OCA\Pipelinq\Service\LogiusConnector;
 use OCA\Pipelinq\Service\MailboxResolver;
 use OCP\IAppConfig;
 use OCP\IConfig;
-use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -53,9 +52,7 @@ class MailboxResolverTest extends TestCase
         $config = $this->createMock(IConfig::class);
         $config->method('getSystemValue')->willReturn('unit-secret-for-mailbox-resolver-tests');
         return new EncryptionService(
-            $this->createMock(ContainerInterface::class),
             $config,
-            $this->createMock(ICrypto::class),
             $this->createMock(LoggerInterface::class)
         );
     }//end makeEncryption()

@@ -31,7 +31,6 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use InvalidArgumentException;
 use OCP\IAppConfig;
-use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -92,18 +91,16 @@ class EntityActivityService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container   The DI container, used to
-     *                                        lazily resolve the OpenRegister
-     *                                        `ObjectService` so an outage of
-     *                                        OR cannot break Pipelinq DI.
-     * @param IAppConfig         $appConfig   The app config.
-     * @param IUserSession       $userSession The current user session.
-     * @param LoggerInterface    $logger      The logger.
+     * @param ContainerInterface $container The DI container, used to
+     *                                      lazily resolve the OpenRegister
+     *                                      `ObjectService` so an outage of
+     *                                      OR cannot break Pipelinq DI.
+     * @param IAppConfig         $appConfig The app config.
+     * @param LoggerInterface    $logger    The logger.
      */
     public function __construct(
         private readonly ContainerInterface $container,
         private readonly IAppConfig $appConfig,
-        private readonly IUserSession $userSession,
         private readonly LoggerInterface $logger,
     ) {
     }//end __construct()

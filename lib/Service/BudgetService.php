@@ -292,10 +292,16 @@ class BudgetService
     /**
      * Persist a budget payload.
      *
+     * Return value is available for callers that need the saved row (e.g. to
+     * read back the auto-assigned id); the two current call sites discard it.
+     *
      * @param array<string, mixed> $payload Payload.
      * @param string               $id      Existing id or empty.
      *
      * @return array<string, mixed>|null Saved row.
+     *
+     * @psalm-suppress UnusedReturnValue — callers at saveBudget / applyPeriodReset
+     *   intentionally discard the saved row; the return type is kept for future callers.
      */
     private function saveObject(array $payload, string $id=''): ?array
     {

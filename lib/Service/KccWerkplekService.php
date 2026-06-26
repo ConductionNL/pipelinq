@@ -219,7 +219,7 @@ class KccWerkplekService
         }
 
         $out = [];
-        foreach (($results ?? []) as $result) {
+        foreach ($results as $result) {
             $out[] = $this->toArray(object: $result);
         }
 
@@ -267,7 +267,7 @@ class KccWerkplekService
         }
 
         $out = [];
-        foreach (($results ?? []) as $result) {
+        foreach ($results as $result) {
             $out[] = $this->toArray(object: $result);
         }
 
@@ -431,7 +431,7 @@ class KccWerkplekService
 
         usort(
             $queues,
-            static fn (array $a, array $b): int => ($a['sortOrder'] ?? 0) <=> ($b['sortOrder'] ?? 0)
+            static fn (array $a, array $b): int => $a['sortOrder'] <=> $b['sortOrder']
         );
 
         return [
@@ -476,7 +476,7 @@ class KccWerkplekService
             $results = $objectService->findAll(
                 config: ['filters' => ['register' => $register, 'schema' => $schema]]
             );
-            foreach (($results ?? []) as $result) {
+            foreach ($results as $result) {
                 $arr = $this->toArray(object: $result);
                 if ((string) ($arr['userId'] ?? '') === $userId) {
                     $existingData = $arr;
