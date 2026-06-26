@@ -29,11 +29,9 @@ namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
 use OCA\Pipelinq\BackgroundJob\BlastSendJob;
 use OCA\Pipelinq\Service\BlastService;
-use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\WebhookProcessorService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
-use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -49,9 +47,7 @@ class BlastSendJobTest extends TestCase
     private IAppConfig $appConfig;
     private ContainerInterface $container;
     private BlastService $blastService;
-    private ComplianceService $complianceService;
     private WebhookProcessorService $webhookProcessor;
-    private IUserManager $userManager;
     private LoggerInterface $logger;
     private object $objectService;
 
@@ -69,14 +65,12 @@ class BlastSendJobTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->timeFactory       = $this->createMock(ITimeFactory::class);
-        $this->appConfig         = $this->createMock(IAppConfig::class);
-        $this->container         = $this->createMock(ContainerInterface::class);
-        $this->blastService      = $this->createMock(BlastService::class);
-        $this->complianceService = $this->createMock(ComplianceService::class);
-        $this->webhookProcessor  = $this->createMock(WebhookProcessorService::class);
-        $this->userManager       = $this->createMock(IUserManager::class);
-        $this->logger            = $this->createMock(LoggerInterface::class);
+        $this->timeFactory      = $this->createMock(ITimeFactory::class);
+        $this->appConfig        = $this->createMock(IAppConfig::class);
+        $this->container        = $this->createMock(ContainerInterface::class);
+        $this->blastService     = $this->createMock(BlastService::class);
+        $this->webhookProcessor = $this->createMock(WebhookProcessorService::class);
+        $this->logger           = $this->createMock(LoggerInterface::class);
 
         $this->timeFactory->method('getTime')->willReturn(time());
 
@@ -144,9 +138,7 @@ class BlastSendJobTest extends TestCase
             $this->appConfig,
             $this->container,
             $this->blastService,
-            $this->complianceService,
             $this->webhookProcessor,
-            $this->userManager,
             $this->logger,
         );
     }//end buildJob()

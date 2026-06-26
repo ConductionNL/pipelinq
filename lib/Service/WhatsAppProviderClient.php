@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\Service\Provider\MessageDispatchTrait;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
+use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -256,10 +257,6 @@ class WhatsAppProviderClient
 
         if (isset($result['data']) === true && is_array($result['data']) === true) {
             return $result['data'];
-        }
-
-        if (is_array($result) === true && array_is_list($result) === true) {
-            return $result;
         }
 
         return [];

@@ -249,11 +249,7 @@ class ConsentService
 
             try {
                 if (method_exists($objectService, 'deleteObject') === true) {
-                    $objectService->deleteObject(
-                        uuid: $id,
-                        register: $register,
-                        schema: $schema,
-                    );
+                    $objectService->deleteObject($id, $register, $schema);
                     $deleted++;
                 }
             } catch (Throwable $e) {

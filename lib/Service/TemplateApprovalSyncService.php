@@ -99,8 +99,8 @@ class TemplateApprovalSyncService
         $totalChanges = 0;
         foreach ($providers as $provider) {
             $summary       = $this->syncOne(channelProvider: $provider);
-            $totalUpdates += (int) ($summary['templatesUpdated'] ?? 0);
-            $totalChanges += (int) ($summary['statusChanges'] ?? 0);
+            $totalUpdates += (int) $summary['templatesUpdated'];
+            $totalChanges += (int) $summary['statusChanges'];
         }
 
         return [

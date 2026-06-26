@@ -161,7 +161,7 @@ class TemplateRenderer
                 $value = (string) ($variables[$m[1]] ?? '');
                 return htmlspecialchars($value, ENT_XHTML | ENT_QUOTES, 'UTF-8');
             },
-            $result ?? ''
+            $result
         );
 
         return ($result ?? $source);

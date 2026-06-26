@@ -27,9 +27,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\EncryptionService;
 use OCP\IConfig;
-use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -45,8 +43,7 @@ class EncryptionServiceTest extends TestCase
      */
     private function buildService(): EncryptionService
     {
-        $container = $this->createMock(ContainerInterface::class);
-        $config    = $this->createMock(IConfig::class);
+        $config = $this->createMock(IConfig::class);
         $config->method('getSystemValue')->willReturnCallback(
             static function (string $key, mixed $default=null): string {
                 if ($key === 'secret') {
@@ -55,9 +52,8 @@ class EncryptionServiceTest extends TestCase
                 return (string) ($default ?? '');
             }
         );
-        $crypto = $this->createMock(ICrypto::class);
         $logger = $this->createMock(LoggerInterface::class);
-        return new EncryptionService($container, $config, $crypto, $logger);
+        return new EncryptionService($config, $logger);
     }//end buildService()
 
     /**

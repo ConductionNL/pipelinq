@@ -335,7 +335,7 @@ class EmailMatchService
                     schemaId: (int) $schema,
                     mailAccountId: $mailAccountId,
                     messageId: (string) $mailMessageId,
-                    messageUid: (string) ($message['uid'] ?? '')
+                    messageUid: (string) $message['uid']
                 );
 
                 if ($before === null) {
@@ -468,9 +468,9 @@ class EmailMatchService
     public function writeSettings(string $userId, array $settings): void
     {
         $payload = [
-            'account'           => (int) ($settings['account'] ?? 0),
-            'enabled'           => (bool) ($settings['enabled'] ?? false),
-            'excludedAddresses' => $this->sanitiseAddresses(items: $settings['excludedAddresses'] ?? []),
+            'account'           => (int) $settings['account'],
+            'enabled'           => (bool) $settings['enabled'],
+            'excludedAddresses' => $this->sanitiseAddresses(items: $settings['excludedAddresses']),
             'cursor'            => (int) ($settings['cursor'] ?? 0),
         ];
 

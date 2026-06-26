@@ -30,14 +30,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\BerichtenboxService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -48,18 +46,14 @@ class BerichtenboxAdminController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest            $request      Request.
-     * @param ContainerInterface  $container    DI container.
-     * @param IAppConfig          $appConfig    App config.
-     * @param BerichtenboxService $berichtenbox Berichtenbox service.
-     * @param LoggerInterface     $logger       Logger.
+     * @param IRequest           $request   Request.
+     * @param ContainerInterface $container DI container.
+     * @param IAppConfig         $appConfig App config.
      */
     public function __construct(
         IRequest $request,
         private readonly ContainerInterface $container,
         private readonly IAppConfig $appConfig,
-        private readonly BerichtenboxService $berichtenbox,
-        private readonly LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -158,7 +152,7 @@ class BerichtenboxAdminController extends Controller
             );
         }
 
-        foreach (($rows ?? []) as $row) {
+        foreach ($rows as $row) {
             $data = $this->toArray(row: $row);
             if ($data === null) {
                 continue;

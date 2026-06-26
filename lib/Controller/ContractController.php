@@ -38,7 +38,6 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -68,7 +67,6 @@ class ContractController extends Controller
      * @param RecurringRevenueService $revenueService  Recurring-revenue service.
      * @param IUserSession            $userSession     The user session.
      * @param IGroupManager           $groupManager    The group manager.
-     * @param IAppConfig              $appConfig       The app config.
      * @param ContainerInterface      $container       The DI container.
      * @param LoggerInterface         $logger          PSR logger.
      */
@@ -78,7 +76,6 @@ class ContractController extends Controller
         private RecurringRevenueService $revenueService,
         private IUserSession $userSession,
         private IGroupManager $groupManager,
-        private IAppConfig $appConfig,
         private ContainerInterface $container,
         private LoggerInterface $logger,
     ) {

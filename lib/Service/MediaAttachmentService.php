@@ -126,7 +126,7 @@ class MediaAttachmentService
             return ['stored' => false, 'error' => 'downloadFailed'];
         }
 
-        $url = (string) ($handle['url'] ?? '');
+        $url = $handle['url'];
         if ($url === '') {
             return ['stored' => false, 'error' => 'noMediaUrl'];
         }
@@ -147,8 +147,8 @@ class MediaAttachmentService
 
         $quarantined = ($this->virusScan(bytes: $bytes) === false);
 
-        if ((string) ($handle['mimeType'] ?? '') !== '') {
-            $resolvedMime = (string) $handle['mimeType'];
+        if ($handle['mimeType'] !== '') {
+            $resolvedMime = $handle['mimeType'];
         } else {
             $resolvedMime = $mimeType;
         }

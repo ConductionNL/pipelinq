@@ -474,7 +474,7 @@ class WalkInQueueService
             }
 
             foreach ($slots as $slot) {
-                $startTime = (string) ($slot['startTime'] ?? '');
+                $startTime = $slot['startTime'];
                 if ($startTime === '') {
                     continue;
                 }

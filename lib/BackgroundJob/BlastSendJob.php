@@ -33,12 +33,10 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\BlastService;
-use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\WebhookProcessorService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
-use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -75,14 +73,12 @@ class BlastSendJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory            $time              The time factory.
-     * @param IAppConfig              $appConfig         The app config.
-     * @param ContainerInterface      $container         DI container for lazy OR.
-     * @param BlastService            $blastService      Dispatch service.
-     * @param ComplianceService       $complianceService Consent withdrawal sink.
-     * @param WebhookProcessorService $webhookProcessor  Webhook event processor.
-     * @param IUserManager            $userManager       User manager (audit hook).
-     * @param LoggerInterface         $logger            Logger.
+     * @param ITimeFactory            $time             The time factory.
+     * @param IAppConfig              $appConfig        The app config.
+     * @param ContainerInterface      $container        DI container for lazy OR.
+     * @param BlastService            $blastService     Dispatch service.
+     * @param WebhookProcessorService $webhookProcessor Webhook event processor.
+     * @param LoggerInterface         $logger           Logger.
      *
      * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
      */
@@ -91,9 +87,7 @@ class BlastSendJob extends TimedJob
         private IAppConfig $appConfig,
         private ContainerInterface $container,
         private BlastService $blastService,
-        private ComplianceService $complianceService,
         private WebhookProcessorService $webhookProcessor,
-        private IUserManager $userManager,
         private LoggerInterface $logger,
     ) {
         parent::__construct(time: $time);
@@ -189,10 +183,6 @@ class BlastSendJob extends TimedJob
 
         $processed = 0;
         foreach ($batch as $envelope) {
-            if (is_array($envelope) === false) {
-                continue;
-            }
-
             $provider = (string) ($envelope['provider'] ?? 'unknown');
             $event    = ($envelope['event'] ?? []);
             if (is_array($event) === false) {
