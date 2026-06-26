@@ -1,31 +1,52 @@
 # phpstan baseline for pipelinq lint debt.
 #
-# The 22 entries below are tracked in https://github.com/ConductionNL/pipelinq/issues/496
-# and consist of:
-#   - unread DI properties (feature-flag / future-wire-up stubs injected for
-#     forward-compatibility, e.g. loggers, notificationService, appConfig), and
-#   - AuthorizedAdminSetting attribute calls that pass the app-id string, which the
-#     nextcloud/ocp stub mistypes as class-string<IDelegatedSettings> (false positive;
-#     the runtime signature accepts a plain string).
-#
-# Resynced 2026-05-31 (pipelinq-quality-phpstan-burndown): seven stale entries that no
-# longer fire — three unused named-constants now wired up, the CsrfTokenManager
-# invalid-type, and two logic warnings — were resolved in earlier OR-adoption / quality
-# phases and dropped here.
+# Entries below are tracked in https://github.com/ConductionNL/pipelinq/issues/496
+# and consist of pre-existing PHPStan findings that existed before the
+# test-remediation-pipelinq branch.  Regenerated 2026-06-26.
 #
 # Do NOT regenerate this baseline without first triaging issue #496.
 
 parameters:
 	ignoreErrors:
 		-
+			message: "#^Class OC\\\\App\\\\AppStore\\\\Fetcher\\\\AppFetcher not found\\.$#"
+			count: 1
+			path: lib/AppInfo/Application.php
+
+		-
+			message: "#^Parameter \\#2 \\$listener of method OCP\\\\AppFramework\\\\Bootstrap\\\\IRegistrationContext\\:\\:registerEventListener\\(\\) expects class\\-string\\<OCP\\\\EventDispatcher\\\\IEventListener\\<OCP\\\\EventDispatcher\\\\Event\\>\\>, 'OCA\\\\\\\\Pipelinq…' given\\.$#"
+			count: 1
+			path: lib/AppInfo/Application.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\BlastSendJob\\:\\:\\$complianceService is never read, only written\\.$#"
+			count: 1
+			path: lib/BackgroundJob/BlastSendJob.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\BlastSendJob\\:\\:\\$userManager is never read, only written\\.$#"
+			count: 1
+			path: lib/BackgroundJob/BlastSendJob.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/BackgroundJob/BlastSendJob.php
+
+		-
 			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\CallbackOverdueJob\\:\\:\\$notificationService is never read, only written\\.$#"
 			count: 1
 			path: lib/BackgroundJob/CallbackOverdueJob.php
 
 		-
-			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\EmailSyncJob\\:\\:\\$emailSyncService is never read, only written\\.$#"
+			message: "#^Offset 'linked' on array\\{linked\\: int, scanned\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
 			count: 1
-			path: lib/BackgroundJob/EmailSyncJob.php
+			path: lib/BackgroundJob/EmailMatchJob.php
+
+		-
+			message: "#^Offset 'scanned' on array\\{linked\\: int, scanned\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/BackgroundJob/EmailMatchJob.php
 
 		-
 			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\TaskEscalationJob\\:\\:\\$taskService is never read, only written\\.$#"
@@ -38,14 +59,109 @@ parameters:
 			path: lib/BackgroundJob/TaskExpiryJob.php
 
 		-
+			message: "#^Offset 'status' on array\\{status\\: string, messageId\\?\\: string, conversationId\\?\\: string, placeholderCreated\\?\\: bool, optOutRecorded\\?\\: bool, error\\?\\: string\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/BackgroundJob/WebhookProcessorJob.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Controller\\\\BerichtenboxAdminController\\:\\:\\$berichtenbox is never read, only written\\.$#"
+			count: 1
+			path: lib/Controller/BerichtenboxAdminController.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Controller\\\\BerichtenboxAdminController\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Controller/BerichtenboxAdminController.php
+
+		-
+			message: "#^Variable \\$rows on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Controller/BerichtenboxAdminController.php
+
+		-
+			message: "#^Unreachable statement \\- code above always terminates\\.$#"
+			count: 1
+			path: lib/Controller/BerichtenboxWebhookController.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Controller/BlastWebhookController.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Controller\\\\ContractController\\:\\:\\$appConfig is never read, only written\\.$#"
+			count: 1
+			path: lib/Controller/ContractController.php
+
+		-
+			message: "#^Offset 'linked' on array\\{linked\\: int, scanned\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Controller/EmailSyncController.php
+
+		-
+			message: "#^Offset 'scanned' on array\\{linked\\: int, scanned\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Controller/EmailSyncController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 2
+			path: lib/Controller/ForecastSettingsController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 3
+			path: lib/Controller/LeadSourceController.php
+
+		-
 			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
 			count: 1
 			path: lib/Controller/LedgerController.php
 
 		-
 			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 1
+			path: lib/Controller/LoyaltyController.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Controller\\\\LoyaltyController\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Controller/LoyaltyController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 4
+			path: lib/Controller/MdmAvgWorkflowController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 2
+			path: lib/Controller/MdmMergeController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 1
+			path: lib/Controller/MdmSyncQueueController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 2
+			path: lib/Controller/MdmTrustConfigController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 2
+			path: lib/Controller/PosCustomerSettingsController.php
+
+		-
+			message: "#^PHPDoc tag @throws with type OCA\\\\Pipelinq\\\\Controller\\\\OCSForbiddenException is not subtype of Throwable$#"
+			count: 1
+			path: lib/Controller/PosTenderController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
 			count: 3
-			path: lib/Controller/LeadSourceController.php
+			path: lib/Controller/PosTenderController.php
 
 		-
 			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
@@ -64,13 +180,68 @@ parameters:
 
 		-
 			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
-			count: 8
+			count: 2
 			path: lib/Controller/SettingsController.php
 
 		-
 			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 1
+			path: lib/Controller/ShillinqApController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
 			count: 2
-			path: lib/Controller/PosBookkeepingConfigController.php
+			path: lib/Controller/SlaPolicyController.php
+
+		-
+			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
+			count: 1
+			path: lib/Controller/TimeEntryWipController.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between OCA\\\\OpenRegister\\\\Db\\\\ObjectEntity and null will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Listener/ExpenseApprovalListener.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Listener/ExpenseApprovalListener.php
+
+		-
+			message: "#^Constant OCA\\\\Pipelinq\\\\Repair\\\\IngestProductVendorMaster\\:\\:PRICING_FIELDS_PROTECTED is unused\\.$#"
+			count: 1
+			path: lib/Repair/IngestProductVendorMaster.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between mixed~\\(0\\|0\\.0\\|''\\|'0'\\|array\\{\\}\\|false\\|null\\) and '' will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Repair/IngestProductVendorMaster.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between non\\-falsy\\-string and '' will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Repair/IngestProductVendorMaster.php
+
+		-
+			message: "#^Offset 'gdprEntities' on array\\{object\\: array\\<string, mixed\\>, gdprEntities\\: array\\<int, array\\<string, mixed\\>\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/Avg/EvidenceCollectionService.php
+
+		-
+			message: "#^Offset 'object' on array\\{object\\: array\\<string, mixed\\>, gdprEntities\\: array\\<int, array\\<string, mixed\\>\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/Avg/EvidenceCollectionService.php
+
+		-
+			message: "#^Variable \\$rows on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 5
+			path: lib/Service/BerichtenboxService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between DateTimeImmutable and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/BusinessHoursCalculator.php
 
 		-
 			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\CalendarSyncService\\:\\:\\$logger is never read, only written\\.$#"
@@ -83,45 +254,90 @@ parameters:
 			path: lib/Service/CallbackService.php
 
 		-
+			message: "#^Method OCA\\\\Pipelinq\\\\Service\\\\CashShiftService\\:\\:toTimestamp\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/CashShiftService.php
+
+		-
+			message: "#^Unknown parameter \\$register in call to method stdClass\\:\\:deleteObject\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/ConsentService.php
+
+		-
+			message: "#^Unknown parameter \\$schema in call to method stdClass\\:\\:deleteObject\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/ConsentService.php
+
+		-
+			message: "#^Unknown parameter \\$uuid in call to method stdClass\\:\\:deleteObject\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/ConsentService.php
+
+		-
+			message: "#^Variable \\$results on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/ContactVcardService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\CostCaptureService\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/CostCaptureService.php
+
+		-
+			message: "#^Method OCA\\\\Pipelinq\\\\Service\\\\CtiService\\:\\:syncPresenceFromEvent\\(\\) never returns string so it can be removed from the return type\\.$#"
+			count: 1
+			path: lib/Service/CtiService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between DateTimeImmutable and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/DeliveryAuditLogger.php
+
+		-
+			message: "#^Offset 'account' on array\\{account\\: int, enabled\\: bool, excludedAddresses\\: array\\<int, string\\>, cursor\\?\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/EmailMatchService.php
+
+		-
+			message: "#^Offset 'enabled' on array\\{account\\: int, enabled\\: bool, excludedAddresses\\: array\\<int, string\\>, cursor\\?\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/EmailMatchService.php
+
+		-
+			message: "#^Offset 'excludedAddresses' on array\\{account\\: int, enabled\\: bool, excludedAddresses\\: array\\<int, string\\>, cursor\\?\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/EmailMatchService.php
+
+		-
+			message: "#^Offset 'uid' on array\\{uid\\: string, subject\\: string\\|null, sender\\: string\\|null, recipients\\: array\\<int, string\\>, date\\: string\\|null\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/EmailMatchService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/EmailMatchService.php
+
+		-
 			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\EmailSyncService\\:\\:\\$logger is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/EmailSyncService.php
 
 		-
-			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\IntakeFormService\\:\\:\\$appConfig is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\EncryptionService\\:\\:\\$container is never read, only written\\.$#"
 			count: 1
-			path: lib/Service/IntakeFormService.php
+			path: lib/Service/EncryptionService.php
 
 		-
-			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\ReportingService\\:\\:\\$logger is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\EncryptionService\\:\\:\\$crypto is never read, only written\\.$#"
 			count: 1
-			path: lib/Service/ReportingService.php
+			path: lib/Service/EncryptionService.php
 
 		-
-			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\TaskService\\:\\:\\$logger is never read, only written\\.$#"
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\EntityActivityService\\:\\:\\$userSession is never read, only written\\.$#"
 			count: 1
-			path: lib/Service/TaskService.php
+			path: lib/Service/EntityActivityService.php
 
-		-
-			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\TaskService\\:\\:\\$userSession is never read, only written\\.$#"
-			count: 1
-			path: lib/Service/TaskService.php
-
-		# forecast-roll-up-and-categories: AuthorizedAdminSetting app-id-string false positive
-		# (same documented stub mistype as the other settings controllers above).
-		-
-			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
-			count: 2
-			path: lib/Controller/ForecastSettingsController.php
-
-		# sla-engine-and-escalation: same AuthorizedAdminSetting app-id-string false positive.
-		-
-			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
-			count: 2
-			path: lib/Controller/SlaPolicyController.php
-
-		# Pre-existing BI-export debt (feat c9713bf0) surfaced by the pre-merge check:strict
-		# gate; untouched by the forecast change. Tracked under issue #496.
 		-
 			message: "#^Comparison operation \"\\>\\=\" between int\\<1, max\\> and 1 is always true\\.$#"
 			count: 1
@@ -136,3 +352,233 @@ parameters:
 			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\Export\\\\ExportJobService\\:\\:\\$logger is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/Export/ExportJobService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between non\\-empty\\-string and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/GiftCardService.php
+
+		-
+			message: "#^Method OCA\\\\Pipelinq\\\\Service\\\\HaalCentraalClient\\:\\:lookupViaOpenRegister\\(\\) should return array\\<string, mixed\\>\\|null but returns array\\<int, string\\>\\.$#"
+			count: 1
+			path: lib/Service/HaalCentraalClient.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between array\\<string, mixed\\> and array\\{'__or_brp_empty__'\\} will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/HaalCentraalClient.php
+
+		-
+			message: "#^Offset 'sortOrder' on array\\{id\\: string, slug\\: string, title\\: string, sortOrder\\: int, maxCapacity\\: mixed\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 2
+			path: lib/Service/KccWerkplekService.php
+
+		-
+			message: "#^Variable \\$results on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 3
+			path: lib/Service/KccWerkplekService.php
+
+		-
+			message: "#^Expression on left side of \\?\\? is not nullable\\.$#"
+			count: 1
+			path: lib/Service/LogiusConnector.php
+
+		-
+			message: "#^Offset 'changed' on array\\{from\\: string\\|null, to\\: string\\|null, changed\\: bool\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/LoyaltyEngineService.php
+
+		-
+			message: "#^Variable \\$rows on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/MailboxResolver.php
+
+		-
+			message: "#^Offset 'mimeType' on array\\{url\\: string, mimeType\\: string, sha256\\?\\: string\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/MediaAttachmentService.php
+
+		-
+			message: "#^Offset 'url' on array\\{url\\: string, mimeType\\: string, sha256\\?\\: string\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/MediaAttachmentService.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between int\\<1, max\\> and 0 is always true\\.$#"
+			count: 1
+			path: lib/Service/PhoneNormaliser.php
+
+		-
+			message: "#^Offset 'eventId' on array\\{sessionId\\: string, status\\: string, eventId\\: string, error\\: string\\|null\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/PosPaymentService.php
+
+		-
+			message: "#^Offset 'refundId' on array\\{sessionId\\: string, refundId\\: string, status\\: string, error\\?\\: string\\|null\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/PosPaymentService.php
+
+		-
+			message: "#^Offset 'sessionId' on array\\{sessionId\\: string, redirectUrl\\: string\\|null, status\\: string, error\\?\\: string\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/PosPaymentService.php
+
+		-
+			message: "#^Offset 'sessionId' on array\\{sessionId\\: string, status\\: string, eventId\\: string, error\\: string\\|null\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/PosPaymentService.php
+
+		-
+			message: "#^Offset 'status' on array\\{sessionId\\: string, redirectUrl\\: string\\|null, status\\: string, error\\?\\: string\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/PosPaymentService.php
+
+		-
+			message: "#^Offset 'status' on array\\{sessionId\\: string, refundId\\: string, status\\: string, error\\?\\: string\\|null\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/PosPaymentService.php
+
+		-
+			message: "#^Offset 'status' on array\\{sessionId\\: string, status\\: string, error\\?\\: string\\|null\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 2
+			path: lib/Service/PosPaymentService.php
+
+		-
+			message: "#^Offset 'status' on array\\{sessionId\\: string, status\\: string, eventId\\: string, error\\: string\\|null\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/PosPaymentService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\Provider\\\\CmComSmsClient\\:\\:\\$credentials is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/Provider/CmComSmsClient.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\Provider\\\\MessageBirdSmsClient\\:\\:\\$credentials is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/Provider/MessageBirdSmsClient.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\Provider\\\\TwilioSmsClient\\:\\:\\$credentials is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/Provider/TwilioSmsClient.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between int\\<1, max\\> and 0 is always true\\.$#"
+			count: 1
+			path: lib/Service/RapportageService.php
+
+		-
+			message: "#^Call to function in_array\\(\\) with arguments int, array\\<int, string\\> and true will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/SystemTagCrudService.php
+
+		-
+			message: "#^Parameter \\$tagIds of method OCP\\\\SystemTag\\\\ISystemTagObjectMapper\\:\\:assignTags\\(\\) expects array\\<int, string\\>\\|string, array\\<int, int\\> given\\.$#"
+			count: 1
+			path: lib/Service/SystemTagCrudService.php
+
+		-
+			message: "#^Parameter \\$tagIds of method OCP\\\\SystemTag\\\\ISystemTagObjectMapper\\:\\:unassignTags\\(\\) expects array\\<int, string\\>\\|string, array\\<int, int\\> given\\.$#"
+			count: 1
+			path: lib/Service/SystemTagCrudService.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 1
+			path: lib/Service/SystemTagCrudService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between false and true will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/SystemTagCrudService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\TaskService\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/TaskService.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\TaskService\\:\\:\\$userSession is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/TaskService.php
+
+		-
+			message: "#^Offset 'statusChanges' on array\\{templatesUpdated\\: int, statusChanges\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/TemplateApprovalSyncService.php
+
+		-
+			message: "#^Offset 'templatesUpdated' on array\\{templatesUpdated\\: int, statusChanges\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/TemplateApprovalSyncService.php
+
+		-
+			message: "#^Variable \\$result on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/TemplateRenderer.php
+
+		-
+			message: "#^Offset 'startTime' on array\\{startTime\\: string, endTime\\: string, durationMinutes\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/WalkInQueueService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/WebhookProcessorService.php
+
+		-
+			message: "#^Offset 'body' on array\\{from\\: string, body\\: string, raw\\: array\\<string, mixed\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/WhatsAppAdapter.php
+
+		-
+			message: "#^Offset 'from' on array\\{from\\: string, body\\: string, raw\\: array\\<string, mixed\\>\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/WhatsAppAdapter.php
+
+		-
+			message: "#^Offset 1 on array\\{array\\<int, string\\>, array\\<int, numeric\\-string\\>\\} in isset\\(\\) always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/WhatsAppAdapter.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/WhatsAppAdapter.php
+
+		-
+			message: "#^Call to function array_is_list\\(\\) with array\\<string, mixed\\> will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/WhatsAppProviderClient.php
+
+		-
+			message: "#^PHPDoc tag @throws with type OCA\\\\Pipelinq\\\\Service\\\\Provider\\\\PermanentSmsProviderException\\|OCA\\\\Pipelinq\\\\Service\\\\TransientSmsProviderException is not subtype of Throwable$#"
+			count: 6
+			path: lib/Service/WhatsAppProviderClient.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 1
+			path: lib/Service/WhatsAppProviderClient.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between false and true will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/WhatsAppProviderClient.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\Zgw\\\\BrcClient\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/Zgw/BrcClient.php
+
+		-
+			message: "#^Property OCA\\\\Pipelinq\\\\Service\\\\Zgw\\\\DrcClient\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/Zgw/DrcClient.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between true and false will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/Zgw/NrcSubscriptionService.php

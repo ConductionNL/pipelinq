@@ -122,6 +122,8 @@ class BerichtenboxService
      * @return array The persisted BerichtenboxMessage object.
      *
      * @throws RuntimeException On validation / persistence failure.
+     *
+     * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
      */
     public function queueOutboundMessage(
         string $zaakId,
@@ -138,7 +140,7 @@ class BerichtenboxService
             status: $status,
             language: (string) ($extraVariables['language'] ?? 'nl')
         ));
-        $template = ($template ?? $this->fallbackTemplate(zaakId: $zaakId, status: $status));
+        $template = ($template ?? $this->fallbackTemplate());
 
         $variables = array_merge(
             [
@@ -836,12 +838,13 @@ class BerichtenboxService
     /**
      * Return a minimal default template when no match is configured.
      *
-     * @param string $zaakId Zaak id.
-     * @param string $status Status.
+     * The template body uses mustache placeholders ({{zaakId}}, {{status}},
+     * {{gemeente}}) that are filled at render time by TemplateRenderer::render().
+     * No zaakId/status parameters needed here — they come from the render context.
      *
      * @return array
      */
-    private function fallbackTemplate(string $zaakId, string $status): array
+    private function fallbackTemplate(): array
     {
         return [
             'id'               => 'fallback',
