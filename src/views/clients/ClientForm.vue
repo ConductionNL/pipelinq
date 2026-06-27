@@ -19,6 +19,7 @@
 				<NcSelect
 					v-model="form.type"
 					input-id="client-type"
+					:input-label="t('pipelinq', 'Type')"
 					label-outside
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
