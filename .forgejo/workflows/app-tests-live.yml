@@ -39,6 +39,7 @@ permissions:
 jobs:
   live:
     uses: ./.forgejo/workflows/tests-live.yml
+    secrets: inherit
     with:
       app-id: pipelinq
       is-openregister: false
