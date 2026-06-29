@@ -45,7 +45,10 @@ jobs:
           fetch-depth: 0
 
       - name: Install composer deps
-        run: composer install --no-interaction --no-progress --prefer-dist --ignore-platform-reqs
+        env:
+          COMPOSER_MAX_PARALLEL_HTTP: "1"
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GH_COMPOSER_TOKEN }}"}}'
+        run: n=0; until composer install --no-interaction --no-progress --prefer-dist --ignore-platform-reqs; do n=$((n+1)); [ $n -ge 5 ] && { echo "composer install failed after 5 attempts"; exit 1; }; echo "transient composer download failure, retry $n/5"; sleep 15; done
 
       - name: Run lint + phpcs (the enforced gate)
         run: |
