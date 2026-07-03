@@ -32,8 +32,6 @@
 		"ProductBarcodeSearch": "Catalog",
 
 		"Rapportage": "AnalyticsGroup",
-		"Analytics": "AnalyticsGroup",
-		"PipelineAnalytics": "AnalyticsGroup",
 		"BillingCategories": "AnalyticsGroup",
 		"SlaAttainment": "AnalyticsGroup",
 		"MdmDataQuality": "AnalyticsGroup"

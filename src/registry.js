@@ -207,12 +207,7 @@ import PaymentSettingsForm from './views/settings/PaymentSettingsForm.vue'
 //     dashboard (hours per billing category) registered as a slot. ---
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
 
-// --- Klantbeeld 360 (lib gap: no cross-module KPI dashboard with a
-//     trailing-period filter wired to a domain-specific aggregation
-//     endpoint, and no pipeline KPI / stage-funnel page driving four
-//     bespoke ratio KPIs off lead-collection client-side aggregation). ---
 import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
-import PipelineAnalyticsView from './views/pipeline/PipelineAnalyticsView.vue'
 
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
 //     declarative). The ClientDetail / ContactDetail monolithic page-host views
@@ -806,13 +801,6 @@ const registry = {
 		kind: 'section',
 		component: SlaAttainmentBreakdownSection,
 		_note: 'In-body section for the declarative type:"dashboard" SlaAttainment page (pipelinq-dashboards-declarative). The four headline KPIs (overall attainment % + total/met/breached) are endpoint-bound stat widgets reading GET /api/sla/attainment, driven by the page bucket + groupBy pageFilters. This section renders the per-group breakdown table (by policy/tier/team/target/customer) the stat grid cannot express; it reads bucket + groupBy props (from @workspace.*) and self-fetches the same endpoint, re-querying on change. The SlaAttainmentService now defaults the period to the current bucket window when no explicit date param is sent, so the dashboard needs no client-side date math.',
-	},
-
-	// --- Klantbeeld 360 — per-pipeline sales analytics. ---
-	PipelineAnalyticsView: {
-		kind: 'page',
-		component: PipelineAnalyticsView,
-		_note: 'KEPT CUSTOM (pipelinq-dashboards-declarative): per-pipeline KPI cards (Total Pipeline Value / Win Rate / Avg Deal Size / Active Opportunities) + a horizontal stage-funnel CnChartWidget, all derived CLIENT-SIDE from one pipeline\'s leads (<500) for instant updates on pipeline switch — there is no summary endpoint. Two missing primitives block a declarative conversion: (1) a derived/ratio stat source (Win Rate = won/(won+lost), Avg Deal Size = sum/count cannot be a single endpoint/OR-aggregation value), and (2) a pageFilter whose options come from an OR collection (the pipeline selector is dynamic, not a static option list). Converting today would drop the ratio KPIs or hardcode the pipeline list, so it stays custom.',
 	},
 
 	// --- Client / Contact 360 detail in-body sections (kind:'section').

@@ -111,25 +111,6 @@ page MUST apply a declarative default multi-key sort by `type` then `name`.
 - AND rows MUST default-sort by `type` ascending then `name` ascending
 - AND no `BillingCategoryList.vue` host component MUST be required
 
-### Requirement: Analytics MUST render from a declarative type:dashboard page driven by an endpoint and a period filter
-
-The system MUST render the Analytics surface from a declarative
-`type:"dashboard"` manifest page. The page MUST expose a `pageFilters` period
-select and four `stat` widgets whose `source` is the
-`GET /api/analytics/summary` endpoint, each reading its KPI at a JSON dot-path
-and passing `params:{ period:"@page.period" }`. Changing the period MUST
-re-query all four KPIs. No `AnalyticsDashboard.vue` host component MUST be
-required.
-
-#### Scenario: Analytics KPIs populate from the endpoint and re-query on period change
-
-- GIVEN the user opens the Pipelinq app
-- WHEN they navigate to the Analytics route `/analytics`
-- THEN the page MUST render four KPI tiles (Open Pipeline Value, Open Requests,
-  Contactmomenten, Active Leads) populated from `GET /api/analytics/summary`
-- AND selecting a different period in the header filter MUST re-query the
-  endpoint with the new `period` and update every KPI
-
 ### Requirement: The Client 360 detail MUST render from a declarative type:detail page with in-body sections
 
 The system MUST render the Client 360 surface from a declarative `type:"detail"`
