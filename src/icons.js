@@ -28,6 +28,7 @@ import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.v
 import FolderOpen from 'vue-material-design-icons/FolderOpen.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import FormTextboxPassword from 'vue-material-design-icons/FormTextboxPassword.vue'
+import Heart from 'vue-material-design-icons/Heart.vue'
 import History from 'vue-material-design-icons/History.vue'
 import Package from 'vue-material-design-icons/Package.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
@@ -62,6 +63,7 @@ export default {
 	FolderOpen,
 	FormatListBulleted,
 	FormTextboxPassword,
+	Heart,
 	History,
 	Package,
 	PhoneMessage,
