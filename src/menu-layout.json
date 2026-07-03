@@ -32,10 +32,13 @@
 		"Products": "Catalog",
 		"ProductBarcodeSearch": "Catalog",
 
-		"Rapportage": "AnalyticsGroup",
+		"Rapportage": "Dashboard",
 		"BillingCategories": "AnalyticsGroup",
-		"SlaAttainment": "AnalyticsGroup",
-		"MdmDataQuality": "AnalyticsGroup"
+		"SlaAttainment": "OperationalDashboard",
+		"MdmDataQuality": "AnalyticsGroup",
+
+		"Prospects": "Dashboard",
+		"Contracts": "OperationalDashboard"
 	},
 	"sections": {},
 	"settingsSection": [
