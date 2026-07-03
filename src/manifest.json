@@ -97,7 +97,7 @@
 	"menu": [
 		{
 			"id": "Dashboard",
-			"label": "Commercial",
+			"label": "Sales",
 			"icon": "icon-category-dashboard",
 			"route": "Dashboard",
 			"order": 10
@@ -132,7 +132,7 @@
 		},
 		{
 			"id": "Requests",
-			"label": "Requests",
+			"label": "Tickets",
 			"icon": "icon-file",
 			"route": "Requests",
 			"order": 50
@@ -213,18 +213,6 @@
 			"icon": "icon-checkmark",
 			"route": "KassakoppelingAuditList",
 			"order": 99
-		},
-		{
-			"id": "SalesCrm",
-			"label": "Sales & CRM",
-			"icon": "icon-category-organization",
-			"order": 20
-		},
-		{
-			"id": "Service",
-			"label": "Service",
-			"icon": "icon-category-workflow",
-			"order": 40
 		},
 		{
 			"id": "PointOfSale",
@@ -314,7 +302,7 @@
 			"id": "Dashboard",
 			"route": "/",
 			"type": "dashboard",
-			"title": "Commercial overview",
+			"title": "Sales overview",
 			"actionsComponent": "DashboardHeaderActions",
 			"config": {
 				"showRefresh": false,
