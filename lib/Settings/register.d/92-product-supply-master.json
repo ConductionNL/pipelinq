@@ -86,13 +86,6 @@
             "maxLength": 20,
             "visible": false
           },
-          "preferredSupplier": {
-            "type": "string",
-            "title": "Preferred supplier",
-            "description": "contactsUid of the default supplier for procurement. Cross-references the pipelinq supplier schema; the supplier's identity is the corresponding Nextcloud Contact.",
-            "maxLength": 255,
-            "visible": false
-          },
           "stockTracked": {
             "type": "boolean",
             "title": "Stock tracked",
