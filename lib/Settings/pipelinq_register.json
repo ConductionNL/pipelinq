@@ -57,6 +57,13 @@
     },
     "schemas": {
       "client": {
+        "x-schema-org": "schema:Organization",
+        "configuration": {
+          "implements": [
+            "https://openregister.app/ns#Customer",
+            "https://schema.org/Organization"
+          ]
+        },
         "slug": "client",
         "title": "Client",
         "icon": "AccountGroup",
@@ -140,6 +147,7 @@
         }
       },
       "contact": {
+        "x-schema-org": "schema:Person",
         "slug": "contact",
         "x-openregister-notifications": {
           "newContact": {
@@ -252,6 +260,7 @@
         }
       },
       "lead": {
+        "x-schema-org": "schema:Demand",
         "slug": "lead",
         "x-openregister-notifications": {
           "newLead": {
@@ -946,6 +955,7 @@
         }
       },
       "complaint": {
+        "x-schema-org": "schema:Message",
         "slug": "complaint",
         "x-openregister-notifications": {
           "complaintResolved": {
@@ -1218,6 +1228,7 @@
         }
       },
       "product": {
+        "x-schema-org": "schema:Product",
         "slug": "product",
         "title": "Product",
         "icon": "Package",
@@ -1590,6 +1601,7 @@
         }
       },
       "contactmoment": {
+        "x-schema-org": "schema:CommunicateAction",
         "slug": "contactmoment",
         "title": "Contactmoment",
         "icon": "PhoneMessage",
@@ -1864,6 +1876,7 @@
         }
       },
       "task": {
+        "x-schema-org": "schema:Action",
         "slug": "task",
         "x-openregister-notifications": {
           "taskCompleted": {

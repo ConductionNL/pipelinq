@@ -328,6 +328,7 @@
         }
       },
       "message": {
+        "x-schema-org": "schema:Message",
         "slug": "message",
         "title": "Message",
         "icon": "MessageOutline",
@@ -438,6 +439,7 @@
         }
       },
       "conversation": {
+        "x-schema-org": "schema:Conversation",
         "slug": "conversation",
         "title": "Conversation",
         "icon": "ForumOutline",

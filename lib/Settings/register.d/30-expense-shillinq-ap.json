@@ -9,6 +9,7 @@
     },
     "schemas": {
       "expense": {
+        "x-schema-org": "schema:Invoice",
         "slug": "expense",
         "title": "Expense",
         "icon": "Receipt",
