@@ -93,6 +93,15 @@
             "default": true,
             "visible": false
           },
+          "vendor": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Vendor",
+            "description": "The vendor/supplier this product is procured from. Cross-app reference resolved by canonical semantic type (schema.org/Organization, ADR-048) — sourced from shillinq's Payee master when installed; otherwise the field is unfillable, since the supplying app is optional.",
+            "referenceSemanticType": "https://schema.org/Organization",
+            "referenceSemanticApp": "shillinq",
+            "visible": true
+          },
           "consumableBy": {
             "type": "array",
             "title": "Consumable by",
