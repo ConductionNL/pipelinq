@@ -285,7 +285,9 @@ class DeliveryAuditLogger
             $anchor = DateTimeImmutable::createFromInterface($from);
         }
 
-        return $anchor->modify('+'.$years.' years');
+        $retentionUntil = $anchor->modify('+'.$years.' years');
+        assert($retentionUntil !== false);
+        return $retentionUntil;
     }//end calculateRetentionUntil()
 
     /**
