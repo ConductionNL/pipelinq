@@ -251,7 +251,9 @@ class BusinessHoursCalculator
 
             $availMinutes = (int) floor(($winEnd->getTimestamp() - $cursor->getTimestamp()) / 60);
             if ($availMinutes >= $minutesNeeded) {
-                return $cursor->modify('+'.$minutesNeeded.' minutes');
+                $advanced = $cursor->modify('+'.$minutesNeeded.' minutes');
+                assert($advanced !== false);
+                return $advanced;
             }
 
             $minutesNeeded -= $availMinutes;
