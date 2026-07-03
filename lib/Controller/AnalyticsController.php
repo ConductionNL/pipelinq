@@ -65,42 +65,6 @@ class AnalyticsController extends Controller
     }//end __construct()
 
     /**
-     * GET /api/analytics/summary.
-     *
-     * All authenticated users may view org-level KPIs. Period defaults to
-     * "month" when omitted. Invalid period -> HTTP 400 with a static error
-     * message. OpenRegister outage -> HTTP 500 with a static message
-     * (never the underlying exception text).
-     *
-     * @return JSONResponse The summary payload, or an error envelope.
-     *
-     * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.2
-     */
-    #[NoAdminRequired]
-    public function summary(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-        }
-
-        $period = (string) $this->request->getParam('period', AnalyticsService::DEFAULT_PERIOD);
-
-        try {
-            $payload = $this->analyticsService->getSummary(period: $period);
-            return new JSONResponse($payload);
-        } catch (InvalidArgumentException) {
-            return new JSONResponse(['message' => 'Invalid period'], Http::STATUS_BAD_REQUEST);
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                message: '[AnalyticsController] summary failed',
-                context: ['error' => $e->getMessage()]
-            );
-            return new JSONResponse(['message' => 'Analytics unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
-        }//end try
-    }//end summary()
-
-    /**
      * GET /api/analytics/overview.
      *
      * Cross-module KPI snapshot for the unified analytics widget. Period

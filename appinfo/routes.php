@@ -80,8 +80,6 @@ return [
         // uses the Forms app's own public links; in-app authoring/management
         // routes are retired.
         // Rapportage / reporting — specific routes before wildcard catch-all.
-        // Klantbeeld 360 — cross-module analytics summary (must precede any wildcard `{slug}` routes).
-        ['name' => 'analytics#summary', 'url' => '/api/analytics/summary', 'verb' => 'GET'],
         // Dashboard analytics & Navi (openspec/changes/dashboard).
         ['name' => 'analytics#overview', 'url' => '/api/analytics/overview', 'verb' => 'GET'],
         ['name' => 'analytics#trends',   'url' => '/api/analytics/trends',   'verb' => 'GET'],
