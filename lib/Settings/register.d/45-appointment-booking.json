@@ -13,6 +13,7 @@
     },
     "schemas": {
       "service": {
+        "x-schema-org": "schema:Service",
         "slug": "service",
         "title": "Service",
         "icon": "Tag",
@@ -343,6 +344,7 @@
         }
       },
       "booking": {
+        "x-schema-org": "schema:Reservation",
         "slug": "booking",
         "title": "Booking",
         "icon": "CalendarCheck",

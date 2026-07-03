@@ -13,6 +13,7 @@
     },
     "schemas": {
       "berichtenboxMessage": {
+        "x-schema-org": "schema:Message",
         "slug": "berichtenboxMessage",
         "title": "BerichtenboxMessage",
         "description": "Outbound message delivered to a burger via MijnOverheid Berichtenbox or email fallback (REQ-OUTBOUND-001).",
