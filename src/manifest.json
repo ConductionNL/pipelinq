@@ -307,34 +307,6 @@
 			"route": "FeaturesRoadmap",
 			"section": "footer",
 			"order": 230
-		},
-		{
-			"id": "TimesheetApproval",
-			"label": "Timesheet approval",
-			"icon": "icon-category-monitoring",
-			"href": "/index.php/apps/hrmq/timesheets/approval",
-			"order": 218
-		},
-		{
-			"id": "Expenses",
-			"label": "Expenses",
-			"icon": "icon-toggle",
-			"href": "/index.php/apps/hrmq/expenses",
-			"order": 219
-		},
-		{
-			"id": "SettingsHelpCaption",
-			"label": "Help",
-			"type": "caption",
-			"order": 240
-		},
-		{
-			"id": "RestartTutorial",
-			"label": "Restart tutorial",
-			"icon": "icon-play",
-			"action": "replay-walkthrough",
-			"tourId": "pipelinq:getting-started",
-			"order": 241
 		}
 	],
 	"pages": [

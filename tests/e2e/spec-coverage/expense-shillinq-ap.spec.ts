@@ -51,8 +51,8 @@ test('admin settings page renders the Integraties section with the Shillinq AP w
  *   ConfigFileLoaderService merge in PHPUnit.
  * @e2e exclude REQ-AP-005 — The pipelinq expense LIST view was retired in the
  *   pipelinq-hr-moveout-and-admin-dedupe change: expenses now live in the hrmq
- *   app, and pipelinq's "Expenses" nav entry is a static deep-link to
- *   /index.php/apps/hrmq/expenses. The list UI is hrmq's to cover.
+ *   app. Pipelinq's "Expenses" nav deep-link was subsequently dropped from the
+ *   menu entirely; the list UI is hrmq's to cover.
  * @e2e exclude REQ-AP-006 — The pipelinq expense DETAIL view (with the embedded
  *   Shillinq AP card) was retired in pipelinq-hr-moveout-and-admin-dedupe;
  *   expense detail is now an hrmq surface. The AP dispatch backend remains in
