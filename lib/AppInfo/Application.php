@@ -595,6 +595,17 @@ class Application extends App implements IBootstrap
             }//end foreach
 
             $initialState->provideInitialState('dependency_statuses', $dependencyStatus);
+
+            // Reporting currency (persisted by the setup wizard, default EUR)
+            // seeds the SPA's `config` initial state so manifest dashboards can
+            // format currency KPIs via the `@config.currency` token. Serialized
+            // as `initial-state-pipelinq-config` and read in main.js via
+            // loadState('pipelinq', 'config').
+            $appConfig = $this->getContainer()->get(IAppConfig::class);
+            $initialState->provideInitialState(
+                'config',
+                ['currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR')]
+            );
         } catch (\Exception $e) {
             // Initial state unavailable — Features tab will fall back to [].
         }//end try

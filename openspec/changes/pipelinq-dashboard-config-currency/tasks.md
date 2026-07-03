@@ -11,7 +11,7 @@
 
 ## 3. Manifest — switch currency KPIs to `@config.currency`
 
-- [x] 3.1 In `src/manifest.json`, change `format.currency` from `"EUR"` to `"@config.currency"` on the six currency KPIs: `revenue`, `won-value`, `weighted-forecast`, `mrr`, `pipeline-coverage` (gauge), `pipeline-value`.
+- [x] 3.1 In `src/manifest.json`, change `format.currency` from `"EUR"` to `"@config.currency"` on the stat KPIs: `revenue`, `won-value`, `weighted-forecast`, `mrr`, `pipeline-value`. NOTE (follow-up fix, 2026-07-03): `pipeline-coverage` (`type:"gauge"`) was reverted to literal `"EUR"` — the bundled `@conduction/nextcloud-vue` gauge widget does not run its value through the `@config.<key>` resolver before `Intl.NumberFormat`, so `@config.currency` reaches the formatter verbatim and throws `RangeError: Invalid currency code`. Stat widgets resolve correctly. Also required a missing backend piece: `Application::boot()` never actually provided the `config` initial state (task 1.1 was checked but unimplemented) — now added. Remaining known issue: a transient RangeError can flash during dashboard→dashboard SPA navigation (nc-vue `@config` inject arrives a render frame late); fresh loads are clean. Follow-up: harden the nc-vue `@config` resolver (guard unresolved tokens; cover gauge/delta), then restore `@config.currency` on the gauge.
 - [x] 3.2 In `src/manifest.d/60-klantbeeld-360.json`, switch the `open-pipeline-value` KPI the same way; update its `_note` to reflect the reporting currency.
 - [x] 3.3 Leave non-currency formats (number/percent) and `type:"index"` table-column currency formats (`budgetAmount`, `price`) untouched — they do not run through the dashboard `@config` resolver.
 
