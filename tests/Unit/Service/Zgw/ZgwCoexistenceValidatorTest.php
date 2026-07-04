@@ -173,8 +173,8 @@ class ZgwCoexistenceValidatorTest extends TestCase
             $validator->validateWritePath('0637');
             self::fail('expected DoubleWritePathException');
         } catch (DoubleWritePathException $e) {
-            self::assertContains('zgw:zgw-zo', $e->conflictingEndpointIds);
-            self::assertContains('stuf:stuf-zo', $e->conflictingEndpointIds);
+            self::assertContains('zgw:zgw-zo', $e->conflictEndpointIds);
+            self::assertContains('stuf:stuf-zo', $e->conflictEndpointIds);
         }
     }//end testExceptionCarriesConflictingIds()
 

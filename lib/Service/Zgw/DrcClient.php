@@ -40,6 +40,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Throwable;
@@ -63,13 +65,13 @@ class DrcClient
      *
      * @param ZgwApiClient      $api       Base transport.
      * @param ZgwRegisterAccess $registers Register facade.
-     * @param AcClient          $ac        Scope cache (pre-flight guards).
+     * @param AcClient          $acClient  Scope cache (pre-flight guards).
      * @param IAppConfig        $appConfig App config (threshold tuning).
      */
     public function __construct(
         private ZgwApiClient $api,
         private ZgwRegisterAccess $registers,
-        private AcClient $ac,
+        private AcClient $acClient,
         private IAppConfig $appConfig,
     ) {
     }//end __construct()
@@ -93,6 +95,8 @@ class DrcClient
      *                              and a 'plan' key when multipart is required).
      *
      * @throws InsufficientScopeException When the configured client lacks documenten.aanmaken.
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-003
      */
     public function createEnkelvoudigInformatieobject(
         array $endpoint,
@@ -104,22 +108,20 @@ class DrcClient
 
         // AC scope is component-level for DRC (not zaaktype-specific); the wildcard
         // bucket carries it.
-        $this->ac->require($endpoint, '*', self::SCOPE_AANMAKEN);
+        $this->acClient->require($endpoint, '*', self::SCOPE_AANMAKEN);
 
         $bytes = (string) ($document['bytes'] ?? '');
+        $size  = strlen($bytes);
         if (isset($document['bestandsomvang']) === true) {
             $size = (int) $document['bestandsomvang'];
-        } else {
-            $size = strlen($bytes);
         }
 
         $threshold = $this->inlineThreshold();
         $useInline = ($bytes !== '' && $size <= $threshold);
 
+        $inhoud = ['inhoud' => null];
         if ($useInline === true) {
             $inhoud = ['inhoud' => base64_encode($bytes)];
-        } else {
-            $inhoud = ['inhoud' => null];
         }
 
         $body = array_merge(
@@ -361,7 +363,7 @@ class DrcClient
      */
     private static function today(): string
     {
-        return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d');
+        return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d');
     }//end today()
 
     /**
@@ -371,6 +373,6 @@ class DrcClient
      */
     private static function nowIso(): string
     {
-        return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+        return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
     }//end nowIso()
 }//end class
