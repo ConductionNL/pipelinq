@@ -84,6 +84,7 @@ Vrij en open source onder de AGPL-licentie.
             <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
             <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
             <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
+            <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
         </post-migration>
     </repair-steps>
 
@@ -120,9 +121,7 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\AvgDeadlineTrackerJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AvgDpiaPatternDetectionJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AvgRetentionJob</job>
-        <job>OCA\Pipelinq\BackgroundJob\MdmDuplicateDetectionJob</job>
         <job>OCA\Pipelinq\BackgroundJob\MdmSyncQueueProcessorJob</job>
-        <job>OCA\Pipelinq\BackgroundJob\MdmDataQualityScorerJob</job>
         <job>OCA\Pipelinq\BackgroundJob\MdmHardDeleteConfirmationJob</job>
         <job>OCA\Pipelinq\BackgroundJob\MdmOpenRegisterSyncJob</job>
         <job>OCA\Pipelinq\BackgroundJob\RenewalWindowJob</job>

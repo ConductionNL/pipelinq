@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
-use OCA\Pipelinq\Service\Mdm\MasterEntityService;
+use OCA\Pipelinq\Service\Mdm\MdmObjectRepository;
 use OCA\Pipelinq\Service\Mdm\OpenRegisterSyncService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -42,14 +42,14 @@ class MdmOpenRegisterSyncJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory            $time           The time factory.
-     * @param MasterEntityService     $masterEntities The master-entity service.
-     * @param OpenRegisterSyncService $orSync         The OR sync service.
-     * @param LoggerInterface         $logger         The logger.
+     * @param ITimeFactory            $time       The time factory.
+     * @param MdmObjectRepository     $repository The MDM object repository (master-entity reads).
+     * @param OpenRegisterSyncService $orSync     The OR sync service.
+     * @param LoggerInterface         $logger     The logger.
      */
     public function __construct(
         ITimeFactory $time,
-        private MasterEntityService $masterEntities,
+        private MdmObjectRepository $repository,
         private OpenRegisterSyncService $orSync,
         private LoggerInterface $logger,
     ) {
@@ -70,7 +70,7 @@ class MdmOpenRegisterSyncJob extends TimedJob
     protected function run($argument): void
     {
         try {
-            $entities = $this->masterEntities->findAll(null, 'active');
+            $entities = $this->repository->findMasterEntities(null, 'active');
         } catch (\Throwable $e) {
             $this->logger->warning(
                 'Pipelinq MDM: OR sync skipped (could not list entities)',

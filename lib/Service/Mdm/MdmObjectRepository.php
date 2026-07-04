@@ -40,9 +40,13 @@ use RuntimeException;
  *
  * Only the real OpenRegister ObjectService API is used: `find`, `findAll`,
  * `saveObject`, `deleteObject` (ADR-022). No invented `findObject` /
- * `createFromArray` helpers.
+ * `createFromArray` helpers. This is a deliberately cohesive OR-access facade —
+ * register/schema resolution, the four ObjectService CRUD wrappers, the re-homed
+ * masterEntity/sourceRecord read helpers and the uuid/now/toArray utilities are
+ * one thin persistence surface, hence the TooManyPublicMethods suppression.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  *
  * @spec openspec/changes/master-data-management/specs.md#REQ-MDM-001
  */
@@ -54,6 +58,20 @@ class MdmObjectRepository
      * @var string
      */
     private const REGISTER_KEY = 'register';
+
+    /**
+     * The masterEntity schema slug (re-homed from the retired MasterEntityService).
+     *
+     * @var string
+     */
+    public const SCHEMA_MASTER_ENTITY = 'masterEntity';
+
+    /**
+     * The sourceRecord schema slug (re-homed from the retired MasterEntityService).
+     *
+     * @var string
+     */
+    public const SCHEMA_SOURCE_RECORD = 'sourceRecord';
 
     /**
      * Constructor.
@@ -207,6 +225,66 @@ class MdmObjectRepository
         $this->schema(schemaSlug: $schemaSlug);
         $this->objectService()->deleteObject($id);
     }//end delete()
+
+    /**
+     * Fetch a Master Entity by uuid, reading OpenRegister's materialised object.
+     *
+     * Re-homed from the retired MasterEntityService: OpenRegister's
+     * SurvivorshipRecomputeListener now materialises goldenRecord /
+     * attributeProvenance on save, so consumers (AVG, the downstream read API,
+     * the OR-mirror sync) read the golden record straight off the object.
+     *
+     * @param string $masterId The master entity uuid.
+     *
+     * @return array<string, mixed>|null The entity, or null if absent.
+     *
+     * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-001
+     */
+    public function findMasterEntity(string $masterId): ?array
+    {
+        return $this->find(schemaSlug: self::SCHEMA_MASTER_ENTITY, id: $masterId);
+    }//end findMasterEntity()
+
+    /**
+     * List Master Entities, optionally filtered by entityType and status.
+     *
+     * @param string|null $entityType Optional entity-type filter.
+     * @param string|null $status     Optional status filter.
+     *
+     * @return array<int, array<string, mixed>> The matching entities.
+     *
+     * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-001
+     */
+    public function findMasterEntities(?string $entityType=null, ?string $status=null): array
+    {
+        $filters = [];
+        if ($entityType !== null && $entityType !== '') {
+            $filters['entityType'] = $entityType;
+        }
+
+        if ($status !== null && $status !== '') {
+            $filters['status'] = $status;
+        }
+
+        return $this->findAll(schemaSlug: self::SCHEMA_MASTER_ENTITY, filters: $filters);
+    }//end findMasterEntities()
+
+    /**
+     * Fetch all source records currently linked to a Master Entity.
+     *
+     * @param string $masterId The master entity uuid.
+     *
+     * @return array<int, array<string, mixed>> The linked source records.
+     *
+     * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-009
+     */
+    public function linkedSourceRecords(string $masterId): array
+    {
+        return $this->findAll(
+            schemaSlug: self::SCHEMA_SOURCE_RECORD,
+            filters: ['currentMasterEntity' => $masterId]
+        );
+    }//end linkedSourceRecords()
 
     /**
      * Generate an RFC-4122 v4 UUID.
