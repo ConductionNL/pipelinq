@@ -39,12 +39,12 @@ class DoubleWritePathException extends ZgwException
     /**
      * Constructor.
      *
-     * @param string             $message                Human-readable error message.
-     * @param array<int, string> $conflictingEndpointIds List of ZgwEndpoint + StufEndpoint ids involved.
+     * @param string             $message             Human-readable error message.
+     * @param array<int, string> $conflictEndpointIds List of ZgwEndpoint + StufEndpoint ids involved.
      */
     public function __construct(
         string $message,
-        public readonly array $conflictingEndpointIds=[],
+        public readonly array $conflictEndpointIds=[],
     ) {
         parent::__construct(message: $message);
     }//end __construct()
