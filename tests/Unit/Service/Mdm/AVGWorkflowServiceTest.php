@@ -25,9 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Mdm;
 
 use OCA\Pipelinq\Service\Mdm\AVGWorkflowService;
-use OCA\Pipelinq\Service\Mdm\MasterEntityService;
 use OCA\Pipelinq\Service\Mdm\SyncQueueService;
-use OCA\Pipelinq\Service\Mdm\TrustConfigurationService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -61,12 +59,10 @@ final class AVGWorkflowServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->repo = new InMemoryMdmObjectRepository();
-        $trust      = new TrustConfigurationService($this->repo);
-        $master     = new MasterEntityService($this->repo, $trust, new NullLogger());
-        $container  = $this->createStub(ContainerInterface::class);
-        $syncQueue  = new SyncQueueService($this->repo, $container, new NullLogger());
-        $this->service = new AVGWorkflowService($this->repo, $master, $syncQueue, new NullLogger());
+        $this->repo    = new InMemoryMdmObjectRepository();
+        $container     = $this->createStub(ContainerInterface::class);
+        $syncQueue     = new SyncQueueService($this->repo, $container, new NullLogger());
+        $this->service = new AVGWorkflowService($this->repo, $syncQueue, new NullLogger());
     }//end setUp()
 
     /**

@@ -65,14 +65,13 @@ class AVGWorkflowService
     /**
      * Constructor.
      *
-     * @param MdmObjectRepository $repository     The MDM object repository.
-     * @param MasterEntityService $masterEntities The master-entity service.
-     * @param SyncQueueService    $syncQueue      The sync queue service.
-     * @param LoggerInterface     $logger         The logger.
+     * @param MdmObjectRepository $repository The MDM object repository (also the
+     *                                        re-homed master-entity read helpers).
+     * @param SyncQueueService    $syncQueue  The sync queue service.
+     * @param LoggerInterface     $logger     The logger.
      */
     public function __construct(
         private MdmObjectRepository $repository,
-        private MasterEntityService $masterEntities,
         private SyncQueueService $syncQueue,
         private LoggerInterface $logger,
     ) {
@@ -90,17 +89,17 @@ class AVGWorkflowService
      */
     public function initiateRightOfDeletion(string $masterEntityId, string $gdprRequestId): array
     {
-        $entity = $this->masterEntities->find($masterEntityId);
+        $entity = $this->repository->findMasterEntity($masterEntityId);
         if ($entity === null) {
             throw new RuntimeException('Master entity not found.');
         }
 
-        $sources = $this->masterEntities->linkedSourceRecords($masterEntityId);
+        $sources = $this->repository->linkedSourceRecords($masterEntityId);
         $now     = $this->repository->now();
 
         $note = sprintf('[%s] AVG right-of-deletion requested (request %s); pending steward review.', $now, $gdprRequestId);
         $entity['gdprNotes'] = trim((string) ($entity['gdprNotes'] ?? '')."\n".$note);
-        $this->repository->save(MasterEntityService::SCHEMA, $entity, $masterEntityId);
+        $this->repository->save(MdmObjectRepository::SCHEMA_MASTER_ENTITY, $entity, $masterEntityId);
 
         $this->logger->info(
             'Pipelinq MDM: AVG right-of-deletion initiated',
@@ -132,13 +131,13 @@ class AVGWorkflowService
         string $gdprRequestId,
         string $approvedBy
     ): array {
-        $entity = $this->masterEntities->find($masterEntityId);
+        $entity = $this->repository->findMasterEntity($masterEntityId);
         if ($entity === null) {
             throw new RuntimeException('Master entity not found.');
         }
 
         $now     = $this->repository->now();
-        $sources = $this->masterEntities->linkedSourceRecords($masterEntityId);
+        $sources = $this->repository->linkedSourceRecords($masterEntityId);
 
         // 1. Anonymise every linked source record.
         $anonymised = 0;
@@ -148,7 +147,7 @@ class AVGWorkflowService
             $record['mappedAttributes'] = $this->redactMap(map: $record['mappedAttributes'] ?? []);
             $record['withdrawn']        = true;
             $this->repository->save(
-                schemaSlug: MasterEntityService::SOURCE_SCHEMA,
+                schemaSlug: MdmObjectRepository::SCHEMA_SOURCE_RECORD,
                 object: $record,
                 uuid: $this->nullableId(id: $recordId)
             );
@@ -168,7 +167,7 @@ class AVGWorkflowService
             $this->hardDeleteEligibleAt(softDeletedAt: $now)
         );
         $entity['gdprNotes'] = trim((string) ($entity['gdprNotes'] ?? '')."\n".$note);
-        $this->repository->save(MasterEntityService::SCHEMA, $entity, $masterEntityId);
+        $this->repository->save(MdmObjectRepository::SCHEMA_MASTER_ENTITY, $entity, $masterEntityId);
 
         // 3. Queue soft-delete sync for every downstream app.
         foreach (self::DOWNSTREAM_SYSTEMS as $system) {
@@ -208,7 +207,7 @@ class AVGWorkflowService
      */
     public function confirmHardDelete(string $masterEntityId, string $confirmedBy): array
     {
-        $entity = $this->masterEntities->find($masterEntityId);
+        $entity = $this->repository->findMasterEntity($masterEntityId);
         if ($entity === null) {
             throw new RuntimeException('Master entity not found.');
         }
@@ -223,15 +222,15 @@ class AVGWorkflowService
 
         // Permanently delete all source records, then the master entity.
         $deleted = 0;
-        foreach ($this->masterEntities->linkedSourceRecords($masterEntityId) as $record) {
+        foreach ($this->repository->linkedSourceRecords($masterEntityId) as $record) {
             $recordId = (string) ($record['sourceRecordId'] ?? ($record['id'] ?? ''));
             if ($recordId !== '') {
-                $this->repository->delete(MasterEntityService::SOURCE_SCHEMA, $recordId);
+                $this->repository->delete(MdmObjectRepository::SCHEMA_SOURCE_RECORD, $recordId);
                 $deleted++;
             }
         }
 
-        $this->repository->delete(MasterEntityService::SCHEMA, $masterEntityId);
+        $this->repository->delete(MdmObjectRepository::SCHEMA_MASTER_ENTITY, $masterEntityId);
 
         $this->logger->info(
             'Pipelinq MDM: AVG hard delete executed',
@@ -254,7 +253,7 @@ class AVGWorkflowService
      */
     public function listHardDeleteCandidates(): array
     {
-        $entities = $this->masterEntities->findAll(null, 'soft-deleted');
+        $entities = $this->repository->findMasterEntities(null, 'soft-deleted');
 
         return array_values(
             array_filter(

@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Mdm\MasterEntityService;
+use OCA\Pipelinq\Service\Mdm\MdmObjectRepository;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -56,13 +56,13 @@ class MdmApiController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest            $request        The request.
-     * @param MasterEntityService $masterEntities The master-entity service.
-     * @param IUserSession        $userSession    The user session.
+     * @param IRequest            $request     The request.
+     * @param MdmObjectRepository $repository  The MDM object repository (OR-materialised reads).
+     * @param IUserSession        $userSession The user session.
      */
     public function __construct(
         IRequest $request,
-        private MasterEntityService $masterEntities,
+        private MdmObjectRepository $repository,
         private IUserSession $userSession,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -112,7 +112,7 @@ class MdmApiController extends Controller
         }
 
         try {
-            $entities = $this->masterEntities->findAll($entityType, 'active');
+            $entities = $this->repository->findMasterEntities($entityType, 'active');
         } catch (\Throwable $e) {
             return new JSONResponse(['message' => 'Master entity lookup failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
         }
@@ -155,7 +155,7 @@ class MdmApiController extends Controller
         }
 
         try {
-            $entity = $this->masterEntities->find($id);
+            $entity = $this->repository->findMasterEntity($id);
         } catch (\Throwable $e) {
             return new JSONResponse(['message' => 'Lookup failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
         }
@@ -165,7 +165,7 @@ class MdmApiController extends Controller
             if ((string) ($entity['status'] ?? '') === 'merged-into-other'
                 && (string) ($entity['mergedIntoMasterId'] ?? '') !== ''
             ) {
-                $survivor = $this->masterEntities->find(masterId: (string) $entity['mergedIntoMasterId']);
+                $survivor = $this->repository->findMasterEntity(masterId: (string) $entity['mergedIntoMasterId']);
                 if ($survivor !== null) {
                     return new JSONResponse(
                         $this->present(entity: $survivor) + [
@@ -202,7 +202,7 @@ class MdmApiController extends Controller
      */
     private function resolveAlias(string $aliasId): ?array
     {
-        foreach ($this->masterEntities->findAll(null, 'active') as $entity) {
+        foreach ($this->repository->findMasterEntities(null, 'active') as $entity) {
             $aliases = (array) ($entity['aliases'] ?? []);
             if (in_array($aliasId, $aliases, true) === true) {
                 return $entity;
@@ -225,7 +225,10 @@ class MdmApiController extends Controller
             'masterId'            => (string) ($entity['masterId'] ?? ($entity['id'] ?? '')),
             'entityType'          => (string) ($entity['entityType'] ?? ''),
             'goldenRecord'        => ($entity['goldenRecord'] ?? []),
-            'dataQualityScore'    => ($entity['dataQualityScore'] ?? null),
+            // OpenRegister materialises `qualityScore` on save (x-openregister-quality).
+            // The app-side blend (DataQualityScorer + agreement term) is retired, so
+            // the read API exposes OR's score directly under the stable key.
+            'dataQualityScore'    => ($entity['qualityScore'] ?? ($entity['dataQualityScore'] ?? null)),
             'attributeProvenance' => ($entity['attributeProvenance'] ?? []),
             'aliases'             => ($entity['aliases'] ?? []),
             'status'              => (string) ($entity['status'] ?? ''),

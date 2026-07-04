@@ -55,7 +55,7 @@ use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
 use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
-use OCA\Pipelinq\Listener\SourceRecordChangedListener;
+use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
@@ -195,15 +195,14 @@ class Application extends App implements IBootstrap
             listener: SlaObjectUpdatedListener::class
         );
 
-        // MDM: recompute a Master Entity's golden record when a linked
-        // source-record is created or updated (REQ-MDM-001).
+        // MDM: OpenRegister now materialises the golden record on save via its
+        // SurvivorshipRecomputeListener (x-openregister-survivorship), so the
+        // app-side recompute-on-source-change listener is retired. Instead we
+        // subscribe to OR's ObjectsMergedEvent to enqueue downstream sync after a
+        // merge / reversal (REQ-MDM-004; ADR-041 event-not-RPC propagation).
         $context->registerEventListener(
-            event: ObjectCreatedEvent::class,
-            listener: SourceRecordChangedListener::class
-        );
-        $context->registerEventListener(
-            event: ObjectUpdatedEvent::class,
-            listener: SourceRecordChangedListener::class
+            event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
+            listener: ObjectsMergedSyncListener::class
         );
 
         $context->registerDashboardWidget(DealsOverviewWidget::class);

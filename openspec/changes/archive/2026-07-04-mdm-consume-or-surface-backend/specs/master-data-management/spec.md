@@ -1,12 +1,16 @@
----
-status: done
----
+# master-data-management (delta — mdm-consume-or-surface-backend)
 
-# master-data-management Specification
+This delta removes pipelinq's app-side MDM **engine** (survivorship, dedup, quality, merge, trust
+config) now that OpenRegister materialises the golden record + quality on save, owns the reversible
+merge engine (firing `ObjectsMergedEvent`) and owns the `trust-configuration` register (ADR-045 #D).
+It re-homes the AVG consumer onto a scoped repository reading OR's materialised object, rewires the
+downstream sync trigger to an OR event (ADR-041), and seeds the trust rows into OR via a Repair
+step. It depends on the config head link `mdm-consume-or-surface` and is the sibling of the frontend
+link `mdm-consume-or-surface-frontend`. Every scenario here is a backend/config assertion with no UI
+surface, so each carries an `@e2e exclude` reason (ADR-020).
 
-## Purpose
-Maintains a single authoritative golden record per master entity by resolving conflicting attribute values through configurable per-source trust tiers, detecting deterministic and probabilistic duplicates, and providing reversible merge tooling with preview. Computes a data-quality score, records an audit trail of merges and gold-record mutations, executes AVG right-of-deletion, and publishes golden records to downstream apps via a read API and a retrying sync queue.
-## Requirements
+## MODIFIED Requirements
+
 ### Requirement: REQ-MDM-001 — Golden Record per Master Entity
 
 The system MUST maintain a single authoritative golden record per Master Entity, materialised by
@@ -56,34 +60,6 @@ nested dot-paths directly.
 - AND the schema MUST NOT declare `matchName`, `matchEmail`, `matchKvkNumber` or `matchPhone`
 
 `@e2e exclude` backend deletion + schema assertion — verified by grep + JSON parse; duplicate detection is owned + e2e-tested by OpenRegister.
-
-### Requirement: REQ-MDM-003 — Probabilistic Duplicate Detection on Fuzzy Match
-
-The system MUST support probabilistic duplicate detection via the `normalized` and `levenshtein` match methods declared in the `x-openregister-dedup` annotation and resolved by OpenRegister's `DuplicateDetectionService`. Because OpenRegister returns a weight-normalised mean of per-field similarities, the dedup threshold MUST be tuned (0.7) so that a pair agreeing on natural keys surfaces while a single weak field cannot. Jaro-Winkler / TF-IDF scoring that OpenRegister does not yet model MAY be retained as a noted in-process fallback path used only when OpenRegister is unavailable.
-
-**Feature tier**: MVP
-**Handoff**: Primary path is OpenRegister `findDuplicates()`; Jaro-Winkler/TF-IDF retained only as the OR-unavailable fallback.
-
-#### Scenario: Name similarity fuzzy match
-
-- GIVEN two Master Entities "Jansens Bouw BV" and "Jansen's Bouw B.V." sharing a natural key
-- WHEN the detector runs
-- THEN OpenRegister's `findDuplicates()` returns the pair with `linkageMethod = probabilistic-match` (or `deterministic-key` when a natural key matched)
-- AND it appears in the stewardship queue for human decision
-
-#### Scenario: Below threshold produces no candidate
-
-- GIVEN two entities whose only weak signal is a partial name match below the dedup threshold
-- WHEN the detector runs
-- THEN NO candidate is generated (insufficient confidence)
-
-#### Scenario: Fallback path on OpenRegister unavailability
-
-- GIVEN OpenRegister's duplicate-detection service cannot be resolved
-- WHEN `detectDuplicates()` runs
-- THEN the app MUST degrade to the in-process Jaro-Winkler/TF-IDF fallback rather than failing
-
----
 
 ### Requirement: REQ-MDM-004 — Merge Tooling with Preview and Reversibility
 
@@ -185,63 +161,6 @@ required `masterEntity` property (nothing app-side populates it).
 
 `@e2e exclude` backend deletion + projection — verified by grep, the read-API unit path, and JSON parse; quality materialisation is owned + e2e-tested by OpenRegister.
 
-### Requirement: REQ-MDM-008 — Audit Trail per Merge and Gold-Record Mutation
-
-The system MUST log an audit trail for every merge and every gold-record attribute mutation, retained for 10 years.
-
-**Feature tier**: MVP
-**Handoff**: Covered by OpenRegister built-in audit-trail field on every schema instance (10-year retention is platform-default).
-
-#### Scenario: Merge audit log
-
-- GIVEN a merge of account A into B performed by steward "alice" on 2026-05-22
-- WHEN the audit trail is reviewed
-- THEN an entry exists with timestamp 2026-05-22T14:30:00Z, action MERGE, actor alice, object master-entity B, details mergedFrom=[A] and preMergeSnapshot={...}, retention until 2036-05-22
-
-#### Scenario: Attribute change audit log
-
-- GIVEN a source-record update that changes Master Entity's goldenRecord.phone via trust-tier recomputation
-- WHEN the change is applied
-- THEN an entry exists in Master Entity's auditTrail with action ATTRIBUTE_UPDATE, attribute=phone, oldValue, newValue, reason describing the trust-tier resolution, retention 10 years
-
----
-
-### Requirement: REQ-MDM-009 — Right-of-Deletion (AVG art. 17)
-
-The system MUST correctly execute AVG right-of-deletion: Master Entity soft-deleted, source-records anonymized, downstream apps synced, audit trail anonymized.
-
-**Feature tier**: MVP
-**Handoff**: Covered by existing `avg-verzoeken-workflow` change (separate openspec change in this repo).
-
-#### Scenario: Initiate right-of-deletion
-
-- GIVEN a data-subject request from "Pietje Puk" to be forgotten from all systems
-- WHEN a data-steward initiates the workflow
-- THEN the Master Entity for contact "Pietje Puk" is identified
-- AND all linked source-records (5 records from 5 systems) are listed
-- AND a right-of-deletion workflow task is created for steward approval
-- AND an audit note logs the request with the GDPR request ID
-
-#### Scenario: Approve and execute deletion
-
-- GIVEN the steward approves the right-of-deletion request
-- WHEN `AVGWorkflowService::approveAndExecuteRightOfDeletion()` runs
-- THEN Master Entity status = soft-deleted
-- AND all source-records are anonymized: name/address/email/phone → "[verwijderd]", withdrawn=true
-- AND sync-queue-items are created for all 5 downstream systems with changeType=soft-delete
-- AND an audit trail entry is written with steward name and GDPR request ID
-- AND a hard-delete callback is scheduled for +30 days
-
-#### Scenario: Audit trail remains after anonymization
-
-- GIVEN the soft-delete was executed as above
-- WHEN an auditor reviews the audit trail 1 year later
-- THEN the trail still shows merge and right-of-deletion events with timestamps and actor names
-- AND the actual attribute values are anonymized (redacted as [***])
-- AND the structure of events and dates remains visible for wettelijke aantoonbaarheid
-
----
-
 ### Requirement: REQ-MDM-010 — Read-API for Downstream Apps
 
 The system MUST keep the read-only downstream API (`MdmApiController`) that resolves a Master Entity
@@ -261,89 +180,3 @@ OpenRegister CRUD. Its reads MUST go through the retained `MdmObjectRepository` 
 - AND the projected `dataQualityScore` MUST come from the object's OR-materialised `qualityScore`
 
 `@e2e exclude` backend read projection — asserted by the read-API unit path over the in-memory repository; the endpoint is a machine-to-machine API with no steward UI.
-
-### Requirement: REQ-MDM-011 — Sync Golden Record to OpenRegister
-
-The system MUST keep the OpenRegister schema instances (contact, account, product, vendor) synchronized with the golden records, marking them with masterEntityRef.
-
-**Feature tier**: MVP
-**Handoff**: Covered by `pipelinq-or-adoption` and `openregister-integration` capabilities; existing schemas remain the system of record.
-
-#### Scenario: Golden record reflects in OR schema
-
-- GIVEN a change to Master Entity account's goldenRecord (phone updated)
-- WHEN the sync-to-OR job runs
-- THEN the corresponding OpenRegister `account` object is updated with the new phone value
-- AND `masterEntityRef = <masterId>` is set on the OR object
-
-#### Scenario: Pre-merge OR records marked as merged
-
-- GIVEN two OR `account` objects are merged into one Master Entity
-- WHEN the first OR object is marked as `isMasterRecord = false`
-- THEN queries against the OpenRegister catalog still resolve correctly via masterEntityRef
-
----
-
-### Requirement: REQ-MDM-012 — Conflict-Resolution Wizard for Data Stewards
-
-The system MUST provide a wizard for data stewards to resolve attribute conflicts, with the option to establish persistent trust-tier rules.
-
-**Feature tier**: MVP
-**Handoff**: Deferred — UI wizard tracked for a future change once the trust-configuration schema lands.
-
-#### Scenario: Resolve VAT number conflict
-
-- GIVEN a Master Entity with conflicting VAT numbers: pipelinq-crm="NL123456789B01", shillinq-debiteuren="NL123456789B02"
-- WHEN a steward opens the conflict-resolution wizard
-- THEN the UI displays the attribute name, both values with their source and last-updated timestamp, and a rationale field
-- AND the steward can select which value to keep
-- AND optionally check "Always use this rule" to create a persistent trust-config entry
-
-#### Scenario: Persistent rule creation
-
-- GIVEN the steward selected "Always use this rule"
-- AND entered rationale "Shillinq bron geverifieerd via VAT-validatie EU-service"
-- WHEN the wizard saves
-- THEN the attribute value for this entity is resolved to the shillinq value
-- AND a trust-configuration entry is created with entityType=account, attribute=vatNumber, sourceSystem=shillinq-debiteuren, trustTier=gold
-- AND all other Master Entities are queued for recomputation with the new rule
-
-### Requirement: REQ-MDM-013 — MDM Steward UI Deep-Linked to OpenRegister
-
-The system MUST NOT host its own Master Data Management steward views. The app-local MDM views
-(`MdmMasterEntityListView`, `MdmDuplicateCandidatesDashboard`, `MdmSyncQueueAdmin`), in-body
-sections (`MdmDataQualitySection`, `MdmGoldenRecordSection`) and modals
-(`MdmConflictResolutionModal`, `MdmMergeWizardModal`) MUST be removed, together with their
-`src/registry.js` imports + registrations and their `manifest.d` pages and nav entries. In their
-place the app MUST expose exactly ONE navigation entry that deep-links to OpenRegister's
-Data-Quality surface (`/index.php/apps/openregister/#/quality`), where the steward selects the
-pipelinq register and `masterEntity` schema in OpenRegister's own register/schema selector. No
-app-local MDM dashboard, list, merge wizard or conflict-resolution modal may remain.
-
-**Feature tier**: MVP
-**Handoff**: Consumes OpenRegister `mdm-quality-api`, `mdm-survivorship`, `mdm-merge`, `duplicate-detection`, `mdm-conflict-resolution-ui` (steward views hosted by OR). Backend deletion is retired to the sibling backend link.
-
-#### Scenario: App-local MDM views are removed
-
-- WHEN the pipelinq `src/` tree is inspected after this change
-- THEN none of `MdmMasterEntityListView`, `MdmDuplicateCandidatesDashboard`, `MdmSyncQueueAdmin`, `MdmDataQualitySection`, `MdmGoldenRecordSection`, `MdmConflictResolutionModal` or `MdmMergeWizardModal` MUST exist as a file or be imported / registered in `src/registry.js`
-- AND the production build MUST resolve with no unresolved import from those deletions
-
-`@e2e exclude` structural deletion — verified by a repo-wide grep for the seven component names + the `/mdm/` routes returning nothing under `src/`, and by a passing `npm run build`.
-
-#### Scenario: A single deep-link nav entry replaces the three MDM entries
-
-- WHEN `src/manifest.d/90-master-data-management.json` is inspected
-- THEN it MUST declare no app-hosted MDM page and exactly one `href` nav entry labelled "Data quality"
-- AND that entry's `href` MUST target OpenRegister's Data-Quality surface (`/index.php/apps/openregister/#/quality`), not an app-local route
-
-`@e2e exclude` structural manifest assertion — verified by parsing the manifest fragment (one `href` menu entry, empty `pages`) in the build/lint step; the live steward surface it links to lives in OpenRegister's own e2e suite.
-
-#### Scenario: Steward scopes the OR surface to pipelinq/masterEntity
-
-- GIVEN the "Data quality" nav entry opens OpenRegister's Data-Quality index
-- WHEN the steward selects the pipelinq register and the `masterEntity` schema in OpenRegister's in-page register/schema selector
-- THEN OpenRegister's Data-Quality view MUST show the pipelinq `masterEntity` quality distribution and lowest-quality objects (query params are not required, because OpenRegister scopes via the selector, not the URL)
-
-`@e2e exclude` cross-app surface owned by OpenRegister — the register/schema selection + quality rendering are covered by OpenRegister's `mdm-frontend` e2e suite; pipelinq only contributes the deep-link entry point.
-
