@@ -276,17 +276,13 @@ import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import AvgDashboardView from './views/avg/AvgDashboard.vue'
 import AvgRequestDetailView from './views/avg/AvgRequestDetail.vue'
 import AvgIntakeView from './views/avg/AvgIntakeView.vue'
-// --- Master Data Management (MDM) bespoke steward views. The master-entity
-//     detail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
-//     declarative): the masterEntity register fields auto-render, the raw
-//     sourceRecord children are a relatedCollections table, and the server-
-//     computed golden-record + provenance + lineage projection + the conflict-
-//     resolution modal live in one kind:'section' bodyWidget. ---
-import MdmMasterEntityListView from './views/mdm/MdmMasterEntityListView.vue'
-import MdmGoldenRecordSection from './components/mdm/MdmGoldenRecordSection.vue'
-import MdmDataQualitySection from './components/mdm/MdmDataQualitySection.vue'
-import MdmDuplicateCandidatesDashboard from './views/mdm/MdmDuplicateCandidatesDashboard.vue'
-import MdmSyncQueueAdmin from './views/mdm/MdmSyncQueueAdmin.vue'
+// --- Master Data Management (MDM) steward surfaces are no longer hosted in
+//     pipelinq (ADR-045 #D). OpenRegister now owns the survivorship / dedup /
+//     merge / data-quality surface, driven by the x-openregister-survivorship
+//     and x-openregister-merge annotations on the masterEntity schema. The
+//     app-local MDM views/sections/modals were removed and a single "Data
+//     quality" nav entry deep-links to OR's Data-Quality surface instead
+//     (see src/manifest.d/90-master-data-management.json). ---
 
 // --- Contact-aware create overrides (kind:"create-override"). The
 //     client/contact schemas mark `contactsUid` REQUIRED, so a plain
@@ -1010,35 +1006,12 @@ const registry = {
 		component: AvgIntakeView,
 		_note: 'AVG intake form with article classification + BSN elfproef validation; lib has no classification/intake page type.',
 	},
-	// --- Master Data Management (MDM) steward surfaces. The list/detail,
-	//     duplicate-candidates and data-quality dashboards aggregate across
-	//     master-entity + source-record + sync-queue reads that the declarative
-	//     typed pages cannot express, so they ship as bespoke views. ---
-	MdmMasterEntityListView: {
-		kind: 'page',
-		component: MdmMasterEntityListView,
-		_note: 'Master entity list with entityType + low-quality filters and a data-quality badge per row.',
-	},
-	MdmGoldenRecordSection: {
-		kind: 'section',
-		component: MdmGoldenRecordSection,
-		_note: 'MDM golden-record in-body section for the declarative type:"detail" MdmMasterEntityDetail page. The masterEntity register fields auto-render and its raw sourceRecord children are a relatedCollections table; this section adds the server-COMPUTED golden record (merge-rule survivorship) with per-attribute provenance + the derived lineage, fetched from GET /api/mdm/entities/{id} (a projection, not stored flat on the schema), plus the conflict-resolution modal that recomputes the golden record on save. Self-fetches by @objectId.',
-	},
-	MdmDataQualitySection: {
-		kind: 'section',
-		component: MdmDataQualitySection,
-		_note: 'In-body section for the declarative type:"dashboard" MdmDataQuality page (pipelinq-dashboards-declarative). The four headline KPIs (average quality score + good/fair/poor buckets) are endpoint-bound stat widgets reading GET /api/mdm/dashboard; this section hosts what the stat grid cannot express — the lowest-quality master-entity table, the sync-queue health cards, and the dead-letter retry table (Retry POSTs to /api/mdm/sync-queue/{id}/retry, a re-queue side-effect). Self-fetches /api/mdm/dashboard.',
-	},
-	MdmDuplicateCandidatesDashboard: {
-		kind: 'page',
-		component: MdmDuplicateCandidatesDashboard,
-		_note: 'Deterministic + probabilistic duplicate candidates with the merge wizard modal.',
-	},
-	MdmSyncQueueAdmin: {
-		kind: 'page',
-		component: MdmSyncQueueAdmin,
-		_note: 'Outbound sync queue with status filter and manual retry of failed / dead-letter items.',
-	},
+	// --- Master Data Management (MDM) steward surfaces migrated to OpenRegister
+	//     (ADR-045 #D): the list/detail, duplicate-candidates, data-quality and
+	//     sync-queue views + the golden-record/conflict/merge sections & modals
+	//     are removed from pipelinq. OR hosts them, driven by the masterEntity
+	//     x-openregister-survivorship / x-openregister-merge annotations; a
+	//     single "Data quality" nav entry deep-links to OR's surface. ---
 
 	// Contact-aware create for the generic Add button on the Clients index page.
 	createClientContactAware: {

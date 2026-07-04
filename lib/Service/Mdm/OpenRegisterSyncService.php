@@ -51,13 +51,12 @@ class OpenRegisterSyncService
     /**
      * Constructor.
      *
-     * @param MdmObjectRepository $repository     The MDM object repository.
-     * @param MasterEntityService $masterEntities The master-entity service.
-     * @param LoggerInterface     $logger         The logger.
+     * @param MdmObjectRepository $repository The MDM object repository (also the
+     *                                        re-homed master-entity read helpers).
+     * @param LoggerInterface     $logger     The logger.
      */
     public function __construct(
         private MdmObjectRepository $repository,
-        private MasterEntityService $masterEntities,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -88,7 +87,7 @@ class OpenRegisterSyncService
      */
     public function syncMasterToRegister(string $masterId): ?array
     {
-        $entity = $this->masterEntities->find($masterId);
+        $entity = $this->repository->findMasterEntity($masterId);
         if ($entity === null) {
             return null;
         }

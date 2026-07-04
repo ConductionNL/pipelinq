@@ -5,7 +5,6 @@
         "schemas": [
           "masterEntity",
           "sourceRecord",
-          "trustConfiguration",
           "mergeOperation",
           "syncQueueItem"
         ]
@@ -62,35 +61,58 @@
           "blockingKeys": [],
           "matchRules": [
             {
-              "field": "matchKvkNumber",
+              "field": "goldenRecord.kvkNumber",
               "method": "exact",
               "weight": 0.4
             },
             {
-              "field": "matchEmail",
+              "field": "goldenRecord.email",
               "method": "exact",
               "weight": 0.3
             },
             {
-              "field": "matchName",
+              "field": "goldenRecord.name",
               "method": "normalized",
               "weight": 0.2
             },
             {
-              "field": "matchName",
+              "field": "goldenRecord.name",
               "method": "levenshtein",
               "weight": 0.1
             }
           ],
           "threshold": 0.7
         },
+        "x-openregister-survivorship": {
+          "sourceLinkField": "sourceRecords",
+          "goldenRecordField": "goldenRecord",
+          "provenanceField": "attributeProvenance",
+          "trustTierField": "trustTier",
+          "tierOrder": [
+            "discard",
+            "bronze",
+            "silver",
+            "gold"
+          ],
+          "defaultTier": "bronze",
+          "discardTier": "discard",
+          "freshnessAnchorField": "lastChange",
+          "overridesField": "attributeOverrides"
+        },
+        "x-openregister-merge": {
+          "sourceLinkField": "sourceRecords",
+          "entityType": "entityType",
+          "statusField": "status",
+          "survivorStatus": "active",
+          "mergedStatus": "merged-into-other",
+          "reversalWindowDays": 30
+        },
         "required": [
           "masterId",
           "entityType",
           "goldenRecord",
           "attributeProvenance",
-          "status",
-          "dataQualityScore"
+          "status"
         ],
         "properties": {
           "masterId": {
@@ -121,6 +143,11 @@
             "type": "object",
             "title": "Attribute provenance",
             "description": "Per-attribute metadata: which source won, trustTier, lastUpdated, confidence."
+          },
+          "attributeOverrides": {
+            "type": "object",
+            "title": "Attribute overrides",
+            "description": "Per-attribute steward override map (attribute => {value, overriddenBy, rationale}) written by OpenRegister's conflict-resolution override endpoint; short-circuits tier selection for that attribute during survivorship recompute."
           },
           "aliases": {
             "type": "array",
@@ -160,7 +187,7 @@
           "dataQualityScore": {
             "type": "number",
             "title": "Data quality score",
-            "description": "Computed score 0-1: a blend of OpenRegister's materialised qualityScore (completeness/format/freshness via x-openregister-quality) and the app-side cross-source agreement term.",
+            "description": "Downstream-facing quality score 0-1. Mirrors OpenRegister's materialised qualityScore directly; the former app-side cross-source agreement blend (DataQualityScorer) is retired (ADR-045). Optional — OpenRegister materialises qualityScore on save.",
             "minimum": 0,
             "maximum": 1,
             "facetable": true
@@ -168,7 +195,7 @@
           "qualityScore": {
             "type": "number",
             "title": "OR quality score",
-            "description": "Per-object quality score 0-1 materialised by OpenRegister from the x-openregister-quality annotation (completeness/format/freshness). Blended into dataQualityScore with the agreement term.",
+            "description": "Per-object quality score 0-1 materialised by OpenRegister from the x-openregister-quality annotation (completeness/format/freshness). This is the authoritative score the downstream read API exposes.",
             "minimum": 0,
             "maximum": 1,
             "facetable": true
@@ -189,34 +216,6 @@
             "format": "date-time",
             "title": "Last source update",
             "description": "Most recent attributeProvenance lastUpdated across all attributes; the date OpenRegister's freshness rule decays against."
-          },
-          "matchName": {
-            "type": "string",
-            "title": "Match: name",
-            "description": "Flattened goldenRecord.name top-level projection so OpenRegister's duplicate-detection similarity (x-openregister-dedup) can read it (OR similarity does not traverse nested paths).",
-            "maxLength": 512,
-            "facetable": true
-          },
-          "matchEmail": {
-            "type": "string",
-            "title": "Match: email",
-            "description": "Flattened goldenRecord.email top-level projection for OpenRegister duplicate detection.",
-            "maxLength": 255,
-            "facetable": true
-          },
-          "matchKvkNumber": {
-            "type": "string",
-            "title": "Match: KvK number",
-            "description": "Flattened goldenRecord.kvkNumber top-level projection for OpenRegister duplicate detection.",
-            "maxLength": 64,
-            "facetable": true
-          },
-          "matchPhone": {
-            "type": "string",
-            "title": "Match: phone",
-            "description": "Flattened goldenRecord.phone top-level projection for OpenRegister duplicate detection.",
-            "maxLength": 64,
-            "facetable": true
           },
           "lastReviewedAt": {
             "type": "string",
@@ -363,85 +362,6 @@
             "description": "True if the source system has deleted or retracted this record.",
             "default": false,
             "facetable": true
-          }
-        }
-      },
-      "trustConfiguration": {
-        "slug": "trustConfiguration",
-        "title": "Trust Configuration",
-        "icon": "ShieldStarOutline",
-        "version": "1.0.0",
-        "summary": "Per (entityType, attribute, source) trust-tier rule.",
-        "description": "Defines which source system wins for each attribute, with freshness decay, manual-override policy and effective date. Mapped to Schema.org DefinedTerm.",
-        "@type": "schema:DefinedTerm",
-        "required": [
-          "entityType",
-          "attribute",
-          "sourceSystem",
-          "trustTier"
-        ],
-        "properties": {
-          "entityType": {
-            "type": "string",
-            "title": "Entity type",
-            "enum": [
-              "contact",
-              "account",
-              "product",
-              "vendor"
-            ],
-            "facetable": true,
-            "description": "Entity Type for this record."
-          },
-          "attribute": {
-            "type": "string",
-            "title": "Attribute",
-            "description": "Canonical attribute name.",
-            "maxLength": 64,
-            "facetable": true
-          },
-          "sourceSystem": {
-            "type": "string",
-            "title": "Source system",
-            "maxLength": 64,
-            "facetable": true,
-            "description": "Source System for this record."
-          },
-          "trustTier": {
-            "type": "string",
-            "title": "Trust tier",
-            "enum": [
-              "gold",
-              "silver",
-              "bronze",
-              "discard"
-            ],
-            "facetable": true,
-            "description": "Trust Tier for this record."
-          },
-          "freshnessDecayDays": {
-            "type": "integer",
-            "title": "Freshness decay (days)",
-            "description": "After N days without update, lower tier by one level. Null = no decay.",
-            "minimum": 0
-          },
-          "manualOverrideAllowed": {
-            "type": "boolean",
-            "title": "Manual override allowed",
-            "default": true,
-            "description": "Manual Override Allowed for this record."
-          },
-          "rationale": {
-            "type": "string",
-            "title": "Rationale",
-            "maxLength": 1024,
-            "description": "Rationale for this record."
-          },
-          "effectiveFrom": {
-            "type": "string",
-            "format": "date",
-            "title": "Effective from",
-            "description": "Effective From for this record."
           }
         }
       },
@@ -875,51 +795,6 @@
         "tags": [
           "service-offering"
         ]
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "trustConfiguration",
-          "slug": "mdm-trust-account-billingaddress-kvk"
-        },
-        "entityType": "account",
-        "attribute": "billingAddress",
-        "sourceSystem": "kvk-api",
-        "trustTier": "gold",
-        "freshnessDecayDays": 180,
-        "manualOverrideAllowed": true,
-        "rationale": "KvK is government-verified source for Dutch business addresses.",
-        "effectiveFrom": "2026-06-01"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "trustConfiguration",
-          "slug": "mdm-trust-account-phone-shillinq"
-        },
-        "entityType": "account",
-        "attribute": "phone",
-        "sourceSystem": "shillinq-debiteuren",
-        "trustTier": "silver",
-        "freshnessDecayDays": 90,
-        "manualOverrideAllowed": true,
-        "rationale": "Shillinq phone numbers are used for billing communication; fresher than CRM.",
-        "effectiveFrom": "2026-06-01"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "trustConfiguration",
-          "slug": "mdm-trust-account-vatnumber-kvk"
-        },
-        "entityType": "account",
-        "attribute": "vatNumber",
-        "sourceSystem": "kvk-api",
-        "trustTier": "gold",
-        "freshnessDecayDays": 365,
-        "manualOverrideAllowed": false,
-        "rationale": "KvK VAT numbers are legally binding; override not permitted.",
-        "effectiveFrom": "2026-06-01"
       }
     ]
   }
