@@ -1,46 +1,12 @@
 {
+    "_note": "ADR-047 Phase-3: the AVG/DSAR case workflow is owned by OpenRegister. pipelinq no longer renders its own AVG dashboard/intake/detail pages — the AvgRequests entry is now an external deep-link into OpenRegister's AVG case surface (AvgIndex Cases tab, hash-routed at /apps/openregister/#/avg). It stays in the settings foldout (see menu-layout.json settingsSection) so handlers can still reach the AVG surface. No internal AvgRequests/AvgIntake/AvgRequestDetail route or page component remains.",
     "menu": [
         {
             "id": "AvgRequests",
             "label": "AVG-verzoeken",
             "icon": "icon-toggle-filelist",
-            "route": "AvgRequests",
+            "href": "/index.php/apps/openregister/#/avg",
             "order": 95
-        }
-    ],
-    "pages": [
-        {
-            "id": "AvgRequests",
-            "route": "/avg-verzoeken",
-            "type": "custom",
-            "title": "AVG-verzoeken",
-            "component": "AvgDashboardView",
-            "config": {
-                "register": "pipelinq",
-                "schema": "avgVerzoek"
-            }
-        },
-        {
-            "id": "AvgIntake",
-            "route": "/avg-verzoeken/nieuw",
-            "type": "custom",
-            "title": "Nieuw AVG-verzoek",
-            "component": "AvgIntakeView",
-            "config": {
-                "register": "pipelinq",
-                "schema": "avgVerzoek"
-            }
-        },
-        {
-            "id": "AvgRequestDetail",
-            "route": "/avg-verzoeken/:id",
-            "type": "custom",
-            "title": "AVG-verzoek",
-            "component": "AvgRequestDetailView",
-            "config": {
-                "register": "pipelinq",
-                "schema": "avgVerzoek"
-            }
         }
     ]
 }

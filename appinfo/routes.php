@@ -397,8 +397,8 @@ return [
         ['name' => 'loyaltyReporting#liability',          'url' => '/api/loyalty/reporting/{programmeId}/liability',     'verb' => 'GET'],
         ['name' => 'loyaltyReporting#tierDistribution',   'url' => '/api/loyalty/reporting/{programmeId}/tiers',         'verb' => 'GET'],
         ['name' => 'loyaltyReporting#expiryForecast',     'url' => '/api/loyalty/reporting/{programmeId}/expiry-forecast', 'verb' => 'GET'],
-        ['name' => 'loyaltyGdpr#export',                  'url' => '/api/loyalty/gdpr/{klantId}/export',                 'verb' => 'GET'],
-        ['name' => 'loyaltyGdpr#delete',                  'url' => '/api/loyalty/gdpr/{klantId}',                        'verb' => 'DELETE'],
+        // loyaltyGdpr#* routes retired (ADR-047 Phase-3): loyalty GDPR export/erase
+        // is subsumed by OpenRegister's cross-register DSAR erase; LoyaltyGdprController removed.
 
         // CRM workflow automation has been migrated to the OpenRegister
         // flow leaf (NC Flow / n8n) per migrate-automation-to-flow-leaf;
@@ -484,41 +484,12 @@ return [
         ['name' => 'xWiki#page',   'url' => '/api/xwiki/page/{wiki}/{page}',        'verb' => 'GET', 'requirements' => ['page' => '.+']],
         ['name' => 'xWiki#status', 'url' => '/api/xwiki/status',                    'verb' => 'GET'],
 
-        // AVG (GDPR data-subject request) workflow.
-        // avgVerzoek / termijnEvent / bewijsItem / exportBundle / weigering / redactieActie
-        // CRUD is handled by OpenRegister's generic object API; these are the
-        // server-authoritative lifecycle actions (camelCase slug matches the controller).
-        // Collection (static) routes precede the {id} wildcard routes.
-        ['name' => 'avgVerzoek#index',   'url' => '/api/avg-verzoeken', 'verb' => 'GET'],
-        ['name' => 'avgVerzoek#create',  'url' => '/api/avg-verzoeken', 'verb' => 'POST'],
-        ['name' => 'avgVerzoek#show',    'url' => '/api/avg-verzoeken/{id}', 'verb' => 'GET'],
-        ['name' => 'avgVerzoek#update',  'url' => '/api/avg-verzoeken/{id}', 'verb' => 'PATCH'],
-        ['name' => 'avgVerzoek#destroy', 'url' => '/api/avg-verzoeken/{id}', 'verb' => 'DELETE'],
-        ['name' => 'avgVerzoek#flagDpia', 'url' => '/api/avg-verzoeken/{id}/dpia-flag', 'verb' => 'POST'],
-        ['name' => 'avgVerzoek#extend',  'url' => '/api/avg-verzoeken/{id}/extend', 'verb' => 'POST'],
-        ['name' => 'avgVerzoek#archive', 'url' => '/api/avg-verzoeken/{id}/archive', 'verb' => 'POST'],
-
-        // AVG evidence collection.
-        ['name' => 'avgEvidence#collect', 'url' => '/api/avg-verzoeken/{id}/collect-evidence', 'verb' => 'POST'],
-        ['name' => 'avgEvidence#status',  'url' => '/api/avg-verzoeken/{id}/evidence-status', 'verb' => 'GET'],
-        ['name' => 'avgEvidence#items',   'url' => '/api/avg-verzoeken/{id}/bewijs-items', 'verb' => 'GET'],
-
-        // AVG redaction.
-        ['name' => 'avgRedaction#redact',  'url' => '/api/avg-verzoeken/{id}/redact', 'verb' => 'POST'],
-        ['name' => 'avgRedaction#summary', 'url' => '/api/avg-verzoeken/{id}/redaction-summary', 'verb' => 'GET'],
-        ['name' => 'avgRedaction#approve', 'url' => '/api/avg-verzoeken/{id}/approve-redactions', 'verb' => 'POST'],
-
-        // AVG denial (Weigering).
-        ['name' => 'avgDenial#deny',     'url' => '/api/avg-verzoeken/{id}/deny', 'verb' => 'POST'],
-        ['name' => 'avgDenial#show',     'url' => '/api/avg-verzoeken/{id}/weigering', 'verb' => 'GET'],
-        ['name' => 'avgDenial#finalize', 'url' => '/api/avg-verzoeken/{id}/finalize-denial', 'verb' => 'POST'],
-
-        // AVG export bundles + AP escalation. The public secure-download route
-        // precedes the authenticated {bundleId} metadata route.
-        ['name' => 'avgBundle#generate', 'url' => '/api/avg-verzoeken/{id}/generate-bundle', 'verb' => 'POST'],
-        ['name' => 'avgBundle#escalate', 'url' => '/api/avg-verzoeken/{id}/ap-escalate', 'verb' => 'POST'],
-        ['name' => 'avgBundle#download', 'url' => '/api/export-bundles/{bundleId}/download', 'verb' => 'GET'],
-        ['name' => 'avgBundle#show',     'url' => '/api/export-bundles/{bundleId}', 'verb' => 'GET'],
+        // AVG (GDPR data-subject request) workflow RETIRED (ADR-047 Phase-3):
+        // the case workflow (intake / deadline / evidence / redaction / bundle /
+        // denial / AP-escalation) is now owned by OpenRegister's generic DSAR case
+        // engine (/api/gdpr/cases/*). All avgVerzoek / avgEvidence / avgRedaction /
+        // avgDenial / avgBundle controllers + routes were removed; pipelinq
+        // deep-links into OR's AVG case surface and binds NL policy as data.
 
         // Master Data Management — read-API (downstream apps; session/bearer auth).
         // Static /api/mdm/master MUST precede the /{id} wildcard (ADR-016).
@@ -528,13 +499,11 @@ return [
         // MDM steward views, merge tooling, trust-config CRUD and sync-queue admin
         // are now hosted by OpenRegister (ADR-045 #D): the app-side controllers were
         // deleted and the steward navigates to OR's Data-Quality surface. Only the
-        // downstream read-API (above) and the AVG workflow (below, ADR-047) remain.
+        // downstream read-API (above) remains.
 
-        // MDM — AVG right-of-deletion workflow (admin only).
-        ['name' => 'mdmAvgWorkflow#candidates',        'url' => '/api/mdm/avg-workflow/candidates', 'verb' => 'GET'],
-        ['name' => 'mdmAvgWorkflow#initiate',          'url' => '/api/mdm/avg-workflow/initiate', 'verb' => 'POST'],
-        ['name' => 'mdmAvgWorkflow#approve',           'url' => '/api/mdm/avg-workflow/approve', 'verb' => 'POST'],
-        ['name' => 'mdmAvgWorkflow#confirmHardDelete', 'url' => '/api/mdm/avg-workflow/{masterEntityId}/hard-delete', 'verb' => 'POST'],
+        // MDM — AVG right-of-deletion workflow RETIRED (ADR-047 Phase-3):
+        // MdmAvgWorkflowController removed; the DSAR erasure of master entities is
+        // handled by OpenRegister's DSAR case engine over the shared object store.
 
         // Contract & renewal tracking (contract-renewal-tracking) — app-logic only
         // (numbering, guarded transitions, recurring-revenue metrics). Plain CRUD
