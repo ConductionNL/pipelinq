@@ -150,6 +150,8 @@ class ZgwApiClient
      * @throws ClockSkewException
      * @throws ZgwResourceNotFoundException
      * @throws ZgwException
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
      */
     public function callComponent(
         string $componentUrl,
@@ -165,10 +167,9 @@ class ZgwApiClient
 
         $url = rtrim($componentUrl, '/').'/'.ltrim($path, '/');
         if ($query !== []) {
+            $separator = '?';
             if (str_contains($url, '?') === true) {
                 $separator = '&';
-            } else {
-                $separator = '?';
             }
 
             $url .= $separator.http_build_query($query);
@@ -213,9 +214,8 @@ class ZgwApiClient
 
         $status  = (int) $response->getStatusCode();
         $rawBody = (string) $response->getBody();
-        if ($rawBody === '') {
-            $decoded = [];
-        } else {
+        $decoded = [];
+        if ($rawBody !== '') {
             $decoded = json_decode($rawBody, true);
         }
 
@@ -275,28 +275,8 @@ class ZgwApiClient
      */
     private function translateTransportError(Throwable $error, string $url, string $method): void
     {
-        if (method_exists($error, 'getCode') === true) {
-            $status = (int) $error->getCode();
-        } else {
-            $status = 0;
-        }
-
-        $message = $error->getMessage();
-        $body    = '';
-
-        // Many Nextcloud HTTP client exceptions expose the response on a
-        // `getResponse()` accessor (Guzzle-flavoured); we sniff it here so
-        // we can read VNG fault detail strings.
-        if (method_exists($error, 'getResponse') === true) {
-            $resp = $error->getResponse();
-            if ($resp !== null && method_exists($resp, 'getStatusCode') === true) {
-                $status = (int) $resp->getStatusCode();
-            }
-
-            if ($resp !== null && method_exists($resp, 'getBody') === true) {
-                $body = (string) $resp->getBody();
-            }
-        }
+        [$status, $body] = $this->extractErrorContext(error: $error);
+        $message         = $error->getMessage();
 
         $this->logger->info(
             'ZGW: HTTP transport error',
@@ -334,6 +314,39 @@ class ZgwApiClient
     }//end translateTransportError()
 
     /**
+     * Extract the HTTP status and response body from a transport exception.
+     *
+     * Many Nextcloud HTTP client exceptions expose the response on a
+     * `getResponse()` accessor (Guzzle-flavoured); we sniff it here so we can
+     * read VNG fault detail strings.
+     *
+     * @param Throwable $error The underlying exception.
+     *
+     * @return array{0:int, 1:string} Tuple of [status, body].
+     */
+    private function extractErrorContext(Throwable $error): array
+    {
+        $status = 0;
+        if (method_exists($error, 'getCode') === true) {
+            $status = (int) $error->getCode();
+        }
+
+        $body = '';
+        if (method_exists($error, 'getResponse') === true) {
+            $resp = $error->getResponse();
+            if ($resp !== null && method_exists($resp, 'getStatusCode') === true) {
+                $status = (int) $resp->getStatusCode();
+            }
+
+            if ($resp !== null && method_exists($resp, 'getBody') === true) {
+                $body = (string) $resp->getBody();
+            }
+        }
+
+        return [$status, $body];
+    }//end extractErrorContext()
+
+    /**
      * Heuristic: does the body/message look like a VNG clock-skew fault?
      *
      * @param string $text Body or message text.
@@ -369,9 +382,10 @@ class ZgwApiClient
         foreach ($headers as $key => $value) {
             if (is_array($value) === true) {
                 $out[strtolower((string) $key)] = (string) ($value[0] ?? '');
-            } else {
-                $out[strtolower((string) $key)] = (string) $value;
+                continue;
             }
+
+            $out[strtolower((string) $key)] = (string) $value;
         }
 
         return $out;

@@ -307,6 +307,44 @@ class ZtcClient
             return ['url' => $bucket['url'], 'data' => $bucket['data']];
         }
 
+        $resolved = $this->fetchByOmschrijving(
+            endpoint: $endpoint,
+            endpointId: $endpointId,
+            resourceType: $resourceType,
+            omschrijving: $omschrijving,
+            extraQuery: $extraQuery
+        );
+        if ($resolved === null) {
+            return null;
+        }
+
+        $this->cache[$endpointId][$resourceType][$cacheKey] = [
+            'url'      => $resolved['url'],
+            'data'     => $resolved['data'],
+            'storedAt' => time(),
+        ];
+
+        return $resolved;
+    }//end resolveByOmschrijving()
+
+    /**
+     * Internal: issue the ZTC lookup and extract the first definitief entry.
+     *
+     * @param array<string, mixed>     $endpoint     Endpoint payload.
+     * @param string                   $endpointId   Endpoint identifier (for logging).
+     * @param string                   $resourceType One of RESOURCE_*.
+     * @param string                   $omschrijving Omschrijving to look up.
+     * @param array<string,string|int> $extraQuery   Optional extra ZTC filters.
+     *
+     * @return array{url:string,data:array<string,mixed>}|null
+     */
+    private function fetchByOmschrijving(
+        array $endpoint,
+        string $endpointId,
+        string $resourceType,
+        string $omschrijving,
+        array $extraQuery,
+    ): ?array {
         $client = $this->registers->findClientForEndpoint($endpoint);
         $ztcUrl = (string) ($endpoint['componenten']['ztc'] ?? '');
         if ($client === null || $ztcUrl === '') {
@@ -349,14 +387,8 @@ class ZtcClient
             return null;
         }
 
-        $this->cache[$endpointId][$resourceType][$cacheKey] = [
-            'url'      => $url,
-            'data'     => $entry,
-            'storedAt' => time(),
-        ];
-
         return ['url' => $url, 'data' => $entry];
-    }//end resolveByOmschrijving()
+    }//end fetchByOmschrijving()
 
     /**
      * Effective cache TTL (seconds).

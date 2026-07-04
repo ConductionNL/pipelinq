@@ -95,6 +95,8 @@ class AcClient
      * @param array<string, mixed> $client   ZgwClient payload.
      *
      * @return void
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
      */
     public function refreshScopes(array $endpoint, array $client): void
     {
@@ -124,21 +126,32 @@ class AcClient
             return;
         }
 
-        $clientIdentifier = (string) ($client['clientIdentifier'] ?? '');
-        $scopes           = [];
+        $scopes = $this->buildScopeMap(
+            results: $results,
+            clientIdentifier: (string) ($client['clientIdentifier'] ?? '')
+        );
+
+        $this->cache[$endpointId] = ['refreshedAt' => time(), 'scopes' => $scopes];
+    }//end refreshScopes()
+
+    /**
+     * Build the `resourceUrl → [scope, ...]` map from `/autorisaties` results.
+     *
+     * @param array<int, mixed> $results          Decoded `/autorisaties` result rows.
+     * @param string            $clientIdentifier Client identifier to filter entries by.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function buildScopeMap(array $results, string $clientIdentifier): array
+    {
+        $scopes = [];
 
         foreach ($results as $entry) {
             if (is_array($entry) === false) {
                 continue;
             }
 
-            $entryClient = (string) ($entry['component'] ?? $entry['clientIds'][0] ?? '');
-            $clientIds   = $entry['clientIds'] ?? [];
-            if (is_array($clientIds) === true
-                && $clientIdentifier !== ''
-                && in_array($clientIdentifier, $clientIds, true) === false
-                && $entryClient !== $clientIdentifier
-            ) {
+            if ($this->entryMatchesClient(entry: $entry, clientIdentifier: $clientIdentifier) === false) {
                 continue;
             }
 
@@ -147,26 +160,7 @@ class AcClient
                 continue;
             }
 
-            foreach ($autorisaties as $auth) {
-                if (is_array($auth) === false) {
-                    continue;
-                }
-
-                $resource = (string) ($auth['zaaktype'] ?? $auth['besluittype'] ?? $auth['informatieobjecttype'] ?? '*');
-                $list     = $auth['scopes'] ?? [];
-                if (is_array($list) === false) {
-                    continue;
-                }
-
-                foreach ($list as $scope) {
-                    if (is_string($scope) === false || $scope === '') {
-                        continue;
-                    }
-
-                    $scopes[$resource]   = $scopes[$resource] ?? [];
-                    $scopes[$resource][] = $scope;
-                }
-            }
+            $this->collectScopes(autorisaties: $autorisaties, scopes: $scopes);
         }//end foreach
 
         // De-duplicate.
@@ -174,8 +168,63 @@ class AcClient
             $scopes[$resource] = array_values(array_unique($list));
         }
 
-        $this->cache[$endpointId] = ['refreshedAt' => time(), 'scopes' => $scopes];
-    }//end refreshScopes()
+        return $scopes;
+    }//end buildScopeMap()
+
+    /**
+     * Decide whether an `/autorisaties` entry belongs to the configured client.
+     *
+     * @param array<string, mixed> $entry            Single `/autorisaties` row.
+     * @param string               $clientIdentifier Client identifier to match.
+     *
+     * @return bool True when the entry should be processed.
+     */
+    private function entryMatchesClient(array $entry, string $clientIdentifier): bool
+    {
+        $clientIds = $entry['clientIds'] ?? [];
+        if (is_array($clientIds) === false || $clientIdentifier === '') {
+            return true;
+        }
+
+        if (in_array($clientIdentifier, $clientIds, true) === true) {
+            return true;
+        }
+
+        $entryClient = (string) ($entry['component'] ?? $entry['clientIds'][0] ?? '');
+        return $entryClient === $clientIdentifier;
+    }//end entryMatchesClient()
+
+    /**
+     * Accumulate scopes from a list of `autorisaties` into the scope map.
+     *
+     * @param array<int, mixed>                 $autorisaties List of autorisatie entries.
+     * @param array<string, array<int, string>> $scopes       Scope map to append to (by reference).
+     *
+     * @return void
+     */
+    private function collectScopes(array $autorisaties, array &$scopes): void
+    {
+        foreach ($autorisaties as $auth) {
+            if (is_array($auth) === false) {
+                continue;
+            }
+
+            $resource = (string) ($auth['zaaktype'] ?? $auth['besluittype'] ?? $auth['informatieobjecttype'] ?? '*');
+            $list     = $auth['scopes'] ?? [];
+            if (is_array($list) === false) {
+                continue;
+            }
+
+            foreach ($list as $scope) {
+                if (is_string($scope) === false || $scope === '') {
+                    continue;
+                }
+
+                $scopes[$resource]   = $scopes[$resource] ?? [];
+                $scopes[$resource][] = $scope;
+            }
+        }//end foreach
+    }//end collectScopes()
 
     /**
      * Check whether the configured client holds a scope on a target resource.
