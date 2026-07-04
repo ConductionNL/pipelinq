@@ -1,13 +1,5 @@
 {
-  "_note": "ADR-045 #D: the Master Data Management steward surface is owned by OpenRegister, not pipelinq. The app-local MDM pages (Master data / Master-entity detail / Data quality / Duplicates / Trust configuration / Sync queue) and their bespoke views/sections/modals were removed; the masterEntity schema now carries x-openregister-survivorship + x-openregister-merge so OR materialises the golden record and hosts the steward views. This fragment keeps ONE deep-link nav entry into OR's Data-Quality surface. OR's quality index uses an in-page register+schema selector (RegisterSchemaSelector), not query params, so the deep-link lands on OR's Data-Quality page and the steward selects the pipelinq register + masterEntity schema there.",
-  "menu": [
-    {
-      "id": "MdmDataQuality",
-      "label": "Data quality",
-      "icon": "icon-category-monitoring",
-      "href": "/index.php/apps/openregister/#/quality",
-      "order": 141
-    }
-  ],
+  "_note": "ADR-045 #D (+ follow-up): the Master Data Management steward surface is owned entirely by OpenRegister, not pipelinq. The app-local MDM pages (Master data / Master-entity detail / Data quality / Duplicates / Trust configuration / Sync queue) and their bespoke views/sections/modals were removed; the masterEntity schema carries x-openregister-survivorship + x-openregister-merge so OR materialises the golden record and hosts the steward views (Data Quality / Duplicate Candidates / Master entities / Merge Operations / Queue health). The interim 'Data quality' deep-link nav entry into OR has now also been removed — pipelinq exposes no MDM nav; stewards open OpenRegister directly. This fragment is intentionally empty and kept only as a record of the removal.",
+  "menu": [],
   "pages": []
 }
