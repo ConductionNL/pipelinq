@@ -5,11 +5,13 @@
  *
  * These tests assert the NEW, authorized behaviour: booking erasure is routed
  * through OpenRegister's canonical, legal-hold-aware erasure
- * (`DataSubjectRequestService::erase` in `pseudonymise` mode, surfaced via
- * {@see \OCA\Pipelinq\Service\Avg\OrGdprBridge}) instead of the earlier
- * named-field SHA-256 hashing. The critical retention invariant — a Booking row
- * held by the NL Boekhoudplicht 7-year retention SURVIVES erasure — is verified
- * here: held objects come back in the `held` bucket and are never erased.
+ * (`DataSubjectRequestService::erase` in `pseudonymise` mode, resolved lazily
+ * from the DI container by {@see \OCA\Pipelinq\Service\DataDeletionService})
+ * instead of the earlier named-field SHA-256 hashing. The critical retention
+ * invariant — a Booking row held by the NL Boekhoudplicht 7-year retention
+ * SURVIVES erasure — is verified here: held objects come back in the `held`
+ * bucket and are never erased. The OR-absent safe path (container cannot resolve
+ * the OR service) is also verified: it degrades to an empty summary.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -32,7 +34,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\Pipelinq\Service\Avg\OrGdprBridge;
 use OCA\Pipelinq\Service\DataDeletionService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -136,12 +137,25 @@ class DataDeletionServiceTest extends TestCase
     {
         $this->erase = new FakeBookingErase();
 
-        $fake      = $this->erase;
-        $container = new class($fake) implements ContainerInterface {
+        $container     = self::containerResolving($this->erase);
+        $this->service = new DataDeletionService(container: $container, logger: new NullLogger());
+    }//end setUp()
+
+    /**
+     * Build a DI container that resolves OR's request service to $fake, or, when
+     * $fake is null, models OR-absent by throwing for every id.
+     *
+     * @param FakeBookingErase|null $fake The fake OR erase, or null for OR-absent.
+     *
+     * @return ContainerInterface The container.
+     */
+    private static function containerResolving(?FakeBookingErase $fake): ContainerInterface
+    {
+        return new class($fake) implements ContainerInterface {
             /**
-             * @param FakeBookingErase $fake The fake erase.
+             * @param FakeBookingErase|null $fake The fake erase, or null for OR-absent.
              */
-            public function __construct(private FakeBookingErase $fake)
+            public function __construct(private ?FakeBookingErase $fake)
             {
             }
 
@@ -152,7 +166,7 @@ class DataDeletionServiceTest extends TestCase
              */
             public function get(string $id): mixed
             {
-                if ($id === OrGdprBridge::OR_REQUEST_SERVICE || $id === OrGdprBridge::OR_DEADLINE) {
+                if ($this->fake !== null && $id === DataDeletionService::OR_REQUEST_SERVICE) {
                     return $this->fake;
                 }
 
@@ -166,13 +180,10 @@ class DataDeletionServiceTest extends TestCase
              */
             public function has(string $id): bool
             {
-                return ($id === OrGdprBridge::OR_REQUEST_SERVICE || $id === OrGdprBridge::OR_DEADLINE);
+                return ($this->fake !== null && $id === DataDeletionService::OR_REQUEST_SERVICE);
             }
         };
-
-        $bridge        = new OrGdprBridge(container: $container, logger: new NullLogger());
-        $this->service = new DataDeletionService(orGdpr: $bridge, logger: new NullLogger());
-    }//end setUp()
+    }//end containerResolving()
 
     /**
      * Returns the empty summary when the customer id is blank (no erase call).
@@ -241,4 +252,22 @@ class DataDeletionServiceTest extends TestCase
         $this->assertNotNull($this->erase->lastErase);
         $this->assertTrue($this->erase->lastErase['dryRun']);
     }//end testDryRunPassesThroughWithoutMutating()
+
+    /**
+     * OR-absent safe path: when the container cannot resolve OR's request
+     * service, erasure degrades to an empty summary instead of throwing.
+     *
+     * @return void
+     */
+    public function testOrAbsentDegradesToEmptySummary(): void
+    {
+        $service = new DataDeletionService(
+            container: self::containerResolving(null),
+            logger: new NullLogger()
+        );
+
+        $summary = $service->pseudonymizeCustomerBookings('cust-7');
+
+        $this->assertSame(['bookings' => 0, 'held' => 0], $summary);
+    }//end testOrAbsentDegradesToEmptySummary()
 }//end class
