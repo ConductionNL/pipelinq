@@ -52,7 +52,7 @@ Vrij en open source onder de AGPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.32</version>
+    <version>0.5.33</version>
     <licence>agpl</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -85,6 +85,7 @@ Vrij en open source onder de AGPL-licentie.
             <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
             <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+            <step>OCA\Pipelinq\Repair\RemoveRetiredAvgJobs</step>
         </post-migration>
     </repair-steps>
 
@@ -118,9 +119,9 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\DispatchQueuedMessagesJob</job>
         <job>OCA\Pipelinq\BackgroundJob\FallbackEmailJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SlaDeadlineSweepJob</job>
-        <job>OCA\Pipelinq\BackgroundJob\AvgDeadlineTrackerJob</job>
-        <job>OCA\Pipelinq\BackgroundJob\AvgDpiaPatternDetectionJob</job>
-        <job>OCA\Pipelinq\BackgroundJob\AvgRetentionJob</job>
+        <!-- AVG deadline/DPIA/retention jobs retired (ADR-047 Phase-3): the DSAR
+             case engine's sweeps are owned by OpenRegister. Orphaned oc_jobs rows
+             are unregistered by the RemoveRetiredAvgJobs repair step. -->
         <job>OCA\Pipelinq\BackgroundJob\MdmSyncQueueProcessorJob</job>
         <job>OCA\Pipelinq\BackgroundJob\MdmHardDeleteConfirmationJob</job>
         <job>OCA\Pipelinq\BackgroundJob\MdmOpenRegisterSyncJob</job>
