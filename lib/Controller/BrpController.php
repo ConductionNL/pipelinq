@@ -49,12 +49,15 @@ use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
  * Controller for the BRP-lookup REST surface.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregates the full BRP surface (validate,
+ *   lookup, webhook ingest, geheimhouding reveal, opt-out) behind one cohesive controller.
  *
  * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002
  * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
@@ -89,6 +92,9 @@ class BrpController extends Controller
      * @param BrpMutationWebhookListener $webhookListener Webhook listener.
      * @param ContainerInterface         $container       DI container.
      * @param LoggerInterface            $logger          Logger.
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList) Standard NC constructor injection; each
+     *   parameter is a distinct collaborator wired by the DI container.
      */
     public function __construct(
         IRequest $request,
@@ -158,6 +164,15 @@ class BrpController extends Controller
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002-01
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-002-02
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)  Single auth-guarded BRP flow: doelbinding,
+     *   permission, 11-proef, cache/remote, audit-persist — sequential guard clauses that must
+     *   stay one atomic transaction; splitting would fragment the audit trail.
+     * @SuppressWarnings(PHPMD.NPathComplexity)       Same rationale; independent guards, not nesting.
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Same rationale; the audit-record payload is
+     *   assembled inline so every branch contributes to one recordLookup() call.
+     * @SuppressWarnings(PHPMD.StaticAccess)          BsnValidationService::hash() is a pure static
+     *   hashing utility (no state), used identically across the codebase.
      */
     #[NoAdminRequired]
     public function lookup(): JSONResponse
@@ -249,7 +264,9 @@ class BrpController extends Controller
             $responseInCache = true;
             $uitkomst        = 'geslaagd';
             $responseCode    = 200;
-        } else {
+        }
+
+        if ($cached === null) {
             try {
                 $verzoekRef = null;
                 if ($verzoekId !== '') {
@@ -260,7 +277,9 @@ class BrpController extends Controller
                 if ($remote === null) {
                     $uitkomst     = 'niet-gevonden';
                     $responseCode = 404;
-                } else {
+                }
+
+                if ($remote !== null) {
                     $correlationId      = $remote['_correlationId'] ?? null;
                     $responseDurationMs = $remote['_responseDurationMs'] ?? null;
                     $responseCode       = (int) ($remote['_responseStatus'] ?? 200);
@@ -280,10 +299,9 @@ class BrpController extends Controller
                     );
                 }//end if
             } catch (HaalCentraalException $e) {
+                $uitkomst = 'fout';
                 if ($e->getStatusCode() === 0) {
                     $uitkomst = 'timeout';
-                } else {
-                    $uitkomst = 'fout';
                 }
 
                 $responseCode  = $e->getStatusCode();
@@ -511,8 +529,8 @@ class BrpController extends Controller
             $notitieValue = $notitie;
         }
 
-        $ok = $this->optOut->recordLocalOptOut($rawBsn, $actor, $notitieValue);
-        if ($ok === false) {
+        $recorded = $this->optOut->recordLocalOptOut($rawBsn, $actor, $notitieValue);
+        if ($recorded === false) {
             return new JSONResponse(
                     [
                         'errorCode' => 'internal',
@@ -841,7 +859,7 @@ class BrpController extends Controller
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (Throwable $e) {
-            throw new \RuntimeException('OpenRegister service is not available.');
+            throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
 }//end class

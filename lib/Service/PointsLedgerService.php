@@ -41,21 +41,26 @@ use RuntimeException;
  * Append-only points ledger.
  *
  * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) owns every ledger
+ *  movement type (credit/debit/expiry/adjustment/refund) plus balance/history
+ *  reads as small, single-purpose methods delegating to one shared
+ *  append-and-update core.
  */
 class PointsLedgerService
 {
     /**
      * Constructor.
      *
-     * @param ContainerInterface    $container             The DI container.
-     * @param IAppConfig            $appConfig             The app configuration.
-     * @param LoyaltyAccountService $loyaltyAccountService The loyalty account service.
-     * @param LoggerInterface       $logger                The logger.
+     * @param ContainerInterface    $container      The DI container.
+     * @param IAppConfig            $appConfig      The app configuration.
+     * @param LoyaltyAccountService $accountService The loyalty account service.
+     * @param LoggerInterface       $logger         The logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
-        private LoyaltyAccountService $loyaltyAccountService,
+        private LoyaltyAccountService $accountService,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -123,7 +128,7 @@ class PointsLedgerService
             throw new RuntimeException('Debit amount must be positive.');
         }
 
-        $account = $this->loyaltyAccountService->getAccount(accountId: $accountId);
+        $account = $this->accountService->getAccount(accountId: $accountId);
         if ($account === null) {
             throw new RuntimeException('Account not found.');
         }
@@ -237,6 +242,8 @@ class PointsLedgerService
      * @param string $accountId The account UUID.
      *
      * @return int The sum of all ledger entry amounts.
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) AggregationQuery::create() is OpenRegister's documented query-builder factory, not app state
      */
     public function getAccountBalance(string $accountId): int
     {
@@ -279,6 +286,8 @@ class PointsLedgerService
      * @param ?string $to        ISO-8601 upper bound (inclusive) on timestamp.
      *
      * @return array<int, array<string, mixed>> The ledger entries, oldest first.
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function getLedgerHistory(string $accountId, ?string $from=null, ?string $to=null): array
     {
@@ -299,28 +308,16 @@ class PointsLedgerService
             return [];
         }
 
+        $rowsToMap = [];
         if (is_array($rows) === true) {
             $rowsToMap = array_values($rows);
-        } else {
-            $rowsToMap = [];
         }
 
         $rows = array_map([$this, 'toArray'], $rowsToMap);
 
         $filtered = array_filter(
             $rows,
-            static function (array $entry) use ($from, $to): bool {
-                $ts = (string) ($entry['timestamp'] ?? '');
-                if ($from !== null && $ts < $from) {
-                    return false;
-                }
-
-                if ($to !== null && $ts > $to) {
-                    return false;
-                }
-
-                return true;
-            }
+            fn(array $entry): bool => $this->isWithinWindow(entry: $entry, from: $from, to: $to)
         );
 
         usort(
@@ -330,6 +327,29 @@ class PointsLedgerService
 
         return array_values($filtered);
     }//end getLedgerHistory()
+
+    /**
+     * Whether a ledger entry's timestamp falls within an optional [from, to] window.
+     *
+     * @param array<string, mixed> $entry The ledger entry.
+     * @param ?string              $from  ISO-8601 lower bound (inclusive), or null.
+     * @param ?string              $to    ISO-8601 upper bound (inclusive), or null.
+     *
+     * @return bool
+     */
+    private function isWithinWindow(array $entry, ?string $from, ?string $to): bool
+    {
+        $timestamp = (string) ($entry['timestamp'] ?? '');
+        if ($from !== null && $timestamp < $from) {
+            return false;
+        }
+
+        if ($to !== null && $timestamp > $to) {
+            return false;
+        }
+
+        return true;
+    }//end isWithinWindow()
 
     /**
      * Get ledger entries for a programme in a window (used by reporting).
@@ -348,7 +368,7 @@ class PointsLedgerService
         ?string $to=null
     ): array {
         // Collect all accounts for the programme then fetch their ledgers.
-        $accounts = $this->loyaltyAccountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
+        $accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 
         $entries = [];
         foreach ($accounts as $account) {
@@ -395,7 +415,7 @@ class PointsLedgerService
         string $verwerktDoor,
         int $lifetimeDelta
     ): array {
-        $account = $this->loyaltyAccountService->getAccount(accountId: $accountId);
+        $account = $this->accountService->getAccount(accountId: $accountId);
         if ($account === null) {
             throw new RuntimeException('Account not found.');
         }
@@ -419,7 +439,7 @@ class PointsLedgerService
         $saved = $this->persist(payload: $entry);
 
         try {
-            $this->loyaltyAccountService->updateBalances(
+            $this->accountService->updateBalances(
                 accountId: $accountId,
                 newCurrentBalance: $newBalance,
                 lifetimeDelta: $lifetimeDelta,
@@ -488,16 +508,16 @@ class PointsLedgerService
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $s = $object->jsonSerialize();
-            if (is_array($s) === true) {
-                return $s;
+            $serialized = $object->jsonSerialize();
+            if (is_array($serialized) === true) {
+                return $serialized;
             }
         }
 
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $d = $object->getObject();
-            if (is_array($d) === true) {
-                return $d;
+            $data = $object->getObject();
+            if (is_array($data) === true) {
+                return $data;
             }
         }
 

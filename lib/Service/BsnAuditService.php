@@ -31,6 +31,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -89,6 +90,11 @@ class BsnAuditService
      * @return string The UUID of the written audit record (empty string if writing fails).
      *
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-005-01
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList) One audit record maps 1:1 to these compliance fields; a DTO would only shift the list.
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)    $vogScreening is an audit fact recorded verbatim on the record, not a behaviour switch.
+     * @SuppressWarnings(PHPMD.LongVariable)           $haalcentraalCorrelationId mirrors the named-arg caller; renaming breaks the call site.
+     * @SuppressWarnings(PHPMD.StaticAccess)           BsnValidationService hash/mask are pure stateless helpers.
      */
     public function recordLookup(
         string $actor,
@@ -116,7 +122,7 @@ class BsnAuditService
             'doelbinding'               => $doelbinding,
             'uitkomst'                  => $uitkomst,
             'responseCode'              => $responseCode,
-            'ipAdres'                   => self::anonymiseIp(ip: $this->request->getRemoteAddress()),
+            'ipAdres'                   => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
             'userAgent'                 => 'Pipelinq/'.(Application::APP_ID).' (Nextcloud)',
             'haalcentraalCorrelationId' => $haalcentraalCorrelationId,
             'gekoppeldVerzoek'          => $gekoppeldVerzoek,
@@ -187,6 +193,8 @@ class BsnAuditService
      * @return int Number of records pseudonymised.
      *
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-008-02
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
      */
     public function pseudonymise(string $rawBsn): int
     {
@@ -217,12 +225,11 @@ class BsnAuditService
 
             $count = 0;
             foreach (($records ?? []) as $record) {
+                $arr = [];
                 if (is_array($record) === true) {
                     $arr = $record;
                 } else if (method_exists($record, 'jsonSerialize') === true) {
                     $arr = (array) $record->jsonSerialize();
-                } else {
-                    $arr = [];
                 }
 
                 $uuid = (string) ($arr['@self']['id'] ?? $arr['id'] ?? '');
@@ -257,27 +264,27 @@ class BsnAuditService
     /**
      * Anonymise an IPv4 address by zeroing the last octet (ipv6: zero the last 80 bits).
      *
-     * @param string $ip Raw IP from request scope.
+     * @param string $ipAddress Raw IP from request scope.
      *
      * @return string Anonymised IP suitable for audit storage.
      *
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-009-01
      */
-    public static function anonymiseIp(string $ip): string
+    public static function anonymiseIp(string $ipAddress): string
     {
-        if ($ip === '') {
+        if ($ipAddress === '') {
             return '';
         }
 
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
-            $parts    = explode('.', $ip);
+        if (filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
+            $parts    = explode('.', $ipAddress);
             $parts[3] = '0';
             return implode('.', $parts);
         }
 
         // IPv6: zero the last 5 groups (preserves /48 prefix).
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) {
-            $bin = inet_pton($ip);
+        if (filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) {
+            $bin = inet_pton($ipAddress);
             if ($bin === false) {
                 return '';
             }
@@ -299,14 +306,14 @@ class BsnAuditService
      *
      * @return array{0: string, 1: string}
      *
-     * @throws \RuntimeException If configuration is missing.
+     * @throws RuntimeException If configuration is missing.
      */
     private function config(): array
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'bsnAuditRecord_schema', '');
         if ($register === '' || $schema === '') {
-            throw new \RuntimeException('bsnAuditRecord register/schema not configured.');
+            throw new RuntimeException('bsnAuditRecord register/schema not configured.');
         }
 
         return [$register, $schema];
@@ -317,14 +324,14 @@ class BsnAuditService
      *
      * @return object The OR ObjectService.
      *
-     * @throws \RuntimeException If OR is unavailable.
+     * @throws RuntimeException If OR is unavailable.
      */
     private function getObjectService(): object
     {
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (Throwable $e) {
-            throw new \RuntimeException('OpenRegister service is not available.');
+            throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
 }//end class

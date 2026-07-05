@@ -44,11 +44,13 @@ use Psr\Log\LoggerInterface;
  * the authentication path: PASSWORD_BCRYPT verify, lockout counter increment,
  * 15-minute lock at 5 consecutive failures, counter reset on success.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators a
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators a
  *  staff service legitimately needs (OR container, app config, role lookup,
  *  logger) — splitting them would add indirection without reducing coupling.
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)   Cohesive CRUD + auth surface;
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     Cohesive CRUD + auth surface;
  *  every method is single-purpose.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) CRUD + PIN-auth + lockout
+ *  logic is inherently branchy; split across small focused methods.
  *
  * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#3
  */
@@ -170,6 +172,48 @@ class PosStaffService
         // Verify role exists.
         $this->posRoleService->getRole(id: $posRole);
 
+        [$existing, $isUpdate] = $this->resolveExistingStaff(id: $id);
+
+        $hash = $this->resolvePinHash(data: $data, isUpdate: $isUpdate, existing: $existing);
+
+        $payload = $this->buildStaffPayload(
+            data: $data,
+            posRole: $posRole,
+            displayName: $displayName,
+            hash: $hash,
+            existing: $existing
+        );
+
+        [$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
+
+        $uuid = $id;
+        if ($uuid === '') {
+            $uuid = $this->uuid();
+        }
+
+        $saved = $this->getObjectService()->saveObject(
+            object: $payload,
+            extend: [],
+            register: $register,
+            schema: $schema,
+            uuid: $uuid
+        );
+
+        return $this->stripSensitive(staff: $this->toArray(object: $saved));
+    }//end saveStaff()
+
+    /**
+     * Resolve the existing staff record (if any) for a saveStaff() call.
+     *
+     * Falls back to "create" semantics when an id is supplied but the
+     * record cannot be found.
+     *
+     * @param string $id Optional UUID for updates.
+     *
+     * @return array{0: ?array<string, mixed>, 1: bool} [existing, isUpdate].
+     */
+    private function resolveExistingStaff(string $id): array
+    {
         $isUpdate = ($id !== '');
         $existing = null;
         if ($isUpdate === true) {
@@ -181,6 +225,25 @@ class PosStaffService
             }
         }
 
+        return [$existing, $isUpdate];
+    }//end resolveExistingStaff()
+
+    /**
+     * Resolve the pinHash to persist for a saveStaff() call.
+     *
+     * A submitted PIN is validated and re-hashed; otherwise an update
+     * falls back to the existing hash. Creating without a PIN is rejected.
+     *
+     * @param array<string, mixed>  $data     The staff data.
+     * @param bool                  $isUpdate Whether this is an update.
+     * @param ?array<string, mixed> $existing The existing staff record, if any.
+     *
+     * @return string The bcrypt pinHash to persist.
+     *
+     * @throws OCSBadRequestException If the PIN format is invalid, or missing on create.
+     */
+    private function resolvePinHash(array $data, bool $isUpdate, ?array $existing): string
+    {
         $pin  = (string) ($data['pin'] ?? '');
         $hash = '';
         if ($isUpdate === true && $existing !== null) {
@@ -202,6 +265,22 @@ class PosStaffService
             throw new OCSBadRequestException('PIN is verplicht bij het aanmaken van een medewerker.');
         }
 
+        return $hash;
+    }//end resolvePinHash()
+
+    /**
+     * Build the persisted payload for a saveStaff() call.
+     *
+     * @param array<string, mixed>  $data        The staff data.
+     * @param string                $posRole     The posRole UUID.
+     * @param string                $displayName The trimmed display name.
+     * @param string                $hash        The resolved pinHash.
+     * @param ?array<string, mixed> $existing    The existing staff record, if any.
+     *
+     * @return array<string, mixed> The payload to save.
+     */
+    private function buildStaffPayload(array $data, string $posRole, string $displayName, string $hash, ?array $existing): array
+    {
         $payload = [
             'displayName'       => $displayName,
             'userId'            => (string) ($data['userId'] ?? ($existing['userId'] ?? '')),
@@ -219,23 +298,8 @@ class PosStaffService
             $payload['lastLoginAt'] = (string) $existing['lastLoginAt'];
         }
 
-        [$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
-
-        $uuid = $id;
-        if ($uuid === '') {
-            $uuid = $this->uuid();
-        }
-
-        $saved = $this->getObjectService()->saveObject(
-            object: $payload,
-            extend: [],
-            register: $register,
-            schema: $schema,
-            uuid: $uuid
-        );
-
-        return $this->stripSensitive(staff: $this->toArray(object: $saved));
-    }//end saveStaff()
+        return $payload;
+    }//end buildStaffPayload()
 
     /**
      * Delete a staff record.

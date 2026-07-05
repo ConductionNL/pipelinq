@@ -76,10 +76,9 @@ class SmsProviderFactory
         $sourceId    = (string) ($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
         $credentials = (array) ($channelProvider['credentials'] ?? []);
 
+        $sourceIdOrNull = $sourceId;
         if ($sourceId === '') {
             $sourceIdOrNull = null;
-        } else {
-            $sourceIdOrNull = $sourceId;
         }
 
         return match ($vendor) {

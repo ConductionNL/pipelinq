@@ -36,6 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DOMDocument;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\Http\Client\IClient;
 use OCP\Http\Client\IClientService;
@@ -299,10 +300,25 @@ class LogiusConnector
             throw new RuntimeException('body must be non-empty XHTML strict.');
         }
 
+        $this->assertWellFormedXhtml(body: $body);
+        $this->validateAttachments(attachments: ($message['attachments'] ?? []));
+    }//end validateOutboundPayload()
+
+    /**
+     * Assert a message body is well-formed XHTML strict.
+     *
+     * @param string $body The message body.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the body does not parse as well-formed XML.
+     */
+    private function assertWellFormedXhtml(string $body): void
+    {
         // XHTML strict validation: must parse as well-formed XML.
         $previous = libxml_use_internal_errors(true);
         try {
-            $doc     = new \DOMDocument();
+            $doc     = new DOMDocument();
             $wrapped = '<?xml version="1.0" encoding="UTF-8"?><root>'.$body.'</root>';
             if ($doc->loadXML($wrapped) === false) {
                 throw new RuntimeException('body is not valid XHTML strict.');
@@ -311,13 +327,24 @@ class LogiusConnector
             libxml_clear_errors();
             libxml_use_internal_errors($previous);
         }
+    }//end assertWellFormedXhtml()
 
-        $totalSize   = 0;
-        $attachments = ($message['attachments'] ?? []);
+    /**
+     * Validate the outbound attachments list (shape, mime allow-list, total size).
+     *
+     * @param mixed $attachments The candidate attachments value.
+     *
+     * @return void
+     *
+     * @throws RuntimeException On any validation failure (with reason).
+     */
+    private function validateAttachments(mixed $attachments): void
+    {
         if (is_array($attachments) === false) {
             throw new RuntimeException('attachments must be an array.');
         }
 
+        $totalSize = 0;
         foreach ($attachments as $att) {
             if (is_array($att) === false) {
                 throw new RuntimeException('attachment entries must be arrays.');
@@ -334,7 +361,7 @@ class LogiusConnector
         if ($totalSize > self::MAX_ATTACHMENT_BYTES) {
             throw new RuntimeException('attachments total size exceeds 25 MB.');
         }
-    }//end validateOutboundPayload()
+    }//end validateAttachments()
 
     /**
      * Sign a request body with the tenant's PKI-overheid private key.
@@ -350,6 +377,10 @@ class LogiusConnector
      * @return string Base64-encoded signature.
      *
      * @throws RuntimeException If the key cannot be loaded or signing fails.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $pkiCertPem is part of the
+     *  public signRequest contract (kept for callers/tests and future cert-pinning);
+     *  the signature itself only needs the private key.
      */
     public function signRequest(array $body, string $pkiCertPem, string $pkiKeyPem): string
     {

@@ -101,6 +101,8 @@ class BlastSendJob extends TimedJob
      *
      * @return void
      *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+     *
      * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#blastsendjob
      */
     protected function run(mixed $argument): void

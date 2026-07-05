@@ -34,9 +34,19 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Read-only reporting service.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregates the programme
+ *  KPI, liability, tier and expiry-forecast reports as many small,
+ *  single-purpose methods over one loyalty-reporting concern; splitting it
+ *  would scatter one cohesive read-only surface across several classes.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators a
+ *  loyalty reporting service legitimately needs (OR container, app config,
+ *  account/ledger/programme services, logger); splitting them would add
+ *  indirection without reducing real coupling.
  *
  * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
  */
@@ -45,17 +55,17 @@ class LoyaltyReportingService
     /**
      * Constructor.
      *
-     * @param ContainerInterface      $container             The DI container.
-     * @param IAppConfig              $appConfig             The app configuration.
-     * @param LoyaltyAccountService   $loyaltyAccountService The account service.
-     * @param PointsLedgerService     $ledgerService         The ledger service.
-     * @param LoyaltyProgrammeService $programmeService      The programme service.
-     * @param LoggerInterface         $logger                The logger.
+     * @param ContainerInterface      $container        The DI container.
+     * @param IAppConfig              $appConfig        The app configuration.
+     * @param LoyaltyAccountService   $accountService   The account service.
+     * @param PointsLedgerService     $ledgerService    The ledger service.
+     * @param LoyaltyProgrammeService $programmeService The programme service.
+     * @param LoggerInterface         $logger           The logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
-        private LoyaltyAccountService $loyaltyAccountService,
+        private LoyaltyAccountService $accountService,
         private PointsLedgerService $ledgerService,
         private LoyaltyProgrammeService $programmeService,
         private LoggerInterface $logger,
@@ -75,7 +85,7 @@ class LoyaltyReportingService
      */
     public function getKpis(string $programmeId, ?string $from=null, ?string $to=null): array
     {
-        $accounts = $this->loyaltyAccountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
+        $accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 
         $activeAccounts    = 0;
         $tierDistribution  = [];
@@ -126,10 +136,7 @@ class LoyaltyReportingService
         $programme            = $this->programmeService->getProgramme(programmeId: $programmeId);
         $pointValue           = (float) ($programme['pointValue'] ?? 0.01);
         $estimatedLiability   = round($outstandingPoints * $pointValue, 2);
-        $programmeCostPercent = $this->estimateProgrammeCostPercent(
-            programmeId: $programmeId,
-            debits: $debits
-        );
+        $programmeCostPercent = $this->estimateProgrammeCostPercent(debits: $debits);
 
         return [
             'activeAccounts'       => $activeAccounts,
@@ -158,7 +165,7 @@ class LoyaltyReportingService
      */
     public function getLiabilitySnapshot(string $programmeId): array
     {
-        $accounts = $this->loyaltyAccountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
+        $accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 
         $outstanding = 0;
         foreach ($accounts as $a) {
@@ -182,6 +189,12 @@ class LoyaltyReportingService
      * @param string $programmeId The programme UUID.
      *
      * @return array<int, array<string, mixed>>
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) AggregationQuery::create() is the
+     *  library's documented value-object factory; there is no instance to call
+     *  it on.
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function getTierReport(string $programmeId): array
     {
@@ -217,11 +230,10 @@ class LoyaltyReportingService
             // Fold a missing/empty tier key into the `unassigned` bucket,
             // matching the prior `?? 'unassigned'` default. Two source buckets
             // (e.g. null and '') therefore merge into one, so accumulate.
-            $key = $group['key'] ?? null;
+            $key    = $group['key'] ?? null;
+            $tierId = (string) $key;
             if ($key === null || $key === '') {
                 $tierId = 'unassigned';
-            } else {
-                $tierId = (string) $key;
             }
 
             $byTier[$tierId] = ($byTier[$tierId] ?? 0) + (int) ($group['value'] ?? 0);
@@ -246,7 +258,7 @@ class LoyaltyReportingService
      */
     private function getTierReportPhp(string $programmeId): array
     {
-        $accounts = $this->loyaltyAccountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
+        $accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 
         $byTier = [];
         foreach ($accounts as $a) {
@@ -269,17 +281,18 @@ class LoyaltyReportingService
      * @param int    $days        Window size in days (default 30).
      *
      * @return array{points: int, accounts: int, until: string}
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function getExpiryForecast(string $programmeId, int $days=30): array
     {
-        $accounts = $this->loyaltyAccountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
+        $accounts = $this->accountService->listAccountsForProgramme(programmeId: $programmeId, limit: 10000);
 
         $programme = $this->programmeService->getProgramme(programmeId: $programmeId);
         $policy    = $programme['expiryPolicy'] ?? [];
+        $type      = 'none';
         if (is_array($policy) === true) {
             $type = (string) ($policy['type'] ?? 'none');
-        } else {
-            $type = 'none';
         }
 
         if ($type !== 'inactivityMonths') {
@@ -290,10 +303,9 @@ class LoyaltyReportingService
             ];
         }
 
+        $months = 12;
         if (is_array($policy) === true) {
             $months = (int) ($policy['value'] ?? 12);
-        } else {
-            $months = 12;
         }
 
         $now    = new DateTimeImmutable('now', new DateTimeZone('UTC'));
@@ -327,12 +339,11 @@ class LoyaltyReportingService
      * matched POS transaction totaal (looked up via posTransaction_schema if
      * present). Returns 0.0 when sales data is unavailable.
      *
-     * @param string                           $programmeId The programme UUID.
-     * @param array<int, array<string, mixed>> $debits      The debit ledger entries in period.
+     * @param array<int, array<string, mixed>> $debits The debit ledger entries in period.
      *
      * @return float
      */
-    private function estimateProgrammeCostPercent(string $programmeId, array $debits): float
+    private function estimateProgrammeCostPercent(array $debits): float
     {
         if ($debits === []) {
             return 0.0;
@@ -384,6 +395,24 @@ class LoyaltyReportingService
             return null;
         }
 
+        return $this->normalizeOptionResult(object: $object);
+    }//end getOption()
+
+    /**
+     * Normalize a RedemptionOption lookup result to a plain array.
+     *
+     * Mirrors the previous inline `getOption()` tail exactly: null passes
+     * through as null, arrays pass through, objects exposing
+     * `jsonSerialize()` are serialized, objects exposing `getObject()` are
+     * unwrapped, anything else yields null.
+     *
+     * @param mixed $object The raw ObjectService::find() result.
+     *
+     * @return array<string, mixed>|null The normalized option, or null when it
+     *         could not be normalized to an array.
+     */
+    private function normalizeOptionResult(mixed $object): ?array
+    {
         if ($object === null) {
             return null;
         }
@@ -393,21 +422,21 @@ class LoyaltyReportingService
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $s = $object->jsonSerialize();
-            if (is_array($s) === true) {
-                return $s;
+            $serialized = $object->jsonSerialize();
+            if (is_array($serialized) === true) {
+                return $serialized;
             }
         }
 
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $d = $object->getObject();
-            if (is_array($d) === true) {
-                return $d;
+            $data = $object->getObject();
+            if (is_array($data) === true) {
+                return $data;
             }
         }
 
         return null;
-    }//end getOption()
+    }//end normalizeOptionResult()
 
     /**
      * Get the ObjectService.
@@ -419,7 +448,7 @@ class LoyaltyReportingService
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (\Throwable $e) {
-            throw new \RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
+            throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
         }
     }//end getObjectService()
 
@@ -432,14 +461,14 @@ class LoyaltyReportingService
      *
      * @return object The aggregation runner.
      *
-     * @throws \RuntimeException If OpenRegister is unavailable.
+     * @throws RuntimeException If OpenRegister is unavailable.
      */
     private function getAggregationRunner(): object
     {
         try {
             return $this->container->get('OCA\OpenRegister\Service\Aggregation\AggregationRunner');
         } catch (\Throwable $e) {
-            throw new \RuntimeException('OpenRegister aggregation runner is unavailable.', 0, $e);
+            throw new RuntimeException('OpenRegister aggregation runner is unavailable.', 0, $e);
         }
     }//end getAggregationRunner()
 
@@ -451,14 +480,14 @@ class LoyaltyReportingService
      *
      * @return array{0: string, 1: string} The [register, schema] refs.
      *
-     * @throws \RuntimeException When the register or schema is not configured.
+     * @throws RuntimeException When the register or schema is not configured.
      */
     private function accountConfig(): array
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'klantLoyaltyAccount_schema', '');
         if ($register === '' || $schema === '') {
-            throw new \RuntimeException('KlantLoyaltyAccount register/schema is not configured.');
+            throw new RuntimeException('KlantLoyaltyAccount register/schema is not configured.');
         }
 
         return [$register, $schema];

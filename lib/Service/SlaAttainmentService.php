@@ -46,7 +46,8 @@ use Throwable;
  * counts as 1.0 met for acknowledgement and 0.0 met for resolution
  * (REQ-006).
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Bridges OR + SLA engine constants for breach-event/tracked-object aggregation
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Attainment aggregation is inherently branchy; split into small focused methods
  */
 class SlaAttainmentService
 {
@@ -77,6 +78,8 @@ class SlaAttainmentService
      * @return array<string, mixed> Attainment payload.
      *
      * @throws InvalidArgumentException When required params are invalid.
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function compute(array $params): array
     {
@@ -94,8 +97,50 @@ class SlaAttainmentService
         $events        = $this->loadBreachEventsInRange(start: $start, end: $end);
         $policyFilter  = (string) ($params['policy'] ?? '');
 
+        $accumulated = $this->accumulateBreachedEvents(events: $events, policyFilter: $policyFilter, groupBy: $groupBy);
+
+        // For attainment we need the closed-met denominator too — query
+        // tracked objects with all targets met in the period.
+        $metCounts = $this->countMetObjectsInRange(start: $start, end: $end, policyFilter: $policyFilter);
+        $merged    = $this->mergeMetCounts(accumulated: $accumulated, metCounts: $metCounts);
+
+        $byTargetOut       = $this->buildByTargetOut(byTarget: $merged['byTarget']);
+        $byGroup           = $this->buildByGroup(groupAccum: $merged['groupAccum']);
+        $overallAttainment = $this->ratio(numerator: $merged['met'], denominator: $merged['total']);
+
+        return [
+            'attainment'        => $overallAttainment,
+            // Same value scaled to a literal percent (0–100) so a declarative
+            // dashboard stat widget can render it with format.style "percent".
+            'attainmentPercent' => round(($overallAttainment * 100), 1),
+            'total'             => $merged['total'],
+            'met'               => $merged['met'],
+            'breached'          => $accumulated['breached'],
+            'inFlightBreached'  => $accumulated['inFlight'],
+            'closedBreached'    => $accumulated['closed'],
+            'range'             => [
+                'start' => $start->format(DateTimeInterface::ATOM),
+                'end'   => $end->format(DateTimeInterface::ATOM),
+            ],
+            'details'           => [
+                'byTarget' => $byTargetOut,
+                'byGroup'  => $byGroup,
+            ],
+        ];
+    }//end compute()
+
+    /**
+     * Walk the breach events and accumulate per-target/per-group breach counts.
+     *
+     * @param array<int, array<string, mixed>> $events       Breach events.
+     * @param string                           $policyFilter Optional policy identity filter.
+     * @param string                           $groupBy      Grouping mode.
+     *
+     * @return array{total: int, breached: int, inFlight: int, closed: int, byTarget: array<string, mixed>, groupAccum: array<string, mixed>}
+     */
+    private function accumulateBreachedEvents(array $events, string $policyFilter, string $groupBy): array
+    {
         $total      = 0;
-        $met        = 0;
         $breached   = 0;
         $inFlight   = 0;
         $closed     = 0;
@@ -112,7 +157,9 @@ class SlaAttainmentService
             $resolved = isset($event['resolvedAt']) === true && $event['resolvedAt'] !== '';
             if ($resolved === true) {
                 $closed++;
-            } else {
+            }
+
+            if ($resolved === false) {
                 $inFlight++;
             }
 
@@ -127,16 +174,36 @@ class SlaAttainmentService
             $groupAccum[$groupKey]['breached']++;
         }//end foreach
 
-        // For attainment we need the closed-met denominator too — query
-        // tracked objects with all targets met in the period.
-        $metCounts = $this->countMetObjectsInRange(start: $start, end: $end, policyFilter: $policyFilter);
+        return [
+            'total'      => $total,
+            'breached'   => $breached,
+            'inFlight'   => $inFlight,
+            'closed'     => $closed,
+            'byTarget'   => $byTarget,
+            'groupAccum' => $groupAccum,
+        ];
+    }//end accumulateBreachedEvents()
+
+    /**
+     * Merge the closed-met tracked-object counts into the breached-event accumulation.
+     *
+     * @param array<string, mixed> $accumulated Breach-event accumulation (see accumulateBreachedEvents()).
+     * @param array<string, mixed> $metCounts   Met-object counts (see countMetObjectsInRange()).
+     *
+     * @return array{total: int, met: int, byTarget: array<string, mixed>, groupAccum: array<string, mixed>}
+     */
+    private function mergeMetCounts(array $accumulated, array $metCounts): array
+    {
+        $byTarget   = $accumulated['byTarget'];
+        $groupAccum = $accumulated['groupAccum'];
+
         foreach ($metCounts['byTarget'] as $kind => $count) {
             $byTarget[$kind]        = ($byTarget[$kind] ?? ['breached' => 0, 'met' => 0]);
             $byTarget[$kind]['met'] = $count;
         }
 
-        $met   += $metCounts['total'];
-        $total += $metCounts['total'];
+        $met   = $metCounts['total'];
+        $total = $accumulated['total'] + $metCounts['total'];
 
         foreach ($metCounts['byGroup'] as $key => $entry) {
             $groupAccum[$key]          = ($groupAccum[$key] ?? ['name' => $entry['name'], 'total' => 0, 'breached' => 0, 'met' => 0]);
@@ -144,15 +211,28 @@ class SlaAttainmentService
             $groupAccum[$key]['met']   = ($groupAccum[$key]['met'] ?? 0) + $entry['total'];
         }
 
+        return [
+            'total'      => $total,
+            'met'        => $met,
+            'byTarget'   => $byTarget,
+            'groupAccum' => $groupAccum,
+        ];
+    }//end mergeMetCounts()
+
+    /**
+     * Build the `details.byTarget` output payload from the merged per-target counts.
+     *
+     * @param array<string, array<string, int>> $byTarget Merged per-target breached/met counts.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    private function buildByTargetOut(array $byTarget): array
+    {
         $byTargetOut = [];
         foreach ($byTarget as $kind => $counts) {
-            $metCount = (int) $counts['met'];
-            $denom    = ($counts['breached'] + $metCount);
-            if ($denom > 0) {
-                $attainment = round(($metCount / $denom), 4);
-            } else {
-                $attainment = 0.0;
-            }
+            $metCount   = (int) $counts['met'];
+            $denom      = ($counts['breached'] + $metCount);
+            $attainment = $this->ratio(numerator: $metCount, denominator: $denom);
 
             $byTargetOut[$kind] = [
                 'attainment' => $attainment,
@@ -161,15 +241,23 @@ class SlaAttainmentService
             ];
         }
 
+        return $byTargetOut;
+    }//end buildByTargetOut()
+
+    /**
+     * Build the `details.byGroup` output payload from the merged per-group counts.
+     *
+     * @param array<string, array<string, mixed>> $groupAccum Merged per-group breached/met counts.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildByGroup(array $groupAccum): array
+    {
         $byGroup = [];
         foreach ($groupAccum as $key => $entry) {
-            $denom = (int) $entry['total'];
-            $metE  = (int) ($entry['met'] ?? 0);
-            if ($denom > 0) {
-                $groupAttainment = round(($metE / $denom), 4);
-            } else {
-                $groupAttainment = 0.0;
-            }
+            $denom           = (int) $entry['total'];
+            $metE            = (int) ($entry['met'] ?? 0);
+            $groupAttainment = $this->ratio(numerator: $metE, denominator: $denom);
 
             $byGroup[] = [
                 'groupKey'   => (string) $key,
@@ -181,32 +269,25 @@ class SlaAttainmentService
             ];
         }
 
-        if ($total > 0) {
-            $overallAttainment = round(($met / $total), 4);
-        } else {
-            $overallAttainment = 0.0;
+        return $byGroup;
+    }//end buildByGroup()
+
+    /**
+     * Ratio rounded to 4 decimals, or 0.0 when the denominator is not positive.
+     *
+     * @param int $numerator   The numerator.
+     * @param int $denominator The denominator.
+     *
+     * @return float
+     */
+    private function ratio(int $numerator, int $denominator): float
+    {
+        if ($denominator > 0) {
+            return round(($numerator / $denominator), 4);
         }
 
-        return [
-            'attainment'        => $overallAttainment,
-            // Same value scaled to a literal percent (0–100) so a declarative
-            // dashboard stat widget can render it with format.style "percent".
-            'attainmentPercent' => round(($overallAttainment * 100), 1),
-            'total'             => $total,
-            'met'               => $met,
-            'breached'          => $breached,
-            'inFlightBreached'  => $inFlight,
-            'closedBreached'    => $closed,
-            'range'             => [
-                'start' => $start->format(DateTimeInterface::ATOM),
-                'end'   => $end->format(DateTimeInterface::ATOM),
-            ],
-            'details'           => [
-                'byTarget' => $byTargetOut,
-                'byGroup'  => $byGroup,
-            ],
-        ];
-    }//end compute()
+        return 0.0;
+    }//end ratio()
 
     /**
      * Resolve the (start, end) instant pair for the requested bucket.
@@ -217,72 +298,130 @@ class SlaAttainmentService
      * @return array{0: DateTimeImmutable, 1: DateTimeImmutable} Range.
      *
      * @throws InvalidArgumentException On missing/invalid bucket value.
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function resolveBucketRange(string $bucket, array $params): array
     {
         $tz  = new DateTimeZone('UTC');
         $now = new DateTimeImmutable('now', $tz);
-        switch ($bucket) {
-            case 'day':
-                // An empty/missing date defaults to today so a declarative
-                // dashboard can drive the bucket select alone (no client-side
-                // date math); an explicitly supplied value must still be valid.
-                $date = (string) ($params['date'] ?? '');
-                if ($date === '') {
-                    $date = $now->format('Y-m-d');
-                } else if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
-                    throw new InvalidArgumentException('invalidDate');
-                }
 
-                $start = new DateTimeImmutable($date.' 00:00:00', $tz);
-                return [$start, $start->modify('+1 day')];
-
-            case 'week':
-                $week = (string) ($params['week'] ?? '');
-                if ($week === '') {
-                    $week = $now->format('o-\WW');
-                }
-
-                if (preg_match('/^(\d{4})-W(\d{1,2})$/', $week, $matches) !== 1) {
-                    throw new InvalidArgumentException('invalidWeek');
-                }
-
-                $start = (new DateTimeImmutable('now', $tz))
-                    ->setISODate((int) $matches[1], (int) $matches[2])
-                    ->setTime(0, 0);
-                return [$start, $start->modify('+7 days')];
-
-            case 'month':
-                $month = (string) ($params['month'] ?? '');
-                if ($month === '') {
-                    $month = $now->format('Y-m');
-                }
-
-                if (preg_match('/^(\d{4})-(\d{2})$/', $month, $matches) !== 1) {
-                    throw new InvalidArgumentException('invalidMonth');
-                }
-
-                $start = new DateTimeImmutable($month.'-01 00:00:00', $tz);
-                return [$start, $start->modify('+1 month')];
-
-            case 'quarter':
-                $quarter = (string) ($params['quarter'] ?? '');
-                if ($quarter === '') {
-                    $quarter = sprintf('%s-Q%d', $now->format('Y'), (int) ceil(((int) $now->format('n')) / 3));
-                }
-
-                if (preg_match('/^(\d{4})-Q([1-4])$/', $quarter, $matches) !== 1) {
-                    throw new InvalidArgumentException('invalidQuarter');
-                }
-
-                $month = (((int) $matches[2] - 1) * 3) + 1;
-                $start = new DateTimeImmutable(sprintf('%s-%02d-01 00:00:00', $matches[1], $month), $tz);
-                return [$start, $start->modify('+3 months')];
-
-            default:
-                throw new InvalidArgumentException('invalidBucket');
-        }//end switch
+        return match ($bucket) {
+            'day'     => $this->resolveDayRange(now: $now, tz: $tz, params: $params),
+            'week'    => $this->resolveWeekRange(now: $now, tz: $tz, params: $params),
+            'month'   => $this->resolveMonthRange(now: $now, tz: $tz, params: $params),
+            'quarter' => $this->resolveQuarterRange(now: $now, tz: $tz, params: $params),
+            default   => throw new InvalidArgumentException('invalidBucket'),
+        };
     }//end resolveBucketRange()
+
+    /**
+     * Resolve the (start, end) range for the "day" bucket.
+     *
+     * @param DateTimeImmutable    $now    Current instant.
+     * @param DateTimeZone         $tz     Working timezone.
+     * @param array<string, mixed> $params Filter parameters.
+     *
+     * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
+     *
+     * @throws InvalidArgumentException On an invalid date value.
+     */
+    private function resolveDayRange(DateTimeImmutable $now, DateTimeZone $tz, array $params): array
+    {
+        // An empty/missing date defaults to today so a declarative
+        // dashboard can drive the bucket select alone (no client-side
+        // date math); an explicitly supplied value must still be valid.
+        $date = (string) ($params['date'] ?? '');
+        if ($date === '') {
+            $date = $now->format('Y-m-d');
+        } else if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
+            throw new InvalidArgumentException('invalidDate');
+        }
+
+        $start = new DateTimeImmutable($date.' 00:00:00', $tz);
+        return [$start, $start->modify('+1 day')];
+    }//end resolveDayRange()
+
+    /**
+     * Resolve the (start, end) range for the "week" bucket.
+     *
+     * @param DateTimeImmutable    $now    Current instant.
+     * @param DateTimeZone         $tz     Working timezone.
+     * @param array<string, mixed> $params Filter parameters.
+     *
+     * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
+     *
+     * @throws InvalidArgumentException On an invalid week value.
+     */
+    private function resolveWeekRange(DateTimeImmutable $now, DateTimeZone $tz, array $params): array
+    {
+        $week = (string) ($params['week'] ?? '');
+        if ($week === '') {
+            $week = $now->format('o-\WW');
+        }
+
+        if (preg_match('/^(\d{4})-W(\d{1,2})$/', $week, $matches) !== 1) {
+            throw new InvalidArgumentException('invalidWeek');
+        }
+
+        $start = (new DateTimeImmutable('now', $tz))
+            ->setISODate((int) $matches[1], (int) $matches[2])
+            ->setTime(0, 0);
+        return [$start, $start->modify('+7 days')];
+    }//end resolveWeekRange()
+
+    /**
+     * Resolve the (start, end) range for the "month" bucket.
+     *
+     * @param DateTimeImmutable    $now    Current instant.
+     * @param DateTimeZone         $tz     Working timezone.
+     * @param array<string, mixed> $params Filter parameters.
+     *
+     * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
+     *
+     * @throws InvalidArgumentException On an invalid month value.
+     */
+    private function resolveMonthRange(DateTimeImmutable $now, DateTimeZone $tz, array $params): array
+    {
+        $month = (string) ($params['month'] ?? '');
+        if ($month === '') {
+            $month = $now->format('Y-m');
+        }
+
+        if (preg_match('/^(\d{4})-(\d{2})$/', $month) !== 1) {
+            throw new InvalidArgumentException('invalidMonth');
+        }
+
+        $start = new DateTimeImmutable($month.'-01 00:00:00', $tz);
+        return [$start, $start->modify('+1 month')];
+    }//end resolveMonthRange()
+
+    /**
+     * Resolve the (start, end) range for the "quarter" bucket.
+     *
+     * @param DateTimeImmutable    $now    Current instant.
+     * @param DateTimeZone         $tz     Working timezone.
+     * @param array<string, mixed> $params Filter parameters.
+     *
+     * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
+     *
+     * @throws InvalidArgumentException On an invalid quarter value.
+     */
+    private function resolveQuarterRange(DateTimeImmutable $now, DateTimeZone $tz, array $params): array
+    {
+        $quarter = (string) ($params['quarter'] ?? '');
+        if ($quarter === '') {
+            $quarter = sprintf('%s-Q%d', $now->format('Y'), (int) ceil(((int) $now->format('n')) / 3));
+        }
+
+        if (preg_match('/^(\d{4})-Q([1-4])$/', $quarter, $matches) !== 1) {
+            throw new InvalidArgumentException('invalidQuarter');
+        }
+
+        $month = (((int) $matches[2] - 1) * 3) + 1;
+        $start = new DateTimeImmutable(sprintf('%s-%02d-01 00:00:00', $matches[1], $month), $tz);
+        return [$start, $start->modify('+3 months')];
+    }//end resolveQuarterRange()
 
     /**
      * Load breach-event records whose breachedAt is in the time range.
@@ -328,27 +467,44 @@ class SlaAttainmentService
 
         $events = [];
         foreach ((array) $rows as $row) {
-            $array = $this->normalise(row: $row);
-            $when  = $array['breachedAt'] ?? '';
-            if ($when === '') {
-                continue;
+            $event = $this->parseBreachEventRow(row: $row, start: $start, end: $end);
+            if ($event !== null) {
+                $events[] = $event;
             }
-
-            try {
-                $instant = new DateTimeImmutable((string) $when);
-            } catch (Throwable $e) {
-                continue;
-            }
-
-            if ($instant < $start || $instant >= $end) {
-                continue;
-            }
-
-            $events[] = $array;
         }
 
         return $events;
     }//end loadBreachEventsInRange()
+
+    /**
+     * Parse and range-filter a single breach-event row.
+     *
+     * @param mixed             $row   Raw row.
+     * @param DateTimeInterface $start Start instant.
+     * @param DateTimeInterface $end   End instant (exclusive).
+     *
+     * @return array<string, mixed>|null The normalised event, or null when out of range/unparsable.
+     */
+    private function parseBreachEventRow(mixed $row, DateTimeInterface $start, DateTimeInterface $end): ?array
+    {
+        $array = $this->normalise(row: $row);
+        $when  = $array['breachedAt'] ?? '';
+        if ($when === '') {
+            return null;
+        }
+
+        try {
+            $instant = new DateTimeImmutable((string) $when);
+        } catch (Throwable $e) {
+            return null;
+        }
+
+        if ($instant < $start || $instant >= $end) {
+            return null;
+        }
+
+        return $array;
+    }//end parseBreachEventRow()
 
     /**
      * Count tracked objects that met all targets in the time range.
@@ -389,67 +545,127 @@ class SlaAttainmentService
                 continue;
             }
 
-            try {
-                $rows = $objectService->findAll(
-                    config: [
-                        'register' => $register,
-                        'schema'   => $schemaId,
-                        'limit'    => 5000,
-                    ]
-                );
-            } catch (Throwable $e) {
-                continue;
-            }
-
-            foreach ((array) $rows as $row) {
-                $array     = $this->normalise(row: $row);
-                $slaStatus = $array['slaStatus'] ?? null;
-                if (is_array($slaStatus) === false) {
+            $rows = $this->fetchTrackedObjectRows(objectService: $objectService, register: $register, schemaId: $schemaId);
+            foreach ($rows as $row) {
+                $result = $this->evaluateTrackedObjectRow(row: $row, start: $start, end: $end, policyFilter: $policyFilter);
+                if ($result === null) {
                     continue;
                 }
 
-                if ($policyFilter !== '' && (string) ($slaStatus['policyId'] ?? '') !== $policyFilter) {
-                    continue;
+                $total++;
+                foreach ($result['byTarget'] as $kind => $count) {
+                    $byTarget[$kind] = ($byTarget[$kind] ?? 0) + $count;
                 }
 
-                $allMet     = true;
-                $touchedKey = false;
-                foreach (($slaStatus['targets'] ?? []) as $target) {
-                    $status = (string) ($target['status'] ?? '');
-                    if ($status !== SlaEngineService::STATUS_MET) {
-                        $allMet = false;
-                        continue;
-                    }
-
-                    $metAt = $target['metAt'] ?? '';
-                    if ($metAt === '') {
-                        continue;
-                    }
-
-                    try {
-                        $metInstant = new DateTimeImmutable((string) $metAt);
-                    } catch (Throwable $e) {
-                        continue;
-                    }
-
-                    if ($metInstant >= $start && $metInstant < $end) {
-                        $touchedKey      = true;
-                        $kind            = (string) ($target['kind'] ?? 'resolution');
-                        $byTarget[$kind] = ($byTarget[$kind] ?? 0) + 1;
-                    }
-                }//end foreach
-
-                if ($allMet === true && $touchedKey === true) {
-                    $total++;
-                    $key           = (string) ($slaStatus['policyId'] ?? 'unknown');
-                    $byGroup[$key] = ($byGroup[$key] ?? ['name' => $key, 'total' => 0]);
-                    $byGroup[$key]['total']++;
-                }
+                $key           = $result['groupKey'];
+                $byGroup[$key] = ($byGroup[$key] ?? ['name' => $key, 'total' => 0]);
+                $byGroup[$key]['total']++;
             }//end foreach
         }//end foreach
 
         return ['total' => $total, 'byTarget' => $byTarget, 'byGroup' => $byGroup];
     }//end countMetObjectsInRange()
+
+    /**
+     * Fetch tracked-object rows for a schema, tolerating findAll failures.
+     *
+     * @param object $objectService The OpenRegister ObjectService.
+     * @param string $register      The register identifier.
+     * @param string $schemaId      The schema identifier.
+     *
+     * @return array<int, mixed>
+     */
+    private function fetchTrackedObjectRows(object $objectService, string $register, string $schemaId): array
+    {
+        try {
+            $rows = $objectService->findAll(
+                config: [
+                    'register' => $register,
+                    'schema'   => $schemaId,
+                    'limit'    => 5000,
+                ]
+            );
+        } catch (Throwable $e) {
+            return [];
+        }
+
+        return (array) $rows;
+    }//end fetchTrackedObjectRows()
+
+    /**
+     * Evaluate whether a tracked-object row is counted for attainment.
+     *
+     * @param mixed             $row          Raw row.
+     * @param DateTimeInterface $start        Start instant.
+     * @param DateTimeInterface $end          End instant.
+     * @param string            $policyFilter Optional policy identity filter.
+     *
+     * @return array{byTarget: array<string, int>, groupKey: string}|null Null when filtered out or not fully-met-in-range.
+     */
+    private function evaluateTrackedObjectRow(mixed $row, DateTimeInterface $start, DateTimeInterface $end, string $policyFilter): ?array
+    {
+        $array     = $this->normalise(row: $row);
+        $slaStatus = $array['slaStatus'] ?? null;
+        if (is_array($slaStatus) === false) {
+            return null;
+        }
+
+        if ($policyFilter !== '' && (string) ($slaStatus['policyId'] ?? '') !== $policyFilter) {
+            return null;
+        }
+
+        $targets = $this->evaluateSlaTargets(slaStatus: $slaStatus, start: $start, end: $end);
+        if ($targets['allMet'] === false || $targets['touchedKey'] === false) {
+            return null;
+        }
+
+        return [
+            'byTarget' => $targets['byTarget'],
+            'groupKey' => (string) ($slaStatus['policyId'] ?? 'unknown'),
+        ];
+    }//end evaluateTrackedObjectRow()
+
+    /**
+     * Evaluate every SLA target on a tracked object.
+     *
+     * @param array<string, mixed> $slaStatus The object's slaStatus.
+     * @param DateTimeInterface    $start     Start instant.
+     * @param DateTimeInterface    $end       End instant.
+     *
+     * @return array{allMet: bool, touchedKey: bool, byTarget: array<string, int>}
+     */
+    private function evaluateSlaTargets(array $slaStatus, DateTimeInterface $start, DateTimeInterface $end): array
+    {
+        $allMet     = true;
+        $touchedKey = false;
+        $byTarget   = [];
+        foreach (($slaStatus['targets'] ?? []) as $target) {
+            $status = (string) ($target['status'] ?? '');
+            if ($status !== SlaEngineService::STATUS_MET) {
+                $allMet = false;
+                continue;
+            }
+
+            $metAt = $target['metAt'] ?? '';
+            if ($metAt === '') {
+                continue;
+            }
+
+            try {
+                $metInstant = new DateTimeImmutable((string) $metAt);
+            } catch (Throwable $e) {
+                continue;
+            }
+
+            if ($metInstant >= $start && $metInstant < $end) {
+                $touchedKey      = true;
+                $kind            = (string) ($target['kind'] ?? 'resolution');
+                $byTarget[$kind] = ($byTarget[$kind] ?? 0) + 1;
+            }
+        }//end foreach
+
+        return ['allMet' => $allMet, 'touchedKey' => $touchedKey, 'byTarget' => $byTarget];
+    }//end evaluateSlaTargets()
 
     /**
      * Derive a group key for an event according to the requested grouping.

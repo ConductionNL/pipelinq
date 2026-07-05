@@ -53,6 +53,8 @@ use RuntimeException;
  * this slice; an empty list is returned without an external call.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive availability engine; splitting would fragment slot/cache logic.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Slot computation over many working-hour/booking/calendar dimensions is inherently complex.
  *
  * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-003
  * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-016
@@ -169,6 +171,8 @@ class AvailabilityService
      * @return array<int, array{startTime: string, endTime: string, durationMinutes: int}>
      *
      * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-003
+     *
+     * @SuppressWarnings(PHPMD.LongVariable) $serviceDurationMinutes is a public named-argument param; renaming breaks callers.
      */
     public function computeAvailability(string $resourceId, string $date, int $serviceDurationMinutes): array
     {
@@ -420,6 +424,8 @@ class AvailabilityService
      * @return array<string, mixed> A `{freeBlocks, generatedAt, expiresAt, stale}` cache snapshot.
      *
      * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-016
+     *
+     * @SuppressWarnings(PHPMD.LongVariable) $serviceDurationMinutes is a public named-argument param; renaming breaks callers.
      */
     public function getOrComputeCache(string $resourceId, string $date, ?int $serviceDurationMinutes=null): array
     {
@@ -546,6 +552,8 @@ class AvailabilityService
      * @param string $date       ISO date `YYYY-MM-DD`.
      *
      * @return array<int, array<string, mixed>>
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential fetch + per-booking overlap guards; extraction adds no clarity.
      */
     private function loadOverlappingBookings(string $resourceId, string $date): array
     {
@@ -827,13 +835,13 @@ class AvailabilityService
     private function overlapsAny(int $startMin, int $endMin, array $blocks): bool
     {
         foreach ($blocks as $block) {
-            $bs = $block['startMin'];
-            $be = $block['endMin'];
-            if ($be <= $bs) {
+            $blockStart = $block['startMin'];
+            $blockEnd   = $block['endMin'];
+            if ($blockEnd <= $blockStart) {
                 continue;
             }
 
-            if ($startMin < $be && $endMin > $bs) {
+            if ($startMin < $blockEnd && $endMin > $blockStart) {
                 return true;
             }
         }
@@ -854,13 +862,13 @@ class AvailabilityService
             return 0;
         }
 
-        $h = (int) $match[1];
-        $m = (int) $match[2];
-        if ($h < 0 || $h > 23 || $m < 0 || $m > 59) {
+        $hours   = (int) $match[1];
+        $minutes = (int) $match[2];
+        if ($hours < 0 || $hours > 23 || $minutes < 0 || $minutes > 59) {
             return 0;
         }
 
-        return (($h * 60) + $m);
+        return (($hours * 60) + $minutes);
     }//end minutesFromHHMM()
 
     /**
@@ -872,10 +880,10 @@ class AvailabilityService
      */
     private function minutesToHHMM(int $minutes): string
     {
-        $clamped = $this->clampToDay(value: $minutes);
-        $h       = intdiv($clamped, 60);
-        $m       = ($clamped % 60);
-        return sprintf('%02d:%02d', $h, $m);
+        $clamped    = $this->clampToDay(value: $minutes);
+        $hourPart   = intdiv($clamped, 60);
+        $minutePart = ($clamped % 60);
+        return sprintf('%02d:%02d', $hourPart, $minutePart);
     }//end minutesToHHMM()
 
     /**
@@ -911,8 +919,8 @@ class AvailabilityService
      */
     private function minutesOfDay(string $iso, string $date): int
     {
-        $ts = strtotime($iso);
-        if ($ts === false) {
+        $timestamp = strtotime($iso);
+        if ($timestamp === false) {
             return 0;
         }
 
@@ -922,15 +930,15 @@ class AvailabilityService
             return 0;
         }
 
-        if ($ts <= $dayStart) {
+        if ($timestamp <= $dayStart) {
             return 0;
         }
 
-        if ($ts >= $dayEnd) {
+        if ($timestamp >= $dayEnd) {
             return (24 * 60);
         }
 
-        $minutesFromDayStart = intdiv(($ts - $dayStart), 60);
+        $minutesFromDayStart = intdiv(($timestamp - $dayStart), 60);
         return $this->clampToDay(value: (int) $minutesFromDayStart);
     }//end minutesOfDay()
 
@@ -944,12 +952,12 @@ class AvailabilityService
     private function weekDayFor(string $date): string
     {
         try {
-            $dt = new DateTimeImmutable($date, new DateTimeZone('UTC'));
+            $dateTime = new DateTimeImmutable($date, new DateTimeZone('UTC'));
         } catch (\Throwable $e) {
             return '';
         }
 
-        return strtolower($dt->format('l'));
+        return strtolower($dateTime->format('l'));
     }//end weekDayFor()
 
     /**
@@ -1000,9 +1008,9 @@ class AvailabilityService
      */
     private function isoOffsetSeconds(int $seconds): string
     {
-        $dt = (new DateTimeImmutable('now', new DateTimeZone('UTC')))
+        $dateTime = (new DateTimeImmutable('now', new DateTimeZone('UTC')))
             ->modify(sprintf('+%d seconds', $seconds));
-        return $dt->format('Y-m-d\TH:i:sP');
+        return $dateTime->format('Y-m-d\TH:i:sP');
     }//end isoOffsetSeconds()
 
     /**

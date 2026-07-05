@@ -85,6 +85,12 @@ class EmailFallbackSender
      * @return bool True iff IMailer accepted the message.
      *
      * @throws RuntimeException If the recipient address is invalid.
+     *
+     * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $appendNotice selects between the
+     *  two documented fallback modes (5-day notice vs no-mailbox); it is not a
+     *  behaviour toggle to be split into two methods.
      */
     public function send(array $message, string $toEmail, bool $appendNotice=true): bool
     {

@@ -91,6 +91,8 @@ class ReminderDispatchJob extends TimedJob
      *
      * @return void
      *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+     *
      * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-007
      */
     protected function run(mixed $argument): void
@@ -136,12 +138,13 @@ class ReminderDispatchJob extends TimedJob
 
             try {
                 $emailService = $this->emailService();
-                $ok           = $emailService->sendReminder(bookingId: $bookingId);
-                if ($ok === true) {
+                $reminderSent = $emailService->sendReminder(bookingId: $bookingId);
+                if ($reminderSent === true) {
                     ++$sent;
-                } else {
-                    ++$failures;
+                    continue;
                 }
+
+                ++$failures;
             } catch (\Throwable $e) {
                 ++$failures;
                 $this->logger->warning(

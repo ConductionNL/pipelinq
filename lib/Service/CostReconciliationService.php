@@ -80,6 +80,11 @@ class CostReconciliationService
      * @return array{scanned: int, reconciled: int} Summary.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential per-row guard clauses
+     *  over the pending-cost scan; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same flat per-row guards; path count is
+     *  a product of independent skip conditions, not nesting.
      */
     public function reconcile(): array
     {
@@ -217,6 +222,9 @@ class CostReconciliationService
      * @param array<string, mixed> $payload Payload.
      *
      * @return string Id or empty.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat fallback chain over candidate
+     *  id keys; each branch is an independent early return.
      */
     private function extractId(array $payload): string
     {

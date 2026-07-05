@@ -54,18 +54,18 @@ class LoyaltyController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest                $request               The request.
-     * @param LoyaltyAccountService   $loyaltyAccountService The account service.
-     * @param PointsLedgerService     $ledgerService         The ledger service.
-     * @param RedemptionService       $redemptionService     The redemption service.
-     * @param GiftCardService         $giftCardService       The gift card service.
-     * @param LoyaltyProgrammeService $programmeService      The programme service.
-     * @param IUserSession            $userSession           The user session.
-     * @param IL10N                   $l10n                  The localiser.
+     * @param IRequest                $request           The request.
+     * @param LoyaltyAccountService   $accountService    The account service.
+     * @param PointsLedgerService     $ledgerService     The ledger service.
+     * @param RedemptionService       $redemptionService The redemption service.
+     * @param GiftCardService         $giftCardService   The gift card service.
+     * @param LoyaltyProgrammeService $programmeService  The programme service.
+     * @param IUserSession            $userSession       The user session.
+     * @param IL10N                   $l10n              The localiser.
      */
     public function __construct(
         IRequest $request,
-        private LoyaltyAccountService $loyaltyAccountService,
+        private LoyaltyAccountService $accountService,
         private PointsLedgerService $ledgerService,
         private RedemptionService $redemptionService,
         private GiftCardService $giftCardService,
@@ -96,7 +96,7 @@ class LoyaltyController extends Controller
             );
         }
 
-        $account = $this->loyaltyAccountService->getAccount(accountId: $accountId);
+        $account = $this->accountService->getAccount(accountId: $accountId);
         if ($account === null) {
             return new JSONResponse(
                 ['error' => $this->l10n->t('Account not found')],
@@ -228,6 +228,8 @@ class LoyaltyController extends Controller
      * @param string $code The beloningCode.
      *
      * @return JSONResponse
+     *
+     * @spec exclude mechanical phpmd cleanup — local variable renamed only, behaviour unchanged
      */
     #[NoAdminRequired]
     public function useRedemptionCode(string $code): JSONResponse
@@ -265,15 +267,15 @@ class LoyaltyController extends Controller
         }
 
         try {
-            $posTransactionId      = $this->request->getParam('posTransactionId');
-            $posTransactionIdValue = null;
+            $posTransactionId  = $this->request->getParam('posTransactionId');
+            $posTransactionRef = null;
             if (is_string($posTransactionId) === true) {
-                $posTransactionIdValue = $posTransactionId;
+                $posTransactionRef = $posTransactionId;
             }
 
             $updated = $this->redemptionService->markRedemptionUsed(
                 redemptionId: $redemptionId,
-                posTransactionId: $posTransactionIdValue
+                posTransactionId: $posTransactionRef
             );
             return new JSONResponse($updated);
         } catch (Throwable $e) {
@@ -341,9 +343,9 @@ class LoyaltyController extends Controller
             );
         }
 
-        $posTransactionIdValue = null;
+        $posTransactionRef = null;
         if (is_string($posTransactionId) === true) {
-            $posTransactionIdValue = $posTransactionId;
+            $posTransactionRef = $posTransactionId;
         }
 
         try {
@@ -351,7 +353,7 @@ class LoyaltyController extends Controller
                 giftCardId: $giftCardId,
                 pin: $pin,
                 amount: $amount,
-                posTransactionId: $posTransactionIdValue
+                posTransactionId: $posTransactionRef
             );
             return new JSONResponse($result);
         } catch (Throwable $e) {
@@ -379,15 +381,15 @@ class LoyaltyController extends Controller
             );
         }
 
-        $posTransactionId      = $this->request->getParam('posTransactionId');
-        $posTransactionIdValue = null;
+        $posTransactionId  = $this->request->getParam('posTransactionId');
+        $posTransactionRef = null;
         if (is_string($posTransactionId) === true) {
-            $posTransactionIdValue = $posTransactionId;
+            $posTransactionRef = $posTransactionId;
         }
 
         $card = $this->giftCardService->activateGiftCard(
             giftCardId: $giftCardId,
-            posTransactionId: $posTransactionIdValue
+            posTransactionId: $posTransactionRef
         );
         if ($card === null) {
             return new JSONResponse(

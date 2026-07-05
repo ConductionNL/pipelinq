@@ -84,6 +84,12 @@ class InitSlaStatus implements IRepairStep
      * @param IOutput $output Output.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Batched pagination over three tracked schema
+     *   types with per-batch and per-object fault tolerance; the per-object logic is extracted to
+     *   initialiseObject(), leaving only the loop/paging scaffold here.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same rationale: the nested paging loop and its
+     *   independent guard clauses inflate the theoretical path count.
      */
     public function run(IOutput $output): void
     {
@@ -140,59 +146,29 @@ class InitSlaStatus implements IRepairStep
 
                 foreach ($rows as $row) {
                     try {
-                        if (is_object($row) === true && method_exists($row, 'getObject') === true) {
-                            $data = $row->getObject();
-                        } else {
-                            $data = (array) $row;
-                        }
-
-                        if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
-                            $uuid = (string) $row->getUuid();
-                        } else {
-                            $uuid = (string) ($data['uuid'] ?? $data['id'] ?? '');
-                        }
-
-                        if ($uuid === '') {
-                            $totalSkip++;
-                            continue;
-                        }
-
-                        $slaStatus = $data['slaStatus'] ?? null;
-                        if (is_array($slaStatus) === true && ($slaStatus['policyId'] ?? '') !== '') {
-                            $totalSkip++;
-                            continue;
-                        }
-
-                        $metadata = [
-                            'tier'           => (string) ($data['slaTier'] ?? $data['customerTier'] ?? ''),
-                            'organisationId' => (string) ($data['organisationId'] ?? $data['client'] ?? ''),
-                            'contractId'     => (string) ($data['contractId'] ?? ''),
-                        ];
-
-                        $policy = $this->engine->resolvePolicyForObject($type, $uuid, $metadata);
-                        if ($policy === null) {
-                            $totalSkip++;
-                            continue;
-                        }
-
-                        $startedAt         = $this->parseStarted(data: $data) ?? $now;
-                        $data['slaStatus'] = $this->engine->initialiseStatus($policy, $startedAt);
-
-                        $objectService->saveObject(
-                            object: $data,
-                            extend: [],
+                        $written = $this->initialiseObject(
+                            row: $row,
+                            type: $type,
                             register: $register,
-                            schema: $schemaId,
-                            uuid: $uuid,
+                            schemaId: $schemaId,
+                            objectService: $objectService,
+                            fallbackStart: $now,
                         );
-                        $totalInit++;
                     } catch (Throwable $e) {
                         $this->logger->warning(
                             'InitSlaStatus: per-object failed',
                             ['error' => $e->getMessage()]
                         );
                         $totalSkip++;
+                        continue;
                     }//end try
+
+                    if ($written === true) {
+                        $totalInit++;
+                        continue;
+                    }
+
+                    $totalSkip++;
                 }//end foreach
 
                 $offset += self::BATCH_SIZE;
@@ -208,6 +184,73 @@ class InitSlaStatus implements IRepairStep
             ['initialised' => $totalInit, 'skipped' => $totalSkip]
         );
     }//end run()
+
+    /**
+     * Initialise slaStatus on a single tracked object.
+     *
+     * Skips objects with no UUID, an already-initialised slaStatus, or no matching
+     * policy; otherwise writes the initial status and persists the object.
+     *
+     * @param mixed             $row           OR row (entity or array).
+     * @param string            $type          SLA object type (request/klacht/callback).
+     * @param string            $register      Register id.
+     * @param string            $schemaId      Schema id.
+     * @param object            $objectService OR ObjectService.
+     * @param DateTimeImmutable $fallbackStart Fallback start instant when the object has none.
+     *
+     * @return bool True when a status was written, false when the object was skipped.
+     */
+    private function initialiseObject(
+        mixed $row,
+        string $type,
+        string $register,
+        string $schemaId,
+        object $objectService,
+        DateTimeImmutable $fallbackStart,
+    ): bool {
+        $data = (array) $row;
+        if (is_object($row) === true && method_exists($row, 'getObject') === true) {
+            $data = $row->getObject();
+        }
+
+        $uuid = (string) ($data['uuid'] ?? $data['id'] ?? '');
+        if (is_object($row) === true && method_exists($row, 'getUuid') === true) {
+            $uuid = (string) $row->getUuid();
+        }
+
+        if ($uuid === '') {
+            return false;
+        }
+
+        $slaStatus = $data['slaStatus'] ?? null;
+        if (is_array($slaStatus) === true && ($slaStatus['policyId'] ?? '') !== '') {
+            return false;
+        }
+
+        $metadata = [
+            'tier'           => (string) ($data['slaTier'] ?? $data['customerTier'] ?? ''),
+            'organisationId' => (string) ($data['organisationId'] ?? $data['client'] ?? ''),
+            'contractId'     => (string) ($data['contractId'] ?? ''),
+        ];
+
+        $policy = $this->engine->resolvePolicyForObject($type, $uuid, $metadata);
+        if ($policy === null) {
+            return false;
+        }
+
+        $startedAt         = $this->parseStarted(data: $data) ?? $fallbackStart;
+        $data['slaStatus'] = $this->engine->initialiseStatus($policy, $startedAt);
+
+        $objectService->saveObject(
+            object: $data,
+            extend: [],
+            register: $register,
+            schema: $schemaId,
+            uuid: $uuid,
+        );
+
+        return true;
+    }//end initialiseObject()
 
     /**
      * Parse the object's created/started timestamp.

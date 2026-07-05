@@ -38,6 +38,22 @@ use Throwable;
 /**
  * SegmentService — validates and evaluates Segment rule trees.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Aggregates the whole
+ *  rule-tree lifecycle (evaluate, validate, estimate, project) as many
+ *  small, single-purpose methods; the 2026-07 phpmd cleanup deliberately
+ *  extracted per-operator/per-node-type helpers to bring every method's own
+ *  complexity under threshold, which grows line count without adding real
+ *  tangled logic. Splitting the class would scatter one cohesive
+ *  rule-engine concern across several classes.
+ * @SuppressWarnings(PHPMD.TooManyMethods)           Same rationale: the
+ *  operator-dispatch table, node-type dispatch, and value-coercion helpers
+ *  are each one-operator/one-type single-purpose methods, intentionally
+ *  kept small and numerous instead of a few large branchy ones.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class sums many
+ *  independently-simple methods (each verified under phpmd's per-method
+ *  thresholds); the total reflects breadth of the rule-tree surface
+ *  (evaluate/validate/estimate/project), not tangled logic.
+ *
  * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.1
  */
 class SegmentService
@@ -584,23 +600,41 @@ class SegmentService
      */
     private function extractSegmentId(array $payload): string
     {
-        foreach (['uuid', 'id', 'slug'] as $key) {
-            if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string) $payload[$key] !== '') {
-                return (string) $payload[$key];
-            }
+        $id = $this->firstScalarValue(source: $payload, keys: ['uuid', 'id', 'slug']);
+        if ($id !== '') {
+            return $id;
         }
 
         if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-            foreach (['uuid', 'id', 'slug'] as $key) {
-                $value = ($payload['@self'][$key] ?? null);
-                if (is_scalar($value) === true && (string) $value !== '') {
-                    return (string) $value;
-                }
-            }
+            return $this->firstScalarValue(source: $payload['@self'], keys: ['uuid', 'id', 'slug']);
         }
 
         return '';
     }//end extractSegmentId()
+
+    /**
+     * First non-empty scalar value among the given keys.
+     *
+     * Extracted so {@see extractSegmentId()} (and other id-resolution
+     * helpers) share one implementation; behaviour is unchanged: a
+     * missing key or a non-scalar / empty-string value is skipped.
+     *
+     * @param array<string, mixed> $source Source array to probe.
+     * @param array<int, string>   $keys   Keys to check, in priority order.
+     *
+     * @return string The first matching value, or empty when none match.
+     */
+    private function firstScalarValue(array $source, array $keys): string
+    {
+        foreach ($keys as $key) {
+            $value = ($source[$key] ?? null);
+            if (is_scalar($value) === true && (string) $value !== '') {
+                return (string) $value;
+            }
+        }
+
+        return '';
+    }//end firstScalarValue()
 
     /**
      * Build the minimal member-projection row used by the blast engine.
@@ -616,23 +650,60 @@ class SegmentService
      */
     private function projectMember(array $entity): array
     {
-        $id = '';
-        foreach (['id', 'uuid', 'slug'] as $key) {
-            if (isset($entity[$key]) === true && is_scalar($entity[$key]) === true && (string) $entity[$key] !== '') {
-                $id = (string) $entity[$key];
-                break;
-            }
+        $id   = $this->resolveMemberId(entity: $entity);
+        $name = $this->resolveMemberName(entity: $entity);
+
+        return [
+            'contactId' => $id,
+            'email'     => (string) ($entity['email'] ?? ''),
+            'firstName' => $name['firstName'],
+            'lastName'  => $name['lastName'],
+        ];
+    }//end projectMember()
+
+    /**
+     * Resolve a member's id (id > uuid > slug, then the same in `@self`).
+     *
+     * Extracted from {@see projectMember()} so it stays within the
+     * complexity budget; behaviour is unchanged, including the `@self`
+     * fallback loop NOT requiring a non-empty value (matching the
+     * pre-refactor `isset() && is_scalar()` check exactly).
+     *
+     * @param array<string, mixed> $entity Entity payload.
+     *
+     * @return string Id or empty string.
+     */
+    private function resolveMemberId(array $entity): string
+    {
+        $id = $this->firstScalarValue(source: $entity, keys: ['id', 'uuid', 'slug']);
+        if ($id !== '') {
+            return $id;
         }
 
-        if ($id === '' && isset($entity['@self']) === true && is_array($entity['@self']) === true) {
+        if (isset($entity['@self']) === true && is_array($entity['@self']) === true) {
             foreach (['uuid', 'id', 'slug'] as $key) {
                 if (isset($entity['@self'][$key]) === true && is_scalar($entity['@self'][$key]) === true) {
-                    $id = (string) $entity['@self'][$key];
-                    break;
+                    return (string) $entity['@self'][$key];
                 }
             }
         }
 
+        return '';
+    }//end resolveMemberId()
+
+    /**
+     * Resolve a member's first/last name, falling back to splitting a
+     * vCard-style `name` on whitespace when neither is present.
+     *
+     * Extracted from {@see projectMember()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param array<string, mixed> $entity Entity payload.
+     *
+     * @return array{firstName: string, lastName: string}
+     */
+    private function resolveMemberName(array $entity): array
+    {
         $firstName = (string) ($entity['firstName'] ?? $entity['first_name'] ?? '');
         $lastName  = (string) ($entity['lastName'] ?? $entity['last_name'] ?? '');
         if ($firstName === '' && $lastName === '' && isset($entity['name']) === true && is_string($entity['name']) === true) {
@@ -643,13 +714,8 @@ class SegmentService
             }
         }
 
-        return [
-            'contactId' => $id,
-            'email'     => (string) ($entity['email'] ?? ''),
-            'firstName' => $firstName,
-            'lastName'  => $lastName,
-        ];
-    }//end projectMember()
+        return ['firstName' => $firstName, 'lastName' => $lastName];
+    }//end resolveMemberName()
 
     /**
      * Estimate the size of a Segment by counting matching entities.
@@ -677,15 +743,9 @@ class SegmentService
     {
         $cache    = $this->getEstimateCache();
         $cacheKey = 'estimate:'.$segmentId;
-        if ($cache !== null) {
-            $cached = $cache->get($cacheKey);
-            if (is_int($cached) === true) {
-                return $cached;
-            }
-
-            if (is_numeric($cached) === true) {
-                return (int) $cached;
-            }
+        $cached   = $this->readEstimateCache(cache: $cache, cacheKey: $cacheKey);
+        if ($cached !== null) {
+            return $cached;
         }
 
         $segment = $this->loadSegment(segmentId: $segmentId);
@@ -699,13 +759,7 @@ class SegmentService
             return 0;
         }
 
-        $count    = 0;
-        $entities = $this->loadEntitiesForType(entityType: $entityType);
-        foreach ($entities as $entity) {
-            if ($this->evaluateRules(rules: $rules, entity: $entity) === true) {
-                $count++;
-            }
-        }
+        $count = $this->countMatchingEntities(rules: $rules, entityType: $entityType);
 
         if ($cache !== null) {
             $ttl = $this->getEstimateTtl();
@@ -714,6 +768,59 @@ class SegmentService
 
         return $count;
     }//end estimateSize()
+
+    /**
+     * Read a cached estimate count, if present and int-like.
+     *
+     * Extracted from {@see estimateSize()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param ?ICache $cache    The estimate cache, or null when unavailable.
+     * @param string  $cacheKey The cache key.
+     *
+     * @return int|null The cached count, or null on a cache miss / unavailable cache.
+     */
+    private function readEstimateCache(?ICache $cache, string $cacheKey): ?int
+    {
+        if ($cache === null) {
+            return null;
+        }
+
+        $cached = $cache->get($cacheKey);
+        if (is_int($cached) === true) {
+            return $cached;
+        }
+
+        if (is_numeric($cached) === true) {
+            return (int) $cached;
+        }
+
+        return null;
+    }//end readEstimateCache()
+
+    /**
+     * Count the entities of a type that match a rule tree.
+     *
+     * Extracted from {@see estimateSize()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param array<string, mixed> $rules      The rule tree.
+     * @param string               $entityType The entity schema slug.
+     *
+     * @return int Count of matching entities.
+     */
+    private function countMatchingEntities(array $rules, string $entityType): int
+    {
+        $count    = 0;
+        $entities = $this->loadEntitiesForType(entityType: $entityType);
+        foreach ($entities as $entity) {
+            if ($this->evaluateRules(rules: $rules, entity: $entity) === true) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }//end countMatchingEntities()
 
     /**
      * Recursively evaluate a node against the entity.
@@ -727,54 +834,103 @@ class SegmentService
     {
         $type = $this->nodeType(node: $node);
         if ($type === 'AND') {
-            $children = ($node['children'] ?? []);
-            if (is_array($children) === false || $children === []) {
-                return false;
-            }
-
-            foreach ($children as $child) {
-                if (is_array($child) === false) {
-                    return false;
-                }
-
-                if ($this->evaluateNode(node: $child, entity: $entity) === false) {
-                    return false;
-                }
-            }
-
-            return true;
+            return $this->evaluateAndChildren(children: ($node['children'] ?? []), entity: $entity);
         }
 
         if ($type === 'OR') {
-            $children = ($node['children'] ?? []);
-            if (is_array($children) === false || $children === []) {
-                return false;
-            }
-
-            foreach ($children as $child) {
-                if (is_array($child) === false) {
-                    continue;
-                }
-
-                if ($this->evaluateNode(node: $child, entity: $entity) === true) {
-                    return true;
-                }
-            }
-
-            return false;
+            return $this->evaluateOrChildren(children: ($node['children'] ?? []), entity: $entity);
         }
 
         if ($type === 'NOT') {
-            $children = ($node['children'] ?? []);
-            if (is_array($children) === false || isset($children[0]) === false || is_array($children[0]) === false) {
-                return false;
-            }
-
-            return ($this->evaluateNode(node: $children[0], entity: $entity) === false);
+            return $this->evaluateNotChild(node: $node, entity: $entity);
         }
 
         return $this->evaluateLeaf(leaf: $node, entity: $entity);
     }//end evaluateNode()
+
+    /**
+     * Evaluate an `AND` node's children: true only when the children array
+     * is non-empty and every child is an array node that evaluates true.
+     *
+     * Extracted from {@see evaluateNode()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param mixed                $children The node's `children` value.
+     * @param array<string, mixed> $entity   Entity payload.
+     *
+     * @return bool
+     */
+    private function evaluateAndChildren(mixed $children, array $entity): bool
+    {
+        if (is_array($children) === false || $children === []) {
+            return false;
+        }
+
+        foreach ($children as $child) {
+            if (is_array($child) === false) {
+                return false;
+            }
+
+            if ($this->evaluateNode(node: $child, entity: $entity) === false) {
+                return false;
+            }
+        }
+
+        return true;
+    }//end evaluateAndChildren()
+
+    /**
+     * Evaluate an `OR` node's children: true when the children array is
+     * non-empty and at least one array child evaluates true (non-array
+     * children are skipped rather than failing the whole node).
+     *
+     * Extracted from {@see evaluateNode()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param mixed                $children The node's `children` value.
+     * @param array<string, mixed> $entity   Entity payload.
+     *
+     * @return bool
+     */
+    private function evaluateOrChildren(mixed $children, array $entity): bool
+    {
+        if (is_array($children) === false || $children === []) {
+            return false;
+        }
+
+        foreach ($children as $child) {
+            if (is_array($child) === false) {
+                continue;
+            }
+
+            if ($this->evaluateNode(node: $child, entity: $entity) === true) {
+                return true;
+            }
+        }
+
+        return false;
+    }//end evaluateOrChildren()
+
+    /**
+     * Evaluate a `NOT` node: negation of its single child.
+     *
+     * Extracted from {@see evaluateNode()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param array<string, mixed> $node   Tree node.
+     * @param array<string, mixed> $entity Entity payload.
+     *
+     * @return bool
+     */
+    private function evaluateNotChild(array $node, array $entity): bool
+    {
+        $children = ($node['children'] ?? []);
+        if (is_array($children) === false || isset($children[0]) === false || is_array($children[0]) === false) {
+            return false;
+        }
+
+        return ($this->evaluateNode(node: $children[0], entity: $entity) === false);
+    }//end evaluateNotChild()
 
     /**
      * Evaluate one leaf predicate against the entity.
@@ -795,79 +951,155 @@ class SegmentService
         $value    = ($leaf['value'] ?? null);
         $actual   = ($entity[$field] ?? null);
 
-        switch ($operator) {
-            case 'equals':
-                return $this->looseEquals(left: $actual, right: $value);
-            case 'notEquals':
-                return ($this->looseEquals(left: $actual, right: $value) === false);
-            case 'gt':
-            case 'greaterThan':
-                return $this->compareNumeric(left: $actual, right: $value) === 1;
-            case 'gte':
-            case 'greaterThanOrEqual':
-                return $this->compareNumeric(left: $actual, right: $value) >= 0;
-            case 'lt':
-            case 'lessThan':
-                return $this->compareNumeric(left: $actual, right: $value) === -1;
-            case 'lte':
-            case 'lessThanOrEqual':
-                $cmp = $this->compareNumeric(left: $actual, right: $value);
-                return ($cmp === -1 || $cmp === 0);
-            case 'before':
-                return $this->compareDates(left: $actual, right: $value) === -1;
-            case 'after':
-                return $this->compareDates(left: $actual, right: $value) === 1;
-            case 'between':
-                if (is_array($value) === false || count($value) !== 2) {
-                    return false;
-                }
+        $handler = ($this->operatorHandlers()[$operator] ?? null);
+        if ($handler === null) {
+            return false;
+        }
 
-                $low  = $this->compareNumeric(left: $actual, right: $value[0]);
-                $high = $this->compareNumeric(left: $actual, right: $value[1]);
-                return ($low >= 0 && $high <= 0);
-            case 'contains':
-                return $this->valueContains(haystack: $actual, needle: $value);
-            case 'containsAny':
-                if (is_array($value) === false) {
-                    return false;
-                }
-
-                foreach ($value as $candidate) {
-                    if ($this->valueContains(haystack: $actual, needle: $candidate) === true) {
-                        return true;
-                    }
-                }
-                return false;
-            case 'in':
-                if (is_array($value) === false) {
-                    return false;
-                }
-
-                foreach ($value as $candidate) {
-                    if ($this->looseEquals(left: $actual, right: $candidate) === true) {
-                        return true;
-                    }
-                }
-                return false;
-            case 'notIn':
-                if (is_array($value) === false) {
-                    return true;
-                }
-
-                foreach ($value as $candidate) {
-                    if ($this->looseEquals(left: $actual, right: $candidate) === true) {
-                        return false;
-                    }
-                }
-                return true;
-            case 'isNull':
-                return ($actual === null);
-            case 'isNotNull':
-                return ($actual !== null);
-            default:
-                return false;
-        }//end switch
+        return $handler($actual, $value);
     }//end evaluateLeaf()
+
+    /**
+     * Operator name → predicate closure map used by {@see evaluateLeaf()}.
+     *
+     * Extracted so the operator dispatch is an O(1) lookup instead of a
+     * 19-branch switch, which is what kept {@see evaluateLeaf()}'s
+     * cyclomatic complexity over threshold; each closure's own logic is
+     * unchanged from the prior switch-case bodies (several delegate to the
+     * small `evaluate*()` helpers below for the cases that had internal
+     * branching).
+     *
+     * @return array<string, callable(mixed, mixed): bool> Operator handlers.
+     */
+    private function operatorHandlers(): array
+    {
+        return [
+            'equals'             => fn (mixed $actual, mixed $value): bool => $this->looseEquals(left: $actual, right: $value),
+            'notEquals'          => fn (mixed $actual, mixed $value): bool => ($this->looseEquals(left: $actual, right: $value) === false),
+            'gt'                 => fn (mixed $actual, mixed $value): bool => ($this->compareNumeric(left: $actual, right: $value) === 1),
+            'greaterThan'        => fn (mixed $actual, mixed $value): bool => ($this->compareNumeric(left: $actual, right: $value) === 1),
+            'gte'                => fn (mixed $actual, mixed $value): bool => ($this->compareNumeric(left: $actual, right: $value) >= 0),
+            'greaterThanOrEqual' => fn (mixed $actual, mixed $value): bool => ($this->compareNumeric(left: $actual, right: $value) >= 0),
+            'lt'                 => fn (mixed $actual, mixed $value): bool => ($this->compareNumeric(left: $actual, right: $value) === -1),
+            'lessThan'           => fn (mixed $actual, mixed $value): bool => ($this->compareNumeric(left: $actual, right: $value) === -1),
+            'lte'                => fn (mixed $actual, mixed $value): bool => $this->evaluateLessThanOrEqual(actual: $actual, value: $value),
+            'lessThanOrEqual'    => fn (mixed $actual, mixed $value): bool => $this->evaluateLessThanOrEqual(actual: $actual, value: $value),
+            'before'             => fn (mixed $actual, mixed $value): bool => ($this->compareDates(left: $actual, right: $value) === -1),
+            'after'              => fn (mixed $actual, mixed $value): bool => ($this->compareDates(left: $actual, right: $value) === 1),
+            'between'            => fn (mixed $actual, mixed $value): bool => $this->evaluateBetween(actual: $actual, value: $value),
+            'contains'           => fn (mixed $actual, mixed $value): bool => $this->valueContains(haystack: $actual, needle: $value),
+            'containsAny'        => fn (mixed $actual, mixed $value): bool => $this->evaluateContainsAny(actual: $actual, value: $value),
+            'in'                 => fn (mixed $actual, mixed $value): bool => $this->evaluateIn(actual: $actual, value: $value),
+            'notIn'              => fn (mixed $actual, mixed $value): bool => $this->evaluateNotIn(actual: $actual, value: $value),
+            'isNull'             => fn (mixed $actual): bool => ($actual === null),
+            'isNotNull'          => fn (mixed $actual): bool => ($actual !== null),
+        ];
+    }//end operatorHandlers()
+
+    /**
+     * `lte` / `lessThanOrEqual` predicate.
+     *
+     * @param mixed $actual The entity's field value.
+     * @param mixed $value  The rule value.
+     *
+     * @return bool
+     */
+    private function evaluateLessThanOrEqual(mixed $actual, mixed $value): bool
+    {
+        $cmp = $this->compareNumeric(left: $actual, right: $value);
+        return ($cmp === -1 || $cmp === 0);
+    }//end evaluateLessThanOrEqual()
+
+    /**
+     * `between` predicate: `$value` must be a 2-element array `[low, high]`.
+     *
+     * @param mixed $actual The entity's field value.
+     * @param mixed $value  The rule value.
+     *
+     * @return bool
+     */
+    private function evaluateBetween(mixed $actual, mixed $value): bool
+    {
+        if (is_array($value) === false || count($value) !== 2) {
+            return false;
+        }
+
+        $low  = $this->compareNumeric(left: $actual, right: $value[0]);
+        $high = $this->compareNumeric(left: $actual, right: $value[1]);
+        return ($low >= 0 && $high <= 0);
+    }//end evaluateBetween()
+
+    /**
+     * `containsAny` predicate: true when `$actual` contains any candidate
+     * in `$value`.
+     *
+     * @param mixed $actual The entity's field value.
+     * @param mixed $value  The rule value (expected array of candidates).
+     *
+     * @return bool
+     */
+    private function evaluateContainsAny(mixed $actual, mixed $value): bool
+    {
+        if (is_array($value) === false) {
+            return false;
+        }
+
+        foreach ($value as $candidate) {
+            if ($this->valueContains(haystack: $actual, needle: $candidate) === true) {
+                return true;
+            }
+        }
+
+        return false;
+    }//end evaluateContainsAny()
+
+    /**
+     * `in` predicate: true when `$actual` loosely equals any candidate in
+     * `$value`.
+     *
+     * @param mixed $actual The entity's field value.
+     * @param mixed $value  The rule value (expected array of candidates).
+     *
+     * @return bool
+     */
+    private function evaluateIn(mixed $actual, mixed $value): bool
+    {
+        if (is_array($value) === false) {
+            return false;
+        }
+
+        foreach ($value as $candidate) {
+            if ($this->looseEquals(left: $actual, right: $candidate) === true) {
+                return true;
+            }
+        }
+
+        return false;
+    }//end evaluateIn()
+
+    /**
+     * `notIn` predicate: true when `$actual` loosely equals none of the
+     * candidates in `$value`.
+     *
+     * @param mixed $actual The entity's field value.
+     * @param mixed $value  The rule value (expected array of candidates).
+     *
+     * @return bool
+     */
+    private function evaluateNotIn(mixed $actual, mixed $value): bool
+    {
+        if (is_array($value) === false) {
+            return true;
+        }
+
+        foreach ($value as $candidate) {
+            if ($this->looseEquals(left: $actual, right: $candidate) === true) {
+                return false;
+            }
+        }
+
+        return true;
+    }//end evaluateNotIn()
 
     /**
      * Loose equality with case-insensitive string compare.
@@ -917,13 +1149,13 @@ class SegmentService
             return 0;
         }
 
-        $lf = (float) $left;
-        $rf = (float) $right;
-        if ($lf < $rf) {
+        $leftFloat  = (float) $left;
+        $rightFloat = (float) $right;
+        if ($leftFloat < $rightFloat) {
             return -1;
         }
 
-        if ($lf > $rf) {
+        if ($leftFloat > $rightFloat) {
             return 1;
         }
 
@@ -941,17 +1173,17 @@ class SegmentService
      */
     private function compareDates(mixed $left, mixed $right): int
     {
-        $lt = $this->toTimestamp(value: $left);
-        $rt = $this->toTimestamp(value: $right);
-        if ($lt === null || $rt === null) {
+        $leftTimestamp  = $this->toTimestamp(value: $left);
+        $rightTimestamp = $this->toTimestamp(value: $right);
+        if ($leftTimestamp === null || $rightTimestamp === null) {
             return 0;
         }
 
-        if ($lt < $rt) {
+        if ($leftTimestamp < $rightTimestamp) {
             return -1;
         }
 
-        if ($lt > $rt) {
+        if ($leftTimestamp > $rightTimestamp) {
             return 1;
         }
 
@@ -1041,44 +1273,99 @@ class SegmentService
     {
         $type = $this->nodeType(node: $node);
         if ($type === 'AND' || $type === 'OR') {
-            $children = ($node['children'] ?? null);
-            if (is_array($children) === false || $children === []) {
-                return sprintf('%s: composite "%s" node requires non-empty "children".', $path, $type);
-            }
-
-            foreach ($children as $index => $child) {
-                if (is_array($child) === false) {
-                    return sprintf('%s.children[%d]: child must be an object.', $path, $index);
-                }
-
-                $childError = $this->validateNode(
-                    node: $child,
-                    path: $path.'.children['.$index.']',
-                    properties: $properties
-                );
-                if ($childError !== null) {
-                    return $childError;
-                }
-            }
-
-            return null;
-        }//end if
-
-        if ($type === 'NOT') {
-            $children = ($node['children'] ?? null);
-            if (is_array($children) === false || count($children) !== 1) {
-                return sprintf('%s: NOT node requires exactly one child.', $path);
-            }
-
-            $child = $children[0];
-            if (is_array($child) === false) {
-                return sprintf('%s.children[0]: child must be an object.', $path);
-            }
-
-            return $this->validateNode(node: $child, path: $path.'.children[0]', properties: $properties);
+            return $this->validateCompositeNode(node: $node, path: $path, properties: $properties, type: $type);
         }
 
-        // Leaf predicate.
+        if ($type === 'NOT') {
+            return $this->validateNotNode(node: $node, path: $path, properties: $properties);
+        }
+
+        return $this->validateLeafNode(node: $node, path: $path, properties: $properties);
+    }//end validateNode()
+
+    /**
+     * Validate an `AND`/`OR` node: non-empty `children`, each an object,
+     * each recursively valid.
+     *
+     * Extracted from {@see validateNode()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param array<string, mixed> $node       Tree node.
+     * @param string               $path       JSON-pointer-ish breadcrumb.
+     * @param array<string, mixed> $properties Schema properties map.
+     * @param string               $type       `AND` or `OR` (for the error message).
+     *
+     * @return string|null Error string or null.
+     */
+    private function validateCompositeNode(array $node, string $path, array $properties, string $type): ?string
+    {
+        $children = ($node['children'] ?? null);
+        if (is_array($children) === false || $children === []) {
+            return sprintf('%s: composite "%s" node requires non-empty "children".', $path, $type);
+        }
+
+        foreach ($children as $index => $child) {
+            if (is_array($child) === false) {
+                return sprintf('%s.children[%d]: child must be an object.', $path, $index);
+            }
+
+            $childError = $this->validateNode(
+                node: $child,
+                path: $path.'.children['.$index.']',
+                properties: $properties
+            );
+            if ($childError !== null) {
+                return $childError;
+            }
+        }
+
+        return null;
+    }//end validateCompositeNode()
+
+    /**
+     * Validate a `NOT` node: exactly one child, which must be an object
+     * and recursively valid.
+     *
+     * Extracted from {@see validateNode()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param array<string, mixed> $node       Tree node.
+     * @param string               $path       JSON-pointer-ish breadcrumb.
+     * @param array<string, mixed> $properties Schema properties map.
+     *
+     * @return string|null Error string or null.
+     */
+    private function validateNotNode(array $node, string $path, array $properties): ?string
+    {
+        $children = ($node['children'] ?? null);
+        if (is_array($children) === false || count($children) !== 1) {
+            return sprintf('%s: NOT node requires exactly one child.', $path);
+        }
+
+        $child = $children[0];
+        if (is_array($child) === false) {
+            return sprintf('%s.children[0]: child must be an object.', $path);
+        }
+
+        return $this->validateNode(node: $child, path: $path.'.children[0]', properties: $properties);
+    }//end validateNotNode()
+
+    /**
+     * Validate a leaf predicate node: `field` declared on the schema,
+     * `operator` supported and valid for the field's type, and (unless a
+     * null-check operator) a coercible `value`.
+     *
+     * Extracted from {@see validateNode()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param array<string, mixed> $node       Tree node.
+     * @param string               $path       JSON-pointer-ish breadcrumb.
+     * @param array<string, mixed> $properties Schema properties map.
+     *
+     * @return string|null Error string or null.
+     */
+    private function validateLeafNode(array $node, string $path, array $properties): ?string
+    {
         $field = ($node['field'] ?? null);
         if (is_string($field) === false || $field === '') {
             return sprintf('%s: leaf predicate requires non-empty "field".', $path);
@@ -1088,32 +1375,32 @@ class SegmentService
             return sprintf('%s: field "%s" is not declared on the entity schema.', $path, $field);
         }
 
-        $operator = ($node['operator'] ?? null);
-        if (is_string($operator) === false || isset(self::OPERATOR_TYPE_MATRIX[$operator]) === false) {
+        $operator     = ($node['operator'] ?? null);
+        $allowedTypes = $this->resolveAllowedTypesForOperator(operator: $operator);
+        if ($allowedTypes === null) {
             return sprintf('%s: operator "%s" is not supported.', $path, (string) $operator);
         }
 
-        $fieldType    = $this->propertyType(property: $properties[$field]);
-        $allowedTypes = self::OPERATOR_TYPE_MATRIX[$operator];
+        $fieldType = $this->propertyType(property: $properties[$field]);
         if (in_array($fieldType, $allowedTypes, true) === false) {
             return sprintf(
                 '%s: operator "%s" is not valid for field "%s" of type "%s".',
                 $path,
-                $operator,
+                (string) $operator,
                 $field,
                 $fieldType
             );
         }
 
-        if ($operator === 'isNull' || $operator === 'isNotNull') {
+        if (in_array($operator, ['isNull', 'isNotNull'], true) === true) {
             return null;
         }
 
         if (array_key_exists('value', $node) === false) {
-            return sprintf('%s: operator "%s" requires a "value".', $path, $operator);
+            return sprintf('%s: operator "%s" requires a "value".', $path, (string) $operator);
         }
 
-        if ($this->isValueCoercible(value: $node['value'], fieldType: $fieldType, operator: $operator) === false) {
+        if ($this->isValueCoercible(value: $node['value'], fieldType: $fieldType, operator: (string) $operator) === false) {
             return sprintf(
                 '%s: value for field "%s" is not coercible to type "%s".',
                 $path,
@@ -1123,7 +1410,29 @@ class SegmentService
         }
 
         return null;
-    }//end validateNode()
+    }//end validateLeafNode()
+
+    /**
+     * Resolve the JSON-schema types an operator is valid for, or null when
+     * the operator is not a recognised, supported operator.
+     *
+     * Extracted from {@see validateLeafNode()} so the `is_string($operator)`
+     * guard and the `OPERATOR_TYPE_MATRIX` lookup collapse into one branch
+     * instead of two (`is_string(...) === false || isset(...) === false`);
+     * behaviour is unchanged.
+     *
+     * @param mixed $operator The raw operator value.
+     *
+     * @return array<int, string>|null Allowed JSON-schema types, or null when unsupported.
+     */
+    private function resolveAllowedTypesForOperator(mixed $operator): ?array
+    {
+        if (is_string($operator) === false) {
+            return null;
+        }
+
+        return (self::OPERATOR_TYPE_MATRIX[$operator] ?? null);
+    }//end resolveAllowedTypesForOperator()
 
     /**
      * Determine whether a value is coercible to the field's declared type.
@@ -1136,7 +1445,7 @@ class SegmentService
      */
     private function isValueCoercible(mixed $value, string $fieldType, string $operator): bool
     {
-        if ($operator === 'in' || $operator === 'notIn' || $operator === 'containsAny' || $operator === 'between') {
+        if (in_array($operator, ['in', 'notIn', 'containsAny', 'between'], true) === true) {
             if (is_array($value) === false) {
                 return false;
             }
@@ -1173,36 +1482,11 @@ class SegmentService
 
         switch ($fieldType) {
             case 'integer':
-                if (is_int($value) === true) {
-                    return true;
-                }
-
-                if (is_string($value) === true && preg_match('/^-?\d+$/', $value) === 1) {
-                    return true;
-                }
-                return false;
+                return $this->isIntegerCoercible(value: $value);
             case 'number':
-                if (is_int($value) === true || is_float($value) === true) {
-                    return true;
-                }
-
-                if (is_string($value) === true && is_numeric($value) === true) {
-                    return true;
-                }
-                return false;
+                return $this->isNumberCoercible(value: $value);
             case 'boolean':
-                if (is_bool($value) === true) {
-                    return true;
-                }
-
-                if (is_string($value) === true && in_array(strtolower($value), ['true', 'false', '0', '1'], true) === true) {
-                    return true;
-                }
-
-                if (is_int($value) === true && ($value === 0 || $value === 1)) {
-                    return true;
-                }
-                return false;
+                return $this->isBooleanCoercible(value: $value);
             case 'array':
                 return is_array($value);
             case 'string':
@@ -1210,6 +1494,69 @@ class SegmentService
                 return (is_scalar($value) === true);
         }//end switch
     }//end isScalarCoercible()
+
+    /**
+     * `integer` coercibility: an int, or a string of digits (optional
+     * leading `-`).
+     *
+     * Extracted from {@see isScalarCoercible()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param mixed $value The raw (non-null) value.
+     *
+     * @return bool
+     */
+    private function isIntegerCoercible(mixed $value): bool
+    {
+        if (is_int($value) === true) {
+            return true;
+        }
+
+        return (is_string($value) === true && preg_match('/^-?\d+$/', $value) === 1);
+    }//end isIntegerCoercible()
+
+    /**
+     * `number` coercibility: an int/float, or a numeric string.
+     *
+     * Extracted from {@see isScalarCoercible()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param mixed $value The raw (non-null) value.
+     *
+     * @return bool
+     */
+    private function isNumberCoercible(mixed $value): bool
+    {
+        if (is_int($value) === true || is_float($value) === true) {
+            return true;
+        }
+
+        return (is_string($value) === true && is_numeric($value) === true);
+    }//end isNumberCoercible()
+
+    /**
+     * `boolean` coercibility: a bool, a `true`/`false`/`0`/`1` string
+     * (case-insensitive), or the int `0`/`1`.
+     *
+     * Extracted from {@see isScalarCoercible()} so it stays within the
+     * complexity budget; behaviour is unchanged.
+     *
+     * @param mixed $value The raw (non-null) value.
+     *
+     * @return bool
+     */
+    private function isBooleanCoercible(mixed $value): bool
+    {
+        if (is_bool($value) === true) {
+            return true;
+        }
+
+        if (is_string($value) === true && in_array(strtolower($value), ['true', 'false', '0', '1'], true) === true) {
+            return true;
+        }
+
+        return (is_int($value) === true && ($value === 0 || $value === 1));
+    }//end isBooleanCoercible()
 
     /**
      * Return the canonical node type — `AND`, `OR`, `NOT`, or `LEAF`.

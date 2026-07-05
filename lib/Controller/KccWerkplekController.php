@@ -138,13 +138,8 @@ class KccWerkplekController extends Controller
         }
 
         // Accept boolean, "true"/"false" strings or 0/1; reject everything else.
-        if (is_bool($param) === true) {
-            $available = $param;
-        } else if (is_string($param) === true && in_array(strtolower($param), ['true', 'false', '1', '0'], true) === true) {
-            $available = in_array(strtolower($param), ['true', '1'], true);
-        } else if (is_int($param) === true && ($param === 0 || $param === 1)) {
-            $available = ($param === 1);
-        } else {
+        $available = $this->parseAvailability(param: $param);
+        if ($available === null) {
             return new JSONResponse(
                 ['message' => 'isAvailable must be a boolean'],
                 Http::STATUS_BAD_REQUEST
@@ -165,4 +160,31 @@ class KccWerkplekController extends Controller
             );
         }//end try
     }//end setAvailabilityAction()
+
+    /**
+     * Coerce the request's isAvailable param to a strict boolean.
+     *
+     * Accepts a real boolean, the strings "true"/"false"/"1"/"0" (case-insensitive),
+     * or the integers 0/1. Returns null for any other input so the caller can reject it.
+     *
+     * @param mixed $param Raw request value.
+     *
+     * @return bool|null The parsed availability, or null when the value is not accepted.
+     */
+    private function parseAvailability(mixed $param): ?bool
+    {
+        if (is_bool($param) === true) {
+            return $param;
+        }
+
+        if (is_string($param) === true && in_array(strtolower($param), ['true', 'false', '1', '0'], true) === true) {
+            return in_array(strtolower($param), ['true', '1'], true);
+        }
+
+        if (is_int($param) === true && ($param === 0 || $param === 1)) {
+            return ($param === 1);
+        }
+
+        return null;
+    }//end parseAvailability()
 }//end class

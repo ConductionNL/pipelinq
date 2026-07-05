@@ -137,62 +137,97 @@ class WebhookProcessorJob extends TimedJob
         }
 
         foreach ($rows as $raw) {
-            $arr        = $this->toArray(value: $raw);
-            $channel    = (string) ($arr['channel'] ?? '');
-            $providerId = (string) ($arr['providerId'] ?? '');
-            $signature  = (string) ($arr['signature'] ?? '');
-            $body       = (string) ($arr['rawBody'] ?? '');
-            $id         = $this->extractId(payload: $arr);
-
-            try {
-                if ($channel === 'whatsapp') {
-                    $result = $this->whatsAppAdapter->handleInboundWebhook(
-                        rawBody: $body,
-                        signature: $signature,
-                        providerId: $providerId,
-                    );
-                } else if ($channel === 'sms') {
-                    $result = $this->smsAdapter->handleInboundWebhook(
-                        rawBody: $body,
-                        signature: $signature,
-                        providerId: $providerId,
-                    );
-                } else {
-                    $result = ['status' => 'unknownChannel'];
-                }
-            } catch (Throwable $e) {
-                $this->logger->warning(
-                    'WebhookProcessorJob.drain: processing failed',
-                    ['id' => $id, 'exception' => $e->getMessage()]
-                );
-                $result = ['status' => 'processingFailed', 'error' => $e->getMessage()];
-            }//end try
-
-            $arr['status']      = (string) $result['status'];
-            $arr['processedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-            $arr['result']      = $result;
-
-            try {
-                if ($id === '') {
-                    $saveUuid = null;
-                } else {
-                    $saveUuid = $id;
-                }
-
-                $objectService->saveObject(
-                    object: $arr,
-                    register: $this->getRegisterSlug(),
-                    schema: $this->getSchemaSlug(),
-                    uuid: $saveUuid,
-                );
-            } catch (Throwable $e) {
-                $this->logger->warning(
-                    'WebhookProcessorJob.drain: save failed',
-                    ['id' => $id, 'exception' => $e->getMessage()]
-                );
-            }
+            $this->processRow(objectService: $objectService, raw: $raw);
         }//end foreach
     }//end drain()
+
+    /**
+     * Process one queued webhook row: dispatch to the channel adapter and
+     * persist the outcome.
+     *
+     * @param object $objectService OR ObjectService.
+     * @param mixed  $raw           Raw queued row (entity or array).
+     *
+     * @return void
+     */
+    private function processRow(object $objectService, mixed $raw): void
+    {
+        $arr        = $this->toArray(value: $raw);
+        $channel    = (string) ($arr['channel'] ?? '');
+        $providerId = (string) ($arr['providerId'] ?? '');
+        $signature  = (string) ($arr['signature'] ?? '');
+        $body       = (string) ($arr['rawBody'] ?? '');
+        $id         = $this->extractId(payload: $arr);
+
+        try {
+            $result = $this->dispatchChannel(
+                channel: $channel,
+                body: $body,
+                signature: $signature,
+                providerId: $providerId
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'WebhookProcessorJob.drain: processing failed',
+                ['id' => $id, 'exception' => $e->getMessage()]
+            );
+            $result = ['status' => 'processingFailed', 'error' => $e->getMessage()];
+        }//end try
+
+        $arr['status']      = (string) $result['status'];
+        $arr['processedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+        $arr['result']      = $result;
+
+        $saveUuid = null;
+        if ($id !== '') {
+            $saveUuid = $id;
+        }
+
+        try {
+            $objectService->saveObject(
+                object: $arr,
+                register: $this->getRegisterSlug(),
+                schema: $this->getSchemaSlug(),
+                uuid: $saveUuid,
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'WebhookProcessorJob.drain: save failed',
+                ['id' => $id, 'exception' => $e->getMessage()]
+            );
+        }
+    }//end processRow()
+
+    /**
+     * Dispatch a webhook to the adapter matching its channel.
+     *
+     * @param string $channel    Channel identifier.
+     * @param string $body       Raw request body.
+     * @param string $signature  Provider signature header.
+     * @param string $providerId Provider message identifier.
+     *
+     * @return array<string, mixed> Adapter result (unknownChannel when unmatched).
+     */
+    private function dispatchChannel(string $channel, string $body, string $signature, string $providerId): array
+    {
+        if ($channel === 'whatsapp') {
+            return $this->whatsAppAdapter->handleInboundWebhook(
+                rawBody: $body,
+                signature: $signature,
+                providerId: $providerId,
+            );
+        }
+
+        if ($channel === 'sms') {
+            return $this->smsAdapter->handleInboundWebhook(
+                rawBody: $body,
+                signature: $signature,
+                providerId: $providerId,
+            );
+        }
+
+        return ['status' => 'unknownChannel'];
+    }//end dispatchChannel()
 
     /**
      * Resolve OpenRegister ObjectService.
@@ -251,23 +286,38 @@ class WebhookProcessorJob extends TimedJob
      */
     private function extractId(array $payload): string
     {
-        foreach (['uuid', 'id', 'slug'] as $key) {
-            if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string) $payload[$key] !== '') {
-                return (string) $payload[$key];
-            }
+        $keys   = ['uuid', 'id', 'slug'];
+        $direct = $this->firstScalar(source: $payload, keys: $keys);
+        if ($direct !== '') {
+            return $direct;
         }
 
         if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-            foreach (['uuid', 'id', 'slug'] as $key) {
-                $value = ($payload['@self'][$key] ?? null);
-                if (is_scalar($value) === true && (string) $value !== '') {
-                    return (string) $value;
-                }
-            }
+            return $this->firstScalar(source: $payload['@self'], keys: $keys);
         }
 
         return '';
     }//end extractId()
+
+    /**
+     * Return the first non-empty scalar value among the given keys.
+     *
+     * @param array<string, mixed> $source Source array.
+     * @param array<int, string>   $keys   Candidate keys, in priority order.
+     *
+     * @return string First matching value cast to string, or empty.
+     */
+    private function firstScalar(array $source, array $keys): string
+    {
+        foreach ($keys as $key) {
+            $value = ($source[$key] ?? null);
+            if (is_scalar($value) === true && (string) $value !== '') {
+                return (string) $value;
+            }
+        }
+
+        return '';
+    }//end firstScalar()
 
     /**
      * Register slug.

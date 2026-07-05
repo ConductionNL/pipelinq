@@ -52,6 +52,11 @@ use RuntimeException;
  *  coupling between two halves of a state machine.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class is the state
  *  machine for the bridge; the requirement count drives the method count.
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     The state machine spans the
+ *  full outbound/inbound/fallback/retry lifecycle; splitting would just shuffle
+ *  the transitions across files.
+ *
+ * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
  */
 class BerichtenboxService
 {
@@ -89,6 +94,12 @@ class BerichtenboxService
      * @param DeliveryAuditLogger  $auditLogger      Audit logger.
      * @param DutchHolidayCalendar $holidayCalendar  Working-day helper.
      * @param LoggerInterface      $logger           NC logger.
+     *
+     * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList) Orchestration root wires every
+     *  bridge collaborator via constructor injection; a parameter object would only
+     *  hide the DI graph.
      */
     public function __construct(
         private readonly ContainerInterface $container,
@@ -223,12 +234,13 @@ class BerichtenboxService
      * @param array $message OR object array form.
      *
      * @return void
+     *
+     * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
      */
     public function dispatchOne(array $message): void
     {
         $tenantId  = $this->resolveTenantId();
         $messageId = (string) ($message['uuid'] ?? $message['id'] ?? '');
-        $bsnHash   = (string) ($message['bsnHash'] ?? '');
         $bsnPlain  = $this->decryptBsn(row: $message, tenantId: $tenantId);
         $bodyHash  = $this->auditLogger->hashPayload((string) ($message['body'] ?? ''));
 
@@ -1044,9 +1056,9 @@ class BerichtenboxService
 
         if (is_object($row) === true) {
             if (method_exists($row, 'jsonSerialize') === true) {
-                $s = $row->jsonSerialize();
-                if (is_array($s) === true) {
-                    return $s;
+                $serialized = $row->jsonSerialize();
+                if (is_array($serialized) === true) {
+                    return $serialized;
                 }
             }
 

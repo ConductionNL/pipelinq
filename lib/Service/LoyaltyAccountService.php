@@ -69,6 +69,9 @@ class LoyaltyAccountService
      * @throws RuntimeException When OR is unavailable or opt-in missing.
      *
      * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010-01
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $optIn is the REQ-LOY-010 opt-in
+     *  acceptance flag, part of the account-creation contract; not a behaviour switch.
      */
     public function createAccount(
         string $klantId,
@@ -146,6 +149,8 @@ class LoyaltyAccountService
      * @param string $termsVersion The terms version.
      *
      * @return array<string, mixed> The existing or newly-created account.
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $optIn passes through the REQ-LOY-010 opt-in flag to createAccount(); not a behaviour switch.
      */
     public function getOrCreateAccount(
         string $klantId,
@@ -346,10 +351,9 @@ class LoyaltyAccountService
             return [];
         }
 
+        $values = [];
         if (is_array($rows) === true) {
             $values = array_values($rows);
-        } else {
-            $values = [];
         }
 
         return array_map([$this, 'toArray'], $values);

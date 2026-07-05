@@ -55,6 +55,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\TenderPostedEvent;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
+use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -65,13 +66,19 @@ use Throwable;
 /**
  * Tender-domain service for POS split-tender payments.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The collaborators are the ones a
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   The collaborators are the ones a
  *  tender service legitimately needs: OR container (ObjectService + WebhookService),
  *  IAppConfig for schema-key resolution, IEventDispatcher for TenderPostedEvent
  *  emission and logger. Splitting them would scatter one cohesive concern.
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)   The public surface mirrors
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface mirrors
  *  REQ-PST-001..006 plus the schema-key lookups exposed for the retry job /
  *  controller. Each method is unit-tested independently.
+ * @SuppressWarnings(PHPMD.TooManyMethods)           See TooManyPublicMethods
+ *  rationale above; private helpers keep each public method small.
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     One cohesive tender-domain
+ *  service (REQ-PST-001..006); splitting would fragment a single monetary invariant.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Complexity mirrors the six
+ *  REQ-PST requirements; each is independently unit-tested.
  *
  * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
  */
@@ -135,6 +142,10 @@ class PosTenderService
      * @return array<int, array<string, mixed>> The tender types sorted by sortOrder.
      *
      * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) public API consumed positionally
+     *  by PosTenderController and the retry job; changing the signature is out of
+     *  scope for this mechanical pass
      */
     public function listTenderTypes(bool $activeOnly=false): array
     {
@@ -873,9 +884,8 @@ class PosTenderService
             throw new OCSBadRequestException('GL account is required');
         }
 
-        if ($code !== '') {
-            $resolvedCode = $code;
-        } else {
+        $resolvedCode = $code;
+        if ($code === '') {
             $resolvedCode = (string) ($data['code'] ?? '');
         }
 
@@ -1134,7 +1144,7 @@ class PosTenderService
 
         try {
             $webhookService->dispatchEvent(
-                _event: new \OCP\EventDispatcher\Event(),
+                _event: new Event(),
                 eventName: self::EVENT_TENDER_POSTED,
                 payload: $event->toCloudEvent()
             );

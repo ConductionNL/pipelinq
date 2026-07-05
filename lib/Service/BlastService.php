@@ -52,6 +52,16 @@ use Throwable;
  *   thin repository surface consumed by the REST controllers (member 06).
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Blast lifecycle plus the thin
+ *  repository surface consumed by the REST controllers live together by design;
+ *  splitting would only scatter the seam.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregate complexity is driven
+ *  by the number of lifecycle operations; each method stays individually simple.
+ * @SuppressWarnings(PHPMD.TooManyMethods)           The send/dispatch/AB lifecycle
+ *  plus the repository surface justify the method count; splitting adds no clarity.
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The REST controllers consume a
+ *  cohesive public repository surface on top of the lifecycle operations.
  */
 class BlastService
 {
@@ -142,6 +152,15 @@ class BlastService
      *                              `variantB`, `variantBlastId`, `status`.
      *
      * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)   $isDraft selects the documented
+     *  dry-run preview mode; it is the method's defined contract, not a toggle to split.
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)  Sequential compliance/audience/AB
+     *  guard clauses; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)       Same flat guard sequence; path count is a
+     *  product of independent conditions, not nesting.
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Single linear send pipeline kept
+     *  together for readability; the steps share local state.
      */
     public function sendBlast(string $blastId, bool $isDraft=false): array
     {
@@ -217,7 +236,13 @@ class BlastService
 
         $variantACount = 0;
         $variantBCount = 0;
+
+        // A draft dry-run counts the whole sliced audience without persisting;
+        // a real send persists each delivery first and counts only the rows
+        // that were stored (a failed persist is skipped).
+        $countableRows = $sliced;
         if ($isDraft === false) {
+            $countableRows = [];
             foreach ($sliced as $row) {
                 $persisted = $this->persistQueuedDelivery(
                     blastId: $row['blastId'],
@@ -228,12 +253,7 @@ class BlastService
                     continue;
                 }
 
-                if ($row['variant'] === 'B') {
-                    $variantBCount++;
-                    continue;
-                }
-
-                $variantACount++;
+                $countableRows[] = $row;
             }
 
             $this->updateBlastStatus(blastId: $blastId, newStatus: 'sending');
@@ -245,16 +265,16 @@ class BlastService
             if ($variantBlastId !== null) {
                 $this->updateBlastTotals(blastId: $variantBlastId);
             }
-        } else {
-            foreach ($sliced as $row) {
-                if ($row['variant'] === 'B') {
-                    $variantBCount++;
-                    continue;
-                }
-
-                $variantACount++;
-            }
         }//end if
+
+        foreach ($countableRows as $row) {
+            if ($row['variant'] === 'B') {
+                $variantBCount++;
+                continue;
+            }
+
+            $variantACount++;
+        }
 
         return [
             'queued'           => ($variantACount + $variantBCount),
@@ -304,6 +324,9 @@ class BlastService
      * @return int Number of deliveries dispatched.
      *
      * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential throttle/dispatch guard
+     *  clauses over the delivery batch; extraction adds no clarity.
      */
     public function dispatchBlastDeliveries(string $blastId, int $maxPerSecond=100): int
     {
@@ -397,13 +420,12 @@ class BlastService
             return '';
         }
 
-        $suffix   = (string) ($variantData['suffix'] ?? ' (Variant B)');
-        $baseName = (string) ($parent['name'] ?? 'Blast');
-        $override = (string) ($variantData['name'] ?? '');
+        $suffix    = (string) ($variantData['suffix'] ?? ' (Variant B)');
+        $baseName  = (string) ($parent['name'] ?? 'Blast');
+        $override  = (string) ($variantData['name'] ?? '');
+        $childName = ($baseName.$suffix);
         if ($override !== '') {
             $childName = $override;
-        } else {
-            $childName = ($baseName.$suffix);
         }
 
         $childPayload = [
@@ -1079,16 +1101,16 @@ class BlastService
         }
 
         try {
-            if (method_exists($sourceService, 'executeAction') === true) {
-                $result     = $sourceService->executeAction($connectorSourceId, 'send-mail', $rendered);
-                $providerId = $this->extractProviderId(result: $result);
-            } else {
+            if (method_exists($sourceService, 'executeAction') === false) {
                 $this->logger->warning(
                     'BlastService.sendOneDelivery: SourceService lacks executeAction',
                     ['connectorSourceId' => $connectorSourceId]
                 );
                 return false;
             }
+
+            $result     = $sourceService->executeAction($connectorSourceId, 'send-mail', $rendered);
+            $providerId = $this->extractProviderId(result: $result);
         } catch (Throwable $e) {
             $this->logger->warning(
                 'BlastService.sendOneDelivery: send-mail failed',
@@ -1119,6 +1141,9 @@ class BlastService
      * @param mixed $result Action result.
      *
      * @return string|null Provider message id.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat fallback chain over candidate
+     *  id keys across the array/object result shapes; each branch is an early return.
      */
     private function extractProviderId(mixed $result): ?string
     {
@@ -1196,10 +1221,9 @@ class BlastService
     private function resolveRateLimit(string $connectorSourceId, int $callerRate): int
     {
         $sourceRate = $this->readSourceRateLimit(connectorSourceId: $connectorSourceId);
+        $candidate  = self::DEFAULT_RATE_LIMIT_PER_SECOND;
         if ($callerRate > 0) {
             $candidate = $callerRate;
-        } else {
-            $candidate = self::DEFAULT_RATE_LIMIT_PER_SECOND;
         }
 
         if ($sourceRate !== null && $sourceRate > 0 && $sourceRate < $candidate) {
@@ -1643,6 +1667,9 @@ class BlastService
      * @param array<string, mixed> $payload Payload.
      *
      * @return string Id (uuid / id / slug) or empty.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat fallback chain over candidate
+     *  id keys; each branch is an independent early return.
      */
     private function extractId(array $payload): string
     {

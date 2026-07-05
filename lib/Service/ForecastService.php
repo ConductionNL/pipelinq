@@ -178,7 +178,7 @@ class ForecastService
      */
     public function averageAccuracy(array $scores): ?float
     {
-        $values = array_values(array_filter($scores, static fn($s): bool => is_numeric($s)));
+        $values = array_values(array_filter($scores, static fn($value): bool => is_numeric($value)));
         if ($values === []) {
             return null;
         }
@@ -200,7 +200,7 @@ class ForecastService
      */
     public function computeTrailingQuartersAccuracy(array $orderedScores): float
     {
-        $values = array_values(array_filter($orderedScores, static fn($s): bool => is_numeric($s)));
+        $values = array_values(array_filter($orderedScores, static fn($value): bool => is_numeric($value)));
         if (count($values) < 4) {
             return 0.0;
         }
@@ -222,16 +222,15 @@ class ForecastService
     {
         $green = $this->appConfig->getValueString(Application::APP_ID, self::ACCURACY_GREEN_KEY, (string) self::ACCURACY_GREEN_DEFAULT);
         $amber = $this->appConfig->getValueString(Application::APP_ID, self::ACCURACY_AMBER_KEY, (string) self::ACCURACY_AMBER_DEFAULT);
+
+        $greenThreshold = self::ACCURACY_GREEN_DEFAULT;
         if ($green !== '') {
             $greenThreshold = (float) $green;
-        } else {
-            $greenThreshold = self::ACCURACY_GREEN_DEFAULT;
         }
 
+        $amberThreshold = self::ACCURACY_AMBER_DEFAULT;
         if ($amber !== '') {
             $amberThreshold = (float) $amber;
-        } else {
-            $amberThreshold = self::ACCURACY_AMBER_DEFAULT;
         }
 
         if ($score > $greenThreshold) {

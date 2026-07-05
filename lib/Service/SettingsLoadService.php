@@ -233,6 +233,27 @@ class SettingsLoadService
             schemas: ($importResult['schemas'] ?? [])
         );
 
+        $this->applyRegisterConfig(importResult: $importResult);
+        $this->applySchemaConfig(schemaMap: $schemaMap);
+
+        $defaultViewId = $this->mapBuilder->findDefaultViewId(
+            views: ($importResult['views'] ?? [])
+        );
+
+        if ($defaultViewId !== null) {
+            $this->appConfig->setValueString(Application::APP_ID, 'default_view', (string) $defaultViewId);
+        }
+    }//end updateObjectTypeConfiguration()
+
+    /**
+     * Store the imported main/portal/SLA register ids in app config.
+     *
+     * @param array $importResult The import result from ConfigurationService.
+     *
+     * @return void
+     */
+    private function applyRegisterConfig(array $importResult): void
+    {
         $registerId = $this->mapBuilder->findRegisterIdBySlug(
             registers: ($importResult['registers'] ?? [])
         );
@@ -256,7 +277,18 @@ class SettingsLoadService
         if ($slaRegisterId !== null) {
             $this->appConfig->setValueString(Application::APP_ID, 'sla_register', (string) $slaRegisterId);
         }
+    }//end applyRegisterConfig()
 
+    /**
+     * Store the imported schema ids (including the SLA schema-key overrides
+     * and the generic `<slug>_schema` set) in app config.
+     *
+     * @param array $schemaMap The slug => schema id map.
+     *
+     * @return void
+     */
+    private function applySchemaConfig(array $schemaMap): void
+    {
         // SLA schema config keys diverge from the auto-derived `<slug>_schema`
         // naming because the engine expects `sla_policy_schema` and
         // `sla_breach_event_schema` rather than `slaPolicy_schema`.
@@ -273,15 +305,7 @@ class SettingsLoadService
                 $this->appConfig->setValueString(Application::APP_ID, "{$slug}_schema", (string) $schemaMap[$slug]);
             }
         }
-
-        $defaultViewId = $this->mapBuilder->findDefaultViewId(
-            views: ($importResult['views'] ?? [])
-        );
-
-        if ($defaultViewId !== null) {
-            $this->appConfig->setValueString(Application::APP_ID, 'default_view', (string) $defaultViewId);
-        }
-    }//end updateObjectTypeConfiguration()
+    }//end applySchemaConfig()
 
     /**
      * Resolve an imported register id by its slug.

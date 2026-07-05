@@ -42,6 +42,10 @@ use Throwable;
  * XWiki REST proxy service.
  *
  * @spec openspec/changes/xwiki-integration/tasks.md#1.1
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) thin proxy over the xWiki REST
+ *  API with discovery, caching, XML parsing and sanitisation kept together as one
+ *  cohesive read path
  */
 class XWikiService
 {
@@ -266,8 +270,20 @@ class XWikiService
             return null;
         }
 
-        $rows = [];
-        foreach ($decoded['results'] as $row) {
+        return $this->mapOpenRegisterRows(rows: $decoded['results']);
+    }//end searchViaOpenRegister()
+
+    /**
+     * Map raw OpenRegister search result rows to the widget row shape.
+     *
+     * @param array<int, mixed> $rows Raw rows from the OR search response.
+     *
+     * @return array<int, array<string, mixed>> Normalised rows.
+     */
+    private function mapOpenRegisterRows(array $rows): array
+    {
+        $mapped = [];
+        foreach ($rows as $row) {
             if (is_array($row) === false) {
                 continue;
             }
@@ -277,7 +293,7 @@ class XWikiService
                 $tags = $row['tags'];
             }
 
-            $rows[] = [
+            $mapped[] = [
                 'id'       => (string) ($row['id'] ?? $row['reference'] ?? ''),
                 'title'    => (string) ($row['title'] ?? $row['id'] ?? $row['reference'] ?? ''),
                 'space'    => (string) ($row['space'] ?? ''),
@@ -287,8 +303,8 @@ class XWikiService
             ];
         }
 
-        return $rows;
-    }//end searchViaOpenRegister()
+        return $mapped;
+    }//end mapOpenRegisterRows()
 
     /**
      * List pages in a space.
@@ -344,10 +360,9 @@ class XWikiService
      */
     public function getPageContent(string $wiki, string $page): array
     {
-        if (trim($wiki) === '') {
+        $wiki = trim($wiki);
+        if ($wiki === '') {
             $wiki = 'xwiki';
-        } else {
-            $wiki = trim($wiki);
         }
 
         $page = trim($page);
@@ -426,8 +441,8 @@ class XWikiService
             $response = $client->get($base.'/rest', ['timeout' => 5, 'connect_timeout' => 3]);
             $body     = (string) $response->getBody();
             $version  = '';
-            if (preg_match('#<version>([^<]+)</version>#', $body, $m) === 1) {
-                $version = (string) $m[1];
+            if (preg_match('#<version>([^<]+)</version>#', $body, $matches) === 1) {
+                $version = (string) $matches[1];
             }
 
             $this->availabilityMemo = true;
@@ -750,8 +765,8 @@ class XWikiService
         $fragment = $html;
         $pattern  = '#<div[^>]*id=["\']xwikicontent["\'][^>]*>(.*?)</div>\s*'
             .'(?:<!--\s*end\s*xwikicontent|<div[^>]*id=["\']xwikidocfooter)#is';
-        if (preg_match($pattern, $html, $m) === 1) {
-            $fragment = (string) $m[1];
+        if (preg_match($pattern, $html, $matches) === 1) {
+            $fragment = (string) $matches[1];
         }
 
         return $this->sanitiseHtml(html: $fragment);

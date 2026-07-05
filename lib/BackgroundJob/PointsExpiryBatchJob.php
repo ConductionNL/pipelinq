@@ -53,19 +53,19 @@ class PointsExpiryBatchJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory          $time                  The time factory.
-     * @param IAppConfig            $appConfig             The app configuration.
-     * @param ContainerInterface    $container             The DI container.
-     * @param LoyaltyAccountService $loyaltyAccountService The account service.
-     * @param PointsLedgerService   $ledgerService         The ledger service.
-     * @param NotificationService   $notificationService   The notification service.
-     * @param LoggerInterface       $logger                The logger.
+     * @param ITimeFactory          $time                The time factory.
+     * @param IAppConfig            $appConfig           The app configuration.
+     * @param ContainerInterface    $container           The DI container.
+     * @param LoyaltyAccountService $loyaltyService      The account service.
+     * @param PointsLedgerService   $ledgerService       The ledger service.
+     * @param NotificationService   $notificationService The notification service.
+     * @param LoggerInterface       $logger              The logger.
      */
     public function __construct(
         ITimeFactory $time,
         private IAppConfig $appConfig,
         private ContainerInterface $container,
-        private LoyaltyAccountService $loyaltyAccountService,
+        private LoyaltyAccountService $loyaltyService,
         private PointsLedgerService $ledgerService,
         private NotificationService $notificationService,
         private LoggerInterface $logger,
@@ -115,7 +115,7 @@ class PointsExpiryBatchJob extends TimedJob
             $cutoff       = $now->modify("-{$months} months");
             $noticeCutoff = $now->modify("-".max(0, $months - (int) ceil($notice / 30))." months");
 
-            $accounts = $this->loyaltyAccountService->listAccountsForProgramme(
+            $accounts = $this->loyaltyService->listAccountsForProgramme(
                 programmeId: $programmeId,
                 limit: 10000
             );
@@ -233,10 +233,9 @@ class PointsExpiryBatchJob extends TimedJob
         }
 
         $result = [];
+        $list   = [];
         if (is_array($rows) === true) {
             $list = $rows;
-        } else {
-            $list = [];
         }
 
         foreach ($list as $row) {
@@ -277,16 +276,16 @@ class PointsExpiryBatchJob extends TimedJob
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $s = $object->jsonSerialize();
-            if (is_array($s) === true) {
-                return $s;
+            $serialised = $object->jsonSerialize();
+            if (is_array($serialised) === true) {
+                return $serialised;
             }
         }
 
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $d = $object->getObject();
-            if (is_array($d) === true) {
-                return $d;
+            $payload = $object->getObject();
+            if (is_array($payload) === true) {
+                return $payload;
             }
         }
 

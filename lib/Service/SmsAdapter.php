@@ -45,8 +45,10 @@ use Throwable;
  * - handleInboundWebhook(rawBody, signature, providerId) —
  *   signature-verified webhook ingestion.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires consent +
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires consent +
  * budget + provider + repository + notifications + OR.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Vendor-neutral send/receive
+ * surface with failover, persistence and webhook ingestion kept cohesive.
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
  */
@@ -169,83 +171,18 @@ class SmsAdapter
         $allowFailover = ($providerHint === null);
 
         foreach ($ordered as $row) {
-            $providerId = $this->extractId(payload: $row);
-
-            if ($this->budgetService->canSend(tenantId: $tenantId, providerId: $providerId) === false) {
-                if ($allowFailover === false) {
-                    return ['status' => self::STATUS_BUDGET_EXCEEDED, 'providerId' => $providerId];
-                }
-
-                continue;
-            }
-
-            $client = $this->providerFactory->create(channelProvider: $row);
-            if ($client === null) {
-                continue;
-            }
-
-            try {
-                $result = $client->send(toNumber: $toNumber, body: $body);
-            } catch (TransientSmsProviderException $e) {
-                $this->logger->warning(
-                    'SmsAdapter.send: transient — failing over',
-                    ['providerId' => $providerId, 'vendor' => $client->getVendor(), 'message' => $e->getMessage()]
-                );
-                if ($allowFailover === false) {
-                    return $this->persistFailureAndAlert(
-                        contactId: $contactId,
-                        providerId: $providerId,
-                        body: $body,
-                        error: $e->getMessage(),
-                    );
-                }
-
-                continue;
-            } catch (PermanentSmsProviderException $e) {
-                $this->logger->warning(
-                    'SmsAdapter.send: permanent provider failure',
-                    ['providerId' => $providerId, 'vendor' => $client->getVendor(), 'message' => $e->getMessage()]
-                );
-                return $this->persistFailureAndAlert(
-                    contactId: $contactId,
-                    providerId: $providerId,
-                    body: $body,
-                    error: $e->getMessage(),
-                );
-            } catch (Throwable $e) {
-                $this->logger->warning(
-                    'SmsAdapter.send: unexpected exception — failing over',
-                    ['providerId' => $providerId, 'vendor' => $client->getVendor(), 'message' => $e->getMessage()]
-                );
-                if ($allowFailover === false) {
-                    return $this->persistFailureAndAlert(
-                        contactId: $contactId,
-                        providerId: $providerId,
-                        body: $body,
-                        error: $e->getMessage(),
-                    );
-                }
-
-                continue;
-            }//end try
-
-            $persisted = $this->persistOutbound(
-                contactId: $contactId,
-                providerId: $providerId,
+            $outcome = $this->attemptProviderSend(
+                row: $row,
+                toNumber: $toNumber,
                 body: $body,
-                externalMessageId: $result['externalMessageId'],
+                contactId: $contactId,
+                tenantId: $tenantId,
+                allowFailover: $allowFailover,
             );
-
-            $this->budgetService->recordSend(tenantId: $tenantId, providerId: $providerId);
-
-            return [
-                'status'            => self::STATUS_SENT,
-                'messageId'         => $this->extractId(payload: $persisted ?? []),
-                'externalMessageId' => $result['externalMessageId'],
-                'providerId'        => $providerId,
-                'vendor'            => $result['vendor'],
-            ];
-        }//end foreach
+            if ($outcome !== null) {
+                return $outcome;
+            }
+        }
 
         // Exhausted all providers transiently — persist failed row + alert.
         return $this->persistFailureAndAlert(
@@ -255,6 +192,109 @@ class SmsAdapter
             error: 'all SMS providers returned transient errors',
         );
     }//end send()
+
+    /**
+     * Try sending via a single provider row.
+     *
+     * Returns the final outcome envelope when the caller should stop
+     * (sent, budget-exceeded-without-failover, or a persisted failure
+     * that exhausts failover), or null when the caller should move on
+     * to the next provider in the ordered list.
+     *
+     * @param array<string, mixed> $row           Provider row.
+     * @param string               $toNumber      Recipient E.164 number.
+     * @param string               $body          Message body.
+     * @param string               $contactId     Contact UUID.
+     * @param string               $tenantId      Tenant id.
+     * @param bool                 $allowFailover Whether failover to the next provider is allowed.
+     *
+     * @return array<string, mixed>|null Outcome envelope, or null to continue.
+     */
+    private function attemptProviderSend(
+        array $row,
+        string $toNumber,
+        string $body,
+        string $contactId,
+        string $tenantId,
+        bool $allowFailover
+    ): ?array {
+        $providerId = $this->extractId(payload: $row);
+
+        if ($this->budgetService->canSend(tenantId: $tenantId, providerId: $providerId) === false) {
+            if ($allowFailover === false) {
+                return ['status' => self::STATUS_BUDGET_EXCEEDED, 'providerId' => $providerId];
+            }
+
+            return null;
+        }
+
+        $client = $this->providerFactory->create(channelProvider: $row);
+        if ($client === null) {
+            return null;
+        }
+
+        try {
+            $result = $client->send(toNumber: $toNumber, body: $body);
+        } catch (TransientSmsProviderException $e) {
+            $this->logger->warning(
+                'SmsAdapter.send: transient — failing over',
+                ['providerId' => $providerId, 'vendor' => $client->getVendor(), 'message' => $e->getMessage()]
+            );
+            if ($allowFailover === false) {
+                return $this->persistFailureAndAlert(
+                    contactId: $contactId,
+                    providerId: $providerId,
+                    body: $body,
+                    error: $e->getMessage(),
+                );
+            }
+
+            return null;
+        } catch (PermanentSmsProviderException $e) {
+            $this->logger->warning(
+                'SmsAdapter.send: permanent provider failure',
+                ['providerId' => $providerId, 'vendor' => $client->getVendor(), 'message' => $e->getMessage()]
+            );
+            return $this->persistFailureAndAlert(
+                contactId: $contactId,
+                providerId: $providerId,
+                body: $body,
+                error: $e->getMessage(),
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'SmsAdapter.send: unexpected exception — failing over',
+                ['providerId' => $providerId, 'vendor' => $client->getVendor(), 'message' => $e->getMessage()]
+            );
+            if ($allowFailover === false) {
+                return $this->persistFailureAndAlert(
+                    contactId: $contactId,
+                    providerId: $providerId,
+                    body: $body,
+                    error: $e->getMessage(),
+                );
+            }
+
+            return null;
+        }//end try
+
+        $persisted = $this->persistOutbound(
+            contactId: $contactId,
+            providerId: $providerId,
+            body: $body,
+            externalMessageId: $result['externalMessageId'],
+        );
+
+        $this->budgetService->recordSend(tenantId: $tenantId, providerId: $providerId);
+
+        return [
+            'status'            => self::STATUS_SENT,
+            'messageId'         => $this->extractId(payload: $persisted ?? []),
+            'externalMessageId' => $result['externalMessageId'],
+            'providerId'        => $providerId,
+            'vendor'            => $result['vendor'],
+        ];
+    }//end attemptProviderSend()
 
     /**
      * Handle an inbound SMS webhook.
@@ -807,23 +847,37 @@ class SmsAdapter
      */
     private function extractId(array $payload): string
     {
-        foreach (['uuid', 'id', 'slug'] as $key) {
-            if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string) $payload[$key] !== '') {
-                return (string) $payload[$key];
-            }
+        $id = $this->firstScalarValue(source: $payload, keys: ['uuid', 'id', 'slug']);
+        if ($id !== '') {
+            return $id;
         }
 
         if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-            foreach (['uuid', 'id', 'slug'] as $key) {
-                $value = ($payload['@self'][$key] ?? null);
-                if (is_scalar($value) === true && (string) $value !== '') {
-                    return (string) $value;
-                }
-            }
+            return $this->firstScalarValue(source: $payload['@self'], keys: ['uuid', 'id', 'slug']);
         }
 
         return '';
     }//end extractId()
+
+    /**
+     * Return the first non-empty scalar value found under any of the given keys.
+     *
+     * @param array<string, mixed> $source Source array.
+     * @param array<int, string>   $keys   Keys to try, in order.
+     *
+     * @return string The first matching value cast to string, or empty.
+     */
+    private function firstScalarValue(array $source, array $keys): string
+    {
+        foreach ($keys as $key) {
+            $value = ($source[$key] ?? null);
+            if (is_scalar($value) === true && (string) $value !== '') {
+                return (string) $value;
+            }
+        }
+
+        return '';
+    }//end firstScalarValue()
 
     /**
      * Current ISO 8601 UTC timestamp.

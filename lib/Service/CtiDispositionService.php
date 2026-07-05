@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -80,6 +81,8 @@ class CtiDispositionService
      * @return array{outcome: string, contactmomentId: string, taskId: string|null}
      *
      * @throws \InvalidArgumentException When $outcome is not in self::OUTCOMES.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
      */
     public function processDisposition(
         string $contactmomentId,
@@ -88,7 +91,7 @@ class CtiDispositionService
         string $notes,
     ): array {
         if (in_array($outcome, self::OUTCOMES, true) === false) {
-            throw new \InvalidArgumentException('Unknown disposition outcome: '.$outcome);
+            throw new InvalidArgumentException('Unknown disposition outcome: '.$outcome);
         }
 
         $this->updateContactmoment(
