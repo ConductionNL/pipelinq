@@ -20,7 +20,7 @@
         "version": "1.0.0",
         "summary": "A stored rule-based query that selects Contacts or Customers for marketing blasts.",
         "description": "A Segment is a saved query, not a materialised list. The rule tree (AND/OR with leaf {field, operator, value}) is evaluated by SegmentService against the entityType ('contact' or 'customer'). estimatedSize is a cached preview count refreshed on save. See ADR-000 and the marketing-segmentation-and-blast chain (member 02 owns the evaluator).",
-        "@type": "schema:DefinedTerm",
+        "x-schema-org": "schema:DefinedTerm",
         "required": [
           "name",
           "rules",
@@ -85,7 +85,7 @@
         "version": "1.0.0",
         "summary": "A reusable email or SMS template with variable substitution markers and compliance-required tokens.",
         "description": "CampaignTemplate stores the channel-specific body (HTML + text for email, plain text for SMS), sender identity, and the variable list. Email templates MUST embed {{unsubscribe_link}} and a physical-address footer; SMS templates have no footer requirement. See marketing-segmentation-and-blast member 03 (compliance) for enforcement.",
-        "@type": "schema:CreativeWork",
+        "x-schema-org": "schema:CreativeWork",
         "required": [
           "name",
           "channel"
@@ -178,7 +178,7 @@
         "version": "1.0.0",
         "summary": "One outbound campaign execution against a Segment using a CampaignTemplate, with optional A/B variant pairing.",
         "description": "A Blast is one campaign send. It binds a Segment (audience) to a CampaignTemplate (content) for a single channel, with optional scheduling, A/B split, and rolling delivery totals. abVariantOf links a child variant to its parent A blast; abSplitPercent on the parent records the audience split (0-100). totals is an aggregated counter map updated by BlastDelivery state changes (member 04). See ADR-000.",
-        "@type": "schema:CommunicateAction",
+        "x-schema-org": "schema:CommunicateAction",
         "required": [
           "name",
           "segmentId",
@@ -331,7 +331,7 @@
         "version": "1.0.0",
         "summary": "One row per (Blast, recipient) — tracks per-recipient delivery, open, click, bounce, and unsubscribe events.",
         "description": "BlastDelivery is the per-recipient telemetry record for a Blast. status transitions queued → sent → delivered → opened/clicked/bounced/unsubscribed; providerId is the upstream provider's message id (e.g. SendGrid 'sg-...') used for webhook correlation. clickedUrls collects every URL the recipient clicked with utm parameters preserved. firstClickAt records the earliest click. See marketing-segmentation-and-blast member 05 (webhook ingest) and member 04 (totals roll-up).",
-        "@type": "schema:DeliveryEvent",
+        "x-schema-org": "schema:DeliveryEvent",
         "required": [
           "blastId",
           "status"
@@ -436,7 +436,7 @@
         "version": "1.0.0",
         "summary": "Per-contact-per-channel marketing consent (GDPR Art. 6 lawful basis + withdrawal state).",
         "description": "ConsentRecord is the source of truth for whether a Contact may be sent marketing on a given channel. lawfulBasis records the GDPR Art. 6 basis used at capture (consent | legitimate-interest | contract); consentSource describes the capture mechanism (web-form, double-opt-in, import, etc.). withdrawnAt + withdrawnReason close the consent. softBounceCount counts consecutive soft bounces (5 triggers automatic withdrawal — member 03 owns the rule). One record per (contactId, channel).",
-        "@type": "schema:Permit",
+        "x-schema-org": "schema:Permit",
         "required": [
           "contactId",
           "channel",
@@ -511,7 +511,7 @@
         "version": "1.0.0",
         "summary": "Revenue attribution: a click on a Blast that preceded a closed-won Deal.",
         "description": "AttributionLink ties one BlastDelivery first-click event to a closed-won Deal (lead with stage='closed-won' in Pipelinq). Created by the attribution job when a deal closes within the attribution window after the blast click. attributedValue is the EUR value attributed to the blast (typically the deal value, but may be weighted by the model in member 04).",
-        "@type": "schema:InteractAction",
+        "x-schema-org": "schema:InteractAction",
         "required": [
           "blastId",
           "contactId",

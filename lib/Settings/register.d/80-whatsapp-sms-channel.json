@@ -20,7 +20,7 @@
         "version": "1.0.0",
         "summary": "WhatsApp or SMS provider credentials and routing priority.",
         "description": "ChannelProvider holds credentials, the webhook signing secret, the E.164 sender number and the failover priority for a single tenant-owned WhatsApp or SMS sender. The kind field distinguishes Meta Cloud API direct senders (whatsapp-cloud-api) from BSP-mediated senders (whatsapp-bsp) and from SMS senders (sms). priority orders failover within the same kind. credentials is encrypted at rest by OpenRegister.",
-        "@type": "schema:DigitalDocument",
+        "x-schema-org": "schema:DigitalDocument",
         "required": [
           "kind",
           "vendor",
@@ -98,7 +98,7 @@
         "version": "1.0.0",
         "summary": "Provider-side message template (WhatsApp HSM) with approval lifecycle.",
         "description": "MessageTemplate is the local mirror of an HSM template registered with a Channel Provider (Meta / BSP). status tracks the provider's approval state; lastSyncedAt records the last successful sync. body is the template text with {{1}}..{{N}} placeholders.",
-        "@type": "schema:CreativeWork",
+        "x-schema-org": "schema:CreativeWork",
         "required": [
           "providerId",
           "externalId",
@@ -176,7 +176,7 @@
         "version": "1.0.0",
         "summary": "Per-contact, per-channel consent state for WhatsApp / SMS (immutable audit history).",
         "description": "MessagingConsentRecord captures every opt-in / opt-out event for a contact on a messaging channel. Records are append-only: a new row is written on each state transition; never overwrite history. ConsentService.canSend(...) picks the most recent record for the (contactId, channel) pair as the effective state. Distinct from the marketing consentRecord schema (which only models email).",
-        "@type": "schema:Permit",
+        "x-schema-org": "schema:Permit",
         "required": [
           "contactId",
           "channel",
@@ -249,7 +249,7 @@
         "version": "1.0.0",
         "summary": "Per-tenant, per-provider send cap with hard-stop or alert-only enforcement.",
         "description": "MessageSendBudget governs how many messages and how much cost a tenant may spend through a single provider in one period. hardStop=true blocks further sends once the cap is reached; hardStop=false only alerts (once per period). currentPeriodMessages and currentPeriodCostEur are advanced by BudgetService on each successful send; BudgetPeriodResetJob rolls them on periodResetAt.",
-        "@type": "schema:MonetaryAmount",
+        "x-schema-org": "schema:MonetaryAmount",
         "required": [
           "tenantId",
           "providerId",
@@ -335,7 +335,6 @@
         "version": "1.0.0",
         "summary": "A single message exchanged on a conversation (email, web-form, whatsapp, sms).",
         "description": "Message is the omnichannel exchange record: one row per inbound or outbound message persisted across all supported channels. The whatsapp-sms-channel-adapter change extends it with providerId, externalMessageId, templateId, costEur, deliveryStatus and windowExpiresAt. channel.enum is extended to include whatsapp and sms.",
-        "@type": "schema:Message",
         "required": [
           "channel",
           "direction"
@@ -446,7 +445,6 @@
         "version": "1.0.0",
         "summary": "A threaded omnichannel exchange between an agent and a contact on a single channel.",
         "description": "Conversation groups messages for one contact on one channel (per the channel-threading invariant in design.md). The KCC queue routes new conversations; agents handle them until completedAt is set.",
-        "@type": "schema:Conversation",
         "required": [
           "channel"
         ],
