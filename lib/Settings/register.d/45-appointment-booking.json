@@ -20,7 +20,6 @@
         "version": "1.0.0",
         "summary": "A bookable service offered by the business (haircut, oil change, consultation).",
         "description": "Defines a bookable service with duration, pricing, skill/resource requirements, multi-step composition, and booking policies (online bookability, deposit, cancellation rules). Consumed by availability and booking services. REQ-APT-001.",
-        "@type": "Service",
         "required": [
           "name",
           "durationMinutes",
@@ -351,7 +350,6 @@
         "version": "1.0.0",
         "summary": "A scheduled appointment for a customer against one or more resources.",
         "description": "Owns the lifecycle of a single customer appointment: customer link, service, resource assignments, time window, status (pending-deposit / confirmed / completed / no-show / cancelled-by-customer / cancelled-by-business / rescheduled), audit history, and payment hooks.",
-        "@type": "Reservation",
         "configuration": {
           "x-openregister-lifecycle": {
             "field": "status",
