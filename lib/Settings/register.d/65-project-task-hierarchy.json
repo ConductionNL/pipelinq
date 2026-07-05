@@ -18,7 +18,7 @@
         "version": "1.1.0",
         "summary": "A named phase within a project with its own status, billable flag and budget; phase status changes are dispatched to the Shillinq ledger in the parent project's context.",
         "description": "Phases break a project into delivery stages (e.g. discovery, build, hypercare). A phase carries its own status, optional description, optional explicit billable flag (otherwise inherited from the parent project) and an optional phase-level budgetHours. When status changes the ledger integration fetches the parent project and dispatches a status-changed event in the project's context rather than per phase.",
-        "@type": "schema:Event",
+        "x-schema-org": "schema:Event",
         "required": [
           "name",
           "project"
@@ -89,7 +89,7 @@
         "version": "1.0.0",
         "summary": "A deliverable within a phase — the third level of the WBS.",
         "description": "A project task is a discrete deliverable inside a project phase. It carries an estimated effort in hours, an optional assignee (Nextcloud user UID), an explicit billable override that overrides the phase / project resolved billable value, and a deadline. The denormalised project reference enables efficient project-scoped queries without a phase join. Mapped to schema:Action.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "name",
           "phase"
@@ -170,7 +170,7 @@
         "version": "1.0.0",
         "summary": "A time entry recorded against a project task — the fourth (leaf) level of the WBS.",
         "description": "A project activity is one user time entry against a projectTask. It is finer-grained than the project-level timeEntry schema (which is the approval/WIP-sync record dispatched to Shillinq): activities are the day-to-day capture surface inside the WBS tree. Each activity stores the date the work was performed, a duration in minutes, the executing user, and an optional billable override that wins over the resolved task/phase/project billable chain (REQ-PTH-005). The denormalised project reference enables project activity-list / budget roll-ups without a join. Mapped to schema:Action with schema:duration.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "task",
           "date",

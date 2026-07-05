@@ -43,7 +43,7 @@
         "version": "1.0.0",
         "summary": "A POS cash drawer shift from open (declared float) to reconciled close",
         "description": "Represents a single cash drawer's shift period. The opening float is declared by the operator at the start; mid-shift drops reduce the expected cash; a blind physical count is recorded at close and reconciled against the server-derived expected amount. Status flows open -> closed (count recorded) -> reconciled (variance approved). floatAt, closedAt and the operator are server-authoritative. Mapped to Schema.org Action.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "operator",
           "floatAmount",
@@ -143,7 +143,7 @@
         "version": "1.0.0",
         "summary": "An append-only record of a mid-shift cash removal from the drawer",
         "description": "Records a mid-shift removal of cash from the drawer (e.g. deposit with a manager, bank run, security removal). Append-only: a drop is never updated after creation, forming an immutable audit trail of cash that left the drawer during the shift. The drop amount and timestamp are server-authoritative. Mapped to Schema.org MoneyTransfer.",
-        "@type": "schema:MoneyTransfer",
+        "x-schema-org": "schema:MoneyTransfer",
         "required": [
           "shift",
           "amount",
@@ -193,7 +193,7 @@
         "version": "1.0.0",
         "summary": "An append-only physical cash count recorded at shift close (blind count)",
         "description": "Records a physical count of cash in the drawer at a point in time, normally at shift close. The count is entered blind (without prior knowledge of the expected amount). Append-only: a count is never updated after creation; a rejected count is superseded by a fresh count, preserving the full recount history. The counted amount and timestamp are server-authoritative. Mapped to Schema.org Action.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "shift",
           "amount",
@@ -250,7 +250,7 @@
         "version": "1.0.0",
         "summary": "A server-computed cash variance report reconciling a shift's count against expected cash",
         "description": "Variance report computed by CashShiftService at shift close. Compares the server-derived expected cash (float + confirmed sales - drops) against the actual counted amount. expectedAmount, actualAmount, diffAmount, diffPercentage and withinTolerance are all server-computed and never trusted from the client. Lifecycle: pending -> approved (manager confirm, emits the CloudEvent) or pending -> rejected (manager reopens the shift). Mapped to Schema.org Action.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "shift",
           "count",
