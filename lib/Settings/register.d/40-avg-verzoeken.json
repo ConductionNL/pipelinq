@@ -20,7 +20,7 @@
         "version": "1.0.0",
         "summary": "A data-subject request (AVG/GDPR art. 15/16/17/18/20) with legal-deadline tracking",
         "description": "Central request object for handling a citizen's GDPR rights request. The legal deadline (wettelijkeTermijnVerloopt) is server-computed at intake (30 days, optionally extended to 60). Lifecycle is server-authoritative; the DELETE path refuses removal while the 5-year retention window is active. Mapped to Schema.org Action.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "configuration": {
           "x-openregister-lifecycle": {
             "field": "status",
@@ -337,7 +337,7 @@
         "version": "1.0.0",
         "summary": "Immutable deadline-related audit event for an AVG request",
         "description": "Append-only audit record documenting deadline events (receipt confirmation, escalation, breach, collection error). Written server-side by DeadlineTrackerService and the evidence collector.",
-        "@type": "schema:Event",
+        "x-schema-org": "schema:Event",
         "required": [
           "verzoekId",
           "type"
@@ -402,7 +402,7 @@
         "version": "1.0.0",
         "summary": "A single piece of collected personal-data evidence for an AVG request",
         "description": "An individual record found during federated evidence collection. inhoudPreview holds PII and is pseudonymized by RetentionService 30 days after delivery while metadata is retained.",
-        "@type": "schema:CreativeWork",
+        "x-schema-org": "schema:CreativeWork",
         "required": [
           "verzoekId",
           "bronApp"
@@ -505,7 +505,7 @@
         "version": "1.0.0",
         "summary": "A finalized data-export bundle (JSON + PDF) with integrity hash",
         "description": "The deliverable export for a data-subject request. sha256, ondertekend and downloadCode are written server-side by BundleService; the bundle is immutable once finalized. The one-time download token is validated server-side and the secure link expires after the configured window (default 30 days).",
-        "@type": "schema:DataDownload",
+        "x-schema-org": "schema:DataDownload",
         "required": [
           "verzoekId"
         ],
@@ -611,7 +611,7 @@
         "version": "1.0.0",
         "summary": "A full or partial denial of an AVG request with art. 23 grounds",
         "description": "Records a denial under GDPR art. 23 restrictions. The art. 23 motivation must be substantive and the AP appeal reference must be present before the denial can be finalized; both are enforced server-side by DenialService.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "verzoekId",
           "weigering",
@@ -707,7 +707,7 @@
         "version": "1.0.0",
         "summary": "A field-level redaction applied to an evidence item before export",
         "description": "Audit record of a single field redaction with before/after values and the legal ground. Created server-side by RedactionService, which refuses to redact the data subject's own data without an art. 23 ground.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "bewijsItemId",
           "veldpad",

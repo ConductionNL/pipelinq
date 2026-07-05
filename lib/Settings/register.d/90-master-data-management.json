@@ -18,7 +18,7 @@
         "version": "1.1.0",
         "summary": "Single authoritative golden record per master entity (Contact / Account / Product / Vendor).",
         "description": "The golden record consolidated from one or more source-records via trust-tier resolution. Holds the winning attribute values (goldenRecord), per-attribute provenance, merge lineage, lifecycle status and a computed data-quality score. Mapped to Schema.org Thing.",
-        "@type": "schema:Thing",
+        "x-schema-org": "schema:Thing",
         "x-openregister-quality": {
           "field": "qualityScore",
           "statusField": "qualityStatus",
@@ -254,7 +254,7 @@
         "version": "1.0.0",
         "summary": "Per-system raw copy of an entity, linked to a Master Entity.",
         "description": "A copy of an entity as supplied by a specific source system (Pipelinq CRM, Shillinq, KvK API, etc.). Carries both raw and normalised attributes that compete in duplicate detection and golden-record recomputation.",
-        "@type": "schema:Thing",
+        "x-schema-org": "schema:Thing",
         "required": [
           "sourceRecordId",
           "sourceSystem",
@@ -380,7 +380,7 @@
         "version": "1.0.0",
         "summary": "Log of a merge with pre-merge snapshot for reversal.",
         "description": "Records every merge (manual or auto) with the pre-merge snapshot, attribute-resolution log, downstream sync status and reversibility window. Mapped to Schema.org Action.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "mergedIntoMasterId",
           "mergedFromMasterIds",
@@ -477,7 +477,7 @@
         "version": "1.0.0",
         "summary": "Outbound sync event to a downstream app with retry status.",
         "description": "One queued change per downstream app per Master Entity, delivered via openconnector with exponential-backoff retries and confirmation callbacks. Mapped to Schema.org Action.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "masterEntity",
           "targetSystem",

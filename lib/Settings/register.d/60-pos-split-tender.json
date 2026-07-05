@@ -46,7 +46,7 @@
         "version": "1.0.0",
         "summary": "An available POS payment method (Contant / Betaalpas / Cadeaubon / ...) with its GL posting account",
         "description": "Configuration entity describing one tender method (payment type) available at the till. Each posTender on a posTransaction references one posTenderType. The glAccount on the type is the canonical GL number; new tenders copy that value at add-time so historical tenders keep their original posting account even if the type's account is later edited. requiresReference enforces an external receipt / voucher code; requiresPin marks the type as needing PIN-entry; allowsChange marks the type (cash only) as eligible for change calculation on overpayment. Mapped to Schema.org PaymentMethod.",
-        "@type": "schema:PaymentMethod",
+        "x-schema-org": "schema:PaymentMethod",
         "required": [
           "name",
           "code",
@@ -122,7 +122,7 @@
         "version": "1.0.0",
         "summary": "One payment-method instance on a posTransaction (split-tender component)",
         "description": "A single tender (payment leg) on a posTransaction. A transaction MAY have one or more tenders -- e.g. cash + card on a single sale -- and the sum of tender amounts MUST equal the transaction total before settle. The tender records its method (tenderType), the amount in EUR, the optional external reference (card auth code, voucher serial), and the GL account it posts to (copied from tenderType.glAccount at add-time so it is immutable thereafter). Mapped to Schema.org PaymentChargeSpecification.",
-        "@type": "schema:PaymentChargeSpecification",
+        "x-schema-org": "schema:PaymentChargeSpecification",
         "required": [
           "transaction",
           "tenderType",
