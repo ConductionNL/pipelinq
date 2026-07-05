@@ -84,7 +84,11 @@
           "threshold": 0.7
         },
         "x-openregister-survivorship": {
-          "sourceLinkField": "sourceRecords",
+          "sourceLink": {
+            "mode": "reverseFk",
+            "sourceSchema": "sourceRecord",
+            "referenceField": "currentMasterEntity"
+          },
           "goldenRecordField": "goldenRecord",
           "provenanceField": "attributeProvenance",
           "trustTierField": "trustTier",
@@ -100,7 +104,11 @@
           "overridesField": "attributeOverrides"
         },
         "x-openregister-merge": {
-          "sourceLinkField": "sourceRecords",
+          "sourceLink": {
+            "mode": "reverseFk",
+            "sourceSchema": "sourceRecord",
+            "referenceField": "currentMasterEntity"
+          },
           "entityType": "entityType",
           "statusField": "status",
           "survivorStatus": "active",
