@@ -210,6 +210,8 @@ class ConfigFileLoaderService
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) The per-key branch picks one
      *  of three merge modes (additive-list union, recursive assoc merge, replace);
      *  the conditions are flat, not nested.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same flat per-key branch as above;
+     *  path count is high only because of the number of independent merge modes.
      */
     private static function deepMergeConfig(array $base, array $override, string $path=''): array
     {

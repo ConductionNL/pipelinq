@@ -49,6 +49,8 @@ use Throwable;
  *   UITSCHRIJVEN detection.
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Consent lifecycle (opt-in/opt-out/erasure/keyword detection) is one cohesive responsibility.
  */
 class ConsentService
 {
@@ -456,6 +458,8 @@ class ConsentService
      * @param array<string, mixed> $payload Payload.
      *
      * @return string Id or empty.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential key-lookup fallbacks; extraction adds no clarity.
      */
     private function extractId(array $payload): string
     {

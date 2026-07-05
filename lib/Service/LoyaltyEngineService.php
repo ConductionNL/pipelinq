@@ -35,31 +35,35 @@ use OCP\EventDispatcher\IEventDispatcher;
 use OCP\EventDispatcher\GenericEvent;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
  * Orchestrates the end-to-end loyalty credit flow on a POS-trigger.
  *
  * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) end-to-end POS credit orchestration is inherently branchy; split across small focused methods
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrator necessarily wires account/ledger/rule/tier/event collaborators
  */
 class LoyaltyEngineService
 {
     /**
      * Constructor.
      *
-     * @param ContainerInterface    $container             The DI container.
-     * @param IAppConfig            $appConfig             The app configuration.
-     * @param LoyaltyAccountService $loyaltyAccountService The account service.
-     * @param PointsLedgerService   $ledgerService         The ledger service.
-     * @param PointsRuleEngine      $ruleEngine            The rule engine.
-     * @param TierService           $tierService           The tier service.
-     * @param IEventDispatcher      $eventDispatcher       The dispatcher.
-     * @param LoggerInterface       $logger                The logger.
+     * @param ContainerInterface    $container       The DI container.
+     * @param IAppConfig            $appConfig       The app configuration.
+     * @param LoyaltyAccountService $accountService  The account service.
+     * @param PointsLedgerService   $ledgerService   The ledger service.
+     * @param PointsRuleEngine      $ruleEngine      The rule engine.
+     * @param TierService           $tierService     The tier service.
+     * @param IEventDispatcher      $eventDispatcher The dispatcher.
+     * @param LoggerInterface       $logger          The logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
-        private LoyaltyAccountService $loyaltyAccountService,
+        private LoyaltyAccountService $accountService,
         private PointsLedgerService $ledgerService,
         private PointsRuleEngine $ruleEngine,
         private TierService $tierService,
@@ -83,6 +87,8 @@ class LoyaltyEngineService
      * @return array<int, array<string, mixed>> One result per programme: status
      *                              (credited / skipped / blocked / error),
      *                              accountId, points, tierChanged.
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function processPosTransaction(string $klantId, array $transaction): array
     {
@@ -102,7 +108,6 @@ class LoyaltyEngineService
                 $results[] = $this->processForProgramme(
                     klantId: $klantId,
                     programmeId: $programmeId,
-                    programme: $programme,
                     transaction: $transaction
                 );
             } catch (Throwable $e) {
@@ -130,7 +135,6 @@ class LoyaltyEngineService
      *
      * @param string               $klantId     The contact UID.
      * @param string               $programmeId The programme UUID.
-     * @param array<string, mixed> $programme   The programme object.
      * @param array<string, mixed> $transaction The transaction context.
      *
      * @return array<string, mixed>
@@ -138,10 +142,9 @@ class LoyaltyEngineService
     private function processForProgramme(
         string $klantId,
         string $programmeId,
-        array $programme,
         array $transaction
     ): array {
-        $account = $this->loyaltyAccountService->findAccountByKlantAndProgramme(
+        $account = $this->accountService->findAccountByKlantAndProgramme(
             klantId: $klantId,
             programmeId: $programmeId
         );
@@ -169,13 +172,27 @@ class LoyaltyEngineService
             ];
         }
 
-        $context = [
-            'amount'    => (float) ($transaction['amount'] ?? 0),
-            'category'  => (string) ($transaction['category'] ?? ''),
-            'channel'   => (string) ($transaction['channel'] ?? ''),
-            'segment'   => (string) ($transaction['segment'] ?? ''),
-            'timestamp' => (string) ($transaction['timestamp'] ?? (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c')),
-        ];
+        return $this->awardPointsForActiveAccount(
+            programmeId: $programmeId,
+            account: $account,
+            accountId: $accountId,
+            transaction: $transaction
+        );
+    }//end processForProgramme()
+
+    /**
+     * Evaluate rules and credit points for an already-resolved, active account.
+     *
+     * @param string               $programmeId The programme UUID.
+     * @param array<string, mixed> $account     The active loyalty account.
+     * @param string               $accountId   The account UUID.
+     * @param array<string, mixed> $transaction The transaction context.
+     *
+     * @return array<string, mixed>
+     */
+    private function awardPointsForActiveAccount(string $programmeId, array $account, string $accountId, array $transaction): array
+    {
+        $context = $this->buildTransactionContext(transaction: $transaction);
 
         $matches = $this->ruleEngine->evaluateRules(
             programmeId: $programmeId,
@@ -192,18 +209,7 @@ class LoyaltyEngineService
             ];
         }
 
-        // Apply tier multiplier (REQ-LOY-003-03).
-        $multiplier    = 1.0;
-        $currentTierId = (string) ($account['currentTierId'] ?? '');
-        if ($currentTierId !== '') {
-            $tierRules = $this->tierService->getTierRules(programmeId: $programmeId);
-            foreach ($tierRules as $tr) {
-                if ((string) $this->extractUuid(object: $tr) === $currentTierId) {
-                    $multiplier = $this->tierService->applyTierBenefits(tier: $tr);
-                    break;
-                }
-            }
-        }
+        $multiplier = $this->resolveTierMultiplier(account: $account, programmeId: $programmeId);
 
         $formule = $rule['formule'] ?? [];
         if (is_array($formule) === false) {
@@ -216,29 +222,7 @@ class LoyaltyEngineService
             multiplier: $multiplier
         );
 
-        // Enforce maxPerKlantPerPeriode.
-        $max     = $rule['maxPerKlantPerPeriode'] ?? null;
-        $period  = (string) ($rule['maxPerKlantPeriode'] ?? 'day');
-        $already = 0;
-        if ($max !== null && (int) $max > 0) {
-            $already = $this->countAlreadyEarned(
-                accountId: $accountId,
-                ruleId: (string) $this->extractUuid(object: $rule),
-                period: $period
-            );
-        }
-
-        if ($max !== null) {
-            $maxInt = (int) $max;
-        } else {
-            $maxInt = null;
-        }
-
-        $toAward = $this->ruleEngine->applyMaxPerCustomer(
-            alreadyEarnedInPeriod: $already,
-            pointsToAward: $rawPoints,
-            max: $maxInt
-        );
+        $toAward = $this->enforceMaxPerPeriod(rule: $rule, accountId: $accountId, rawPoints: $rawPoints);
 
         if ($toAward <= 0) {
             $this->logger->info(
@@ -254,6 +238,118 @@ class LoyaltyEngineService
             ];
         }
 
+        return $this->creditAndFinalize(
+            programmeId: $programmeId,
+            accountId: $accountId,
+            rule: $rule,
+            toAward: $toAward,
+            context: $context,
+            transaction: $transaction,
+            multiplier: $multiplier
+        );
+    }//end awardPointsForActiveAccount()
+
+    /**
+     * Build the rule-evaluation context from the raw transaction payload.
+     *
+     * @param array<string, mixed> $transaction The transaction context.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildTransactionContext(array $transaction): array
+    {
+        return [
+            'amount'    => (float) ($transaction['amount'] ?? 0),
+            'category'  => (string) ($transaction['category'] ?? ''),
+            'channel'   => (string) ($transaction['channel'] ?? ''),
+            'segment'   => (string) ($transaction['segment'] ?? ''),
+            'timestamp' => (string) ($transaction['timestamp'] ?? (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c')),
+        ];
+    }//end buildTransactionContext()
+
+    /**
+     * Resolve the tier multiplier for an account's current tier (REQ-LOY-003-03).
+     *
+     * @param array<string, mixed> $account     The loyalty account.
+     * @param string               $programmeId The programme UUID.
+     *
+     * @return float
+     */
+    private function resolveTierMultiplier(array $account, string $programmeId): float
+    {
+        $multiplier    = 1.0;
+        $currentTierId = (string) ($account['currentTierId'] ?? '');
+        if ($currentTierId === '') {
+            return $multiplier;
+        }
+
+        $tierRules = $this->tierService->getTierRules(programmeId: $programmeId);
+        foreach ($tierRules as $tierRule) {
+            if ((string) $this->extractUuid(object: $tierRule) === $currentTierId) {
+                $multiplier = $this->tierService->applyTierBenefits(tier: $tierRule);
+                break;
+            }
+        }
+
+        return $multiplier;
+    }//end resolveTierMultiplier()
+
+    /**
+     * Enforce maxPerKlantPerPeriode and return the actually-awardable points.
+     *
+     * @param array<string, mixed> $rule      The matched PointsRule.
+     * @param string               $accountId The account UUID.
+     * @param int                  $rawPoints Points the formula would award.
+     *
+     * @return int
+     */
+    private function enforceMaxPerPeriod(array $rule, string $accountId, int $rawPoints): int
+    {
+        $max     = $rule['maxPerKlantPerPeriode'] ?? null;
+        $period  = (string) ($rule['maxPerKlantPeriode'] ?? 'day');
+        $already = 0;
+        if ($max !== null && (int) $max > 0) {
+            $already = $this->countAlreadyEarned(
+                accountId: $accountId,
+                ruleId: (string) $this->extractUuid(object: $rule),
+                period: $period
+            );
+        }
+
+        $maxInt = null;
+        if ($max !== null) {
+            $maxInt = (int) $max;
+        }
+
+        return $this->ruleEngine->applyMaxPerCustomer(
+            earnedInPeriod: $already,
+            pointsToAward: $rawPoints,
+            max: $maxInt
+        );
+    }//end enforceMaxPerPeriod()
+
+    /**
+     * Credit the ledger, re-evaluate tier, emit the event, and build the result.
+     *
+     * @param string               $programmeId The programme UUID.
+     * @param string               $accountId   The account UUID.
+     * @param array<string, mixed> $rule        The matched PointsRule.
+     * @param int                  $toAward     Points to credit.
+     * @param array<string, mixed> $context     The rule-evaluation context.
+     * @param array<string, mixed> $transaction The transaction context.
+     * @param float                $multiplier  The applied tier multiplier.
+     *
+     * @return array<string, mixed>
+     */
+    private function creditAndFinalize(
+        string $programmeId,
+        string $accountId,
+        array $rule,
+        int $toAward,
+        array $context,
+        array $transaction,
+        float $multiplier
+    ): array {
         $ledgerEntry = $this->ledgerService->creditPoints(
             accountId: $accountId,
             amount: $toAward,
@@ -284,7 +380,7 @@ class LoyaltyEngineService
             'tierChanged' => $tierResult['changed'],
             'multiplier'  => $multiplier,
         ];
-    }//end processForProgramme()
+    }//end creditAndFinalize()
 
     /**
      * Get all programmes whose status is "actief".
@@ -310,10 +406,9 @@ class LoyaltyEngineService
             return [];
         }
 
+        $values = [];
         if (is_array($rows) === true) {
             $values = array_values($rows);
-        } else {
-            $values = [];
         }
 
         return array_map([$this, 'toArray'], $values);
@@ -439,6 +534,8 @@ class LoyaltyEngineService
      * @param mixed $object The OR entity or array.
      *
      * @return array<string, mixed>
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) invoked via array_map([$this, 'toArray'], ...) callable reference, not statically detected
      */
     private function toArray(mixed $object): array
     {
@@ -447,16 +544,16 @@ class LoyaltyEngineService
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $s = $object->jsonSerialize();
-            if (is_array($s) === true) {
-                return $s;
+            $serialized = $object->jsonSerialize();
+            if (is_array($serialized) === true) {
+                return $serialized;
             }
         }
 
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $d = $object->getObject();
-            if (is_array($d) === true) {
-                return $d;
+            $data = $object->getObject();
+            if (is_array($data) === true) {
+                return $data;
             }
         }
 
@@ -473,7 +570,7 @@ class LoyaltyEngineService
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (Throwable $e) {
-            throw new \RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
+            throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
         }
     }//end getObjectService()
 }//end class

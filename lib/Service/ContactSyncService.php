@@ -74,6 +74,9 @@ class ContactSyncService
      * @throws RuntimeException When name is missing or the contact cannot be provisioned.
      *
      * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential validation + contact-provisioning guard clauses; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential validation + contact-provisioning guard clauses; extraction adds no clarity.
      */
     public function createWithContact(string $objectType, array $form): array
     {

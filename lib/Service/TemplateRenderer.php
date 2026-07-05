@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DOMDocument;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -106,6 +107,8 @@ class TemplateRenderer
      * @param array $variables Substitution vars (uses zaakId, messageId, status).
      *
      * @return string|null
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function buildDeepLink(array $template, array $variables): ?string
     {
@@ -124,10 +127,9 @@ class TemplateRenderer
                 'ref'    => (string) ($variables['messageId'] ?? ''),
             ]
         );
+        $sep   = '?';
         if (str_contains($base, '?') === true) {
             $sep = '&';
-        } else {
-            $sep = '?';
         }
 
         return $base.$sep.$query;
@@ -146,8 +148,8 @@ class TemplateRenderer
         // Triple-brace (raw) first so the double-brace pass doesn't see it.
         $result = preg_replace_callback(
             '/\{\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}\}/',
-            static function (array $m) use ($variables): string {
-                return (string) ($variables[$m[1]] ?? '');
+            static function (array $matches) use ($variables): string {
+                return (string) ($variables[$matches[1]] ?? '');
             },
             $source
         );
@@ -157,8 +159,8 @@ class TemplateRenderer
 
         $result = preg_replace_callback(
             '/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/',
-            static function (array $m) use ($variables): string {
-                $value = (string) ($variables[$m[1]] ?? '');
+            static function (array $matches) use ($variables): string {
+                $value = (string) ($variables[$matches[1]] ?? '');
                 return htmlspecialchars($value, ENT_XHTML | ENT_QUOTES, 'UTF-8');
             },
             $result
@@ -180,7 +182,7 @@ class TemplateRenderer
     {
         $previous = libxml_use_internal_errors(true);
         try {
-            $doc     = new \DOMDocument();
+            $doc     = new DOMDocument();
             $wrapped = '<?xml version="1.0" encoding="UTF-8"?><root>'.$body.'</root>';
             if ($doc->loadXML($wrapped) === false) {
                 throw new RuntimeException('Rendered body is not valid XHTML strict.');

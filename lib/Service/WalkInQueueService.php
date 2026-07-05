@@ -47,6 +47,13 @@ use RuntimeException;
  *   served / abandoned are terminal.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyMethods)           small single-purpose
+ *  methods (ticket CRUD/state-machine + ETA computation + candidate filtering
+ *  + accessors); each is individually under the complexity threshold.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) owns the full walk-in
+ *  ticket lifecycle (create/call/serve/abandon), ETA computation, and
+ *  rebalance in one cohesive service; splitting would scatter one
+ *  transactional concern.
  *
  * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
  */
@@ -321,48 +328,10 @@ class WalkInQueueService
 
         $touched = 0;
         foreach ($waiting as $row) {
-            $ticket = $this->ticketAsArray(value: $row);
-            $uuid   = $this->idOf(object: $row);
-            if ($uuid === '') {
-                continue;
-            }
-
-            $serviceId = (string) ($ticket['serviceId'] ?? '');
-            if ($serviceId === '') {
-                // No service link — no schedule-derived ETA possible.
-                continue;
-            }
-
-            try {
-                $eta = $this->computeEstimatedReadyAt(serviceId: $serviceId);
-            } catch (\Throwable $e) {
-                $this->logger->warning(
-                    'Pipelinq: walk-in rebalance ETA failed',
-                    ['ticket' => $uuid, 'service' => $serviceId]
-                );
-                continue;
-            }
-
-            if ($eta === '') {
-                continue;
-            }
-
-            if ((string) ($ticket['estimatedReadyAt'] ?? '') === $eta) {
-                continue;
-            }
-
-            $ticket['estimatedReadyAt'] = $eta;
-
-            try {
-                $this->saveTicket(payload: $this->stripSelf(payload: $ticket), uuid: $uuid);
+            if ($this->rebalanceTicket(row: $row) === true) {
                 $touched++;
-            } catch (\Throwable $e) {
-                $this->logger->warning(
-                    'Pipelinq: walk-in rebalance save failed',
-                    ['ticket' => $uuid]
-                );
             }
-        }//end foreach
+        }
 
         if ($touched > 0) {
             $this->logger->info(
@@ -373,6 +342,60 @@ class WalkInQueueService
 
         return $touched;
     }//end rebalance()
+
+    /**
+     * Recompute + persist a single waiting ticket's estimatedReadyAt.
+     *
+     * @param array<string, mixed>|object $row The ticket row from listByStatus.
+     *
+     * @return bool True when the ticket was updated, false when skipped/unchanged/failed.
+     */
+    private function rebalanceTicket(array|object $row): bool
+    {
+        $ticket = $this->ticketAsArray(value: $row);
+        $uuid   = $this->idOf(object: $row);
+        if ($uuid === '') {
+            return false;
+        }
+
+        $serviceId = (string) ($ticket['serviceId'] ?? '');
+        if ($serviceId === '') {
+            // No service link — no schedule-derived ETA possible.
+            return false;
+        }
+
+        try {
+            $eta = $this->computeEstimatedReadyAt(serviceId: $serviceId);
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq: walk-in rebalance ETA failed',
+                ['ticket' => $uuid, 'service' => $serviceId]
+            );
+            return false;
+        }
+
+        if ($eta === '') {
+            return false;
+        }
+
+        if ((string) ($ticket['estimatedReadyAt'] ?? '') === $eta) {
+            return false;
+        }
+
+        $ticket['estimatedReadyAt'] = $eta;
+
+        try {
+            $this->saveTicket(payload: $this->stripSelf(payload: $ticket), uuid: $uuid);
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq: walk-in rebalance save failed',
+                ['ticket' => $uuid]
+            );
+            return false;
+        }
+
+        return true;
+    }//end rebalanceTicket()
 
     /**
      * Assert that a ticket status transition is permitted.
@@ -457,6 +480,32 @@ class WalkInQueueService
         }
 
         $date     = $this->todayLocalDate();
+        $earliest = $this->findEarliestSlotStart(
+            candidates: $candidates,
+            date: $date,
+            duration: $duration,
+            serviceId: $serviceId
+        );
+
+        if ($earliest === null) {
+            return '';
+        }
+
+        return $this->localTimeToUtcIso(date: $date, hhmm: $earliest);
+    }//end computeEstimatedReadyAt()
+
+    /**
+     * Find the earliest free-slot start time across a set of candidate resources.
+     *
+     * @param array<int, string> $candidates Candidate resource ids.
+     * @param string             $date       YYYY-MM-DD to check.
+     * @param int                $duration   Required service duration in minutes.
+     * @param string             $serviceId  Service id (for warning-log context only).
+     *
+     * @return string|null The earliest HH:MM start time, or null when none found.
+     */
+    private function findEarliestSlotStart(array $candidates, string $date, int $duration, string $serviceId): ?string
+    {
         $earliest = null;
         foreach ($candidates as $resourceId) {
             try {
@@ -485,12 +534,8 @@ class WalkInQueueService
             }
         }//end foreach
 
-        if ($earliest === null) {
-            return '';
-        }
-
-        return $this->localTimeToUtcIso(date: $date, hhmm: $earliest);
-    }//end computeEstimatedReadyAt()
+        return $earliest;
+    }//end findEarliestSlotStart()
 
     /**
      * Read all tickets with a given status (best-effort, capped by QUEUE_PAGE_SIZE).
@@ -629,15 +674,55 @@ class WalkInQueueService
     {
         $register      = $this->registerId();
         $schema        = $this->schemaId(key: 'resource_schema');
-        $requiredTypes = ($service['requiredResourceTypes'] ?? []);
-        if (is_array($requiredTypes) === false) {
-            $requiredTypes = [];
-        }
+        $requiredTypes = $this->resolveRequiredTypes(service: $service);
 
         if ($register === '' || $schema === '') {
             return [];
         }
 
+        $candidates = [];
+        foreach ($this->fetchResourceRows(register: $register, schema: $schema) as $row) {
+            $resource = $this->toArray(object: $row);
+            if ($resource === null || $this->isCandidateResource(resource: $resource, requiredTypes: $requiredTypes) === false) {
+                continue;
+            }
+
+            $id = $this->idOf(object: $resource);
+            if ($id !== '') {
+                $candidates[] = $id;
+            }
+        }//end foreach
+
+        return $candidates;
+    }//end loadCandidateResources()
+
+    /**
+     * Normalise a service's `requiredResourceTypes` filter.
+     *
+     * @param array<string, mixed> $service Service entity.
+     *
+     * @return array<int, string>
+     */
+    private function resolveRequiredTypes(array $service): array
+    {
+        $requiredTypes = ($service['requiredResourceTypes'] ?? []);
+        if (is_array($requiredTypes) === false) {
+            return [];
+        }
+
+        return $requiredTypes;
+    }//end resolveRequiredTypes()
+
+    /**
+     * Fetch resource rows for candidate resolution (best-effort, empty on failure).
+     *
+     * @param string $register The register id.
+     * @param string $schema   The resource schema id.
+     *
+     * @return array<int, array<string, mixed>|object>
+     */
+    private function fetchResourceRows(string $register, string $schema): array
+    {
         try {
             $rows = $this->getObjectService()->findAll(
                 config: [
@@ -655,37 +740,40 @@ class WalkInQueueService
             return [];
         }
 
-        $candidates = [];
-        foreach (array_values($rows) as $row) {
-            $resource = $this->toArray(object: $row);
-            if ($resource === null) {
-                continue;
-            }
+        return array_values($rows);
+    }//end fetchResourceRows()
 
-            if (($resource['bookable'] ?? true) === false) {
-                continue;
-            }
+    /**
+     * Whether a resource qualifies as a walk-in ETA candidate.
+     *
+     * Bookable, active, and (when the service declares required types) of a
+     * matching type.
+     *
+     * @param array<string, mixed> $resource      The resource entity.
+     * @param array<int, string>   $requiredTypes The service's requiredResourceTypes filter.
+     *
+     * @return bool
+     */
+    private function isCandidateResource(array $resource, array $requiredTypes): bool
+    {
+        if (($resource['bookable'] ?? true) === false) {
+            return false;
+        }
 
-            $status = (string) ($resource['status'] ?? 'active');
-            if ($status !== 'active') {
-                continue;
-            }
+        $status = (string) ($resource['status'] ?? 'active');
+        if ($status !== 'active') {
+            return false;
+        }
 
-            if ($requiredTypes !== []) {
-                $type = (string) ($resource['type'] ?? '');
-                if (in_array($type, $requiredTypes, true) === false) {
-                    continue;
-                }
+        if ($requiredTypes !== []) {
+            $type = (string) ($resource['type'] ?? '');
+            if (in_array($type, $requiredTypes, true) === false) {
+                return false;
             }
+        }
 
-            $id = $this->idOf(object: $resource);
-            if ($id !== '') {
-                $candidates[] = $id;
-            }
-        }//end foreach
-
-        return $candidates;
-    }//end loadCandidateResources()
+        return true;
+    }//end isCandidateResource()
 
     /**
      * Persist a WalkInTicket (create when uuid is null, update otherwise).
@@ -774,12 +862,12 @@ class WalkInQueueService
     {
         $composed = ($date.'T'.$hhmm.':00');
         try {
-            $dt = new DateTimeImmutable($composed, new DateTimeZone('UTC'));
+            $timestamp = new DateTimeImmutable($composed, new DateTimeZone('UTC'));
         } catch (\Throwable $e) {
             return '';
         }
 
-        return $dt->format('Y-m-d\TH:i:sP');
+        return $timestamp->format('Y-m-d\TH:i:sP');
     }//end localTimeToUtcIso()
 
     /**

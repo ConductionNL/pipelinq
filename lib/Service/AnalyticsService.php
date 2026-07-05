@@ -46,6 +46,9 @@ use RuntimeException;
  * returns the four headline KPIs for the Analytics dashboard.
  *
  * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.1
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive analytics aggregator; splitting would fragment related KPI logic.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregation over many KPI dimensions; complexity is inherent, not accidental.
  */
 class AnalyticsService
 {
@@ -314,6 +317,9 @@ class AnalyticsService
      * @param array<int, array<string, mixed>> $responses Survey-response rows.
      *
      * @return array<string, float|int|null>
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential per-metric aggregation loops; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Independent guard clauses across four KPI loops inflate NPath without real branching depth.
      */
     private function aggregateOverviewWindow(
         DateTimeInterface $from,
@@ -330,8 +336,8 @@ class AnalyticsService
         $totalLeads = 0;
         $wonLeads   = 0;
         foreach ($leads as $lead) {
-            $ts = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
-            if ($ts === null || $ts < $fromTs || $ts >= $toTs) {
+            $timestamp = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
+            if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
                 continue;
             }
 
@@ -364,16 +370,16 @@ class AnalyticsService
             $resolvedCount++;
         }
 
-        $avgRequestResolutionTime = null;
+        $avgResolutionHours = null;
         if ($resolvedCount > 0) {
-            $avgRequestResolutionTime = round($resolutionHours / $resolvedCount, 2);
+            $avgResolutionHours = round($resolutionHours / $resolvedCount, 2);
         }
 
         // Contact moment volume.
         $cmCount = 0;
         foreach ($cms as $cm) {
-            $ts = $this->extractTimestamp(row: $cm, fields: ['contactedAt', 'createdAt']);
-            if ($ts === null || $ts < $fromTs || $ts >= $toTs) {
+            $timestamp = $this->extractTimestamp(row: $cm, fields: ['contactedAt', 'createdAt']);
+            if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
                 continue;
             }
 
@@ -384,8 +390,8 @@ class AnalyticsService
         $scoreSum = 0.0;
         $scoreN   = 0;
         foreach ($responses as $r) {
-            $ts = $this->extractTimestamp(row: $r, fields: ['submittedAt', 'createdAt']);
-            if ($ts === null || $ts < $fromTs || $ts >= $toTs) {
+            $timestamp = $this->extractTimestamp(row: $r, fields: ['submittedAt', 'createdAt']);
+            if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
                 continue;
             }
 
@@ -397,16 +403,16 @@ class AnalyticsService
             $scoreN++;
         }
 
-        $customerSatisfactionScore = null;
+        $satisfactionScore = null;
         if ($scoreN > 0) {
-            $customerSatisfactionScore = round($scoreSum / $scoreN, 2);
+            $satisfactionScore = round($scoreSum / $scoreN, 2);
         }
 
         return [
             'leadConversionRate'        => $leadConversionRate,
-            'avgRequestResolutionTime'  => $avgRequestResolutionTime,
+            'avgRequestResolutionTime'  => $avgResolutionHours,
             'contactMomentVolume'       => $cmCount,
-            'customerSatisfactionScore' => $customerSatisfactionScore,
+            'customerSatisfactionScore' => $satisfactionScore,
         ];
     }//end aggregateOverviewWindow()
 
@@ -479,12 +485,12 @@ class AnalyticsService
 
         $buckets = [];
         foreach ($leads as $lead) {
-            $ts = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
-            if ($ts === null || $ts < $startTs || $ts > $nowTs) {
+            $timestamp = $this->extractTimestamp(row: $lead, fields: ['createdAt', 'created', 'expectedCloseDate']);
+            if ($timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
                 continue;
             }
 
-            $bucketTs = $startTs + ((int) floor(($ts - $startTs) / $bucketSize)) * $bucketSize;
+            $bucketTs = $startTs + ((int) floor(($timestamp - $startTs) / $bucketSize)) * $bucketSize;
             $key      = date('Y-m-d', $bucketTs);
             if (isset($buckets[$key]) === false) {
                 $buckets[$key] = 0;
@@ -492,9 +498,10 @@ class AnalyticsService
 
             if ($metric === 'leads') {
                 $buckets[$key] += 1;
-            } else {
-                $buckets[$key] += (float) ($lead['value'] ?? 0);
+                continue;
             }
+
+            $buckets[$key] += (float) ($lead['value'] ?? 0);
         }
 
         ksort($buckets);
@@ -529,8 +536,8 @@ class AnalyticsService
 
         $counts = [];
         foreach ($requests as $request) {
-            $ts = $this->extractTimestamp(row: $request, fields: ['requestedAt', 'createdAt']);
-            if ($ts === null || $ts < $startTs || $ts > $nowTs) {
+            $timestamp = $this->extractTimestamp(row: $request, fields: ['requestedAt', 'createdAt']);
+            if ($timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
                 continue;
             }
 
@@ -689,6 +696,9 @@ class AnalyticsService
      * @return array{revenue: float, wonValue: float, winRate: float|null, avgDealSize: float|null}
      *
      * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential POS + lead window filters; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Independent guard clauses inflate NPath without real branching depth.
      */
     private function aggregateCommercialWindow(
         DateTimeInterface $from,
@@ -701,8 +711,8 @@ class AnalyticsService
 
         $posRevenue = 0.0;
         foreach ($pos as $txn) {
-            $ts = $this->posRevenueTimestamp(txn: $txn);
-            if ($this->isRevenueTransaction(txn: $txn) === false || $ts === null || $ts < $fromTs || $ts >= $toTs) {
+            $timestamp = $this->posRevenueTimestamp(txn: $txn);
+            if ($this->isRevenueTransaction(txn: $txn) === false || $timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
                 continue;
             }
 
@@ -718,17 +728,18 @@ class AnalyticsService
                 continue;
             }
 
-            $ts = $this->leadCloseTimestamp(lead: $lead);
-            if ($ts === null || $ts < $fromTs || $ts >= $toTs) {
+            $timestamp = $this->leadCloseTimestamp(lead: $lead);
+            if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
                 continue;
             }
 
             if ($status === 'won') {
                 $wonValue += (float) ($lead['value'] ?? 0);
                 $wonCount++;
-            } else {
-                $lostCount++;
+                continue;
             }
+
+            $lostCount++;
         }
 
         $closed = ($wonCount + $lostCount);
@@ -807,7 +818,7 @@ class AnalyticsService
                 continue;
             }
 
-            $key = $this->bucketKey(ts: $this->posRevenueTimestamp(txn: $txn), startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+            $key = $this->bucketKey(timestamp: $this->posRevenueTimestamp(txn: $txn), startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
             if ($key !== null) {
                 $buckets[$key] = (($buckets[$key] ?? 0.0) + (float) ($txn['total'] ?? 0));
             }
@@ -818,7 +829,7 @@ class AnalyticsService
                 continue;
             }
 
-            $key = $this->bucketKey(ts: $this->leadCloseTimestamp(lead: $lead), startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
+            $key = $this->bucketKey(timestamp: $this->leadCloseTimestamp(lead: $lead), startTs: $startTs, nowTs: $nowTs, bucketSize: $bucketSize);
             if ($key !== null) {
                 $buckets[$key] = (($buckets[$key] ?? 0.0) + (float) ($lead['value'] ?? 0));
             }
@@ -896,6 +907,8 @@ class AnalyticsService
      * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
      *
      * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential filter/index/group loops; extraction adds no clarity.
      */
     private function buildRevenueByCategorySeries(string $period): array
     {
@@ -911,8 +924,8 @@ class AnalyticsService
 
         $eligibleTxn = [];
         foreach ($pos as $txn) {
-            $ts = $this->posRevenueTimestamp(txn: $txn);
-            if ($this->isRevenueTransaction(txn: $txn) === false || $ts === null || $ts < $startTs || $ts > $nowTs) {
+            $timestamp = $this->posRevenueTimestamp(txn: $txn);
+            if ($this->isRevenueTransaction(txn: $txn) === false || $timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
                 continue;
             }
 
@@ -961,6 +974,8 @@ class AnalyticsService
      * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
      *
      * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential lead + POS grouping loops; extraction adds no clarity.
      */
     private function buildTopCustomersSeries(string $period): array
     {
@@ -977,8 +992,8 @@ class AnalyticsService
 
         $byClient = [];
         foreach ($leads as $lead) {
-            $ts = $this->leadCloseTimestamp(lead: $lead);
-            if (((string) ($lead['status'] ?? '')) !== 'won' || $ts === null || $ts < $startTs || $ts > $nowTs) {
+            $timestamp = $this->leadCloseTimestamp(lead: $lead);
+            if (((string) ($lead['status'] ?? '')) !== 'won' || $timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
                 continue;
             }
 
@@ -987,8 +1002,8 @@ class AnalyticsService
         }
 
         foreach ($pos as $txn) {
-            $ts = $this->posRevenueTimestamp(txn: $txn);
-            if ($this->isRevenueTransaction(txn: $txn) === false || $ts === null || $ts < $startTs || $ts > $nowTs) {
+            $timestamp = $this->posRevenueTimestamp(txn: $txn);
+            if ($this->isRevenueTransaction(txn: $txn) === false || $timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
                 continue;
             }
 
@@ -1054,20 +1069,20 @@ class AnalyticsService
     /**
      * Bucket key (`Y-m-d`) for a timestamp, or null when out of range.
      *
-     * @param int|null $ts         Unix timestamp.
+     * @param int|null $timestamp  Unix timestamp.
      * @param int      $startTs    Window start.
      * @param int      $nowTs      Window end.
      * @param int      $bucketSize Bucket width in seconds.
      *
      * @return string|null
      */
-    private function bucketKey(?int $ts, int $startTs, int $nowTs, int $bucketSize): ?string
+    private function bucketKey(?int $timestamp, int $startTs, int $nowTs, int $bucketSize): ?string
     {
-        if ($ts === null || $ts < $startTs || $ts > $nowTs) {
+        if ($timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
             return null;
         }
 
-        $bucketTs = ($startTs + ((int) floor((($ts - $startTs) / $bucketSize)) * $bucketSize));
+        $bucketTs = ($startTs + ((int) floor((($timestamp - $startTs) / $bucketSize)) * $bucketSize));
         return date('Y-m-d', $bucketTs);
     }//end bucketKey()
 
@@ -1188,9 +1203,9 @@ class AnalyticsService
                 continue;
             }
 
-            $ts = strtotime($value);
-            if ($ts !== false) {
-                return $ts;
+            $timestamp = strtotime($value);
+            if ($timestamp !== false) {
+                return $timestamp;
             }
         }
 

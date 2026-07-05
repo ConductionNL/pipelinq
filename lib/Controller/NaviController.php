@@ -95,9 +95,8 @@ class NaviController extends Controller
 
         try {
             $payload = $this->naviService->processQuery(query: $query, userId: $user->getUID());
-            if ($conversationId === '') {
-                $payload['conversationId'] = null;
-            } else {
+            $payload['conversationId'] = null;
+            if ($conversationId !== '') {
                 $payload['conversationId'] = $conversationId;
             }
 

@@ -97,6 +97,11 @@ class CallVoipAdapter implements CtiAdapterInterface
      * @param array $payload The inbound webhook payload.
      *
      * @return CtiWebhookResult The parsed webhook result.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat field-by-field payload normalisation; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Flat field-by-field payload normalisation; extraction adds no clarity.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.2
      */
     public function handleInboundWebhook(array $payload): CtiWebhookResult
     {
@@ -145,9 +150,9 @@ class CallVoipAdapter implements CtiAdapterInterface
             $recordingUrlString = (string) $recordingUrl;
         }
 
-        $recordingExpiresAtString = null;
+        $recordingExpiresStr = null;
         if ($recordingExpiresAt !== null) {
-            $recordingExpiresAtString = (string) $recordingExpiresAt;
+            $recordingExpiresStr = (string) $recordingExpiresAt;
         }
 
         $presenceState = null;
@@ -175,7 +180,7 @@ class CallVoipAdapter implements CtiAdapterInterface
             userId: $userId,
             durationSeconds: $durationSeconds,
             recordingUrl: $recordingUrlString,
-            recordingExpiresAt: $recordingExpiresAtString,
+            recordingExpiresAt: $recordingExpiresStr,
             presenceState: $presenceState,
             queueName: $queueName,
             agentSkill: $agentSkill,
@@ -312,7 +317,7 @@ class CallVoipAdapter implements CtiAdapterInterface
         $this->callTimestamps = array_values(
             array_filter(
                 $this->callTimestamps,
-                static fn(float $ts): bool => ($ts >= $cutoff)
+                static fn(float $timestamp): bool => ($timestamp >= $cutoff)
             )
         );
 

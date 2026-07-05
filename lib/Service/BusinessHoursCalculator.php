@@ -80,6 +80,8 @@ class BusinessHoursCalculator
      *
      * @return DateTimeImmutable End instant (immutable copy).
      *
+     * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface is a stdlib factory, not injectable.
+     *
      * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
     public function addDuration(
@@ -158,6 +160,8 @@ class BusinessHoursCalculator
      * @param string            $calendarType    Calendar mode (24x7 / business-hours / extended).
      *
      * @return int Elapsed minutes (>=0).
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface is a stdlib factory, not injectable.
      *
      * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */
@@ -345,7 +349,7 @@ class BusinessHoursCalculator
      */
     private function withTime(DateTimeImmutable $day, string $time): DateTimeImmutable
     {
-        [$h, $m] = array_map('intval', explode(':', $time));
-        return $day->setTime($h, $m, 0);
+        [$hours, $minutes] = array_map('intval', explode(':', $time));
+        return $day->setTime($hours, $minutes, 0);
     }//end withTime()
 }//end class

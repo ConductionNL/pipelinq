@@ -119,19 +119,21 @@ class EncryptionService
      * @return string Base64-encoded IV || ciphertext || tag.
      *
      * @throws RuntimeException If encryption fails.
+     *
+     * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
      */
     public function encrypt(string $plaintext, string $tenantId): string
     {
-        $key = $this->getEncryptionKey(tenantId: $tenantId);
-        $iv  = random_bytes(self::IV_BYTES);
-        $tag = '';
+        $key        = $this->getEncryptionKey(tenantId: $tenantId);
+        $initVector = random_bytes(self::IV_BYTES);
+        $tag        = '';
 
         $ciphertext = openssl_encrypt(
             $plaintext,
             self::CIPHER,
             $key,
             OPENSSL_RAW_DATA,
-            $iv,
+            $initVector,
             $tag,
             '',
             self::TAG_BYTES
@@ -141,7 +143,7 @@ class EncryptionService
             throw new RuntimeException('AES-256-GCM encryption failed.');
         }
 
-        return base64_encode($iv.$ciphertext.$tag);
+        return base64_encode($initVector.$ciphertext.$tag);
     }//end encrypt()
 
     /**
@@ -153,6 +155,8 @@ class EncryptionService
      * @return string The plaintext (never logged).
      *
      * @throws RuntimeException If decryption fails or the payload is malformed.
+     *
+     * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-encryption-008
      */
     public function decrypt(string $ciphertext, string $tenantId): string
     {
@@ -161,10 +165,10 @@ class EncryptionService
             throw new RuntimeException('Malformed ciphertext payload.');
         }
 
-        $iv     = substr($raw, 0, self::IV_BYTES);
-        $tag    = substr($raw, -self::TAG_BYTES);
-        $cipher = substr($raw, self::IV_BYTES, -self::TAG_BYTES);
-        $keys   = $this->getDecryptionKeys(tenantId: $tenantId);
+        $initVector = substr($raw, 0, self::IV_BYTES);
+        $tag        = substr($raw, -self::TAG_BYTES);
+        $cipher     = substr($raw, self::IV_BYTES, -self::TAG_BYTES);
+        $keys       = $this->getDecryptionKeys(tenantId: $tenantId);
 
         foreach ($keys as $key) {
             $plain = openssl_decrypt(
@@ -172,7 +176,7 @@ class EncryptionService
                 self::CIPHER,
                 $key,
                 OPENSSL_RAW_DATA,
-                $iv,
+                $initVector,
                 $tag
             );
             if ($plain !== false) {

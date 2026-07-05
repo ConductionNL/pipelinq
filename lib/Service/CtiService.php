@@ -42,8 +42,12 @@ use Psr\Log\LoggerInterface;
  * All public mutating methods log to the event log; all OR writes use
  * `saveObject` (per Hydra OR ObjectService API).
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Central orchestrator that wires
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Central orchestrator that wires
  *  contact matching, disposition, adapter framework and OR persistence together.
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive CTI orchestrator; splitting would fragment a single responsibility.
+ * @SuppressWarnings(PHPMD.TooManyMethods)           Each method maps to one CTI event/operation; grouping keeps the flow readable.
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     Public surface mirrors the CTI controller/webhook operations it backs.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregate of many small guard-clause methods; no single hotspot.
  *
  * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
  */
@@ -86,6 +90,8 @@ class CtiService
      * @param string|null         $signature Signature header from the request.
      *
      * @return array{logged: bool, valid: bool, contactmomentId: string|null}
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
      */
     public function handleWebhook(
         string $platform,
@@ -97,9 +103,8 @@ class CtiService
         $valid     = true;
         $rawForSig = ($rawBody ?? json_encode($payload));
         if ($signature !== null) {
-            if ($rawForSig === false) {
-                $rawForSigString = '';
-            } else {
+            $rawForSigString = '';
+            if ($rawForSig !== false) {
                 $rawForSigString = (string) $rawForSig;
             }
 
@@ -109,6 +114,10 @@ class CtiService
         $normalised      = $adapter->handleInboundWebhook($payload);
         $contactmomentId = null;
         $processingError = null;
+
+        if ($valid === false) {
+            $processingError = 'Invalid signature';
+        }
 
         if ($valid === true) {
             try {
@@ -120,8 +129,6 @@ class CtiService
                 );
                 $processingError = $e->getMessage();
             }
-        } else {
-            $processingError = 'Invalid signature';
         }
 
         $this->logEvent(
@@ -253,6 +260,8 @@ class CtiService
      * @param string $dispositionNotes   Disposition notes.
      *
      * @return void
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
      */
     public function completeContactmoment(
         string $contactmomentId,
@@ -268,11 +277,10 @@ class CtiService
         }
 
         try {
-            $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+            $objectService      = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+            $dispositionOutcome = 'resolved';
             if ($outcome !== '') {
                 $dispositionOutcome = $outcome;
-            } else {
-                $dispositionOutcome = 'resolved';
             }
 
             $objectService->saveObject(
@@ -633,6 +641,10 @@ class CtiService
      * Purge event-log entries older than 30 days.
      *
      * @return int Number of deleted records.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over the fetch/filter/delete loop; extraction adds no clarity.
      */
     public function purgeOldEventLog(): int
     {
@@ -880,6 +892,8 @@ class CtiService
      * @param CtiWebhookResult $event    Normalised event.
      *
      * @return string|null Contactmoment UUID.
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $platform is part of the shared dispatchEvent() handler signature.
      */
     private function attachRecordingFromEvent(string $platform, CtiWebhookResult $event): ?string
     {
@@ -999,6 +1013,8 @@ class CtiService
      * @param mixed $object OR entity, array, or serialised object.
      *
      * @return string|null
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered id-extraction fallbacks (array/getter/jsonSerialize); flattening obscures precedence.
      */
     private function extractId(mixed $object): ?string
     {

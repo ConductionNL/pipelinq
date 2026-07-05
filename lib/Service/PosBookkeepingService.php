@@ -83,14 +83,17 @@ use Psr\Log\LoggerInterface;
  * called by the background job; it is not directly exposed to a
  * #[NoAdminRequired] endpoint.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators the
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the collaborators the
  *  pipeline legitimately needs (OR container for ObjectService + WebhookService,
  *  app config, mailer for alerts, shared POS access policy, logger).
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)   The public surface mirrors
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface mirrors
  *  the lifecycle stages, each unit-tested independently.
- * @SuppressWarnings(PHPMD.TooManyMethods)         Private helpers (fetch /
+ * @SuppressWarnings(PHPMD.TooManyMethods)           Private helpers (fetch /
  *  save / sum / time / hash / dispatch) are deliberately small and
  *  single-purpose; merging them would only obscure the lifecycle.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Z-report aggregation +
+ *  journal raise + outcome projection is inherently branchy; already split
+ *  across small single-purpose helpers.
  *
  * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-001
  */
@@ -310,9 +313,9 @@ class PosBookkeepingService
             ];
         }
 
-        $paymentMethodBreakdown = [];
+        $paymentBreakdown = [];
         foreach ($byMethod as $row) {
-            $paymentMethodBreakdown[] = [
+            $paymentBreakdown[] = [
                 'method' => $row['method'],
                 'amount' => $this->money(value: (float) $row['amount']),
             ];
@@ -326,7 +329,7 @@ class PosBookkeepingService
             'taxBreakdown'           => $taxBreakdown,
             'totalTax'               => $this->money(value: $totalTax),
             'total'                  => $this->money(value: $grandTotal),
-            'paymentMethodBreakdown' => $paymentMethodBreakdown,
+            'paymentMethodBreakdown' => $paymentBreakdown,
             'settledAt'              => $latestSettled,
         ];
     }//end aggregateTransactions()
@@ -1013,8 +1016,8 @@ class PosBookkeepingService
         }
 
         try {
-            $dt = new DateTimeImmutable($value);
-            return $dt->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');
+            $dateTime = new DateTimeImmutable($value);
+            return $dateTime->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d');
         } catch (\Throwable $e) {
             return '';
         }

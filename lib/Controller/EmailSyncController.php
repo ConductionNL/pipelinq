@@ -222,10 +222,9 @@ class EmailSyncController extends Controller
      */
     private function responseShape(array $settings): array
     {
+        $excludedAddresses = [];
         if (is_array($settings['excludedAddresses'] ?? null) === true) {
             $excludedAddresses = array_values($settings['excludedAddresses']);
-        } else {
-            $excludedAddresses = [];
         }
 
         return [

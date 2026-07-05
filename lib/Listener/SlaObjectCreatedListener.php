@@ -76,6 +76,9 @@ class SlaObjectCreatedListener implements IEventListener
      * @param Event $event The event.
      *
      * @return void
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-007
      */
     public function handle(Event $event): void
     {
@@ -91,10 +94,9 @@ class SlaObjectCreatedListener implements IEventListener
             }
 
             // Normalise 'complaint' → 'klacht' for policy matching, per spec wording.
+            $matchType = $type;
             if ($type === 'complaint') {
                 $matchType = 'klacht';
-            } else {
-                $matchType = $type;
             }
 
             $data = $entity->getObject();

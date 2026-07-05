@@ -450,6 +450,9 @@ class CashShiftService
      * @return float The sum of in-window confirmed/settled transaction totals.
      *
      * @spec openspec/changes/pos-cash-management/tasks.md#3.1
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) AggregationQuery::create() is the
+     *  OpenRegister value-object factory; it carries no state to inject.
      */
     private function sumConfirmedSales(string $from, string $to): float
     {

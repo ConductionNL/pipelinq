@@ -83,9 +83,7 @@ class XWikiController extends Controller
             $limit  = (int) ($this->request->getParam('limit') ?? 10);
             $offset = (int) ($this->request->getParam('offset') ?? 0);
 
-            if (is_string($space) === true && $space !== '') {
-                $space = $space;
-            } else {
+            if (is_string($space) === false || $space === '') {
                 $space = null;
             }
 

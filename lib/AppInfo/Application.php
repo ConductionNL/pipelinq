@@ -104,6 +104,9 @@ class Application extends App implements IBootstrap
      * @param IRegistrationContext $context The registration context
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength) A flat DI registration
+     *  manifest — one linear list of service/listener wirings, not branching logic.
      */
     public function register(IRegistrationContext $context): void
     {
@@ -474,44 +477,30 @@ class Application extends App implements IBootstrap
         $entries = [];
         foreach ($paths as $specPath) {
             $text = (string) file_get_contents($specPath);
-            if (preg_match('/^---\s*\n(.*?\n)---\s*\n(.*)$/s', $text, $m) !== 1) {
+            if (preg_match('/^---\s*\n(.*?\n)---\s*\n(.*)$/s', $text, $matches) !== 1) {
                 continue;
             }
 
-            $front = $m[1];
-            $body  = $m[2];
-            if (preg_match('/^status:\s*(.+?)\s*$/m', $front, $sm) !== 1) {
+            $front = $matches[1];
+            $body  = $matches[2];
+            if (preg_match('/^status:\s*(.+?)\s*$/m', $front, $statusMatch) !== 1) {
                 continue;
             }
 
-            if (strtolower(trim($sm[1], " \t\"'")) !== 'done') {
+            if (strtolower(trim($statusMatch[1], " \t\"'")) !== 'done') {
                 continue;
             }
 
             $slug  = basename(dirname($specPath));
             $title = $slug;
-            if (preg_match('/^#\s+(.+?)\s*$/m', $body, $tm) === 1) {
-                $title = trim((string) preg_replace('/\s+specification\s*$/i', '', trim($tm[1])));
-            }
-
-            $summary = '';
-            if (preg_match('/^##\s+Purpose\s*$/m', $body, $pm, PREG_OFFSET_CAPTURE) === 1) {
-                $rest = substr($body, ($pm[0][1] + strlen($pm[0][0])));
-                if (preg_match('/\n##\s/', $rest, $nm, PREG_OFFSET_CAPTURE) === 1) {
-                    $nextPos = $nm[0][1];
-                } else {
-                    $nextPos = strlen($rest);
-                }
-
-                $section = trim(substr($rest, 0, $nextPos));
-                $para    = (preg_split('/\n\s*\n/', $section)[0] ?? '');
-                $summary = trim((string) preg_replace('/\s+/', ' ', $para));
+            if (preg_match('/^#\s+(.+?)\s*$/m', $body, $titleMatch) === 1) {
+                $title = trim((string) preg_replace('/\s+specification\s*$/i', '', trim($titleMatch[1])));
             }
 
             $entries[] = [
                 'slug'    => $slug,
                 'title'   => $title,
-                'summary' => $summary,
+                'summary' => $this->extractSummary(body: $body),
                 'docsUrl' => 'openspec/specs/'.$slug.'/spec.md',
             ];
         }//end foreach
@@ -523,11 +512,37 @@ class Application extends App implements IBootstrap
     }//end extractFeaturesFromSpecs()
 
     /**
+     * Extract the first paragraph under `## Purpose` as the feature summary.
+     *
+     * @param string $body Spec markdown body (frontmatter stripped).
+     *
+     * @return string Collapsed single-line summary, or empty when absent.
+     */
+    private function extractSummary(string $body): string
+    {
+        if (preg_match('/^##\s+Purpose\s*$/m', $body, $purposeMatch, PREG_OFFSET_CAPTURE) !== 1) {
+            return '';
+        }
+
+        $rest    = substr($body, ($purposeMatch[0][1] + strlen($purposeMatch[0][0])));
+        $nextPos = strlen($rest);
+        if (preg_match('/\n##\s/', $rest, $nextMatch, PREG_OFFSET_CAPTURE) === 1) {
+            $nextPos = $nextMatch[0][1];
+        }
+
+        $section = trim(substr($rest, 0, $nextPos));
+        $para    = (preg_split('/\n\s*\n/', $section)[0] ?? '');
+        return trim((string) preg_replace('/\s+/', ' ', $para));
+    }//end extractSummary()
+
+    /**
      * Boot the application and register comment display name resolvers.
      *
      * @param IBootContext $context The boot context
      *
      * @return void
+     *
+     * @spec exclude Framework bootstrap wiring (initial-state + comment resolvers + seams); no single behavioural spec.
      */
     public function boot(IBootContext $context): void
     {
@@ -545,54 +560,8 @@ class Application extends App implements IBootstrap
                 $this->loadRoadmapFeatures()
             );
 
-            $manifestPath = __DIR__.'/../../src/manifest.json';
-            $dependencies = [];
-            if (is_file($manifestPath) === true) {
-                $manifest = json_decode((string) file_get_contents($manifestPath), associative: true);
-                if (is_array($manifest['dependencies'] ?? null) === true) {
-                    $dependencies = $manifest['dependencies'];
-                } else {
-                    $dependencies = [];
-                }
-            }
-
-            $appManager     = $this->getContainer()->get(IAppManager::class);
-            $appStoreLookup = [];
-            try {
-                $appFetcher = $server->get(\OC\App\AppStore\Fetcher\AppFetcher::class);
-                foreach ($appFetcher->get() as $storeApp) {
-                    if (empty($storeApp['id']) === false && empty($storeApp['categories']) === false) {
-                        $appStoreLookup[$storeApp['id']] = (array) $storeApp['categories'];
-                    }
-                }
-            } catch (\Throwable) {
-                // Intentionally ignored.
-            }
-
-            $dependencyStatus = [];
-            foreach ($dependencies as $depId) {
-                $onDisk   = false;
-                $category = 'organization';
-                try {
-                    $appManager->getAppPath($depId);
-                    $onDisk  = true;
-                    $appInfo = \OC_App::getAppInfo($depId);
-                    if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
-                        $category = (string) ((array) $appInfo['category'])[0];
-                    }
-                } catch (\Throwable) {
-                    if (empty($appStoreLookup[$depId][0]) === false) {
-                        $category = (string) $appStoreLookup[$depId][0];
-                    }
-                }
-
-                $dependencyStatus[$depId] = [
-                    'installed' => $onDisk,
-                    'enabled'   => $appManager->isEnabledForUser($depId),
-                    'category'  => $category,
-                ];
-            }//end foreach
-
+            $dependencies     = $this->readManifestDependencies();
+            $dependencyStatus = $this->resolveDependencyStatuses(context: $context, dependencies: $dependencies);
             $initialState->provideInitialState('dependency_statuses', $dependencyStatus);
 
             // Reporting currency (persisted by the setup wizard, default EUR)
@@ -654,6 +623,94 @@ class Application extends App implements IBootstrap
         $this->wireAppointmentCalendarSeam();
         $this->wireAppointmentPaymentSeam();
     }//end boot()
+
+    /**
+     * Read the SPA manifest's declared app dependencies.
+     *
+     * @return array<int, string> Dependency app IDs (empty when absent/malformed).
+     */
+    private function readManifestDependencies(): array
+    {
+        $manifestPath = __DIR__.'/../../src/manifest.json';
+        if (is_file($manifestPath) === false) {
+            return [];
+        }
+
+        $manifest = json_decode((string) file_get_contents($manifestPath), associative: true);
+        if (is_array($manifest['dependencies'] ?? null) === true) {
+            return $manifest['dependencies'];
+        }
+
+        return [];
+    }//end readManifestDependencies()
+
+    /**
+     * Build an app-store id → categories lookup (best-effort).
+     *
+     * @param IBootContext $context The boot context.
+     *
+     * @return array<string, array<int, mixed>> Categories keyed by app id.
+     */
+    private function buildAppStoreLookup(IBootContext $context): array
+    {
+        $server         = $context->getServerContainer();
+        $appStoreLookup = [];
+        try {
+            $appFetcher = $server->get(\OC\App\AppStore\Fetcher\AppFetcher::class);
+            foreach ($appFetcher->get() as $storeApp) {
+                if (empty($storeApp['id']) === false && empty($storeApp['categories']) === false) {
+                    $appStoreLookup[$storeApp['id']] = (array) $storeApp['categories'];
+                }
+            }
+        } catch (\Throwable) {
+            // Intentionally ignored.
+        }
+
+        return $appStoreLookup;
+    }//end buildAppStoreLookup()
+
+    /**
+     * Resolve installed/enabled/category status for each declared dependency.
+     *
+     * @param IBootContext       $context      The boot context.
+     * @param array<int, string> $dependencies Dependency app IDs.
+     *
+     * @return array<string, array{installed: bool, enabled: bool, category: string}>
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) \OC_App::getAppInfo() is the only
+     *  API exposing an on-disk app's category; no OCP equivalent exists.
+     */
+    private function resolveDependencyStatuses(IBootContext $context, array $dependencies): array
+    {
+        $appManager     = $this->getContainer()->get(IAppManager::class);
+        $appStoreLookup = $this->buildAppStoreLookup(context: $context);
+
+        $dependencyStatus = [];
+        foreach ($dependencies as $depId) {
+            $onDisk   = false;
+            $category = 'organization';
+            try {
+                $appManager->getAppPath($depId);
+                $onDisk  = true;
+                $appInfo = \OC_App::getAppInfo($depId);
+                if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
+                    $category = (string) ((array) $appInfo['category'])[0];
+                }
+            } catch (\Throwable) {
+                if (empty($appStoreLookup[$depId][0]) === false) {
+                    $category = (string) $appStoreLookup[$depId][0];
+                }
+            }
+
+            $dependencyStatus[$depId] = [
+                'installed' => $onDisk,
+                'enabled'   => $appManager->isEnabledForUser($depId),
+                'category'  => $category,
+            ];
+        }//end foreach
+
+        return $dependencyStatus;
+    }//end resolveDependencyStatuses()
 
     /**
      * Inject {@see AppointmentEmailService} into {@see BookingService} as the

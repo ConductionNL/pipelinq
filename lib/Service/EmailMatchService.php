@@ -43,8 +43,13 @@ use Throwable;
  * leaf. All OR access is mediated via the DI container so the
  * openregister + mail apps stay optional runtime dependencies.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Leaf-bridge orchestration
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Leaf-bridge orchestration
  *     fundamentally couples OR services, Mail DB, and pipelinq config.
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     The matching helpers plus the
+ *     Mail-indexing orchestration span the full email-linking lifecycle; splitting
+ *     would only scatter the seam.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregate complexity is driven
+ *     by the number of matching strategies; each method stays individually simple.
  *
  * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
  */
@@ -161,6 +166,11 @@ class EmailMatchService
      * @return array{entityType:string,entityId:string}|null
      *
      * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-domain-organization-matching
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered domain-matching strategies
+     *  guarded by flat early returns; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same flat strategy chain; path count is a
+     *  product of independent guards, not nesting.
      */
     public function matchDomainToOrganization(string $domain): ?array
     {
@@ -266,6 +276,11 @@ class EmailMatchService
      * @return int Number of new links created via the leaf.
      *
      * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential address/entity linking
+     *  guards; each condition is a flat skip, extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same flat linking guards; path count is a
+     *  product of independent conditions, not nesting.
      */
     public function matchAndLinkMessage(int $mailAccountId, int $mailMessageId, string $userId): int
     {
@@ -420,6 +435,8 @@ class EmailMatchService
      * @param string $userId The user id.
      *
      * @return array{account:int,enabled:bool,excludedAddresses:array<int,string>,cursor:int}
+     *
+     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
      */
     public function getSettings(string $userId): array
     {
@@ -464,6 +481,8 @@ class EmailMatchService
      * @param array{account:int,enabled:bool,excludedAddresses:array<int,string>,cursor?:int} $settings Settings payload.
      *
      * @return void
+     *
+     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
      */
     public function writeSettings(string $userId, array $settings): void
     {
@@ -488,6 +507,8 @@ class EmailMatchService
      * @param string $userId The user id.
      *
      * @return array{lastRunAt:?string,linked:int,scanned:int,error:?string}
+     *
+     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
      */
     public function getStatus(string $userId): array
     {
@@ -534,6 +555,8 @@ class EmailMatchService
      * @param string|null $error   Optional static error message.
      *
      * @return void
+     *
+     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
      */
     public function writeStatus(string $userId, int $linked, int $scanned, ?string $error=null): void
     {
@@ -655,6 +678,9 @@ class EmailMatchService
      * @param string $email     Lowercased email to match.
      *
      * @return array<int,string> Matched object ids.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat guards over register/schema
+     *  resolution and result normalisation; extraction adds no clarity.
      */
     private function findObjectsByEmail(string $schemaKey, string $email): array
     {
@@ -759,6 +785,9 @@ class EmailMatchService
      * @param int    $mailMessageId Mail message id.
      *
      * @return int|null Existing link id, or null.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat guards over the linked-email
+     *  lookup and shape normalisation; each branch is an independent early return.
      */
     private function existingLinkId(
         object $linkService,
@@ -810,6 +839,11 @@ class EmailMatchService
      * @param int $accountId Mail account id.
      *
      * @return array{uid:string,subject:?string,sender:?string,recipients:array<int,string>,date:?string}|null
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Two guarded DB lookups plus row
+     *  normalisation; the branches are flat, not nested.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same flat lookup/normalise guards; path
+     *  count is a product of independent conditions.
      */
     private function fetchMailMessageMeta(int $messageId, int $accountId): ?array
     {
@@ -851,9 +885,10 @@ class EmailMatchService
                 $type = (int) ($rcpt['type'] ?? -1);
                 if ($type === 0) {
                     $sender = $email;
-                } else {
-                    $recipients[] = $email;
+                    continue;
                 }
+
+                $recipients[] = $email;
             }
 
             $result->closeCursor();
@@ -958,6 +993,9 @@ class EmailMatchService
      * @param mixed $object Entity, array, or null.
      *
      * @return array<string,mixed>|null
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat chain of type/shape checks
+     *  for OR entity normalisation; each branch is an independent early return.
      */
     private function toArray(mixed $object): ?array
     {

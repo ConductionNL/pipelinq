@@ -138,10 +138,9 @@ class SetupController extends Controller
                 continue;
             }
 
+            $stored = json_encode($value);
             if (is_scalar($value) === true) {
                 $stored = (string) $value;
-            } else {
-                $stored = json_encode($value);
             }
 
             $this->appConfig->setValueString(Application::APP_ID, (string) $key, $stored);

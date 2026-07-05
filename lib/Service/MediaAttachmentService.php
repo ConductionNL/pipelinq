@@ -147,10 +147,9 @@ class MediaAttachmentService
 
         $quarantined = ($this->virusScan(bytes: $bytes) === false);
 
+        $resolvedMime = $mimeType;
         if ($handle['mimeType'] !== '') {
             $resolvedMime = $handle['mimeType'];
-        } else {
-            $resolvedMime = $mimeType;
         }
 
         $extension = $this->extensionFor(mimeType: $resolvedMime);
@@ -184,6 +183,8 @@ class MediaAttachmentService
      * @return array{ok: bool, error?: string, sizeBytes?: int} Outcome.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.7
+     *
+     * @SuppressWarnings(PHPMD.ErrorControlOperator) filesize() warns on stat race after file_exists; false is already handled
      */
     public function prepareOutbound(string $filePath, string $mimeType): array
     {
@@ -298,6 +299,8 @@ class MediaAttachmentService
      * @param string $url URL to fetch.
      *
      * @return string|null Body or null on failure.
+     *
+     * @SuppressWarnings(PHPMD.ErrorControlOperator) file_get_contents() warns on failure in this curl-unavailable fallback; false is already handled
      */
     private function fetchUrlBody(string $url): ?string
     {

@@ -31,6 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -196,19 +198,18 @@ class SlaPolicyController extends Controller
      */
     private function auditLog(string $action, $existing, array $payload, string $justification): void
     {
-        $actor = $this->userSession->getUser();
-        if ($actor === null) {
-            $actorId = 'system';
-        } else {
+        $actor   = $this->userSession->getUser();
+        $actorId = 'system';
+        if ($actor !== null) {
             $actorId = $actor->getUID();
         }
 
-        if ($existing === null) {
-            $before = null;
-        } else if (method_exists($existing, 'getObject') === true) {
-            $before = $existing->getObject();
-        } else {
+        $before = null;
+        if ($existing !== null) {
             $before = (array) $existing;
+            if (method_exists($existing, 'getObject') === true) {
+                $before = $existing->getObject();
+            }
         }
 
         $this->logger->info(
@@ -219,7 +220,7 @@ class SlaPolicyController extends Controller
                 'justification' => $justification,
                 'before'        => $before,
                 'after'         => $payload,
-                'timestamp'     => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+                'timestamp'     => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
             ]
         );
     }//end auditLog()

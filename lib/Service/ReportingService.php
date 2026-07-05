@@ -38,6 +38,11 @@ use Psr\Log\LoggerInterface;
  * Provides methods for calculating KPIs, SLA compliance, channel distribution,
  * and agent performance metrics from contactmoment data.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregates the KPI, SLA,
+ *  channel-distribution and agent-performance calculations as many small,
+ *  single-purpose methods over one contactmoment reporting concern; splitting
+ *  it would scatter one cohesive reporting surface across several classes.
+ *
  * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
  */
 class ReportingService

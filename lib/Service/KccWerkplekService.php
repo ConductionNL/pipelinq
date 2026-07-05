@@ -44,6 +44,9 @@ use RuntimeException;
  * open tasks, queue counts, agent profile) and applies idempotent availability
  * toggles to the user's `agentProfile`.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregator fans out over several
+ *   independent OR read facades; each branch is guard-heavy but flat.
+ *
  * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
  */
 class KccWerkplekService
@@ -285,6 +288,8 @@ class KccWerkplekService
      *
      * @return array<string, int> Map of raw queue ref to open-request count.
      *
+     * @SuppressWarnings(PHPMD.StaticAccess) AggregationQuery::create is OR's public query factory; no DI alternative.
+     *
      * @spec openspec/changes/pipelinq-query-pushdown-batch-3/tasks.md#task-2.4
      */
     private function openRequestCountsByQueue(): array
@@ -341,6 +346,8 @@ class KccWerkplekService
      * @return array{agentProfile: array<string, mixed>, assignedRequests: array<int, array<string, mixed>>,
      *               openTasks: array<int, array<string, mixed>>, queueCounts: array<string, int>,
      *               queues: array<int, array<string, mixed>>} Workspace state.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses assembling one payload; extraction adds no clarity.
      *
      * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
      */
@@ -457,6 +464,8 @@ class KccWerkplekService
      *
      * @throws RuntimeException When OR is unavailable or the save fails.
      *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Idempotent find-merge-save with defensive guards; extraction adds no clarity.
+     *
      * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
      */
     public function setAvailability(string $userId, bool $available): array
@@ -504,10 +513,9 @@ class KccWerkplekService
         }
 
         try {
+            $saveId = null;
             if ($existingId !== '') {
                 $saveId = $existingId;
-            } else {
-                $saveId = null;
             }
 
             $objectService->saveObject(

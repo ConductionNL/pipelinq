@@ -47,18 +47,18 @@ class TierDowngradeJob extends TimedJob
     /**
      * Constructor.
      *
-     * @param ITimeFactory          $time                  The time factory.
-     * @param IAppConfig            $appConfig             The app configuration.
-     * @param ContainerInterface    $container             The DI container.
-     * @param LoyaltyAccountService $loyaltyAccountService The account service.
-     * @param TierService           $tierService           The tier service.
-     * @param LoggerInterface       $logger                The logger.
+     * @param ITimeFactory          $time           The time factory.
+     * @param IAppConfig            $appConfig      The app configuration.
+     * @param ContainerInterface    $container      The DI container.
+     * @param LoyaltyAccountService $loyaltyService The account service.
+     * @param TierService           $tierService    The tier service.
+     * @param LoggerInterface       $logger         The logger.
      */
     public function __construct(
         ITimeFactory $time,
         private IAppConfig $appConfig,
         private ContainerInterface $container,
-        private LoyaltyAccountService $loyaltyAccountService,
+        private LoyaltyAccountService $loyaltyService,
         private TierService $tierService,
         private LoggerInterface $logger,
     ) {
@@ -92,7 +92,7 @@ class TierDowngradeJob extends TimedJob
                 continue;
             }
 
-            $accounts = $this->loyaltyAccountService->listAccountsForProgramme(
+            $accounts = $this->loyaltyService->listAccountsForProgramme(
                 programmeId: $programmeId,
                 limit: 10000
             );
@@ -140,26 +140,44 @@ class TierDowngradeJob extends TimedJob
             return [];
         }
 
-        $result = [];
+        $rowsToIterate = [];
         if (is_array($rows) === true) {
             $rowsToIterate = $rows;
-        } else {
-            $rowsToIterate = [];
         }
 
+        $result = [];
         foreach ($rowsToIterate as $row) {
-            if (is_array($row) === true) {
-                $result[] = $row;
-            } else if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-                $s = $row->jsonSerialize();
-                if (is_array($s) === true) {
-                    $result[] = $s;
-                }
+            $arr = $this->rowToArray(row: $row);
+            if ($arr !== null) {
+                $result[] = $arr;
             }
         }
 
         return $result;
     }//end getActiveProgrammes()
+
+    /**
+     * Normalise an OpenRegister row (array or entity) to a plain array.
+     *
+     * @param mixed $row Row from ObjectService::findAll().
+     *
+     * @return array<string, mixed>|null Array representation, or null when unusable.
+     */
+    private function rowToArray(mixed $row): ?array
+    {
+        if (is_array($row) === true) {
+            return $row;
+        }
+
+        if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+            $serialised = $row->jsonSerialize();
+            if (is_array($serialised) === true) {
+                return $serialised;
+            }
+        }
+
+        return null;
+    }//end rowToArray()
 
     /**
      * Extract UUID from an OR entity array.

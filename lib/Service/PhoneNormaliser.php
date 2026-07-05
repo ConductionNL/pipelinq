@@ -90,6 +90,10 @@ class PhoneNormaliser
      * @param string|null $orgId     Organisation/tenant identifier (reserved for future per-org overrides).
      *
      * @return array{e164: string|null, raw: string}
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $orgId is a reserved parameter
+     *  of the public contract (see method summary) for future per-org normalisation
+     *  overrides; CtiService already passes it.
      */
     public function normaliseForOrg(string $rawNumber, ?string $orgId=null): array
     {
@@ -122,14 +126,14 @@ class PhoneNormaliser
 
         // Case 3: national leading '0' -- replace with country prefix.
         if (str_starts_with($digits, '0') === true) {
-            $cc   = (self::COUNTRY_PREFIX[$country] ?? '31');
-            $e164 = '+'.$cc.substr($digits, 1);
+            $countryCode = (self::COUNTRY_PREFIX[$country] ?? '31');
+            $e164        = '+'.$countryCode.substr($digits, 1);
             return ['e164' => $this->validate(candidate: $e164, rawNumber: $rawNumber), 'raw' => $rawNumber];
         }
 
         // Case 4: bare subscriber digits and we know the country -- still try.
-        $cc   = (self::COUNTRY_PREFIX[$country] ?? '31');
-        $e164 = '+'.$cc.$digits;
+        $countryCode = (self::COUNTRY_PREFIX[$country] ?? '31');
+        $e164        = '+'.$countryCode.$digits;
         return ['e164' => $this->validate(candidate: $e164, rawNumber: $rawNumber), 'raw' => $rawNumber];
     }//end normaliseForOrg()
 

@@ -45,6 +45,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
@@ -57,6 +59,10 @@ use Psr\Log\LoggerInterface;
 /**
  * One-shot, re-runnable repair step that resolves every client/contact to a
  * Nextcloud Contact (contactsUid) and re-keys contactmoment interactions.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) A cohesive idempotent migration: resolve
+ *  client identities, resolve contact identities, match-or-create NC contacts, and re-key
+ *  contactmomenten are one unit of work, deliberately kept in a single repair step.
  *
  * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-005
  * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-006
@@ -161,6 +167,12 @@ class UnifyClientContactIdentity implements IRepairStep
      *
      * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-005
      * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-006
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Two structurally-identical resolve loops (clients,
+     *   contacts) plus a conditional contactmoment re-key; each status tally is a flat guard, not
+     *   nested logic.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same rationale: the independent per-schema guards
+     *   inflate the theoretical path count.
      */
     public function migrate(object $objectService, string $register): array
     {
@@ -201,11 +213,15 @@ class UnifyClientContactIdentity implements IRepairStep
 
                 if ($outcome['status'] === 'linked') {
                     $clientsLinked++;
-                } else if ($outcome['status'] === 'skipped') {
-                    $skipped++;
-                } else {
-                    $unresolved++;
+                    continue;
                 }
+
+                if ($outcome['status'] === 'skipped') {
+                    $skipped++;
+                    continue;
+                }
+
+                $unresolved++;
             }//end foreach
         }//end if
 
@@ -226,11 +242,15 @@ class UnifyClientContactIdentity implements IRepairStep
 
                 if ($outcome['status'] === 'linked') {
                     $contactsLinked++;
-                } else if ($outcome['status'] === 'skipped') {
-                    $skipped++;
-                } else {
-                    $unresolved++;
+                    continue;
                 }
+
+                if ($outcome['status'] === 'skipped') {
+                    $skipped++;
+                    continue;
+                }
+
+                $unresolved++;
             }//end foreach
         }//end if
 
@@ -297,7 +317,9 @@ class UnifyClientContactIdentity implements IRepairStep
                 object: $object,
                 contactsUid: $contactsUid
             );
-        } else {
+        }
+
+        if ($contactsUid === null) {
             // 2) No match — create one from the existing identity fields via the
             // EXISTING ContactVcardService::syncToContacts (reuse, no new engine).
             // It writes the vCard AND stores contactsUid back on the object.
@@ -333,6 +355,12 @@ class UnifyClientContactIdentity implements IRepairStep
      * @param array<string,mixed> $object The pipelinq object.
      *
      * @return string|null The matched contactsUid, or null when none matches.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) IManager availability guard, prioritised
+     *   email/ORG search-term assembly, and a per-term search loop with per-hit UID extraction —
+     *   a cohesive best-effort match wrapped in fault-tolerant try/catch blocks.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same rationale: independent guards and the
+     *   search/hit loops inflate the theoretical path count.
      */
     private function matchExistingContact(array $object): ?string
     {
@@ -549,7 +577,7 @@ class UnifyClientContactIdentity implements IRepairStep
 
         $raw = $object;
         unset($raw['@self']);
-        $now = (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM);
+        $now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
         try {
             $objectService

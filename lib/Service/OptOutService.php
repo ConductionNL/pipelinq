@@ -30,12 +30,17 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
  * Opt-out lookup + recording service.
  *
  * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash() is a pure,
+ *  side-effect-free hashing utility shared across BSN-handling services; injecting
+ *  it as a collaborator would not change behaviour.
  */
 class OptOutService
 {
@@ -265,14 +270,14 @@ class OptOutService
      *
      * @return array{0: string, 1: string}
      *
-     * @throws \RuntimeException If misconfigured.
+     * @throws RuntimeException If misconfigured.
      */
     private function config(): array
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'optOutVlag_schema', '');
         if ($register === '' || $schema === '') {
-            throw new \RuntimeException('optOutVlag register/schema not configured.');
+            throw new RuntimeException('optOutVlag register/schema not configured.');
         }
 
         return [$register, $schema];
@@ -283,14 +288,14 @@ class OptOutService
      *
      * @return object
      *
-     * @throws \RuntimeException When OR is not available.
+     * @throws RuntimeException When OR is not available.
      */
     private function getObjectService(): object
     {
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (Throwable $e) {
-            throw new \RuntimeException('OpenRegister service is not available.');
+            throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
 }//end class

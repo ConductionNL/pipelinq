@@ -202,29 +202,8 @@ class RenewalEngineService
         // Silent expiry: an expiring contract whose endDate has passed and whose
         // renewal lead never resolved -> churned.
         if ((string) ($contract['status'] ?? '') === 'expiring') {
-            $endDate = (string) ($contract['endDate'] ?? '');
-            $outcome = (string) ($contract['renewalLeadOutcome'] ?? '');
-            if ($endDate !== '' && $today > $endDate && $outcome === '') {
-                $this->transition(contract: $contract, newStatus: 'churned', uuid: $uuid);
-                return 'churned-silent';
-            }
-
-            // Notice-deadline My Work entry (idempotent).
-            if ((bool) ($contract['noticeReminderSent'] ?? false) === false) {
-                $deadline = $this->dateMinusDays(
-                    isoDate: $endDate,
-                    days: (int) ($contract['noticePeriodDays'] ?? 0)
-                );
-                if ($deadline !== '' && $today >= $deadline) {
-                    $this->createNoticeMyWorkEntry(contract: $contract);
-                    $contract['noticeReminderSent'] = true;
-                    $this->contractService->save($contract, $uuid);
-                    return 'noticed';
-                }
-            }
-
-            return 'noop';
-        }//end if
+            return $this->processExpiringContract(contract: $contract, today: $today, uuid: $uuid);
+        }
 
         // Window detection: flip active -> expiring and create the renewal lead.
         if ($this->isInRenewalWindow(contract: $contract, today: $today) === true
@@ -241,6 +220,42 @@ class RenewalEngineService
 
         return 'noop';
     }//end processContract()
+
+    /**
+     * Handle an already-`expiring` contract: silent-churn detection and the
+     * idempotent notice-deadline My Work entry.
+     *
+     * @param array<string,mixed> $contract The contract object.
+     * @param string              $today    ISO date (Y-m-d) of evaluation.
+     * @param string              $uuid     The contract UUID.
+     *
+     * @return string A short action code: 'churned-silent', 'noticed', or 'noop'.
+     */
+    private function processExpiringContract(array $contract, string $today, string $uuid): string
+    {
+        $endDate = (string) ($contract['endDate'] ?? '');
+        $outcome = (string) ($contract['renewalLeadOutcome'] ?? '');
+        if ($endDate !== '' && $today > $endDate && $outcome === '') {
+            $this->transition(contract: $contract, newStatus: 'churned', uuid: $uuid);
+            return 'churned-silent';
+        }
+
+        // Notice-deadline My Work entry (idempotent).
+        if ((bool) ($contract['noticeReminderSent'] ?? false) === false) {
+            $deadline = $this->dateMinusDays(
+                isoDate: $endDate,
+                days: (int) ($contract['noticePeriodDays'] ?? 0)
+            );
+            if ($deadline !== '' && $today >= $deadline) {
+                $this->createNoticeMyWorkEntry(contract: $contract);
+                $contract['noticeReminderSent'] = true;
+                $this->contractService->save($contract, $uuid);
+                return 'noticed';
+            }
+        }
+
+        return 'noop';
+    }//end processExpiringContract()
 
     /**
      * Reconcile a contract against the outcome of its renewal lead.
@@ -314,10 +329,9 @@ class RenewalEngineService
                 $leadSchema,
                 null
             );
+            $arr           = (array) $saved;
             if (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true) {
                 $arr = $saved->jsonSerialize();
-            } else {
-                $arr = (array) $saved;
             }
 
             return (string) ($arr['id'] ?? ($arr['uuid'] ?? ''));
@@ -343,14 +357,13 @@ class RenewalEngineService
         }
 
         $autoRenew = (bool) ($contract['autoRenew'] ?? false);
+        $title     = sprintf(
+            'Renewal decision due for contract %s',
+            (string) ($contract['contractNumber'] ?? '')
+        );
         if ($autoRenew === true) {
             $title = sprintf(
                 'Contract %s renews automatically unless cancelled by the notice deadline',
-                (string) ($contract['contractNumber'] ?? '')
-            );
-        } else {
-            $title = sprintf(
-                'Renewal decision due for contract %s',
                 (string) ($contract['contractNumber'] ?? '')
             );
         }
@@ -390,11 +403,11 @@ class RenewalEngineService
             return '';
         }
 
-        $ts = strtotime(sprintf('%s -%d days', $isoDate, $days));
-        if ($ts === false) {
+        $timestamp = strtotime(sprintf('%s -%d days', $isoDate, $days));
+        if ($timestamp === false) {
             return '';
         }
 
-        return date('Y-m-d', $ts);
+        return date('Y-m-d', $timestamp);
     }//end dateMinusDays()
 }//end class

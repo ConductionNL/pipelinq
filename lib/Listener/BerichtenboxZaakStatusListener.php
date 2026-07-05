@@ -240,9 +240,8 @@ class BerichtenboxZaakStatusListener implements IEventListener
                 return '';
             }
 
-            if (is_array($row) === true) {
-                $data = $row;
-            } else {
+            $data = $row;
+            if (is_array($row) === false) {
                 $data = ($row->getObject() ?? []);
             }
 

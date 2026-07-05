@@ -278,13 +278,8 @@ class MigratePosBookkeepingToShillinq implements IRepairStep
         $rows  = $this->readAll(objectService: $objectService, register: $register, schema: self::ZREPORT_SCHEMA);
         $index = [];
         foreach ($rows as $row) {
-            $id      = (string) ($row['id'] ?? $row['uuid'] ?? '');
-            $slugRaw = (string) ($row['@self']['slug'] ?? '');
-            if ($slugRaw !== '') {
-                $slug = $slugRaw;
-            } else {
-                $slug = '';
-            }
+            $id   = (string) ($row['id'] ?? $row['uuid'] ?? '');
+            $slug = (string) ($row['@self']['slug'] ?? '');
 
             if ($id !== '') {
                 $index[$id] = $row;

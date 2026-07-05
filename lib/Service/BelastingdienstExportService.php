@@ -39,6 +39,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use DOMDocument;
 
 /**
  * Format kassakoppelingAuditLog entries for the Belastingdienst audit pack.
@@ -111,7 +112,7 @@ class BelastingdienstExportService
             $manifest = $this->buildManifest(entries: $entries, fromDate: '', toDate: '');
         }
 
-        $document = new \DOMDocument('1.0', 'UTF-8');
+        $document = new DOMDocument('1.0', 'UTF-8');
         $document->formatOutput = true;
 
         $root = $document->createElement('KassakoppelingExport');
@@ -146,11 +147,12 @@ class BelastingdienstExportService
             foreach ($this->canonicalEntry(entry: $entry) as $field => $value) {
                 $childValue = $value;
                 if (is_bool($childValue) === true) {
+                    $boolAsString = 'false';
                     if ($childValue === true) {
-                        $childValue = 'true';
-                    } else {
-                        $childValue = 'false';
+                        $boolAsString = 'true';
                     }
+
+                    $childValue = $boolAsString;
                 }
 
                 if ($childValue === null) {

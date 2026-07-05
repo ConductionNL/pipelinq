@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateInterval;
+use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
@@ -54,6 +55,8 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.UnusedPrivateField)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     SLA lifecycle surface is the intended API (resolve/compute/evaluate/escalate/pause/resume/mark)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Policy + deadline + escalation logic, split into helpers, still one cohesive engine
  */
 class SlaEngineService
 {
@@ -206,6 +209,8 @@ class SlaEngineService
      *         `status`, `consumedPercentage` initialised.
      *
      * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface() is a value-object factory, not a collaborator to inject
      */
     public function computeDeadlines(
         array $policy,
@@ -284,20 +289,23 @@ class SlaEngineService
 
             $totalMin   = $this->businessHours->elapsedBusinessMinutes($started, $dueAt, $calendar, $calendarType);
             $elapsedMin = $this->businessHours->elapsedBusinessMinutes($started, $now, $calendar, $calendarType);
+            $consumed   = 0.0;
             if ($totalMin > 0) {
                 $consumed = ($elapsedMin / $totalMin);
-            } else {
-                $consumed = 0.0;
             }
 
             $currentTargets[$idx]['consumedPercentage'] = round($consumed, 4);
-            if ($consumed >= 1.0) {
-                $currentTargets[$idx]['status'] = self::STATUS_BREACHED;
-            } else if ($consumed >= 0.8) {
-                $currentTargets[$idx]['status'] = self::STATUS_AT_RISK;
-            } else {
-                $currentTargets[$idx]['status'] = self::STATUS_ON_TRACK;
+
+            $status = self::STATUS_ON_TRACK;
+            if ($consumed >= 0.8) {
+                $status = self::STATUS_AT_RISK;
             }
+
+            if ($consumed >= 1.0) {
+                $status = self::STATUS_BREACHED;
+            }
+
+            $currentTargets[$idx]['status'] = $status;
         }//end foreach
 
         return $currentTargets;
@@ -320,6 +328,8 @@ class SlaEngineService
      * @return array{level:int, eventIds:array<int,string>} The new escalation level + event UUIDs.
      *
      * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-004
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $priorTargets is part of the public signature (positional callers exist outside this class)
      */
     public function executeEscalations(
         array $policy,
@@ -329,6 +339,7 @@ class SlaEngineService
         array $priorTargets,
         int $alreadyFired,
     ): array {
+        unset($priorTargets);
         $chain = $policy['escalationChain'] ?? [];
         if ($chain === []) {
             return ['level' => $alreadyFired, 'eventIds' => []];
@@ -602,35 +613,95 @@ class SlaEngineService
         string $contractId,
         DateTimeInterface $now,
     ): bool {
-        $applies = (string) ($policy['appliesTo'] ?? '*');
-        if ($applies !== '*' && $applies !== $objectType) {
+        if ($this->matchesAppliesTo(policy: $policy, objectType: $objectType) === false) {
             return false;
         }
 
-        $policyTier = (string) ($policy['customerTier'] ?? '*');
+        if ($this->matchesTier(policy: $policy, tier: $tier) === false) {
+            return false;
+        }
+
+        if ($this->matchesScope(policy: $policy, organisationId: $organisationId, contractId: $contractId) === false) {
+            return false;
+        }
+
+        return $this->isValidAt(policy: $policy, now: $now);
+    }//end policyApplies()
+
+    /**
+     * Whether the policy's `appliesTo` matches the object type.
+     *
+     * @param array<string, mixed> $policy     Policy.
+     * @param string               $objectType Object type.
+     *
+     * @return bool
+     */
+    private function matchesAppliesTo(array $policy, string $objectType): bool
+    {
+        $applies = (string) ($policy['appliesTo'] ?? '*');
+        return ($applies === '*' || $applies === $objectType);
+    }//end matchesAppliesTo()
+
+    /**
+     * Whether the policy's `customerTier` matches, defaulting the
+     * customer's tier to "bronze" when unspecified.
+     *
+     * @param array<string, mixed> $policy Policy.
+     * @param string               $tier   Customer tier.
+     *
+     * @return bool
+     */
+    private function matchesTier(array $policy, string $tier): bool
+    {
+        $policyTier    = (string) ($policy['customerTier'] ?? '*');
+        $effectiveTier = 'bronze';
         if ($tier !== '') {
             $effectiveTier = $tier;
-        } else {
-            $effectiveTier = 'bronze';
         }
 
-        if ($policyTier !== '*' && $policyTier !== $effectiveTier) {
+        return ($policyTier === '*' || $policyTier === $effectiveTier);
+    }//end matchesTier()
+
+    /**
+     * Whether the policy's `customerScope` (contract/organisation
+     * allow-lists) matches, when a scope is configured at all.
+     *
+     * @param array<string, mixed> $policy         Policy.
+     * @param string               $organisationId Organisation UUID (or '').
+     * @param string               $contractId     Contract UUID (or '').
+     *
+     * @return bool
+     */
+    private function matchesScope(array $policy, string $organisationId, string $contractId): bool
+    {
+        $scope = $policy['customerScope'] ?? null;
+        if (is_array($scope) === false) {
+            return true;
+        }
+
+        $orgs      = (array) ($scope['organisationIds'] ?? []);
+        $contracts = (array) ($scope['contractIds'] ?? []);
+        if ($orgs !== [] && in_array($organisationId, $orgs, true) === false) {
             return false;
         }
 
-        $scope = $policy['customerScope'] ?? null;
-        if (is_array($scope) === true) {
-            $orgs      = (array) ($scope['organisationIds'] ?? []);
-            $contracts = (array) ($scope['contractIds'] ?? []);
-            if ($orgs !== [] && in_array($organisationId, $orgs, true) === false) {
-                return false;
-            }
-
-            if ($contracts !== [] && in_array($contractId, $contracts, true) === false) {
-                return false;
-            }
+        if ($contracts !== [] && in_array($contractId, $contracts, true) === false) {
+            return false;
         }
 
+        return true;
+    }//end matchesScope()
+
+    /**
+     * Whether `$now` falls within the policy's validFrom/validUntil window.
+     *
+     * @param array<string, mixed> $policy Policy.
+     * @param DateTimeInterface    $now    Resolution instant.
+     *
+     * @return bool
+     */
+    private function isValidAt(array $policy, DateTimeInterface $now): bool
+    {
         $validFrom  = $this->parseIsoOrNull(value: ($policy['validFrom'] ?? null));
         $validUntil = $this->parseIsoOrNull(value: ($policy['validUntil'] ?? null));
         if ($validFrom !== null && $now < $validFrom) {
@@ -642,7 +713,7 @@ class SlaEngineService
         }
 
         return true;
-    }//end policyApplies()
+    }//end isValidAt()
 
     /**
      * Score the specificity of a policy's scope for sort ordering.
@@ -720,10 +791,9 @@ class SlaEngineService
             $notifiedActors = ['failed:'.$channel];
         }
 
+        $kind = $hottestKind;
         if ($hottestKind === '') {
             $kind = 'resolution';
-        } else {
-            $kind = $hottestKind;
         }
 
         return $this->writeBreachEvent(
@@ -779,7 +849,7 @@ class SlaEngineService
             $notification = $this->notifications->createNotification();
             $notification->setApp(Application::APP_ID)
                 ->setUser($actor)
-                ->setDateTime(new \DateTime())
+                ->setDateTime(new DateTime())
                 ->setObject($objectType, $objectId)
                 ->setSubject('sla_breach', ['level' => $level, 'policy' => (string) ($policy['name'] ?? '')])
                 ->setMessage('sla_breach_message', ['level' => $level]);

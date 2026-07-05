@@ -222,8 +222,8 @@ class AvailabilityCacheRefreshJob extends TimedJob
         $today = new DateTimeImmutable('today', new DateTimeZone('UTC'));
         $dates = [];
         for ($offset = 0; $offset <= self::HORIZON_DAYS; $offset++) {
-            $dt      = $today->modify(sprintf('+%d days', $offset));
-            $dates[] = $dt->format('Y-m-d');
+            $date    = $today->modify(sprintf('+%d days', $offset));
+            $dates[] = $date->format('Y-m-d');
         }
 
         return $dates;
@@ -300,32 +300,44 @@ class AvailabilityCacheRefreshJob extends TimedJob
         }
 
         if (is_object($object) === true) {
-            if (method_exists($object, 'jsonSerialize') === true) {
-                $serialised = $object->jsonSerialize();
-                if (is_array($serialised) === true) {
-                    return $serialised;
-                }
-            }
-
-            if (method_exists($object, 'getObject') === true) {
-                $payload = $object->getObject();
-                if (is_array($payload) === true) {
-                    return $payload;
-                }
-            }
-
-            if (method_exists($object, 'toArray') === true) {
-                $arr = $object->toArray();
-                if (is_array($arr) === true) {
-                    return $arr;
-                }
-            }
-
-            return (array) $object;
-        }//end if
+            return $this->objectToArray(object: $object);
+        }
 
         return null;
     }//end toArray()
+
+    /**
+     * Coerce an object to a plain array via its best-available accessor.
+     *
+     * @param object $object Entity to coerce.
+     *
+     * @return array<string, mixed> Array representation.
+     */
+    private function objectToArray(object $object): array
+    {
+        if (method_exists($object, 'jsonSerialize') === true) {
+            $serialised = $object->jsonSerialize();
+            if (is_array($serialised) === true) {
+                return $serialised;
+            }
+        }
+
+        if (method_exists($object, 'getObject') === true) {
+            $payload = $object->getObject();
+            if (is_array($payload) === true) {
+                return $payload;
+            }
+        }
+
+        if (method_exists($object, 'toArray') === true) {
+            $arr = $object->toArray();
+            if (is_array($arr) === true) {
+                return $arr;
+            }
+        }
+
+        return (array) $object;
+    }//end objectToArray()
 
     /**
      * Resolve the OpenRegister ObjectService via the DI container.

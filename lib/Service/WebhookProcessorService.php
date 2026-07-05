@@ -43,6 +43,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use Closure;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -60,8 +61,11 @@ use Throwable;
  *   `processClick` / `processUnsubscribe` / `processComplaint` — the
  *   event-type handlers exposed for tests and direct dispatch.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires three sibling
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires three sibling
  * services + ObjectService. Each method has one collaborator.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) One event-type handler per
+ * routing-matrix row (delivered/bounce/open/click/unsubscribe/complaint), each
+ * independently unit-tested; splitting would scatter one cohesive webhook contract.
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  */
@@ -144,51 +148,60 @@ class WebhookProcessorService
             return false;
         }
 
+        $handler = $this->resolveEventHandler(eventType: $eventType);
+        if ($handler === null) {
+            $this->logger->info(
+                'WebhookProcessorService.processEvent: unhandled eventType',
+                ['provider' => $provider, 'eventType' => $eventType]
+            );
+            return true;
+        }
+
         try {
-            switch ($eventType) {
-                case 'delivered':
-                    $this->processDelivered(event: $event);
-                    break;
-                case 'bounce':
-                case 'bounced':
-                    $this->processBounce(event: $event);
-                    break;
-                case 'open':
-                case 'opened':
-                    $this->processOpen(event: $event);
-                    break;
-                case 'click':
-                case 'clicked':
-                    $this->processClick(event: $event);
-                    break;
-                case 'unsubscribe':
-                case 'unsubscribed':
-                case 'group_unsubscribe':
-                    $this->processUnsubscribe(event: $event);
-                    break;
-                case 'spamreport':
-                case 'spam_report':
-                case 'complaint':
-                case 'complained':
-                    $this->processComplaint(event: $event);
-                    break;
-                default:
-                    $this->logger->info(
-                        'WebhookProcessorService.processEvent: unhandled eventType',
-                        ['provider' => $provider, 'eventType' => $eventType]
-                    );
-                    return true;
-            }//end switch
+            $handler($event);
         } catch (Throwable $e) {
             $this->logger->warning(
                 'WebhookProcessorService.processEvent: handler failed',
                 ['provider' => $provider, 'eventType' => $eventType, 'exception' => $e->getMessage()]
             );
             return false;
-        }//end try
+        }
 
         return true;
     }//end processEvent()
+
+    /**
+     * Resolve the process* handler closure for a normalised event type.
+     *
+     * Table-driven equivalent of the previous switch: keeps the exact same
+     * eventType => handler routing (including provider aliases that share a
+     * handler) while keeping cyclomatic complexity low.
+     *
+     * @param string $eventType Lower-cased event type / alias.
+     *
+     * @return Closure(array<string, mixed>): void|null The handler, or null when unrecognised.
+     */
+    private function resolveEventHandler(string $eventType): ?Closure
+    {
+        $handlers = [
+            'delivered'         => $this->processDelivered(...),
+            'bounce'            => $this->processBounce(...),
+            'bounced'           => $this->processBounce(...),
+            'open'              => $this->processOpen(...),
+            'opened'            => $this->processOpen(...),
+            'click'             => $this->processClick(...),
+            'clicked'           => $this->processClick(...),
+            'unsubscribe'       => $this->processUnsubscribe(...),
+            'unsubscribed'      => $this->processUnsubscribe(...),
+            'group_unsubscribe' => $this->processUnsubscribe(...),
+            'spamreport'        => $this->processComplaint(...),
+            'spam_report'       => $this->processComplaint(...),
+            'complaint'         => $this->processComplaint(...),
+            'complained'        => $this->processComplaint(...),
+        ];
+
+        return $handlers[$eventType] ?? null;
+    }//end resolveEventHandler()
 
     /**
      * SendGrid POSTs a JSON array of events. Iterate and dispatch each.
@@ -820,15 +833,15 @@ class WebhookProcessorService
      */
     private function extractId(array $payload): string
     {
-        foreach (['uuid', 'id', 'slug'] as $key) {
-            if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string) $payload[$key] !== '') {
-                return (string) $payload[$key];
-            }
+        $searchSpaces = [$payload];
+        $self         = ($payload['@self'] ?? null);
+        if (is_array($self) === true) {
+            $searchSpaces[] = $self;
         }
 
-        if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
+        foreach ($searchSpaces as $space) {
             foreach (['uuid', 'id', 'slug'] as $key) {
-                $value = ($payload['@self'][$key] ?? null);
+                $value = ($space[$key] ?? null);
                 if (is_scalar($value) === true && (string) $value !== '') {
                     return (string) $value;
                 }
