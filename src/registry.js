@@ -49,7 +49,9 @@ import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.v
 import LeadConversionKpiWidget from './views/dashboard/widgets/LeadConversionKpiWidget.vue'
 import AvgResolutionKpiWidget from './views/dashboard/widgets/AvgResolutionKpiWidget.vue'
 import ContactVolumeKpiWidget from './views/dashboard/widgets/ContactVolumeKpiWidget.vue'
-import SatisfactionKpiWidget from './views/dashboard/widgets/SatisfactionKpiWidget.vue'
+// SatisfactionKpiWidget removed 2026-07: permanently-null data source (no survey
+// responses after the forms-leaf migration); restored via openspec change
+// customer-satisfaction-closed-loop.
 import LeadsOverTimeChartWidget from './views/dashboard/widgets/LeadsOverTimeChartWidget.vue'
 import RequestsByCategoryChartWidget from './views/dashboard/widgets/RequestsByCategoryChartWidget.vue'
 import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
@@ -452,12 +454,6 @@ const registry = {
 		component: ContactVolumeKpiWidget,
 		...KPI_WIDGET_META,
 		_note: 'KPI card: contactmoment count in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
-	},
-	SatisfactionKpiWidget: {
-		kind: 'widget',
-		component: SatisfactionKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: mean survey score (1–5) in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
 	},
 	LeadsOverTimeChartWidget: {
 		kind: 'widget',

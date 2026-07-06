@@ -116,6 +116,13 @@ class Application extends App implements IBootstrap
         // Preferences / repair plumbing stays bespoke.
         $this->registerAppHost(context: $context);
 
+        // Notifier registration. Previously declared via a <notification>
+        // element in info.xml, which Nextcloud core never reads (and which
+        // app-info.xsd rejects) — the IBootstrap registration below is the
+        // canonical path, fixed with the align-claims-and-first-hour
+        // conformance sweep.
+        $context->registerNotifierService(\OCA\Pipelinq\Notification\Notifier::class);
+
         $context->registerEventListener(
             event: ObjectCreatedEvent::class,
             listener: ObjectEventListener::class
