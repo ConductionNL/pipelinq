@@ -740,6 +740,21 @@
       },
       "request": {
         "slug": "request",
+        "x-openregister-handoff": [
+          {
+            "id": "convert-to-case",
+            "targetSemanticType": "https://openregister.app/ns#Case",
+            "trigger": "manual",
+            "whenUnavailable": "hide",
+            "mapping": {
+              "title": { "from": "title" },
+              "summary": { "from": "description", "default": "" },
+              "channel": { "from": "channel", "default": "onbekend" },
+              "source": { "template": "pipelinq:request:{{title}}" },
+              "requester": { "semanticRef": "client" }
+            }
+          }
+        ],
         "x-openregister-notifications": {
           "requestCompleted": {
             "trigger": {
