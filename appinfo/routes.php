@@ -436,6 +436,13 @@ return [
         ['name' => 'messaging#preflight',    'url' => '/api/messaging/preflight/{contactId}',   'verb' => 'GET'],
         ['name' => 'messaging#consent',      'url' => '/api/messaging/consent',                 'verb' => 'POST'],
         ['name' => 'messaging#testProvider', 'url' => '/api/messaging/providers/{id}/test',     'verb' => 'POST'],
+        // Semantic object handoff emit (ADR-051 / semantic-handoff-emit):
+        // request -> ns#Case, active contract -> ns#Invoice. Kind-addressed via
+        // OpenRegister's handoff engine; actions hide when no app implements the kind.
+        ['name' => 'semanticHandoff#requestAvailability',    'url' => '/api/handoff/request/{id}/availability',       'verb' => 'GET'],
+        ['name' => 'semanticHandoff#convertRequestToCase',   'url' => '/api/handoff/request/{id}/convert-to-case',    'verb' => 'POST'],
+        ['name' => 'semanticHandoff#contractAvailability',   'url' => '/api/handoff/contract/{id}/availability',      'verb' => 'GET'],
+        ['name' => 'semanticHandoff#sendContractToInvoicing','url' => '/api/handoff/contract/{id}/send-to-invoicing', 'verb' => 'POST'],
         // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
         // Logius webhooks for read-receipt + inbound replies — HMAC-SHA256
         // signature-verified (REQ-RECEIPT-005 / REQ-INBOUND-006).
