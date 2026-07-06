@@ -212,15 +212,9 @@ final class PortalContributionProviderTest extends TestCase
         $this->assertIsArray($manifest);
 
         $collections = $this->indexById($manifest['collections']);
-        $this->assertSame(['customerAvgVerzoeken', 'customerBookings', 'customerLoyalty'], $this->sortedKeys($collections));
-
-        $dsar = $collections['customerAvgVerzoeken'];
-        $this->assertSame('pipelinq', $dsar['register']);
-        $this->assertSame('avgVerzoek', $dsar['schema']);
-        $this->assertSame('verzoekerContact', $dsar['scopeField']);
-        $this->assertSame('contactId', $dsar['scopeClaim'], 'DSAR scopes by the pipelinq contact object UUID claim');
-        $this->assertSame('substantial', $dsar['minTrust'], 'DSAR case files require eIDAS-substantial assurance');
-        $this->assertTrue($dsar['listable']);
+        // consume-or-dsar removed the customerAvgVerzoeken collection: DSAR
+        // cases moved to OpenRegister's data-subject-requests register.
+        $this->assertSame(['customerBookings', 'customerLoyalty'], $this->sortedKeys($collections));
 
         $loyalty = $collections['customerLoyalty'];
         $this->assertSame('pipelinq', $loyalty['register']);
@@ -246,40 +240,22 @@ final class PortalContributionProviderTest extends TestCase
     }//end testCustomerCollectionsAreSubjectScoped()
 
     /**
-     * Scenario: DSAR intake is the only customer action.
+     * Scenario: no customer actions remain after DSAR moved to OpenRegister.
+     *
+     * consume-or-dsar removed the createAvgVerzoek intake action (pipelinq no
+     * longer owns the avgVerzoek schema; citizen DSAR intake is OpenRegister's
+     * responsibility). The customer contribution ships no actions.
      *
      * @return void
      *
-     * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014--openregister-compliance-subsystem-consumption-boundary
      */
-    public function testCustomerActionIsDsarIntakeOnly(): void
+    public function testCustomerHasNoActionsAfterDsarMovedToOr(): void
     {
         $manifest = $this->provider->getContribution(self::CUSTOMER_SUBJECT);
         $this->assertIsArray($manifest);
-
-        $actions = $this->indexById($manifest['actions']);
-        $this->assertSame(['createAvgVerzoek'], $this->sortedKeys($actions));
-
-        $intake = $actions['createAvgVerzoek'];
-        $this->assertSame('create', $intake['type']);
-        $this->assertSame('pipelinq', $intake['register']);
-        $this->assertSame('avgVerzoek', $intake['schema']);
-        $this->assertSame(['artikel', 'specifiekeVraag', 'scope'], $intake['fields']);
-
-        $forbidden = [
-            'status',
-            'behandelaar',
-            'verzoekerBsn',
-            'verzoekerBsnGeverifieerd',
-            'verzoekerContact',
-            'wettelijkeTermijnVerloopt',
-            'retentieTot',
-            'uitkomst',
-        ];
-        foreach ($forbidden as $field) {
-            $this->assertNotContains($field, $intake['fields'], "DSAR intake must never expose '{$field}'");
-        }
-    }//end testCustomerActionIsDsarIntakeOnly()
+        $this->assertSame([], $manifest['actions']);
+    }//end testCustomerHasNoActionsAfterDsarMovedToOr()
 
     /**
      * Scenario: Unknown audience yields null (fail-closed).

@@ -89,13 +89,11 @@ class SettingsService
         'exportJob_schema',
         'exportRun_schema',
         'exportSchemaSnapshot_schema',
-        // AVG/GDPR data-subject-request workflow (avg-verzoeken-workflow).
-        'avgVerzoek_schema',
-        'termijnEvent_schema',
-        'bewijsItem_schema',
-        'exportBundle_schema',
-        'weigering_schema',
-        'redactieActie_schema',
+        // AVG/GDPR data-subject-request workflow removed by consume-or-dsar
+        // (ADR-047 Phase 3): the avgVerzoek + satellite schemas moved to
+        // OpenRegister's data-subject-request register. The MigrateAvgVerzoekenToOrDsar
+        // repair step still reads any pre-existing avgVerzoek_schema config value
+        // (persisted from an earlier import) directly to migrate legacy objects.
         'complaint_sla_service',
         'complaint_sla_product',
         'complaint_sla_communication',

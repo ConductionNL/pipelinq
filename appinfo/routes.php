@@ -487,55 +487,21 @@ return [
         ['name' => 'xWiki#page',   'url' => '/api/xwiki/page/{wiki}/{page}',        'verb' => 'GET', 'requirements' => ['page' => '.+']],
         ['name' => 'xWiki#status', 'url' => '/api/xwiki/status',                    'verb' => 'GET'],
 
-        // AVG (GDPR data-subject request) workflow.
-        // avgVerzoek / termijnEvent / bewijsItem / exportBundle / weigering / redactieActie
-        // CRUD is handled by OpenRegister's generic object API; these are the
-        // server-authoritative lifecycle actions (camelCase slug matches the controller).
-        // Collection (static) routes precede the {id} wildcard routes.
-        ['name' => 'avgVerzoek#index',   'url' => '/api/avg-verzoeken', 'verb' => 'GET'],
-        ['name' => 'avgVerzoek#create',  'url' => '/api/avg-verzoeken', 'verb' => 'POST'],
-        ['name' => 'avgVerzoek#show',    'url' => '/api/avg-verzoeken/{id}', 'verb' => 'GET'],
-        ['name' => 'avgVerzoek#update',  'url' => '/api/avg-verzoeken/{id}', 'verb' => 'PATCH'],
-        ['name' => 'avgVerzoek#destroy', 'url' => '/api/avg-verzoeken/{id}', 'verb' => 'DELETE'],
-        ['name' => 'avgVerzoek#flagDpia', 'url' => '/api/avg-verzoeken/{id}/dpia-flag', 'verb' => 'POST'],
-        ['name' => 'avgVerzoek#extend',  'url' => '/api/avg-verzoeken/{id}/extend', 'verb' => 'POST'],
-        ['name' => 'avgVerzoek#archive', 'url' => '/api/avg-verzoeken/{id}/archive', 'verb' => 'POST'],
-
-        // AVG evidence collection.
-        ['name' => 'avgEvidence#collect', 'url' => '/api/avg-verzoeken/{id}/collect-evidence', 'verb' => 'POST'],
-        ['name' => 'avgEvidence#status',  'url' => '/api/avg-verzoeken/{id}/evidence-status', 'verb' => 'GET'],
-        ['name' => 'avgEvidence#items',   'url' => '/api/avg-verzoeken/{id}/bewijs-items', 'verb' => 'GET'],
-
-        // AVG redaction.
-        ['name' => 'avgRedaction#redact',  'url' => '/api/avg-verzoeken/{id}/redact', 'verb' => 'POST'],
-        ['name' => 'avgRedaction#summary', 'url' => '/api/avg-verzoeken/{id}/redaction-summary', 'verb' => 'GET'],
-        ['name' => 'avgRedaction#approve', 'url' => '/api/avg-verzoeken/{id}/approve-redactions', 'verb' => 'POST'],
-
-        // AVG denial (Weigering).
-        ['name' => 'avgDenial#deny',     'url' => '/api/avg-verzoeken/{id}/deny', 'verb' => 'POST'],
-        ['name' => 'avgDenial#show',     'url' => '/api/avg-verzoeken/{id}/weigering', 'verb' => 'GET'],
-        ['name' => 'avgDenial#finalize', 'url' => '/api/avg-verzoeken/{id}/finalize-denial', 'verb' => 'POST'],
-
-        // AVG export bundles + AP escalation. The public secure-download route
-        // precedes the authenticated {bundleId} metadata route.
-        ['name' => 'avgBundle#generate', 'url' => '/api/avg-verzoeken/{id}/generate-bundle', 'verb' => 'POST'],
-        ['name' => 'avgBundle#escalate', 'url' => '/api/avg-verzoeken/{id}/ap-escalate', 'verb' => 'POST'],
-        ['name' => 'avgBundle#download', 'url' => '/api/export-bundles/{bundleId}/download', 'verb' => 'GET'],
-        ['name' => 'avgBundle#show',     'url' => '/api/export-bundles/{bundleId}', 'verb' => 'GET'],
+        // AVG / DSAR (GDPR data-subject request) — the entire app-side workflow
+        // (avgVerzoek#*, avgEvidence#*, avgRedaction#*, avgDenial#*, avgBundle#*)
+        // and the MDM right-of-deletion workflow (mdmAvgWorkflow#*) were removed
+        // by consume-or-dsar (ADR-047 Phase 3). DSAR is owned by OpenRegister's
+        // case engine (/apps/openregister/avg + /api/gdpr/*); pipelinq registers
+        // as an evidence source (PipelinqEvidenceSourceProvider) and deep-links
+        // handlers into OR's AVG surface. Existing avgVerzoek objects are
+        // migrated to OR dataSubjectRequest cases by MigrateAvgVerzoekenToOrDsar.
 
         // Master Data Management — the app-side read-API (`/api/mdm/master*`,
         // MdmApiController) was removed by retire-mdm-sync-queue (ADR-022 /
         // ADR-045 #D): downstream apps read master entities directly from
         // OpenRegister's `/api/objects` surface, and MDM steward views, merge
         // tooling, trust-config CRUD and the sync queue are all hosted by
-        // OpenRegister. Only the AVG right-of-deletion workflow (below, ADR-047)
-        // remains in-app until consume-or-dsar re-homes it to OR too.
-
-        // MDM — AVG right-of-deletion workflow (admin only).
-        ['name' => 'mdmAvgWorkflow#candidates',        'url' => '/api/mdm/avg-workflow/candidates', 'verb' => 'GET'],
-        ['name' => 'mdmAvgWorkflow#initiate',          'url' => '/api/mdm/avg-workflow/initiate', 'verb' => 'POST'],
-        ['name' => 'mdmAvgWorkflow#approve',           'url' => '/api/mdm/avg-workflow/approve', 'verb' => 'POST'],
-        ['name' => 'mdmAvgWorkflow#confirmHardDelete', 'url' => '/api/mdm/avg-workflow/{masterEntityId}/hard-delete', 'verb' => 'POST'],
+        // OpenRegister.
 
         // Contract & renewal tracking (contract-renewal-tracking) — app-logic only
         // (numbering, guarded transitions, recurring-revenue metrics). Plain CRUD

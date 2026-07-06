@@ -231,9 +231,9 @@ class PortalContributionProvider
     /**
      * Manifest for the `customer` audience (B2C).
      *
-     * `avgVerzoek` (DSAR case file) is scoped by `verzoekerContact` via
-     * `claims.pipelinq.contactId` (pipelinq `contact` object UUID) and gated
-     * at eIDAS-substantial trust. `klantLoyaltyAccount` is scoped by `klantId`
+     * The `avgVerzoek` DSAR self-service collection + intake action were removed
+     * by consume-or-dsar (ADR-047 Phase 3) — DSAR moved to OpenRegister.
+     * `klantLoyaltyAccount` is scoped by `klantId`
      * via `claims.pipelinq.customerUid` (Nextcloud contact UID — a DIFFERENT
      * identifier space than contactId, see design.md). `booking` is scoped by
      * `customerId` (also a Nextcloud addressbook contact ref → `customerUid`)
@@ -252,19 +252,15 @@ class PortalContributionProvider
      */
     private function customerContribution(): array
     {
+        // NOTE: the citizen "My privacy requests" collection + "Submit a privacy
+        // (GDPR) request" action were removed by consume-or-dsar (ADR-047 Phase
+        // 3): pipelinq no longer owns the avgVerzoek schema — DSAR cases live in
+        // OpenRegister's data-subject-requests register and are surfaced through
+        // OpenRegister's own AVG/portal surface. Re-adding a citizen DSAR intake
+        // pointed at OR's register is a portal follow-up, not part of this change.
         return [
             'label'         => 'Pipelinq',
             'collections'   => [
-                [
-                    'id'         => 'customerAvgVerzoeken',
-                    'register'   => self::REGISTER,
-                    'schema'     => 'avgVerzoek',
-                    'scopeField' => 'verzoekerContact',
-                    'scopeClaim' => 'contactId',
-                    'label'      => 'My privacy requests',
-                    'listable'   => true,
-                    'minTrust'   => 'substantial',
-                ],
                 [
                     'id'         => 'customerLoyalty',
                     'register'   => self::REGISTER,
@@ -294,20 +290,7 @@ class PortalContributionProvider
                     ],
                 ],
             ],
-            'actions'       => [
-                [
-                    'id'       => 'createAvgVerzoek',
-                    'type'     => 'create',
-                    'label'    => 'Submit a privacy (GDPR) request',
-                    'register' => self::REGISTER,
-                    'schema'   => 'avgVerzoek',
-                    'fields'   => [
-                        'artikel',
-                        'specifiekeVraag',
-                        'scope',
-                    ],
-                ],
-            ],
+            'actions'       => [],
             'notifications' => [],
         ];
     }//end customerContribution()
