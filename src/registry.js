@@ -275,9 +275,10 @@ import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 // --- AVG (GDPR data-subject request) workflow (lib gap: list needs deadline
 //     colour-coding + masked names; detail needs the tabbed evidence/redaction/
 //     bundle/denial lifecycle; intake needs article classification). ---
-import AvgDashboardView from './views/avg/AvgDashboard.vue'
-import AvgRequestDetailView from './views/avg/AvgRequestDetail.vue'
-import AvgIntakeView from './views/avg/AvgIntakeView.vue'
+// AVG/DSAR views removed by consume-or-dsar (ADR-047 Phase 3): the data-subject
+// request workflow is owned by OpenRegister's case engine; pipelinq deep-links
+// handlers into OR's AVG surface (/apps/openregister/avg) instead of embedding
+// its own dashboard/detail/intake pages.
 // --- Master Data Management (MDM) steward surfaces are no longer hosted in
 //     pipelinq (ADR-045 #D). OpenRegister now owns the survivorship / dedup /
 //     merge / data-quality surface, driven by the x-openregister-survivorship
@@ -986,22 +987,12 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'Inline xWiki HTML viewer used by the sidebar tab; consumes the xwiki Pinia store directly.',
 	},
-	// --- AVG (GDPR data-subject request) workflow. ---
-	AvgDashboardView: {
-		kind: 'page',
-		component: AvgDashboardView,
-		_note: 'AVG request dashboard; custom so rows carry deadline colour-coding, masked subject names and a DPIA badge, and the empty state offers "New AVG request".',
-	},
-	AvgRequestDetailView: {
-		kind: 'page',
-		component: AvgRequestDetailView,
-		_note: 'AVG request detail with the tabbed lifecycle (intake/evidence/redaction/bundle/denial), a live deadline counter and the 60-day extension action; lib detail page cannot express the GDPR request lifecycle.',
-	},
-	AvgIntakeView: {
-		kind: 'page',
-		component: AvgIntakeView,
-		_note: 'AVG intake form with article classification + BSN elfproef validation; lib has no classification/intake page type.',
-	},
+	// --- AVG (GDPR data-subject request) workflow migrated to OpenRegister
+	//     (ADR-047 Phase 3 / consume-or-dsar): the dashboard/detail/intake views
+	//     and their bespoke components were removed. OR's case engine owns the
+	//     DSAR lifecycle; the AvgRequests nav entry deep-links to OR's AVG page
+	//     (/apps/openregister/avg). Pipelinq contributes evidence via
+	//     PipelinqEvidenceSourceProvider. ---
 	// --- Master Data Management (MDM) steward surfaces migrated to OpenRegister
 	//     (ADR-045 #D): the list/detail, duplicate-candidates, data-quality and
 	//     sync-queue views + the golden-record/conflict/merge sections & modals
