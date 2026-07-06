@@ -5,8 +5,10 @@
  *
  * Covers the right-of-deletion workflow: initiation logging, the atomic
  * approve-and-execute (source anonymisation, soft-delete, golden-record + audit
- * redaction, downstream soft-delete enqueue), cooling-off enforcement on hard
- * delete and the hard delete itself. Mirrors spec scenarios REQ-MDM-009-01..03.
+ * redaction, downstream soft-delete dispatch via OR WebhookService), cooling-off
+ * enforcement on hard delete and the hard delete itself. Mirrors spec scenarios
+ * REQ-MDM-009-01..03. retire-mdm-sync-queue moved the downstream soft-delete
+ * sync off the app-side queue onto OpenRegister's WebhookService.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service\Mdm
@@ -24,8 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Mdm;
 
+use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Service\Mdm\AVGWorkflowService;
-use OCA\Pipelinq\Service\Mdm\SyncQueueService;
+use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -46,6 +49,13 @@ final class AVGWorkflowServiceTest extends TestCase
     private InMemoryMdmObjectRepository $repo;
 
     /**
+     * Records every downstream WebhookService::dispatchEvent payload.
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    private array $dispatched = [];
+
+    /**
      * The service under test.
      *
      * @var AVGWorkflowService
@@ -53,16 +63,43 @@ final class AVGWorkflowServiceTest extends TestCase
     private AVGWorkflowService $service;
 
     /**
-     * Set up the service stack.
+     * Set up the service stack with a dispatch-recording WebhookService.
      *
      * @return void
      */
     protected function setUp(): void
     {
-        $this->repo    = new InMemoryMdmObjectRepository();
-        $container     = $this->createStub(ContainerInterface::class);
-        $syncQueue     = new SyncQueueService($this->repo, $container, new NullLogger());
-        $this->service = new AVGWorkflowService($this->repo, $syncQueue, new NullLogger());
+        $this->repo       = new InMemoryMdmObjectRepository();
+        $this->dispatched = [];
+
+        $recorder = &$this->dispatched;
+        $webhook  = new class ($recorder) extends WebhookService {
+            /**
+             * @param array<int, array<string, mixed>> $sink Reference to the record sink.
+             */
+            public function __construct(private array &$sink)
+            {
+            }
+
+            /**
+             * Record the dispatch instead of delivering it.
+             *
+             * @param Event                $_event    The event.
+             * @param string               $eventName The event name.
+             * @param array<string, mixed> $payload   The payload.
+             *
+             * @return void
+             */
+            public function dispatchEvent(Event $_event, string $eventName, array $payload): void
+            {
+                $this->sink[] = $payload;
+            }
+        };
+
+        $container = $this->createStub(ContainerInterface::class);
+        $container->method('get')->willReturn($webhook);
+
+        $this->service = new AVGWorkflowService($this->repo, $container, new NullLogger());
     }//end setUp()
 
     /**
@@ -94,7 +131,7 @@ final class AVGWorkflowServiceTest extends TestCase
     }//end testInitiate()
 
     /**
-     * Approve-and-execute soft-deletes, anonymises sources and enqueues sync.
+     * Approve-and-execute soft-deletes, anonymises sources and dispatches sync.
      *
      * @return void
      */
@@ -119,8 +156,17 @@ final class AVGWorkflowServiceTest extends TestCase
         $this->assertTrue($source['withdrawn']);
         $this->assertSame(AVGWorkflowService::REDACTED, $source['mappedAttributes']['name']);
 
-        // Soft-delete sync enqueued for all 5 downstream systems.
-        $this->assertCount(5, $this->repo->store['syncQueueItem'] ?? []);
+        // Soft-delete sync dispatched to OR WebhookService for all 5 downstream
+        // systems — no app-side queue rows are created.
+        $this->assertCount(5, $this->dispatched);
+        $this->assertArrayNotHasKey('syncQueueItem', $this->repo->store);
+        foreach ($this->dispatched as $payload) {
+            $this->assertSame('soft-delete', $payload['changeType']);
+            $this->assertSame('p1', $payload['masterEntity']);
+            $this->assertSame('GR-2026-5001', $payload['payload']['gdprRequestId']);
+        }
+        $targets = array_map(static fn (array $p): string => (string) $p['targetSystem'], $this->dispatched);
+        $this->assertSame(['shillinq', 'procest', 'scholiq', 'opencatalogi', 'decidesk'], $targets);
     }//end testApproveAndExecute()
 
     /**

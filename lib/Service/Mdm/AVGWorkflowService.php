@@ -31,6 +31,8 @@ namespace OCA\Pipelinq\Service\Mdm;
 use DateInterval;
 use DateTimeImmutable;
 use Exception;
+use OCP\EventDispatcher\Event;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -63,16 +65,24 @@ class AVGWorkflowService
     private const DOWNSTREAM_SYSTEMS = ['shillinq', 'procest', 'scholiq', 'opencatalogi', 'decidesk'];
 
     /**
+     * CloudEvent name webhooks subscribe to for MDM sync delivery (mirrors
+     * ObjectsMergedSyncListener::EVENT_SYNC).
+     *
+     * @var string
+     */
+    private const EVENT_SYNC = 'pipelinq.mdm.sync';
+
+    /**
      * Constructor.
      *
      * @param MdmObjectRepository $repository The MDM object repository (also the
      *                                        re-homed master-entity read helpers).
-     * @param SyncQueueService    $syncQueue  The sync queue service.
+     * @param ContainerInterface  $container  The DI container (lazy OR WebhookService resolve).
      * @param LoggerInterface     $logger     The logger.
      */
     public function __construct(
         private MdmObjectRepository $repository,
-        private SyncQueueService $syncQueue,
+        private ContainerInterface $container,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -125,6 +135,8 @@ class AVGWorkflowService
      * @return array<string, mixed> The execution summary.
      *
      * @throws RuntimeException If the entity is missing.
+     *
+     * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-006--downstream-sync-queue-with-retries-and-confirmation
      */
     public function approveAndExecuteRightOfDeletion(
         string $masterEntityId,
@@ -169,15 +181,10 @@ class AVGWorkflowService
         $entity['gdprNotes'] = trim((string) ($entity['gdprNotes'] ?? '')."\n".$note);
         $this->repository->save(MdmObjectRepository::SCHEMA_MASTER_ENTITY, $entity, $masterEntityId);
 
-        // 3. Queue soft-delete sync for every downstream app.
-        foreach (self::DOWNSTREAM_SYSTEMS as $system) {
-            $this->syncQueue->enqueueSync(
-                masterEntityId: $masterEntityId,
-                targetSystem: $system,
-                changeType: 'soft-delete',
-                payload: ['gdprRequestId' => $gdprRequestId, 'reason' => 'right-of-deletion']
-            );
-        }
+        // 3. Dispatch soft-delete sync for every downstream app directly via
+        // OpenRegister's WebhookService — queueing, per-target delivery logs
+        // and retries are OR's job (ADR-045: no app-side queue subsystem).
+        $this->dispatchSoftDeleteSync(masterEntityId: $masterEntityId, gdprRequestId: $gdprRequestId);
 
         $this->logger->info(
             'Pipelinq MDM: AVG right-of-deletion executed',
@@ -324,6 +331,52 @@ class AVGWorkflowService
 
         return $id;
     }//end nullableId()
+
+    /**
+     * Dispatch a soft-delete sync webhook per downstream app via OR WebhookService.
+     *
+     * Delivery, per-target webhook logs and retries are owned by OpenRegister
+     * (WebhookRetryJob). Dispatch failures are logged, never thrown — the AVG
+     * right-of-deletion has already been recorded server-side. OR-absent is a
+     * logged no-op.
+     *
+     * @param string $masterEntityId The soft-deleted master entity uuid.
+     * @param string $gdprRequestId  The GDPR request reference.
+     *
+     * @return void
+     */
+    private function dispatchSoftDeleteSync(string $masterEntityId, string $gdprRequestId): void
+    {
+        try {
+            $webhookService = $this->container->get('OCA\OpenRegister\Service\WebhookService');
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq MDM: OpenRegister WebhookService unavailable; soft-delete sync skipped',
+                ['master' => $masterEntityId, 'exception' => $e->getMessage()]
+            );
+            return;
+        }
+
+        foreach (self::DOWNSTREAM_SYSTEMS as $system) {
+            try {
+                $webhookService->dispatchEvent(
+                    _event: new Event(),
+                    eventName: self::EVENT_SYNC,
+                    payload: [
+                        'targetSystem' => $system,
+                        'changeType'   => 'soft-delete',
+                        'masterEntity' => $masterEntityId,
+                        'payload'      => ['gdprRequestId' => $gdprRequestId, 'reason' => 'right-of-deletion'],
+                    ]
+                );
+            } catch (\Throwable $e) {
+                $this->logger->error(
+                    'Pipelinq MDM: soft-delete sync dispatch failed',
+                    ['master' => $masterEntityId, 'target' => $system, 'exception' => $e->getMessage()]
+                );
+            }//end try
+        }//end foreach
+    }//end dispatchSoftDeleteSync()
 
     /**
      * Redact every value in a flat attribute map (pure).

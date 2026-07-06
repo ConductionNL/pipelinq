@@ -9,6 +9,14 @@
  * the master entity. Non-canonical records keep their masterEntityRef but are
  * flagged isMasterRecord=false.
  *
+ * As of retire-mdm-sync-queue this projection is driven EVENT-first from
+ * ObjectsMergedSyncListener (a merge/reversal is exactly when the survivor's
+ * golden record changed), replacing the retired hourly MdmOpenRegisterSyncJob
+ * poller. OpenRegister materialises the masterEntity's own golden record on
+ * save (x-openregister-survivorship), but not these pipelinq-specific schema
+ * projections (account→client mapping, isMasterRecord markers), so the service
+ * is kept rather than deleted.
+ *
  * @category Service
  * @package  OCA\Pipelinq\Service\Mdm
  *
@@ -20,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/master-data-management/specs.md#REQ-MDM-011
+ * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-011--sync-golden-record-to-openregister
  */
 
 declare(strict_types=1);
@@ -31,6 +39,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for syncing golden records to OpenRegister schema instances.
+ *
+ * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-011--sync-golden-record-to-openregister
  */
 class OpenRegisterSyncService
 {
@@ -67,6 +77,8 @@ class OpenRegisterSyncService
      * @param string $entityType The master entity type.
      *
      * @return string|null The OR schema slug.
+     *
+     * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-011--sync-golden-record-to-openregister
      */
     public function schemaForEntityType(string $entityType): ?string
     {
@@ -84,6 +96,8 @@ class OpenRegisterSyncService
      *
      * @return array<string, mixed>|null The synced OR object, or null when the
      *                                   entity is missing / its type is unmapped.
+     *
+     * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-011--sync-golden-record-to-openregister
      */
     public function syncMasterToRegister(string $masterId): ?array
     {
@@ -151,6 +165,8 @@ class OpenRegisterSyncService
      * @param string $objectId   The OR object uuid.
      *
      * @return void
+     *
+     * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-011--sync-golden-record-to-openregister
      */
     public function demoteRecord(string $schemaSlug, string $objectId): void
     {
