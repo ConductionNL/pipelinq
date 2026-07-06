@@ -126,11 +126,12 @@ class SettingsLoadService
         'weigering',
         'redactieActie',
         // Master-data-management golden-record governance (master-data-management).
+        // syncQueueItem removed by retire-mdm-sync-queue — downstream delivery is
+        // OpenRegister's WebhookService, no app-side queue schema.
         'masterEntity',
         'sourceRecord',
         'trustConfiguration',
         'mergeOperation',
-        'syncQueueItem',
         // Supplier commercial master (pipelinq-product-vendor-master). Without
         // this slug the `supplier_schema` app-config key is never populated on
         // import, so ProductVendorProviderService::resolveSupplier() and the

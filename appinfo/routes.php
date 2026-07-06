@@ -523,15 +523,13 @@ return [
         ['name' => 'avgBundle#download', 'url' => '/api/export-bundles/{bundleId}/download', 'verb' => 'GET'],
         ['name' => 'avgBundle#show',     'url' => '/api/export-bundles/{bundleId}', 'verb' => 'GET'],
 
-        // Master Data Management — read-API (downstream apps; session/bearer auth).
-        // Static /api/mdm/master MUST precede the /{id} wildcard (ADR-016).
-        ['name' => 'mdmApi#queryByNaturalKey', 'url' => '/api/mdm/master', 'verb' => 'GET'],
-        ['name' => 'mdmApi#show',              'url' => '/api/mdm/master/{id}', 'verb' => 'GET'],
-
-        // MDM steward views, merge tooling, trust-config CRUD and sync-queue admin
-        // are now hosted by OpenRegister (ADR-045 #D): the app-side controllers were
-        // deleted and the steward navigates to OR's Data-Quality surface. Only the
-        // downstream read-API (above) and the AVG workflow (below, ADR-047) remain.
+        // Master Data Management — the app-side read-API (`/api/mdm/master*`,
+        // MdmApiController) was removed by retire-mdm-sync-queue (ADR-022 /
+        // ADR-045 #D): downstream apps read master entities directly from
+        // OpenRegister's `/api/objects` surface, and MDM steward views, merge
+        // tooling, trust-config CRUD and the sync queue are all hosted by
+        // OpenRegister. Only the AVG right-of-deletion workflow (below, ADR-047)
+        // remains in-app until consume-or-dsar re-homes it to OR too.
 
         // MDM — AVG right-of-deletion workflow (admin only).
         ['name' => 'mdmAvgWorkflow#candidates',        'url' => '/api/mdm/avg-workflow/candidates', 'verb' => 'GET'],
