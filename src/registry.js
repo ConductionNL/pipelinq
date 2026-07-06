@@ -39,39 +39,29 @@ import OverdueKpiWidget from './views/dashboard/widgets/OverdueKpiWidget.vue'
 import RequestsByStatusWidget from './views/dashboard/widgets/RequestsByStatusWidget.vue'
 import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
-import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
 // --- Dashboard analytics widgets (openspec/changes/dashboard +
 //     openspec/changes/decompose-unified-analytics). Navi AI
-//     conversational analytics, the cross-module analytics KPI cards +
-//     trend charts, and the funder report export panel. ---
+//     conversational analytics + the endpoint-bound trend charts.
+//     The cross-module analytics KPI cards were dissolved into
+//     `type:"stat"` + `content.endpointSource` manifest config
+//     (ADR-049 Phase-4, nextcloud-vue#91 Wave 2); the funder report
+//     export panel stays custom (see the ReportExportPanel _note). ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
-import LeadConversionKpiWidget from './views/dashboard/widgets/LeadConversionKpiWidget.vue'
-import AvgResolutionKpiWidget from './views/dashboard/widgets/AvgResolutionKpiWidget.vue'
-import ContactVolumeKpiWidget from './views/dashboard/widgets/ContactVolumeKpiWidget.vue'
-import SatisfactionKpiWidget from './views/dashboard/widgets/SatisfactionKpiWidget.vue'
 import LeadsOverTimeChartWidget from './views/dashboard/widgets/LeadsOverTimeChartWidget.vue'
 import RequestsByCategoryChartWidget from './views/dashboard/widgets/RequestsByCategoryChartWidget.vue'
 import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
 
-// Commercial dashboard widgets (openspec/changes/commercial-dashboard).
-// Six KPI cards from one cached GET /api/analytics/commercial per period,
-// four charts from GET /api/analytics/trends (revenue / pipeline-by-stage /
-// revenue-by-product-category / top-customers), and two deal tables built
-// client-side from the cached lead dataset. All share the dashboard
-// date-range + Refresh action via the analytics mixins.
-import RevenueKpiWidget from './views/dashboard/widgets/RevenueKpiWidget.vue'
-import WonValueKpiWidget from './views/dashboard/widgets/WonValueKpiWidget.vue'
-import WinRateKpiWidget from './views/dashboard/widgets/WinRateKpiWidget.vue'
-import AvgDealSizeKpiWidget from './views/dashboard/widgets/AvgDealSizeKpiWidget.vue'
-import WeightedForecastKpiWidget from './views/dashboard/widgets/WeightedForecastKpiWidget.vue'
-import OpenPipelineKpiWidget from './views/dashboard/widgets/OpenPipelineKpiWidget.vue'
+// Commercial dashboard trend charts (openspec/changes/commercial-dashboard).
+// Four endpoint-bound charts from GET /api/analytics/trends (revenue /
+// pipeline-by-stage / revenue-by-product-category / top-customers). The six
+// commercial KPI cards were dissolved into `type:"stat"` +
+// `content.endpointSource` manifest config (ADR-049 Phase-4). These charts
+// stay custom pending a library fix — see their registry _notes.
 import RevenueOverTimeChartWidget from './views/dashboard/widgets/RevenueOverTimeChartWidget.vue'
 import PipelineByStageChartWidget from './views/dashboard/widgets/PipelineByStageChartWidget.vue'
 import RevenueByCategoryChartWidget from './views/dashboard/widgets/RevenueByCategoryChartWidget.vue'
 import TopCustomersChartWidget from './views/dashboard/widgets/TopCustomersChartWidget.vue'
-import ClosingSoonWidget from './views/dashboard/widgets/ClosingSoonWidget.vue'
-import RecentlyWonLostWidget from './views/dashboard/widgets/RecentlyWonLostWidget.vue'
 
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
@@ -421,13 +411,7 @@ const registry = {
 		kind: 'widget',
 		component: MyWorkWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Top-5 list of leads + requests assigned to the current user, sorted by overdue → priority → due date.',
-	},
-	ClientOverviewWidget: {
-		kind: 'widget',
-		component: ClientOverviewWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Top-5 recent clients with a view-all link to the Clients index page.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4). Thin wrapper over the canonical GET /apps/pipelinq/api/worklist/mine union endpoint (leads + requests, server-sorted overdue → priority → due date). NOT dissolved into the built-in object-table widget because each row navigates to a DIFFERENT route (LeadDetail vs RequestDetail via the row\'s routeName field) and object-table\'s rowRoute is a single static route name — nextcloud-vue#91 Wave 2 has no per-row-route field. Dissolvable once the object-table widget gains a per-row route resolver.',
 	},
 	NaviAnalyticsWidget: {
 		kind: 'widget',
@@ -435,121 +419,53 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnDataTable / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
 	},
-	LeadConversionKpiWidget: {
-		kind: 'widget',
-		component: LeadConversionKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: % of leads won in the dashboard date range. Shares one cached GET /api/analytics/overview per period. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
-	},
-	AvgResolutionKpiWidget: {
-		kind: 'widget',
-		component: AvgResolutionKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: mean request resolution time (hours) in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
-	},
-	ContactVolumeKpiWidget: {
-		kind: 'widget',
-		component: ContactVolumeKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: contactmoment count in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
-	},
-	SatisfactionKpiWidget: {
-		kind: 'widget',
-		component: SatisfactionKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: mean survey score (1–5) in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
-	},
 	LeadsOverTimeChartWidget: {
 		kind: 'widget',
 		component: LeadsOverTimeChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Line chart: leads over time from GET /api/analytics/trends?metric=leads. Title comes from the widget chrome. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap). Line chart: leads over time from GET /api/analytics/trends?metric=leads. NOT dissolvable in nextcloud-vue beta.156: CnDashboardPage renders type:"chart" widgets via getChartProps() whose CHART_PROP_KEYS allowlist does NOT forward endpointSource, and the chart dataSource union is OpenRegister/GraphQL-only (no REST-endpoint form) — so an app REST endpoint cannot feed a dashboard chart. Dissolvable once the library forwards endpointSource for legacy config.widgets[] charts. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
 	},
 	RequestsByCategoryChartWidget: {
 		kind: 'widget',
 		component: RequestsByCategoryChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Bar chart: requests by category from GET /api/analytics/trends?metric=requests-by-category. Title comes from the widget chrome. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Bar chart: requests by category from GET /api/analytics/trends?metric=requests-by-category. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
 	},
 	ReportExportPanel: {
 		kind: 'widget',
 		component: ReportExportPanel,
 		...PANEL_WIDGET_META,
-		_note: 'Collapsible funder-reporting export panel; delegates the format picker + download to CnMassExportDialog / ExportService — no custom export controller. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — dashboard export-action gap). Collapsible funder-reporting export panel; delegates format picker + download to CnMassExportDialog / ExportService. NOT dissolvable to the Wave-1 type:"export" action: that action is dispatched via cnDispatchAction from an index/toolbar surface, but CnDashboardPage renders no dispatchable page-level actions (it exposes only Refresh/Docs/Request-feature + the header-actions slot), so an in-body dashboard export panel has no declarative equivalent. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
 	},
 
-	// --- Commercial dashboard widgets (openspec/changes/commercial-dashboard). ---
-	RevenueKpiWidget: {
-		kind: 'widget',
-		component: RevenueKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: settled POS turnover + won-deal value in the dashboard date range. Shares one cached GET /api/analytics/commercial per period.',
-	},
-	WonValueKpiWidget: {
-		kind: 'widget',
-		component: WonValueKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: value of deals won in the dashboard date range.',
-	},
-	WinRateKpiWidget: {
-		kind: 'widget',
-		component: WinRateKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: won / (won + lost) deals closed in the dashboard date range.',
-	},
-	AvgDealSizeKpiWidget: {
-		kind: 'widget',
-		component: AvgDealSizeKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: mean value of won deals in the dashboard date range.',
-	},
-	WeightedForecastKpiWidget: {
-		kind: 'widget',
-		component: WeightedForecastKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: open pipeline value weighted by win probability (forward-looking).',
-	},
-	OpenPipelineKpiWidget: {
-		kind: 'widget',
-		component: OpenPipelineKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: total value of open leads (forward-looking).',
-	},
+	// --- Commercial dashboard trend charts (openspec/changes/commercial-dashboard).
+	//     The six commercial KPI cards were dissolved into type:"stat" +
+	//     content.endpointSource manifest config (ADR-049 Phase-4). These four
+	//     charts stay custom pending the same chart-endpoint library gap noted
+	//     on LeadsOverTimeChartWidget. ---
 	RevenueOverTimeChartWidget: {
 		kind: 'widget',
 		component: RevenueOverTimeChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Line chart: revenue over time from GET /api/analytics/trends?metric=revenue. Title comes from the widget chrome.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Line chart: revenue over time from GET /api/analytics/trends?metric=revenue.',
 	},
 	PipelineByStageChartWidget: {
 		kind: 'widget',
 		component: PipelineByStageChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Horizontal bar funnel: open-lead value per stage from GET /api/analytics/trends?metric=pipeline-by-stage.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Horizontal bar funnel: open-lead value per stage from GET /api/analytics/trends?metric=pipeline-by-stage.',
 	},
 	RevenueByCategoryChartWidget: {
 		kind: 'widget',
 		component: RevenueByCategoryChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Donut: POS revenue by product category from GET /api/analytics/trends?metric=revenue-by-product-category.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Donut: POS revenue by product category from GET /api/analytics/trends?metric=revenue-by-product-category.',
 	},
 	TopCustomersChartWidget: {
 		kind: 'widget',
 		component: TopCustomersChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Horizontal bar: top customers by revenue from GET /api/analytics/trends?metric=top-customers.',
-	},
-	ClosingSoonWidget: {
-		kind: 'widget',
-		component: ClosingSoonWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Table: open deals ordered by expected close date, built client-side from the cached lead dataset.',
-	},
-	RecentlyWonLostWidget: {
-		kind: 'widget',
-		component: RecentlyWonLostWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Table: recently won/lost deals, built client-side from the cached lead dataset.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Horizontal bar: top customers by revenue from GET /api/analytics/trends?metric=top-customers.',
 	},
 
 	// --- Queues / routing rules. ---
