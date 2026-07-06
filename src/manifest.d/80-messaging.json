@@ -1,0 +1,20 @@
+{
+	"menu": [
+		{
+			"id": "Messaging",
+			"label": "Messaging (WhatsApp/SMS)",
+			"icon": "icon-comment",
+			"route": "Messaging",
+			"order": 219
+		}
+	],
+	"pages": [
+		{
+			"id": "Messaging",
+			"route": "/settings/messaging",
+			"type": "custom",
+			"title": "Messaging (WhatsApp/SMS)",
+			"component": "MessagingSettingsView"
+		}
+	]
+}
