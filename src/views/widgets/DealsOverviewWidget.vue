@@ -1,32 +1,33 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<NcDashboardWidget :items="items"
+	<CnDataTable :rows="items"
+		:columns="columns"
 		:loading="loading"
-		:item-menu="itemMenu"
-		@show="onShow">
-		<template #empty-content>
-			<NcEmptyContent :title="t('pipelinq', 'No leads found')">
-				<template #icon>
-					<TrendingUp />
-				</template>
-			</NcEmptyContent>
+		hide-header
+		borderless
+		:empty-text="t('pipelinq', 'No leads found')"
+		@row-click="onShow">
+		<template #footer>
+			<a class="cn-data-table__view-all" @click.prevent="onViewAll">
+				{{ t('pipelinq', 'View all') }} →
+			</a>
 		</template>
-	</NcDashboardWidget>
+	</CnDataTable>
 </template>
 
 <script>
-import { NcDashboardWidget, NcEmptyContent } from '@nextcloud/vue'
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
-import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
-import { initializeStores } from '../../store/store.js'
 import { formatCurrency } from '../../services/localeUtils.js'
+import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
+import { LIST_COLUMNS, navigateTo } from './listTable.js'
 
 export default {
 	name: 'DealsOverviewWidget',
 	components: {
-		NcDashboardWidget,
-		NcEmptyContent,
-		TrendingUp,
+		CnDataTable,
 	},
 	props: {
 		title: {
@@ -39,12 +40,7 @@ export default {
 			loading: false,
 			leads: [],
 			clients: [],
-			itemMenu: {
-				show: {
-					text: t('pipelinq', 'View lead'),
-					icon: 'icon-confirm',
-				},
-			},
+			columns: LIST_COLUMNS,
 		}
 	},
 	computed: {
@@ -81,11 +77,21 @@ export default {
 	},
 	methods: {
 		/**
-		 * @param item
+		 * Navigate to the clicked lead in the same tab.
+		 *
+		 * @param {object} item The clicked row (a shaped lead item).
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-32
 		 */
 		onShow(item) {
-			window.location.href = generateUrl('/apps/pipelinq/leads/' + item.id)
+			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id))
+		},
+		/**
+		 * Navigate to the full leads list.
+		 *
+		 * @return {void}
+		 */
+		onViewAll() {
+			navigateTo(generateUrl('/apps/pipelinq/leads'))
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-29
@@ -109,9 +115,9 @@ export default {
 			}
 		},
 		/**
-		 * @param config
-		 * @param type
-		 * @param params
+		 * @param {object} config The object-type registry (register/schema per type).
+		 * @param {string} type The object type to fetch.
+		 * @param {object} params Query parameters.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-30
 		 */
 		async fetchRaw(config, type, params = {}) {
