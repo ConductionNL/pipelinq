@@ -56,7 +56,7 @@
   {
     "slug": "contactmomenten-rapportage",
     "title": "Contactmomenten Rapportage",
-    "summary": "@e2e exclude draft/unbuilt spec — rapportage analytics dashboard not yet implemented; no UI surface to test",
+    "summary": "Contactmoment analytics dashboard at /rapportage/contactmomenten with volume and channel reporting; covered by Playwright (tests/e2e/rapportage.spec.ts)",
     "docsUrl": "openspec/specs/contactmomenten-rapportage/spec.md"
   },
   {
@@ -92,7 +92,7 @@
   {
     "slug": "email-calendar-sync",
     "title": "email-calendar-sync",
-    "summary": "@e2e exclude draft/unbuilt spec — email and calendar sync integration not yet implemented; no UI surface to test",
+    "summary": "@e2e exclude backend integration — email and calendar sync run as PHP services (EmailSyncService, CalendarSyncService, EmailMatchJob) with a SyncSettings surface; covered by PHPUnit",
     "docsUrl": "openspec/specs/email-calendar-sync/spec.md"
   },
   {
@@ -104,7 +104,7 @@
   {
     "slug": "kcc-werkplek",
     "title": "KCC Werkplek",
-    "summary": "@e2e exclude draft/unbuilt spec — KCC werkplek unified agent screen not yet implemented; no UI surface to test",
+    "summary": "Shipped as the Customer Support workspace: the KccWerkplek nav host groups tickets, tasks, contactmomenten, complaints, projects, my-work and queues into one agent surface (IA revision 2026-07, src/menu-layout.json + src/views/werkplek)",
     "docsUrl": "openspec/specs/kcc-werkplek/spec.md"
   },
   {

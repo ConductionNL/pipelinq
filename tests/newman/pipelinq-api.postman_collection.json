@@ -514,6 +514,100 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Setup Wizard (ADR-042)",
+      "item": [
+        {
+          "name": "GET /setup/status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/setup/status",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Reports per-step status', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.steps).to.be.an('object');",
+                  "  pm.expect(json.version).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /setup/action/seed-demo-data (optional demo seed, idempotent)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/setup/action/seed-demo-data",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Seed reports success with a message', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.success).to.eql(true);",
+                  "  pm.expect(json.message).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /setup/action/unknown → 404",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/setup/action/does-not-exist",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Unknown action returns 404', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }
