@@ -52,7 +52,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.36</version>
+    <version>0.5.37</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -106,9 +106,6 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\DispatchQueuedMessagesJob</job>
         <job>OCA\Pipelinq\BackgroundJob\FallbackEmailJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SlaDeadlineSweepJob</job>
-        <job>OCA\Pipelinq\BackgroundJob\AvgDeadlineTrackerJob</job>
-        <job>OCA\Pipelinq\BackgroundJob\AvgDpiaPatternDetectionJob</job>
-        <job>OCA\Pipelinq\BackgroundJob\AvgRetentionJob</job>
         <job>OCA\Pipelinq\BackgroundJob\RenewalWindowJob</job>
     </background-jobs>
 
@@ -122,6 +119,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
             <step>OCA\Pipelinq\Repair\DrainMdmSyncQueue</step>
+            <step>OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar</step>
         </post-migration>
     </repair-steps>
 

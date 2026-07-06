@@ -118,13 +118,9 @@ class SettingsLoadService
         // SLA engine (sla-engine-and-escalation) — separate sla register.
         'slaPolicy',
         'slaBreachEvent',
-        // AVG/GDPR data-subject-request workflow (avg-verzoeken-workflow).
-        'avgVerzoek',
-        'termijnEvent',
-        'bewijsItem',
-        'exportBundle',
-        'weigering',
-        'redactieActie',
+        // AVG/GDPR data-subject-request workflow removed by consume-or-dsar
+        // (ADR-047 Phase 3): the avgVerzoek + satellite schemas moved to
+        // OpenRegister's data-subject-request register.
         // Master-data-management golden-record governance (master-data-management).
         // syncQueueItem removed by retire-mdm-sync-queue — downstream delivery is
         // OpenRegister's WebhookService, no app-side queue schema.
