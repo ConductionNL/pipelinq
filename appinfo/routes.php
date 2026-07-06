@@ -429,6 +429,13 @@ return [
         // any wildcard catch-alls (ADR-016).
         ['name' => 'messagingWebhook#whatsapp', 'url' => '/api/messaging-webhooks/whatsapp/{providerId}', 'verb' => 'POST'],
         ['name' => 'messagingWebhook#sms',      'url' => '/api/messaging-webhooks/sms/{providerId}',      'verb' => 'POST'],
+        // Outbound agent messaging (outbound-messaging-provider-wiring):
+        // server-side send + composer preflight + consent recording +
+        // admin-gated zero-cost provider connectivity test.
+        ['name' => 'messaging#send',         'url' => '/api/messaging/send',                    'verb' => 'POST'],
+        ['name' => 'messaging#preflight',    'url' => '/api/messaging/preflight/{contactId}',   'verb' => 'GET'],
+        ['name' => 'messaging#consent',      'url' => '/api/messaging/consent',                 'verb' => 'POST'],
+        ['name' => 'messaging#testProvider', 'url' => '/api/messaging/providers/{id}/test',     'verb' => 'POST'],
         // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
         // Logius webhooks for read-receipt + inbound replies — HMAC-SHA256
         // signature-verified (REQ-RECEIPT-005 / REQ-INBOUND-006).

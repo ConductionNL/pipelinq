@@ -137,6 +137,9 @@ class SmsAdapter
      * @param string|null          $providerHint Pin a specific vendor
      *                                           (caller-pinned, no
      *                                           failover).
+     * @param array<string, mixed> $context      Optional send context for
+     *                                           the outbound audit
+     *                                           (`clientId`, `agent`).
      *
      * @return array{
      *     status: string,
@@ -148,8 +151,9 @@ class SmsAdapter
      * } Outcome envelope.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-006--outbound-sends-audited-as-contactmomenten
      */
-    public function send(array $contact, string $body, ?string $providerHint=null): array
+    public function send(array $contact, string $body, ?string $providerHint=null, array $context=[]): array
     {
         $contactId = $this->extractId(payload: $contact);
         $toNumber  = $this->extractPhone(contact: $contact);
@@ -178,6 +182,7 @@ class SmsAdapter
                 contactId: $contactId,
                 tenantId: $tenantId,
                 allowFailover: $allowFailover,
+                context: $context,
             );
             if ($outcome !== null) {
                 return $outcome;
@@ -207,6 +212,7 @@ class SmsAdapter
      * @param string               $contactId     Contact UUID.
      * @param string               $tenantId      Tenant id.
      * @param bool                 $allowFailover Whether failover to the next provider is allowed.
+     * @param array<string, mixed> $context       Send context for the outbound audit.
      *
      * @return array<string, mixed>|null Outcome envelope, or null to continue.
      */
@@ -216,7 +222,8 @@ class SmsAdapter
         string $body,
         string $contactId,
         string $tenantId,
-        bool $allowFailover
+        bool $allowFailover,
+        array $context=[]
     ): ?array {
         $providerId = $this->extractId(payload: $row);
 
@@ -287,14 +294,73 @@ class SmsAdapter
 
         $this->budgetService->recordSend(tenantId: $tenantId, providerId: $providerId);
 
+        $messageId = $this->extractId(payload: ($persisted ?? []));
+        $this->auditOutbound(
+            contactId: $contactId,
+            messageId: $messageId,
+            conversationId: (string) (($persisted ?? [])['conversationId'] ?? ''),
+            body: $body,
+            context: $context,
+        );
+
         return [
             'status'            => self::STATUS_SENT,
-            'messageId'         => $this->extractId(payload: $persisted ?? []),
+            'messageId'         => $messageId,
             'externalMessageId' => $result['externalMessageId'],
             'providerId'        => $providerId,
             'vendor'            => $result['vendor'],
         ];
     }//end attemptProviderSend()
+
+    /**
+     * Best-effort outbound contactmoment audit (REQ-OM-006).
+     *
+     * Resolves {@see ContactmomentService} lazily through the container and
+     * records the SMS send as a `channel: sms` contactmoment. Log-and-continue:
+     * an audit failure MUST never affect the send outcome.
+     *
+     * @param string               $contactId      Contact UUID.
+     * @param string               $messageId      Persisted message UUID.
+     * @param string               $conversationId Conversation UUID.
+     * @param string               $body           Message body.
+     * @param array<string, mixed> $context        Send context (`clientId`, `agent`).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
+     */
+    private function auditOutbound(
+        string $contactId,
+        string $messageId,
+        string $conversationId,
+        string $body,
+        array $context
+    ): void {
+        try {
+            $auditor = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
+        } catch (Throwable $e) {
+            return;
+        }
+
+        if (is_object($auditor) === false || method_exists($auditor, 'recordOutboundMessage') === false) {
+            return;
+        }
+
+        $auditor->recordOutboundMessage(
+            channel: 'sms',
+            subject: 'Outbound SMS',
+            summary: $body,
+            channelMetadata: [
+                'platform'       => 'sms',
+                'direction'      => 'outbound',
+                'messageId'      => $messageId,
+                'conversationId' => $conversationId,
+                'contactId'      => $contactId,
+            ],
+            clientId: (string) ($context['clientId'] ?? ''),
+            agent: (string) ($context['agent'] ?? ''),
+        );
+    }//end auditOutbound()
 
     /**
      * Handle an inbound SMS webhook.
