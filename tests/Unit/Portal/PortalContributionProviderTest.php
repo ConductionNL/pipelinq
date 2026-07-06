@@ -6,10 +6,12 @@
  * Pins pipelinq's ADR-046 contract-v2 contribution: dependency-free
  * duck-typed shape (inert without portaliq), the v2 getAudiences() + v1
  * getAudience() pair, the per-audience manifest (collections, scoping map,
- * claim names, minTrust) and the conservative create-action whitelists.
- * Also pins the scoping map against the register JSONs at HEAD so a schema
- * drift (renamed scope property, dropped whitelist field) fails here instead
- * of silently scoping portal reads to nothing.
+ * claim names, minTrust), the conservative create-action whitelists and the
+ * client-safe read-field projections on the contactmoment and booking
+ * collections. Also pins the scoping map + projection whitelists against the
+ * register JSONs at HEAD so a schema drift (renamed scope property, dropped
+ * whitelist field) fails here instead of silently scoping portal reads to
+ * nothing or dropping a projected column.
  *
  * Subjects use nil-pattern UUIDs per the change design.md Seed Data section —
  * self-evidently fake, never colliding with live data.
@@ -143,15 +145,16 @@ final class PortalContributionProviderTest extends TestCase
 
         $collections = $this->indexById($manifest['collections']);
         $this->assertSame(
-            ['clientComplaints', 'clientContracts', 'clientRequests'],
+            ['clientComplaints', 'clientContactmoments', 'clientContracts', 'clientRequests'],
             $this->sortedKeys($collections),
-            'Client audience exposes exactly request, complaint and contract'
+            'Client audience exposes request, complaint, contract and (field-projected) contactmoment'
         );
 
         $expected = [
-            'clientRequests'   => ['request', 'client'],
-            'clientComplaints' => ['complaint', 'client'],
-            'clientContracts'  => ['contract', 'clientRef'],
+            'clientRequests'       => ['request', 'client'],
+            'clientComplaints'     => ['complaint', 'client'],
+            'clientContracts'      => ['contract', 'clientRef'],
+            'clientContactmoments' => ['contactmoment', 'client'],
         ];
         foreach ($expected as $id => [$schema, $scopeField]) {
             $this->assertSame('pipelinq', $collections[$id]['register']);
@@ -162,8 +165,8 @@ final class PortalContributionProviderTest extends TestCase
         }
 
         $schemas = array_column($manifest['collections'], 'schema');
-        $this->assertNotContains('contactmoment', $schemas, 'contactmoment is excluded: internal notes would leak');
-        $this->assertNotContains('booking', $schemas);
+        $this->assertContains('contactmoment', $schemas, 'contactmoment is now field-projected in, not excluded');
+        $this->assertNotContains('booking', $schemas, 'booking is a customer surface, never in the client manifest');
     }//end testClientCollectionsAreOrgScoped()
 
     /**
@@ -209,7 +212,7 @@ final class PortalContributionProviderTest extends TestCase
         $this->assertIsArray($manifest);
 
         $collections = $this->indexById($manifest['collections']);
-        $this->assertSame(['customerAvgVerzoeken', 'customerLoyalty'], $this->sortedKeys($collections));
+        $this->assertSame(['customerAvgVerzoeken', 'customerBookings', 'customerLoyalty'], $this->sortedKeys($collections));
 
         $dsar = $collections['customerAvgVerzoeken'];
         $this->assertSame('pipelinq', $dsar['register']);
@@ -226,11 +229,19 @@ final class PortalContributionProviderTest extends TestCase
         $this->assertSame('customerUid', $loyalty['scopeClaim'], 'Loyalty scopes by the NC contact UID claim — a different identifier space than contactId');
         $this->assertTrue($loyalty['listable']);
 
+        $booking = $collections['customerBookings'];
+        $this->assertSame('pipelinq', $booking['register']);
+        $this->assertSame('booking', $booking['schema']);
+        $this->assertSame('customerId', $booking['scopeField']);
+        $this->assertSame('customerUid', $booking['scopeClaim'], 'Booking scopes by the NC addressbook contact ref — same customerUid claim space as loyalty');
+        $this->assertSame('substantial', $booking['minTrust'], 'Booking notes may carry special-category (allergy) data — eIDAS-substantial floor');
+        $this->assertTrue($booking['listable']);
+
         $schemas = array_column($manifest['collections'], 'schema');
-        $this->assertNotContains('booking', $schemas, 'booking is excluded: internalNotes is staff-only and Wave 1 has no field projection');
-        $this->assertNotContains('berichtenboxMessage', $schemas, 'Berichtenbox is BSN-scoped, not contact/customer-scoped — no inbox in Wave 1');
+        $this->assertContains('booking', $schemas, 'booking is now field-projected in, not excluded');
+        $this->assertNotContains('berichtenboxMessage', $schemas, 'Berichtenbox stays BSN-scoped, not contact/customer-scoped — no inbox');
         foreach ($manifest['collections'] as $collection) {
-            $this->assertArrayNotHasKey('kind', $collection, 'No inbox collections ship in Wave 1');
+            $this->assertArrayNotHasKey('kind', $collection, 'No inbox collections ship');
         }
     }//end testCustomerCollectionsAreSubjectScoped()
 
@@ -304,16 +315,102 @@ final class PortalContributionProviderTest extends TestCase
     }//end testAllActionsAreCreateOnly()
 
     /**
-     * Pin the scoping map + whitelists against the register JSONs at HEAD.
-     *
-     * Every declared scopeField and every whitelisted action field must exist
-     * as a property on the declared schema in the shipped register config, so
-     * register drift breaks this test instead of silently emptying portal
-     * scopes.
+     * Scenario: Client contactmoment ships a client-safe field projection.
      *
      * @return void
      *
-     * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+     * @spec openspec/changes/portal-projected-collections/specs/portal-contribution/spec.md
+     */
+    public function testClientContactmomentIsFieldProjected(): void
+    {
+        $manifest = $this->provider->getContribution(self::CLIENT_SUBJECT);
+        $this->assertIsArray($manifest);
+
+        $contactmoment = $this->indexById($manifest['collections'])['clientContactmoments'];
+        $this->assertSame('contactmoment', $contactmoment['schema']);
+        $this->assertSame('client', $contactmoment['scopeField']);
+        $this->assertSame('clientId', $contactmoment['scopeClaim']);
+        $this->assertArrayNotHasKey('minTrust', $contactmoment, 'B2B contactmoment carries no special-category data — no trust floor');
+        $this->assertSame(
+            ['subject', 'channel', 'outcome', 'contactedAt'],
+            $contactmoment['fields'],
+            'Only the client-safe interaction facts are projected'
+        );
+
+        // Staff-only / internal properties must never appear in the whitelist,
+        // including the CTI union fields merged in by register.d/70-cti.json.
+        $forbidden = [
+            'notes',
+            'summary',
+            'channelMetadata',
+            'duration',
+            'agent',
+            'contactsUid',
+            'request',
+            'recording_url',
+            'disposition_notes',
+            'agent_skill',
+            'from_number',
+            'to_number',
+            'external_call_id',
+        ];
+        foreach ($forbidden as $field) {
+            $this->assertNotContains($field, $contactmoment['fields'], "Projection must never expose '{$field}'");
+        }
+    }//end testClientContactmomentIsFieldProjected()
+
+    /**
+     * Scenario: Customer booking ships a customer-safe field projection.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/portal-projected-collections/specs/portal-contribution/spec.md
+     */
+    public function testCustomerBookingIsFieldProjected(): void
+    {
+        $manifest = $this->provider->getContribution(self::CUSTOMER_SUBJECT);
+        $this->assertIsArray($manifest);
+
+        $booking = $this->indexById($manifest['collections'])['customerBookings'];
+        $this->assertSame('booking', $booking['schema']);
+        $this->assertSame('customerId', $booking['scopeField']);
+        $this->assertSame('customerUid', $booking['scopeClaim']);
+        $this->assertSame('substantial', $booking['minTrust']);
+        $this->assertSame(
+            ['serviceId', 'startAt', 'endAt', 'status', 'notes', 'depositAmount', 'depositPaidAt'],
+            $booking['fields'],
+            'Only the customer-facing booking facts are projected'
+        );
+
+        // Staff-only, audit and provenance properties must never be whitelisted.
+        $forbidden = [
+            'internalNotes',
+            'statusHistory',
+            'resourceAssignments',
+            'source',
+            'cancelledBy',
+            'cancellationReason',
+            'previousBookingId',
+            'confirmationSentAt',
+            'reminderSentAt',
+            'noShowFeeChargedAt',
+        ];
+        foreach ($forbidden as $field) {
+            $this->assertNotContains($field, $booking['fields'], "Projection must never expose '{$field}'");
+        }
+    }//end testCustomerBookingIsFieldProjected()
+
+    /**
+     * Pin the scoping map + whitelists against the register JSONs at HEAD.
+     *
+     * Every declared scopeField, every projected collection field and every
+     * whitelisted action field must exist as a property on the declared schema
+     * in the shipped register config, so register drift breaks this test
+     * instead of silently emptying portal scopes or dropping a projected column.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/portal-projected-collections/specs/portal-contribution/spec.md
      */
     public function testManifestMatchesShippedRegisterSchemas(): void
     {
@@ -331,6 +428,16 @@ final class PortalContributionProviderTest extends TestCase
                     $schemaProperties[$schema],
                     "scopeField '{$collection['scopeField']}' must exist on schema '{$schema}'"
                 );
+
+                // Field-projected collections: every whitelisted read field must
+                // exist on the schema, else projection silently drops a column.
+                foreach (($collection['fields'] ?? []) as $field) {
+                    $this->assertContains(
+                        $field,
+                        $schemaProperties[$schema],
+                        "Projected field '{$field}' must exist on schema '{$schema}'"
+                    );
+                }
             }
 
             foreach ($manifest['actions'] as $action) {
