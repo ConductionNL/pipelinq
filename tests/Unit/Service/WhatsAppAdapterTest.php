@@ -194,7 +194,11 @@ class WhatsAppAdapterTest extends TestCase
         ];
         $this->objectService->saveObject($template);
 
+        // Template sends are business-initiated: they now require an
+        // opted-in record (canSendBusinessInitiated), gated before the
+        // parameter-count check reached below.
         $this->consentService->method('canSend')->willReturn(true);
+        $this->consentService->method('canSendBusinessInitiated')->willReturn(true);
         $this->providerRepo->method('listActive')->willReturn([
             ['uuid' => 'prov-1', 'kind' => 'whatsapp-cloud-api', 'vendor' => 'meta'],
         ]);
@@ -229,6 +233,7 @@ class WhatsAppAdapterTest extends TestCase
         $this->objectService->saveObject($template);
 
         $this->consentService->method('canSend')->willReturn(true);
+        $this->consentService->method('canSendBusinessInitiated')->willReturn(true);
 
         $result = $this->adapter->send(
             ['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'],
