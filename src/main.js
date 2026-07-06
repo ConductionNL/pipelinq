@@ -7,10 +7,12 @@ import { PiniaVuePlugin, setActivePinia } from 'pinia'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { loadState } from '@nextcloud/initial-state'
+import axios from '@nextcloud/axios'
 import {
 	buildManifest,
 	CnPageRenderer,
 	defaultPageTypes,
+	mergeManifestDelta,
 	registerIcons,
 	registerTranslations,
 } from '@conduction/nextcloud-vue'
@@ -151,11 +153,40 @@ function routesFromManifest(manifest) {
 	return routes
 }
 
-const router = new VueRouter({
-	mode: 'hash',
-	base: generateUrl('/apps/pipelinq'),
-	routes: routesFromManifest(mergedManifest),
-})
+/**
+ * Load the persisted OpenBuild app-override delta and merge it over the
+ * build-time manifest (ADR-041 round-trip: App.vue's persistManifestDelta PUTs
+ * edits to this store; this loader brings them back at boot). The GET returns
+ * the LAYERED delta (shared admin delta ⊕ the calling user's own delta), or
+ * `{}` when no override exists. Fail-soft: any error — OpenBuild not
+ * installed, endpoint unreachable, malformed delta — falls back to the
+ * build-time manifest, so an override can never prevent the app from booting.
+ *
+ * @param {object} manifest The build-time merged manifest.
+ * @return {Promise<object>} The manifest with persisted overrides applied.
+ *
+ * @spec exclude Bug fix closing the ADR-041 persist/load round-trip; the
+ *               delta contract is owned by openbuild's
+ *               layered-versioned-app-deltas specs.
+ */
+async function loadPersistedOverrides(manifest) {
+	try {
+		const { data } = await axios.get(
+			generateUrl('/apps/openbuild/api/app-overrides/pipelinq'),
+			{ timeout: 8000 },
+		)
+		if (data !== null && typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length > 0) {
+			const { manifest: merged, orphanedDeltaPaths } = mergeManifestDelta(manifest, data)
+			if (orphanedDeltaPaths.length > 0) {
+				console.warn('[pipelinq] Manifest override has orphaned delta paths (base changed since the edit):', orphanedDeltaPaths)
+			}
+			return merged
+		}
+	} catch (error) {
+		console.warn('[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.', error)
+	}
+	return manifest
+}
 
 tryLoadTranslations()
 
@@ -176,14 +207,25 @@ const registryProp = { ...registry }
 setActivePinia(pinia)
 registerObjectTypes()
 
-/** Mount the Vue instance onto #content. */
-function mountApp() {
+/**
+ * Mount the Vue instance onto #content. The router is built here — not at
+ * module scope — because persisted overrides can add or remove pages, and
+ * routes must reflect the final manifest.
+ *
+ * @param {object} manifest The final manifest (overrides applied).
+ */
+function mountApp(manifest) {
+	const router = new VueRouter({
+		mode: 'hash',
+		base: generateUrl('/apps/pipelinq'),
+		routes: routesFromManifest(manifest),
+	})
 	new Vue({
 		pinia,
 		router,
 		render: (h) => h(App, {
 			props: {
-				manifest: mergedManifest,
+				manifest,
 				registry: registryProp,
 				pageTypes: pageTypesProp,
 			},
@@ -191,9 +233,13 @@ function mountApp() {
 	}).$mount('#content')
 }
 
-// Gate the mount on initializeStores() so types are registered and settings
-// loaded before the first view fetches. A settings failure still mounts the
-// shell (catch/finally) — views then degrade to their own empty/retry state.
-initializeStores().catch(() => {}).finally(() => {
-	mountApp()
+// Gate the mount on initializeStores() (types registered and settings loaded
+// before the first view fetches; a settings failure still mounts the shell —
+// views then degrade to their own empty/retry state) and on the persisted
+// override load (both fail-soft, so the slower of the two bounds boot time).
+Promise.all([
+	initializeStores().catch(() => {}),
+	loadPersistedOverrides(mergedManifest),
+]).then(([, manifest]) => {
+	mountApp(manifest)
 })
