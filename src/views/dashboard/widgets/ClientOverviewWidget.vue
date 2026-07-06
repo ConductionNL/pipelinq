@@ -1,20 +1,15 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<div class="client-overview-content">
-		<div v-if="!loaded" class="chart-empty">
-			{{ t('pipelinq', 'Loading…') }}
-		</div>
-		<div v-else-if="clients.length === 0" class="chart-empty">
-			{{ t('pipelinq', 'No clients yet') }}
-		</div>
-		<div v-else class="client-list">
-			<div
-				v-for="client in recent"
-				:key="client.id"
-				class="client-item"
-				@click="$router.push({ name: 'ClientDetail', params: { id: client.id } })">
-				<span class="client-name">{{ client.name || client.title || t('pipelinq', 'Unnamed') }}</span>
-				<span class="client-info">{{ [client.email, client.city].filter(Boolean).join(' · ') }}</span>
-			</div>
+	<CnDataTable :rows="rows"
+		:columns="columns"
+		:loading="!loaded"
+		:loading-text="t('pipelinq', 'Loading…')"
+		hide-header
+		borderless
+		:empty-text="t('pipelinq', 'No clients yet')"
+		@row-click="open">
+		<template #footer>
 			<NcButton
 				v-if="clients.length > 5"
 				type="tertiary"
@@ -22,11 +17,12 @@
 				@click="$router.push({ name: 'Clients' })">
 				{{ t('pipelinq', 'View all clients ({count})', { count: clients.length }) }}
 			</NcButton>
-		</div>
-	</div>
+		</template>
+	</CnDataTable>
 </template>
 
 <script>
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import { NcButton } from '@nextcloud/vue'
 import { getClients } from '../../../services/dashboardData.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
@@ -34,6 +30,7 @@ import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 export default {
 	name: 'ClientOverviewWidget',
 	components: {
+		CnDataTable,
 		NcButton,
 	},
 	mixins: [dashboardRefreshMixin],
@@ -41,6 +38,10 @@ export default {
 		return {
 			loaded: false,
 			clients: [],
+			columns: [
+				{ key: 'mainText', cellClass: 'cn-cell--strong' },
+				{ key: 'subText', cellClass: 'cn-cell--muted cn-cell--end' },
+			],
 		}
 	},
 	computed: {
@@ -49,6 +50,18 @@ export default {
 		 */
 		recent() {
 			return this.clients.slice(0, 5)
+		},
+		/**
+		 * The five most recent clients shaped as CnDataTable list rows.
+		 *
+		 * @return {Array<object>} Shaped rows.
+		 */
+		rows() {
+			return this.recent.map((client) => ({
+				id: client.id,
+				mainText: client.name || client.title || t('pipelinq', 'Unnamed'),
+				subText: [client.email, client.city].filter(Boolean).join(' · '),
+			}))
 		},
 	},
 	methods: {
@@ -64,59 +77,20 @@ export default {
 				this.loaded = true
 			}
 		},
+		/**
+		 * Navigate to the client detail page.
+		 *
+		 * @param {object} row - The clicked row.
+		 */
+		open(row) {
+			this.$router.push({ name: 'ClientDetail', params: { id: row.id } })
+		},
 	},
 }
 </script>
 
 <style scoped>
-.client-overview-content {
-	padding: 4px 0;
-	height: 100%;
-	overflow: auto;
-}
-
-.chart-empty {
-	padding: 24px;
-	text-align: center;
-	color: var(--color-text-maxcontrast);
-	font-size: 14px;
-}
-
-.client-list {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.client-item {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 8px 12px;
-	cursor: pointer;
-}
-
-.client-item:hover {
-	background: var(--color-background-hover);
-}
-
-.client-name {
-	font-size: 13px;
-	font-weight: 500;
-	flex: 1;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.client-info {
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	flex-shrink: 0;
-}
-
 .view-all-link {
 	margin-top: 4px;
-	padding-left: 12px;
 }
 </style>
