@@ -1,32 +1,18 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<div class="deal-table-widget">
-		<div v-if="!loaded" class="deal-table-widget__empty">
-			{{ t('pipelinq', 'Loading…') }}
-		</div>
-		<div v-else-if="rows.length === 0" class="deal-table-widget__empty">
-			{{ t('pipelinq', 'No open deals with a close date.') }}
-		</div>
-		<div v-else class="deal-table-widget__list">
-			<div
-				v-for="row in rows"
-				:key="row.id"
-				class="deal-table-widget__row"
-				role="link"
-				tabindex="0"
-				@click="open(row)"
-				@keyup.enter="open(row)">
-				<span class="deal-table-widget__title">{{ row.title }}</span>
-				<span class="deal-table-widget__sub">{{ row.client }}</span>
-				<span class="deal-table-widget__meta">{{ formatDate(row.dueDate) }}</span>
-				<span class="deal-table-widget__amount">{{ formatEur(row.value) }}</span>
-			</div>
-		</div>
-	</div>
+	<CnDataTable :rows="rows"
+		:columns="columns"
+		:loading="!loaded"
+		:loading-text="t('pipelinq', 'Loading…')"
+		hide-header
+		borderless
+		:empty-text="t('pipelinq', 'No open deals with a close date.')"
+		@row-click="open" />
 </template>
 
 <script>
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import { getLeads, getClients } from '../../../services/dashboardData.js'
 import { formatEur } from '../../../services/commercialFormat.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
@@ -35,17 +21,27 @@ const MAX_ROWS = 6
 
 /**
  * Table: open deals ordered by expected close date ascending (closing
- * soonest first), from the client-side cached lead dataset.
+ * soonest first), from the client-side cached lead dataset. Rendered
+ * with the universal CnDataTable list pattern (ADR-049).
  *
  * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
  */
 export default {
 	name: 'ClosingSoonWidget',
+	components: {
+		CnDataTable,
+	},
 	mixins: [dashboardRefreshMixin],
 	data() {
 		return {
 			loaded: false,
 			rows: [],
+			columns: [
+				{ key: 'title', cellClass: 'cn-cell--strong' },
+				{ key: 'client', cellClass: 'cn-cell--muted' },
+				{ key: 'dueDate', cellClass: 'cn-cell--muted', format: (v) => this.formatDate(v) },
+				{ key: 'value', cellClass: 'cn-cell--strong cn-cell--end', format: (v) => formatEur(v) },
+			],
 		}
 	},
 	methods: {
@@ -101,68 +97,3 @@ export default {
 	},
 }
 </script>
-
-<style scoped>
-.deal-table-widget {
-	padding: 4px 0;
-	height: 100%;
-	overflow: auto;
-}
-
-.deal-table-widget__empty {
-	padding: 24px;
-	text-align: center;
-	color: var(--color-text-maxcontrast);
-	font-size: 14px;
-}
-
-.deal-table-widget__list {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.deal-table-widget__row {
-	display: grid;
-	grid-template-columns: 1.6fr 1.2fr auto auto;
-	align-items: center;
-	gap: 12px;
-	padding: 8px 12px;
-	cursor: pointer;
-}
-
-.deal-table-widget__row:hover,
-.deal-table-widget__row:focus {
-	background: var(--color-background-hover);
-}
-
-.deal-table-widget__title {
-	font-size: 13px;
-	font-weight: 500;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.deal-table-widget__sub {
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.deal-table-widget__meta {
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	white-space: nowrap;
-}
-
-.deal-table-widget__amount {
-	font-size: 13px;
-	font-weight: 600;
-	text-align: end;
-	font-variant-numeric: tabular-nums;
-	white-space: nowrap;
-}
-</style>

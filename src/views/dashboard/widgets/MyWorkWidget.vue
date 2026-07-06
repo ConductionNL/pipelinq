@@ -1,27 +1,26 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<div class="my-work-widget-content">
-		<div v-if="!loaded" class="chart-empty">
-			{{ t('pipelinq', 'Loading…') }}
-		</div>
-		<div v-else-if="items.length === 0" class="chart-empty">
-			{{ t('pipelinq', 'No items assigned to you') }}
-		</div>
-		<div v-else class="my-work-list">
-			<div
-				v-for="item in items"
-				:key="item.id"
-				class="my-work-item"
-				:class="{ 'my-work-item--overdue': item.isOverdue }"
-				@click="openItem(item)">
-				<span class="entity-badge" :class="'badge--' + item.entityType">
-					{{ item.entityType === 'lead' ? 'LEAD' : 'REQ' }}
-				</span>
-				<span class="my-work-title">{{ item.title }}</span>
-				<span class="my-work-stage">{{ item.stageOrStatus }}</span>
-				<span v-if="item.dueDate" class="my-work-due" :class="{ overdue: item.isOverdue }">
-					{{ formatDate(item.dueDate) }}
-				</span>
-			</div>
+	<CnDataTable :rows="items"
+		:columns="columns"
+		:loading="!loaded"
+		:loading-text="t('pipelinq', 'Loading…')"
+		hide-header
+		borderless
+		:empty-text="t('pipelinq', 'No items assigned to you')"
+		:row-class="rowClass"
+		@row-click="openItem">
+		<template #column-entityType="{ row }">
+			<span class="entity-badge" :class="'badge--' + row.entityType">
+				{{ row.entityType === 'lead' ? 'LEAD' : 'REQ' }}
+			</span>
+		</template>
+		<template #column-dueDate="{ row }">
+			<span v-if="row.dueDate" class="my-work-due" :class="{ overdue: row.isOverdue }">
+				{{ formatDate(row.dueDate) }}
+			</span>
+		</template>
+		<template #footer>
 			<NcButton
 				v-if="total > 5"
 				type="tertiary"
@@ -29,11 +28,12 @@
 				@click="$router.push({ name: 'MyWork' })">
 				{{ t('pipelinq', 'View all ({count})', { count: total }) }}
 			</NcButton>
-		</div>
-	</div>
+		</template>
+	</CnDataTable>
 </template>
 
 <script>
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import { NcButton } from '@nextcloud/vue'
 import { getMyLeads, getMyRequests, getPipelines, getClosedStageNames } from '../../../services/dashboardData.js'
 import { getStatusLabel } from '../../../services/requestStatus.js'
@@ -45,6 +45,7 @@ const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
 export default {
 	name: 'MyWorkWidget',
 	components: {
+		CnDataTable,
 		NcButton,
 	},
 	mixins: [dashboardRefreshMixin],
@@ -54,6 +55,12 @@ export default {
 			myLeads: [],
 			myRequests: [],
 			pipelines: [],
+			columns: [
+				{ key: 'entityType' },
+				{ key: 'title', cellClass: 'cn-cell--strong' },
+				{ key: 'stageOrStatus', cellClass: 'cn-cell--muted' },
+				{ key: 'dueDate', cellClass: 'cn-cell--end' },
+			],
 		}
 	},
 	computed: {
@@ -122,6 +129,15 @@ export default {
 	methods: {
 		formatDate,
 		/**
+		 * Row emphasis for overdue items (CnDataTable rowClass hook).
+		 *
+		 * @param {object} row - Work item row.
+		 * @return {string} CSS class for the row.
+		 */
+		rowClass(row) {
+			return row.isOverdue ? 'my-work-row--overdue' : ''
+		},
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-10
 		 */
 		async load() {
@@ -154,38 +170,7 @@ export default {
 </script>
 
 <style scoped>
-.my-work-widget-content {
-	padding: 4px 0;
-	height: 100%;
-	overflow: auto;
-}
-
-.chart-empty {
-	padding: 24px;
-	text-align: center;
-	color: var(--color-text-maxcontrast);
-	font-size: 14px;
-}
-
-.my-work-list {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.my-work-item {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 8px 12px;
-	cursor: pointer;
-}
-
-.my-work-item:hover {
-	background: var(--color-background-hover);
-}
-
-.my-work-item--overdue {
+:deep(.my-work-row--overdue) {
 	background: rgba(233, 50, 45, 0.04);
 }
 
@@ -211,25 +196,10 @@ export default {
 	border: 1px solid #fdba74;
 }
 
-.my-work-title {
-	flex: 1;
-	font-size: 13px;
-	font-weight: 500;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.my-work-stage {
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-	flex-shrink: 0;
-}
-
 .my-work-due {
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
-	flex-shrink: 0;
+	white-space: nowrap;
 }
 
 .my-work-due.overdue {
@@ -239,6 +209,5 @@ export default {
 
 .view-all-link {
 	margin-top: 4px;
-	padding-left: 12px;
 }
 </style>
