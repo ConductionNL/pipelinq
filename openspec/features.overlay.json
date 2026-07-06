@@ -75,9 +75,10 @@
     "slug": "omnichannel-registratie",
     "title": "Omnichannel messaging",
     "title_nl": "Omnichannel berichten",
-    "summary": "Reach clients on WhatsApp and SMS, with consent logged automatically.",
-    "summary_nl": "Je bereikt klanten via WhatsApp en sms, met toestemming automatisch vastgelegd.",
-    "status": "stable",
+    "summary": "Register inbound WhatsApp and SMS messages, with consent logged automatically.",
+    "summary_nl": "Je registreert inkomende WhatsApp- en sms-berichten, met toestemming automatisch vastgelegd.",
+    "status": "beta",
+    "statusReason": "Outbound WhatsApp/SMS send has zero production callers and no UI surface; SlaEngineService::dispatchNotification defers all channels except nextcloud-notification. Inbound webhooks (messagingWebhook#whatsapp|sms) are wired.",
     "docsUrl": "openspec/specs/omnichannel-registratie/spec.md"
   },
   {

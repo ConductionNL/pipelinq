@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\App\IAppManager;
@@ -62,6 +63,7 @@ class SetupController extends Controller
      * @param IRequest        $request         The request.
      * @param IAppConfig      $appConfig       App-config reader/writer.
      * @param SettingsService $settingsService Register/schema + default-data provisioning.
+     * @param DemoSeedService $demoSeedService Optional demo-data seeding (same write path as occ).
      * @param IAppManager     $appManager      App installed/enabled lookup for integration detection.
      * @param LoggerInterface $logger          Logger.
      */
@@ -70,6 +72,7 @@ class SetupController extends Controller
         IRequest $request,
         private readonly IAppConfig $appConfig,
         private readonly SettingsService $settingsService,
+        private readonly DemoSeedService $demoSeedService,
         private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,
     ) {
@@ -165,6 +168,10 @@ class SetupController extends Controller
             return $this->provisionRegister();
         }
 
+        if ($actionId === 'seed-demo-data') {
+            return $this->seedDemoData();
+        }
+
         return new DataResponse(
             ['success' => false, 'message' => 'Unknown setup action: '.$actionId],
             Http::STATUS_NOT_FOUND,
@@ -221,6 +228,48 @@ class SetupController extends Controller
             );
         }//end try
     }//end provisionRegister()
+
+    /**
+     * Seed the optional demo dataset (ADR-042 optional action `seed-demo-data`).
+     *
+     * Invokes the same DemoSeedService the `occ pipelinq:demo:seed` command
+     * uses (one write path). Idempotent — re-running creates no duplicates.
+     * Skipping this step never blocks setup completion (the wizard treats it
+     * as optional; only the currency step is required).
+     *
+     * @return DataResponse `{ success, message }`.
+     *
+     * @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+     */
+    private function seedDemoData(): DataResponse
+    {
+        try {
+            $result = $this->demoSeedService->seed();
+
+            if ($result['success'] === false) {
+                return new DataResponse(
+                    ['success' => false, 'message' => (string) ($result['message'] ?? 'Demo seed failed.')],
+                    Http::STATUS_PRECONDITION_FAILED,
+                );
+            }
+
+            $created = array_sum($result['created']);
+            $skipped = array_sum($result['skipped']);
+            $message = sprintf(
+                'Seeded %d demo object(s) (%d already present). Remove them any time with `occ pipelinq:demo:seed --remove`.',
+                $created,
+                $skipped,
+            );
+
+            return new DataResponse(['success' => true, 'message' => $message]);
+        } catch (\Throwable $e) {
+            $this->logger->error('Pipelinq demo seed failed', ['exception' => $e->getMessage()]);
+            return new DataResponse(
+                ['success' => false, 'message' => 'Demo seed failed: '.$e->getMessage()],
+                Http::STATUS_INTERNAL_SERVER_ERROR,
+            );
+        }//end try
+    }//end seedDemoData()
 
     /**
      * Read a pipelinq app-config string value.

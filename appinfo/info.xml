@@ -17,15 +17,15 @@
 - **Contact moments** — Log calls, emails, visits, and other interactions with clients
 - **My Work queue** — Personal overview of your assigned leads, requests, and follow-ups
 - **Nextcloud Contacts sync** — Two-way sync with the native Contacts app via CardDAV
-- **Duplicate detection** — Automatic warnings when creating clients with matching names or emails
-- **Import and export** — Bulk operations with CSV and vCard support
+- **Duplicate detection** — Provided via OpenRegister master-data management, flagging clients with matching names or emails
+- **Import and export** — vCard contact import and export via Nextcloud Contacts, plus scheduled CSV data exports
 - **Activity and notifications** — Stay updated on assignments, stage changes, and new notes
 
-Pairs naturally with [Procest](https://apps.nextcloud.com/apps/procest) — hand off requests to case management when they're ready.
+Pairs naturally with [Procest](https://apps.nextcloud.com/apps/procest) for case management. A direct request-to-case handoff bridge is in development (openspec change `semantic-handoff-emit`).
 
 **Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
-Free and open source under the AGPL license.
+Free and open source under the EUPL-1.2 license.
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
@@ -40,20 +40,20 @@ Free and open source under the AGPL license.
 - **Contactmomenten** — Log telefoongesprekken, e-mails, bezoeken en andere interacties met klanten
 - **Mijn Werk** — Persoonlijk overzicht van je toegewezen leads, verzoeken en opvolgingen
 - **Nextcloud Contacten sync** — Tweerichtingssynchronisatie met de native Contacten-app via CardDAV
-- **Duplicaatdetectie** — Automatische waarschuwingen bij het aanmaken van klanten met overeenkomende namen of e-mails
-- **Importeren en exporteren** — Bulkbewerkingen met CSV- en vCard-ondersteuning
+- **Duplicaatdetectie** — Geleverd via OpenRegister master-data management, dat klanten met overeenkomende namen of e-mails signaleert
+- **Importeren en exporteren** — vCard-contactimport en -export via Nextcloud Contacten, plus geplande CSV-data-exports
 - **Activiteit en notificaties** — Blijf op de hoogte van toewijzingen, fasewijzigingen en nieuwe notities
 
-Sluit naadloos aan op [Procest](https://apps.nextcloud.com/apps/procest) — draag verzoeken over naar zaakafhandeling wanneer ze klaar zijn.
+Sluit naadloos aan op [Procest](https://apps.nextcloud.com/apps/procest) voor zaakafhandeling. Een directe verzoek-naar-zaak-overdracht is in ontwikkeling (openspec-wijziging `semantic-handoff-emit`).
 
 **Vereist:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (installeer via de [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
-Vrij en open source onder de AGPL-licentie.
+Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.34</version>
-    <licence>agpl</licence>
+    <version>0.5.35</version>
+    <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
     <documentation>
@@ -72,21 +72,9 @@ Vrij en open source onder de AGPL-licentie.
     <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/main/img/app-store.svg</screenshot>
 
     <dependencies>
-        <nextcloud min-version="28" max-version="34"/>
         <php min-version="8.3"/>
+        <nextcloud min-version="28" max-version="34"/>
     </dependencies>
-
-    <repair-steps>
-        <post-migration>
-            <step>OCA\Pipelinq\Repair\InitializeSettings</step>
-            <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
-            <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
-            <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
-            <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
-            <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
-            <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
-        </post-migration>
-    </repair-steps>
 
     <background-jobs>
         <job>OCA\Pipelinq\BackgroundJob\TaskExpiryJob</job>
@@ -127,14 +115,17 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\RenewalWindowJob</job>
     </background-jobs>
 
-    <navigations>
-        <navigation>
-            <id>pipelinq</id>
-            <name>Pipelinq</name>
-            <route>pipelinq.dashboard.page</route>
-            <icon>app.svg</icon>
-        </navigation>
-    </navigations>
+    <repair-steps>
+        <post-migration>
+            <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+            <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
+            <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
+            <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
+            <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
+            <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
+            <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+        </post-migration>
+    </repair-steps>
 
     <settings>
         <admin>OCA\Pipelinq\Settings\AdminSettings</admin>
@@ -142,9 +133,6 @@ Vrij en open source onder de AGPL-licentie.
     </settings>
 
     <activity>
-        <providers>
-            <provider>OCA\Pipelinq\Activity\Provider</provider>
-        </providers>
         <settings>
             <setting>OCA\Pipelinq\Activity\Setting\AssignmentSetting</setting>
             <setting>OCA\Pipelinq\Activity\Setting\StageStatusSetting</setting>
@@ -154,9 +142,17 @@ Vrij en open source onder de AGPL-licentie.
         <filters>
             <filter>OCA\Pipelinq\Activity\Filter</filter>
         </filters>
+        <providers>
+            <provider>OCA\Pipelinq\Activity\Provider</provider>
+        </providers>
     </activity>
 
-    <notification>
-        <service>OCA\Pipelinq\Notification\Notifier</service>
-    </notification>
+    <navigations>
+        <navigation>
+            <id>pipelinq</id>
+            <name>Pipelinq</name>
+            <route>pipelinq.dashboard.page</route>
+            <icon>app.svg</icon>
+        </navigation>
+    </navigations>
 </info>
