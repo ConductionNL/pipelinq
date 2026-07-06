@@ -606,6 +606,13 @@
 						"props": { "customerId": "@objectId" }
 					},
 					{
+						"id": "messaging-conversation",
+						"component": "MessagingConversationSection",
+						"title": "Messages",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "client" }
+					},
+					{
 						"id": "contactmoment-quick-log",
 						"component": "ContactmomentQuickLog",
 						"title": "Log contactmoment",
@@ -923,6 +930,13 @@
 						"title": "BSN / BRP",
 						"placement": "end",
 						"props": { "contactId": "@objectId" }
+					},
+					{
+						"id": "messaging-conversation",
+						"component": "MessagingConversationSection",
+						"title": "Messages",
+						"placement": "end",
+						"props": { "entityId": "@objectId", "entityType": "contact" }
 					}
 				],
 				"sidebar": { "enabled": true }

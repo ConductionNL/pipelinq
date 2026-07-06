@@ -197,6 +197,12 @@ import CtiSettingsView from './views/settings/CtiSettings.vue'
 import CtiEventLogView from './views/settings/CtiEventLog.vue'
 import CtiPageView from './views/settings/CtiPage.vue'
 
+// --- Outbound WhatsApp/SMS messaging admin (outbound-messaging-provider-
+//     wiring): channelProvider / messageSendBudget / messageTemplate CRUD +
+//     per-provider connectivity test + inbound webhook URL display. Lib gap:
+//     no messaging-provider-settings page type. ---
+import MessagingSettingsView from './views/settings/MessagingSettings.vue'
+
 // --- POS pluggable payment provider adapter (pos-payment-provider-adapter):
 //     admin-only credential form for Mollie / CCV / Adyen / Stripe with
 //     encrypted-at-rest secrets and a per-provider "Verbinding testen" button.
@@ -225,6 +231,12 @@ import CommunicationHistory from './components/CommunicationHistory.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
+
+// --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
+//     provider-wiring): self-fetches conversation/message rows by contactId
+//     + the composer preflight facts, and hosts the SendMessageModal
+//     composer. Same self-fetching-by-props pattern as the sections above. ---
+import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
 
 // --- Project / WBS hierarchy (project-task-hierarchy):
 //     four schemas (project / projectPhase / projectTask / projectActivity)
@@ -832,6 +844,11 @@ const registry = {
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
+	MessagingConversationSection: {
+		kind: 'section',
+		component: MessagingConversationSection,
+		_note: 'Outbound WhatsApp/SMS conversation feed for a client or contact (outbound-messaging-provider-wiring). Self-fetches message/conversation rows by contactId + the composer preflight facts; on ClientDetail (no client-level FK on message/conversation) it resolves the client\'s linked contacts client-side and lets the agent pick which contact to converse with. Hosts the SendMessageModal composer.',
+	},
 
 	// --- BI export + data-warehouse sink. ---
 	ExportJobsView: {
@@ -880,6 +897,13 @@ const registry = {
 		kind: 'page',
 		component: CtiPageView,
 		_note: 'Merged CTI (telephony) settings page (pipelinq-cti-and-catalog-ia): composes the CtiSettings integration config and the CtiEventLog webhook log into one settings-section page so the former two Administration menu entries become one entry under Settings.',
+	},
+
+	// --- Outbound WhatsApp/SMS messaging admin (outbound-messaging-provider-wiring). ---
+	MessagingSettingsView: {
+		kind: 'page',
+		component: MessagingSettingsView,
+		_note: 'Admin settings: channelProvider / messageSendBudget / messageTemplate CRUD via createObjectStore (no bespoke REST for these OR objects), per-provider zero-cost connectivity test (POST /api/messaging/providers/{id}/test) and the inbound webhook URL to paste into the vendor console. Provider rows carry NO credential field by design — vendor secrets live on the OpenConnector source addressed by sourceId. Lib gap: no messaging-provider-settings page type.',
 	},
 
 	// --- POS pluggable payment provider adapter (pos-payment-provider-adapter). ---
