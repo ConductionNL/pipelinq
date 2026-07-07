@@ -158,6 +158,8 @@ class WhatsAppAdapter
      * @param string               $body       Free-form body (ignored when templateId set).
      * @param string|null          $templateId Template UUID/slug or null for free-form.
      * @param array<int, string>   $parameters Positional template parameters.
+     * @param array<string, mixed> $context    Optional send context for the
+     *                                         outbound audit (`clientId`, `agent`).
      *
      * @return array{
      *     status: string,
@@ -171,12 +173,14 @@ class WhatsAppAdapter
      * } Send outcome.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
      */
     public function send(
         array $contact,
         string $body,
         ?string $templateId=null,
-        array $parameters=[]
+        array $parameters=[],
+        array $context=[]
     ): array {
         $contactId = $this->extractId(payload: $contact);
         $toNumber  = $this->extractPhone(contact: $contact);
@@ -185,7 +189,8 @@ class WhatsAppAdapter
             return ['status' => self::STATUS_FAILED, 'error' => 'no recipient phone number'];
         }
 
-        if ($this->consentService->canSend(contactId: $contactId, channel: 'whatsapp') === false) {
+        $isBusinessInitiated = (($templateId ?? '') !== '');
+        if ($this->consentForSend(contactId: $contactId, businessInitiated: $isBusinessInitiated) === false) {
             return ['status' => self::STATUS_CONSENT_MISSING];
         }
 
@@ -222,6 +227,7 @@ class WhatsAppAdapter
                 language: $language,
                 parameters: $parameters,
                 template: $template,
+                context: $context,
             );
 
             if ($outcome !== null) {
@@ -291,6 +297,31 @@ class WhatsAppAdapter
             'language'     => $language,
         ];
     }//end resolveSendContext()
+
+    /**
+     * Consent gate for a WhatsApp send.
+     *
+     * A business-initiated send (a template send, normally outside the 24h
+     * session window — including SLA escalations) requires the contact's
+     * latest `messagingConsentRecord` for whatsapp to be `opted-in` (Meta
+     * business-messaging policy). A within-window free-form reply keeps the
+     * opt-out-only gate (customer initiated the session).
+     *
+     * @param string $contactId         Contact UUID.
+     * @param bool   $businessInitiated Whether this is a template / business-initiated send.
+     *
+     * @return bool True when the send may proceed.
+     *
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     */
+    private function consentForSend(string $contactId, bool $businessInitiated): bool
+    {
+        if ($businessInitiated === true) {
+            return $this->consentService->canSendBusinessInitiated(contactId: $contactId, channel: 'whatsapp');
+        }
+
+        return $this->consentService->canSend(contactId: $contactId, channel: 'whatsapp');
+    }//end consentForSend()
 
     /**
      * Resolve + validate a template send.
@@ -367,8 +398,14 @@ class WhatsAppAdapter
      * @param string                    $language     Resolved language.
      * @param array<int, string>        $parameters   Positional template parameters.
      * @param array<string, mixed>|null $template     Resolved template row, or null for free-form.
+     * @param array<string, mixed>      $context      Send context for the outbound audit.
      *
      * @return array<string, mixed>|null Terminal outcome, or null to try the next provider.
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList) The per-attempt send state
+     *  (row + tenant + contact + recipient + body + template resolution + params
+     *  + audit context) is threaded explicitly to keep the failover loop pure and
+     *  free of mutable per-send instance state.
      */
     private function attemptProviderSend(
         array $row,
@@ -379,7 +416,8 @@ class WhatsAppAdapter
         string $templateName,
         string $language,
         array $parameters,
-        ?array $template
+        ?array $template,
+        array $context=[]
     ): ?array {
         $providerId = $this->extractId(payload: $row);
 
@@ -441,14 +479,74 @@ class WhatsAppAdapter
 
         $this->budgetService->recordSend(tenantId: $tenantId, providerId: $providerId);
 
+        $messageId = $this->extractId(payload: ($persisted ?? []));
+        $this->auditOutbound(
+            contactId: $contactId,
+            messageId: $messageId,
+            conversationId: (string) (($persisted ?? [])['conversationId'] ?? ''),
+            body: $this->bodyForSend(templateName: $templateName, body: $body),
+            context: $context,
+        );
+
         return [
             'status'            => self::STATUS_SENT,
-            'messageId'         => $this->extractId(payload: $persisted ?? []),
+            'messageId'         => $messageId,
             'externalMessageId' => $result['externalMessageId'],
             'providerId'        => $providerId,
             'vendor'            => $result['vendor'],
         ];
     }//end attemptProviderSend()
+
+    /**
+     * Best-effort outbound contactmoment audit (REQ-OM-006).
+     *
+     * Resolves {@see ContactmomentService} lazily through the container and
+     * records the WhatsApp send as a `channel: chat` contactmoment with
+     * `channelMetadata.platform = whatsapp` (omnichannel convention).
+     * Log-and-continue: an audit failure MUST never affect the send outcome.
+     *
+     * @param string               $contactId      Contact UUID.
+     * @param string               $messageId      Persisted message UUID.
+     * @param string               $conversationId Conversation UUID.
+     * @param string               $body           Message body / template marker.
+     * @param array<string, mixed> $context        Send context (`clientId`, `agent`).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
+     */
+    private function auditOutbound(
+        string $contactId,
+        string $messageId,
+        string $conversationId,
+        string $body,
+        array $context
+    ): void {
+        try {
+            $auditor = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
+        } catch (Throwable $e) {
+            return;
+        }
+
+        if (is_object($auditor) === false || method_exists($auditor, 'recordOutboundMessage') === false) {
+            return;
+        }
+
+        $auditor->recordOutboundMessage(
+            channel: 'chat',
+            subject: 'Outbound WhatsApp',
+            summary: $body,
+            channelMetadata: [
+                'platform'       => 'whatsapp',
+                'direction'      => 'outbound',
+                'messageId'      => $messageId,
+                'conversationId' => $conversationId,
+                'contactId'      => $contactId,
+            ],
+            clientId: (string) ($context['clientId'] ?? ''),
+            agent: (string) ($context['agent'] ?? ''),
+        );
+    }//end auditOutbound()
 
     /**
      * Outbound body: a `[template:NAME]` marker for template sends, the raw

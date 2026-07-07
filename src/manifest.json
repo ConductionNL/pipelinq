@@ -17,6 +17,7 @@
 			{ "id": "welcome", "type": "info", "title": "Welcome to Pipelinq", "body": "A few quick choices to get your CRM, pipeline and service desk ready. Only the reporting currency is required — everything else is optional and can be changed later in the admin settings." },
 			{ "id": "currency", "type": "choice", "title": "Reporting currency", "required": true, "configKey": "currency", "body": "Used to format revenue, forecast and pipeline amounts across dashboards and reports.", "options": [ { "value": "EUR", "label": "Euro (EUR)" }, { "value": "USD", "label": "US Dollar (USD)" }, { "value": "GBP", "label": "Pound Sterling (GBP)" }, { "value": "CHF", "label": "Swiss Franc (CHF)" } ] },
 			{ "id": "provision", "type": "run-action", "title": "Provision data", "action": "provision-register", "body": "Create the Pipelinq OpenRegister register and schemas, plus the default sales pipeline and stages, service queues, agent skills, lead sources and request channels. This normally runs automatically on install; run it here if OpenRegister was enabled after Pipelinq, or to repair a partial install. It is safe to run more than once." },
+			{ "id": "demo-data", "type": "run-action", "title": "Demo data (optional)", "action": "seed-demo-data", "body": "Seed a small linked demo dataset — clients, leads, requests and contactmomenten — so lists, dashboards and the 360° client view show a working product right away. Optional and safe to run more than once; every object is marked [Demo] and can be removed later with `occ pipelinq:demo:seed --remove`. Skip this on a production install." },
 			{ "id": "organisation", "type": "config-fields", "title": "Organisation", "body": "Your organisation details, printed on POS receipts and shown on reports. Optional — leave blank to skip.", "schema": { "type": "object", "properties": { "receipt_company_name": { "type": "string", "title": "Organisation name" }, "receipt_company_vat": { "type": "string", "title": "VAT number" }, "receipt_company_kvk": { "type": "string", "title": "Chamber of Commerce (KvK) number" } } } },
 			{ "id": "integrations", "type": "config-fields", "title": "Integrations", "body": "Optional connections to other Conduction apps. Set the Shillinq base URL to surface recurring-revenue metrics and route billing/ledger entries; set the XWiki URL to embed the knowledge base. Leave blank to disable.", "schema": { "type": "object", "properties": { "shillinq_app_url": { "type": "string", "title": "Shillinq base URL" }, "xwiki_direct_url": { "type": "string", "title": "XWiki base URL" } } } },
 			{ "id": "done", "type": "summary", "title": "All set", "healthCheck": true, "body": "Pipelinq is ready. Head to the Dashboard or Leads to get started." }
@@ -385,7 +386,6 @@
 					{ "id": "lead-conversion",       "type": "stat", "title": "Lead Conversion Rate", "content": { "label": "Lead Conversion Rate", "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "leadConversionRate", "previousField": "previousPeriod.leadConversionRate", "goodDirection": "up" } },
 					{ "id": "avg-resolution",        "type": "stat", "title": "Avg Request Resolution", "content": { "label": "Avg Request Resolution", "icon": "ClockOutline", "valueColor": "#0082c9", "format": { "style": "duration-hours", "decimals": 1 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "avgRequestResolutionTime", "previousField": "previousPeriod.avgRequestResolutionTime", "goodDirection": "down" } },
 					{ "id": "contact-volume",        "type": "stat", "title": "Contact Moment Volume", "content": { "label": "Contacts", "icon": "Account", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "contactMomentVolume", "previousField": "previousPeriod.contactMomentVolume", "goodDirection": "up" } },
-					{ "id": "satisfaction",          "type": "stat", "title": "Customer Satisfaction", "content": { "label": "Customer Satisfaction", "icon": "StarOutline", "valueColor": "#0082c9", "format": { "style": "decimal", "decimals": 1 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "customerSatisfactionScore", "previousField": "previousPeriod.customerSatisfactionScore", "goodDirection": "up" } },
 					{ "id": "leads-over-time",       "type": "chart", "title": "Leads over time", "content": { "chartKind": "area", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "bucket": { "field": "expectedCloseDate", "interval": "month", "metric": "count" } } } },
 					{ "id": "requests-by-category",  "type": "chart", "title": "Requests by category", "content": { "chartKind": "donut", "dataSource": { "register": "pipelinq", "schema": "request", "filter": {}, "groupBy": { "field": "category", "metric": "count", "sort": "desc" } } } },
 					{ "id": "requests-by-status",    "type": "chart", "title": "Requests by Status", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "request", "filter": {}, "groupBy": { "field": "status", "metric": "count", "sort": "desc" } } } },
@@ -402,10 +402,9 @@
 					{ "id": "2",  "widgetId": "open-requests",         "gridX": 3, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
 					{ "id": "3",  "widgetId": "pipeline-value",        "gridX": 6, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
 					{ "id": "4",  "widgetId": "overdue",               "gridX": 9, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "14", "widgetId": "lead-conversion",       "gridX": 0, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "15", "widgetId": "avg-resolution",        "gridX": 3, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
-					{ "id": "16", "widgetId": "contact-volume",        "gridX": 6, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
-					{ "id": "17", "widgetId": "satisfaction",          "gridX": 9, "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "14", "widgetId": "lead-conversion",       "gridX": 0, "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
+					{ "id": "15", "widgetId": "avg-resolution",        "gridX": 4, "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "16", "widgetId": "contact-volume",        "gridX": 8, "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
 					{ "id": "18", "widgetId": "leads-over-time",       "gridX": 0, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "19", "widgetId": "requests-by-category",  "gridX": 6, "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "5",  "widgetId": "requests-by-status",    "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4 },
@@ -418,6 +417,7 @@
 					{ "id": "13", "widgetId": "xwiki-knowledge",       "gridX": 0, "gridY": 29, "gridWidth": 6,  "gridHeight": 5 }
 				]
 			},
+			"_note": "The Customer Satisfaction KPI (SatisfactionKpiWidget, widget id 'satisfaction', layout slot 17) was removed 2026-07 because its data source is permanently empty (AnalyticsService hardcodes no survey responses after the forms-leaf migration); it returns with real CSAT data via openspec change customer-satisfaction-closed-loop.",
 			"slots": {
 				"widget-my-work": "MyWorkWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
@@ -604,6 +604,13 @@
 						"component": "BookingsCard",
 						"placement": "after-related",
 						"props": { "customerId": "@objectId" }
+					},
+					{
+						"id": "messaging-conversation",
+						"component": "MessagingConversationSection",
+						"title": "Messages",
+						"placement": "after-related",
+						"props": { "entityId": "@objectId", "entityType": "client" }
 					},
 					{
 						"id": "contactmoment-quick-log",
@@ -923,6 +930,13 @@
 						"title": "BSN / BRP",
 						"placement": "end",
 						"props": { "contactId": "@objectId" }
+					},
+					{
+						"id": "messaging-conversation",
+						"component": "MessagingConversationSection",
+						"title": "Messages",
+						"placement": "end",
+						"props": { "entityId": "@objectId", "entityType": "contact" }
 					}
 				],
 				"sidebar": { "enabled": true }

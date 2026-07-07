@@ -58,8 +58,13 @@
           },
           "credentials": {
             "type": "object",
-            "description": "Vendor-specific credential bag. Encrypted at rest.",
+            "description": "DEPRECATED. Vendor credentials now live exclusively on the OpenConnector source addressed by sourceId (routed via OpenRegister's MessageDispatchProvider leaf, which never handles a vendor credential). Retained for backward compatibility only; the admin messaging settings surface does not write it and links out to the OpenConnector source as the credential home.",
             "title": "Credentials"
+          },
+          "sourceId": {
+            "type": "string",
+            "description": "OpenConnector source slug that transports this provider (e.g. messagebird-sms, cmcom-sms, twilio-sms, whatsapp-cloud-api, whatsapp-bsp). Credentials and base URL live on that source; this row carries routing metadata only.",
+            "title": "Source ID"
           },
           "phoneNumber": {
             "type": "string",
