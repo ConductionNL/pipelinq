@@ -238,6 +238,14 @@ import BrpContactPanel from './components/BrpContactPanel.vue'
 //     composer. Same self-fetching-by-props pattern as the sections above. ---
 import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
 
+// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit):
+//     "Convert to case" (request → ns#Case) and "Send to invoicing"
+//     (contract → ns#Invoice) in-body actions. Both self-fetch their
+//     availability endpoint and hide when no installed app implements the
+//     kind — same self-fetching-by-props pattern as the sections above. ---
+import RequestConversionSection from './views/requests/RequestConversionSection.vue'
+import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
+
 // --- Project / WBS hierarchy (project-task-hierarchy):
 //     four schemas (project / projectPhase / projectTask / projectActivity)
 //     surface as ProjectList → ProjectDetail (WBS tree with inline phase /
@@ -848,6 +856,22 @@ const registry = {
 		kind: 'section',
 		component: MessagingConversationSection,
 		_note: 'Outbound WhatsApp/SMS conversation feed for a client or contact (outbound-messaging-provider-wiring). Self-fetches message/conversation rows by contactId + the composer preflight facts; on ClientDetail (no client-level FK on message/conversation) it resolves the client\'s linked contacts client-side and lets the agent pick which contact to converse with. Hosts the SendMessageModal composer.',
+	},
+
+	// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit).
+	//     Registered for RequestDetail / ContractDetail's declarative
+	//     `config.bodyWidgets`. Each self-fetches its GET .../availability
+	//     endpoint by @objectId and hides entirely (not disabled) when no
+	//     installed app implements the target kind. ---
+	RequestConversionSection: {
+		kind: 'section',
+		component: RequestConversionSection,
+		_note: '"Convert to case" action for the RequestDetail page (semantic-handoff-emit). Self-fetches GET /api/handoff/request/{id}/availability by @objectId; renders the button only when canConvert (an ns#Case implementer is installed AND status is in_progress). On success shows the converted notice + a copyable caseReference — the target app is kind-addressed and unknown to the frontend, so no precise cross-app route can be built.',
+	},
+	ContractInvoicingSection: {
+		kind: 'section',
+		component: ContractInvoicingSection,
+		_note: '"Send to invoicing" action for the ContractDetail page (semantic-handoff-emit). Self-fetches GET /api/handoff/contract/{id}/availability by @objectId; renders the button only when canSend (an ns#Invoice implementer is installed AND status is active). Sending does not change the contract\'s own status (a recurring contract stays active for the next interval), so the button remains available after a send; shows a success notice + copyable invoiceReference for the most recent send.',
 	},
 
 	// --- BI export + data-warehouse sink. ---

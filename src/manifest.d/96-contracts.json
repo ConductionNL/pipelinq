@@ -56,6 +56,14 @@
 					{ "id": "4", "widgetId": "contract-related", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 4 },
 					{ "id": "5", "widgetId": "contract-files",   "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 3 }
 				],
+				"bodyWidgets": [
+					{
+						"id": "contract-invoicing",
+						"component": "ContractInvoicingSection",
+						"placement": "after-related",
+						"props": { "contractId": "@objectId" }
+					}
+				],
 				"sidebar": { "enabled": true, "showMetadata": true }
 			}
 		}

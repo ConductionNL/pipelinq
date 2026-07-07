@@ -17,6 +17,7 @@ When the `quote` schema is registered (per the Quote entity requirement of this 
 
 - WHEN the `quote` schema is registered by the quoting implementation
 - THEN it MUST carry the `ns#Quote` implements declaration in the ADR-051 dialect form
+- `@e2e exclude` Enterprise-tier spec-binding on an unbuilt schema — no runtime UI surface ships in this change; verified when the quoting capability is built.
 
 #### Scenario: Accepted quote handed to the invoice implementer
 
@@ -25,6 +26,7 @@ When the `quote` schema is registered (per the Quote entity requirement of this 
 - WHEN the user triggers "Send to invoicing"
 - THEN the target invoice object MUST be created through OR's handoff engine with the mapped fields
 - AND the quote MUST record the handoff provenance link
+- `@e2e exclude` Enterprise-tier, unbuilt quote schema — no runtime surface until the quoting capability is built (mirrors the contract→invoice emit, which this change ships and covers).
 
 #### Scenario: Hidden without an implementer
 
@@ -32,3 +34,4 @@ When the `quote` schema is registered (per the Quote entity requirement of this 
 - WHEN the user views an accepted quote
 - THEN the "Send to invoicing" action MUST NOT be rendered
 - AND a direct endpoint call MUST be refused with a not-available error
+- `@e2e exclude` Enterprise-tier, unbuilt quote schema — no runtime surface in this change.
