@@ -1,5 +1,16 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
+<!--
+	MyWorkWidget — thin wrapper over the canonical worklist endpoint
+	(ADR-049 Wave 4). The leads+requests union that used to be computed
+	client-side now comes pre-merged + pre-sorted from
+	GET /apps/pipelinq/api/worklist/mine (WorklistController). This widget
+	is kept CUSTOM — and NOT dissolved into the built-in `object-table`
+	widget — because each row navigates to a DIFFERENT route (LeadDetail
+	vs RequestDetail via the row's `routeName` field) and object-table's
+	`rowRoute` is a single static route name that cannot express a
+	per-row destination (ConductionNL/nextcloud-vue#91 Wave 2 gap).
+-->
 <template>
 	<CnDataTable :rows="items"
 		:columns="columns"
@@ -22,7 +33,7 @@
 		</template>
 		<template #footer>
 			<NcButton
-				v-if="total > 5"
+				v-if="total > items.length"
 				type="tertiary"
 				class="view-all-link"
 				@click="$router.push({ name: 'MyWork' })">
@@ -35,12 +46,11 @@
 <script>
 import { CnDataTable } from '@conduction/nextcloud-vue'
 import { NcButton } from '@nextcloud/vue'
-import { getMyLeads, getMyRequests, getPipelines, getClosedStageNames } from '../../../services/dashboardData.js'
-import { getStatusLabel } from '../../../services/requestStatus.js'
+import { generateUrl } from '@nextcloud/router'
 import { formatDate } from '../../../services/localeUtils.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
-const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
+const WIDGET_LIMIT = 5
 
 export default {
 	name: 'MyWorkWidget',
@@ -52,9 +62,8 @@ export default {
 	data() {
 		return {
 			loaded: false,
-			myLeads: [],
-			myRequests: [],
-			pipelines: [],
+			items: [],
+			total: 0,
 			columns: [
 				{ key: 'entityType' },
 				{ key: 'title', cellClass: 'cn-cell--strong' },
@@ -62,69 +71,6 @@ export default {
 				{ key: 'dueDate', cellClass: 'cn-cell--end' },
 			],
 		}
-	},
-	computed: {
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-8
-		 */
-		allItems() {
-			const closed = getClosedStageNames(this.pipelines)
-			const now = new Date()
-			const items = []
-
-			for (const l of this.myLeads) {
-				if (closed.has(l.stage)) continue
-				const due = l.expectedCloseDate ? new Date(l.expectedCloseDate) : null
-				items.push({
-					id: l.id,
-					entityType: 'lead',
-					title: l.title,
-					stageOrStatus: l.stage || '-',
-					priority: l.priority || 'normal',
-					dueDate: l.expectedCloseDate,
-					isOverdue: due ? due < now : false,
-				})
-			}
-
-			for (const r of this.myRequests) {
-				if (r.status === 'completed' || r.status === 'rejected' || r.status === 'converted') continue
-				const due = r.requestedAt ? new Date(r.requestedAt) : null
-				items.push({
-					id: r.id,
-					entityType: 'request',
-					title: r.title,
-					stageOrStatus: getStatusLabel(r.status),
-					priority: r.priority || 'normal',
-					dueDate: r.requestedAt,
-					isOverdue: due ? (now - due) > 30 * 24 * 60 * 60 * 1000 : false,
-				})
-			}
-
-			items.sort((a, b) => {
-				if (a.isOverdue !== b.isOverdue) return a.isOverdue ? -1 : 1
-				const pa = PRIORITY_ORDER[a.priority] ?? 2
-				const pb = PRIORITY_ORDER[b.priority] ?? 2
-				if (pa !== pb) return pa - pb
-				if (a.dueDate && b.dueDate) return new Date(a.dueDate) - new Date(b.dueDate)
-				if (a.dueDate) return -1
-				if (b.dueDate) return 1
-				return 0
-			})
-
-			return items
-		},
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-12
-		 */
-		total() {
-			return this.allItems.length
-		},
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-9
-		 */
-		items() {
-			return this.allItems.slice(0, 5)
-		},
 	},
 	methods: {
 		formatDate,
@@ -138,16 +84,29 @@ export default {
 			return row.isOverdue ? 'my-work-row--overdue' : ''
 		},
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-10
+		 * Fetch the current user's top-N worklist from the canonical
+		 * server-side union endpoint (leads + requests, pre-sorted by
+		 * overdue → priority → due date). The union + sort that this widget
+		 * used to compute client-side now lives in WorklistService.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 		 */
 		async load() {
 			try {
-				const [myLeads, myRequests, pipelines] = await Promise.all([
-					getMyLeads(), getMyRequests(), getPipelines(),
-				])
-				this.myLeads = myLeads
-				this.myRequests = myRequests
-				this.pipelines = pipelines
+				const response = await fetch(
+					generateUrl('/apps/pipelinq/api/worklist/mine?limit=' + WIDGET_LIMIT),
+					{
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+					},
+				)
+				if (!response.ok) throw new Error('Failed to fetch worklist')
+				const data = await response.json()
+				this.items = Array.isArray(data.items) ? data.items : []
+				this.total = Number(data.total) || this.items.length
 			} catch (err) {
 				console.error('MyWorkWidget fetch error:', err)
 			} finally {
@@ -155,15 +114,16 @@ export default {
 			}
 		},
 		/**
-		 * @param {object} item - Work item row (lead or request) to navigate to.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-11
+		 * Navigate to the row's detail page. The route differs per row
+		 * (LeadDetail vs RequestDetail); the server-side worklist row carries
+		 * the destination route name in `routeName`.
+		 *
+		 * @param {object} item - Work item row (lead or request).
+		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 		 */
 		openItem(item) {
-			if (item.entityType === 'lead') {
-				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
-			} else {
-				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
-			}
+			const name = item.routeName || (item.entityType === 'lead' ? 'LeadDetail' : 'RequestDetail')
+			this.$router.push({ name, params: { id: item.id } })
 		},
 	},
 }
