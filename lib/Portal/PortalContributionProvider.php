@@ -51,10 +51,15 @@ namespace OCA\Pipelinq\Portal;
  * UUID, contact object UUID, Nextcloud contact UID) — never Nextcloud user
  * ids, because externals have no Nextcloud account by premise.
  *
- * Excluded surfaces (full-row collections have no field projection in Wave 1):
- * `contactmoment` (internal notes), `booking` (staff-only internalNotes) and
- * the `berichtenboxMessage` inbox (BSN-scoped, not contact/customer-scoped).
- * Rationale: openspec/changes/portal-contribution/design.md.
+ * Field-projected surfaces (portaliq now whitelist-projects rows after per-row
+ * verification — identifiers always survive, a malformed `fields` declaration
+ * degrades to identifiers-only): `contactmoment` (client) and `booking`
+ * (customer) ship with explicit `fields` whitelists that drop every staff-only/
+ * internal property — agent identity + CTI call internals on contactmoment;
+ * `internalNotes`, the audit `statusHistory` and resource assignments on
+ * booking. The `berichtenboxMessage` inbox stays excluded (BSN-scoped, not
+ * contact/customer-scoped). Rationale + whitelist tables:
+ * openspec/changes/portal-projected-collections/design.md.
  *
  * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
  */
@@ -133,10 +138,13 @@ class PortalContributionProvider
      *
      * Read surfaces are org-scoped: the subject's `claims.pipelinq.clientId`
      * (the pipelinq `client` object UUID) matches `request.client`,
-     * `complaint.client` and `contract.clientRef`. `contactmoment` is
-     * deliberately absent — its internal `notes` would leak in a full-row
-     * collection. Create actions whitelist intake fields only; status,
-     * assignment, pipeline/queue and SLA fields stay back-office-only.
+     * `complaint.client`, `contract.clientRef` and `contactmoment.client`.
+     * `contactmoment` ships field-projected — only `subject`, `channel`,
+     * `outcome` and `contactedAt` — so the internal `notes`, raw
+     * `channelMetadata`, `duration`, agent identity and CTI call internals
+     * (recording URL, disposition notes) never reach the client. Create actions
+     * whitelist intake fields only; status, assignment, pipeline/queue and SLA
+     * fields stay back-office-only.
      *
      * @return array<string, mixed> The client manifest.
      *
@@ -174,6 +182,21 @@ class PortalContributionProvider
                     'label'      => 'My contracts',
                     'listable'   => true,
                 ],
+                [
+                    'id'         => 'clientContactmoments',
+                    'register'   => self::REGISTER,
+                    'schema'     => 'contactmoment',
+                    'scopeField' => 'client',
+                    'scopeClaim' => 'clientId',
+                    'label'      => 'My contact history',
+                    'listable'   => true,
+                    'fields'     => [
+                        'subject',
+                        'channel',
+                        'outcome',
+                        'contactedAt',
+                    ],
+                ],
             ],
             'actions'       => [
                 [
@@ -208,15 +231,20 @@ class PortalContributionProvider
     /**
      * Manifest for the `customer` audience (B2C).
      *
-     * `avgVerzoek` (DSAR case file) is scoped by `verzoekerContact` via
-     * `claims.pipelinq.contactId` (pipelinq `contact` object UUID) and gated
-     * at eIDAS-substantial trust. `klantLoyaltyAccount` is scoped by `klantId`
+     * The `avgVerzoek` DSAR self-service collection + intake action were removed
+     * by consume-or-dsar (ADR-047 Phase 3) — DSAR moved to OpenRegister.
+     * `klantLoyaltyAccount` is scoped by `klantId`
      * via `claims.pipelinq.customerUid` (Nextcloud contact UID — a DIFFERENT
-     * identifier space than contactId, see design.md). `booking` and the
-     * `berichtenboxMessage` inbox are deliberately absent (staff-only
-     * internalNotes / BSN scoping). The single create action is DSAR intake
-     * with a strict whitelist; lifecycle, handler, deadline and BSN
-     * verification fields are server-authoritative.
+     * identifier space than contactId, see design.md). `booking` is scoped by
+     * `customerId` (also a Nextcloud addressbook contact ref → `customerUid`)
+     * and ships field-projected + `minTrust` `substantial`, because its
+     * customer-facing `notes` may carry special-category data (the schema's own
+     * example is allergies); staff-only `internalNotes`, the audit
+     * `statusHistory`, `resourceAssignments`, cancellation actor and provenance
+     * fields are dropped. The `berichtenboxMessage` inbox stays absent
+     * (BSN-scoped). The single create action is DSAR intake with a strict
+     * whitelist; lifecycle, handler, deadline and BSN verification fields are
+     * server-authoritative.
      *
      * @return array<string, mixed> The customer manifest.
      *
@@ -224,19 +252,15 @@ class PortalContributionProvider
      */
     private function customerContribution(): array
     {
+        // NOTE: the citizen "My privacy requests" collection + "Submit a privacy
+        // (GDPR) request" action were removed by consume-or-dsar (ADR-047 Phase
+        // 3): pipelinq no longer owns the avgVerzoek schema — DSAR cases live in
+        // OpenRegister's data-subject-requests register and are surfaced through
+        // OpenRegister's own AVG/portal surface. Re-adding a citizen DSAR intake
+        // pointed at OR's register is a portal follow-up, not part of this change.
         return [
             'label'         => 'Pipelinq',
             'collections'   => [
-                [
-                    'id'         => 'customerAvgVerzoeken',
-                    'register'   => self::REGISTER,
-                    'schema'     => 'avgVerzoek',
-                    'scopeField' => 'verzoekerContact',
-                    'scopeClaim' => 'contactId',
-                    'label'      => 'My privacy requests',
-                    'listable'   => true,
-                    'minTrust'   => 'substantial',
-                ],
                 [
                     'id'         => 'customerLoyalty',
                     'register'   => self::REGISTER,
@@ -246,21 +270,27 @@ class PortalContributionProvider
                     'label'      => 'My loyalty account',
                     'listable'   => true,
                 ],
-            ],
-            'actions'       => [
                 [
-                    'id'       => 'createAvgVerzoek',
-                    'type'     => 'create',
-                    'label'    => 'Submit a privacy (GDPR) request',
-                    'register' => self::REGISTER,
-                    'schema'   => 'avgVerzoek',
-                    'fields'   => [
-                        'artikel',
-                        'specifiekeVraag',
-                        'scope',
+                    'id'         => 'customerBookings',
+                    'register'   => self::REGISTER,
+                    'schema'     => 'booking',
+                    'scopeField' => 'customerId',
+                    'scopeClaim' => 'customerUid',
+                    'label'      => 'My appointments',
+                    'listable'   => true,
+                    'minTrust'   => 'substantial',
+                    'fields'     => [
+                        'serviceId',
+                        'startAt',
+                        'endAt',
+                        'status',
+                        'notes',
+                        'depositAmount',
+                        'depositPaidAt',
                     ],
                 ],
             ],
+            'actions'       => [],
             'notifications' => [],
         ];
     }//end customerContribution()

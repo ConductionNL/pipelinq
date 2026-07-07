@@ -246,4 +246,59 @@ class ConsentServiceTest extends TestCase
         $this->assertCount(1, $this->objectService->store);
         $this->assertTrue($this->service->canSend('contact-1', 'sms'));
     }//end testDeleteForContactRemovesAllRecords()
+
+    /**
+     * canSendBusinessInitiated requires an explicit opted-in record —
+     * absent record does NOT pass (Meta business-messaging policy).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     */
+    public function testBusinessInitiatedRequiresOptIn(): void
+    {
+        // No record → blocked (unlike canSend which defaults to allow).
+        $this->assertFalse($this->service->canSendBusinessInitiated('contact-1', 'whatsapp'));
+
+        $this->service->recordOptIn('contact-1', 'whatsapp', 'webform', 'signed up', 'consent');
+        $this->assertTrue($this->service->canSendBusinessInitiated('contact-1', 'whatsapp'));
+
+        // A later opt-out flips it back to blocked.
+        sleep(1);
+        $this->service->recordOptOut('contact-1', 'whatsapp', 'admin-override', 'withdrew', 'consent');
+        $this->assertFalse($this->service->canSendBusinessInitiated('contact-1', 'whatsapp'));
+    }//end testBusinessInitiatedRequiresOptIn()
+
+    /**
+     * latestState reflects the newest record, or `unknown` when absent.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     */
+    public function testLatestStateReflectsNewestRecord(): void
+    {
+        $this->assertSame('unknown', $this->service->latestState('contact-9', 'sms'));
+
+        $this->service->recordOptIn('contact-9', 'sms', 'webform', 'opted in', 'consent');
+        $this->assertSame('opted-in', $this->service->latestState('contact-9', 'sms'));
+
+        sleep(1);
+        $this->service->recordOptOut('contact-9', 'sms', 'keyword-stop', 'STOP', 'consent');
+        $this->assertSame('opted-out', $this->service->latestState('contact-9', 'sms'));
+    }//end testLatestStateReflectsNewestRecord()
+
+    /**
+     * The recorded legal basis is persisted on the consent row.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     */
+    public function testLegalBasisPersisted(): void
+    {
+        $saved = $this->service->recordOptIn('contact-3', 'whatsapp', 'webform', 'evidence', 'legitimate-interest');
+        $this->assertIsArray($saved);
+        $this->assertSame('legitimate-interest', $saved['legalBasis']);
+    }//end testLegalBasisPersisted()
 }//end class

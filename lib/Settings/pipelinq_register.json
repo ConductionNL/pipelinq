@@ -1641,14 +1641,15 @@
           },
           "channel": {
             "type": "string",
-            "description": "Communication channel used (schema:instrument / Contactmoment.kanaal)",
+            "description": "Communication channel used (schema:instrument / Contactmoment.kanaal). The sms value records outbound/inbound SMS interactions; WhatsApp messages use chat with metadata.platform=whatsapp (omnichannel outbound-send audit).",
             "enum": [
               "telefoon",
               "email",
               "balie",
               "chat",
               "social",
-              "brief"
+              "brief",
+              "sms"
             ],
             "title": "Channel",
             "facetable": true

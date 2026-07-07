@@ -81,6 +81,8 @@ use Psr\Log\LoggerInterface;
 /**
  * Main application class for the Pipelinq client and request management app.
  *
+ * @spec exclude Main app bootstrap class; per-change spec coverage lives on the changed methods.
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.UnusedFormalParameter)
  */
@@ -105,6 +107,8 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
+     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md
+     *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength) A flat DI registration
      *  manifest — one linear list of service/listener wirings, not branching logic.
      */
@@ -115,6 +119,13 @@ class Application extends App implements IBootstrap
         // fully-built halves — see registerAppHost() for why the Settings /
         // Preferences / repair plumbing stays bespoke.
         $this->registerAppHost(context: $context);
+
+        // Notifier registration. Previously declared via a <notification>
+        // element in info.xml, which Nextcloud core never reads (and which
+        // app-info.xsd rejects) — the IBootstrap registration below is the
+        // canonical path, fixed with the align-claims-and-first-hour
+        // conformance sweep.
+        $context->registerNotifierService(\OCA\Pipelinq\Notification\Notifier::class);
 
         $context->registerEventListener(
             event: ObjectCreatedEvent::class,
@@ -622,7 +633,34 @@ class Application extends App implements IBootstrap
 
         $this->wireAppointmentCalendarSeam();
         $this->wireAppointmentPaymentSeam();
+        $this->registerDsarEvidenceSource();
     }//end boot()
+
+    /**
+     * Register pipelinq's CRM objects as an evidence source in OpenRegister's
+     * DSAR case engine (ADR-047 Phase 3 / ADR-019 seam).
+     *
+     * OpenRegister's EvidenceHarvestService enumerates only providers added to
+     * its EvidenceSourceRegistry, so this registration is what makes pipelinq
+     * data reachable during a data-subject request. The registry is resolved
+     * lazily through the container so a disabled / absent OpenRegister never
+     * fatals bootstrap — the registration is simply skipped.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016--pipelinq-evidence-source-registration
+     */
+    private function registerDsarEvidenceSource(): void
+    {
+        try {
+            $registry = $this->getContainer()->get('OCA\\OpenRegister\\Service\\Gdpr\\Evidence\\EvidenceSourceRegistry');
+            $provider = $this->getContainer()->get(\OCA\Pipelinq\Service\PipelinqEvidenceSourceProvider::class);
+            $registry->addProvider($provider);
+        } catch (\Throwable $e) {
+            // OpenRegister absent or DSAR engine not present — pipelinq boots
+            // without contributing DSAR evidence. No Throwable escapes.
+        }
+    }//end registerDsarEvidenceSource()
 
     /**
      * Read the SPA manifest's declared app dependencies.

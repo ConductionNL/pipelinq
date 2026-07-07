@@ -43,10 +43,15 @@ import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 // --- Dashboard analytics widgets (openspec/changes/dashboard +
 //     openspec/changes/decompose-unified-analytics). Navi AI
 //     conversational analytics + the endpoint-bound trend charts.
-//     The cross-module analytics KPI cards were dissolved into
-//     `type:"stat"` + `content.endpointSource` manifest config
-//     (ADR-049 Phase-4, nextcloud-vue#91 Wave 2); the funder report
-//     export panel stays custom (see the ReportExportPanel _note). ---
+//     The lead-conversion / avg-resolution / contact-volume KPI cards
+//     were dissolved into `type:"stat"` + `content.endpointSource`
+//     manifest config (ADR-049 Phase-4, nextcloud-vue#91 Wave 2). The
+//     Customer Satisfaction KPI was NOT dissolved to config: its data
+//     source is permanently null (no survey responses after the
+//     forms-leaf migration), so it is dropped until real CSAT data
+//     returns via openspec change customer-satisfaction-closed-loop.
+//     The funder report export panel stays custom (see the
+//     ReportExportPanel _note). ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
 import LeadsOverTimeChartWidget from './views/dashboard/widgets/LeadsOverTimeChartWidget.vue'
 import RequestsByCategoryChartWidget from './views/dashboard/widgets/RequestsByCategoryChartWidget.vue'
@@ -185,6 +190,12 @@ import CtiSettingsView from './views/settings/CtiSettings.vue'
 import CtiEventLogView from './views/settings/CtiEventLog.vue'
 import CtiPageView from './views/settings/CtiPage.vue'
 
+// --- Outbound WhatsApp/SMS messaging admin (outbound-messaging-provider-
+//     wiring): channelProvider / messageSendBudget / messageTemplate CRUD +
+//     per-provider connectivity test + inbound webhook URL display. Lib gap:
+//     no messaging-provider-settings page type. ---
+import MessagingSettingsView from './views/settings/MessagingSettings.vue'
+
 // --- POS pluggable payment provider adapter (pos-payment-provider-adapter):
 //     admin-only credential form for Mollie / CCV / Adyen / Stripe with
 //     encrypted-at-rest secrets and a per-provider "Verbinding testen" button.
@@ -213,6 +224,12 @@ import CommunicationHistory from './components/CommunicationHistory.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
+
+// --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
+//     provider-wiring): self-fetches conversation/message rows by contactId
+//     + the composer preflight facts, and hosts the SendMessageModal
+//     composer. Same self-fetching-by-props pattern as the sections above. ---
+import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
 
 // --- Project / WBS hierarchy (project-task-hierarchy):
 //     four schemas (project / projectPhase / projectTask / projectActivity)
@@ -263,9 +280,10 @@ import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 // --- AVG (GDPR data-subject request) workflow (lib gap: list needs deadline
 //     colour-coding + masked names; detail needs the tabbed evidence/redaction/
 //     bundle/denial lifecycle; intake needs article classification). ---
-import AvgDashboardView from './views/avg/AvgDashboard.vue'
-import AvgRequestDetailView from './views/avg/AvgRequestDetail.vue'
-import AvgIntakeView from './views/avg/AvgIntakeView.vue'
+// AVG/DSAR views removed by consume-or-dsar (ADR-047 Phase 3): the data-subject
+// request workflow is owned by OpenRegister's case engine; pipelinq deep-links
+// handlers into OR's AVG surface (/apps/openregister/avg) instead of embedding
+// its own dashboard/detail/intake pages.
 // --- Master Data Management (MDM) steward surfaces are no longer hosted in
 //     pipelinq (ADR-045 #D). OpenRegister now owns the survivorship / dedup /
 //     merge / data-quality surface, driven by the x-openregister-survivorship
@@ -751,6 +769,11 @@ const registry = {
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
+	MessagingConversationSection: {
+		kind: 'section',
+		component: MessagingConversationSection,
+		_note: 'Outbound WhatsApp/SMS conversation feed for a client or contact (outbound-messaging-provider-wiring). Self-fetches message/conversation rows by contactId + the composer preflight facts; on ClientDetail (no client-level FK on message/conversation) it resolves the client\'s linked contacts client-side and lets the agent pick which contact to converse with. Hosts the SendMessageModal composer.',
+	},
 
 	// --- BI export + data-warehouse sink. ---
 	ExportJobsView: {
@@ -799,6 +822,13 @@ const registry = {
 		kind: 'page',
 		component: CtiPageView,
 		_note: 'Merged CTI (telephony) settings page (pipelinq-cti-and-catalog-ia): composes the CtiSettings integration config and the CtiEventLog webhook log into one settings-section page so the former two Administration menu entries become one entry under Settings.',
+	},
+
+	// --- Outbound WhatsApp/SMS messaging admin (outbound-messaging-provider-wiring). ---
+	MessagingSettingsView: {
+		kind: 'page',
+		component: MessagingSettingsView,
+		_note: 'Admin settings: channelProvider / messageSendBudget / messageTemplate CRUD via createObjectStore (no bespoke REST for these OR objects), per-provider zero-cost connectivity test (POST /api/messaging/providers/{id}/test) and the inbound webhook URL to paste into the vendor console. Provider rows carry NO credential field by design — vendor secrets live on the OpenConnector source addressed by sourceId. Lib gap: no messaging-provider-settings page type.',
 	},
 
 	// --- POS pluggable payment provider adapter (pos-payment-provider-adapter). ---
@@ -906,22 +936,12 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'Inline xWiki HTML viewer used by the sidebar tab; consumes the xwiki Pinia store directly.',
 	},
-	// --- AVG (GDPR data-subject request) workflow. ---
-	AvgDashboardView: {
-		kind: 'page',
-		component: AvgDashboardView,
-		_note: 'AVG request dashboard; custom so rows carry deadline colour-coding, masked subject names and a DPIA badge, and the empty state offers "New AVG request".',
-	},
-	AvgRequestDetailView: {
-		kind: 'page',
-		component: AvgRequestDetailView,
-		_note: 'AVG request detail with the tabbed lifecycle (intake/evidence/redaction/bundle/denial), a live deadline counter and the 60-day extension action; lib detail page cannot express the GDPR request lifecycle.',
-	},
-	AvgIntakeView: {
-		kind: 'page',
-		component: AvgIntakeView,
-		_note: 'AVG intake form with article classification + BSN elfproef validation; lib has no classification/intake page type.',
-	},
+	// --- AVG (GDPR data-subject request) workflow migrated to OpenRegister
+	//     (ADR-047 Phase 3 / consume-or-dsar): the dashboard/detail/intake views
+	//     and their bespoke components were removed. OR's case engine owns the
+	//     DSAR lifecycle; the AvgRequests nav entry deep-links to OR's AVG page
+	//     (/apps/openregister/avg). Pipelinq contributes evidence via
+	//     PipelinqEvidenceSourceProvider. ---
 	// --- Master Data Management (MDM) steward surfaces migrated to OpenRegister
 	//     (ADR-045 #D): the list/detail, duplicate-candidates, data-quality and
 	//     sync-queue views + the golden-record/conflict/merge sections & modals

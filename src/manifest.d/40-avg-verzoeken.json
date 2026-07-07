@@ -1,46 +1,14 @@
 {
+    "_note": "ADR-047 Phase 3 (consume-or-dsar): the app-side AVG/DSAR workflow (AvgRequests dashboard / AvgIntake / AvgRequestDetail pages + their views) was removed. OpenRegister owns the data-subject-request case engine and serves its own AVG UI at /apps/openregister/avg. Pipelinq exposes a single deep-link nav entry that opens that surface (href, new tab) — the same pattern the MDM steward views used — and registers pipelinq CRM objects as an evidence source (PipelinqEvidenceSourceProvider) so DSAR fulfilment harvests them. Existing avgVerzoek objects are migrated to OR dataSubjectRequest cases by the MigrateAvgVerzoekenToOrDsar repair step.",
     "menu": [
         {
             "id": "AvgRequests",
             "label": "AVG-verzoeken",
             "icon": "icon-toggle-filelist",
-            "route": "AvgRequests",
+            "href": "/index.php/apps/openregister/avg",
+            "section": "settings",
             "order": 95
         }
     ],
-    "pages": [
-        {
-            "id": "AvgRequests",
-            "route": "/avg-verzoeken",
-            "type": "custom",
-            "title": "AVG-verzoeken",
-            "component": "AvgDashboardView",
-            "config": {
-                "register": "pipelinq",
-                "schema": "avgVerzoek"
-            }
-        },
-        {
-            "id": "AvgIntake",
-            "route": "/avg-verzoeken/nieuw",
-            "type": "custom",
-            "title": "Nieuw AVG-verzoek",
-            "component": "AvgIntakeView",
-            "config": {
-                "register": "pipelinq",
-                "schema": "avgVerzoek"
-            }
-        },
-        {
-            "id": "AvgRequestDetail",
-            "route": "/avg-verzoeken/:id",
-            "type": "custom",
-            "title": "AVG-verzoek",
-            "component": "AvgRequestDetailView",
-            "config": {
-                "register": "pipelinq",
-                "schema": "avgVerzoek"
-            }
-        }
-    ]
+    "pages": []
 }
