@@ -77,7 +77,13 @@
 					{ "id": "1", "widgetId": "billcat-data",    "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 3 },
 					{ "id": "2", "widgetId": "billcat-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 3 }
 				],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "component": "CnAuditTrailTab" }
+					]
+				}
 			}
 		}
 	]

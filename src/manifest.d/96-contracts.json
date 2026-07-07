@@ -41,7 +41,7 @@
 				"register": "pipelinq",
 				"schema": "contract",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Agreement archetype (bespoke-detail-pages). A contract is a legal/commercial agreement watched for value and renewal, so the body opens with two KPI stat cards (Value per interval / Total contract value) then the agreement fields (contractNumber, title, billingInterval, currency, startDate/endDate, autoRenew, noticePeriodDays, status, owner) 8-wide and the related graph (client via clientRef, the renewal lead, the predecessor contract) 4-wide for the renewal chain. The signed contract PDF and amendments live in Documents full-width — the single most-consulted artefact on an agreement record. NO comms leaves: contract declares no email/calendar linkedType (the renewal conversation happens on the linked renewalLead). The lineItems are an ARRAY-on-object (product refs + amounts), not a FK child schema, so they auto-render inside the data widget rather than as an object-list.",
+				"_note": "Agreement archetype (bespoke-detail-pages). A contract is a legal/commercial agreement watched for value and renewal, so the body opens with two KPI stat cards (Value per interval / Total contract value) then the agreement fields (contractNumber, title, billingInterval, currency, startDate/endDate, autoRenew, noticePeriodDays, status, owner) 8-wide and the related graph (client via clientRef, the renewal lead, the predecessor contract) 4-wide for the renewal chain. The signed contract PDF and amendments live in Documents full-width — the single most-consulted artefact on an agreement record. NO comms leaves: contract declares no email/calendar linkedType (the renewal conversation happens on the linked renewalLead). The lineItems are an ARRAY-on-object (product refs + amounts), not a FK child schema, so they auto-render inside the data widget rather than as an object-list. lifecycleActions is wired to the OR-authoritative status lifecycle (draft -> active -> renewed/churned/cancelled), which drives the manual state transitions; the automated 'expiring'/'renewed' hops are still set by the renewal job. Sidebar is audit-only.",
 				"widgets": [
 					{ "id": "contract-value", "type": "stat", "title": "Value per interval", "content": { "label": "Value / interval", "format": "currency", "source": { "register": "pipelinq", "schema": "contract", "metric": "sum", "field": "valuePerInterval", "filter": { "id": "@objectId" } } } },
 					{ "id": "contract-total", "type": "stat", "title": "Contract value", "content": { "label": "Total value", "format": "currency", "source": { "register": "pipelinq", "schema": "contract", "metric": "sum", "field": "value", "filter": { "id": "@objectId" } } } },
@@ -64,7 +64,14 @@
 						"props": { "contractId": "@objectId" }
 					}
 				],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"lifecycleActions": { "field": "status" },
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "component": "CnAuditTrailTab" }
+					]
+				}
 			}
 		}
 	]

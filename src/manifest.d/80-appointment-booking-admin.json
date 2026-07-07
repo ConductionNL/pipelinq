@@ -180,7 +180,13 @@
 						"props": { "bookingId": "@objectId" }
 					}
 				],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "component": "CnAuditTrailTab" }
+					]
+				}
 			}
 		}
 	]
