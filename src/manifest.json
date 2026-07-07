@@ -723,6 +723,14 @@
 					{ "id": "3", "widgetId": "request-email",   "gridX": 0, "gridY": 4, "gridWidth": 8, "gridHeight": 4 },
 					{ "id": "4", "widgetId": "request-files",   "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 }
 				],
+				"bodyWidgets": [
+					{
+						"id": "request-conversion",
+						"component": "RequestConversionSection",
+						"placement": "after-related",
+						"props": { "requestId": "@objectId" }
+					}
+				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
