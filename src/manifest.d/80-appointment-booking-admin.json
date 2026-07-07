@@ -184,7 +184,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "component": "CnAuditTrailTab" }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				}
 			}
