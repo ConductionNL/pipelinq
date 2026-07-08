@@ -1458,7 +1458,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit-trail", "label": "Audit trail", "component": "CnAuditTrailTab", "config": { "linkedType": "audit-trail" } }
+						{ "id": "audit-trail", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				}
 			}
@@ -1526,7 +1526,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit-trail", "label": "Audit trail", "component": "CnAuditTrailTab", "config": { "linkedType": "audit-trail" } }
+						{ "id": "audit-trail", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				}
 			}
@@ -1579,7 +1579,7 @@
 				"widgets": [
 					{ "id": "z-total", "type": "stat", "title": "Day total", "content": { "label": "Day total", "format": "currency", "source": { "register": "pipelinq", "schema": "posZReport", "metric": "sum", "field": "total", "filter": { "id": "@objectId" } } } },
 					{ "id": "z-tax", "type": "stat", "title": "VAT", "content": { "label": "VAT", "format": "currency", "source": { "register": "pipelinq", "schema": "posZReport", "metric": "sum", "field": "totalTax", "filter": { "id": "@objectId" } } } },
-					{ "id": "z-count", "type": "stat", "title": "Transactions", "content": { "label": "Transactions", "icon": "Receipt", "source": { "register": "pipelinq", "schema": "posZReport", "metric": "sum", "field": "transactionCount", "filter": { "id": "@objectId" } } } },
+					{ "id": "z-count", "type": "stat", "title": "Transactions", "content": { "label": "Transactions", "icon": "ClipboardList", "source": { "register": "pipelinq", "schema": "posZReport", "metric": "sum", "field": "transactionCount", "filter": { "id": "@objectId" } } } },
 					{ "id": "z-data", "type": "data", "title": "Z-report", "content": { "columns": 2 } }
 				],
 				"layout": [
@@ -1601,7 +1601,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit-trail", "label": "Audit trail", "component": "CnAuditTrailTab", "config": { "linkedType": "audit-trail" } }
+						{ "id": "audit-trail", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				}
 			}
@@ -1660,7 +1660,7 @@
 				"widgets": [
 					{ "id": "pos-tx-total", "type": "stat", "title": "Total", "content": { "label": "Total", "format": "currency", "source": { "register": "pipelinq", "schema": "posTransaction", "metric": "sum", "field": "total", "filter": { "id": "@objectId" } } } },
 					{ "id": "pos-tx-tax", "type": "stat", "title": "VAT", "content": { "label": "VAT", "format": "currency", "source": { "register": "pipelinq", "schema": "posTransaction", "metric": "sum", "field": "totalTax", "filter": { "id": "@objectId" } } } },
-					{ "id": "pos-tx-lines", "type": "stat", "title": "Lines", "content": { "label": "Line items", "icon": "FormatListNumbered", "source": { "register": "pipelinq", "schema": "posTransactionLine", "metric": "count", "filter": { "transaction": "@objectId" } } } },
+					{ "id": "pos-tx-lines", "type": "stat", "title": "Lines", "content": { "label": "Line items", "icon": "ClipboardList", "source": { "register": "pipelinq", "schema": "posTransactionLine", "metric": "count", "filter": { "transaction": "@objectId" } } } },
 					{ "id": "pos-tx-data", "type": "data", "title": "Transaction", "content": { "columns": 2 } },
 					{ "id": "pos-tx-related", "type": "related", "title": "Related" }
 				],
@@ -1701,7 +1701,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit-trail", "label": "Audit trail", "component": "CnAuditTrailTab", "config": { "linkedType": "audit-trail" } }
+						{ "id": "audit-trail", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				}
 			}
