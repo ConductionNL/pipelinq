@@ -163,11 +163,21 @@ class PortalContributionProvider
                     'scopeClaim'  => 'clientId',
                     'label'       => 'My requests',
                     'listable'    => true,
+                    // Read-side field projection (the DATA authority): only these
+                    // client-safe fields (+ identifiers) leave the server. The
+                    // back-office `assignee`, `pipeline`, `stage`, `contact` and
+                    // `priority` fields are dropped here — columns alone are
+                    // presentation-only and would NOT stop them being returned.
+                    'fields'      => [
+                        'title',
+                        'category',
+                        'status',
+                        'description',
+                        'requestedAt',
+                    ],
                     // Contribution-manifest-v3 UI (ADR-063), presentation-only:
-                    // a column set, a detail layout, and a newest-first sort. The
-                    // back-office `assignee`/`pipeline`/`stage` fields are simply
-                    // not columns here — and stay unreadable because they are not
-                    // in any `fields` projection the client can widen.
+                    // a column set, a detail layout, and a newest-first sort,
+                    // over the projected fields above.
                     'columns'     => [
                         ['field' => 'title', 'label' => 'Onderwerp'],
                         ['field' => 'category', 'label' => 'Categorie'],
