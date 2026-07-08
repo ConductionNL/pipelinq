@@ -212,6 +212,7 @@
             "type": "string",
             "description": "UUID reference to the parent client object",
             "format": "uuid",
+            "$ref": "client",
             "title": "Client"
           },
           "contactsUid": {
@@ -356,17 +357,6 @@
             "source": "email",
             "notes": "From: {{senderName}} <{{sender}}>\nReceived: {{date}}\nMail: {{mailRef}}\n\n{{preview}}"
           },
-          "x-openregister-relations": [
-            {
-              "type": "deck",
-              "via": "openregister_deck_links",
-              "onCardMovedToWonStack": {
-                "action": "set-field",
-                "field": "status",
-                "value": "won"
-              }
-            }
-          ],
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "open",
@@ -624,12 +614,14 @@
             "type": "string",
             "description": "UUID reference to the associated client",
             "format": "uuid",
+            "$ref": "client",
             "title": "Client"
           },
           "contact": {
             "type": "string",
             "description": "UUID reference to the associated contact person",
             "format": "uuid",
+            "$ref": "contact",
             "x-relation-filter": { "client": "@object.client" },
             "title": "Contact"
           },
@@ -682,6 +674,7 @@
             "type": "string",
             "description": "UUID reference to the pipeline this lead is tracked in",
             "format": "uuid",
+            "$ref": "pipeline",
             "visible": false,
             "title": "Pipeline"
           },
@@ -794,17 +787,6 @@
           "forms"
         ],
         "configuration": {
-          "x-openregister-relations": [
-            {
-              "type": "deck",
-              "via": "openregister_deck_links",
-              "onCardMovedToWonStack": {
-                "action": "set-field",
-                "field": "status",
-                "value": "completed"
-              }
-            }
-          ],
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "new",
@@ -873,12 +855,14 @@
             "type": "string",
             "description": "UUID reference to the associated client",
             "format": "uuid",
+            "$ref": "client",
             "title": "Client"
           },
           "contact": {
             "type": "string",
             "description": "UUID reference to the associated contact person",
             "format": "uuid",
+            "$ref": "contact",
             "x-relation-filter": { "client": "@object.client" },
             "title": "Contact"
           },
@@ -931,6 +915,7 @@
             "type": "string",
             "description": "UUID reference to the pipeline this request is tracked in",
             "format": "uuid",
+            "$ref": "pipeline",
             "visible": false,
             "title": "Pipeline"
           },
@@ -956,6 +941,7 @@
             "type": "string",
             "description": "UUID reference to the queue this request is assigned to",
             "format": "uuid",
+            "$ref": "queue",
             "title": "Queue",
             "facetable": true
           },
@@ -1113,12 +1099,14 @@
             "type": "string",
             "description": "UUID reference to the associated client",
             "format": "uuid",
+            "$ref": "client",
             "title": "Client"
           },
           "contact": {
             "type": "string",
             "description": "UUID reference to the associated contact person",
             "format": "uuid",
+            "$ref": "contact",
             "x-relation-filter": { "client": "@object.client" },
             "title": "Contact"
           },
@@ -1291,6 +1279,7 @@
             "type": "string",
             "description": "UUID reference to a ProductCategory object",
             "format": "uuid",
+            "$ref": "productCategory",
             "title": "Category",
             "facetable": true
           },
@@ -1538,6 +1527,7 @@
             "type": "string",
             "description": "UUID reference to parent category (for hierarchy)",
             "format": "uuid",
+            "$ref": "productCategory",
             "visible": false,
             "title": "Parent Category"
           },
@@ -1569,12 +1559,14 @@
             "type": "string",
             "description": "UUID reference to the parent Lead",
             "format": "uuid",
+            "$ref": "lead",
             "title": "Lead"
           },
           "product": {
             "type": "string",
             "description": "UUID reference to the Product",
             "format": "uuid",
+            "$ref": "product",
             "title": "Product"
           },
           "quantity": {
@@ -1690,12 +1682,15 @@
             "type": "string",
             "description": "UUID reference to the associated client (schema:recipient / KlantContactmoment)",
             "format": "uuid",
+            "$ref": "client",
             "title": "Client"
           },
           "request": {
             "type": "string",
             "description": "UUID reference to the associated request (schema:object / ObjectContactmoment)",
             "format": "uuid",
+            "$ref": "request",
+            "x-relation-filter": { "client": "@object.client" },
             "title": "Request"
           },
           "agent": {
@@ -2071,12 +2066,15 @@
             "type": "string",
             "description": "UUID reference to the associated client",
             "format": "uuid",
+            "$ref": "client",
             "title": "Client"
           },
           "requestId": {
             "type": "string",
             "description": "UUID reference to the associated request",
             "format": "uuid",
+            "$ref": "request",
+            "x-relation-filter": { "client": "@object.clientId" },
             "title": "Request"
           },
           "contactMomentSummary": {
@@ -2162,12 +2160,14 @@
             "type": "string",
             "description": "UUID reference to the source contact or client",
             "format": "uuid",
+            "$ref": "contact",
             "title": "From"
           },
           "toContact": {
             "type": "string",
             "description": "UUID reference to the target contact or client",
             "format": "uuid",
+            "$ref": "contact",
             "title": "To"
           },
           "fromType": {
@@ -2497,12 +2497,14 @@
             "type": "string",
             "description": "Optional UUID reference to a client object for account sales",
             "format": "uuid",
+            "$ref": "client",
             "title": "Client"
           },
           "customer": {
             "type": "string",
             "description": "Optional UUID reference to a pipelinq contact attached to this transaction (POS customer link). When tenderType is 'onAccount' this field is required and enforced server-side by PosCustomerLinkService.",
             "format": "uuid",
+            "$ref": "contact",
             "x-relation-filter": { "client": "@object.client" },
             "title": "Customer",
             "facetable": true
@@ -2731,12 +2733,14 @@
             "type": "string",
             "description": "UUID reference to the parent posTransaction",
             "format": "uuid",
+            "$ref": "posTransaction",
             "title": "Transaction"
           },
           "product": {
             "type": "string",
             "description": "Optional UUID reference to a product object from the catalog",
             "format": "uuid",
+            "$ref": "product",
             "title": "Product"
           },
           "description": {
@@ -2910,6 +2914,7 @@
             "type": "string",
             "description": "UUID reference to the original posTransaction being refunded",
             "format": "uuid",
+            "$ref": "posTransaction",
             "title": "Original transaction"
           },
           "cashier": {
@@ -3014,12 +3019,14 @@
             "type": "string",
             "description": "UUID reference to the parent posRefund",
             "format": "uuid",
+            "$ref": "posRefund",
             "title": "Refund"
           },
           "originalLine": {
             "type": "string",
             "description": "UUID reference to the original posTransactionLine being refunded",
             "format": "uuid",
+            "$ref": "posTransactionLine",
             "title": "Original Line"
           },
           "returnedQuantity": {
@@ -3274,6 +3281,7 @@
             "type": "string",
             "description": "UUID reference to the posTransaction the receipt was issued for",
             "format": "uuid",
+            "$ref": "posTransaction",
             "facetable": true,
             "title": "Transaction"
           },
