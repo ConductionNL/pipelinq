@@ -630,6 +630,7 @@
             "type": "string",
             "description": "UUID reference to the associated contact person",
             "format": "uuid",
+            "x-relation-filter": { "client": "@object.client" },
             "title": "Contact"
           },
           "source": {
@@ -878,6 +879,7 @@
             "type": "string",
             "description": "UUID reference to the associated contact person",
             "format": "uuid",
+            "x-relation-filter": { "client": "@object.client" },
             "title": "Contact"
           },
           "status": {
@@ -1117,6 +1119,7 @@
             "type": "string",
             "description": "UUID reference to the associated contact person",
             "format": "uuid",
+            "x-relation-filter": { "client": "@object.client" },
             "title": "Contact"
           },
           "assignedTo": {
@@ -2500,6 +2503,7 @@
             "type": "string",
             "description": "Optional UUID reference to a pipelinq contact attached to this transaction (POS customer link). When tenderType is 'onAccount' this field is required and enforced server-side by PosCustomerLinkService.",
             "format": "uuid",
+            "x-relation-filter": { "client": "@object.client" },
             "title": "Customer",
             "facetable": true
           },
