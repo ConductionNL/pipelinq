@@ -473,23 +473,24 @@
 				"register": "pipelinq",
 				"schema": "client",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Communication-first grid detail (comms-first-detail-pages). The 360 record now leads with account details + the live Email and Files leaves as body widgets, so correspondence and documents sit on the main page. KPI chips (summaryAggregates), the six related-collection tables, and the Relationships/Activity/Bookings/quick-log sections render below. Flow/Time/Knowledge/Forms stay in sidebar tabs.",
+				"_note": "Communication-first grid detail (comms-first-detail-pages), ADR-062 rev3: the five pipeline KPIs live in ONE in-grid stats-block top-right of Account details (rule 3 — no aggregate bar); lead-value sums use entries[] metric:sum with an EUR countLabel (raw number — currency formatting is not an entries[] capability). Email + Files leaves keep the comms-first body; the six related-collection tables and Relationships/Activity/Bookings/quick-log sections render below. Flow/Time/Knowledge/Forms stay in sidebar tabs.",
 				"widgets": [
-					{ "id": "client-data", "type": "data", "title": "Account details", "content": { "columns": 2 } },
-					{ "id": "client-email", "type": "integration", "integrationId": "email", "title": "Emails" },
-					{ "id": "client-files", "type": "integration", "integrationId": "files", "title": "Files" }
+					{ "id": "client-data", "type": "data", "icon": "Account", "title": "Account details", "content": { "columns": 2 } },
+					{ "id": "client-kpis", "type": "stats-block", "icon": "Gauge", "title": "Pipeline", "content": { "entries": [
+						{ "title": "Open leads", "countLabel": "open", "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "client": "@objectId", "status": "open" }, "route": { "name": "Leads", "query": { "client": "@objectId", "status": "open" } } },
+						{ "title": "Open value", "countLabel": "EUR (open)", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "client": "@objectId", "status": "open" } },
+						{ "title": "Won leads", "countLabel": "won", "variant": "success", "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "client": "@objectId", "status": "won" }, "route": { "name": "Leads", "query": { "client": "@objectId", "status": "won" } } },
+						{ "title": "Won value", "countLabel": "EUR (won)", "variant": "success", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "client": "@objectId", "status": "won" } },
+						{ "title": "New requests", "countLabel": "new", "register": "pipelinq", "schema": "request", "metric": "count", "filter": { "client": "@objectId", "status": "new" }, "route": { "name": "Requests", "query": { "client": "@objectId", "status": "new" } } }
+					] } },
+					{ "id": "client-email", "type": "integration", "integrationId": "email", "icon": "Email", "title": "Emails" },
+					{ "id": "client-files", "type": "integration", "integrationId": "files", "icon": "FolderOutline", "title": "Files" }
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "client-data",  "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 3 },
-					{ "id": "2", "widgetId": "client-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 7 },
-					{ "id": "3", "widgetId": "client-email", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 4 }
-				],
-				"summaryAggregates": [
-					{ "label": "Open leads", "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "client": "@objectId", "status": "open" } },
-					{ "label": "Open leads value", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "client": "@objectId", "status": "open" }, "format": "currency" },
-					{ "label": "Won leads", "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "client": "@objectId", "status": "won" } },
-					{ "label": "Won leads value", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "client": "@objectId", "status": "won" }, "format": "currency" },
-					{ "label": "New requests", "register": "pipelinq", "schema": "request", "metric": "count", "filter": { "client": "@objectId", "status": "new" } }
+					{ "id": "1", "widgetId": "client-data",  "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "2", "widgetId": "client-kpis",  "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 7 },
+					{ "id": "3", "widgetId": "client-email", "gridX": 0, "gridY": 4, "gridWidth": 8, "gridHeight": 7 },
+					{ "id": "4", "widgetId": "client-files", "gridX": 8, "gridY": 7, "gridWidth": 4, "gridHeight": 4 }
 				],
 				"relatedCollections": [
 					{
