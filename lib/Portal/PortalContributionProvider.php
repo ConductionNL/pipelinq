@@ -156,13 +156,26 @@ class PortalContributionProvider
             'label'         => 'Pipelinq',
             'collections'   => [
                 [
-                    'id'         => 'clientRequests',
-                    'register'   => self::REGISTER,
-                    'schema'     => 'request',
-                    'scopeField' => 'client',
-                    'scopeClaim' => 'clientId',
-                    'label'      => 'My requests',
-                    'listable'   => true,
+                    'id'          => 'clientRequests',
+                    'register'    => self::REGISTER,
+                    'schema'      => 'request',
+                    'scopeField'  => 'client',
+                    'scopeClaim'  => 'clientId',
+                    'label'       => 'My requests',
+                    'listable'    => true,
+                    // Contribution-manifest-v3 UI (ADR-063), presentation-only:
+                    // a column set, a detail layout, and a newest-first sort. The
+                    // back-office `assignee`/`pipeline`/`stage` fields are simply
+                    // not columns here — and stay unreadable because they are not
+                    // in any `fields` projection the client can widen.
+                    'columns'     => [
+                        ['field' => 'title', 'label' => 'Onderwerp'],
+                        ['field' => 'category', 'label' => 'Categorie'],
+                        ['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+                        ['field' => 'requestedAt', 'label' => 'Ingediend', 'render' => 'date'],
+                    ],
+                    'detail'      => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'requestedAt']],
+                    'defaultSort' => ['field' => 'requestedAt', 'direction' => 'desc'],
                 ],
                 [
                     'id'         => 'clientComplaints',
@@ -200,16 +213,50 @@ class PortalContributionProvider
             ],
             'actions'       => [
                 [
-                    'id'       => 'createRequest',
-                    'type'     => 'create',
-                    'label'    => 'Submit a request',
-                    'register' => self::REGISTER,
-                    'schema'   => 'request',
-                    'fields'   => [
+                    'id'               => 'createRequest',
+                    'type'             => 'create',
+                    'label'            => 'Submit a request',
+                    'register'         => self::REGISTER,
+                    'schema'           => 'request',
+                    'fields'           => [
                         'title',
                         'description',
                         'category',
                     ],
+                    // Contribution-manifest-v3 form config. `fieldConfigs` may only
+                    // describe whitelisted fields; the category dropdown is a
+                    // static enum here (a scoped `collection` provider would be
+                    // used for a live-OR-backed picker).
+                    'fieldConfigs'     => [
+                        'title'       => [
+                            'label'       => 'Onderwerp',
+                            'required'    => true,
+                            'size'        => 'large',
+                            'placeholder' => 'Waar gaat uw verzoek over?',
+                        ],
+                        'description' => [
+                            'label'       => 'Omschrijving',
+                            'required'    => true,
+                            'size'        => 'full',
+                            'placeholder' => 'Beschrijf uw verzoek zo volledig mogelijk',
+                        ],
+                        'category'    => ['label' => 'Categorie'],
+                    ],
+                    'optionsProviders' => [
+                        'category' => [
+                            'type'    => 'static',
+                            'options' => [
+                                ['value' => 'Support', 'label' => 'Support'],
+                                ['value' => 'Facturatie', 'label' => 'Facturatie'],
+                                ['value' => 'Technisch', 'label' => 'Technisch'],
+                                ['value' => 'Accountbeheer', 'label' => 'Accountbeheer'],
+                                ['value' => 'Sales', 'label' => 'Sales'],
+                                ['value' => 'Integratie', 'label' => 'Integratie'],
+                            ],
+                        ],
+                    ],
+                    'submitLabel'      => 'Verzoek indienen',
+                    'successMessage'   => 'Uw verzoek is ingediend',
                 ],
                 [
                     'id'       => 'createComplaint',
@@ -221,6 +268,49 @@ class PortalContributionProvider
                         'title',
                         'description',
                         'category',
+                    ],
+                ],
+            ],
+            // Contribution-manifest-v3 page composition: one screen per surface,
+            // each block resolved within this contribution. The requests page
+            // leads with a short intro, the intake form, then the scoped table.
+            'pages'         => [
+                [
+                    'id'     => 'requests',
+                    'label'  => 'Verzoeken',
+                    'icon'   => 'MessageText',
+                    'blocks' => [
+                        [
+                            'type'     => 'richText',
+                            'markdown' => '## Mijn verzoeken'."\n".'Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken.',
+                        ],
+                        ['type' => 'action', 'action' => 'createRequest'],
+                        ['type' => 'collection', 'collection' => 'clientRequests'],
+                    ],
+                ],
+                [
+                    'id'     => 'complaints',
+                    'label'  => 'Klachten',
+                    'icon'   => 'AlertCircle',
+                    'blocks' => [
+                        ['type' => 'action', 'action' => 'createComplaint'],
+                        ['type' => 'collection', 'collection' => 'clientComplaints'],
+                    ],
+                ],
+                [
+                    'id'     => 'contracts',
+                    'label'  => 'Contracten',
+                    'icon'   => 'FileDocument',
+                    'blocks' => [
+                        ['type' => 'collection', 'collection' => 'clientContracts'],
+                    ],
+                ],
+                [
+                    'id'     => 'contactmoments',
+                    'label'  => 'Contactmomenten',
+                    'icon'   => 'Phone',
+                    'blocks' => [
+                        ['type' => 'collection', 'collection' => 'clientContactmoments'],
                     ],
                 ],
             ],
