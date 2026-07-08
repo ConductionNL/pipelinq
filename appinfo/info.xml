@@ -74,6 +74,15 @@ Vrij en open source onder de EUPL-1.2-licentie.
     <dependencies>
         <php min-version="8.3"/>
         <nextcloud min-version="28" max-version="34"/>
+        <!-- App dependency (not expressible in app-info.xsd): OpenRegister
+             (all Pipelinq data — clients, contacts, leads, requests, contracts,
+             contactmomenten — is stored as OpenRegister registers/schemas; see
+             lib/Settings/pipelinq_register.json and the post-migration repair
+             steps below). Deck is used as the leaf board provider for the
+             pipeline-stage kanban (see the "deck" linkedType entries in
+             pipelinq_register.json); OpenConnector is an optional soft
+             dependency (checked via IAppManager::isInstalled(), used for the
+             webhook queue and Shillinq handoff). -->
     </dependencies>
 
     <background-jobs>
