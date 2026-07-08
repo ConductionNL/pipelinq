@@ -70,8 +70,8 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Config archetype (bespoke-detail-pages). A billing category is a tiny reference/config row (name, code, type, colour, isDefault, requiresWbsoRef, isDba, isActive) used to tag billable work — nobody communicates with it and it has no documents, so this is deliberately the leanest page in the set: NO comms leaves, NO files, NO object-list. A single 3-column config data widget shows every field at a glance; the related widget alongside surfaces anything that references this category. Kept intentionally minimal so it reads as a settings row, not a workspace.",
 				"widgets": [
-					{ "id": "billcat-data", "type": "data", "title": "Billing category", "content": { "columns": 3 } },
-					{ "id": "billcat-related", "type": "related", "title": "Used by" }
+					{ "id": "billcat-data", "type": "data", "title": "Billing category", "icon": "TagOutline", "content": { "columns": 3 } },
+					{ "id": "billcat-related", "type": "related", "title": "Used by", "icon": "LinkVariant" }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "billcat-data",    "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 3 },
