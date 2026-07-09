@@ -400,8 +400,8 @@ return [
         ['name' => 'loyaltyReporting#liability',          'url' => '/api/loyalty/reporting/{programmeId}/liability',     'verb' => 'GET'],
         ['name' => 'loyaltyReporting#tierDistribution',   'url' => '/api/loyalty/reporting/{programmeId}/tiers',         'verb' => 'GET'],
         ['name' => 'loyaltyReporting#expiryForecast',     'url' => '/api/loyalty/reporting/{programmeId}/expiry-forecast', 'verb' => 'GET'],
-        ['name' => 'loyaltyGdpr#export',                  'url' => '/api/loyalty/gdpr/{klantId}/export',                 'verb' => 'GET'],
-        ['name' => 'loyaltyGdpr#delete',                  'url' => '/api/loyalty/gdpr/{klantId}',                        'verb' => 'DELETE'],
+        // loyaltyGdpr#* routes retired (ADR-047 Phase-3): loyalty GDPR export/erase
+        // is subsumed by OpenRegister's cross-register DSAR erase; LoyaltyGdprController removed.
 
         // CRM workflow automation has been migrated to the OpenRegister
         // flow leaf (NC Flow / n8n) per migrate-automation-to-flow-leaf;

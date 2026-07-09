@@ -75,6 +75,13 @@
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
+                <!-- OpenRegister AVG/DSAR integration seams (ADR-047 Phase-3) -->
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Identity\IdentityVerifyProvider"/>
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Identity\IdentityVerifyResult"/>
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Identity\IdentityVerifyRegistry"/>
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Regulator\RegulatorEscalateProvider"/>
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Regulator\RegulatorEscalateResult"/>
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Regulator\RegulatorEscalateRegistry"/>
                 <!-- Additional OCP infrastructure types used across the fleet -->
                 <referencedClass name="OCP\AppFramework\Bootstrap\IBootContext"/>
                 <referencedClass name="OCP\AppFramework\Bootstrap\IRegistrationContext"/>

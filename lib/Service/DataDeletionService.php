@@ -44,21 +44,42 @@ use Psr\Log\LoggerInterface;
 /**
  * AVG right-to-be-forgotten erasure for Bookings, via OR's canonical capability.
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires only the OR container
+ *  and a logger.
+ *
+ * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
  * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014--openregister-compliance-subsystem-consumption-boundary
  */
 class DataDeletionService
 {
     /**
-     * OpenRegister's data-subject erasure service (resolved lazily).
+     * Fully-qualified name of OR's consumable data-subject-request service.
      *
      * @var string
      */
-    private const OR_REQUEST_SERVICE = 'OCA\OpenRegister\Service\Gdpr\DataSubjectRequestService';
+    public const OR_REQUEST_SERVICE = 'OCA\OpenRegister\Service\Gdpr\DataSubjectRequestService';
+
+    /**
+     * OR erase mode: field-level pseudonymise (row retained, PII overwritten).
+     *
+     * Mirrors DataSubjectRequestService::ERASE_MODE_PSEUDONYMISE. Pipelinq always
+     * erases in this mode so the underlying record survives — this is what keeps
+     * the NL 7-year Boekhoudplicht booking retention intact while the PII is
+     * removed.
+     *
+     * @var string
+     */
+    public const ERASE_MODE_PSEUDONYMISE = 'pseudonymise';
 
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container The DI container (lazy OR service resolve).
+     * OR's `DataSubjectRequestService` is resolved lazily through the DI
+     * container (the same OR-absent-safe pattern the AVG repository uses for
+     * `ObjectService`) so the app still loads when OR is absent; the erase verb
+     * degrades to a safe empty result in that case rather than throwing.
+     *
+     * @param ContainerInterface $container The DI container (lazy OR resolve).
      * @param LoggerInterface    $logger    The logger.
      */
     public function __construct(
@@ -95,13 +116,7 @@ class DataDeletionService
             return $summary;
         }
 
-        $service = $this->resolveOrService();
-        if ($service === null) {
-            $this->logger->warning('Pipelinq: AVG booking erasure skipped — OpenRegister DSAR service unavailable.');
-            return $summary;
-        }
-
-        $result = $service->erase(subjectId: $customerId, type: null, dryRun: $dryRun);
+        $result = $this->eraseViaOr(subjectId: $customerId, type: null, dryRun: $dryRun);
 
         $summary['bookings'] = count((array) ($result['erased'] ?? []));
         $summary['held']     = count((array) ($result['held'] ?? []));
@@ -120,17 +135,60 @@ class DataDeletionService
     }//end pseudonymizeCustomerBookings()
 
     /**
-     * Lazily resolve OpenRegister's DataSubjectRequestService, or null when
-     * OpenRegister is absent.
+     * Erase a subject's data via OR's legal-hold-aware field-level pseudonymise.
      *
-     * @return object|null The OR erasure service, or null.
+     * Resolves OR's `DataSubjectRequestService` lazily and always uses the
+     * PSEUDONYMISE mode so the owning records are RETAINED (the row survives,
+     * matching PII values become OR's `[erased]` token). Objects under an active
+     * legal hold or in an immutable archival status are reported back in the
+     * `held` bucket and never mutated — this preserves the NL Boekhoudplicht
+     * 7-year booking retention. When OR is absent, or the call throws, this
+     * degrades to a safe empty summary rather than throwing.
+     *
+     * @param string      $subjectId The subject identifier value.
+     * @param string|null $type      Optional GdprEntity type filter.
+     * @param bool        $dryRun    When true, report matches/holds without mutating.
+     *
+     * @return array<string, mixed> OR's erase summary (erased/held/failed buckets).
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+     *
+     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
      */
-    private function resolveOrService(): ?object
+    private function eraseViaOr(string $subjectId, ?string $type=null, bool $dryRun=false): array
+    {
+        $service = $this->requestService();
+        if ($service === null) {
+            return ['subject' => $subjectId, 'matchedCount' => 0, 'erased' => [], 'held' => [], 'failed' => [], 'complete' => false];
+        }
+
+        try {
+            return $service->erase(
+                subjectId: $subjectId,
+                type: $type,
+                eraseMode: self::ERASE_MODE_PSEUDONYMISE,
+                dryRun: $dryRun
+            );
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq AVG: OR erase failed',
+                ['exception' => $e->getMessage()]
+            );
+            return ['subject' => $subjectId, 'matchedCount' => 0, 'erased' => [], 'held' => [], 'failed' => [], 'complete' => false];
+        }
+    }//end eraseViaOr()
+
+    /**
+     * Resolve OR's data-subject-request service, or null when unavailable.
+     *
+     * @return object|null The DataSubjectRequestService, or null.
+     */
+    private function requestService(): ?object
     {
         try {
             return $this->container->get(self::OR_REQUEST_SERVICE);
         } catch (\Throwable $e) {
             return null;
         }
-    }//end resolveOrService()
+    }//end requestService()
 }//end class
