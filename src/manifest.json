@@ -1129,7 +1129,7 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Interaction-log archetype (bespoke-detail-pages). A contactmoment is the immutable record of a single interaction (call / email / chat / CTI-telephony), so it reads like a log entry, not a workspace: the interaction fields (channel, subject, outcome/disposition, agent, direction, timestamps, duration, CTI extension) fill the body 8-wide, with the related parties (client, contact, request) at 4-wide for one-click drill-through. Documents full-width carries the call recording (recording_url) and any attached correspondence. NO email/calendar body widgets — contactmoment declares no comms linkedType and is itself the communication record, not a live mailbox. There are no child collections, so no object-list; a lean two-row grid keeps it fast to scan.",
 				"widgets": [
-					{ "id": "cm-data", "type": "data", "title": "Interaction", "icon": "MessageTextOutline", "content": { "columns": 2 } },
+					{ "id": "cm-data", "type": "data", "title": "Interaction", "icon": "MessageTextOutline", "content": { "columns": 2, "include": ["channel", "subject", "outcome", "agent", "contactedAt", "duration"] } },
 					{ "id": "cm-related", "type": "related", "title": "Parties", "icon": "AccountGroup" },
 					{ "id": "cm-files", "type": "integration", "integrationId": "files", "title": "Recording & documents", "icon": "FolderOutline" }
 				],
