@@ -256,7 +256,7 @@ The dashboard layout MUST support user customization through the `CnDashboardPag
 
 ### Requirement: Nextcloud Dashboard Widget API Integration
 
-Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\Dashboard\IWidget`) so they appear in the platform-level dashboard and in MyDash.
+Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\Dashboard\IWidget`) so they appear in the platform-level dashboard and in LaunchPad.
 
 #### Scenario: Registered Nextcloud dashboard widgets
 @e2e exclude PHP OCP\Dashboard\IWidget registration
