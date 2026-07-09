@@ -41,20 +41,23 @@
 				"register": "pipelinq",
 				"schema": "contract",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Agreement archetype (bespoke-detail-pages). A contract is a legal/commercial agreement watched for value and renewal, so the body opens with two KPI stat cards (Value per interval / Total contract value) then the agreement fields (contractNumber, title, billingInterval, currency, startDate/endDate, autoRenew, noticePeriodDays, status, owner) 8-wide and the related graph (client via clientRef, the renewal lead, the predecessor contract) 4-wide for the renewal chain. The signed contract PDF and amendments live in Documents full-width — the single most-consulted artefact on an agreement record. NO comms leaves: contract declares no email/calendar linkedType (the renewal conversation happens on the linked renewalLead). The lineItems are an ARRAY-on-object (product refs + amounts), not a FK child schema, so they auto-render inside the data widget rather than as an object-list.",
+				"_note": "Agreement archetype (bespoke-detail-pages). A contract is a legal/commercial agreement watched for value and renewal, so the body opens with the Terms data widget 8-wide + an in-grid stats-block KPI card top-right (rule 2, replacing the two loose uncarded stat tiles: Recurring value sums variableConsideration, Fixed value sums fixedConsideration — the contract schema's real amount fields, @objectId-scoped) and the related graph (client via clientRef, renewal lead, predecessor contract) below it, and a full-width Billing data widget (billingInterval, valuePerInterval, value, currency, invoiceReference, lineItems array-on-object) below. The signed contract PDF and amendments live in Documents full-width — the single most-consulted artefact on an agreement record. NO comms leaves: contract declares no email/calendar linkedType (the renewal conversation happens on the linked renewalLead). The lineItems are an ARRAY-on-object (product refs + amounts), not a FK child schema, so they auto-render inside the data widget rather than as an object-list. lifecycleActions is wired to the OR-authoritative status lifecycle (draft -> active -> renewed/churned/cancelled), which drives the manual state transitions; the automated 'expiring'/'renewed' hops are still set by the renewal job. Sidebar is audit-only.",
 				"widgets": [
-					{ "id": "contract-value", "type": "stat", "title": "Value per interval", "content": { "label": "Value / interval", "format": "currency", "source": { "register": "pipelinq", "schema": "contract", "metric": "sum", "field": "valuePerInterval", "filter": { "id": "@objectId" } } } },
-					{ "id": "contract-total", "type": "stat", "title": "Contract value", "content": { "label": "Total value", "format": "currency", "source": { "register": "pipelinq", "schema": "contract", "metric": "sum", "field": "value", "filter": { "id": "@objectId" } } } },
-					{ "id": "contract-data", "type": "data", "title": "Contract", "content": { "columns": 2 } },
-					{ "id": "contract-related", "type": "related", "title": "Related" },
-					{ "id": "contract-files", "type": "integration", "integrationId": "files", "title": "Signed contract & amendments" }
+					{ "id": "contract-terms", "type": "data", "title": "Terms", "icon": "FileSign", "content": { "columns": 2, "include": ["contractNumber", "title", "startDate", "endDate", "autoRenew", "noticePeriodDays", "status", "ownerId", "cancellationReason", "renewalLeadOutcome", "noticeReminderSent", "notes"] } },
+					{ "id": "contract-kpis", "type": "stats-block", "title": "Value", "icon": "CurrencyEur", "content": { "entries": [
+						{ "title": "Recurring value", "register": "pipelinq", "schema": "contract", "metric": "sum", "field": "variableConsideration", "countLabel": "EUR / interval", "filter": { "id": "@objectId" } },
+						{ "title": "Fixed value", "register": "pipelinq", "schema": "contract", "metric": "sum", "field": "fixedConsideration", "countLabel": "EUR", "filter": { "id": "@objectId" } }
+					] } },
+					{ "id": "contract-billing", "type": "data", "title": "Billing", "icon": "CurrencyEur", "content": { "columns": 3, "include": ["billingInterval", "valuePerInterval", "value", "currency", "invoiceReference", "lineItems"] } },
+					{ "id": "contract-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "contract-files", "type": "integration", "integrationId": "files", "title": "Signed contract & amendments", "icon": "FolderOutline" }
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "contract-value",   "gridX": 0, "gridY": 0, "gridWidth": 6, "gridHeight": 2 },
-					{ "id": "2", "widgetId": "contract-total",   "gridX": 6, "gridY": 0, "gridWidth": 6, "gridHeight": 2 },
-					{ "id": "3", "widgetId": "contract-data",    "gridX": 0, "gridY": 2, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "4", "widgetId": "contract-related", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "5", "widgetId": "contract-files",   "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 3 }
+					{ "id": "1", "widgetId": "contract-terms",   "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
+					{ "id": "2", "widgetId": "contract-kpis",    "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "3", "widgetId": "contract-related", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "4", "widgetId": "contract-billing", "gridX": 0, "gridY": 5, "gridWidth": 12, "gridHeight": 3 },
+					{ "id": "5", "widgetId": "contract-files",   "gridX": 0, "gridY": 8, "gridWidth": 12, "gridHeight": 3 }
 				],
 				"bodyWidgets": [
 					{
@@ -64,7 +67,14 @@
 						"props": { "contractId": "@objectId" }
 					}
 				],
-				"sidebar": { "enabled": true, "showMetadata": true }
+				"lifecycleActions": { "field": "status" },
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				}
 			}
 		}
 	]
