@@ -100,6 +100,8 @@ class GenerateZReportJob extends TimedJob
      *
      * @return void
      *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+     *
      * @spec openspec/changes/pos-end-of-day-bookkeeping-post/tasks.md#3.1
      */
     protected function run(mixed $argument): void

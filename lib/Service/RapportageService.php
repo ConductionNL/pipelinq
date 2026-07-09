@@ -44,7 +44,11 @@ use RuntimeException;
  * error mapping). Static error strings keep the response surface stable
  * for the frontend (no $e->getMessage() leakage into JSON).
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregation reads several schemas.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Aggregation reads several schemas.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) four independent read-only
+ *  analytics endpoints (stage values / source performance / aging / win-loss)
+ *  each broken into small single-purpose methods; the sum is high but each
+ *  method is individually under threshold.
  *
  * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
  */
@@ -235,7 +239,20 @@ class RapportageService
         }
 
         $closed = $this->filterByCreated(leads: $closed, from: $dateFrom, to: $dateTo);
+        $totals = $this->accumulateWinLossTotals(leads: $closed);
 
+        return $this->buildWinLossSummary(totals: $totals);
+    }//end getWinLossAnalysis()
+
+    /**
+     * Accumulate won/lost counts, value sums, and close-duration stats for closed leads.
+     *
+     * @param array<int, array<string, mixed>> $leads The closed (won/lost) leads.
+     *
+     * @return array{wonCount:int, lostCount:int, wonValueSum:float, lostValueSum:float, daysSum:float, daysCount:int}
+     */
+    private function accumulateWinLossTotals(array $leads): array
+    {
         $wonCount     = 0;
         $lostCount    = 0;
         $wonValueSum  = 0.0;
@@ -243,14 +260,16 @@ class RapportageService
         $daysSum      = 0.0;
         $daysCount    = 0;
 
-        foreach ($closed as $lead) {
+        foreach ($leads as $lead) {
             $status = (string) ($lead['status'] ?? '');
             $value  = (float) ($lead['value'] ?? 0);
 
             if ($status === 'won') {
                 $wonCount++;
                 $wonValueSum += $value;
-            } else {
+            }
+
+            if ($status !== 'won') {
                 $lostCount++;
                 $lostValueSum += $value;
             }
@@ -261,9 +280,31 @@ class RapportageService
                 $daysSum += (($modified - $created) / 86400);
                 $daysCount++;
             }
-        }
+        }//end foreach
 
-        $total   = ($wonCount + $lostCount);
+        return [
+            'wonCount'     => $wonCount,
+            'lostCount'    => $lostCount,
+            'wonValueSum'  => $wonValueSum,
+            'lostValueSum' => $lostValueSum,
+            'daysSum'      => $daysSum,
+            'daysCount'    => $daysCount,
+        ];
+    }//end accumulateWinLossTotals()
+
+    /**
+     * Turn accumulated win/loss totals into the public summary shape.
+     *
+     * @param array{wonCount:int, lostCount:int, wonValueSum:float, lostValueSum:float, daysSum:float, daysCount:int} $totals The accumulated totals.
+     *
+     * @return array{wonCount:int, lostCount:int, winRate:float, avgWonValue:float, avgLostValue:float, avgDaysToClose:float}
+     */
+    private function buildWinLossSummary(array $totals): array
+    {
+        $wonCount  = $totals['wonCount'];
+        $lostCount = $totals['lostCount'];
+        $total     = ($wonCount + $lostCount);
+
         $winRate = 0.0;
         if ($total > 0) {
             $winRate = round(($wonCount / $total) * 100.0, 1);
@@ -271,17 +312,17 @@ class RapportageService
 
         $avgWon = 0.0;
         if ($wonCount > 0) {
-            $avgWon = round($wonValueSum / $wonCount, 2);
+            $avgWon = round($totals['wonValueSum'] / $wonCount, 2);
         }
 
         $avgLost = 0.0;
         if ($lostCount > 0) {
-            $avgLost = round($lostValueSum / $lostCount, 2);
+            $avgLost = round($totals['lostValueSum'] / $lostCount, 2);
         }
 
         $avgDays = 0.0;
-        if ($daysCount > 0) {
-            $avgDays = round($daysSum / $daysCount, 1);
+        if ($totals['daysCount'] > 0) {
+            $avgDays = round($totals['daysSum'] / $totals['daysCount'], 1);
         }
 
         return [
@@ -292,8 +333,7 @@ class RapportageService
             'avgLostValue'   => $avgLost,
             'avgDaysToClose' => $avgDays,
         ];
-
-    }//end getWinLossAnalysis()
+    }//end buildWinLossSummary()
 
     /**
      * Filter leads by `_dateCreated` within the optional bounds.
@@ -310,43 +350,66 @@ class RapportageService
             return $leads;
         }
 
-        $fromTs = null;
-        $toTs   = null;
-        if ($from !== null && $from !== '') {
-            $parsed = strtotime($from);
-            if ($parsed !== false) {
-                $fromTs = $parsed;
-            }
-        }
-
-        if ($to !== null && $to !== '') {
-            $parsed = strtotime($to);
-            if ($parsed !== false) {
-                $toTs = $parsed;
-            }
-        }
+        $fromTs = $this->parseDateBound(value: $from);
+        $toTs   = $this->parseDateBound(value: $to);
 
         $result = [];
         foreach ($leads as $lead) {
-            $created = $this->extractTimestamp(lead: $lead, key: '_dateCreated');
-            if ($created === null) {
-                continue;
+            if ($this->isWithinCreatedBounds(lead: $lead, fromTs: $fromTs, toTs: $toTs) === true) {
+                $result[] = $lead;
             }
-
-            if ($fromTs !== null && $created < $fromTs) {
-                continue;
-            }
-
-            if ($toTs !== null && $created > $toTs) {
-                continue;
-            }
-
-            $result[] = $lead;
         }
 
         return $result;
-
     }//end filterByCreated()
+
+    /**
+     * Parse an optional ISO-8601 date bound into a unix timestamp.
+     *
+     * @param ?string $value The date string, or null/empty for "no bound".
+     *
+     * @return int|null The parsed timestamp, or null when absent/unparseable.
+     */
+    private function parseDateBound(?string $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $parsed = strtotime($value);
+        if ($parsed === false) {
+            return null;
+        }
+
+        return $parsed;
+    }//end parseDateBound()
+
+    /**
+     * Whether a lead's `_dateCreated` falls within the optional [from, to] bounds.
+     *
+     * @param array<string, mixed> $lead   The lead row.
+     * @param int|null             $fromTs Lower bound (inclusive), or null.
+     * @param int|null             $toTs   Upper bound (inclusive), or null.
+     *
+     * @return bool
+     */
+    private function isWithinCreatedBounds(array $lead, ?int $fromTs, ?int $toTs): bool
+    {
+        $created = $this->extractTimestamp(lead: $lead, key: '_dateCreated');
+        if ($created === null) {
+            return false;
+        }
+
+        if ($fromTs !== null && $created < $fromTs) {
+            return false;
+        }
+
+        if ($toTs !== null && $created > $toTs) {
+            return false;
+        }
+
+        return true;
+    }//end isWithinCreatedBounds()
 
     /**
      * Extract a unix timestamp from `_dateModified` / `_dateCreated` /
@@ -372,9 +435,9 @@ class RapportageService
 
         foreach ($candidates as $candidate) {
             if (is_string($candidate) === true && $candidate !== '') {
-                $ts = strtotime($candidate);
-                if ($ts !== false) {
-                    return $ts;
+                $timestamp = strtotime($candidate);
+                if ($timestamp !== false) {
+                    return $timestamp;
                 }
             } else if (is_int($candidate) === true) {
                 return $candidate;

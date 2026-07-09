@@ -49,6 +49,7 @@ use RuntimeException;
  * availability is opt-in (`getEligibleResourcesForSlot()`).
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Cohesive eligibility matching logic; splitting would fragment a single primitive.
  *
  * @spec openspec/changes/appointment-booking-03-skill-routing-eligibility/specs/appointment-booking/spec.md#req-apt-004
  */

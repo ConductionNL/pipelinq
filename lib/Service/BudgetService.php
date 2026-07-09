@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -47,6 +49,8 @@ use Throwable;
  *   budget row whose periodResetAt has passed.
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#5.1
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Budget gating spans many period/threshold branches; complexity is inherent.
  */
 class BudgetService
 {
@@ -311,9 +315,8 @@ class BudgetService
         }
 
         try {
-            if ($id === '') {
-                $saveUuid = null;
-            } else {
+            $saveUuid = null;
+            if ($id !== '') {
                 $saveUuid = $id;
             }
 
@@ -384,8 +387,8 @@ class BudgetService
         };
 
         try {
-            $dt = new \DateTimeImmutable($from, new \DateTimeZone('UTC'));
-            return $dt->modify($modifier)->format('Y-m-d\TH:i:s\Z');
+            $dateTime = new DateTimeImmutable($from, new DateTimeZone('UTC'));
+            return $dateTime->modify($modifier)->format('Y-m-d\TH:i:s\Z');
         } catch (Throwable $e) {
             $this->logger->warning(
                 'BudgetService.advancePeriod: parse failed',
@@ -449,6 +452,8 @@ class BudgetService
      * @param array<string, mixed> $payload Payload.
      *
      * @return string Id or empty.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential id-candidate probes across two payload shapes; extraction adds no clarity.
      */
     private function extractId(array $payload): string
     {

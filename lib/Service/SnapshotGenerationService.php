@@ -42,6 +42,11 @@ use RuntimeException;
  *
  * The pure roll-up sequence ({@see self::buildSnapshots()}) is unit-tested
  * independently of OpenRegister and the group manager.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) rep/team/division/company
+ *  roll-up plus persistence and notification in one cohesive orchestrator
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrates rollup, exchange
+ *  rate, fiscal period, quota, notification and OpenRegister collaborators by design
  */
 class SnapshotGenerationService
 {
@@ -214,17 +219,8 @@ class SnapshotGenerationService
         // Team level.
         $teamTotals = [];
         foreach ($teams as $teamId => $repIds) {
-            $children = [];
-            $missing  = [];
-            foreach ($repIds as $repId) {
-                if (isset($repTotals[$repId]) === true) {
-                    $children[] = $repTotals[$repId];
-                } else {
-                    $missing[] = $repId;
-                }
-            }
-
-            $totals = $this->rollup->sumChildTotals($children);
+            $collected = $this->collectChildTotals(ids: $repIds, sourceTotals: $repTotals);
+            $totals    = $this->rollup->sumChildTotals($collected['children']);
             $teamTotals[$teamId] = $totals;
             $snapshots[]         = $this->snapshotRecord(
                 periodId: $periodId,
@@ -234,25 +230,16 @@ class SnapshotGenerationService
                 totals: $totals,
                 currency: $currency,
                 dealIds: [],
-                partial: ($missing !== []),
-                missing: $missing
+                partial: ($collected['missing'] !== []),
+                missing: $collected['missing']
             );
         }//end foreach
 
         // Division level.
         $divisionTotals = [];
         foreach ($divisions as $divisionId => $teamIds) {
-            $children = [];
-            $missing  = [];
-            foreach ($teamIds as $teamId) {
-                if (isset($teamTotals[$teamId]) === true) {
-                    $children[] = $teamTotals[$teamId];
-                } else {
-                    $missing[] = $teamId;
-                }
-            }
-
-            $totals = $this->rollup->sumChildTotals($children);
+            $collected = $this->collectChildTotals(ids: $teamIds, sourceTotals: $teamTotals);
+            $totals    = $this->rollup->sumChildTotals($collected['children']);
             $divisionTotals[$divisionId] = $totals;
             $snapshots[] = $this->snapshotRecord(
                 periodId: $periodId,
@@ -262,8 +249,8 @@ class SnapshotGenerationService
                 totals: $totals,
                 currency: $currency,
                 dealIds: [],
-                partial: ($missing !== []),
-                missing: $missing
+                partial: ($collected['missing'] !== []),
+                missing: $collected['missing']
             );
         }//end foreach
 
@@ -287,6 +274,30 @@ class SnapshotGenerationService
 
         return $snapshots;
     }//end buildSnapshots()
+
+    /**
+     * Collect child totals for a set of ids, tracking any missing children.
+     *
+     * @param array<int, string>                  $ids          Child ids to look up.
+     * @param array<string, array<string, float>> $sourceTotals Totals keyed by child id.
+     *
+     * @return array{children: array<int, array<string, float>>, missing: array<int, string>}
+     */
+    private function collectChildTotals(array $ids, array $sourceTotals): array
+    {
+        $children = [];
+        $missing  = [];
+        foreach ($ids as $id) {
+            if (isset($sourceTotals[$id]) === false) {
+                $missing[] = $id;
+                continue;
+            }
+
+            $children[] = $sourceTotals[$id];
+        }
+
+        return ['children' => $children, 'missing' => $missing];
+    }//end collectChildTotals()
 
     /**
      * Assemble a single snapshot record.

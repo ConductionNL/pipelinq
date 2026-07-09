@@ -78,6 +78,11 @@ class AsteriskAdapter implements CtiAdapterInterface
      * @param array<string,mixed> $payload Raw decoded webhook body.
      *
      * @return CtiWebhookResult Normalised event.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat field-by-field payload normalisation; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Flat field-by-field payload normalisation; extraction adds no clarity.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.4
      */
     public function handleInboundWebhook(array $payload): CtiWebhookResult
     {
@@ -93,14 +98,14 @@ class AsteriskAdapter implements CtiAdapterInterface
 
         $extension = null;
         $channel   = (string) ($payload['Channel'] ?? ($payload['channel'] ?? ''));
-        if ($channel !== '' && preg_match('#/(\d+)#', $channel, $m) === 1) {
-            $extension = $m[1];
+        if ($channel !== '' && preg_match('#/(\d+)#', $channel, $matches) === 1) {
+            $extension = $matches[1];
         }
 
         $duration = null;
         $raw      = ($payload['Duration'] ?? ($payload['duration'] ?? null));
-        if (is_string($raw) === true && preg_match('/(\d+):(\d+):(\d+)/', $raw, $m) === 1) {
-            $duration = (((int) $m[1]) * 3600) + (((int) $m[2]) * 60) + ((int) $m[3]);
+        if (is_string($raw) === true && preg_match('/(\d+):(\d+):(\d+)/', $raw, $matches) === 1) {
+            $duration = (((int) $matches[1]) * 3600) + (((int) $matches[2]) * 60) + ((int) $matches[3]);
         } else if (is_numeric($raw) === true) {
             $duration = (int) $raw;
         }

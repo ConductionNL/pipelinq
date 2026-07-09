@@ -181,7 +181,7 @@ class MessagingWebhookController extends Controller
      */
     private function readRawBody(): string
     {
-        $body = @file_get_contents('php://input');
+        $body = file_get_contents('php://input');
         if ($body === false) {
             return '';
         }

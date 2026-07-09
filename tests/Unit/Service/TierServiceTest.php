@@ -80,7 +80,7 @@ class TierServiceTest extends TestCase
         return new TierService(
             container: $container,
             appConfig: $appConfig,
-            loyaltyAccountService: $accountService,
+            accountService: $accountService,
             eventDispatcher: $eventDispatcher,
             logger: $logger
         );

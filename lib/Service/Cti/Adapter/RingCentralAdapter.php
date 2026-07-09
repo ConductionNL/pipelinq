@@ -80,6 +80,11 @@ class RingCentralAdapter implements CtiAdapterInterface
      * @param array $payload The raw webhook payload.
      *
      * @return CtiWebhookResult The normalised webhook result.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat field-by-field payload normalisation; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Flat field-by-field payload normalisation; extraction adds no clarity.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.3
      */
     public function handleInboundWebhook(array $payload): CtiWebhookResult
     {
@@ -87,11 +92,10 @@ class RingCentralAdapter implements CtiAdapterInterface
         $party = ((array) ($body['parties'] ?? []))[0] ?? [];
         $party = (array) $party;
 
-        $statusCode = strtolower((string) (($party['status']['code'] ?? '')));
+        $statusCode       = strtolower((string) (($party['status']['code'] ?? '')));
+        $defaultEventType = 'unknown';
         if ($statusCode !== '') {
             $defaultEventType = $statusCode;
-        } else {
-            $defaultEventType = 'unknown';
         }
 
         $eventType = match ($statusCode) {
@@ -182,6 +186,8 @@ class RingCentralAdapter implements CtiAdapterInterface
      * @param string $callerId     The caller ID to present.
      *
      * @return CtiCallResult The call origination result.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.3
      */
     public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult
     {
@@ -218,10 +224,9 @@ class RingCentralAdapter implements CtiAdapterInterface
 
             $bodyContents = (string) $response->getBody();
             $body         = json_decode($bodyContents, true);
+            $callId       = null;
             if (is_array($body) === true) {
                 $callId = ($body['id'] ?? null);
-            } else {
-                $callId = null;
             }
 
             $externalCallId = null;

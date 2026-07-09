@@ -5,8 +5,7 @@
         "schemas": [
           "masterEntity",
           "sourceRecord",
-          "mergeOperation",
-          "syncQueueItem"
+          "mergeOperation"
         ]
       }
     },
@@ -18,7 +17,7 @@
         "version": "1.1.0",
         "summary": "Single authoritative golden record per master entity (Contact / Account / Product / Vendor).",
         "description": "The golden record consolidated from one or more source-records via trust-tier resolution. Holds the winning attribute values (goldenRecord), per-attribute provenance, merge lineage, lifecycle status and a computed data-quality score. Mapped to Schema.org Thing.",
-        "@type": "schema:Thing",
+        "x-schema-org": "schema:Thing",
         "x-openregister-quality": {
           "field": "qualityScore",
           "statusField": "qualityStatus",
@@ -84,7 +83,11 @@
           "threshold": 0.7
         },
         "x-openregister-survivorship": {
-          "sourceLinkField": "sourceRecords",
+          "sourceLink": {
+            "mode": "reverseFk",
+            "sourceSchema": "sourceRecord",
+            "referenceField": "currentMasterEntity"
+          },
           "goldenRecordField": "goldenRecord",
           "provenanceField": "attributeProvenance",
           "trustTierField": "trustTier",
@@ -100,7 +103,11 @@
           "overridesField": "attributeOverrides"
         },
         "x-openregister-merge": {
-          "sourceLinkField": "sourceRecords",
+          "sourceLink": {
+            "mode": "reverseFk",
+            "sourceSchema": "sourceRecord",
+            "referenceField": "currentMasterEntity"
+          },
           "entityType": "entityType",
           "statusField": "status",
           "survivorStatus": "active",
@@ -246,7 +253,7 @@
         "version": "1.0.0",
         "summary": "Per-system raw copy of an entity, linked to a Master Entity.",
         "description": "A copy of an entity as supplied by a specific source system (Pipelinq CRM, Shillinq, KvK API, etc.). Carries both raw and normalised attributes that compete in duplicate detection and golden-record recomputation.",
-        "@type": "schema:Thing",
+        "x-schema-org": "schema:Thing",
         "required": [
           "sourceRecordId",
           "sourceSystem",
@@ -372,7 +379,7 @@
         "version": "1.0.0",
         "summary": "Log of a merge with pre-merge snapshot for reversal.",
         "description": "Records every merge (manual or auto) with the pre-merge snapshot, attribute-resolution log, downstream sync status and reversibility window. Mapped to Schema.org Action.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "mergedIntoMasterId",
           "mergedFromMasterIds",
@@ -459,114 +466,6 @@
             "title": "Reversed by",
             "maxLength": 128,
             "description": "Reversed By for this record."
-          }
-        }
-      },
-      "syncQueueItem": {
-        "slug": "syncQueueItem",
-        "title": "Sync Queue Item",
-        "icon": "SyncCircle",
-        "version": "1.0.0",
-        "summary": "Outbound sync event to a downstream app with retry status.",
-        "description": "One queued change per downstream app per Master Entity, delivered via openconnector with exponential-backoff retries and confirmation callbacks. Mapped to Schema.org Action.",
-        "@type": "schema:Action",
-        "required": [
-          "masterEntity",
-          "targetSystem",
-          "changeType",
-          "payload",
-          "status"
-        ],
-        "properties": {
-          "masterEntity": {
-            "type": "string",
-            "title": "Master entity",
-            "description": "UUID of the affected Master Entity.",
-            "maxLength": 64,
-            "facetable": true
-          },
-          "targetSystem": {
-            "type": "string",
-            "title": "Target system",
-            "maxLength": 64,
-            "facetable": true,
-            "description": "Target System for this record."
-          },
-          "changeType": {
-            "type": "string",
-            "title": "Change type",
-            "enum": [
-              "create",
-              "update",
-              "merge",
-              "soft-delete",
-              "reverse-merge"
-            ],
-            "facetable": true,
-            "description": "Change Type for this record."
-          },
-          "payload": {
-            "type": "object",
-            "title": "Payload",
-            "description": "Payload for this record."
-          },
-          "status": {
-            "type": "string",
-            "title": "Status",
-            "enum": [
-              "queued",
-              "sending",
-              "sent",
-              "acknowledged",
-              "failed",
-              "dead-letter"
-            ],
-            "default": "queued",
-            "facetable": true,
-            "description": "Current lifecycle status of this record."
-          },
-          "attemptCount": {
-            "type": "integer",
-            "title": "Attempt count",
-            "default": 0,
-            "minimum": 0,
-            "description": "Count of attempt count."
-          },
-          "lastAttemptAt": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Last attempt at",
-            "description": "Timestamp when last attempt occurred."
-          },
-          "nextRetryAt": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Next retry at",
-            "description": "Timestamp when next retry occurred."
-          },
-          "errorMessage": {
-            "type": "string",
-            "title": "Error message",
-            "maxLength": 2048,
-            "description": "Error Message for this record."
-          },
-          "acknowledgedAt": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Acknowledged at",
-            "description": "Timestamp when acknowledged occurred."
-          },
-          "acknowledgmentReference": {
-            "type": "string",
-            "title": "Acknowledgment reference",
-            "maxLength": 255,
-            "description": "Acknowledgment Reference for this record."
-          },
-          "priority": {
-            "type": "number",
-            "title": "Priority",
-            "default": 0,
-            "description": "Priority for this record."
           }
         }
       },

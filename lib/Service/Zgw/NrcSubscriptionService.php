@@ -170,6 +170,8 @@ class NrcSubscriptionService
      * @return void
      *
      * @throws NrcSubscriptionFailedException On HTTP failure.
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-007
      */
     public function unregisterAbonnement(array $endpoint, array $abonnement): void
     {
@@ -197,11 +199,10 @@ class NrcSubscriptionService
         }
 
         $abonnement['actief'] = false;
-        $uuid = (string) ($abonnement['@self']['uuid'] ?? $abonnement['id'] ?? '');
+        $uuid     = (string) ($abonnement['@self']['uuid'] ?? $abonnement['id'] ?? '');
+        $saveUuid = null;
         if ($uuid !== '') {
             $saveUuid = $uuid;
-        } else {
-            $saveUuid = null;
         }
 
         $this->registers->save(ZgwRegisterAccess::SCHEMA_ABONN, $abonnement, $saveUuid);

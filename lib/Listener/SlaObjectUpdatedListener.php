@@ -45,6 +45,10 @@ use Throwable;
  * re-evaluation and escalation firing.
  *
  * @implements IEventListener<Event>
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges the SLA engine,
+ *  schema map, OR ObjectService, app-config and logger — an irreducible
+ *  set of collaborators for the update-time SLA lifecycle.
  */
 class SlaObjectUpdatedListener implements IEventListener
 {
@@ -83,6 +87,9 @@ class SlaObjectUpdatedListener implements IEventListener
      * @param Event $event The event.
      *
      * @return void
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-003
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-004
      */
     public function handle(Event $event): void
     {
@@ -121,37 +128,12 @@ class SlaObjectUpdatedListener implements IEventListener
             // Re-evaluate target statuses and fire escalations.
             $slaStatus['targets'] = $this->engine->evaluateTargets($slaStatus['targets'] ?? [], $policy, $now);
 
-            if (($slaStatus['pausedAt'] ?? null) === null) {
-                $alreadyFired = (int) ($slaStatus['currentEscalationLevel'] ?? 0);
-                if ($type === 'complaint') {
-                    $matchType = 'klacht';
-                } else {
-                    $matchType = $type;
-                }
-
-                $result = $this->engine->executeEscalations(
-                    $policy,
-                    (string) $matchType,
-                    (string) $entity->getUuid(),
-                    $slaStatus['targets'],
-                    $slaStatus['targets'],
-                    $alreadyFired,
-                );
-                if ($result['eventIds'] !== []) {
-                    foreach ($slaStatus['targets'] as $idx => $target) {
-                        $slaStatus['targets'][$idx]['breachEventIds'] = array_values(
-                                array_unique(
-                            array_merge(
-                                (array) ($target['breachEventIds'] ?? []),
-                                $result['eventIds']
-                                )
-                        )
-                                );
-                    }
-                }
-
-                $slaStatus['currentEscalationLevel'] = $result['level'];
-            }//end if
+            $slaStatus = $this->applyEscalations(
+                slaStatus: $slaStatus,
+                type: $type,
+                entity: $entity,
+                policy: $policy,
+            );
 
             $slaStatus['lastEvaluatedAt'] = $now->format(DateTimeInterface::ATOM);
             $data['slaStatus']            = $slaStatus;
@@ -163,6 +145,60 @@ class SlaObjectUpdatedListener implements IEventListener
             );
         }//end try
     }//end handle()
+
+    /**
+     * Fire due escalations for an unpaused timer and merge breach-event IDs.
+     *
+     * No-op when the timer is currently paused.
+     *
+     * @param array<string, mixed> $slaStatus Current slaStatus.
+     * @param string               $type      Resolved entity type.
+     * @param object               $entity    Object entity from the event.
+     * @param array<string, mixed> $policy    Policy.
+     *
+     * @return array<string, mixed> Updated slaStatus.
+     */
+    private function applyEscalations(
+        array $slaStatus,
+        string $type,
+        object $entity,
+        array $policy,
+    ): array {
+        if (($slaStatus['pausedAt'] ?? null) !== null) {
+            return $slaStatus;
+        }
+
+        $alreadyFired = (int) ($slaStatus['currentEscalationLevel'] ?? 0);
+        $matchType    = $type;
+        if ($type === 'complaint') {
+            $matchType = 'klacht';
+        }
+
+        $result = $this->engine->executeEscalations(
+            $policy,
+            (string) $matchType,
+            (string) $entity->getUuid(),
+            $slaStatus['targets'],
+            $slaStatus['targets'],
+            $alreadyFired,
+        );
+        if ($result['eventIds'] !== []) {
+            foreach ($slaStatus['targets'] as $idx => $target) {
+                $slaStatus['targets'][$idx]['breachEventIds'] = array_values(
+                    array_unique(
+                        array_merge(
+                            (array) ($target['breachEventIds'] ?? []),
+                            $result['eventIds']
+                        )
+                    )
+                );
+            }
+        }
+
+        $slaStatus['currentEscalationLevel'] = $result['level'];
+
+        return $slaStatus;
+    }//end applyEscalations()
 
     /**
      * Apply pause / resume according to the policy's pause-conditions.

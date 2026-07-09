@@ -33,6 +33,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
+use DateTimeImmutable;
+use DateTimeZone;
+
 /**
  * Typed Besluiten (BRC) client.
  */
@@ -45,12 +48,12 @@ class BrcClient
      *
      * @param ZgwApiClient      $api       Base transport.
      * @param ZgwRegisterAccess $registers Register facade.
-     * @param AcClient          $ac        Scope cache (pre-flight guards).
+     * @param AcClient          $acClient  Scope cache (pre-flight guards).
      */
     public function __construct(
         private ZgwApiClient $api,
         private ZgwRegisterAccess $registers,
-        private AcClient $ac,
+        private AcClient $acClient,
     ) {
     }//end __construct()
 
@@ -67,6 +70,8 @@ class BrcClient
      * @return array<string, mixed> Saved ZgwResourceMapping (with zgwUrl, zgwUuid, etag).
      *
      * @throws InsufficientScopeException When the configured client lacks besluiten.aanmaken.
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-004
      */
     public function createBesluit(array $endpoint, array $zaakMapping, array $besluitData): array
     {
@@ -75,7 +80,7 @@ class BrcClient
 
         $besluittypeUrl = (string) ($besluitData['besluittype'] ?? '');
         if ($besluittypeUrl !== '') {
-            $this->ac->require($endpoint, $besluittypeUrl, self::SCOPE_AANMAKEN);
+            $this->acClient->require($endpoint, $besluittypeUrl, self::SCOPE_AANMAKEN);
         }
 
         $body = array_merge(
@@ -222,6 +227,6 @@ class BrcClient
      */
     private static function nowIso(): string
     {
-        return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+        return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
     }//end nowIso()
 }//end class

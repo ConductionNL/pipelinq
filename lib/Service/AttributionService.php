@@ -37,6 +37,8 @@ use Throwable;
  * AttributionService — click→deal joining and revenue roll-up.
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Attribution joins many payload shapes; complexity is inherent to the roll-up.
  */
 class AttributionService
 {
@@ -520,6 +522,8 @@ class AttributionService
      * @param array<string, mixed> $payload Payload.
      *
      * @return string Id or empty.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential id-candidate probes across two payload shapes; extraction adds no clarity.
      */
     private function extractId(array $payload): string
     {

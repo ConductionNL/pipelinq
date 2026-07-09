@@ -68,6 +68,8 @@ class WalkInQueueRebalanceJob extends Job
      *
      * @return void
      *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+     *
      * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
      */
     protected function run(mixed $argument): void

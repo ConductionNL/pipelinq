@@ -65,6 +65,11 @@ use Throwable;
  *  intentional.
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)     The public surface mirrors
  *  REQ-PAY-001 through REQ-PAY-011 — one method per requirement.
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Same single-responsibility
+ *  scope as ExcessiveClassComplexity above — many short, focused methods.
+ * @SuppressWarnings(PHPMD.TooManyMethods)           34 small single-purpose
+ *  methods (CRUD + adapters + webhook + events + accessors); splitting would
+ *  scatter one transactional concern across multiple classes.
  *
  * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
@@ -174,6 +179,10 @@ class PosPaymentService
      * @return array<string, mixed>
      *
      * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) toggles whether sensitive
+     *  fields are present at all (mask vs omit), not a behavioural branch
+     *  worth splitting into two public methods.
      */
     public function getProviderConfig(string $name, bool $includeMaskedSecrets=true): array
     {
@@ -193,10 +202,9 @@ class PosPaymentService
 
         if ($includeMaskedSecrets === true) {
             foreach (self::SENSITIVE_FIELDS as $field) {
-                $stored = $this->readString(name: $name, key: $field, default: '');
-                if ($stored === '') {
-                    $config[$field] = '';
-                } else {
+                $stored         = $this->readString(name: $name, key: $field, default: '');
+                $config[$field] = '';
+                if ($stored !== '') {
                     $config[$field] = self::MASK;
                 }
             }
@@ -225,7 +233,22 @@ class PosPaymentService
     {
         $this->assertKnownProvider(name: $name);
 
-        // Non-sensitive scalars.
+        $this->writeNonSensitiveFields(name: $name, data: $data);
+        $this->writeSensitiveFields(name: $name, data: $data);
+
+        return $this->getProviderConfig(name: $name, includeMaskedSecrets: true);
+    }//end updateProvider()
+
+    /**
+     * Store the non-sensitive scalar/object fields of a provider update.
+     *
+     * @param string               $name The provider name.
+     * @param array<string, mixed> $data The form payload.
+     *
+     * @return void
+     */
+    private function writeNonSensitiveFields(string $name, array $data): void
+    {
         if (array_key_exists('isActive', $data) === true) {
             $this->writeBool(name: $name, key: 'isActive', value: (bool) $data['isActive']);
         }
@@ -244,8 +267,21 @@ class PosPaymentService
         if (array_key_exists('config', $data) === true && is_array($data['config']) === true) {
             $this->writeObject(name: $name, key: 'config', value: $data['config']);
         }
+    }//end writeNonSensitiveFields()
 
-        // Sensitive — encrypt before store, skip MASK / empty values.
+    /**
+     * Encrypt + store the sensitive credential fields of a provider update.
+     *
+     * Skips fields that are absent, empty, or still carrying the MASK
+     * sentinel (admin saved the form without re-entering the secret).
+     *
+     * @param string               $name The provider name.
+     * @param array<string, mixed> $data The form payload.
+     *
+     * @return void
+     */
+    private function writeSensitiveFields(string $name, array $data): void
+    {
         foreach (self::SENSITIVE_FIELDS as $field) {
             if (array_key_exists($field, $data) === false) {
                 continue;
@@ -262,9 +298,7 @@ class PosPaymentService
             // Discard plaintext immediately (best-effort).
             unset($raw);
         }
-
-        return $this->getProviderConfig(name: $name, includeMaskedSecrets: true);
-    }//end updateProvider()
+    }//end writeSensitiveFields()
 
     /**
      * Resolve an active provider adapter by name.
@@ -579,7 +613,40 @@ class PosPaymentService
         }
 
         $previousStatus = (string) ($transaction['paymentStatus'] ?? '');
-        $patch          = [
+        $patch          = $this->buildSettlementPatch(
+            paymentStatus: $paymentStatus,
+            previousStatus: $previousStatus,
+            eventId: $eventId
+        );
+
+        $id      = (string) ($transaction['@self']['id'] ?? ($transaction['id'] ?? ''));
+        $updated = $this->saveTransaction(id: $id, patch: $patch);
+
+        $this->emitSettlementEvents(
+            paymentStatus: $paymentStatus,
+            previousStatus: $previousStatus,
+            transaction: $updated,
+            eventId: $eventId
+        );
+
+        return [
+            'status'        => 'ok',
+            'transactionId' => $id,
+        ];
+    }//end handleSettlement()
+
+    /**
+     * Build the transaction patch for a settlement update.
+     *
+     * @param string $paymentStatus  The normalised lifecycle status.
+     * @param string $previousStatus The transaction's status before this update.
+     * @param string $eventId        The provider event id (idempotency key).
+     *
+     * @return array<string, mixed>
+     */
+    private function buildSettlementPatch(string $paymentStatus, string $previousStatus, string $eventId): array
+    {
+        $patch = [
             'paymentStatus'         => $paymentStatus,
             'paymentWebhookEventId' => $eventId,
         ];
@@ -592,22 +659,29 @@ class PosPaymentService
             $patch['refundedAt'] = $this->nowIso();
         }
 
-        $id      = (string) ($transaction['@self']['id'] ?? ($transaction['id'] ?? ''));
-        $updated = $this->saveTransaction(id: $id, patch: $patch);
+        return $patch;
+    }//end buildSettlementPatch()
 
+    /**
+     * Emit the settled/refunded CloudEvent for a settlement update, if applicable.
+     *
+     * @param string               $paymentStatus  The normalised lifecycle status.
+     * @param string               $previousStatus The transaction's status before this update.
+     * @param array<string, mixed> $transaction    The updated transaction.
+     * @param string               $eventId        The provider event id (used as refundId on refund).
+     *
+     * @return void
+     */
+    private function emitSettlementEvents(string $paymentStatus, string $previousStatus, array $transaction, string $eventId): void
+    {
         if ($paymentStatus === 'settled' && $previousStatus !== 'settled') {
-            $this->emitSettledEvent(transaction: $updated);
+            $this->emitSettledEvent(transaction: $transaction);
         }
 
         if ($paymentStatus === 'refunded' && $previousStatus !== 'refunded') {
-            $this->emitRefundedEvent(transaction: $updated, refundId: $eventId, reason: 'Provider-initiated refund');
+            $this->emitRefundedEvent(transaction: $transaction, refundId: $eventId, reason: 'Provider-initiated refund');
         }
-
-        return [
-            'status'        => 'ok',
-            'transactionId' => $id,
-        ];
-    }//end handleSettlement()
+    }//end emitSettlementEvents()
 
     /**
      * Test the configured connection for a provider.
@@ -816,6 +890,8 @@ class PosPaymentService
      * @param bool   $default The default.
      *
      * @return bool
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) generic config accessor — the default IS the value being requested, not a behavioural branch
      */
     private function readBool(string $name, string $key, bool $default=false): bool
     {
@@ -1118,10 +1194,10 @@ class PosPaymentService
     {
         if (is_array($result) === true) {
             // Handle envelope shapes like { results: [...] } or flat lists.
-            if (isset($result['results']) === true && is_array($result['results']) === true) {
+            $hasResultsEnvelope = isset($result['results']) === true && is_array($result['results']) === true;
+            $rows = $result;
+            if ($hasResultsEnvelope === true) {
                 $rows = $result['results'];
-            } else {
-                $rows = $result;
             }
 
             $out = [];

@@ -85,6 +85,9 @@ class BrpMutationWebhookListener
      * @param string $signature The `X-Signature` (or equivalent) header value (hex digest).
      *
      * @return array{result: string, invalidated: int}
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::mask() is a
+     *  pure static log-masking helper with no instance state.
      */
     public function handle(string $rawBody, string $signature): array
     {

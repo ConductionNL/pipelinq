@@ -29,6 +29,8 @@ namespace OCA\Pipelinq\Service\Cti\Result;
  *
  * Adapters translate vendor-specific webhook payloads into this shape so the
  * CtiService can act uniformly regardless of platform.
+ *
+ * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
  */
 final class CtiWebhookResult
 {
@@ -49,6 +51,10 @@ final class CtiWebhookResult
      * @param string|null         $queueName          Inbound queue/campaign name.
      * @param string|null         $agentSkill         Skill tag.
      * @param array<string,mixed> $raw                Raw payload (stored verbatim in cti_event_log).
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList) Immutable normalised webhook DTO; each field is a distinct CTI event attribute.
      */
     public function __construct(
         public readonly string $eventType,

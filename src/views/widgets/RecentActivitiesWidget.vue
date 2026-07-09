@@ -1,32 +1,27 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<NcDashboardWidget :items="items"
+	<CnDataTable :rows="items"
+		:columns="columns"
 		:loading="loading"
-		:item-menu="itemMenu"
-		@show="onShow">
-		<template #empty-content>
-			<NcEmptyContent :title="t('pipelinq', 'No recent activities')">
-				<template #icon>
-					<ClockOutline />
-				</template>
-			</NcEmptyContent>
-		</template>
-	</NcDashboardWidget>
+		hide-header
+		borderless
+		:empty-text="t('pipelinq', 'No recent activities')"
+		@row-click="onShow" />
 </template>
 
 <script>
-import { NcDashboardWidget, NcEmptyContent } from '@nextcloud/vue'
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
-import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
-import { initializeStores } from '../../store/store.js'
 import { formatDate } from '../../services/localeUtils.js'
+import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
+import { LIST_COLUMNS, navigateTo } from './listTable.js'
 
 export default {
 	name: 'RecentActivitiesWidget',
 	components: {
-		NcDashboardWidget,
-		NcEmptyContent,
-		ClockOutline,
+		CnDataTable,
 	},
 	props: {
 		title: {
@@ -38,12 +33,7 @@ export default {
 		return {
 			loading: false,
 			activities: [],
-			itemMenu: {
-				show: {
-					text: t('pipelinq', 'View'),
-					icon: 'icon-confirm',
-				},
-			},
+			columns: LIST_COLUMNS,
 		}
 	},
 	computed: {
@@ -70,15 +60,18 @@ export default {
 	},
 	methods: {
 		/**
-		 * @param item
+		 * Navigate to the clicked activity's entity (lead or request),
+		 * routed per row `_entityType` in the same tab.
+		 *
+		 * @param {object} item The clicked row (a shaped activity item).
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-51
 		 */
 		onShow(item) {
 			const type = item._entityType === 'lead' ? 'leads' : 'requests'
-			window.location.href = generateUrl('/apps/pipelinq/' + type + '/' + item._entityId)
+			navigateTo(generateUrl('/apps/pipelinq/' + type + '/' + item._entityId))
 		},
 		/**
-		 * @param dateStr
+		 * @param {string} dateStr The date string to humanise.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-49
 		 */
 		formatTimeAgo(dateStr) {
@@ -151,9 +144,9 @@ export default {
 			}
 		},
 		/**
-		 * @param config
-		 * @param type
-		 * @param params
+		 * @param {object} config The object-type registry (register/schema per type).
+		 * @param {string} type The object type to fetch.
+		 * @param {object} params Query parameters.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-48
 		 */
 		async fetchRaw(config, type, params = {}) {

@@ -49,7 +49,7 @@ trait MessageDispatchTrait
      *
      * @var string
      */
-    private static string $dispatchProviderClass = 'OCA\\OpenRegister\\Service\\Integration\\Providers\\MessageDispatchProvider';
+    private static string $dispatchLeafClass = 'OCA\\OpenRegister\\Service\\Integration\\Providers\\MessageDispatchProvider';
 
     /**
      * Dispatch a vendor-shaped payload through the OpenRegister leaf.
@@ -124,12 +124,12 @@ trait MessageDispatchTrait
      */
     private function resolveDispatchProvider(): object
     {
-        if (class_exists(self::$dispatchProviderClass) === false) {
+        if (class_exists(self::$dispatchLeafClass) === false) {
             throw new PermanentSmsProviderException('OpenRegister MessageDispatchProvider not available');
         }
 
         try {
-            $provider = $this->container->get(self::$dispatchProviderClass);
+            $provider = $this->container->get(self::$dispatchLeafClass);
         } catch (Throwable $e) {
             throw new PermanentSmsProviderException('OpenRegister MessageDispatchProvider not available: '.$e->getMessage());
         }

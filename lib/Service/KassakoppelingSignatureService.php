@@ -289,10 +289,10 @@ class KassakoppelingSignatureService
             }
 
             if (is_bool($value) === true) {
-                if ($value === true) {
+                $boolValue = $value;
+                $value     = 'false';
+                if ($boolValue === true) {
                     $value = 'true';
-                } else {
-                    $value = 'false';
                 }
             }
 

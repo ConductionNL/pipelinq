@@ -50,6 +50,9 @@ use Throwable;
  *   `{{unsubscribe_link}}` + physical-address token on email templates;
  *   SMS templates pass through.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive consent + template + queued-delivery gate; splitting fragments one policy.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Guard-heavy but flat GDPR/CAN-SPAM checks; each operation is independently unit-tested.
+ *
  * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#compliance-service
  */
 class ComplianceService
@@ -625,6 +628,8 @@ class ComplianceService
      * @param array<string, mixed> $payload Payload.
      *
      * @return string Id or empty string.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered fallback lookup (uuid > id > slug); extraction adds no clarity.
      */
     private function extractTemplateId(array $payload): string
     {
@@ -706,9 +711,19 @@ class ComplianceService
         $now = gmdate('Y-m-d\TH:i:s\Z');
 
         $record = $this->findConsentRecord(contactId: $contactId, channel: $channel);
+        if ($record === null) {
+            $this->persistConsentCreate(
+                contactId: $contactId,
+                channel: $channel,
+                reason: $reason,
+                now: $now
+            );
+        }
+
         if ($record !== null) {
             $existingWithdrawnAt = $record['withdrawnAt'] ?? null;
-            if (is_string($existingWithdrawnAt) === true && trim($existingWithdrawnAt) !== '') {
+            $alreadyWithdrawn    = (is_string($existingWithdrawnAt) === true && trim($existingWithdrawnAt) !== '');
+            if ($alreadyWithdrawn === true) {
                 // Already withdrawn — keep first-withdrawal timestamp.
                 $this->logger->info(
                     'ComplianceService.recordConsentWithdrawal: already withdrawn',
@@ -718,18 +733,13 @@ class ComplianceService
                         'sourceBlastId' => $sourceBlastId,
                     ]
                 );
-            } else {
+            }
+
+            if ($alreadyWithdrawn === false) {
                 $record['withdrawnAt']     = $now;
                 $record['withdrawnReason'] = $reason;
                 $this->persistConsentUpdate(record: $record);
             }
-        } else {
-            $this->persistConsentCreate(
-                contactId: $contactId,
-                channel: $channel,
-                reason: $reason,
-                now: $now
-            );
         }//end if
 
         $this->transitionQueuedDeliveries(contactId: $contactId, sourceBlastId: $sourceBlastId);
@@ -858,6 +868,9 @@ class ComplianceService
      * @param string|null $sourceBlastId Blast UUID for audit context.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over queued rows; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential guard clauses over queued rows; extraction adds no clarity.
      */
     private function transitionQueuedDeliveries(string $contactId, ?string $sourceBlastId): void
     {
@@ -1096,6 +1109,8 @@ class ComplianceService
      * @param array<string, mixed> $payload Entity payload.
      *
      * @return string Identifier or empty string.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered fallback lookup over id keys; extraction adds no clarity.
      */
     private function extractObjectId(array $payload): string
     {

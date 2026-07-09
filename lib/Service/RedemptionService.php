@@ -37,22 +37,26 @@ use RuntimeException;
  * Redemption lifecycle service.
  *
  * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) orchestrates the full
+ *  redemption lifecycle (reserve/use/cancel/expire) across account + ledger
+ *  services.
  */
 class RedemptionService
 {
     /**
      * Constructor.
      *
-     * @param ContainerInterface    $container             The DI container.
-     * @param IAppConfig            $appConfig             The app configuration.
-     * @param LoyaltyAccountService $loyaltyAccountService The account service.
-     * @param PointsLedgerService   $ledgerService         The ledger service.
-     * @param LoggerInterface       $logger                The logger.
+     * @param ContainerInterface    $container      The DI container.
+     * @param IAppConfig            $appConfig      The app configuration.
+     * @param LoyaltyAccountService $accountService The account service.
+     * @param PointsLedgerService   $ledgerService  The ledger service.
+     * @param LoggerInterface       $logger         The logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
-        private LoyaltyAccountService $loyaltyAccountService,
+        private LoyaltyAccountService $accountService,
         private PointsLedgerService $ledgerService,
         private LoggerInterface $logger,
     ) {
@@ -72,13 +76,9 @@ class RedemptionService
      */
     public function initiateRedemption(string $accountId, string $optionId): array
     {
-        $account = $this->loyaltyAccountService->getAccount(accountId: $accountId);
+        $account = $this->accountService->getAccount(accountId: $accountId);
         if ($account === null) {
             throw new RuntimeException('Account not found.');
-        }
-
-        if ((string) ($account['status'] ?? '') !== 'actief') {
-            throw new RuntimeException('Account is not active.');
         }
 
         $option = $this->getOption(optionId: $optionId);
@@ -86,22 +86,7 @@ class RedemptionService
             throw new RuntimeException('Redemption option not found.');
         }
 
-        if ($this->isOptionValid(option: $option) === false) {
-            throw new RuntimeException('Redemption option is not currently valid.');
-        }
-
-        $cost = (int) ($option['kostenInPunten'] ?? 0);
-        if ((int) ($account['currentBalance'] ?? 0) < $cost) {
-            throw new RuntimeException('Insufficient balance.');
-        }
-
-        $perKlantLimit = $option['perKlantLimiet'] ?? null;
-        if ($perKlantLimit !== null && (int) $perKlantLimit > 0) {
-            $usedCount = $this->countUsedRedemptions(accountId: $accountId, optionId: $optionId);
-            if ($usedCount >= (int) $perKlantLimit) {
-                throw new RuntimeException('Redemption limit reached for this option.');
-            }
-        }
+        $cost = $this->assertRedemptionEligible(account: $account, option: $option, accountId: $accountId, optionId: $optionId);
 
         $code       = $this->generateBeloningCode();
         $now        = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
@@ -144,6 +129,44 @@ class RedemptionService
 
         return $saved;
     }//end initiateRedemption()
+
+    /**
+     * Assert an account is eligible to redeem an option and return its cost.
+     *
+     * @param array<string, mixed> $account   The account.
+     * @param array<string, mixed> $option    The redemption option.
+     * @param string               $accountId The account UUID.
+     * @param string               $optionId  The option UUID.
+     *
+     * @return int The cost in points.
+     *
+     * @throws RuntimeException On inactive account, invalid option, insufficient balance, or limit reached.
+     */
+    private function assertRedemptionEligible(array $account, array $option, string $accountId, string $optionId): int
+    {
+        if ((string) ($account['status'] ?? '') !== 'actief') {
+            throw new RuntimeException('Account is not active.');
+        }
+
+        if ($this->isOptionValid(option: $option) === false) {
+            throw new RuntimeException('Redemption option is not currently valid.');
+        }
+
+        $cost = (int) ($option['kostenInPunten'] ?? 0);
+        if ((int) ($account['currentBalance'] ?? 0) < $cost) {
+            throw new RuntimeException('Insufficient balance.');
+        }
+
+        $perKlantLimit = $option['perKlantLimiet'] ?? null;
+        if ($perKlantLimit !== null && (int) $perKlantLimit > 0) {
+            $usedCount = $this->countUsedRedemptions(accountId: $accountId, optionId: $optionId);
+            if ($usedCount >= (int) $perKlantLimit) {
+                throw new RuntimeException('Redemption limit reached for this option.');
+            }
+        }
+
+        return $cost;
+    }//end assertRedemptionEligible()
 
     /**
      * Validate a redemption code (without consuming it).
@@ -262,13 +285,14 @@ class RedemptionService
      * @param string $programmeId The programme UUID.
      *
      * @return array<int, array<string, mixed>> Valid + affordable options.
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function getValidRedemptionOptions(string $accountId, string $programmeId): array
     {
-        $account = $this->loyaltyAccountService->getAccount(accountId: $accountId);
-        if ($account === null) {
-            $balance = 0;
-        } else {
+        $account = $this->accountService->getAccount(accountId: $accountId);
+        $balance = 0;
+        if ($account !== null) {
             $balance = (int) ($account['currentBalance'] ?? 0);
         }
 
@@ -288,10 +312,9 @@ class RedemptionService
             return [];
         }
 
+        $rowList = [];
         if (is_array($rows) === true) {
             $rowList = array_values($rows);
-        } else {
-            $rowList = [];
         }
 
         $options = array_map([$this, 'toArray'], $rowList);
@@ -299,8 +322,8 @@ class RedemptionService
         return array_values(
             array_filter(
                 $options,
-                fn(array $o): bool => $this->isOptionValid(option: $o)
-                    && (int) ($o['kostenInPunten'] ?? 0) <= $balance
+                fn(array $option): bool => $this->isOptionValid(option: $option)
+                    && (int) ($option['kostenInPunten'] ?? 0) <= $balance
             )
         );
     }//end getValidRedemptionOptions()
@@ -338,6 +361,8 @@ class RedemptionService
      * @param string $code The code.
      *
      * @return array<string, mixed>|null
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function findByCode(string $code): ?array
     {
@@ -357,17 +382,16 @@ class RedemptionService
             return null;
         }
 
+        $rowList = [];
         if (is_array($rows) === true) {
-            $rows = array_values($rows);
-        } else {
-            $rows = [];
+            $rowList = array_values($rows);
         }
 
-        if ($rows === []) {
+        if ($rowList === []) {
             return null;
         }
 
-        return $this->toArray(object: reset($rows));
+        return $this->toArray(object: reset($rowList));
     }//end findByCode()
 
     /**
@@ -595,16 +619,16 @@ class RedemptionService
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $s = $object->jsonSerialize();
-            if (is_array($s) === true) {
-                return $s;
+            $serialized = $object->jsonSerialize();
+            if (is_array($serialized) === true) {
+                return $serialized;
             }
         }
 
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $d = $object->getObject();
-            if (is_array($d) === true) {
-                return $d;
+            $data = $object->getObject();
+            if (is_array($data) === true) {
+                return $data;
             }
         }
 

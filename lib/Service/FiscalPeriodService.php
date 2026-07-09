@@ -71,15 +71,17 @@ class FiscalPeriodService
      * @param string $periodId The period id (Q<n>-<year>).
      *
      * @return DateTimeImmutable|null The period end date, or null when malformed.
+     *
+     * @spec exclude mechanical phpmd cleanup — no behaviour change
      */
     public function periodEnd(string $periodId): ?DateTimeImmutable
     {
-        if (preg_match('/^Q([1-4])-(\d{4})$/', $periodId, $m) !== 1) {
+        if (preg_match('/^Q([1-4])-(\d{4})$/', $periodId, $matches) !== 1) {
             return null;
         }
 
-        $quarter      = (int) $m[1];
-        $year         = (int) $m[2];
+        $quarter      = (int) $matches[1];
+        $year         = (int) $matches[2];
         $endMonth     = ($quarter * 3);
         $firstOfMonth = new DateTimeImmutable(sprintf('%04d-%02d-01', $year, $endMonth));
 

@@ -37,6 +37,8 @@ use RuntimeException;
 
 /**
  * Stateless points-rule evaluator.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) rule/condition/formula evaluation is inherently branchy; split across small focused methods
  */
 class PointsRuleEngine
 {
@@ -114,6 +116,8 @@ class PointsRuleEngine
      * @param array<string, mixed> $context  Context: category, segment, channel, timestamp...
      *
      * @return bool True when conditions are met (or absent).
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function evaluateCondition(array $conditie, array $context): bool
     {
@@ -121,55 +125,163 @@ class PointsRuleEngine
             return true;
         }
 
-        if (isset($conditie['excludeCategory']) === true) {
-            $excluded        = (array) $conditie['excludeCategory'];
-            $contextCategory = (string) ($context['category'] ?? '');
-            if ($contextCategory !== '' && in_array($contextCategory, $excluded, true) === true) {
-                return false;
-            }
+        if ($this->passesExcludeCategory(conditie: $conditie, context: $context) === false) {
+            return false;
         }
 
-        if (isset($conditie['category']) === true) {
-            $allowed         = (array) $conditie['category'];
-            $contextCategory = (string) ($context['category'] ?? '');
-            if ($contextCategory === '' || in_array($contextCategory, $allowed, true) === false) {
-                return false;
-            }
+        if ($this->passesCategory(conditie: $conditie, context: $context) === false) {
+            return false;
         }
 
-        if (isset($conditie['segment']) === true) {
-            $allowed        = (array) $conditie['segment'];
-            $contextSegment = (string) ($context['segment'] ?? '');
-            if ($contextSegment === '' || in_array($contextSegment, $allowed, true) === false) {
-                return false;
-            }
+        if ($this->passesSegment(conditie: $conditie, context: $context) === false) {
+            return false;
         }
 
-        if (isset($conditie['channel']) === true) {
-            $allowed        = (array) $conditie['channel'];
-            $contextChannel = (string) ($context['channel'] ?? '');
-            if ($contextChannel === '' || in_array($contextChannel, $allowed, true) === false) {
-                return false;
-            }
+        if ($this->passesChannel(conditie: $conditie, context: $context) === false) {
+            return false;
         }
 
-        if (isset($conditie['dayOfWeek']) === true) {
-            $allowed = array_map('strtolower', (array) $conditie['dayOfWeek']);
-            $day     = $this->dayOfWeekFor(ts: (string) ($context['timestamp'] ?? ''));
-            if (in_array($day, $allowed, true) === false) {
-                return false;
-            }
+        if ($this->passesDayOfWeek(conditie: $conditie, context: $context) === false) {
+            return false;
         }
 
-        if (isset($conditie['timeRange']) === true) {
-            $timeRange = (string) $conditie['timeRange'];
-            if ($this->isWithinTimeRange(timeRange: $timeRange, timestamp: (string) ($context['timestamp'] ?? '')) === false) {
-                return false;
-            }
+        if ($this->passesTimeRange(conditie: $conditie, context: $context) === false) {
+            return false;
         }
 
         return true;
     }//end evaluateCondition()
+
+    /**
+     * Whether the excludeCategory condition (if present) allows the context category.
+     *
+     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $context  Evaluation context.
+     *
+     * @return bool
+     */
+    private function passesExcludeCategory(array $conditie, array $context): bool
+    {
+        if (isset($conditie['excludeCategory']) === false) {
+            return true;
+        }
+
+        $excluded        = (array) $conditie['excludeCategory'];
+        $contextCategory = (string) ($context['category'] ?? '');
+        if ($contextCategory !== '' && in_array($contextCategory, $excluded, true) === true) {
+            return false;
+        }
+
+        return true;
+    }//end passesExcludeCategory()
+
+    /**
+     * Whether the category condition (if present) matches the context category.
+     *
+     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $context  Evaluation context.
+     *
+     * @return bool
+     */
+    private function passesCategory(array $conditie, array $context): bool
+    {
+        if (isset($conditie['category']) === false) {
+            return true;
+        }
+
+        $allowed         = (array) $conditie['category'];
+        $contextCategory = (string) ($context['category'] ?? '');
+        if ($contextCategory === '' || in_array($contextCategory, $allowed, true) === false) {
+            return false;
+        }
+
+        return true;
+    }//end passesCategory()
+
+    /**
+     * Whether the segment condition (if present) matches the context segment.
+     *
+     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $context  Evaluation context.
+     *
+     * @return bool
+     */
+    private function passesSegment(array $conditie, array $context): bool
+    {
+        if (isset($conditie['segment']) === false) {
+            return true;
+        }
+
+        $allowed        = (array) $conditie['segment'];
+        $contextSegment = (string) ($context['segment'] ?? '');
+        if ($contextSegment === '' || in_array($contextSegment, $allowed, true) === false) {
+            return false;
+        }
+
+        return true;
+    }//end passesSegment()
+
+    /**
+     * Whether the channel condition (if present) matches the context channel.
+     *
+     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $context  Evaluation context.
+     *
+     * @return bool
+     */
+    private function passesChannel(array $conditie, array $context): bool
+    {
+        if (isset($conditie['channel']) === false) {
+            return true;
+        }
+
+        $allowed        = (array) $conditie['channel'];
+        $contextChannel = (string) ($context['channel'] ?? '');
+        if ($contextChannel === '' || in_array($contextChannel, $allowed, true) === false) {
+            return false;
+        }
+
+        return true;
+    }//end passesChannel()
+
+    /**
+     * Whether the dayOfWeek condition (if present) matches the context timestamp.
+     *
+     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $context  Evaluation context.
+     *
+     * @return bool
+     */
+    private function passesDayOfWeek(array $conditie, array $context): bool
+    {
+        if (isset($conditie['dayOfWeek']) === false) {
+            return true;
+        }
+
+        $allowed = array_map('strtolower', (array) $conditie['dayOfWeek']);
+        $day     = $this->dayOfWeekFor(isoTimestamp: (string) ($context['timestamp'] ?? ''));
+
+        return in_array($day, $allowed, true);
+    }//end passesDayOfWeek()
+
+    /**
+     * Whether the timeRange condition (if present) matches the context timestamp.
+     *
+     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $context  Evaluation context.
+     *
+     * @return bool
+     */
+    private function passesTimeRange(array $conditie, array $context): bool
+    {
+        if (isset($conditie['timeRange']) === false) {
+            return true;
+        }
+
+        $timeRange = (string) $conditie['timeRange'];
+
+        return $this->isWithinTimeRange(timeRange: $timeRange, timestamp: (string) ($context['timestamp'] ?? ''));
+    }//end passesTimeRange()
 
     /**
      * Calculate points from a formule + amount + tier multiplier.
@@ -221,19 +333,21 @@ class PointsRuleEngine
      * Counts ledger credit entries for the rule in the period (day/week/month/year)
      * and returns the remaining quota (0 when reached).
      *
-     * @param int  $alreadyEarnedInPeriod Points already credited under this rule in the period.
-     * @param int  $pointsToAward         Points the formula would award.
-     * @param ?int $max                   The max per period (null = no cap).
+     * @param int  $earnedInPeriod Points already credited under this rule in the period.
+     * @param int  $pointsToAward  Points the formula would award.
+     * @param ?int $max            The max per period (null = no cap).
      *
      * @return int Points to actually award (0..pointsToAward).
+     *
+     * @spec exclude phpmd mechanical refactor
      */
-    public function applyMaxPerCustomer(int $alreadyEarnedInPeriod, int $pointsToAward, ?int $max): int
+    public function applyMaxPerCustomer(int $earnedInPeriod, int $pointsToAward, ?int $max): int
     {
         if ($max === null || $max <= 0) {
             return $pointsToAward;
         }
 
-        $remaining = max(0, $max - $alreadyEarnedInPeriod);
+        $remaining = max(0, $max - $earnedInPeriod);
         return min($pointsToAward, $remaining);
     }//end applyMaxPerCustomer()
 
@@ -267,10 +381,9 @@ class PointsRuleEngine
             return [];
         }
 
+        $ruleList = [];
         if (is_array($rows) === true) {
             $ruleList = array_values($rows);
-        } else {
-            $ruleList = [];
         }
 
         return array_map([$this, 'toArray'], $ruleList);
@@ -286,19 +399,19 @@ class PointsRuleEngine
      */
     private function isWithinValidity(array $rule, array $context): bool
     {
-        $ts = (string) ($context['timestamp'] ?? '');
-        if ($ts === '') {
-            $ts = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+        $effectiveTs = (string) ($context['timestamp'] ?? '');
+        if ($effectiveTs === '') {
+            $effectiveTs = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         }
 
         $from = (string) ($rule['geldigVan'] ?? '');
         $to   = (string) ($rule['geldigTot'] ?? '');
 
-        if ($from !== '' && substr($ts, 0, 10) < substr($from, 0, 10)) {
+        if ($from !== '' && substr($effectiveTs, 0, 10) < substr($from, 0, 10)) {
             return false;
         }
 
-        if ($to !== '' && substr($ts, 0, 10) > substr($to, 0, 10)) {
+        if ($to !== '' && substr($effectiveTs, 0, 10) > substr($to, 0, 10)) {
             return false;
         }
 
@@ -308,23 +421,22 @@ class PointsRuleEngine
     /**
      * Compute the lower-case day-of-week name for an ISO timestamp.
      *
-     * @param string $ts ISO timestamp.
+     * @param string $isoTimestamp ISO timestamp.
      *
      * @return string Lower-case day name.
      */
-    private function dayOfWeekFor(string $ts): string
+    private function dayOfWeekFor(string $isoTimestamp): string
     {
+        $dateTime = new DateTimeImmutable('now');
         try {
-            if ($ts !== '') {
-                $dt = new DateTimeImmutable($ts);
-            } else {
-                $dt = new DateTimeImmutable('now');
+            if ($isoTimestamp !== '') {
+                $dateTime = new DateTimeImmutable($isoTimestamp);
             }
         } catch (\Throwable $e) {
-            $dt = new DateTimeImmutable('now');
+            $dateTime = new DateTimeImmutable('now');
         }
 
-        return strtolower($dt->format('l'));
+        return strtolower($dateTime->format('l'));
     }//end dayOfWeekFor()
 
     /**
@@ -342,17 +454,16 @@ class PointsRuleEngine
             return true;
         }
 
+        $dateTime = new DateTimeImmutable('now');
         try {
             if ($timestamp !== '') {
-                $dt = new DateTimeImmutable($timestamp);
-            } else {
-                $dt = new DateTimeImmutable('now');
+                $dateTime = new DateTimeImmutable($timestamp);
             }
         } catch (\Throwable $e) {
-            $dt = new DateTimeImmutable('now');
+            $dateTime = new DateTimeImmutable('now');
         }
 
-        $hhmm = $dt->format('H:i');
+        $hhmm = $dateTime->format('H:i');
         return ($hhmm >= trim($parts[0])) && ($hhmm <= trim($parts[1]));
     }//end isWithinTimeRange()
 
@@ -375,6 +486,8 @@ class PointsRuleEngine
      * @param mixed $object The entity or array.
      *
      * @return array<string, mixed>
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) invoked via array_map([$this, 'toArray'], ...) callable reference, not statically detected
      */
     private function toArray(mixed $object): array
     {
@@ -383,16 +496,16 @@ class PointsRuleEngine
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $s = $object->jsonSerialize();
-            if (is_array($s) === true) {
-                return $s;
+            $serialized = $object->jsonSerialize();
+            if (is_array($serialized) === true) {
+                return $serialized;
             }
         }
 
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $d = $object->getObject();
-            if (is_array($d) === true) {
-                return $d;
+            $data = $object->getObject();
+            if (is_array($data) === true) {
+                return $data;
             }
         }
 

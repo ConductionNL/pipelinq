@@ -55,6 +55,10 @@ use Throwable;
  * @implements IEventListener<Event>
  *
  * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-002
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges the schema map,
+ *  Shillinq AP service, admin notifier, event dispatcher, OR ObjectService,
+ *  app-config and logger — the minimal collaborator set for AP fan-out.
  */
 class ExpenseApprovalListener implements IEventListener
 {
@@ -98,13 +102,7 @@ class ExpenseApprovalListener implements IEventListener
         }
 
         try {
-            // OR's ObjectUpdatedEvent exposes both getObject() and getNewObject();
-            // ObjectCreatedEvent only has getObject(). Prefer the typed accessor.
-            if ($event instanceof ObjectUpdatedEvent && method_exists($event, 'getNewObject') === true) {
-                $entity = $event->getNewObject();
-            } else {
-                $entity = $event->getObject();
-            }
+            $entity = $this->resolveEntity(event: $event);
 
             if ($this->isExpense(entity: $entity) === false) {
                 return;
@@ -132,45 +130,7 @@ class ExpenseApprovalListener implements IEventListener
                 return;
             }
 
-            $approvedBy = (string) ($data['approvedBy'] ?? '');
-            $approvedAt = (string) ($data['approvedAt'] ?? $this->apService->now());
-
-            // Re-emit a domain event so consumers downstream of the listener can
-            // observe the same approval signal without coupling to OR events
-            // (REQ-AP-002 — consumer-facing contract).
-            $this->eventDispatcher->dispatchTyped(
-                new ExpenseApprovedEvent(
-                    expenseUuid: $uuid,
-                    expense: $data,
-                    approvedBy: $approvedBy,
-                    approvedAt: $approvedAt
-                )
-            );
-
-            // Mark pending and persist before the dispatch begins (REQ-AP-002 Scenario 4).
-            $data['apSyncStatus'] = 'pending';
-            $this->persist(uuid: $uuid, data: $data);
-
-            $success = $this->apService->dispatchApEvent(
-                expense: $data + ['uuid' => $uuid],
-                approvedBy: $approvedBy,
-                approvedAt: $approvedAt
-            );
-
-            if ($success === true) {
-                $data['apSyncStatus'] = 'synced';
-                $data['apSyncedAt']   = $this->apService->now();
-                $this->persist(uuid: $uuid, data: $data);
-                return;
-            }
-
-            // Dispatch failed after retries (REQ-AP-003 Scenario 10): mark failed and notify admins.
-            $data['apSyncStatus'] = 'failed';
-            $this->persist(uuid: $uuid, data: $data);
-            $this->notifier->notifyFailure(
-                expenseTitle: (string) ($data['title'] ?? ''),
-                uuid: $uuid
-            );
+            $this->dispatchApproval(uuid: $uuid, data: $data);
         } catch (Throwable $e) {
             // CRITICAL: never throw — approval workflow must not be affected.
             $this->logger->warning(
@@ -179,6 +139,76 @@ class ExpenseApprovalListener implements IEventListener
             );
         }//end try
     }//end handle()
+
+    /**
+     * Resolve the event's target entity.
+     *
+     * OR's ObjectUpdatedEvent exposes both getObject() and getNewObject();
+     * ObjectCreatedEvent only has getObject(). Prefer the typed accessor.
+     *
+     * @param ObjectCreatedEvent|ObjectUpdatedEvent $event The dispatched event.
+     *
+     * @return object The OR entity.
+     */
+    private function resolveEntity(ObjectCreatedEvent|ObjectUpdatedEvent $event): object
+    {
+        if ($event instanceof ObjectUpdatedEvent && method_exists($event, 'getNewObject') === true) {
+            return $event->getNewObject();
+        }
+
+        return $event->getObject();
+    }//end resolveEntity()
+
+    /**
+     * Re-emit the approval event and dispatch the AP webhook, recording outcome.
+     *
+     * @param string               $uuid The expense UUID.
+     * @param array<string, mixed> $data The approved expense data.
+     *
+     * @return void
+     */
+    private function dispatchApproval(string $uuid, array $data): void
+    {
+        $approvedBy = (string) ($data['approvedBy'] ?? '');
+        $approvedAt = (string) ($data['approvedAt'] ?? $this->apService->now());
+
+        // Re-emit a domain event so consumers downstream of the listener can
+        // observe the same approval signal without coupling to OR events
+        // (REQ-AP-002 — consumer-facing contract).
+        $this->eventDispatcher->dispatchTyped(
+            new ExpenseApprovedEvent(
+                expenseUuid: $uuid,
+                expense: $data,
+                approvedBy: $approvedBy,
+                approvedAt: $approvedAt
+            )
+        );
+
+        // Mark pending and persist before the dispatch begins (REQ-AP-002 Scenario 4).
+        $data['apSyncStatus'] = 'pending';
+        $this->persist(uuid: $uuid, data: $data);
+
+        $success = $this->apService->dispatchApEvent(
+            expense: $data + ['uuid' => $uuid],
+            approvedBy: $approvedBy,
+            approvedAt: $approvedAt
+        );
+
+        if ($success === true) {
+            $data['apSyncStatus'] = 'synced';
+            $data['apSyncedAt']   = $this->apService->now();
+            $this->persist(uuid: $uuid, data: $data);
+            return;
+        }
+
+        // Dispatch failed after retries (REQ-AP-003 Scenario 10): mark failed and notify admins.
+        $data['apSyncStatus'] = 'failed';
+        $this->persist(uuid: $uuid, data: $data);
+        $this->notifier->notifyFailure(
+            expenseTitle: (string) ($data['title'] ?? ''),
+            uuid: $uuid
+        );
+    }//end dispatchApproval()
 
     /**
      * Whether the entity belongs to the expense schema.

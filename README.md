@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/ConductionNL/pipelinq/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/pipelinq" alt="Latest release"></a>
-  <a href="https://github.com/ConductionNL/pipelinq/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License"></a>
+  <a href="https://github.com/ConductionNL/pipelinq/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
   <a href="https://github.com/ConductionNL/pipelinq/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/pipelinq/code-quality.yml?label=quality" alt="Code quality"></a>
   <a href="https://pipelinq.conduction.nl"><img src="https://img.shields.io/badge/docs-pipelinq.conduction.nl-green" alt="Documentation"></a>
 </p>
@@ -45,7 +45,7 @@ It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to fo
 ### Client Management
 - **Persons & Organizations** — Full CRUD with contact details, notes, and complete interaction history
 - **Contact Persons** — Link individuals to organizations with roles (sales manager, project lead, etc.)
-- **Duplicate Detection** — Automatic warnings when creating clients with matching names or email addresses
+- **Duplicate Detection** — Provided via [OpenRegister](https://github.com/ConductionNL/openregister) master-data management, which flags clients with matching names or email addresses
 - **Nextcloud Contacts Sync** — Two-way sync with the native Contacts app via CardDAV
 
 ### Lead Pipeline
@@ -55,7 +55,7 @@ It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to fo
 
 ### Request Intake
 - **Verzoeken** — Capture incoming service requests before they're handed to formal case management
-- **Request-to-Case Bridge** — Hand off requests directly to [Procest](https://github.com/ConductionNL/procest) when ready
+- **Request-to-Case Bridge** *(in development)* — A kind-addressed handoff to the `ns#Case` implementer (e.g. [Procest](https://github.com/ConductionNL/procest)) is being built in openspec change `semantic-handoff-emit`; until it ships, requests stay in Pipelinq
 - **Status Tracking** — Follow requests through intake statuses with activity timeline
 
 ### Work Management
@@ -91,7 +91,7 @@ It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to fo
 > fails closed to the 21% standard rate so BTW is never silently dropped to zero.
 
 ### Integrations
-- **Unified Search** — Deep links for clients, leads, and requests in Nextcloud's global search
+- **Unified Search** — Clients, leads, and requests appear in Nextcloud's global search via [OpenRegister](https://github.com/ConductionNL/openregister) (`lib/Search/ObjectsProvider.php`), which provides search centrally for all OpenRegister-backed apps
 - **Activity Stream** — Nextcloud activity integration for assignments and status changes
 - **Notifications** — Native Nextcloud notifications for new assignments and important updates
 

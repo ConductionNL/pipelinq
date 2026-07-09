@@ -38,6 +38,8 @@ use RuntimeException;
 /**
  * Gift card lifecycle.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Cohesive gift-card lifecycle; splitting would fragment a single domain.
+ *
  * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
  */
 class GiftCardService
@@ -162,6 +164,9 @@ class GiftCardService
      * @return array{amountApplied: float, balanceAfter: float, changeAmount: float, status: string}
      *
      * @throws RuntimeException On invalid PIN, expired, blocked, or non-active card.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential validation guards; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential validation guards; extraction adds no clarity.
      *
      * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007-01
      * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-007-02
@@ -353,6 +358,8 @@ class GiftCardService
      * @param string $pin    The plaintext PIN.
      *
      * @return array{valid: bool, balance: float, expiryDate: ?string, giftCardId: ?string, reason: ?string}
+     *
+     * @spec exclude mechanical phpmd cleanup — no behaviour change
      */
     public function validateBySerial(string $serial, string $pin): array
     {
@@ -388,10 +395,9 @@ class GiftCardService
             return ['valid' => false, 'balance' => 0.0, 'expiryDate' => null, 'giftCardId' => null, 'reason' => 'Invalid PIN'];
         }
 
+        $expiryDate = null;
         if ($vervaltOp !== '') {
             $expiryDate = $vervaltOp;
-        } else {
-            $expiryDate = null;
         }
 
         return [
@@ -436,6 +442,8 @@ class GiftCardService
      * @param string $serial The serial.
      *
      * @return array<string, mixed>|null
+     *
+     * @spec exclude mechanical phpmd cleanup — no behaviour change
      */
     public function findBySerial(string $serial): ?array
     {
@@ -455,12 +463,11 @@ class GiftCardService
             return null;
         }
 
-        if (is_array($rows) === true) {
-            $rows = array_values($rows);
-        } else {
+        if (is_array($rows) === false) {
             $rows = [];
         }
 
+        $rows = array_values($rows);
         if ($rows === []) {
             return null;
         }
@@ -474,6 +481,8 @@ class GiftCardService
      * @param string $klantId The klantId.
      *
      * @return array<int, array<string, mixed>>
+     *
+     * @spec exclude mechanical phpmd cleanup — no behaviour change
      */
     public function listForKlant(string $klantId): array
     {
@@ -493,10 +502,9 @@ class GiftCardService
             return [];
         }
 
+        $rowList = [];
         if (is_array($rows) === true) {
             $rowList = array_values($rows);
-        } else {
-            $rowList = [];
         }
 
         return array_map([$this, 'toArray'], $rowList);
@@ -669,16 +677,16 @@ class GiftCardService
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $s = $object->jsonSerialize();
-            if (is_array($s) === true) {
-                return $s;
+            $serialized = $object->jsonSerialize();
+            if (is_array($serialized) === true) {
+                return $serialized;
             }
         }
 
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $d = $object->getObject();
-            if (is_array($d) === true) {
-                return $d;
+            $decoded = $object->getObject();
+            if (is_array($decoded) === true) {
+                return $decoded;
             }
         }
 

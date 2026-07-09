@@ -104,6 +104,11 @@ class ForecastSettingsController extends Controller
      * @return JSONResponse The save result.
      *
      * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-05
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Linear sequence of independent per-key
+     *   `isset` guards — each validates one optional field before persistence; not nested logic.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Same rationale: the guards are independent,
+     *   so the theoretical path count is high but each branch is trivial.
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function update(): JSONResponse

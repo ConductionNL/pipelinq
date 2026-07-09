@@ -40,22 +40,25 @@ use RuntimeException;
  * Tier classification and benefits service.
  *
  * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-003
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) tier evaluation walks rules, upgrade/downgrade policy, and event emission in one cohesive service
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrates DI container, config, loyalty accounts, events and logging by design
  */
 class TierService
 {
     /**
      * Constructor.
      *
-     * @param ContainerInterface    $container             The DI container.
-     * @param IAppConfig            $appConfig             The app configuration.
-     * @param LoyaltyAccountService $loyaltyAccountService The loyalty account service.
-     * @param IEventDispatcher      $eventDispatcher       The event dispatcher.
-     * @param LoggerInterface       $logger                The logger.
+     * @param ContainerInterface    $container       The DI container.
+     * @param IAppConfig            $appConfig       The app configuration.
+     * @param LoyaltyAccountService $accountService  The loyalty account service.
+     * @param IEventDispatcher      $eventDispatcher The event dispatcher.
+     * @param LoggerInterface       $logger          The logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
-        private LoyaltyAccountService $loyaltyAccountService,
+        private LoyaltyAccountService $accountService,
         private IEventDispatcher $eventDispatcher,
         private LoggerInterface $logger,
     ) {
@@ -135,7 +138,7 @@ class TierService
      */
     public function updateTierIfNeeded(string $accountId): array
     {
-        $account = $this->loyaltyAccountService->getAccount(accountId: $accountId);
+        $account = $this->accountService->getAccount(accountId: $accountId);
         if ($account === null) {
             return ['from' => null, 'to' => null, 'changed' => false];
         }
@@ -181,7 +184,7 @@ class TierService
         if ($downgradePolicy === 'end_of_year' || $downgradePolicy === 'end_of_quarter') {
             // Schedule via tierGeldigTot; do NOT change currentTierId now.
             $end = $this->endOfPeriodTimestamp(policy: $downgradePolicy);
-            $this->loyaltyAccountService->setTier(
+            $this->accountService->setTier(
                 accountId: $accountId,
                 tierId: $currentTierId,
                 tierBehaaldOp: null,
@@ -217,7 +220,7 @@ class TierService
             $valid = $this->endOfPeriodTimestamp(policy: $policy);
         }
 
-        $this->loyaltyAccountService->setTier(
+        $this->accountService->setTier(
             accountId: $accountId,
             tierId: $this->extractUuid(object: $newTier),
             tierBehaaldOp: $now,
@@ -236,7 +239,7 @@ class TierService
     public function handleTierDowngrade(string $accountId, array $newTier): void
     {
         $now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-        $this->loyaltyAccountService->setTier(
+        $this->accountService->setTier(
             accountId: $accountId,
             tierId: $this->extractUuid(object: $newTier),
             tierBehaaldOp: $now,
@@ -403,6 +406,8 @@ class TierService
      * @param mixed $object The entity or array.
      *
      * @return array<string, mixed>
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) invoked indirectly via array_map([$this, 'toArray'], ...) in getTierRules()
      */
     private function toArray(mixed $object): array
     {
@@ -411,16 +416,16 @@ class TierService
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $s = $object->jsonSerialize();
-            if (is_array($s) === true) {
-                return $s;
+            $serialized = $object->jsonSerialize();
+            if (is_array($serialized) === true) {
+                return $serialized;
             }
         }
 
         if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $d = $object->getObject();
-            if (is_array($d) === true) {
-                return $d;
+            $data = $object->getObject();
+            if (is_array($data) === true) {
+                return $data;
             }
         }
 
