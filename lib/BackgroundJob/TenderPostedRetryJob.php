@@ -78,6 +78,8 @@ class TenderPostedRetryJob extends TimedJob
      *
      * @return void
      *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+     *
      * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
      */
     protected function run(mixed $argument): void

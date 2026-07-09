@@ -28,6 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use DateTimeImmutable;
+use DateTimeZone;
+use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\BookingService;
 use OCP\App\IAppManager;
@@ -51,9 +54,14 @@ use RuntimeException;
  * ADR-016). Errors emit static messages — never `$e->getMessage()` — so a
  * misconfiguration cannot leak stack traces to anonymous callers.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the services a
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Aggregates the services a
  *  customer-facing portal needs (booking, availability, OR object service,
  *  URL generator, signing helpers).
+ * @SuppressWarnings(PHPMD.TooManyMethods)           The public booking surface (list, availability,
+ *  book, reschedule, cancel) plus its signing/verification and OR-shaping private helpers form
+ *  one cohesive portal controller.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Same cohesion rationale — the endpoints and
+ *  their input-validation / link-signing helpers belong together.
  *
  * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
  */
@@ -184,7 +192,7 @@ class PortalController extends Controller
 
         try {
             $bookingId = $this->createBookingFromPortal(params: $params);
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'Invalid booking request'], Http::STATUS_BAD_REQUEST);
         } catch (\Throwable $e) {
             $this->logger->error('Pipelinq portal: booking creation failed', ['exception' => $e->getMessage()]);
@@ -272,7 +280,7 @@ class PortalController extends Controller
 
         try {
             $newId = $this->bookingService->rescheduleBooking(bookingId: $bookingId, newStartAt: $newStartAt);
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'Invalid reschedule request'], Http::STATUS_BAD_REQUEST);
         } catch (\Throwable $e) {
             $this->logger->error('Pipelinq portal: reschedule failed', ['exception' => $e->getMessage()]);
@@ -321,7 +329,7 @@ class PortalController extends Controller
                 reason: substr($reason, 0, self::MAX_TEXT_LENGTH),
                 cancelledBy: $customerId
             );
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'Invalid cancel request'], Http::STATUS_BAD_REQUEST);
         } catch (\Throwable $e) {
             $this->logger->error('Pipelinq portal: cancel failed', ['exception' => $e->getMessage()]);
@@ -387,23 +395,23 @@ class PortalController extends Controller
      *
      * @return string The new booking UUID.
      *
-     * @throws \InvalidArgumentException If the service or input is unusable.
+     * @throws InvalidArgumentException If the service or input is unusable.
      * @throws RuntimeException If OpenRegister is unavailable.
      */
     private function createBookingFromPortal(array $params): string
     {
         $service = $this->loadService(serviceId: $params['serviceId']);
         if ($service === null) {
-            throw new \InvalidArgumentException('Unknown service');
+            throw new InvalidArgumentException('Unknown service');
         }
 
         if (($service['bookableOnline'] ?? false) !== true) {
-            throw new \InvalidArgumentException('Service is not bookable online');
+            throw new InvalidArgumentException('Service is not bookable online');
         }
 
         $duration = (int) ($service['durationMinutes'] ?? 0);
         if ($duration <= 0) {
-            throw new \InvalidArgumentException('Service duration is not configured');
+            throw new InvalidArgumentException('Service duration is not configured');
         }
 
         $endAt = $this->computeEndAt(startAt: $params['startAt'], durationMinutes: $duration);
@@ -575,6 +583,10 @@ class PortalController extends Controller
      * @return string The contact UUID (empty when the schema is unconfigured).
      *
      * @throws RuntimeException If OpenRegister is unavailable.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Find-or-create with defensive OR-shape guards
+     *   (results/toArray/idOf null-checks) and two fault-tolerant try/catch fallbacks to the
+     *   email-token id; each guard maps one distinct fallback, not nested branching.
      */
     private function upsertCustomer(string $name, string $email, string $phone): string
     {
@@ -653,14 +665,14 @@ class PortalController extends Controller
      */
     private function computeEndAt(string $startAt, int $durationMinutes): string
     {
-        $ts = strtotime($startAt);
-        if ($ts === false) {
+        $startTimestamp = strtotime($startAt);
+        if ($startTimestamp === false) {
             return $startAt;
         }
 
-        $end = ($ts + ($durationMinutes * 60));
-        return (new \DateTimeImmutable('@'.$end))
-            ->setTimezone(new \DateTimeZone('UTC'))
+        $end = ($startTimestamp + ($durationMinutes * 60));
+        return (new DateTimeImmutable('@'.$end))
+            ->setTimezone(new DateTimeZone('UTC'))
             ->format('Y-m-d\TH:i:sP');
     }//end computeEndAt()
 

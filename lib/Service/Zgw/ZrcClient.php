@@ -43,11 +43,18 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
  * Typed Zaken (ZRC) client.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Typed ZRC surface covering the
+ * full Zaken component (zaak/status/rol/resultaat/eigenschap CRUD + optimistic-lock
+ * retry); the aggregate complexity is inherent to the API breadth, not to any single
+ * over-complex method, so splitting the class would only fragment one cohesive client.
  */
 class ZrcClient
 {
@@ -60,13 +67,13 @@ class ZrcClient
      *
      * @param ZgwApiClient      $api       Base transport.
      * @param ZgwRegisterAccess $registers Register facade.
-     * @param AcClient          $ac        Scope cache (pre-flight guards).
+     * @param AcClient          $acClient  Scope cache (pre-flight guards).
      * @param LoggerInterface   $logger    PSR-3 logger.
      */
     public function __construct(
         private ZgwApiClient $api,
         private ZgwRegisterAccess $registers,
-        private AcClient $ac,
+        private AcClient $acClient,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -87,6 +94,8 @@ class ZrcClient
      *
      * @throws InsufficientScopeException When the configured client lacks zaken.aanmaken.
      * @throws ZgwException On transport failure.
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
      */
     public function createZaak(array $endpoint, array $zaakData, string $pipelinqRequestId): array
     {
@@ -95,7 +104,7 @@ class ZrcClient
 
         $zaaktypeUrl = (string) ($zaakData['zaaktype'] ?? '');
         if ($zaaktypeUrl !== '') {
-            $this->ac->require($endpoint, $zaaktypeUrl, self::SCOPE_AANMAKEN);
+            $this->acClient->require($endpoint, $zaaktypeUrl, self::SCOPE_AANMAKEN);
         }
 
         $response = $this->api->callComponent(
@@ -176,6 +185,8 @@ class ZrcClient
      *
      * @throws OptimisticLockException On 412.
      * @throws InsufficientScopeException When zaken.bijwerken is missing.
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-009
      */
     public function updateZaak(array $endpoint, array $mapping, array $updates): array
     {
@@ -185,13 +196,12 @@ class ZrcClient
 
         $zaaktypeUrl = (string) ($mapping['zaaktype'] ?? $updates['zaaktype'] ?? '');
         if ($zaaktypeUrl !== '') {
-            $this->ac->require($endpoint, $zaaktypeUrl, self::SCOPE_BIJWERK);
+            $this->acClient->require($endpoint, $zaaktypeUrl, self::SCOPE_BIJWERK);
         }
 
+        $extraHeaders = [];
         if ($etag !== '') {
             $extraHeaders = ['If-Match' => $etag];
-        } else {
-            $extraHeaders = [];
         }
 
         try {
@@ -221,10 +231,9 @@ class ZrcClient
 
         $newEtag = (string) ($response['headers']['etag'] ?? '');
         $mapping['laatsteSynchronisatie'] = self::nowIso();
+        $mapping['etag'] = $etag;
         if ($newEtag !== '') {
             $mapping['etag'] = $newEtag;
-        } else {
-            $mapping['etag'] = $etag;
         }
 
         $this->saveEtag(mapping: $mapping, etag: $mapping['etag']);
@@ -525,6 +534,6 @@ class ZrcClient
      */
     private static function nowIso(): string
     {
-        return (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+        return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
     }//end nowIso()
 }//end class

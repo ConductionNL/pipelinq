@@ -77,6 +77,10 @@ class BrpRetentionJob extends TimedJob
      * @param mixed $argument Unused.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+     *
+     * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-008
      */
     protected function run(mixed $argument): void
     {
@@ -100,53 +104,17 @@ class BrpRetentionJob extends TimedJob
 
             $deleted = 0;
             foreach (($records ?? []) as $record) {
-                if (is_array($record) === true) {
-                    $arr = $record;
-                } else if (method_exists($record, 'jsonSerialize') === true) {
-                    $arr = (array) $record->jsonSerialize();
-                } else {
-                    $arr = [];
-                }
-
-                $retentieTo = (string) ($arr['retentieTot'] ?? '');
-                if ($retentieTo === '') {
-                    continue;
-                }
-
-                try {
-                    $retentieDt = new DateTimeImmutable($retentieTo, new DateTimeZone('UTC'));
-                } catch (Throwable $e) {
-                    continue;
-                }
-
-                if ($retentieDt > $now) {
-                    continue;
-                }
-
-                $uuid      = (string) ($arr['@self']['id'] ?? $arr['id'] ?? '');
-                $contactId = (string) ($arr['gekoppeldContact'] ?? '');
-
-                try {
-                    $objects->setRegister($register)
-                        ->setSchema($persoonSchema)
-                        ->deleteObject(uuid: $uuid);
+                $arr        = $this->recordToArray(rec: $record);
+                $wasDeleted = $this->deleteExpiredPersoon(
+                    objects: $objects,
+                    record: $arr,
+                    register: $register,
+                    persoonSchema: $persoonSchema,
+                    contactSchema: $contactSchema,
+                    now: $now
+                );
+                if ($wasDeleted === true) {
                     $deleted++;
-                } catch (Throwable $e) {
-                    $this->logger->warning(
-                        'BRP retention: delete failed',
-                        ['uuid' => $uuid, 'error' => $e->getMessage()]
-                    );
-                    continue;
-                }
-
-                if ($contactId !== '' && $contactSchema !== '') {
-                    $this->resetContact(
-                        objects: $objects,
-                        register: $register,
-                        contactSchema: $contactSchema,
-                        contactId: $contactId,
-                        persoonUuid: $uuid
-                    );
                 }
             }//end foreach
 
@@ -155,6 +123,90 @@ class BrpRetentionJob extends TimedJob
             $this->logger->error('BRP retention job failed', ['error' => $e->getMessage()]);
         }//end try
     }//end run()
+
+    /**
+     * Coerce an OpenRegister record (array or entity) to a plain array.
+     *
+     * @param mixed $rec Record from ObjectService::findAll()/find().
+     *
+     * @return array<string, mixed> Array representation (empty when unusable).
+     */
+    private function recordToArray(mixed $rec): array
+    {
+        if (is_array($rec) === true) {
+            return $rec;
+        }
+
+        if (method_exists($rec, 'jsonSerialize') === true) {
+            return (array) $rec->jsonSerialize();
+        }
+
+        return [];
+    }//end recordToArray()
+
+    /**
+     * Delete a BrpPersoon record when its retention window has elapsed and
+     * reset the linked contact.
+     *
+     * @param object               $objects       OR ObjectService.
+     * @param array<string, mixed> $record        Persoon record data.
+     * @param string               $register      Register slug.
+     * @param string               $persoonSchema BrpPersoon schema slug.
+     * @param string               $contactSchema Contact schema slug.
+     * @param DateTimeImmutable    $now           Current time (UTC).
+     *
+     * @return bool True when a record was deleted.
+     */
+    private function deleteExpiredPersoon(
+        object $objects,
+        array $record,
+        string $register,
+        string $persoonSchema,
+        string $contactSchema,
+        DateTimeImmutable $now
+    ): bool {
+        $retentieTo = (string) ($record['retentieTot'] ?? '');
+        if ($retentieTo === '') {
+            return false;
+        }
+
+        try {
+            $retentieDt = new DateTimeImmutable($retentieTo, new DateTimeZone('UTC'));
+        } catch (Throwable $e) {
+            return false;
+        }
+
+        if ($retentieDt > $now) {
+            return false;
+        }
+
+        $uuid      = (string) ($record['@self']['id'] ?? $record['id'] ?? '');
+        $contactId = (string) ($record['gekoppeldContact'] ?? '');
+
+        try {
+            $objects->setRegister($register)
+                ->setSchema($persoonSchema)
+                ->deleteObject(uuid: $uuid);
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'BRP retention: delete failed',
+                ['uuid' => $uuid, 'error' => $e->getMessage()]
+            );
+            return false;
+        }
+
+        if ($contactId !== '' && $contactSchema !== '') {
+            $this->resetContact(
+                objects: $objects,
+                register: $register,
+                contactSchema: $contactSchema,
+                contactId: $contactId,
+                persoonUuid: $uuid
+            );
+        }
+
+        return true;
+    }//end deleteExpiredPersoon()
 
     /**
      * Reset Contact.verifiedBSN/brpPersoonId once the linked persoon has been deleted.
@@ -173,18 +225,12 @@ class BrpRetentionJob extends TimedJob
     private function resetContact(object $objects, string $register, string $contactSchema, string $contactId, string $persoonUuid): void
     {
         try {
-            $existing = $objects->find(
+            $existing    = $objects->find(
                 id: $contactId,
                 register: $register,
                 schema: $contactSchema,
             );
-            if (is_array($existing) === true) {
-                $existingArr = $existing;
-            } else if (method_exists($existing, 'jsonSerialize') === true) {
-                $existingArr = (array) $existing->jsonSerialize();
-            } else {
-                $existingArr = [];
-            }
+            $existingArr = $this->recordToArray(rec: $existing);
 
             if (empty($existingArr) === true) {
                 return;

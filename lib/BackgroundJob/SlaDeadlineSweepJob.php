@@ -100,6 +100,8 @@ class SlaDeadlineSweepJob extends TimedJob
      * @return void
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008
      */
     protected function run($argument): void
     {
@@ -137,62 +139,15 @@ class SlaDeadlineSweepJob extends TimedJob
         }
 
         foreach (self::TRACKED_SCHEMA_KEYS as $schemaConfigKey) {
-            $schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaConfigKey, '');
-            if ($schemaId === '') {
-                continue;
-            }
-
-            $type   = $this->schemaTypeFromKey(key: $schemaConfigKey);
-            $offset = 0;
-            do {
-                try {
-                    $rows = $objectService->findAll(
-                        config: [
-                            'register' => $register,
-                            'schema'   => $schemaId,
-                            'limit'    => self::BATCH_SIZE,
-                            'offset'   => $offset,
-                        ]
-                    );
-                } catch (Throwable $e) {
-                    $this->logger->warning(
-                        'SlaDeadlineSweepJob: findAll failed',
-                        ['error' => $e->getMessage(), 'schema' => $schemaId]
-                    );
-                    break;
-                }
-
-                if (is_array($rows) === false) {
-                    $rows = iterator_to_array($rows);
-                }
-
-                $count = count($rows);
-                if ($count === 0) {
-                    break;
-                }
-
-                foreach ($rows as $entity) {
-                    $processed++;
-                    $fired = $this->processEntity(
-                        entity: $entity,
-                        type: $type,
-                        policies: $policies,
-                        now: $now,
-                        register: $register,
-                        schemaId: $schemaId,
-                        objectService: $objectService
-                    );
-                    if ($fired === true) {
-                        $escalated++;
-                    }
-                }
-
-                $offset += self::BATCH_SIZE;
-                // Safety bound: don't exceed 5000 objects per schema per run.
-                if ($offset >= 5000) {
-                    break;
-                }
-            } while ($count === self::BATCH_SIZE);
+            $counts     = $this->sweepSchema(
+                schemaConfigKey: $schemaConfigKey,
+                register: $register,
+                policies: $policies,
+                now: $now,
+                objectService: $objectService
+            );
+            $processed += $counts['processed'];
+            $escalated += $counts['escalated'];
         }//end foreach
 
         $elapsed = (microtime(true) - $startTime);
@@ -201,6 +156,149 @@ class SlaDeadlineSweepJob extends TimedJob
             ['processed' => $processed, 'escalated' => $escalated, 'elapsedSeconds' => round($elapsed, 3)]
         );
     }//end run()
+
+    /**
+     * Sweep one tracked schema in batches, processing each object.
+     *
+     * @param string                              $schemaConfigKey App-config key naming the schema.
+     * @param string                              $register        Register UUID.
+     * @param array<string, array<string, mixed>> $policies        Policy index by identity.
+     * @param DateTimeInterface                   $now             Now.
+     * @param object                              $objectService   OR ObjectService.
+     *
+     * @return array{processed: int, escalated: int} Per-schema counters.
+     */
+    private function sweepSchema(
+        string $schemaConfigKey,
+        string $register,
+        array $policies,
+        DateTimeInterface $now,
+        object $objectService
+    ): array {
+        $schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaConfigKey, '');
+        if ($schemaId === '') {
+            return ['processed' => 0, 'escalated' => 0];
+        }
+
+        $type      = $this->schemaTypeFromKey(key: $schemaConfigKey);
+        $processed = 0;
+        $escalated = 0;
+        $offset    = 0;
+        do {
+            try {
+                $rows = $objectService->findAll(
+                    config: [
+                        'register' => $register,
+                        'schema'   => $schemaId,
+                        'limit'    => self::BATCH_SIZE,
+                        'offset'   => $offset,
+                    ]
+                );
+            } catch (Throwable $e) {
+                $this->logger->warning(
+                    'SlaDeadlineSweepJob: findAll failed',
+                    ['error' => $e->getMessage(), 'schema' => $schemaId]
+                );
+                break;
+            }
+
+            if (is_array($rows) === false) {
+                $rows = iterator_to_array($rows);
+            }
+
+            $count = count($rows);
+            if ($count === 0) {
+                break;
+            }
+
+            foreach ($rows as $entity) {
+                $processed++;
+                $fired = $this->processEntity(
+                    entity: $entity,
+                    type: $type,
+                    policies: $policies,
+                    now: $now,
+                    register: $register,
+                    schemaId: $schemaId,
+                    objectService: $objectService
+                );
+                if ($fired === true) {
+                    $escalated++;
+                }
+            }
+
+            $offset += self::BATCH_SIZE;
+            // Safety bound: don't exceed 5000 objects per schema per run.
+            if ($offset >= 5000) {
+                break;
+            }
+        } while ($count === self::BATCH_SIZE);
+
+        return ['processed' => $processed, 'escalated' => $escalated];
+    }//end sweepSchema()
+
+    /**
+     * Coerce an OR entity (or array) to its data payload.
+     *
+     * @param mixed $entity Object entity or array.
+     *
+     * @return array<string, mixed> Object data.
+     */
+    private function extractData($entity): array
+    {
+        if (is_object($entity) === true && method_exists($entity, 'getObject') === true) {
+            return $entity->getObject();
+        }
+
+        return (array) $entity;
+    }//end extractData()
+
+    /**
+     * Resolve an object's UUID from the entity or its data payload.
+     *
+     * @param mixed                $entity Object entity or array.
+     * @param array<string, mixed> $data   Object data.
+     *
+     * @return string UUID (empty when unresolved).
+     */
+    private function extractUuid($entity, array $data): string
+    {
+        if (is_object($entity) === true && method_exists($entity, 'getUuid') === true) {
+            return (string) $entity->getUuid();
+        }
+
+        return (string) ($data['uuid'] ?? $data['id'] ?? '');
+    }//end extractUuid()
+
+    /**
+     * Merge escalation results into the slaStatus envelope.
+     *
+     * @param array<string, mixed> $slaStatus Current slaStatus.
+     * @param array<string, mixed> $result    executeEscalations() result.
+     * @param bool                 $escalated Whether the escalation level advanced.
+     *
+     * @return array<string, mixed> Updated slaStatus.
+     */
+    private function mergeEscalation(array $slaStatus, array $result, bool $escalated): array
+    {
+        if ($escalated === false) {
+            return $slaStatus;
+        }
+
+        $slaStatus['currentEscalationLevel'] = $result['level'];
+        foreach ($slaStatus['targets'] as $idx => $target) {
+            $slaStatus['targets'][$idx]['breachEventIds'] = array_values(
+                array_unique(
+                    array_merge(
+                        (array) ($target['breachEventIds'] ?? []),
+                        $result['eventIds']
+                    )
+                )
+            );
+        }
+
+        return $slaStatus;
+    }//end mergeEscalation()
 
     /**
      * Process a single tracked-object row.
@@ -228,17 +326,8 @@ class SlaDeadlineSweepJob extends TimedJob
         object $objectService,
     ): bool {
         try {
-            if (is_object($entity) === true && method_exists($entity, 'getObject') === true) {
-                $data = $entity->getObject();
-            } else {
-                $data = (array) $entity;
-            }
-
-            if (is_object($entity) === true && method_exists($entity, 'getUuid') === true) {
-                $uuid = (string) $entity->getUuid();
-            } else {
-                $uuid = (string) ($data['uuid'] ?? $data['id'] ?? '');
-            }
+            $data = $this->extractData(entity: $entity);
+            $uuid = $this->extractUuid(entity: $entity, data: $data);
 
             // Per-category complaint SLA monitoring (REQ-KL-009 / REQ-KL-010):
             // complaints carry a category-derived `slaDeadline` (set from the
@@ -278,19 +367,7 @@ class SlaDeadlineSweepJob extends TimedJob
             );
 
             $escalated = ($result['level'] > $previousLevel);
-            if ($escalated === true) {
-                $slaStatus['currentEscalationLevel'] = $result['level'];
-                foreach ($slaStatus['targets'] as $idx => $target) {
-                    $slaStatus['targets'][$idx]['breachEventIds'] = array_values(
-                            array_unique(
-                            array_merge(
-                        (array) ($target['breachEventIds'] ?? []),
-                        $result['eventIds']
-                            )
-                            )
-                            );
-                }
-            }
+            $slaStatus = $this->mergeEscalation(slaStatus: $slaStatus, result: $result, escalated: $escalated);
 
             $slaStatus['lastEvaluatedAt'] = $now->format(DateTimeInterface::ATOM);
             $data['slaStatus']            = $slaStatus;

@@ -31,6 +31,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -68,6 +69,8 @@ class BrpCacheService
      *
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-01
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-02
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
      */
     public function get(string $rawBsn): ?array
     {
@@ -161,6 +164,8 @@ class BrpCacheService
      * @return int Number of cache entries invalidated.
      *
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-03
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper.
      */
     public function invalidate(string $rawBsn): int
     {
@@ -253,14 +258,14 @@ class BrpCacheService
      *
      * @return array{0:string, 1:string}
      *
-     * @throws \RuntimeException If misconfigured.
+     * @throws RuntimeException If misconfigured.
      */
     private function config(): array
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
         if ($register === '' || $schema === '') {
-            throw new \RuntimeException('brpPersoon register/schema not configured.');
+            throw new RuntimeException('brpPersoon register/schema not configured.');
         }
 
         return [$register, $schema];
@@ -271,14 +276,14 @@ class BrpCacheService
      *
      * @return object
      *
-     * @throws \RuntimeException When OR is unavailable.
+     * @throws RuntimeException When OR is unavailable.
      */
     private function getObjectService(): object
     {
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (Throwable $e) {
-            throw new \RuntimeException('OpenRegister service is not available.');
+            throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
 }//end class

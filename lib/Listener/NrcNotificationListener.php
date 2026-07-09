@@ -41,6 +41,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Listener;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
 use OCA\Pipelinq\Service\Zgw\ZrcClient;
 use OCA\Pipelinq\Service\Zgw\ZtcClient;
@@ -80,16 +82,20 @@ class NrcNotificationListener
      * @param array<string, mixed> $notification Parsed inbound JSON payload.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) The per-kanaal match is an
+     *  intentional flat routing table — clearer as one dispatcher than split.
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-007
      */
     public function dispatch(array $abonnement, array $notification): void
     {
         $start = microtime(true);
 
         $endpointId = (string) ($abonnement['endpointId'] ?? '');
+        $endpoint   = null;
         if ($endpointId !== '') {
             $endpoint = $this->registers->find(ZgwRegisterAccess::SCHEMA_ENDPOINT, $endpointId);
-        } else {
-            $endpoint = null;
         }
 
         if ($endpoint === null) {
@@ -143,11 +149,10 @@ class NrcNotificationListener
     private function markReceived(array $abonnement): void
     {
         $uuid = (string) ($abonnement['@self']['uuid'] ?? $abonnement['id'] ?? '');
-        $abonnement['laatstOntvangenOp'] = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+        $abonnement['laatstOntvangenOp'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+        $saveUuid = null;
         if ($uuid !== '') {
             $saveUuid = $uuid;
-        } else {
-            $saveUuid = null;
         }
 
         $this->registers->save(
@@ -164,6 +169,9 @@ class NrcNotificationListener
      * @param array<string, mixed> $notification Inbound payload.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $endpoint keeps the uniform
+     *  per-kanaal handler signature invoked from the dispatch() match table.
      */
     private function onZaakCreated(array $endpoint, array $notification): void
     {
@@ -216,10 +224,9 @@ class NrcNotificationListener
         }
 
         $statustypeUrl = (string) ($status['statustype'] ?? '');
+        $omsch         = null;
         if ($statustypeUrl !== '') {
             $omsch = $this->ztc->resolveOmschrijvingFromUrl($endpoint, $statustypeUrl);
-        } else {
-            $omsch = null;
         }
 
         $requestId = (string) ($mapping['pipelinqId'] ?? '');
@@ -244,6 +251,9 @@ class NrcNotificationListener
      * @param array<string, mixed> $notification Inbound payload.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $endpoint keeps the uniform
+     *  per-kanaal handler signature invoked from the dispatch() match table.
      */
     private function onBesluitCreated(array $endpoint, array $notification): void
     {

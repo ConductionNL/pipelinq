@@ -170,10 +170,9 @@ class TemplateApprovalSyncService
             $payload['status']   = $newStatus;
             $payload['lastSyncedAt'] = $this->nowIso();
 
+            $id = null;
             if ($local !== null) {
                 $id = $this->extractId(payload: $local);
-            } else {
-                $id = null;
             }
 
             $this->saveObject(payload: $payload, id: $id);
@@ -388,15 +387,15 @@ class TemplateApprovalSyncService
      */
     private function extractId(array $payload): string
     {
-        foreach (['uuid', 'id', 'slug'] as $key) {
-            if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string) $payload[$key] !== '') {
-                return (string) $payload[$key];
-            }
+        $searchSpaces = [$payload];
+        $self         = ($payload['@self'] ?? null);
+        if (is_array($self) === true) {
+            $searchSpaces[] = $self;
         }
 
-        if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
+        foreach ($searchSpaces as $space) {
             foreach (['uuid', 'id', 'slug'] as $key) {
-                $value = ($payload['@self'][$key] ?? null);
+                $value = ($space[$key] ?? null);
                 if (is_scalar($value) === true && (string) $value !== '') {
                     return (string) $value;
                 }

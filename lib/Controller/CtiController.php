@@ -107,9 +107,8 @@ class CtiController extends Controller
             $payload = (array) $this->request->getParams();
         }
 
-        if ($signature === '') {
-            $signatureArg = null;
-        } else {
+        $signatureArg = null;
+        if ($signature !== '') {
             $signatureArg = $signature;
         }
 
@@ -198,10 +197,9 @@ class CtiController extends Controller
             targetNumber: $targetNumber,
         );
 
+        $status = Http::STATUS_BAD_GATEWAY;
         if ($result->success === true) {
             $status = Http::STATUS_OK;
-        } else {
-            $status = Http::STATUS_BAD_GATEWAY;
         }
 
         return new JSONResponse($result->toArray(), $status);

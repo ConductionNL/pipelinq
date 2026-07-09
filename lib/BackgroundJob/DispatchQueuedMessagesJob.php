@@ -78,6 +78,8 @@ class DispatchQueuedMessagesJob extends TimedJob
      * @param mixed $argument Job argument (unused).
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
      */
     protected function run(mixed $argument): void
     {

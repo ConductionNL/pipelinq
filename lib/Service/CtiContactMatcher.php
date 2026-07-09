@@ -81,6 +81,10 @@ class CtiContactMatcher
      * @param string|null $orgId      Org/tenant identifier (reserved).
      *
      * @return array{matches: array<int,array<string,mixed>>, totalMatches: int}
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $orgId is reserved for the forthcoming tenant scope; part of the stable public signature.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.3
      */
     public function findByPhoneNumber(?string $e164Number, ?string $orgId=null): array
     {
@@ -238,6 +242,8 @@ class CtiContactMatcher
      * @param array<int,string>   $needles Digit fragments to test against.
      *
      * @return bool
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat nested scans over candidate fields; extraction adds no clarity.
      */
     private function matchesAnyNeedle(array $record, array $needles): bool
     {
@@ -281,6 +287,11 @@ class CtiContactMatcher
      * value is written back via OR `updateObject`.
      *
      * @return array{updated:int, skipped:int}
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses streaming records; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential guard clauses streaming records; extraction adds no clarity.
+     *
+     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.3
      */
     public function normaliseStoredPhoneNumbers(): array
     {

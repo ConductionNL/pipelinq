@@ -39,6 +39,11 @@ namespace OCA\Pipelinq\Service\Lifecycle;
  * map and the caller falls back to its prior hardcoded graph (never regresses).
  *
  * @spec openspec/changes/pipelinq-lifecycle-batch-a/specs/openregister-integration/spec.md
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) four independent
+ *  file-scan entry points (states/configuration/lifecycle/adjacency) sharing
+ *  extracted file-scan helpers; each public/private method is individually
+ *  under threshold.
  */
 final class SchemaLifecycleGraph
 {
@@ -141,6 +146,31 @@ final class SchemaLifecycleGraph
             return [];
         }
 
+        foreach ($this->resolveRegisterFiles() as $file) {
+            $decoded = $this->decodeRegisterFile(file: $file);
+            if ($decoded === null) {
+                continue;
+            }
+
+            $schema = $this->findSchemaInDecoded(decoded: $decoded, schemaSlug: $schemaSlug);
+            if ($schema === null) {
+                continue;
+            }
+
+            return $this->enumFromSchema(schema: $schema, field: $field);
+        }
+
+        return [];
+    }//end statesFor()
+
+    /**
+     * Resolve the absolute paths of every bundled register JSON file to scan
+     * (the main register, then the register.d fragments, alphabetically).
+     *
+     * @return array<int, string>
+     */
+    private function resolveRegisterFiles(): array
+    {
         $files = [$this->mainRegisterPath];
         if (is_dir($this->fragmentDir) === true) {
             $glob = glob($this->fragmentDir.'/*.json');
@@ -150,47 +180,81 @@ final class SchemaLifecycleGraph
             }
         }
 
-        foreach ($files as $file) {
-            if (is_file($file) === false || is_readable($file) === false) {
+        return $files;
+    }//end resolveRegisterFiles()
+
+    /**
+     * Read + json_decode a register file into its decoded array shape.
+     *
+     * @param string $file Absolute path to a register JSON file.
+     *
+     * @return array<string, mixed>|null The decoded document, or null when unreadable/invalid.
+     */
+    private function decodeRegisterFile(string $file): ?array
+    {
+        if (is_file($file) === false || is_readable($file) === false) {
+            return null;
+        }
+
+        $raw = file_get_contents($file);
+        if ($raw === false) {
+            return null;
+        }
+
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded) === false) {
+            return null;
+        }
+
+        return $decoded;
+    }//end decodeRegisterFile()
+
+    /**
+     * Find the first schema in a decoded register document matching a slug.
+     *
+     * @param array<string, mixed> $decoded    The decoded register document.
+     * @param string               $schemaSlug The schema slug to look up.
+     *
+     * @return array<string, mixed>|null The matching schema, or null when absent.
+     */
+    private function findSchemaInDecoded(array $decoded, string $schemaSlug): ?array
+    {
+        $schemas = ($decoded['components']['schemas'] ?? []);
+        if (is_array($schemas) === false) {
+            return null;
+        }
+
+        foreach ($schemas as $key => $schema) {
+            if (is_array($schema) === false) {
                 continue;
             }
 
-            $raw = file_get_contents($file);
-            if ($raw === false) {
-                continue;
+            $slug = (string) ($schema['slug'] ?? $key);
+            if ($slug === $schemaSlug) {
+                return $schema;
             }
+        }
 
-            $decoded = json_decode($raw, true);
-            if (is_array($decoded) === false) {
-                continue;
-            }
+        return null;
+    }//end findSchemaInDecoded()
 
-            $schemas = ($decoded['components']['schemas'] ?? []);
-            if (is_array($schemas) === false) {
-                continue;
-            }
+    /**
+     * Resolve the `enum` values of a schema property as strings.
+     *
+     * @param array<string, mixed> $schema The schema.
+     * @param string               $field  The property name.
+     *
+     * @return array<int, string> The enum values, or an empty array when absent/invalid.
+     */
+    private function enumFromSchema(array $schema, string $field): array
+    {
+        $enum = ($schema['properties'][$field]['enum'] ?? []);
+        if (is_array($enum) === false) {
+            return [];
+        }
 
-            foreach ($schemas as $key => $schema) {
-                if (is_array($schema) === false) {
-                    continue;
-                }
-
-                $slug = (string) ($schema['slug'] ?? $key);
-                if ($slug !== $schemaSlug) {
-                    continue;
-                }
-
-                $enum = ($schema['properties'][$field]['enum'] ?? []);
-                if (is_array($enum) === false) {
-                    return [];
-                }
-
-                return array_map(static fn ($value): string => (string) $value, $enum);
-            }
-        }//end foreach
-
-        return [];
-    }//end statesFor()
+        return array_map(static fn ($value): string => (string) $value, $enum);
+    }//end enumFromSchema()
 
     /**
      * Resolve an arbitrary `configuration.<key>` annotation for a schema slug.
@@ -206,30 +270,14 @@ final class SchemaLifecycleGraph
      * @param string $key        The configuration key (e.g. 'x-pipelinq-forecast-lifecycle').
      *
      * @return array<string, mixed>|null The annotation, or null when not found.
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function configurationFor(string $schemaSlug, string $key): ?array
     {
-        $files = [$this->mainRegisterPath];
-        if (is_dir($this->fragmentDir) === true) {
-            $glob = glob($this->fragmentDir.'/*.json');
-            if (is_array($glob) === true) {
-                sort($glob);
-                $files = array_merge($files, $glob);
-            }
-        }
-
-        foreach ($files as $file) {
-            if (is_file($file) === false || is_readable($file) === false) {
-                continue;
-            }
-
-            $raw = file_get_contents($file);
-            if ($raw === false) {
-                continue;
-            }
-
-            $decoded = json_decode($raw, true);
-            if (is_array($decoded) === false) {
+        foreach ($this->resolveRegisterFiles() as $file) {
+            $decoded = $this->decodeRegisterFile(file: $file);
+            if ($decoded === null) {
                 continue;
             }
 
@@ -238,30 +286,54 @@ final class SchemaLifecycleGraph
                 continue;
             }
 
-            foreach ($schemas as $schemaKey => $schema) {
-                if (is_array($schema) === false) {
-                    continue;
-                }
-
-                $slug = (string) ($schema['slug'] ?? $schemaKey);
-                if ($slug !== $schemaSlug) {
-                    continue;
-                }
-
-                $config = ($schema['configuration'] ?? []);
-                if (is_array($config) === false) {
-                    continue;
-                }
-
-                $annotation = ($config[$key] ?? null);
-                if (is_array($annotation) === true) {
-                    return $annotation;
-                }
+            $annotation = $this->configurationFromSchemas(schemas: $schemas, schemaSlug: $schemaSlug, key: $key);
+            if ($annotation !== null) {
+                return $annotation;
             }
-        }//end foreach
+        }
 
         return null;
     }//end configurationFor()
+
+    /**
+     * Scan one register file's schemas for a slug's `configuration.<key>` annotation.
+     *
+     * Mirrors {@see configurationFor()}'s inner loop: a slug match with an invalid
+     * `configuration` block or a non-array annotation does NOT stop the scan — it
+     * keeps checking any remaining schemas in this file (then the caller moves on
+     * to the next file).
+     *
+     * @param array<string, mixed> $schemas    The decoded `components.schemas` map.
+     * @param string               $schemaSlug The schema slug to look up.
+     * @param string               $key        The configuration key.
+     *
+     * @return array<string, mixed>|null The annotation, or null when not found in these schemas.
+     */
+    private function configurationFromSchemas(array $schemas, string $schemaSlug, string $key): ?array
+    {
+        foreach ($schemas as $schemaKey => $schema) {
+            if (is_array($schema) === false) {
+                continue;
+            }
+
+            $slug = (string) ($schema['slug'] ?? $schemaKey);
+            if ($slug !== $schemaSlug) {
+                continue;
+            }
+
+            $config = ($schema['configuration'] ?? []);
+            if (is_array($config) === false) {
+                continue;
+            }
+
+            $annotation = ($config[$key] ?? null);
+            if (is_array($annotation) === true) {
+                return $annotation;
+            }
+        }
+
+        return null;
+    }//end configurationFromSchemas()
 
     /**
      * Resolve the raw `x-openregister-lifecycle` annotation for a schema slug.
@@ -269,19 +341,12 @@ final class SchemaLifecycleGraph
      * @param string $schemaSlug The schema slug.
      *
      * @return array<string, mixed>|null The annotation, or null when not found.
+     *
+     * @spec exclude phpmd mechanical refactor
      */
     public function lifecycleFor(string $schemaSlug): ?array
     {
-        $files = [$this->mainRegisterPath];
-        if (is_dir($this->fragmentDir) === true) {
-            $glob = glob($this->fragmentDir.'/*.json');
-            if (is_array($glob) === true) {
-                sort($glob);
-                $files = array_merge($files, $glob);
-            }
-        }
-
-        foreach ($files as $file) {
+        foreach ($this->resolveRegisterFiles() as $file) {
             $lifecycle = $this->lifecycleFromFile(file: $file, schemaSlug: $schemaSlug);
             if ($lifecycle !== null) {
                 return $lifecycle;
@@ -301,47 +366,25 @@ final class SchemaLifecycleGraph
      */
     private function lifecycleFromFile(string $file, string $schemaSlug): ?array
     {
-        if (is_file($file) === false || is_readable($file) === false) {
+        $decoded = $this->decodeRegisterFile(file: $file);
+        if ($decoded === null) {
             return null;
         }
 
-        $raw = file_get_contents($file);
-        if ($raw === false) {
+        $schema = $this->findSchemaInDecoded(decoded: $decoded, schemaSlug: $schemaSlug);
+        if ($schema === null) {
             return null;
         }
 
-        $decoded = json_decode($raw, true);
-        if (is_array($decoded) === false) {
+        $config = ($schema['configuration'] ?? []);
+        if (is_array($config) === false) {
             return null;
         }
 
-        $schemas = ($decoded['components']['schemas'] ?? []);
-        if (is_array($schemas) === false) {
-            return null;
+        $lifecycle = ($config['x-openregister-lifecycle'] ?? null);
+        if (is_array($lifecycle) === true) {
+            return $lifecycle;
         }
-
-        foreach ($schemas as $key => $schema) {
-            if (is_array($schema) === false) {
-                continue;
-            }
-
-            $slug = (string) ($schema['slug'] ?? $key);
-            if ($slug !== $schemaSlug) {
-                continue;
-            }
-
-            $config = ($schema['configuration'] ?? []);
-            if (is_array($config) === false) {
-                return null;
-            }
-
-            $lifecycle = ($config['x-openregister-lifecycle'] ?? null);
-            if (is_array($lifecycle) === true) {
-                return $lifecycle;
-            }
-
-            return null;
-        }//end foreach
 
         return null;
     }//end lifecycleFromFile()
@@ -365,36 +408,49 @@ final class SchemaLifecycleGraph
 
         $graph = [];
         foreach ($transitions as $spec) {
-            if (is_array($spec) === false) {
-                continue;
-            }
-
-            $to = ($spec['to'] ?? null);
-            if (is_string($to) === false || $to === '') {
-                continue;
-            }
-
-            $from = ($spec['from'] ?? []);
-            if (is_string($from) === true) {
-                $from = [$from];
-            }
-
-            if (is_array($from) === false) {
-                continue;
-            }
-
-            foreach ($from as $fromState) {
-                $state = (string) $fromState;
-                if (isset($graph[$state]) === false) {
-                    $graph[$state] = [];
-                }
-
-                if (in_array($to, $graph[$state], true) === false) {
-                    $graph[$state][] = $to;
-                }
-            }
-        }//end foreach
+            $this->mergeTransitionSpec(graph: $graph, spec: $spec);
+        }
 
         return $graph;
     }//end normaliseTransitions()
+
+    /**
+     * Merge one `{from, to}` transition spec into the adjacency map being built.
+     *
+     * @param array<string, array<int, string>> $graph The adjacency map (built in place, by reference).
+     * @param mixed                             $spec  One entry of the `transitions` list/map.
+     *
+     * @return void
+     */
+    private function mergeTransitionSpec(array &$graph, mixed $spec): void
+    {
+        if (is_array($spec) === false) {
+            return;
+        }
+
+        $to = ($spec['to'] ?? null);
+        if (is_string($to) === false || $to === '') {
+            return;
+        }
+
+        $from = ($spec['from'] ?? []);
+        if (is_string($from) === true) {
+            $from = [$from];
+        }
+
+        if (is_array($from) === false) {
+            return;
+        }
+
+        foreach ($from as $fromState) {
+            $state = (string) $fromState;
+            if (isset($graph[$state]) === false) {
+                $graph[$state] = [];
+            }
+
+            if (in_array($to, $graph[$state], true) === false) {
+                $graph[$state][] = $to;
+            }
+        }
+    }//end mergeTransitionSpec()
 }//end class

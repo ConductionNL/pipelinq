@@ -13,12 +13,17 @@ data stewards and Nextcloud administrators.
 
 ## Prerequisites
 
-- **OpenRegister** is installed and enabled — MDM stores all of its schemas
-  (`master-entity`, `source-record`, `trust-configuration`, `merge-operation`,
-  `sync-queue-item`) as OpenRegister objects.
-- **openconnector** is installed if you want outbound sync to downstream apps.
-  Without it, sync-queue items are still created but stay `queued` until a
-  consumer is configured.
+- **OpenRegister** is installed and enabled — MDM stores its schemas
+  (`master-entity`, `source-record`, `trust-configuration`, `merge-operation`)
+  as OpenRegister objects, and delivers all outbound downstream sync through
+  OpenRegister's **WebhookService** (durable webhook logs + `WebhookRetryJob`).
+  There is no app-side sync queue: pipelinq dispatches a webhook per downstream
+  app at merge/mutation time and OpenRegister owns queueing, delivery logging,
+  and retries.
+- A **webhook consumer** configured in OpenRegister for the
+  `pipelinq.mdm.sync` event if you want the downstream apps to receive updates.
+  Without one, dispatches are recorded in OpenRegister's webhook log but reach
+  no consumer.
 
 ## Setup
 
@@ -50,16 +55,15 @@ the integration orchestration, out of scope for MDM itself.
 
 ### 3. Background jobs
 
-MDM registers four background jobs (run automatically by Nextcloud cron):
+Duplicate detection and data-quality scoring are hosted by OpenRegister
+(ADR-045 #D). Pipelinq itself no longer runs MDM sync or projection background
+jobs: downstream delivery is dispatched event-first to OpenRegister's
+WebhookService (retries owned by OR's `WebhookRetryJob`), and the golden-record
+→ OR-schema projection runs on the merge/mutation event path
+(`ObjectsMergedSyncListener` → `OpenRegisterSyncService`), not a poller.
 
-| Job | Default cadence | Purpose |
-|---|---|---|
-| `MdmDuplicateDetectionJob` | daily (02:00 UTC) | Deterministic + probabilistic duplicate scan per entity type |
-| `MdmDataQualityScorerJob` | nightly (03:00 UTC) | Recompute `dataQualityScore` for every master entity |
-| `MdmSyncQueueProcessorJob` | every 5 minutes | Deliver queued sync items, apply backoff, dead-letter |
-| `MdmOpenRegisterSyncJob` | hourly | Project changed master entities onto their OR objects |
-
-Ensure Nextcloud is on **Cron** (not AJAX) background mode for reliable cadence.
+Ensure Nextcloud is on **Cron** (not AJAX) background mode so OpenRegister's
+`WebhookRetryJob` runs reliably.
 
 ## Trust configuration
 
@@ -117,11 +121,12 @@ MDM atomically:
 3. marks the losing entity `merged-into-other` and records `mergedIntoMasterId`,
 4. recomputes the survivor's golden record,
 5. logs a `merge-operation` with the per-attribute resolution log,
-6. enqueues `merge` sync items for every downstream app.
+6. dispatches a `merge` sync webhook to every downstream app via OpenRegister's
+   WebhookService.
 
 A merge is **reversible for 30 days**. Reversal restores the pre-merge snapshot,
-re-links source records and enqueues `reverse-merge` sync items. After 30 days the
-`reversible` flag is `false` and reversal is refused.
+re-links source records and dispatches `reverse-merge` sync webhooks. After 30
+days the `reversible` flag is `false` and reversal is refused.
 
 ### Resolving attribute conflicts
 
@@ -132,26 +137,28 @@ entry so the decision applies to all entities of that type.
 
 ### Monitoring data quality
 
-The data-quality dashboard shows the average score trend, a health card (% of
-entities `> 0.8`, `0.6–0.8`, `< 0.6`), the ten worst entities, and sync-queue
-health counts. The score is
+The data-quality dashboard (hosted by OpenRegister) shows the average score
+trend, a health card (% of entities `> 0.8`, `0.6–0.8`, `< 0.6`), and the ten
+worst entities. The score is
 `completeness × 0.3 + freshness × 0.4 + agreement × 0.3`, recomputed nightly.
 
 ## Troubleshooting sync failures
 
-- **Items stuck in `queued`** — confirm openconnector is installed and a consumer
-  is configured for the `targetSystem`; check that `MdmSyncQueueProcessorJob` is
-  running (Cron background mode).
-- **Items in `dead-letter`** — a delivery failed after 7 attempts (backoff
-  1 m → 5 m → 30 m → 2 h → 12 h → 24 h → 24 h, ~7 days). Inspect `errorMessage` in
-  the Sync queue admin panel and use **Retry** to reset the item to `queued`
-  (`POST /api/mdm/sync-queue/{itemId}/retry`).
-- **A master entity is not syncing to OpenRegister** — the hourly
-  `MdmOpenRegisterSyncJob` only projects entities changed since its last run, and
-  only for entity types with a corresponding OR schema. `vendor` has no dedicated
-  OR schema and is intentionally excluded from the OR projection.
+Downstream sync delivery is fully owned by OpenRegister — inspect it in
+**OpenRegister → Webhooks** (webhook logs), not in Pipelinq:
+
+- **A downstream app is not receiving updates** — confirm a webhook consumer is
+  configured in OpenRegister for the `pipelinq.mdm.sync` event, and check the
+  OpenRegister webhook log for the delivery attempt and its response.
+- **Deliveries keep failing** — OpenRegister's `WebhookRetryJob` reschedules
+  failed deliveries via `next_retry_at`; inspect the stored request body and
+  response in the webhook log. There is no app-side retry, dead-letter, or
+  acknowledgment surface in Pipelinq (retire-mdm-sync-queue).
+- **A master entity is not projecting to OpenRegister** — the projection runs on
+  the merge/mutation event path (`ObjectsMergedSyncListener`), only for entity
+  types with a corresponding OR schema. `vendor` has no dedicated OR schema and
+  is intentionally excluded from the OR projection.
 
 ## See also
 
-- [MDM read-API reference](../api/mdm-read-api.md)
 - [AVG right-of-deletion procedure](../compliance/avg-right-of-deletion.md)

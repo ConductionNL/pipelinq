@@ -118,6 +118,8 @@ class BerichtenboxAdminController extends Controller
      * GET /api/admin/berichtenbox/stats — aggregate delivery counts.
      *
      * @return JSONResponse
+     *
+     * @spec exclude mechanical phpmd cleanup — counter tally extracted to a helper, behaviour unchanged
      */
     public function stats(): JSONResponse
     {
@@ -131,7 +133,6 @@ class BerichtenboxAdminController extends Controller
             'failed'           => 0,
             'opted-out'        => 0,
         ];
-        $unread   = 0;
         if ($register === '' || $schema === '') {
             return new JSONResponse(['counters' => $counters, 'unread' => 0]);
         }
@@ -152,6 +153,20 @@ class BerichtenboxAdminController extends Controller
             );
         }
 
+        return new JSONResponse($this->tally(rows: $rows, counters: $counters));
+    }//end stats()
+
+    /**
+     * Tally delivery counters and unread total from OR rows.
+     *
+     * @param iterable $rows     OR result rows.
+     * @param array    $counters Zero-initialised counter map.
+     *
+     * @return array{counters: array, unread: int}
+     */
+    private function tally(iterable $rows, array $counters): array
+    {
+        $unread = 0;
         foreach ($rows as $row) {
             $data = $this->toArray(row: $row);
             if ($data === null) {
@@ -168,8 +183,8 @@ class BerichtenboxAdminController extends Controller
             }
         }
 
-        return new JSONResponse(['counters' => $counters, 'unread' => $unread]);
-    }//end stats()
+        return ['counters' => $counters, 'unread' => $unread];
+    }//end tally()
 
     /**
      * Resolve OR service.
@@ -196,9 +211,9 @@ class BerichtenboxAdminController extends Controller
 
         if (is_object($row) === true) {
             if (method_exists($row, 'jsonSerialize') === true) {
-                $s = $row->jsonSerialize();
-                if (is_array($s) === true) {
-                    return $s;
+                $serialized = $row->jsonSerialize();
+                if (is_array($serialized) === true) {
+                    return $serialized;
                 }
             }
 

@@ -105,6 +105,11 @@ class ProductVendorProviderService
      *
      * @return array<string,mixed>|null The projected product array, or null on failure.
      *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $authorisedConsumer is part of
+     *  the stable pluggable-integration-registry provider contract (REQ-PVM-005);
+     *  other providers call this method positionally and changing the signature
+     *  would be a breaking cross-app change.
+     *
      * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-005
      */
     public function getProduct(string $productId, string $consumerAppSlug='', bool $authorisedConsumer=false): ?array

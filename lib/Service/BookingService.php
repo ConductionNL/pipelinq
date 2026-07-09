@@ -58,6 +58,9 @@ use RuntimeException;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive booking-lifecycle service; splitting would fragment one state machine.
+ * @SuppressWarnings(PHPMD.TooManyMethods)           Cohesive booking-lifecycle service; splitting would fragment one state machine.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Cohesive booking-lifecycle service; splitting would fragment one state machine.
  *
  * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
  */
@@ -262,6 +265,9 @@ class BookingService
      *
      * @throws InvalidArgumentException If validation fails.
      * @throws RuntimeException If OpenRegister is unavailable.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential validation guards; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential validation guards; extraction adds no clarity.
      *
      * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
      */
@@ -1051,6 +1057,9 @@ class BookingService
      * @param array<string, mixed> $service Service entity.
      *
      * @return array<int, string>
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential filtering guards; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential filtering guards; extraction adds no clarity.
      */
     private function loadCandidateResources(array $service): array
     {
@@ -1446,8 +1455,8 @@ class BookingService
             return false;
         }
 
-        $ts = strtotime($value);
-        return ($ts !== false);
+        $timestamp = strtotime($value);
+        return ($timestamp !== false);
     }//end isValidIso()
 
     /**
@@ -1480,14 +1489,14 @@ class BookingService
             return '';
         }
 
-        $ts = strtotime($iso);
-        if ($ts === false) {
+        $timestamp = strtotime($iso);
+        if ($timestamp === false) {
             return $iso;
         }
 
-        $shifted = ($ts + $seconds);
-        $dt      = (new DateTimeImmutable('@'.$shifted))->setTimezone(new DateTimeZone('UTC'));
-        return $dt->format('Y-m-d\TH:i:sP');
+        $shifted  = ($timestamp + $seconds);
+        $dateTime = (new DateTimeImmutable('@'.$shifted))->setTimezone(new DateTimeZone('UTC'));
+        return $dateTime->format('Y-m-d\TH:i:sP');
     }//end shiftIso()
 
     /**

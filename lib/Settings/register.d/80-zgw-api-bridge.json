@@ -18,7 +18,7 @@
         "version": "1.0.0",
         "summary": "Configuration profile for a single ZGW deployment per gemeente (ZRC/DRC/BRC/ZTC/AC/NRC component URLs).",
         "description": "Tracks the per-gemeente ZGW deployment configuration: the six component base URLs (ZRC, DRC, BRC, ZTC, AC, NRC), the bound ZgwClient credential reference, the actief/readOnly write toggles, and the optional mTLS material. Used by ZgwApiClient + ZrcClient + DrcClient + BrcClient + ZtcClient + AcClient + NrcSubscriptionService to address the right host per call. One endpoint per gemeente (gemeenteCode is the natural key); coexistence-validator gates against same-gemeente double write paths versus stuf-zkn-bg-adapter. Mapped to Schema.org SoftwareApplication for register tooling.",
-        "@type": "schema:SoftwareApplication",
+        "x-schema-org": "schema:SoftwareApplication",
         "required": [
           "naam",
           "gemeenteCode",
@@ -131,7 +131,7 @@
         "version": "1.0.0",
         "summary": "JWT credentials per VNG-API-Common spec for one or more ZgwEndpoints.",
         "description": "Holds the clientIdentifier (issued by the gemeente IT team) and the vault reference to the HS256 client secret used to mint per-request JWTs against VNG-API-Common-protected ZGW components. No raw secret is stored on the schema — the secretKluisRef points at a vault entry maintained by gemeente operations. Used by ZgwApiClient.mintJwt() for every outbound call. Mapped to Schema.org CreativeWork (credential-like, no closer Schema.org equivalent).",
-        "@type": "schema:CreativeWork",
+        "x-schema-org": "schema:CreativeWork",
         "required": [
           "clientIdentifier",
           "secretKluisRef",
@@ -187,7 +187,7 @@
         "version": "1.0.0",
         "summary": "Subscription state for one NRC endpoint per ZgwEndpoint (callback URL, bearer secret ref, active kanalen).",
         "description": "Tracks the lifecycle of a single Notificaties Routerings Component (NRC) abonnement: the URL NRC returned on POST /api/v1/abonnement, the pipelinq inbox callback URL, the per-abonnement bearer token vault reference used to authenticate inbound NRC POSTs, the subscribed kanalen + filters, and the last-received timestamp. Owned by NrcSubscriptionService; consumed by ZgwNotificationController to authorise inbound callbacks and by NrcNotificationListener to dispatch them. Mapped to Schema.org Action for register tooling.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "endpointId",
           "abonnementUrl",
@@ -265,7 +265,7 @@
         "version": "1.0.0",
         "summary": "Bidirectional link between a pipelinq entity (request/contact/document) and a ZGW resource URL (zaak/besluit/rol/informatieobject).",
         "description": "ZGW uses absolute URLs as the canonical identifier for zaken, besluiten, rollen and informatieobjecten. This mapping persists the URL + UUID + most-recent ETag per resource so inbound NRC notifications (which reference resources by URL) can be correlated back to the originating pipelinq entity, and so PATCH operations can include If-Match for optimistic concurrency. Multiple mappings per Request are expected during ZGW <-> StUF coexistence migration. Mapped to Schema.org Thing as a pure relation row.",
-        "@type": "schema:Thing",
+        "x-schema-org": "schema:Thing",
         "required": [
           "pipelinqEntiteit",
           "pipelinqId",

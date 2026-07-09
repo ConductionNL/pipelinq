@@ -47,9 +47,25 @@ use Throwable;
  * - parseTemplatePlaceholders(templateBody) — pure utility that
  *   counts {{N}} placeholders.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires consent +
- * budget + provider client + media + repository + cost capture +
- * notifications + OR.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires consent +
+ *  budget + provider client + media + repository + cost capture +
+ *  notifications + OR.
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Aggregates the whole
+ *  outbound/inbound WhatsApp lifecycle (send orchestration, failover,
+ *  webhook ingestion, OR persistence helpers) as many small,
+ *  single-purpose methods; splitting it would scatter one cohesive
+ *  channel-adapter concern across several classes.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Same cohesion
+ *  rationale: the length reflects breadth, not tangled logic — each
+ *  extracted method is independently simple (verified via phpmd's
+ *  per-method thresholds).
+ * @SuppressWarnings(PHPMD.TooManyMethods)           The 2026-07 phpmd
+ *  cleanup extracted several private single-purpose helpers
+ *  (resolveSendContext, resolveTemplateForSend, attemptProviderSend,
+ *  bodyForSend, templateIdForSend, latestInboundTimestamp, firstScalarId)
+ *  specifically to bring per-method complexity under threshold; further
+ *  splitting the class would scatter one channel-adapter concern without
+ *  reducing real coupling.
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
  */
@@ -142,6 +158,8 @@ class WhatsAppAdapter
      * @param string               $body       Free-form body (ignored when templateId set).
      * @param string|null          $templateId Template UUID/slug or null for free-form.
      * @param array<int, string>   $parameters Positional template parameters.
+     * @param array<string, mixed> $context    Optional send context for the
+     *                                         outbound audit (`clientId`, `agent`).
      *
      * @return array{
      *     status: string,
@@ -155,12 +173,14 @@ class WhatsAppAdapter
      * } Send outcome.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
      */
     public function send(
         array $contact,
         string $body,
         ?string $templateId=null,
-        array $parameters=[]
+        array $parameters=[],
+        array $context=[]
     ): array {
         $contactId = $this->extractId(payload: $contact);
         $toNumber  = $this->extractPhone(contact: $contact);
@@ -169,43 +189,25 @@ class WhatsAppAdapter
             return ['status' => self::STATUS_FAILED, 'error' => 'no recipient phone number'];
         }
 
-        if ($this->consentService->canSend(contactId: $contactId, channel: 'whatsapp') === false) {
+        $isBusinessInitiated = (($templateId ?? '') !== '');
+        if ($this->consentForSend(contactId: $contactId, businessInitiated: $isBusinessInitiated) === false) {
             return ['status' => self::STATUS_CONSENT_MISSING];
         }
 
-        $template     = null;
-        $templateName = '';
-        $language     = (string) $this->appConfig->getValueString(Application::APP_ID, 'whatsapp.default_language', 'nl');
+        $language = (string) $this->appConfig->getValueString(Application::APP_ID, 'whatsapp.default_language', 'nl');
+        $context  = $this->resolveSendContext(
+            templateId: $templateId,
+            parameters: $parameters,
+            language: $language,
+            contactId: $contactId
+        );
+        if ($context['error'] !== null) {
+            return $context['error'];
+        }
 
-        if ($templateId !== null && $templateId !== '') {
-            $template = $this->loadTemplate(id: $templateId);
-            if ($template === null) {
-                return ['status' => self::STATUS_TEMPLATE_NOT_FOUND];
-            }
-
-            $status = (string) ($template['status'] ?? '');
-            if ($status !== 'approved') {
-                return ['status' => self::STATUS_TEMPLATE_NOT_APPROVED];
-            }
-
-            $templateName = (string) ($template['externalId'] ?? '');
-            $language     = (string) ($template['language'] ?? $language);
-
-            $expected = $this->parseTemplatePlaceholders(templateBody: (string) ($template['body'] ?? ''));
-            $given    = count($parameters);
-            if ($expected !== $given) {
-                return [
-                    'status'   => self::STATUS_TEMPLATE_MISMATCH,
-                    'expected' => $expected,
-                    'given'    => $given,
-                ];
-            }
-        } else {
-            // Free-form: require an in-window session.
-            if ($this->isWithinSessionWindow(contactId: $contactId) === false) {
-                return ['status' => self::STATUS_SESSION_WINDOW_EXPIRED];
-            }
-        }//end if
+        $template     = $context['template'];
+        $templateName = $context['templateName'];
+        $language     = $context['language'];
 
         $tenantId = $this->getTenantId();
         $ordered  = $this->orderedProvidersForSend(templateProviderId: (string) ($template['providerId'] ?? ''));
@@ -215,120 +217,370 @@ class WhatsAppAdapter
         }
 
         foreach ($ordered as $row) {
-            $providerId = $this->extractId(payload: $row);
-
-            if ($this->budgetService->canSend(tenantId: $tenantId, providerId: $providerId) === false) {
-                // Budget-failure is per-provider; we may still try the
-                // next priority. Continue.
-                continue;
-            }
-
-            try {
-                if ($templateName !== '') {
-                    $result = $this->providerClient->sendTemplate(
-                        channelProvider: $row,
-                        phoneNumber: $toNumber,
-                        templateName: $templateName,
-                        language: $language,
-                        parameters: $parameters,
-                    );
-                } else {
-                    $result = $this->providerClient->sendFreeForm(
-                        channelProvider: $row,
-                        phoneNumber: $toNumber,
-                        body: $body,
-                    );
-                }
-            } catch (TransientSmsProviderException $e) {
-                $this->logger->warning(
-                    'WhatsAppAdapter.send: transient — failing over',
-                    ['providerId' => $providerId, 'message' => $e->getMessage()]
-                );
-                continue;
-            } catch (PermanentSmsProviderException $e) {
-                $this->logger->warning(
-                    'WhatsAppAdapter.send: permanent provider failure',
-                    ['providerId' => $providerId, 'message' => $e->getMessage()]
-                );
-                if ($templateName !== '') {
-                    $failureBody = sprintf('[template:%s]', $templateName);
-                } else {
-                    $failureBody = $body;
-                }
-
-                if ($template !== null) {
-                    $failureTemplateId = $this->extractId(payload: $template);
-                } else {
-                    $failureTemplateId = '';
-                }
-
-                return $this->persistFailureAndAlert(
-                    contactId: $contactId,
-                    providerId: $providerId,
-                    body: $failureBody,
-                    templateId: $failureTemplateId,
-                    error: $e->getMessage(),
-                );
-            } catch (Throwable $e) {
-                $this->logger->warning(
-                    'WhatsAppAdapter.send: unexpected — failing over',
-                    ['providerId' => $providerId, 'message' => $e->getMessage()]
-                );
-                continue;
-            }//end try
-
-            if ($templateName !== '') {
-                $outboundBody = sprintf('[template:%s]', $templateName);
-            } else {
-                $outboundBody = $body;
-            }
-
-            if ($template !== null) {
-                $outboundTemplateId = $this->extractId(payload: $template);
-            } else {
-                $outboundTemplateId = '';
-            }
-
-            $persisted = $this->persistOutbound(
+            $outcome = $this->attemptProviderSend(
+                row: $row,
+                tenantId: $tenantId,
                 contactId: $contactId,
-                providerId: $providerId,
-                body: $outboundBody,
-                externalMessageId: $result['externalMessageId'],
-                templateId: $outboundTemplateId,
-                templateParameters: $parameters,
+                toNumber: $toNumber,
+                body: $body,
+                templateName: $templateName,
+                language: $language,
+                parameters: $parameters,
+                template: $template,
+                context: $context,
             );
 
-            $this->budgetService->recordSend(tenantId: $tenantId, providerId: $providerId);
-
-            return [
-                'status'            => self::STATUS_SENT,
-                'messageId'         => $this->extractId(payload: $persisted ?? []),
-                'externalMessageId' => $result['externalMessageId'],
-                'providerId'        => $providerId,
-                'vendor'            => $result['vendor'],
-            ];
+            if ($outcome !== null) {
+                return $outcome;
+            }
         }//end foreach
-
-        if ($templateName !== '') {
-            $exhaustedBody = sprintf('[template:%s]', $templateName);
-        } else {
-            $exhaustedBody = $body;
-        }
-
-        if ($template !== null) {
-            $exhaustedTemplateId = $this->extractId(payload: $template);
-        } else {
-            $exhaustedTemplateId = '';
-        }
 
         return $this->persistFailureAndAlert(
             contactId: $contactId,
             providerId: '',
-            body: $exhaustedBody,
-            templateId: $exhaustedTemplateId,
+            body: $this->bodyForSend(templateName: $templateName, body: $body),
+            templateId: $this->templateIdForSend(template: $template),
             error: 'all WhatsApp providers returned transient errors',
         );
     }//end send()
+
+    /**
+     * Resolve the send context: template resolution for a template send, or
+     * the in-window session check for a free-form send.
+     *
+     * Extracted from {@see send()} so the orchestrator stays within the
+     * complexity budget; behaviour is unchanged — the two branches are
+     * mutually exclusive on whether `$templateId` is set.
+     *
+     * @param string|null        $templateId Template UUID/slug or null for free-form.
+     * @param array<int, string> $parameters Positional template parameters.
+     * @param string             $language   Default language (app-config).
+     * @param string             $contactId  Contact UUID (session-window lookup).
+     *
+     * @return array{
+     *     error: array<string, mixed>|null,
+     *     template?: array<string, mixed>|null,
+     *     templateName?: string,
+     *     language?: string
+     * } Resolved context, or an `error` outcome to return immediately.
+     */
+    private function resolveSendContext(?string $templateId, array $parameters, string $language, string $contactId): array
+    {
+        $isTemplateSend = (($templateId ?? '') !== '');
+        if ($isTemplateSend === true) {
+            $resolved = $this->resolveTemplateForSend(
+                templateId: (string) $templateId,
+                parameters: $parameters,
+                language: $language
+            );
+            if ($resolved['ok'] === false) {
+                return ['error' => $resolved['error']];
+            }
+
+            return [
+                'error'        => null,
+                'template'     => $resolved['template'],
+                'templateName' => $resolved['templateName'],
+                'language'     => $resolved['language'],
+            ];
+        }
+
+        // Free-form: require an in-window session.
+        if ($this->isWithinSessionWindow(contactId: $contactId) === false) {
+            return ['error' => ['status' => self::STATUS_SESSION_WINDOW_EXPIRED]];
+        }
+
+        return [
+            'error'        => null,
+            'template'     => null,
+            'templateName' => '',
+            'language'     => $language,
+        ];
+    }//end resolveSendContext()
+
+    /**
+     * Consent gate for a WhatsApp send.
+     *
+     * A business-initiated send (a template send, normally outside the 24h
+     * session window — including SLA escalations) requires the contact's
+     * latest `messagingConsentRecord` for whatsapp to be `opted-in` (Meta
+     * business-messaging policy). A within-window free-form reply keeps the
+     * opt-out-only gate (customer initiated the session).
+     *
+     * @param string $contactId         Contact UUID.
+     * @param bool   $businessInitiated Whether this is a template / business-initiated send.
+     *
+     * @return bool True when the send may proceed.
+     *
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     */
+    private function consentForSend(string $contactId, bool $businessInitiated): bool
+    {
+        if ($businessInitiated === true) {
+            return $this->consentService->canSendBusinessInitiated(contactId: $contactId, channel: 'whatsapp');
+        }
+
+        return $this->consentService->canSend(contactId: $contactId, channel: 'whatsapp');
+    }//end consentForSend()
+
+    /**
+     * Resolve + validate a template send.
+     *
+     * Extracted from {@see send()} so the orchestrator stays within the
+     * complexity budget; behaviour (template load / approval / parameter
+     * count checks) is unchanged.
+     *
+     * @param string             $templateId Template UUID/slug.
+     * @param array<int, string> $parameters Positional template parameters.
+     * @param string             $language   Fallback language when the
+     *                                       template does not specify one.
+     *
+     * @return array{
+     *     ok: bool,
+     *     error?: array<string, mixed>,
+     *     template?: array<string, mixed>,
+     *     templateName?: string,
+     *     language?: string
+     * } Resolution outcome.
+     */
+    private function resolveTemplateForSend(string $templateId, array $parameters, string $language): array
+    {
+        $template = $this->loadTemplate(id: $templateId);
+        if ($template === null) {
+            return ['ok' => false, 'error' => ['status' => self::STATUS_TEMPLATE_NOT_FOUND]];
+        }
+
+        $status = (string) ($template['status'] ?? '');
+        if ($status !== 'approved') {
+            return ['ok' => false, 'error' => ['status' => self::STATUS_TEMPLATE_NOT_APPROVED]];
+        }
+
+        $templateName = (string) ($template['externalId'] ?? '');
+        $language     = (string) ($template['language'] ?? $language);
+
+        $expected = $this->parseTemplatePlaceholders(templateBody: (string) ($template['body'] ?? ''));
+        $given    = count($parameters);
+        if ($expected !== $given) {
+            return [
+                'ok'    => false,
+                'error' => [
+                    'status'   => self::STATUS_TEMPLATE_MISMATCH,
+                    'expected' => $expected,
+                    'given'    => $given,
+                ],
+            ];
+        }
+
+        return [
+            'ok'           => true,
+            'template'     => $template,
+            'templateName' => $templateName,
+            'language'     => $language,
+        ];
+    }//end resolveTemplateForSend()
+
+    /**
+     * Attempt a send through one provider row.
+     *
+     * Extracted from {@see send()}'s failover loop so the orchestrator stays
+     * within the complexity budget; behaviour is unchanged: a budget denial,
+     * a transient provider failure, or any unexpected throwable all signal
+     * "try the next provider" (null return, mirrors the previous `continue`);
+     * a permanent provider failure or a successful send are terminal
+     * (mirrors the previous `return`).
+     *
+     * @param array<string, mixed>      $row          Provider row.
+     * @param string                    $tenantId     Tenant id.
+     * @param string                    $contactId    Contact UUID.
+     * @param string                    $toNumber     Recipient phone number.
+     * @param string                    $body         Free-form body.
+     * @param string                    $templateName Resolved template external id, or empty for free-form.
+     * @param string                    $language     Resolved language.
+     * @param array<int, string>        $parameters   Positional template parameters.
+     * @param array<string, mixed>|null $template     Resolved template row, or null for free-form.
+     * @param array<string, mixed>      $context      Send context for the outbound audit.
+     *
+     * @return array<string, mixed>|null Terminal outcome, or null to try the next provider.
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList) The per-attempt send state
+     *  (row + tenant + contact + recipient + body + template resolution + params
+     *  + audit context) is threaded explicitly to keep the failover loop pure and
+     *  free of mutable per-send instance state.
+     */
+    private function attemptProviderSend(
+        array $row,
+        string $tenantId,
+        string $contactId,
+        string $toNumber,
+        string $body,
+        string $templateName,
+        string $language,
+        array $parameters,
+        ?array $template,
+        array $context=[]
+    ): ?array {
+        $providerId = $this->extractId(payload: $row);
+
+        if ($this->budgetService->canSend(tenantId: $tenantId, providerId: $providerId) === false) {
+            // Budget-failure is per-provider; the caller may still try the
+            // next priority.
+            return null;
+        }
+
+        try {
+            $result = match (true) {
+                $templateName !== '' => $this->providerClient->sendTemplate(
+                    channelProvider: $row,
+                    phoneNumber: $toNumber,
+                    templateName: $templateName,
+                    language: $language,
+                    parameters: $parameters,
+                ),
+                default => $this->providerClient->sendFreeForm(
+                    channelProvider: $row,
+                    phoneNumber: $toNumber,
+                    body: $body,
+                ),
+            };
+        } catch (TransientSmsProviderException $e) {
+            $this->logger->warning(
+                'WhatsAppAdapter.send: transient — failing over',
+                ['providerId' => $providerId, 'message' => $e->getMessage()]
+            );
+            return null;
+        } catch (PermanentSmsProviderException $e) {
+            $this->logger->warning(
+                'WhatsAppAdapter.send: permanent provider failure',
+                ['providerId' => $providerId, 'message' => $e->getMessage()]
+            );
+            return $this->persistFailureAndAlert(
+                contactId: $contactId,
+                providerId: $providerId,
+                body: $this->bodyForSend(templateName: $templateName, body: $body),
+                templateId: $this->templateIdForSend(template: $template),
+                error: $e->getMessage(),
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'WhatsAppAdapter.send: unexpected — failing over',
+                ['providerId' => $providerId, 'message' => $e->getMessage()]
+            );
+            return null;
+        }//end try
+
+        $persisted = $this->persistOutbound(
+            contactId: $contactId,
+            providerId: $providerId,
+            body: $this->bodyForSend(templateName: $templateName, body: $body),
+            externalMessageId: $result['externalMessageId'],
+            templateId: $this->templateIdForSend(template: $template),
+            templateParameters: $parameters,
+        );
+
+        $this->budgetService->recordSend(tenantId: $tenantId, providerId: $providerId);
+
+        $messageId = $this->extractId(payload: ($persisted ?? []));
+        $this->auditOutbound(
+            contactId: $contactId,
+            messageId: $messageId,
+            conversationId: (string) (($persisted ?? [])['conversationId'] ?? ''),
+            body: $this->bodyForSend(templateName: $templateName, body: $body),
+            context: $context,
+        );
+
+        return [
+            'status'            => self::STATUS_SENT,
+            'messageId'         => $messageId,
+            'externalMessageId' => $result['externalMessageId'],
+            'providerId'        => $providerId,
+            'vendor'            => $result['vendor'],
+        ];
+    }//end attemptProviderSend()
+
+    /**
+     * Best-effort outbound contactmoment audit (REQ-OM-006).
+     *
+     * Resolves {@see ContactmomentService} lazily through the container and
+     * records the WhatsApp send as a `channel: chat` contactmoment with
+     * `channelMetadata.platform = whatsapp` (omnichannel convention).
+     * Log-and-continue: an audit failure MUST never affect the send outcome.
+     *
+     * @param string               $contactId      Contact UUID.
+     * @param string               $messageId      Persisted message UUID.
+     * @param string               $conversationId Conversation UUID.
+     * @param string               $body           Message body / template marker.
+     * @param array<string, mixed> $context        Send context (`clientId`, `agent`).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
+     */
+    private function auditOutbound(
+        string $contactId,
+        string $messageId,
+        string $conversationId,
+        string $body,
+        array $context
+    ): void {
+        try {
+            $auditor = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
+        } catch (Throwable $e) {
+            return;
+        }
+
+        if (is_object($auditor) === false || method_exists($auditor, 'recordOutboundMessage') === false) {
+            return;
+        }
+
+        $auditor->recordOutboundMessage(
+            channel: 'chat',
+            subject: 'Outbound WhatsApp',
+            summary: $body,
+            channelMetadata: [
+                'platform'       => 'whatsapp',
+                'direction'      => 'outbound',
+                'messageId'      => $messageId,
+                'conversationId' => $conversationId,
+                'contactId'      => $contactId,
+            ],
+            clientId: (string) ($context['clientId'] ?? ''),
+            agent: (string) ($context['agent'] ?? ''),
+        );
+    }//end auditOutbound()
+
+    /**
+     * Outbound body: a `[template:NAME]` marker for template sends, the raw
+     * free-form body otherwise.
+     *
+     * @param string $templateName Resolved template external id, or empty for free-form.
+     * @param string $body         Free-form body.
+     *
+     * @return string
+     */
+    private function bodyForSend(string $templateName, string $body): string
+    {
+        if ($templateName !== '') {
+            return sprintf('[template:%s]', $templateName);
+        }
+
+        return $body;
+    }//end bodyForSend()
+
+    /**
+     * Outbound templateId: the resolved template's id, or empty for free-form.
+     *
+     * @param array<string, mixed>|null $template Resolved template row, or null for free-form.
+     *
+     * @return string
+     */
+    private function templateIdForSend(?array $template): string
+    {
+        if ($template !== null) {
+            return $this->extractId(payload: $template);
+        }
+
+        return '';
+    }//end templateIdForSend()
 
     /**
      * Handle a Meta `messages` inbound webhook.
@@ -497,25 +749,42 @@ class WhatsAppAdapter
             return false;
         }
 
-        $latestTs = 0;
-        foreach ($rows as $raw) {
-            $arr = $this->toArray(value: $raw);
-            $ts  = strtotime((string) ($arr['sentAt'] ?? ''));
-            if ($ts === false) {
-                $ts = 0;
-            }
-
-            if ($ts > $latestTs) {
-                $latestTs = $ts;
-            }
-        }
-
-        if ($latestTs === 0) {
+        $latestTimestamp = $this->latestInboundTimestamp(rows: $rows);
+        if ($latestTimestamp === 0) {
             return false;
         }
 
-        return ((time() - $latestTs) < self::SESSION_WINDOW_SECONDS);
+        return ((time() - $latestTimestamp) < self::SESSION_WINDOW_SECONDS);
     }//end isWithinSessionWindow()
+
+    /**
+     * Latest `sentAt` timestamp across a set of inbound message rows.
+     *
+     * Extracted from {@see isWithinSessionWindow()} so it stays within the
+     * complexity budget; behaviour is unchanged: unparsable/missing
+     * timestamps count as 0 and never win the max.
+     *
+     * @param array<int, mixed> $rows Inbound message rows.
+     *
+     * @return int Latest unix timestamp, or 0 when none parsed.
+     */
+    private function latestInboundTimestamp(array $rows): int
+    {
+        $latestTimestamp = 0;
+        foreach ($rows as $raw) {
+            $arr       = $this->toArray(value: $raw);
+            $timestamp = strtotime((string) ($arr['sentAt'] ?? ''));
+            if ($timestamp === false) {
+                $timestamp = 0;
+            }
+
+            if ($timestamp > $latestTimestamp) {
+                $latestTimestamp = $timestamp;
+            }
+        }
+
+        return $latestTimestamp;
+    }//end latestInboundTimestamp()
 
     /**
      * Provider list for an outbound send.
@@ -1137,23 +1406,39 @@ class WhatsAppAdapter
      */
     private function extractId(array $payload): string
     {
-        foreach (['uuid', 'id', 'slug'] as $key) {
-            if (isset($payload[$key]) === true && is_scalar($payload[$key]) === true && (string) $payload[$key] !== '') {
-                return (string) $payload[$key];
-            }
+        $id = $this->firstScalarId(source: $payload);
+        if ($id !== '') {
+            return $id;
         }
 
         if (isset($payload['@self']) === true && is_array($payload['@self']) === true) {
-            foreach (['uuid', 'id', 'slug'] as $key) {
-                $value = ($payload['@self'][$key] ?? null);
-                if (is_scalar($value) === true && (string) $value !== '') {
-                    return (string) $value;
-                }
-            }
+            return $this->firstScalarId(source: $payload['@self']);
         }
 
         return '';
     }//end extractId()
+
+    /**
+     * First non-empty scalar value among `uuid` / `id` / `slug` keys.
+     *
+     * Extracted from {@see extractId()} so both the top-level and `@self`
+     * lookups share one implementation; behaviour is unchanged.
+     *
+     * @param array<string, mixed> $source Source array to probe.
+     *
+     * @return string The first matching value, or empty when none match.
+     */
+    private function firstScalarId(array $source): string
+    {
+        foreach (['uuid', 'id', 'slug'] as $key) {
+            $value = ($source[$key] ?? null);
+            if (is_scalar($value) === true && (string) $value !== '') {
+                return (string) $value;
+            }
+        }
+
+        return '';
+    }//end firstScalarId()
 
     /**
      * Current ISO 8601 UTC timestamp.

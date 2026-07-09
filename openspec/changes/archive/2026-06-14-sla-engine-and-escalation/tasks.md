@@ -442,7 +442,7 @@
 
 - [x] 12.2 Create attainment dashboard Vue widget
   - **spec_ref**: `specs/sla-engine-and-escalation/spec.md#REQ-006`
-  - **files**: Vue component for mydash or standalone dashboard
+  - **files**: Vue component for launchpad or standalone dashboard
   - **tier**: P0-must
   - **acceptance_criteria**:
     - KPI card: shows quarterly attainment percentage + trend (↑ ↓ —)

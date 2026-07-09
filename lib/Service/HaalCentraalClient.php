@@ -43,6 +43,7 @@ use Throwable;
  * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) OR-first + legacy OAuth2/mTLS paths plus HAL normalisation live in one cohesive client.
  */
 class HaalCentraalClient
 {
@@ -128,6 +129,10 @@ class HaalCentraalClient
      * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-01
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)  Sequential guard clauses over the HTTP response; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Linear OR-first then legacy request/response handling.
+     * @SuppressWarnings(PHPMD.StaticAccess)          BsnValidationService::mask is a pure stateless helper.
      */
     public function lookupPersoon(string $bsn, ?string $verzoekIdContext=null): ?array
     {
@@ -267,6 +272,9 @@ class HaalCentraalClient
      * @return array<string,mixed>|null The normalised+stamped person, OR_EMPTY_RESULT, or null to fall back.
      *
      * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential payload-shape guard clauses; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential payload-shape guard clauses; extraction adds no clarity.
      */
     private function lookupViaOpenRegister(string $bsn, string $maskedBsn): ?array
     {
@@ -319,10 +327,9 @@ class HaalCentraalClient
 
         $persoon = $this->normalisePerson(raw: $first);
 
+        $meta = [];
         if (is_array($payload['meta'] ?? null) === true) {
             $meta = $payload['meta'];
-        } else {
-            $meta = [];
         }
 
         $correlationId = ($meta['correlationId'] ?? null);
@@ -355,6 +362,8 @@ class HaalCentraalClient
      * @return DateTimeImmutable|null
      *
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-02
+     *
+     * @SuppressWarnings(PHPMD.ErrorControlOperator) The @ mutes fs/OpenSSL warnings on unreadable certs; failures handled via false checks.
      */
     public function getCertificateExpiry(): ?DateTimeImmutable
     {
@@ -384,6 +393,8 @@ class HaalCentraalClient
      * Returns true when HaalCentraal is fully configured (oauth + mTLS + base URLs).
      *
      * @return bool
+     *
+     * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
      */
     public function isConfigured(): bool
     {
@@ -399,6 +410,9 @@ class HaalCentraalClient
      * @return string Bearer token.
      *
      * @throws HaalCentraalException When the OAuth exchange fails.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential config/credential/HTTP guard clauses; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential config/credential/HTTP guard clauses; extraction adds no clarity.
      */
     private function getAccessToken(): string
     {
@@ -461,10 +475,9 @@ class HaalCentraalClient
 
         $status  = (int) $response->getStatusCode();
         $payload = json_decode((string) $response->getBody(), true);
+        $token   = '';
         if (is_array($payload) === true) {
             $token = (string) ($payload['access_token'] ?? '');
-        } else {
-            $token = '';
         }
 
         if ($status < 200 || $status >= 300 || $token === '') {
@@ -485,6 +498,8 @@ class HaalCentraalClient
      * @param bool $forToken When true, no mTLS is attached (OAuth endpoint is regular TLS).
      *
      * @return IClient
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $forToken picks plain-TLS vs mTLS; splitting duplicates wiring.
      */
     private function buildHttpClient(bool $forToken=false): IClient
     {
@@ -502,10 +517,9 @@ class HaalCentraalClient
                 // The NC client wrapper supports setDefaultOptions on newer cores; older
                 // cores fall back to TLS-without-cert which the RvIG endpoint will reject.
                 if (method_exists($client, 'setDefaultOptions') === true) {
+                    $verify = true;
                     if ($caBundle !== '') {
                         $verify = $caBundle;
-                    } else {
-                        $verify = true;
                     }
 
                     $client->setDefaultOptions(
@@ -593,41 +607,41 @@ class HaalCentraalClient
      */
     private function normalisePerson(array $raw): array
     {
+        $naam = [];
         if (is_array($raw['naam'] ?? null) === true) {
             $naam = $raw['naam'];
-        } else {
-            $naam = [];
         }
 
+        $geboorte = [];
         if (is_array($raw['geboorte'] ?? null) === true) {
             $geboorte = $raw['geboorte'];
-        } else {
-            $geboorte = [];
         }
 
+        $verblijfplaats = [];
         if (is_array($raw['verblijfplaats'] ?? null) === true) {
-            $vp = $raw['verblijfplaats'];
-        } else {
-            $vp = [];
+            $verblijfplaats = $raw['verblijfplaats'];
         }
 
-        if (is_array($raw['geslacht'] ?? null) === true) {
-            $geslacht = (string) ($raw['geslacht']['code'] ?? '');
-        } else {
-            $geslacht = (string) ($raw['geslacht'] ?? '');
+        $geslacht = $raw['geslacht'] ?? '';
+        if (is_array($geslacht) === true) {
+            $geslacht = ($geslacht['code'] ?? '');
         }
 
-        if (is_array($geboorte['plaats'] ?? null) === true) {
-            $geboorteplaats = (string) ($geboorte['plaats']['omschrijving'] ?? '');
-        } else {
-            $geboorteplaats = (string) ($geboorte['plaats'] ?? '');
+        $geslacht = (string) $geslacht;
+
+        $geboorteplaats = $geboorte['plaats'] ?? '';
+        if (is_array($geboorteplaats) === true) {
+            $geboorteplaats = ($geboorteplaats['omschrijving'] ?? '');
         }
 
-        if (is_array($geboorte['land'] ?? null) === true) {
-            $geboorteland = (string) ($geboorte['land']['code'] ?? '');
-        } else {
-            $geboorteland = (string) ($geboorte['land'] ?? '');
+        $geboorteplaats = (string) $geboorteplaats;
+
+        $geboorteland = $geboorte['land'] ?? '';
+        if (is_array($geboorteland) === true) {
+            $geboorteland = ($geboorteland['code'] ?? '');
         }
+
+        $geboorteland = (string) $geboorteland;
 
         return [
             'voornamen'       => (string) ($naam['voornamen'] ?? ''),
@@ -639,7 +653,7 @@ class HaalCentraalClient
             'geboorteplaats'  => $geboorteplaats,
             'geboorteland'    => $geboorteland,
             'geslacht'        => self::mapGeslacht(code: $geslacht),
-            'verblijfplaats'  => self::mapVerblijfplaats(vp: $vp),
+            'verblijfplaats'  => self::mapVerblijfplaats(verblijfplaats: $verblijfplaats),
             'indicatieGeheim' => (string) ($raw['indicatieGeheim'] ?? '0'),
             'bronsysteem'     => 'HaalCentraal-BRP-v2.0',
         ];
@@ -669,31 +683,29 @@ class HaalCentraalClient
     /**
      * Map a HaalCentraal verblijfplaats subtree to the schema shape.
      *
-     * @param array<string,mixed> $vp The HaalCentraal verblijfplaats subtree.
+     * @param array<string,mixed> $verblijfplaats The HaalCentraal verblijfplaats subtree.
      *
      * @return array<string,mixed>
      */
-    private static function mapVerblijfplaats(array $vp): array
+    private static function mapVerblijfplaats(array $verblijfplaats): array
     {
-        if (is_array($vp['verblijfadres'] ?? null) === true) {
-            $adres = $vp['verblijfadres'];
-        } else {
-            $adres = $vp;
+        $adres = $verblijfplaats;
+        if (is_array($verblijfplaats['verblijfadres'] ?? null) === true) {
+            $adres = $verblijfplaats['verblijfadres'];
         }
 
-        $land = $vp['land'] ?? ($adres['land'] ?? null);
+        $land = $verblijfplaats['land'] ?? ($adres['land'] ?? null);
 
+        $huisnummer = null;
         if (isset($adres['huisnummer']) === true) {
             $huisnummer = (int) $adres['huisnummer'];
-        } else {
-            $huisnummer = null;
         }
 
         if (is_array($land) === true) {
-            $landValue = (string) ($land['omschrijving'] ?? $land['code'] ?? '');
-        } else {
-            $landValue = (string) ($land ?? '');
+            $land = ($land['omschrijving'] ?? $land['code'] ?? '');
         }
+
+        $landValue = (string) ($land ?? '');
 
         return [
             'straat'               => (string) ($adres['officieleStraatnaam'] ?? $adres['straat'] ?? ''),

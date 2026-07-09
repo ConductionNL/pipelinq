@@ -66,9 +66,11 @@ use RuntimeException;
  *      BelastingdienstExportService and stamp `exportedAt` on every entry
  *      so the export trail is itself auditable.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Coordinator wires OR (via
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Coordinator wires OR (via
  *   the container), the app config, the signature primitive and the export
  *   builder. Each is exercised by an independent unit test.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Audit coordinator with
+ *   several independent guard-heavy operations; splitting adds indirection.
  *
  * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#2.2
  */
@@ -328,14 +330,13 @@ class KassakoppelingAuditService
         );
 
         $normalizedFormat = strtolower($format);
+        $body        = $this->exporter->exportAsXml(entries: $entries, manifest: $manifest);
+        $contentType = 'application/xml';
+        $extension   = 'xml';
         if ($normalizedFormat === 'json') {
             $body        = $this->exporter->exportAsJson(entries: $entries, manifest: $manifest);
             $contentType = 'application/json';
             $extension   = 'json';
-        } else {
-            $body        = $this->exporter->exportAsXml(entries: $entries, manifest: $manifest);
-            $contentType = 'application/xml';
-            $extension   = 'xml';
         }
 
         $stamp = $this->now();
@@ -512,6 +513,9 @@ class KassakoppelingAuditService
      * @param array<string, mixed>             $filters The whitelisted filters.
      *
      * @return array<int, array<string, mixed>> The filtered entries.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat sequence of independent whitelist filters; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Flat sequence of independent whitelist filters; extraction adds no clarity.
      */
     private function applyFilters(array $entries, array $filters): array
     {
@@ -568,20 +572,20 @@ class KassakoppelingAuditService
         }
 
         try {
-            $dt = new DateTimeImmutable($value, new DateTimeZone('UTC'));
-        } catch (\Throwable $e) {
+            $parsed = new DateTimeImmutable($value, new DateTimeZone('UTC'));
+        } catch (\Throwable $exception) {
             return null;
         }
 
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) === 1) {
             if ($lower === true) {
-                return $dt->setTime(0, 0, 0);
+                return $parsed->setTime(0, 0, 0);
             }
 
-            return $dt->setTime(23, 59, 59);
+            return $parsed->setTime(23, 59, 59);
         }
 
-        return $dt;
+        return $parsed;
     }//end parseDate()
 
     /**

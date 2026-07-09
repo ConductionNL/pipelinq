@@ -49,9 +49,12 @@ use RuntimeException;
  * sent automatically when a booking is created or transitions into confirmed.
  * The ReminderDispatchJob calls {@see self::sendReminder} for due bookings.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The class legitimately wires
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   The class legitimately wires
  *  the OR container, mailer, URL generator, localisation and app config — every
  *  collaborator is needed for transactional booking email composition.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Composition, dispatch,
+ *  localisation and ICS building for two email types drive the aggregate
+ *  complexity; each method stays individually simple.
  *
  * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-006
  */
@@ -159,17 +162,17 @@ class AppointmentEmailService
         $body = $this->composeConfirmationBody(context: $context);
         $ics  = $this->buildIcs(context: $context);
 
-        $ok = $this->dispatch(
+        $accepted = $this->dispatch(
             recipient: (string) $context['recipientEmail'],
             subject: $subject,
             body: $body,
             icsContent: $ics
         );
-        if ($ok === true) {
+        if ($accepted === true) {
             $this->stamp(bookingId: $bookingId, field: 'confirmationSentAt');
         }
 
-        return $ok;
+        return $accepted;
     }//end sendConfirmation()
 
     /**
@@ -196,17 +199,17 @@ class AppointmentEmailService
         $subject    = $this->l10n->t('Herinnering: Uw afspraak morgen om %s', [$startLocal]);
         $body       = $this->composeReminderBody(context: $context);
 
-        $ok = $this->dispatch(
+        $accepted = $this->dispatch(
             recipient: (string) $context['recipientEmail'],
             subject: $subject,
             body: $body,
             icsContent: null
         );
-        if ($ok === true) {
+        if ($accepted === true) {
             $this->stamp(bookingId: $bookingId, field: 'reminderSentAt');
         }
 
-        return $ok;
+        return $accepted;
     }//end sendReminder()
 
     /**
@@ -554,6 +557,10 @@ class AppointmentEmailService
      * @param array<string, mixed>|null $customer The customer mirror (or null).
      *
      * @return string
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered fallback over candidate
+     *  email fields then the Contacts manager; each branch is an independent early
+     *  return.
      */
     private function resolveCustomerEmail(?array $customer): string
     {
@@ -738,9 +745,9 @@ class AppointmentEmailService
         }
 
         try {
-            $dt = new DateTimeImmutable($iso);
-            $dt = $dt->setTimezone(new DateTimeZone('Europe/Amsterdam'));
-            return $dt->format($pattern);
+            $dateTime = new DateTimeImmutable($iso);
+            $dateTime = $dateTime->setTimezone(new DateTimeZone('Europe/Amsterdam'));
+            return $dateTime->format($pattern);
         } catch (\Throwable $e) {
             return $iso;
         }
@@ -756,9 +763,9 @@ class AppointmentEmailService
     private function toIcsDateTime(string $iso): string
     {
         try {
-            $dt = new DateTimeImmutable($iso);
-            $dt = $dt->setTimezone(new DateTimeZone('UTC'));
-            return $dt->format('Ymd\THis\Z');
+            $dateTime = new DateTimeImmutable($iso);
+            $dateTime = $dateTime->setTimezone(new DateTimeZone('UTC'));
+            return $dateTime->format('Ymd\THis\Z');
         } catch (\Throwable $e) {
             return '';
         }

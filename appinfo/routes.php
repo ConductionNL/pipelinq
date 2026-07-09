@@ -86,6 +86,9 @@ return [
         ['name' => 'analytics#funnels',  'url' => '/api/analytics/funnels',  'verb' => 'GET'],
         // Commercial dashboard KPI overview (openspec/changes/commercial-dashboard).
         ['name' => 'analytics#commercial', 'url' => '/api/analytics/commercial', 'verb' => 'GET'],
+        // My-work worklist — canonical server-side union of the current user's
+        // leads + requests (replaces the MyWorkWidget/MyWork client-side union).
+        ['name' => 'worklist#mine', 'url' => '/api/worklist/mine', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
         ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
@@ -426,6 +429,20 @@ return [
         // any wildcard catch-alls (ADR-016).
         ['name' => 'messagingWebhook#whatsapp', 'url' => '/api/messaging-webhooks/whatsapp/{providerId}', 'verb' => 'POST'],
         ['name' => 'messagingWebhook#sms',      'url' => '/api/messaging-webhooks/sms/{providerId}',      'verb' => 'POST'],
+        // Outbound agent messaging (outbound-messaging-provider-wiring):
+        // server-side send + composer preflight + consent recording +
+        // admin-gated zero-cost provider connectivity test.
+        ['name' => 'messaging#send',         'url' => '/api/messaging/send',                    'verb' => 'POST'],
+        ['name' => 'messaging#preflight',    'url' => '/api/messaging/preflight/{contactId}',   'verb' => 'GET'],
+        ['name' => 'messaging#consent',      'url' => '/api/messaging/consent',                 'verb' => 'POST'],
+        ['name' => 'messaging#testProvider', 'url' => '/api/messaging/providers/{id}/test',     'verb' => 'POST'],
+        // Semantic object handoff emit (ADR-051 / semantic-handoff-emit):
+        // request -> ns#Case, active contract -> ns#Invoice. Kind-addressed via
+        // OpenRegister's handoff engine; actions hide when no app implements the kind.
+        ['name' => 'semanticHandoff#requestAvailability',    'url' => '/api/handoff/request/{id}/availability',       'verb' => 'GET'],
+        ['name' => 'semanticHandoff#convertRequestToCase',   'url' => '/api/handoff/request/{id}/convert-to-case',    'verb' => 'POST'],
+        ['name' => 'semanticHandoff#contractAvailability',   'url' => '/api/handoff/contract/{id}/availability',      'verb' => 'GET'],
+        ['name' => 'semanticHandoff#sendContractToInvoicing','url' => '/api/handoff/contract/{id}/send-to-invoicing', 'verb' => 'POST'],
         // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
         // Logius webhooks for read-receipt + inbound replies — HMAC-SHA256
         // signature-verified (REQ-RECEIPT-005 / REQ-INBOUND-006).
@@ -484,26 +501,21 @@ return [
         ['name' => 'xWiki#page',   'url' => '/api/xwiki/page/{wiki}/{page}',        'verb' => 'GET', 'requirements' => ['page' => '.+']],
         ['name' => 'xWiki#status', 'url' => '/api/xwiki/status',                    'verb' => 'GET'],
 
-        // AVG (GDPR data-subject request) workflow RETIRED (ADR-047 Phase-3):
-        // the case workflow (intake / deadline / evidence / redaction / bundle /
-        // denial / AP-escalation) is now owned by OpenRegister's generic DSAR case
-        // engine (/api/gdpr/cases/*). All avgVerzoek / avgEvidence / avgRedaction /
-        // avgDenial / avgBundle controllers + routes were removed; pipelinq
-        // deep-links into OR's AVG case surface and binds NL policy as data.
+        // AVG / DSAR (GDPR data-subject request) — the entire app-side workflow
+        // (avgVerzoek#*, avgEvidence#*, avgRedaction#*, avgDenial#*, avgBundle#*)
+        // and the MDM right-of-deletion workflow (mdmAvgWorkflow#*) were removed
+        // by consume-or-dsar (ADR-047 Phase 3). DSAR is owned by OpenRegister's
+        // case engine (/apps/openregister/avg + /api/gdpr/*); pipelinq registers
+        // as an evidence source (PipelinqEvidenceSourceProvider) and deep-links
+        // handlers into OR's AVG surface. Existing avgVerzoek objects are
+        // migrated to OR dataSubjectRequest cases by MigrateAvgVerzoekenToOrDsar.
 
-        // Master Data Management — read-API (downstream apps; session/bearer auth).
-        // Static /api/mdm/master MUST precede the /{id} wildcard (ADR-016).
-        ['name' => 'mdmApi#queryByNaturalKey', 'url' => '/api/mdm/master', 'verb' => 'GET'],
-        ['name' => 'mdmApi#show',              'url' => '/api/mdm/master/{id}', 'verb' => 'GET'],
-
-        // MDM steward views, merge tooling, trust-config CRUD and sync-queue admin
-        // are now hosted by OpenRegister (ADR-045 #D): the app-side controllers were
-        // deleted and the steward navigates to OR's Data-Quality surface. Only the
-        // downstream read-API (above) remains.
-
-        // MDM — AVG right-of-deletion workflow RETIRED (ADR-047 Phase-3):
-        // MdmAvgWorkflowController removed; the DSAR erasure of master entities is
-        // handled by OpenRegister's DSAR case engine over the shared object store.
+        // Master Data Management — the app-side read-API (`/api/mdm/master*`,
+        // MdmApiController) was removed by retire-mdm-sync-queue (ADR-022 /
+        // ADR-045 #D): downstream apps read master entities directly from
+        // OpenRegister's `/api/objects` surface, and MDM steward views, merge
+        // tooling, trust-config CRUD and the sync queue are all hosted by
+        // OpenRegister.
 
         // Contract & renewal tracking (contract-renewal-tracking) — app-logic only
         // (numbering, guarded transitions, recurring-revenue metrics). Plain CRUD

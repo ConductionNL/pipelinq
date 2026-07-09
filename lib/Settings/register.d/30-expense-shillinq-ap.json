@@ -16,7 +16,6 @@
         "version": "1.0.0",
         "summary": "An approved or pending expense submission with optional Shillinq AP sync state.",
         "description": "Captured expense (declaratie / onkostenbon) submitted in pipelinq. When status transitions to 'approved' the expense is dispatched as an AP voucher to Shillinq through OpenRegister's WebhookService; apSyncStatus and apSyncedAt record the outcome of that one-way integration (REQ-AP-001).",
-        "@type": "Invoice",
         "required": [
           "title",
           "amount"

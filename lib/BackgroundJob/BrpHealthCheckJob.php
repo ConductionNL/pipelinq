@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
+use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
@@ -94,6 +95,8 @@ class BrpHealthCheckJob extends TimedJob
      * @param mixed $argument Unused.
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
      */
     protected function run(mixed $argument): void
     {
@@ -177,7 +180,7 @@ class BrpHealthCheckJob extends TimedJob
                               'expiry'   => $expiry->format('Y-m-d'),
                           ]
                           )
-                    ->setDateTime(new \DateTime());
+                    ->setDateTime(new DateTime());
                 $this->notificationManager->notify($n);
             } catch (Throwable $e) {
                 $this->logger->warning('BRP cert notify failed', ['admin' => $admin->getUID(), 'error' => $e->getMessage()]);

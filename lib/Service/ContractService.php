@@ -146,6 +146,10 @@ class ContractService
      *
      * @throws InvalidArgumentException When the transition is not allowed.
      *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)  $byEngine marks renewal-engine callers; part of the lifecycle contract, not a branch flag.
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential transition guards; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential transition guards; extraction adds no clarity.
+     *
      * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
      */
     public function assertTransitionAllowed(array $contract, string $newStatus, bool $byEngine=false): void
@@ -248,9 +252,9 @@ class ContractService
         $successorStart = '';
         $endDate        = (string) ($predecessor['endDate'] ?? '');
         if ($endDate !== '') {
-            $ts = strtotime($endDate.' +1 day');
-            if ($ts !== false) {
-                $successorStart = date('Y-m-d', $ts);
+            $timestamp = strtotime($endDate.' +1 day');
+            if ($timestamp !== false) {
+                $successorStart = date('Y-m-d', $timestamp);
             }
         }
 

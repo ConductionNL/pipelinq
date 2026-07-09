@@ -212,6 +212,10 @@ class PosStaffReportService
      * @param array<string, mixed> $filter   The filter map.
      *
      * @return array<string, float|int> Map of staffMemberId to the aggregated value.
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) AggregationQuery::create() is
+     *  OpenRegister's documented static query-builder factory; there is no
+     *  instance to inject.
      */
     private function groupedAgg(
         object $runner,
@@ -310,12 +314,12 @@ class PosStaffReportService
         $allowed = ['confirmed', 'settled', 'refunded'];
         $out     = [];
         foreach ($results as $result) {
-            $tx = $this->toArray(object: $result);
-            if (in_array((string) ($tx['status'] ?? ''), $allowed, true) === false) {
+            $transaction = $this->toArray(object: $result);
+            if (in_array((string) ($transaction['status'] ?? ''), $allowed, true) === false) {
                 continue;
             }
 
-            $out[] = $tx;
+            $out[] = $transaction;
         }
 
         return $out;

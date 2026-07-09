@@ -92,16 +92,18 @@ class ZgwRegisterAccess
      * @param string $id     UUID or slug.
      *
      * @return array<string, mixed>|null Object data (array form) or null when missing.
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md
      */
     public function find(string $schema, string $id): ?array
     {
-        $os = $this->getObjectService();
-        if ($os === null) {
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
             return null;
         }
 
         try {
-            $result = $os->find(id: $id, register: self::REGISTER, schema: $schema);
+            $result = $objectService->find(id: $id, register: self::REGISTER, schema: $schema);
         } catch (Throwable $e) {
             $this->logger->info('ZGW: find failed', ['schema' => $schema, 'id' => $id, 'err' => $e->getMessage()]);
             return null;
@@ -117,26 +119,27 @@ class ZgwRegisterAccess
      * @param array<string, mixed> $filters Filter map (passed straight through to OR).
      *
      * @return array<int, array<string, mixed>>
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md
      */
     public function findAll(string $schema, array $filters=[]): array
     {
-        $os = $this->getObjectService();
-        if ($os === null) {
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
             return [];
         }
 
         try {
-            $rows = $os->findAll(filters: $filters, register: self::REGISTER, schema: $schema);
+            $rows = $objectService->findAll(filters: $filters, register: self::REGISTER, schema: $schema);
         } catch (Throwable $e) {
             $this->logger->info('ZGW: findAll failed', ['schema' => $schema, 'err' => $e->getMessage()]);
             return [];
         }
 
-        $out = [];
+        $out     = [];
+        $rowList = [];
         if (is_array($rows) === true) {
             $rowList = $rows;
-        } else {
-            $rowList = [];
         }
 
         foreach ($rowList as $row) {
@@ -157,11 +160,13 @@ class ZgwRegisterAccess
      * @param string|null          $uuid   Existing UUID to update, or null to create.
      *
      * @return array<string, mixed>|null Saved object (or null on failure).
+     *
+     * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md
      */
     public function save(string $schema, array $data, ?string $uuid=null): ?array
     {
-        $os = $this->getObjectService();
-        if ($os === null) {
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
             return null;
         }
 
@@ -171,7 +176,7 @@ class ZgwRegisterAccess
         }
 
         try {
-            $saved = $os->saveObject(
+            $saved = $objectService->saveObject(
                 object: $data,
                 extend: [],
                 register: self::REGISTER,

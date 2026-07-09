@@ -32,6 +32,7 @@ use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -118,7 +119,7 @@ class HolidayCalendarService
 
             $data = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
             if (is_array($data) === false) {
-                throw new \RuntimeException('calendar root is not an object');
+                throw new RuntimeException('calendar root is not an object');
             }
         } catch (Throwable $e) {
             $this->logger->error(
@@ -188,6 +189,9 @@ class HolidayCalendarService
      * @param int    $year         The calendar year.
      *
      * @return array<string, bool> Map of YYYY-MM-DD → true.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses over rule/computed/override sets; extraction adds no clarity.
+     * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential guard clauses over rule/computed/override sets; extraction adds no clarity.
      */
     private function resolveYearSet(string $calendarName, int $year): array
     {
@@ -197,10 +201,9 @@ class HolidayCalendarService
         }
 
         $names = array_filter(array_map('trim', explode(',', $calendarName)));
+        $cal   = $this->loadCalendar(calendarName: ($names[0] ?? ''));
         if (count($names) > 1) {
             $cal = $this->compositeCalendar(calendarNames: $names);
-        } else {
-            $cal = $this->loadCalendar(calendarName: ($names[0] ?? ''));
         }
 
         $set = [];
@@ -223,10 +226,9 @@ class HolidayCalendarService
         foreach (($cal['computed'] ?? []) as $computed) {
             $offset = (int) ($computed['easterOffset'] ?? 0);
             $easter = $this->easterDate(year: $year);
+            $sign   = '';
             if ($offset >= 0) {
                 $sign = '+';
-            } else {
-                $sign = '';
             }
 
             $date = $easter->modify($sign.$offset.' days');
@@ -242,10 +244,9 @@ class HolidayCalendarService
                 }
 
                 $raw = (string) $entry['date'];
+                $key = $raw;
                 if (strlen($raw) === 5) {
                     $key = $year.'-'.$raw;
-                } else {
-                    $key = $raw;
                 }
 
                 $set[$key] = true;
@@ -309,6 +310,8 @@ class HolidayCalendarService
      * @param int $year The Gregorian year.
      *
      * @return DateTimeImmutable Easter Sunday in UTC.
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable) Single-letter names (a..m) mirror the canonical Meeus/Jones/Butcher formula.
      *
      * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
      */

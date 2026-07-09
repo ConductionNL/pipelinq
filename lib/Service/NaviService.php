@@ -283,12 +283,12 @@ class NaviService
                 continue;
             }
 
-            $ts = strtotime($created);
-            if ($ts === false) {
+            $timestamp = strtotime($created);
+            if ($timestamp === false) {
                 continue;
             }
 
-            $week           = date('o-\WW', $ts);
+            $week           = date('o-\WW', $timestamp);
             $buckets[$week] = ($buckets[$week] ?? 0) + 1;
         }
 
@@ -330,9 +330,8 @@ class NaviService
         }
 
         $total = array_sum($counts);
-        if ($total === 0) {
-            $rate = 0.0;
-        } else {
+        $rate  = 0.0;
+        if ($total !== 0) {
             $rate = round(($counts['won'] * 100.0) / $total, 1);
         }
 
@@ -510,27 +509,47 @@ class NaviService
 
         $objects = [];
         foreach (($results ?? []) as $result) {
-            if (is_array($result) === true) {
-                $objects[] = $result;
-                continue;
+            $normalized = $this->normalizeFindObjectsResult(result: $result);
+            if ($normalized !== null) {
+                $objects[] = $normalized;
             }
-
-            if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-                $serialized = $result->jsonSerialize();
-                if (is_array($serialized) === true) {
-                    $objects[] = $serialized;
-                    continue;
-                }
-            }
-
-            if (is_object($result) === true && method_exists($result, 'getObject') === true) {
-                $data = $result->getObject();
-                if (is_array($data) === true) {
-                    $objects[] = $data;
-                }
-            }
-        }//end foreach
+        }
 
         return $objects;
     }//end findObjects()
+
+    /**
+     * Normalize a single ObjectService::findAll() result row to a plain array.
+     *
+     * Mirrors the previous inline `findObjects()` loop body exactly: arrays pass
+     * through, objects exposing `jsonSerialize()` are serialized, objects
+     * exposing `getObject()` are unwrapped, anything else yields null.
+     *
+     * @param mixed $result A single row from ObjectService::findAll().
+     *
+     * @return array<string, mixed>|null The normalized row, or null when it
+     *         could not be normalized to an array.
+     */
+    private function normalizeFindObjectsResult(mixed $result): ?array
+    {
+        if (is_array($result) === true) {
+            return $result;
+        }
+
+        if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+            $serialized = $result->jsonSerialize();
+            if (is_array($serialized) === true) {
+                return $serialized;
+            }
+        }
+
+        if (is_object($result) === true && method_exists($result, 'getObject') === true) {
+            $data = $result->getObject();
+            if (is_array($data) === true) {
+                return $data;
+            }
+        }
+
+        return null;
+    }//end normalizeFindObjectsResult()
 }//end class

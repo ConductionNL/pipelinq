@@ -45,6 +45,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCP\App\IAppManager;
@@ -66,8 +68,11 @@ use Psr\Log\LoggerInterface;
  * triggered programmatically by passing the payload array directly to
  * {@see self::ingest()}.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Legitimately wires the small
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Legitimately wires the small
  *  set of NC + OR collaborators a data-migration step needs.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) A one-shot ingest step: product match/fill/
+ *  create, vendor match/fill/create, contact resolution and source-record writing are one
+ *  cohesive idempotent migration, deliberately kept in a single class.
  *
  * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-007
  * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-008
@@ -255,7 +260,7 @@ class IngestProductVendorMaster implements IRepairStep
                 continue;
             }
 
-            [$contactsUid, $apPayload] = $this->ingestVendor(shillinqVendor: $shillinqVendor);
+            [$contactsUid] = $this->ingestVendor(shillinqVendor: $shillinqVendor);
             if ($contactsUid !== null) {
                 $vendorMap[$ref] = $contactsUid;
             }
@@ -275,6 +280,9 @@ class IngestProductVendorMaster implements IRepairStep
      * @return string|null The pipelinq productId, or null on failure.
      *
      * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-007
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Idempotent match-fill-or-create with defensive
+     *   OR-shape guards and productId==UUID reconciliation; each branch is one migration step.
      */
     private function ingestProduct(array $shillinqProduct): ?string
     {
@@ -326,10 +334,9 @@ class IngestProductVendorMaster implements IRepairStep
             // Create: map shillinq fields onto the extended product schema.
             $newProduct = $this->mapShillinqProductToSchema(shillinqProduct: $shillinqProduct);
             $created    = $objectService->saveObject($registerId, $schemaId, $newProduct, null);
+            $createdArr = (array) $created;
             if (is_object($created) === true && method_exists($created, 'jsonSerialize') === true) {
                 $createdArr = $created->jsonSerialize();
-            } else {
-                $createdArr = (array) $created;
             }
 
             $productId = $createdArr['productId'] ?? $createdArr['id'] ?? null;
@@ -418,23 +425,14 @@ class IngestProductVendorMaster implements IRepairStep
                 contactsUid: $contactsUid,
             );
 
-            if ($existingSupplier !== null) {
-                // Fill-only: only write commercial fields that are currently empty.
-                $updates = $this->buildSupplierFillPayload(existing: $existingSupplier, shillinqSource: $shillinqVendor);
-                if (empty($updates) === false) {
-                    $objectService->saveObject(
-                        $registerId,
-                        $schemaId,
-                        array_merge($existingSupplier, $updates),
-                        $existingSupplier['id'] ?? null
-                    );
-                }
-            } else {
-                // Create new supplier commercial profile.
-                $newSupplier = $this->mapShillinqVendorToSchema(shillinqVendor: $shillinqVendor);
-                $newSupplier['contactsUid'] = $contactsUid;
-                $objectService->saveObject($registerId, $schemaId, $newSupplier, null);
-            }
+            $this->upsertSupplier(
+                objectService: $objectService,
+                registerId: $registerId,
+                schemaId: $schemaId,
+                shillinqVendor: $shillinqVendor,
+                contactsUid: $contactsUid,
+                existingSupplier: $existingSupplier,
+            );
 
             $this->writeSourceRecord(
                 objectService: $objectService,
@@ -460,6 +458,50 @@ class IngestProductVendorMaster implements IRepairStep
     }//end ingestVendor()
 
     /**
+     * Persist the commercial supplier profile for a vendor (fill-only update or create).
+     *
+     * When a supplier already exists it is filled only where fields are empty; otherwise a
+     * new supplier commercial profile is created.
+     *
+     * @param object                   $objectService    OR ObjectService.
+     * @param string                   $registerId       Register id.
+     * @param string                   $schemaId         Supplier schema id.
+     * @param array<string,mixed>      $shillinqVendor   Incoming vendor record.
+     * @param string                   $contactsUid      Resolved NC contact UID.
+     * @param array<string,mixed>|null $existingSupplier Existing supplier row, or null.
+     *
+     * @return void
+     */
+    private function upsertSupplier(
+        object $objectService,
+        string $registerId,
+        string $schemaId,
+        array $shillinqVendor,
+        string $contactsUid,
+        ?array $existingSupplier,
+    ): void {
+        if ($existingSupplier !== null) {
+            // Fill-only: only write commercial fields that are currently empty.
+            $updates = $this->buildSupplierFillPayload(existing: $existingSupplier, shillinqSource: $shillinqVendor);
+            if (empty($updates) === false) {
+                $objectService->saveObject(
+                    $registerId,
+                    $schemaId,
+                    array_merge($existingSupplier, $updates),
+                    $existingSupplier['id'] ?? null
+                );
+            }
+
+            return;
+        }
+
+        // Create new supplier commercial profile.
+        $newSupplier = $this->mapShillinqVendorToSchema(shillinqVendor: $shillinqVendor);
+        $newSupplier['contactsUid'] = $contactsUid;
+        $objectService->saveObject($registerId, $schemaId, $newSupplier, null);
+    }//end upsertSupplier()
+
+    /**
      * Resolve or create a Nextcloud Contact for a shillinq vendor.
      *
      * Matching priority: KvK number → VAT number → email address.
@@ -468,6 +510,10 @@ class IngestProductVendorMaster implements IRepairStep
      * @param array<string,mixed> $vendor The vendor data.
      *
      * @return string|null The NC contact UID, or null on failure.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Contacts-availability guard, prioritised
+     *   KvK/VAT/email search loop, and a create-with-generated-UID fallback form one cohesive
+     *   resolution path wrapped in a single fault-tolerant try/catch.
      */
     private function resolveOrCreateContact(array $vendor): ?string
     {
@@ -667,7 +713,7 @@ class IngestProductVendorMaster implements IRepairStep
             return;
         }
 
-        $now = (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM);
+        $now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
         try {
             $objectService->saveObject(

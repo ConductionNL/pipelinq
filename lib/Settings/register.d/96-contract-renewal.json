@@ -9,7 +9,26 @@
         "description": "A recurring or one-off contract between the organization and a client. Drives MRR/ARR, renewal-window detection, renewal-lead automation and churn metrics. References an existing client object (identity is never duplicated). Field names contractNumber/startDate/endDate/value/status are read by the customer-portal contract reader without mapping.",
         "@type": "object",
         "type": "object",
+        "x-openregister-handoff": [
+          {
+            "id": "send-to-invoicing",
+            "targetSemanticType": "https://openregister.app/ns#Invoice",
+            "trigger": "manual",
+            "whenUnavailable": "hide",
+            "mapping": {
+              "counterparty": { "semanticRef": "clientRef" },
+              "currency": { "from": "currency", "default": "EUR" },
+              "totalAmount": { "from": "valuePerInterval" },
+              "source": { "template": "pipelinq:contract:{{contractNumber}}" },
+              "lines": { "from": "lineItems" },
+              "dueDate": { "from": "endDate" }
+            }
+          }
+        ],
         "configuration": {
+          "implements": [
+            "https://openregister.app/ns#Contract"
+          ],
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "draft",
@@ -117,6 +136,7 @@
             "type": "string",
             "description": "UUID reference to the existing client object. Client identity is never duplicated into the contract.",
             "format": "uuid",
+            "$ref": "client",
             "title": "Client Ref"
           },
           "title": {
@@ -234,13 +254,20 @@
             "type": "string",
             "description": "UUID of the renewal lead created when the contract enters its renewal window.",
             "format": "uuid",
+            "$ref": "lead",
             "title": "Renewal Lead Ref"
           },
           "predecessorContractRef": {
             "type": "string",
             "description": "UUID of the contract this one succeeds (set on a drafted successor).",
             "format": "uuid",
+            "$ref": "contract",
             "title": "Predecessor Contract Ref"
+          },
+          "invoiceReference": {
+            "type": "string",
+            "description": "Provenance link to the invoice object created by the ns#Invoice handoff (Send to invoicing). Target object UUID in the implementing app's register; the app-level provenance additionally lives in the OpenRegister handoff relations.",
+            "title": "Invoice Reference"
           },
           "cancellationReason": {
             "type": "string",

@@ -264,8 +264,16 @@ class AdyenAdapter extends AbstractPaymentAdapter
         }
 
         // Adyen ships the HMAC secret as a hex string; convert to raw bytes
-        // when it parses cleanly, fall back to literal bytes otherwise.
-        $rawKey = @hex2bin($secret);
+        // when it parses cleanly, fall back to literal bytes otherwise. Guard
+        // the hex2bin() precondition ourselves (odd length / non-hex chars)
+        // instead of relying on the error control operator to swallow the
+        // resulting E_WARNING.
+        $looksHex = (strlen($secret) % 2 === 0 && ctype_xdigit($secret) === true);
+        $rawKey   = false;
+        if ($looksHex === true) {
+            $rawKey = hex2bin($secret);
+        }
+
         if ($rawKey === false || $rawKey === '') {
             $rawKey = $secret;
         }

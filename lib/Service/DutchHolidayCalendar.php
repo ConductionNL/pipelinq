@@ -147,18 +147,20 @@ class DutchHolidayCalendar
      * @param DateTimeInterface $date The date to inspect.
      *
      * @return bool True if the day is a holiday.
+     *
+     * @spec exclude mechanical phpmd cleanup — no behaviour change
      */
     public function isHoliday(DateTimeInterface $date): bool
     {
-        $md   = $date->format('m-d');
-        $ymd  = $date->format('Y-m-d');
-        $year = (int) $date->format('Y');
+        $monthDay = $date->format('m-d');
+        $ymd      = $date->format('Y-m-d');
+        $year     = (int) $date->format('Y');
 
-        if (isset(self::FIXED_HOLIDAYS[$md]) === true) {
+        if (isset(self::FIXED_HOLIDAYS[$monthDay]) === true) {
             return true;
         }
 
-        if ($md === '05-05' && ($year % 5) === 0) {
+        if ($monthDay === '05-05' && ($year % 5) === 0) {
             // Bevrijdingsdag is a public holiday only in lustrum years.
             return true;
         }
@@ -209,6 +211,8 @@ class DutchHolidayCalendar
      * @param int $year Gregorian year.
      *
      * @return int Days after March 21 (0..35).
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable) Single-letter names (a..m) mirror the canonical Meeus/Jones/Butcher formula.
      */
     private function easterOffset(int $year): int
     {

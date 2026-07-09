@@ -140,10 +140,9 @@ class ShillinqApService
     private function buildApPayload(array $expense, string $approvedBy, string $approvedAt): array
     {
         $expenseId = (string) ($expense['uuid'] ?? $expense['id'] ?? '');
+        $time      = $this->now();
         if ($approvedAt !== '') {
             $time = $approvedAt;
-        } else {
-            $time = $this->now();
         }
 
         $projectId = null;

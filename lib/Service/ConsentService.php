@@ -49,6 +49,8 @@ use Throwable;
  *   UITSCHRIJVEN detection.
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Consent lifecycle (opt-in/opt-out/erasure/keyword detection) is one cohesive responsibility.
  */
 class ConsentService
 {
@@ -126,12 +128,77 @@ class ConsentService
     }//end canSend()
 
     /**
-     * Append an `opted-in` consent record.
+     * Whether a business-initiated message may be sent on the channel.
+     *
+     * Business-initiated messages (WhatsApp template sends outside the 24h
+     * session window, including SLA escalations) require an explicit
+     * `opted-in` record — Meta business-messaging policy. Unlike
+     * {@see canSend()}, an absent or `unknown` record does NOT pass: only a
+     * latest `opted-in` record allows the send.
      *
      * @param string $contactId Contact UUID.
      * @param string $channel   `whatsapp` or `sms`.
-     * @param string $source    Enum value (webform / chat-reply / ...).
-     * @param string $evidence  Free-text audit-trail evidence.
+     *
+     * @return bool True only when the latest record is `opted-in`.
+     *
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     */
+    public function canSendBusinessInitiated(string $contactId, string $channel): bool
+    {
+        if ($contactId === '' || $channel === '') {
+            return false;
+        }
+
+        $latest = $this->loadLatestRecord(contactId: $contactId, channel: $channel);
+        if ($latest === null) {
+            return false;
+        }
+
+        return ((string) ($latest['state'] ?? 'unknown')) === 'opted-in';
+    }//end canSendBusinessInitiated()
+
+    /**
+     * The latest consent state for one (contactId, channel) pair.
+     *
+     * Returns `opted-in` / `opted-out` when a record exists, otherwise
+     * `unknown`. Used by the send surface to display consent state (REQ-OM-005)
+     * without deciding whether a send is allowed — that stays with
+     * {@see canSend()} / {@see canSendBusinessInitiated()}.
+     *
+     * @param string $contactId Contact UUID.
+     * @param string $channel   `whatsapp` or `sms`.
+     *
+     * @return string `opted-in` / `opted-out` / `unknown`.
+     *
+     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     */
+    public function latestState(string $contactId, string $channel): string
+    {
+        if ($contactId === '' || $channel === '') {
+            return 'unknown';
+        }
+
+        $latest = $this->loadLatestRecord(contactId: $contactId, channel: $channel);
+        if ($latest === null) {
+            return 'unknown';
+        }
+
+        $state = (string) ($latest['state'] ?? 'unknown');
+        if ($state === '') {
+            return 'unknown';
+        }
+
+        return $state;
+    }//end latestState()
+
+    /**
+     * Append an `opted-in` consent record.
+     *
+     * @param string $contactId  Contact UUID.
+     * @param string $channel    `whatsapp` or `sms`.
+     * @param string $source     Enum value (webform / chat-reply / ...).
+     * @param string $evidence   Free-text audit-trail evidence.
+     * @param string $legalBasis GDPR legal basis (consent / legitimate-interest / ...).
      *
      * @return array<string, mixed>|null Saved row or null on failure.
      *
@@ -141,7 +208,8 @@ class ConsentService
         string $contactId,
         string $channel,
         string $source,
-        string $evidence
+        string $evidence,
+        string $legalBasis='consent'
     ): ?array {
         return $this->appendRecord(
             contactId: $contactId,
@@ -149,16 +217,18 @@ class ConsentService
             state: 'opted-in',
             source: $source,
             evidence: $evidence,
+            legalBasis: $legalBasis,
         );
     }//end recordOptIn()
 
     /**
      * Append an `opted-out` consent record.
      *
-     * @param string $contactId Contact UUID.
-     * @param string $channel   `whatsapp` or `sms`.
-     * @param string $source    Enum value (keyword-stop / admin-override / ...).
-     * @param string $evidence  Free-text audit-trail evidence.
+     * @param string $contactId  Contact UUID.
+     * @param string $channel    `whatsapp` or `sms`.
+     * @param string $source     Enum value (keyword-stop / admin-override / ...).
+     * @param string $evidence   Free-text audit-trail evidence.
+     * @param string $legalBasis GDPR legal basis (consent / legitimate-interest / ...).
      *
      * @return array<string, mixed>|null Saved row or null on failure.
      *
@@ -168,7 +238,8 @@ class ConsentService
         string $contactId,
         string $channel,
         string $source,
-        string $evidence
+        string $evidence,
+        string $legalBasis='consent'
     ): ?array {
         return $this->appendRecord(
             contactId: $contactId,
@@ -176,6 +247,7 @@ class ConsentService
             state: 'opted-out',
             source: $source,
             evidence: $evidence,
+            legalBasis: $legalBasis,
         );
     }//end recordOptOut()
 
@@ -266,11 +338,12 @@ class ConsentService
     /**
      * Append a new consent record (immutable history).
      *
-     * @param string $contactId Contact UUID.
-     * @param string $channel   `whatsapp` or `sms`.
-     * @param string $state     `opted-in` / `opted-out` / `unknown`.
-     * @param string $source    Enum value.
-     * @param string $evidence  Audit evidence.
+     * @param string $contactId  Contact UUID.
+     * @param string $channel    `whatsapp` or `sms`.
+     * @param string $state      `opted-in` / `opted-out` / `unknown`.
+     * @param string $source     Enum value.
+     * @param string $evidence   Audit evidence.
+     * @param string $legalBasis GDPR legal basis.
      *
      * @return array<string, mixed>|null Saved row.
      */
@@ -279,10 +352,16 @@ class ConsentService
         string $channel,
         string $state,
         string $source,
-        string $evidence
+        string $evidence,
+        string $legalBasis='consent'
     ): ?array {
         if ($contactId === '' || $channel === '' || $state === '') {
             return null;
+        }
+
+        $basis = $legalBasis;
+        if ($basis === '') {
+            $basis = 'consent';
         }
 
         $payload = [
@@ -292,7 +371,7 @@ class ConsentService
             'source'     => $source,
             'evidence'   => $evidence,
             'recordedAt' => $this->nowIso(),
-            'legalBasis' => 'consent',
+            'legalBasis' => $basis,
         ];
 
         return $this->saveObject(payload: $payload);
@@ -456,6 +535,8 @@ class ConsentService
      * @param array<string, mixed> $payload Payload.
      *
      * @return string Id or empty.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential key-lookup fallbacks; extraction adds no clarity.
      */
     private function extractId(array $payload): string
     {

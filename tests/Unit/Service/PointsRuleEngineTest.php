@@ -155,17 +155,17 @@ class PointsRuleEngineTest extends TestCase
     {
         $this->assertSame(
             0,
-            $this->engine->applyMaxPerCustomer(alreadyEarnedInPeriod: 100, pointsToAward: 50, max: 100),
+            $this->engine->applyMaxPerCustomer(earnedInPeriod: 100, pointsToAward: 50, max: 100),
             'When max is reached, award 0'
         );
         $this->assertSame(
             20,
-            $this->engine->applyMaxPerCustomer(alreadyEarnedInPeriod: 80, pointsToAward: 50, max: 100),
+            $this->engine->applyMaxPerCustomer(earnedInPeriod: 80, pointsToAward: 50, max: 100),
             'When remaining < requested, award the remaining quota'
         );
         $this->assertSame(
             50,
-            $this->engine->applyMaxPerCustomer(alreadyEarnedInPeriod: 0, pointsToAward: 50, max: null),
+            $this->engine->applyMaxPerCustomer(earnedInPeriod: 0, pointsToAward: 50, max: null),
             'When max is null, award the full amount'
         );
     }//end testApplyMaxPerCustomerCaps()

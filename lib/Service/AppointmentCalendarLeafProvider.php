@@ -598,22 +598,22 @@ class AppointmentCalendarLeafProvider
         }
 
         return [
-            'startTime' => $this->hhmmFromTs(ts: max($startTs, $dayStart)),
-            'endTime'   => $this->hhmmFromTs(ts: min($endTs, ($dayEnd + 1))),
+            'startTime' => $this->hhmmFromTs(timestamp: max($startTs, $dayStart)),
+            'endTime'   => $this->hhmmFromTs(timestamp: min($endTs, ($dayEnd + 1))),
         ];
     }//end eventToBlock()
 
     /**
      * Format a unix timestamp as `HH:MM` in the server timezone.
      *
-     * @param int $ts Unix timestamp.
+     * @param int $timestamp Unix timestamp.
      *
      * @return string
      */
-    private function hhmmFromTs(int $ts): string
+    private function hhmmFromTs(int $timestamp): string
     {
-        $dt = (new DateTimeImmutable('@'.$ts))->setTimezone(new DateTimeZone(date_default_timezone_get()));
-        return $dt->format('H:i');
+        $dateTime = (new DateTimeImmutable('@'.$timestamp))->setTimezone(new DateTimeZone(date_default_timezone_get()));
+        return $dateTime->format('H:i');
     }//end hhmmFromTs()
 
     /**
@@ -767,6 +767,8 @@ class AppointmentCalendarLeafProvider
      * @param mixed $object Entity, array, or null.
      *
      * @return array<string, mixed>|null
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential type-narrowing guards; extraction adds no clarity.
      */
     private function toArray(mixed $object): ?array
     {

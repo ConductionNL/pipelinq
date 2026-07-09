@@ -118,9 +118,9 @@ class ChannelProviderRepository
         usort(
             $out,
             static function (array $a, array $b): int {
-                $pa = (int) ($a['priority'] ?? 100);
-                $pb = (int) ($b['priority'] ?? 100);
-                return ($pa <=> $pb);
+                $priorityA = (int) ($a['priority'] ?? 100);
+                $priorityB = (int) ($b['priority'] ?? 100);
+                return ($priorityA <=> $priorityB);
             }
         );
 

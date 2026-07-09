@@ -3,12 +3,13 @@
 /**
  * Pipelinq DataDeletionService.
  *
- * AVG / GDPR right-to-be-forgotten for the appointment-booking module. ADOPTS
+ * AVG / GDPR right-to-be-forgotten for the appointment-booking module. Calls
  * OpenRegister's canonical, legal-hold-aware erasure
- * (`DataSubjectRequestService::erase` in `pseudonymise` mode) instead of the
- * earlier divergent named-field SHA-256 hashing of `customerName` /
- * `customerEmail` / `customerPhone`. This authorized behavioural change is
- * recorded in openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md.
+ * (`DataSubjectRequestService::erase` in `pseudonymise` mode) DIRECTLY — the
+ * former app-side `OrGdprBridge` adapter was removed by consume-or-dsar
+ * (ADR-047 Phase 3), so the OR service is now resolved lazily through the
+ * container (OR-absent safe). This replaces the earlier divergent named-field
+ * SHA-256 hashing of `customerName` / `customerEmail` / `customerPhone`.
  *
  * OR's pseudonymise mode is a field-level VALUE overwrite (matching PII becomes
  * the `[erased]` token) followed by a save — it never deletes the owning row,
@@ -47,6 +48,7 @@ use Psr\Log\LoggerInterface;
  *  and a logger.
  *
  * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+ * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014--openregister-compliance-subsystem-consumption-boundary
  */
 class DataDeletionService
 {
@@ -104,7 +106,7 @@ class DataDeletionService
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      *
-     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014--openregister-compliance-subsystem-consumption-boundary
      */
     public function pseudonymizeCustomerBookings(string $customerId, bool $dryRun=false): array
     {
