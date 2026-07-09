@@ -136,6 +136,7 @@
             "type": "string",
             "description": "UUID reference to the existing client object. Client identity is never duplicated into the contract.",
             "format": "uuid",
+            "$ref": "client",
             "title": "Client Ref"
           },
           "title": {
@@ -253,12 +254,14 @@
             "type": "string",
             "description": "UUID of the renewal lead created when the contract enters its renewal window.",
             "format": "uuid",
+            "$ref": "lead",
             "title": "Renewal Lead Ref"
           },
           "predecessorContractRef": {
             "type": "string",
             "description": "UUID of the contract this one succeeds (set on a drafted successor).",
             "format": "uuid",
+            "$ref": "contract",
             "title": "Predecessor Contract Ref"
           },
           "invoiceReference": {
