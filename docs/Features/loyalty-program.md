@@ -140,5 +140,5 @@ view; export it to your accounting tool.
 - `loyalty.tier.changed` — fired on tier upgrade or downgrade; payload
   `{accountId, fromTierId, toTierId, toTierNaam, benefits}`.
 
-External notifications (email/SMS) are wired by openconnector / mydash on top
+External notifications (email/SMS) are wired by openconnector / launchpad on top
 of these events.

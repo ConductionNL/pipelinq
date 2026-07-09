@@ -3,12 +3,13 @@
 /**
  * Pipelinq DataDeletionService.
  *
- * AVG / GDPR right-to-be-forgotten for the appointment-booking module. ADOPTS
+ * AVG / GDPR right-to-be-forgotten for the appointment-booking module. Calls
  * OpenRegister's canonical, legal-hold-aware erasure
- * (`DataSubjectRequestService::erase` in `pseudonymise` mode) instead of the
- * earlier divergent named-field SHA-256 hashing of `customerName` /
- * `customerEmail` / `customerPhone`. This authorized behavioural change is
- * recorded in openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md.
+ * (`DataSubjectRequestService::erase` in `pseudonymise` mode) DIRECTLY — the
+ * former app-side `OrGdprBridge` adapter was removed by consume-or-dsar
+ * (ADR-047 Phase 3), so the OR service is now resolved lazily through the
+ * container (OR-absent safe). This replaces the earlier divergent named-field
+ * SHA-256 hashing of `customerName` / `customerEmail` / `customerPhone`.
  *
  * OR's pseudonymise mode is a field-level VALUE overwrite (matching PII becomes
  * the `[erased]` token) followed by a save — it never deletes the owning row,
@@ -37,24 +38,31 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Pipelinq\Service\Avg\OrGdprBridge;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * AVG right-to-be-forgotten erasure for Bookings, via OR's canonical capability.
  *
- * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+ * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014--openregister-compliance-subsystem-consumption-boundary
  */
 class DataDeletionService
 {
     /**
+     * OpenRegister's data-subject erasure service (resolved lazily).
+     *
+     * @var string
+     */
+    private const OR_REQUEST_SERVICE = 'OCA\OpenRegister\Service\Gdpr\DataSubjectRequestService';
+
+    /**
      * Constructor.
      *
-     * @param OrGdprBridge    $orGdpr Bridge onto OR's legal-hold-aware erasure.
-     * @param LoggerInterface $logger The logger.
+     * @param ContainerInterface $container The DI container (lazy OR service resolve).
+     * @param LoggerInterface    $logger    The logger.
      */
     public function __construct(
-        private OrGdprBridge $orGdpr,
+        private ContainerInterface $container,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -77,7 +85,7 @@ class DataDeletionService
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      *
-     * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
+     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014--openregister-compliance-subsystem-consumption-boundary
      */
     public function pseudonymizeCustomerBookings(string $customerId, bool $dryRun=false): array
     {
@@ -87,7 +95,13 @@ class DataDeletionService
             return $summary;
         }
 
-        $result = $this->orGdpr->erase(subjectId: $customerId, type: null, dryRun: $dryRun);
+        $service = $this->resolveOrService();
+        if ($service === null) {
+            $this->logger->warning('Pipelinq: AVG booking erasure skipped — OpenRegister DSAR service unavailable.');
+            return $summary;
+        }
+
+        $result = $service->erase(subjectId: $customerId, type: null, dryRun: $dryRun);
 
         $summary['bookings'] = count((array) ($result['erased'] ?? []));
         $summary['held']     = count((array) ($result['held'] ?? []));
@@ -104,4 +118,19 @@ class DataDeletionService
 
         return $summary;
     }//end pseudonymizeCustomerBookings()
+
+    /**
+     * Lazily resolve OpenRegister's DataSubjectRequestService, or null when
+     * OpenRegister is absent.
+     *
+     * @return object|null The OR erasure service, or null.
+     */
+    private function resolveOrService(): ?object
+    {
+        try {
+            return $this->container->get(self::OR_REQUEST_SERVICE);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }//end resolveOrService()
 }//end class

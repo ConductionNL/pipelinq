@@ -39,41 +39,34 @@ import OverdueKpiWidget from './views/dashboard/widgets/OverdueKpiWidget.vue'
 import RequestsByStatusWidget from './views/dashboard/widgets/RequestsByStatusWidget.vue'
 import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
-import ClientOverviewWidget from './views/dashboard/widgets/ClientOverviewWidget.vue'
 
 // --- Dashboard analytics widgets (openspec/changes/dashboard +
 //     openspec/changes/decompose-unified-analytics). Navi AI
-//     conversational analytics, the cross-module analytics KPI cards +
-//     trend charts, and the funder report export panel. ---
+//     conversational analytics + the endpoint-bound trend charts.
+//     The lead-conversion / avg-resolution / contact-volume KPI cards
+//     were dissolved into `type:"stat"` + `content.endpointSource`
+//     manifest config (ADR-049 Phase-4, nextcloud-vue#91 Wave 2). The
+//     Customer Satisfaction KPI was NOT dissolved to config: its data
+//     source is permanently null (no survey responses after the
+//     forms-leaf migration), so it is dropped until real CSAT data
+//     returns via openspec change customer-satisfaction-closed-loop.
+//     The funder report export panel stays custom (see the
+//     ReportExportPanel _note). ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
-import LeadConversionKpiWidget from './views/dashboard/widgets/LeadConversionKpiWidget.vue'
-import AvgResolutionKpiWidget from './views/dashboard/widgets/AvgResolutionKpiWidget.vue'
-import ContactVolumeKpiWidget from './views/dashboard/widgets/ContactVolumeKpiWidget.vue'
-// SatisfactionKpiWidget removed 2026-07: permanently-null data source (no survey
-// responses after the forms-leaf migration); restored via openspec change
-// customer-satisfaction-closed-loop.
 import LeadsOverTimeChartWidget from './views/dashboard/widgets/LeadsOverTimeChartWidget.vue'
 import RequestsByCategoryChartWidget from './views/dashboard/widgets/RequestsByCategoryChartWidget.vue'
 import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
 
-// Commercial dashboard widgets (openspec/changes/commercial-dashboard).
-// Six KPI cards from one cached GET /api/analytics/commercial per period,
-// four charts from GET /api/analytics/trends (revenue / pipeline-by-stage /
-// revenue-by-product-category / top-customers), and two deal tables built
-// client-side from the cached lead dataset. All share the dashboard
-// date-range + Refresh action via the analytics mixins.
-import RevenueKpiWidget from './views/dashboard/widgets/RevenueKpiWidget.vue'
-import WonValueKpiWidget from './views/dashboard/widgets/WonValueKpiWidget.vue'
-import WinRateKpiWidget from './views/dashboard/widgets/WinRateKpiWidget.vue'
-import AvgDealSizeKpiWidget from './views/dashboard/widgets/AvgDealSizeKpiWidget.vue'
-import WeightedForecastKpiWidget from './views/dashboard/widgets/WeightedForecastKpiWidget.vue'
-import OpenPipelineKpiWidget from './views/dashboard/widgets/OpenPipelineKpiWidget.vue'
+// Commercial dashboard trend charts (openspec/changes/commercial-dashboard).
+// Four endpoint-bound charts from GET /api/analytics/trends (revenue /
+// pipeline-by-stage / revenue-by-product-category / top-customers). The six
+// commercial KPI cards were dissolved into `type:"stat"` +
+// `content.endpointSource` manifest config (ADR-049 Phase-4). These charts
+// stay custom pending a library fix — see their registry _notes.
 import RevenueOverTimeChartWidget from './views/dashboard/widgets/RevenueOverTimeChartWidget.vue'
 import PipelineByStageChartWidget from './views/dashboard/widgets/PipelineByStageChartWidget.vue'
 import RevenueByCategoryChartWidget from './views/dashboard/widgets/RevenueByCategoryChartWidget.vue'
 import TopCustomersChartWidget from './views/dashboard/widgets/TopCustomersChartWidget.vue'
-import ClosingSoonWidget from './views/dashboard/widgets/ClosingSoonWidget.vue'
-import RecentlyWonLostWidget from './views/dashboard/widgets/RecentlyWonLostWidget.vue'
 
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
@@ -197,6 +190,12 @@ import CtiSettingsView from './views/settings/CtiSettings.vue'
 import CtiEventLogView from './views/settings/CtiEventLog.vue'
 import CtiPageView from './views/settings/CtiPage.vue'
 
+// --- Outbound WhatsApp/SMS messaging admin (outbound-messaging-provider-
+//     wiring): channelProvider / messageSendBudget / messageTemplate CRUD +
+//     per-provider connectivity test + inbound webhook URL display. Lib gap:
+//     no messaging-provider-settings page type. ---
+import MessagingSettingsView from './views/settings/MessagingSettings.vue'
+
 // --- POS pluggable payment provider adapter (pos-payment-provider-adapter):
 //     admin-only credential form for Mollie / CCV / Adyen / Stripe with
 //     encrypted-at-rest secrets and a per-provider "Verbinding testen" button.
@@ -225,6 +224,20 @@ import CommunicationHistory from './components/CommunicationHistory.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
+
+// --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
+//     provider-wiring): self-fetches conversation/message rows by contactId
+//     + the composer preflight facts, and hosts the SendMessageModal
+//     composer. Same self-fetching-by-props pattern as the sections above. ---
+import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
+
+// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit):
+//     "Convert to case" (request → ns#Case) and "Send to invoicing"
+//     (contract → ns#Invoice) in-body actions. Both self-fetch their
+//     availability endpoint and hide when no installed app implements the
+//     kind — same self-fetching-by-props pattern as the sections above. ---
+import RequestConversionSection from './views/requests/RequestConversionSection.vue'
+import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
 
 // --- Project / WBS hierarchy (project-task-hierarchy):
 //     four schemas (project / projectPhase / projectTask / projectActivity)
@@ -275,9 +288,10 @@ import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 // --- AVG (GDPR data-subject request) workflow (lib gap: list needs deadline
 //     colour-coding + masked names; detail needs the tabbed evidence/redaction/
 //     bundle/denial lifecycle; intake needs article classification). ---
-import AvgDashboardView from './views/avg/AvgDashboard.vue'
-import AvgRequestDetailView from './views/avg/AvgRequestDetail.vue'
-import AvgIntakeView from './views/avg/AvgIntakeView.vue'
+// AVG/DSAR views removed by consume-or-dsar (ADR-047 Phase 3): the data-subject
+// request workflow is owned by OpenRegister's case engine; pipelinq deep-links
+// handlers into OR's AVG surface (/apps/openregister/avg) instead of embedding
+// its own dashboard/detail/intake pages.
 // --- Master Data Management (MDM) steward surfaces are no longer hosted in
 //     pipelinq (ADR-045 #D). OpenRegister now owns the survivorship / dedup /
 //     merge / data-quality surface, driven by the x-openregister-survivorship
@@ -423,13 +437,7 @@ const registry = {
 		kind: 'widget',
 		component: MyWorkWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Top-5 list of leads + requests assigned to the current user, sorted by overdue → priority → due date.',
-	},
-	ClientOverviewWidget: {
-		kind: 'widget',
-		component: ClientOverviewWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Top-5 recent clients with a view-all link to the Clients index page.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4). Thin wrapper over the canonical GET /apps/pipelinq/api/worklist/mine union endpoint (leads + requests, server-sorted overdue → priority → due date). NOT dissolved into the built-in object-table widget because each row navigates to a DIFFERENT route (LeadDetail vs RequestDetail via the row\'s routeName field) and object-table\'s rowRoute is a single static route name — nextcloud-vue#91 Wave 2 has no per-row-route field. Dissolvable once the object-table widget gains a per-row route resolver.',
 	},
 	NaviAnalyticsWidget: {
 		kind: 'widget',
@@ -437,115 +445,53 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'Conversational analytics chat panel powered by NaviService — natural-language queries return CnChartWidget / CnDataTable / plain text inline, with up to 3 suggested follow-up chips. openspec/changes/dashboard REQ-DASH-001 / REQ-DASH-003.',
 	},
-	LeadConversionKpiWidget: {
-		kind: 'widget',
-		component: LeadConversionKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: % of leads won in the dashboard date range. Shares one cached GET /api/analytics/overview per period. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
-	},
-	AvgResolutionKpiWidget: {
-		kind: 'widget',
-		component: AvgResolutionKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: mean request resolution time (hours) in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
-	},
-	ContactVolumeKpiWidget: {
-		kind: 'widget',
-		component: ContactVolumeKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: contactmoment count in the dashboard date range. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
-	},
 	LeadsOverTimeChartWidget: {
 		kind: 'widget',
 		component: LeadsOverTimeChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Line chart: leads over time from GET /api/analytics/trends?metric=leads. Title comes from the widget chrome. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap). Line chart: leads over time from GET /api/analytics/trends?metric=leads. NOT dissolvable in nextcloud-vue beta.156: CnDashboardPage renders type:"chart" widgets via getChartProps() whose CHART_PROP_KEYS allowlist does NOT forward endpointSource, and the chart dataSource union is OpenRegister/GraphQL-only (no REST-endpoint form) — so an app REST endpoint cannot feed a dashboard chart. Dissolvable once the library forwards endpointSource for legacy config.widgets[] charts. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
 	},
 	RequestsByCategoryChartWidget: {
 		kind: 'widget',
 		component: RequestsByCategoryChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Bar chart: requests by category from GET /api/analytics/trends?metric=requests-by-category. Title comes from the widget chrome. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Bar chart: requests by category from GET /api/analytics/trends?metric=requests-by-category. openspec/changes/decompose-unified-analytics REQ-DASH-010.',
 	},
 	ReportExportPanel: {
 		kind: 'widget',
 		component: ReportExportPanel,
 		...PANEL_WIDGET_META,
-		_note: 'Collapsible funder-reporting export panel; delegates the format picker + download to CnMassExportDialog / ExportService — no custom export controller. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — dashboard export-action gap). Collapsible funder-reporting export panel; delegates format picker + download to CnMassExportDialog / ExportService. NOT dissolvable to the Wave-1 type:"export" action: that action is dispatched via cnDispatchAction from an index/toolbar surface, but CnDashboardPage renders no dispatchable page-level actions (it exposes only Refresh/Docs/Request-feature + the header-actions slot), so an in-body dashboard export panel has no declarative equivalent. openspec/changes/dashboard REQ-DASH-020 / REQ-DASH-021.',
 	},
 
-	// --- Commercial dashboard widgets (openspec/changes/commercial-dashboard). ---
-	RevenueKpiWidget: {
-		kind: 'widget',
-		component: RevenueKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: settled POS turnover + won-deal value in the dashboard date range. Shares one cached GET /api/analytics/commercial per period.',
-	},
-	WonValueKpiWidget: {
-		kind: 'widget',
-		component: WonValueKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: value of deals won in the dashboard date range.',
-	},
-	WinRateKpiWidget: {
-		kind: 'widget',
-		component: WinRateKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: won / (won + lost) deals closed in the dashboard date range.',
-	},
-	AvgDealSizeKpiWidget: {
-		kind: 'widget',
-		component: AvgDealSizeKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: mean value of won deals in the dashboard date range.',
-	},
-	WeightedForecastKpiWidget: {
-		kind: 'widget',
-		component: WeightedForecastKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: open pipeline value weighted by win probability (forward-looking).',
-	},
-	OpenPipelineKpiWidget: {
-		kind: 'widget',
-		component: OpenPipelineKpiWidget,
-		...KPI_WIDGET_META,
-		_note: 'KPI card: total value of open leads (forward-looking).',
-	},
+	// --- Commercial dashboard trend charts (openspec/changes/commercial-dashboard).
+	//     The six commercial KPI cards were dissolved into type:"stat" +
+	//     content.endpointSource manifest config (ADR-049 Phase-4). These four
+	//     charts stay custom pending the same chart-endpoint library gap noted
+	//     on LeadsOverTimeChartWidget. ---
 	RevenueOverTimeChartWidget: {
 		kind: 'widget',
 		component: RevenueOverTimeChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Line chart: revenue over time from GET /api/analytics/trends?metric=revenue. Title comes from the widget chrome.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Line chart: revenue over time from GET /api/analytics/trends?metric=revenue.',
 	},
 	PipelineByStageChartWidget: {
 		kind: 'widget',
 		component: PipelineByStageChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Horizontal bar funnel: open-lead value per stage from GET /api/analytics/trends?metric=pipeline-by-stage.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Horizontal bar funnel: open-lead value per stage from GET /api/analytics/trends?metric=pipeline-by-stage.',
 	},
 	RevenueByCategoryChartWidget: {
 		kind: 'widget',
 		component: RevenueByCategoryChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Donut: POS revenue by product category from GET /api/analytics/trends?metric=revenue-by-product-category.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Donut: POS revenue by product category from GET /api/analytics/trends?metric=revenue-by-product-category.',
 	},
 	TopCustomersChartWidget: {
 		kind: 'widget',
 		component: TopCustomersChartWidget,
 		...PANEL_WIDGET_META,
-		_note: 'Horizontal bar: top customers by revenue from GET /api/analytics/trends?metric=top-customers.',
-	},
-	ClosingSoonWidget: {
-		kind: 'widget',
-		component: ClosingSoonWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Table: open deals ordered by expected close date, built client-side from the cached lead dataset.',
-	},
-	RecentlyWonLostWidget: {
-		kind: 'widget',
-		component: RecentlyWonLostWidget,
-		...PANEL_WIDGET_META,
-		_note: 'Table: recently won/lost deals, built client-side from the cached lead dataset.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Horizontal bar: top customers by revenue from GET /api/analytics/trends?metric=top-customers.',
 	},
 
 	// --- Queues / routing rules. ---
@@ -831,6 +777,27 @@ const registry = {
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
 	},
+	MessagingConversationSection: {
+		kind: 'section',
+		component: MessagingConversationSection,
+		_note: 'Outbound WhatsApp/SMS conversation feed for a client or contact (outbound-messaging-provider-wiring). Self-fetches message/conversation rows by contactId + the composer preflight facts; on ClientDetail (no client-level FK on message/conversation) it resolves the client\'s linked contacts client-side and lets the agent pick which contact to converse with. Hosts the SendMessageModal composer.',
+	},
+
+	// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit).
+	//     Registered for RequestDetail / ContractDetail's declarative
+	//     `config.bodyWidgets`. Each self-fetches its GET .../availability
+	//     endpoint by @objectId and hides entirely (not disabled) when no
+	//     installed app implements the target kind. ---
+	RequestConversionSection: {
+		kind: 'section',
+		component: RequestConversionSection,
+		_note: '"Convert to case" action for the RequestDetail page (semantic-handoff-emit). Self-fetches GET /api/handoff/request/{id}/availability by @objectId; renders the button only when canConvert (an ns#Case implementer is installed AND status is in_progress). On success shows the converted notice + a copyable caseReference — the target app is kind-addressed and unknown to the frontend, so no precise cross-app route can be built.',
+	},
+	ContractInvoicingSection: {
+		kind: 'section',
+		component: ContractInvoicingSection,
+		_note: '"Send to invoicing" action for the ContractDetail page (semantic-handoff-emit). Self-fetches GET /api/handoff/contract/{id}/availability by @objectId; renders the button only when canSend (an ns#Invoice implementer is installed AND status is active). Sending does not change the contract\'s own status (a recurring contract stays active for the next interval), so the button remains available after a send; shows a success notice + copyable invoiceReference for the most recent send.',
+	},
 
 	// --- BI export + data-warehouse sink. ---
 	ExportJobsView: {
@@ -879,6 +846,13 @@ const registry = {
 		kind: 'page',
 		component: CtiPageView,
 		_note: 'Merged CTI (telephony) settings page (pipelinq-cti-and-catalog-ia): composes the CtiSettings integration config and the CtiEventLog webhook log into one settings-section page so the former two Administration menu entries become one entry under Settings.',
+	},
+
+	// --- Outbound WhatsApp/SMS messaging admin (outbound-messaging-provider-wiring). ---
+	MessagingSettingsView: {
+		kind: 'page',
+		component: MessagingSettingsView,
+		_note: 'Admin settings: channelProvider / messageSendBudget / messageTemplate CRUD via createObjectStore (no bespoke REST for these OR objects), per-provider zero-cost connectivity test (POST /api/messaging/providers/{id}/test) and the inbound webhook URL to paste into the vendor console. Provider rows carry NO credential field by design — vendor secrets live on the OpenConnector source addressed by sourceId. Lib gap: no messaging-provider-settings page type.',
 	},
 
 	// --- POS pluggable payment provider adapter (pos-payment-provider-adapter). ---
@@ -986,22 +960,12 @@ const registry = {
 		...PANEL_WIDGET_META,
 		_note: 'Inline xWiki HTML viewer used by the sidebar tab; consumes the xwiki Pinia store directly.',
 	},
-	// --- AVG (GDPR data-subject request) workflow. ---
-	AvgDashboardView: {
-		kind: 'page',
-		component: AvgDashboardView,
-		_note: 'AVG request dashboard; custom so rows carry deadline colour-coding, masked subject names and a DPIA badge, and the empty state offers "New AVG request".',
-	},
-	AvgRequestDetailView: {
-		kind: 'page',
-		component: AvgRequestDetailView,
-		_note: 'AVG request detail with the tabbed lifecycle (intake/evidence/redaction/bundle/denial), a live deadline counter and the 60-day extension action; lib detail page cannot express the GDPR request lifecycle.',
-	},
-	AvgIntakeView: {
-		kind: 'page',
-		component: AvgIntakeView,
-		_note: 'AVG intake form with article classification + BSN elfproef validation; lib has no classification/intake page type.',
-	},
+	// --- AVG (GDPR data-subject request) workflow migrated to OpenRegister
+	//     (ADR-047 Phase 3 / consume-or-dsar): the dashboard/detail/intake views
+	//     and their bespoke components were removed. OR's case engine owns the
+	//     DSAR lifecycle; the AvgRequests nav entry deep-links to OR's AVG page
+	//     (/apps/openregister/avg). Pipelinq contributes evidence via
+	//     PipelinqEvidenceSourceProvider. ---
 	// --- Master Data Management (MDM) steward surfaces migrated to OpenRegister
 	//     (ADR-045 #D): the list/detail, duplicate-candidates, data-quality and
 	//     sync-queue views + the golden-record/conflict/merge sections & modals

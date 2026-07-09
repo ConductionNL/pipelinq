@@ -132,6 +132,7 @@
           "transaction": {
             "type": "string",
             "format": "uuid",
+            "$ref": "posTransaction",
             "description": "UUID reference to the parent posTransaction",
             "facetable": true,
             "title": "Transaction"
@@ -139,6 +140,7 @@
           "tenderType": {
             "type": "string",
             "format": "uuid",
+            "$ref": "posTenderType",
             "description": "UUID reference to the posTenderType used for this tender",
             "facetable": true,
             "title": "Tender Type"

@@ -178,6 +178,11 @@
                   "type": "string",
                   "description": "Optional per-step webhook URL (when channel=webhook).",
                   "title": "Webhook URL"
+                },
+                "templateId": {
+                  "type": "string",
+                  "description": "Optional approved messageTemplate UUID used for a whatsapp escalation to a customer. Required when channel=whatsapp and no open 24h session window exists (business-initiated, template-gated per Meta policy); ignored for other channels.",
+                  "title": "Template ID"
                 }
               }
             },
@@ -301,7 +306,7 @@
           },
           "notifiedActors": {
             "type": "array",
-            "description": "User IDs / external addresses notified, or 'failed:<channel>' placeholders.",
+            "description": "User IDs / contact identifiers notified, or a marker from the audit vocabulary: sent (actor identifier), consent-missing:<channel>, template-missing:<channel>, unsupported:<channel>:<role>, deferred:<channel>:<role>, failed:<channel>, unresolved:<role>.",
             "items": {
               "type": "string"
             },
