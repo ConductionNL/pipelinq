@@ -4,12 +4,13 @@
  * Unit tests for DataDeletionService (AVG erasure of customer Bookings).
  *
  * These tests assert the NEW, authorized behaviour: booking erasure is routed
- * through OpenRegister's canonical, legal-hold-aware erasure
- * (`DataSubjectRequestService::erase` in `pseudonymise` mode, surfaced via
- * {@see \OCA\Pipelinq\Service\Avg\OrGdprBridge}) instead of the earlier
- * named-field SHA-256 hashing. The critical retention invariant — a Booking row
- * held by the NL Boekhoudplicht 7-year retention SURVIVES erasure — is verified
- * here: held objects come back in the `held` bucket and are never erased.
+ * directly through OpenRegister's canonical, legal-hold-aware erasure
+ * (`DataSubjectRequestService::erase` in `pseudonymise` mode, resolved lazily
+ * through the container after consume-or-dsar removed the app-side OrGdprBridge)
+ * instead of the earlier named-field SHA-256 hashing. The critical retention
+ * invariant — a Booking row held by the NL Boekhoudplicht 7-year retention
+ * SURVIVES erasure — is verified here: held objects come back in the `held`
+ * bucket and are never erased.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -32,7 +33,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\Pipelinq\Service\Avg\OrGdprBridge;
 use OCA\Pipelinq\Service\DataDeletionService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -152,7 +152,7 @@ class DataDeletionServiceTest extends TestCase
              */
             public function get(string $id): mixed
             {
-                if ($id === OrGdprBridge::OR_REQUEST_SERVICE || $id === OrGdprBridge::OR_DEADLINE) {
+                if ($id === 'OCA\OpenRegister\Service\Gdpr\DataSubjectRequestService') {
                     return $this->fake;
                 }
 
@@ -166,12 +166,11 @@ class DataDeletionServiceTest extends TestCase
              */
             public function has(string $id): bool
             {
-                return ($id === OrGdprBridge::OR_REQUEST_SERVICE || $id === OrGdprBridge::OR_DEADLINE);
+                return ($id === 'OCA\OpenRegister\Service\Gdpr\DataSubjectRequestService');
             }
         };
 
-        $bridge        = new OrGdprBridge(container: $container, logger: new NullLogger());
-        $this->service = new DataDeletionService(orGdpr: $bridge, logger: new NullLogger());
+        $this->service = new DataDeletionService(container: $container, logger: new NullLogger());
     }//end setUp()
 
     /**

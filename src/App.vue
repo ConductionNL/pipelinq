@@ -12,6 +12,7 @@
 -->
 <template>
 	<CnAppRoot
+		:ai-companion="true"
 		:manifest="manifest"
 		:registry="registry"
 		:cell-widgets="cellWidgets"

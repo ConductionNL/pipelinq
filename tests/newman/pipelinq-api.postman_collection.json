@@ -608,6 +608,74 @@
           ]
         }
       ]
+    },
+    {
+      "name": "MDM read-API retired (retire-mdm-sync-queue)",
+      "item": [
+        {
+          "name": "GET /api/mdm/master serves no JSON read-API (route removed)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/mdm/master?kvk=12345678",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// The MdmApiController + its routes were removed; the SPA",
+                  "// catch-all (dashboard#page /{path}) now serves this path, so",
+                  "// there is no JSON master-entity read-API. A JSON body with a",
+                  "// golden record would mean the wrapper still exists.",
+                  "pm.test('No JSON MDM read-API response is served', function () {",
+                  "  var ct = pm.response.headers.get('Content-Type') || '';",
+                  "  if (ct.indexOf('application/json') !== -1) {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.not.have.property('goldenRecord');",
+                  "    pm.expect(json).to.not.have.property('masterId');",
+                  "  } else {",
+                  "    pm.expect(ct).to.include('text/html');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/mdm/master/{id} serves no JSON read-API (route removed)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/mdm/master/550e8400-e29b-41d4-a716-446655440002",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('No JSON master-by-id read-API response is served', function () {",
+                  "  var ct = pm.response.headers.get('Content-Type') || '';",
+                  "  if (ct.indexOf('application/json') !== -1) {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.not.have.property('goldenRecord');",
+                  "  } else {",
+                  "    pm.expect(ct).to.include('text/html');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -75,10 +75,10 @@
     "slug": "omnichannel-registratie",
     "title": "Omnichannel messaging",
     "title_nl": "Omnichannel berichten",
-    "summary": "Register inbound WhatsApp and SMS messages, with consent logged automatically.",
-    "summary_nl": "Je registreert inkomende WhatsApp- en sms-berichten, met toestemming automatisch vastgelegd.",
+    "summary": "Register inbound and outbound WhatsApp and SMS messages, with consent logged automatically.",
+    "summary_nl": "Je registreert inkomende en uitgaande WhatsApp- en sms-berichten, met toestemming automatisch vastgelegd.",
     "status": "beta",
-    "statusReason": "Outbound WhatsApp/SMS send has zero production callers and no UI surface; SlaEngineService::dispatchNotification defers all channels except nextcloud-notification. Inbound webhooks (messagingWebhook#whatsapp|sms) are wired.",
+    "statusReason": "Outbound send is now wired end-to-end (outbound-messaging-provider-wiring): agent send surface on Client/Contact detail, SlaEngineService::dispatchNotification dispatches sms/whatsapp escalations through the OR MessageDispatchProvider leaf, business-initiated consent gate, and outbound-send contactmoment audit. The CI mock-mode contract ring (PHPUnit + Newman) and the settings/composer Playwright ring are green. Promotion to stable is gated on REQ-OM-008 criterion (c) — one green live-gate run (Bird test key + Meta test number) — which is pending live provider credentials; the env-guarded live gate is config-ready but not yet executed. Stays beta until that live-gate run is recorded.",
     "docsUrl": "openspec/specs/omnichannel-registratie/spec.md"
   },
   {
