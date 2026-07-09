@@ -1022,14 +1022,16 @@
 				"register": "pipelinq",
 				"schema": "lead",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). ADR-062 rev3: the data widget is field-split into Deal (title/value/probability/expectedClose/priority/status) and Qualification (source/stage/stageOrder/qualificationScore/assignee/description/notes); a stats-block KPI card top-right (rule 2, replacing the retired summaryAggregates) shows deal value + line count @objectId-scoped. A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule.",
+				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). ADR-062 rev3: the data widget is field-split into Deal (title/value/probability/expectedClose/priority/status) and Qualification (source/stage/stageOrder/qualificationScore/assignee/description/notes); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; deal-value sum carries its unit in countLabel (entries have no currency formatting). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule.",
 				"widgets": [
 					{ "id": "lead-deal", "type": "data", "title": "Deal", "icon": "HandshakeOutline", "content": { "columns": 2, "include": ["title", "value", "probability", "expectedCloseDate", "priority", "status"] } },
 					{ "id": "lead-qualification", "type": "data", "title": "Qualification", "icon": "FilterVariant", "content": { "columns": 2, "include": ["source", "stage", "stageOrder", "stageEnteredAt", "qualificationScore", "assignee", "description", "notes"] } },
 					{ "id": "lead-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
-					{ "id": "lead-kpis", "type": "stats-block", "title": "Deal KPIs", "icon": "Cash", "content": { "entries": [
-						{ "title": "Deal value", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "format": "currency", "filter": { "id": "@objectId" } },
-						{ "title": "Line items", "register": "pipelinq", "schema": "leadProduct", "metric": "count", "filter": { "lead": "@objectId" } }
+					{ "id": "lead-kpi-value", "type": "stats-block", "title": "Deal value", "icon": "Cash", "content": { "entries": [
+						{ "title": "Deal value", "countLabel": "EUR", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "id": "@objectId" } }
+					] } },
+					{ "id": "lead-kpi-lines", "type": "stats-block", "title": "Line items", "icon": "ClipboardList", "content": { "entries": [
+						{ "title": "Line items", "countLabel": "on this deal", "register": "pipelinq", "schema": "leadProduct", "metric": "count", "filter": { "lead": "@objectId" } }
 					] } },
 					{ "id": "lead-email", "type": "integration", "integrationId": "email", "title": "Emails", "icon": "Email" },
 					{ "id": "lead-files", "type": "integration", "integrationId": "files", "title": "Files", "icon": "FolderOutline" },
@@ -1057,13 +1059,14 @@
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "lead-deal",          "gridX": 0, "gridY": 0,  "gridWidth": 8, "gridHeight": 3 },
-					{ "id": "7", "widgetId": "lead-kpis",          "gridX": 8, "gridY": 0,  "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "7", "widgetId": "lead-kpi-value",     "gridX": 8, "gridY": 0,  "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "9", "widgetId": "lead-kpi-lines",     "gridX": 8, "gridY": 2,  "gridWidth": 4, "gridHeight": 2 },
 					{ "id": "2", "widgetId": "lead-qualification", "gridX": 0, "gridY": 3,  "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "3", "widgetId": "lead-related",       "gridX": 8, "gridY": 4,  "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "lead-related",       "gridX": 8, "gridY": 4,  "gridWidth": 4, "gridHeight": 3 },
 					{ "id": "4", "widgetId": "lead-email",         "gridX": 0, "gridY": 7,  "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "5", "widgetId": "lead-files",         "gridX": 8, "gridY": 8,  "gridWidth": 4, "gridHeight": 3 },
-					{ "id": "6", "widgetId": "lead-calendar",      "gridX": 0, "gridY": 11, "gridWidth": 8, "gridHeight": 3 },
-					{ "id": "8", "widgetId": "lead-lines",         "gridX": 0, "gridY": 14, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "5", "widgetId": "lead-files",         "gridX": 8, "gridY": 7,  "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "8", "widgetId": "lead-lines",         "gridX": 0, "gridY": 11, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "6", "widgetId": "lead-calendar",      "gridX": 8, "gridY": 11, "gridWidth": 4, "gridHeight": 4 }
 				],
 				"lifecycleActions": { "field": "status" },
 				"sidebar": {
