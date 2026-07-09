@@ -1048,14 +1048,16 @@
 							"columns": [
 								{ "key": "product", "label": "Product" },
 								{ "key": "quantity", "label": "Qty" },
-								{ "key": "unitPrice", "label": "Unit price" },
+								{ "key": "unitPrice", "label": "Unit price", "format": { "style": "currency", "currency": "@config.currency" } },
 								{ "key": "discount", "label": "Discount %" },
-								{ "key": "total", "label": "Line total" }
+								{ "key": "total", "label": "Line total", "format": { "style": "currency", "currency": "@config.currency" } }
 							],
+							"allowEdit": true,
 							"limit": 25,
 							"emptyText": "No products quoted on this deal yet — add a line to build the quote."
 						}
-					}
+					},
+					{ "id": "lead-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "lead-deal",          "gridX": 0, "gridY": 0,  "gridWidth": 8, "gridHeight": 3 },
@@ -1066,9 +1068,13 @@
 					{ "id": "4", "widgetId": "lead-email",         "gridX": 0, "gridY": 7,  "gridWidth": 8, "gridHeight": 4 },
 					{ "id": "5", "widgetId": "lead-files",         "gridX": 8, "gridY": 7,  "gridWidth": 4, "gridHeight": 4 },
 					{ "id": "8", "widgetId": "lead-lines",         "gridX": 0, "gridY": 11, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "6", "widgetId": "lead-calendar",      "gridX": 8, "gridY": 11, "gridWidth": 4, "gridHeight": 4 }
+					{ "id": "6", "widgetId": "lead-calendar",      "gridX": 8, "gridY": 11, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "10", "widgetId": "lead-notes",        "gridX": 0, "gridY": 15, "gridWidth": 12, "gridHeight": 4 }
 				],
-				"lifecycleActions": { "field": "status" },
+				"lifecycleActions": { "field": "status", "transitions": [
+					{ "action": "win", "from": "open", "to": "won", "label": "Close as win", "confirm": "Close this lead as won?" },
+					{ "action": "lose", "from": "open", "to": "lost", "label": "Close as lose", "confirm": "Close this lead as lost?" }
+				] },
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
