@@ -977,10 +977,21 @@
           },
           "caseReference": {
             "type": "string",
-            "description": "UUID reference to the converted Procest case",
+            "description": "The Procest case this request was converted into (ADR-066 cross-app reference).",
             "format": "uuid",
+            "$ref": "case",
+            "x-external-register": "procest",
             "visible": false,
             "title": "Case Reference"
+          },
+          "contract": {
+            "type": "string",
+            "title": "Governing contract",
+            "description": "The Shillinq contract that governs this request (drives its SLA tier / entitlements). References a Shillinq Contract object (ADR-066 cross-app reference); Shillinq owns contract lifecycle. Pick an existing contract or create one in Shillinq.",
+            "format": "uuid",
+            "$ref": "Contract",
+            "x-external-register": "shillinq",
+            "x-allow-create": true
           }
         }
       },
