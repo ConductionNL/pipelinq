@@ -1075,7 +1075,8 @@
 							"emptyText": "No products quoted on this deal yet — add a line to build the quote."
 						}
 					},
-					{ "id": "lead-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" }
+					{ "id": "lead-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" },
+					{ "id": "lead-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "lead-deal",          "gridX": 0, "gridY": 0,  "gridWidth": 8, "gridHeight": 3 },
@@ -1087,7 +1088,8 @@
 					{ "id": "5", "widgetId": "lead-files",         "gridX": 8, "gridY": 7,  "gridWidth": 4, "gridHeight": 4 },
 					{ "id": "8", "widgetId": "lead-lines",         "gridX": 0, "gridY": 11, "gridWidth": 8, "gridHeight": 4 },
 					{ "id": "6", "widgetId": "lead-calendar",      "gridX": 8, "gridY": 11, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "10", "widgetId": "lead-notes",        "gridX": 0, "gridY": 15, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "10", "widgetId": "lead-notes",        "gridX": 0, "gridY": 15, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "11", "widgetId": "lead-decisions",    "gridX": 0, "gridY": 19, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"lifecycleActions": { "field": "status", "transitions": [
 					{ "action": "win", "from": "open", "to": "won", "label": "Close as win", "confirm": "Close this lead as won?" },
