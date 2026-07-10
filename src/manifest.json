@@ -713,7 +713,8 @@
 						{ "title": "Contactmomenten", "register": "pipelinq", "schema": "contactmoment", "metric": "count", "filter": { "request": "@objectId" } }
 					] } },
 					{ "id": "request-email", "type": "integration", "integrationId": "email", "title": "Emails", "icon": "Email" },
-					{ "id": "request-files", "type": "integration", "integrationId": "files", "title": "Files", "icon": "FolderOutline" }
+					{ "id": "request-files", "type": "integration", "integrationId": "files", "title": "Files", "icon": "FolderOutline" },
+					{ "id": "request-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "request-data",    "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
@@ -721,7 +722,8 @@
 					{ "id": "5-1", "widgetId": "request-kpis-open-tasks",      "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 2 },
 					{ "id": "5-2", "widgetId": "request-kpis-contactmomenten", "gridX": 8, "gridY": 6, "gridWidth": 4, "gridHeight": 2 },
 					{ "id": "3", "widgetId": "request-email",   "gridX": 0, "gridY": 4, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "4", "widgetId": "request-files",   "gridX": 8, "gridY": 8, "gridWidth": 4, "gridHeight": 3 }
+					{ "id": "4", "widgetId": "request-files",   "gridX": 8, "gridY": 8, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "6", "widgetId": "request-decisions", "gridX": 0, "gridY": 11, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"lifecycleActions": { "field": "status" },
 				"relatedCollections": [
