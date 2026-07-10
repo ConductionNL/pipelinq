@@ -25,39 +25,29 @@
 		:sidebar="sidebarConfig"
 		:row-class="rowClassFor"
 		:items-filter="itemsFilter"
-		:row-click-to-view="false"
+		:row-click-to-view="true"
 		@row-click="openLead"
 		@view="openLead">
-		<template #header-actions>
+		<template #header-extra>
 			<div class="lead-list__filters">
 				<NcCheckboxRadioSwitch
 					v-model="showStaleOnly"
-					:aria-label="
-						t('pipelinq', 'Stale only (>{days}d)', {
-							days: staleThreshold,
-						})
-					"
 					type="checkbox">
-					{{
-						t('pipelinq', 'Stale only (>{days}d)', {
-							days: staleThreshold,
-						})
-					}}
+					{{ t('pipelinq', 'Stale only (>{days}d)', { days: staleThreshold }) }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
 					v-model="hideClosed"
-					:aria-label="t('pipelinq', 'Hide closed')"
 					type="checkbox">
 					{{ t('pipelinq', 'Hide closed') }}
 				</NcCheckboxRadioSwitch>
 			</div>
 		</template>
 
-		<template #column-expectedCloseDate="{ row }">
-			<span :class="{ 'overdue-cell': isLeadOverdue(row, stages) }">
-				{{ row.expectedCloseDate || '-' }}
-				<small v-if="isLeadOverdue(row, stages)" class="overdue-suffix">
-					{{ getOverdueDays(row, stages) }}d {{ t('pipelinq', 'late') }}
+		<template #cell-expectedCloseDate="{ item }">
+			<span :class="{ 'overdue-cell': isLeadOverdue(item, stages) }">
+				{{ item.expectedCloseDate || '-' }}
+				<small v-if="isLeadOverdue(item, stages)" class="overdue-suffix">
+					{{ getOverdueDays(item, stages) }}d {{ t('pipelinq', 'late') }}
 				</small>
 			</span>
 		</template>
@@ -67,12 +57,7 @@
 <script>
 import { CnIndexPage } from '@conduction/nextcloud-vue'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
-import {
-	getDaysAge,
-	isLeadOverdue,
-	getOverdueDays,
-	getStaleThreshold,
-} from '../../services/pipelineUtils.js'
+import { getDaysAge, isLeadOverdue, getOverdueDays, getStaleThreshold } from '../../services/pipelineUtils.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -86,14 +71,7 @@ export default {
 		return {
 			register: 'pipelinq',
 			schema: 'lead',
-			columns: [
-				'title',
-				'stage',
-				'status',
-				'priority',
-				'value',
-				'expectedCloseDate',
-			],
+			columns: ['title', 'stage', 'status', 'priority', 'value', 'expectedCloseDate'],
 			showStaleOnly: false,
 			hideClosed: true,
 			stages: [],
@@ -101,13 +79,13 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/specs/lead-management/spec.md
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
 		 */
 		settingsStore() {
 			return useSettingsStore()
 		},
 		/**
-		 * @spec openspec/specs/lead-management/spec.md
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -116,7 +94,7 @@ export default {
 		 * Effective stale threshold from the settings store. Falls back to
 		 * 14 days when the store hasn't initialised yet.
 		 *
-		 * @spec openspec/specs/lead-management/spec.md
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
 		 */
 		staleThreshold() {
 			return getStaleThreshold(this.settingsStore.config)
@@ -149,7 +127,7 @@ export default {
 		 *
 		 * @param {object} item The lead row.
 		 * @return {string}
-		 * @spec openspec/specs/lead-management/spec.md
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
 		 */
 		rowClassFor(item) {
 			return isLeadOverdue(item, this.stages) ? 'lead-overdue' : ''
@@ -160,15 +138,12 @@ export default {
 		 *
 		 * @param {Array<object>} items The base item list.
 		 * @return {Array<object>}
-		 * @spec openspec/specs/lead-management/spec.md
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
 		 */
 		itemsFilter(items) {
 			if (!Array.isArray(items)) return []
-			return items.filter((item) => {
-				if (
-					this.hideClosed
-					&& (item.status === 'won' || item.status === 'lost')
-				) {
+			return items.filter(item => {
+				if (this.hideClosed && (item.status === 'won' || item.status === 'lost')) {
 					return false
 				}
 				if (this.showStaleOnly && getDaysAge(item) < this.staleThreshold) {
@@ -182,17 +157,13 @@ export default {
 		 * (REQ-LM-004) can honour each stage's `isClosed` flag. Falls back to
 		 * a plain date check when no pipeline is configured.
 		 *
-		 * @spec openspec/specs/lead-management/spec.md
+		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
 		 */
 		async loadDefaultPipeline() {
 			try {
-				const pipelines = await this.objectStore.fetchCollection(
-					'pipeline',
-					{ _limit: 50 },
-				)
+				const pipelines = await this.objectStore.fetchCollection('pipeline', { _limit: 50 })
 				if (!Array.isArray(pipelines)) return
-				const defaultPipeline =
-					pipelines.find((p) => p.isDefault) || pipelines[0]
+				const defaultPipeline = pipelines.find(p => p.isDefault) || pipelines[0]
 				if (defaultPipeline && Array.isArray(defaultPipeline.stages)) {
 					this.stages = defaultPipeline.stages
 				}
