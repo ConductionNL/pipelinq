@@ -1194,12 +1194,12 @@
 					}
 				],
 				"columns": [
-					"title",
-					"type",
-					"status",
-					"priority",
-					"assignee",
-					"dueDate"
+					{ "key": "title", "label": "Title" },
+					{ "key": "type", "label": "Type" },
+					{ "key": "status", "label": "Status" },
+					{ "key": "priority", "label": "Priority" },
+					{ "key": "assignee", "label": "Assignee" },
+					{ "key": "dueDate", "label": "Due date" }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -1268,11 +1268,11 @@
 					}
 				],
 				"columns": [
-					"name",
-					"category",
-					"type",
-					"status",
-					"price"
+					{ "key": "name", "label": "Name" },
+					{ "key": "category", "label": "Category" },
+					{ "key": "type", "label": "Type" },
+					{ "key": "status", "label": "Status" },
+					{ "key": "price", "label": "Price" }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -1886,10 +1886,10 @@
 					}
 				],
 				"columns": [
-					"title",
-					"description",
-					"isActive",
-					"sortOrder"
+					{ "key": "title", "label": "Title" },
+					{ "key": "description", "label": "Description" },
+					{ "key": "isActive", "label": "Active" },
+					{ "key": "sortOrder", "label": "Sort order" }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -2086,10 +2086,10 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"columns": [
-					"title",
-					"description",
-					"isDefault",
-					"_dateCreated"
+					{ "key": "title", "label": "Title" },
+					{ "key": "description", "label": "Description" },
+					{ "key": "isDefault", "label": "Default" },
+					{ "key": "_dateCreated", "label": "Created" }
 				],
 				"sidebar": {
 					"enabled": true,

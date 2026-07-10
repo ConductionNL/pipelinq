@@ -137,6 +137,16 @@ export function objectTypes() {
 		{ slug: 'exportRun', group: 'export', label: t(APP, 'Export Run'), description: t(APP, 'BI export run history') },
 		// Marketing (marketing-segmentation-and-blast)
 		{ slug: 'blast', group: 'marketing', label: t(APP, 'Blast'), description: t(APP, 'Marketing blasts / campaigns') },
+		// Outbound messaging (outbound-messaging-provider-wiring). These slugs are
+		// self-fetched by the conversation section on client/contact detail and by
+		// the Messaging settings page; register them so fetchCollection() resolves
+		// instead of throwing "Object type X is not registered" — which otherwise
+		// blanks the whole Messaging settings page and errors on every detail page.
+		{ slug: 'conversation', group: 'marketing', label: t(APP, 'Conversation'), description: t(APP, 'Messaging conversations (WhatsApp / SMS)') },
+		{ slug: 'message', group: 'marketing', label: t(APP, 'Message'), description: t(APP, 'Outbound / inbound messages within a conversation') },
+		{ slug: 'channelProvider', group: 'marketing', label: t(APP, 'Channel Provider'), description: t(APP, 'Messaging channel providers (WhatsApp / SMS gateways)') },
+		{ slug: 'messageSendBudget', group: 'marketing', label: t(APP, 'Message Send Budget'), description: t(APP, 'Per-channel outbound send budgets') },
+		{ slug: 'messageTemplate', group: 'marketing', label: t(APP, 'Message Template'), description: t(APP, 'Reusable outbound message templates') },
 	]
 }
 
