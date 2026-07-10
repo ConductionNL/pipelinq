@@ -801,6 +801,9 @@
           "forms"
         ],
         "configuration": {
+          "linkedTypes": [
+            "decidesk-decisions"
+          ],
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "new",
@@ -864,6 +867,19 @@
             "description": "Detailed description of the request",
             "visible": false,
             "title": "Description"
+          },
+          "decisions": {
+            "type": "array",
+            "title": "Decisions",
+            "description": "Governance decisions raised for this request (e.g. approval/escalation). References decidesk Decision objects (ADR-066); Decidesk owns the making and eIDAS signing.",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "$ref": "Decision",
+              "x-external-register": "decidesk"
+            },
+            "referenceType": "decision",
+            "x-allow-create": true
           },
           "client": {
             "type": "string",
