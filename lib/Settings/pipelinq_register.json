@@ -350,7 +350,8 @@
         ],
         "configuration": {
           "linkedTypes": [
-            "mail"
+            "mail",
+            "decidesk-decisions"
           ],
           "mailObjectTemplate": {
             "title": "{{subject}}",
@@ -707,6 +708,19 @@
             "default": "open",
             "title": "Status",
             "facetable": true
+          },
+          "decisions": {
+            "type": "array",
+            "title": "Decisions",
+            "description": "Governance decisions raised for this deal (e.g. approval to close above a threshold). References decidesk Decision objects (ADR-066 cross-app relation); Decidesk owns the making and eIDAS signing. Link an existing decision or create one in Decidesk from the lead.",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "$ref": "Decision",
+              "x-external-register": "decidesk"
+            },
+            "referenceType": "decision",
+            "x-allow-create": true
           },
           "description": {
             "type": "string",
