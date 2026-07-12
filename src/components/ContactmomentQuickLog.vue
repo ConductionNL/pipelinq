@@ -1,17 +1,30 @@
+<!--
+  - SPDX-License-Identifier: EUPL-1.2
+  - SPDX-FileCopyrightText: 2024 Conduction B.V.
+  -
+  - ContactmomentQuickLog.vue
+  -
+  - Quick-log form for a contactmoment. Since unify-ticket-supertype the
+  - contactmoment is not its own schema: it is a `ticket` object carrying
+  - `ticketType: 'contactmoment'`. The form therefore writes the unified ticket
+  - fields (title / description / occurredAt / assignee / parentTicket) while the
+  - UI keeps the familiar contactmoment wording (Subject, Summary, Request).
+  -->
+
 <template>
 	<div class="contactmoment-quicklog">
 		<h3 v-if="!inline">
 			{{ t('pipelinq', 'Log contactmoment') }}
 		</h3>
 
-		<!-- Subject -->
+		<!-- Subject → ticket.title -->
 		<div class="form-group">
 			<NcTextField
-				:value="form.subject"
+				:value="form.title"
 				:label="t('pipelinq', 'Subject')"
-				:error="!!errors.subject"
-				:helper-text="errors.subject"
-				@update:value="v => form.subject = v" />
+				:error="!!errors.title"
+				:helper-text="errors.title"
+				@update:value="v => form.title = v" />
 		</div>
 
 		<!-- Channel + Outcome row -->
@@ -49,11 +62,11 @@
 				:placeholder="t('pipelinq', 'Select client')" />
 		</div>
 
-		<!-- Request -->
+		<!-- Request → ticket.parentTicket (a request-type ticket) -->
 		<div class="form-group">
 			<label>{{ t('pipelinq', 'Request') }}</label>
 			<NcSelect
-				v-model="form.request"
+				v-model="form.parentTicket"
 				:options="requestSelectOptions"
 				:aria-label-combobox="t('pipelinq', 'Request')"
 				:clearable="true"
@@ -62,12 +75,12 @@
 				:placeholder="t('pipelinq', 'Select request')" />
 		</div>
 
-		<!-- Summary -->
+		<!-- Summary → ticket.description -->
 		<div class="form-group">
 			<NcTextField
-				:value="form.summary"
+				:value="form.description"
 				:label="t('pipelinq', 'Summary')"
-				@update:value="v => form.summary = v" />
+				@update:value="v => form.description = v" />
 		</div>
 
 		<!-- Duration -->
@@ -130,16 +143,21 @@ export default {
 	},
 	data() {
 		return {
+			// Ticket fields, written verbatim to the `ticket` schema on save.
 			form: {
-				subject: '',
+				title: '',
 				channel: null,
 				outcome: null,
 				client: null,
-				request: null,
-				summary: '',
+				parentTicket: null,
+				description: '',
 				duration: '',
 				notes: '',
 			},
+			// Request-type tickets for the "Request" (parent ticket) dropdown.
+			// Held locally rather than read from `objectStore.collections.ticket`,
+			// which is a shared, unnarrowed key any other ticket view may overwrite.
+			requests: [],
 			channelOptions: [
 				'telefoon',
 				'email',
@@ -181,12 +199,6 @@ export default {
 			}))
 		},
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-26
-		 */
-		requests() {
-			return this.objectStore.collections.request || []
-		},
-		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
 		 */
 		requestSelectOptions() {
@@ -200,8 +212,8 @@ export default {
 		 */
 		errors() {
 			const errors = {}
-			if (!this.form.subject || !this.form.subject.trim()) {
-				errors.subject = t('pipelinq', 'Subject is required')
+			if (!this.form.title || !this.form.title.trim()) {
+				errors.title = t('pipelinq', 'Subject is required')
 			}
 			if (!this.form.channel) {
 				errors.channel = t('pipelinq', 'Channel is required')
@@ -209,24 +221,27 @@ export default {
 			return errors
 		},
 		isValid() {
-			return this.form.subject?.trim() && this.form.channel
+			return this.form.title?.trim() && this.form.channel
 		},
 	},
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
 	 */
 	async created() {
-		await Promise.all([
+		const [, requests] = await Promise.all([
 			this.objectStore.fetchCollection('client', { _limit: 100 }),
-			this.objectStore.fetchCollection('request', { _limit: 100 }),
+			// Request-type tickets only — the unified `ticket` schema is narrowed
+			// by its `ticketType` discriminator (unify-ticket-supertype).
+			this.objectStore.fetchCollection('ticket', { ticketType: 'request', _limit: 100 }),
 		])
+		this.requests = requests || []
 
 		if (this.clientId) {
 			this.form.client = this.clientId
 		}
 		if (this.requestId) {
-			this.form.request = this.requestId
-			// If request has a client, pre-fill that too
+			this.form.parentTicket = this.requestId
+			// If the request has a client, pre-fill that too
 			const req = this.requests.find(r => r.id === this.requestId)
 			if (req?.client && !this.clientId) {
 				this.form.client = req.client
@@ -243,28 +258,32 @@ export default {
 			this.saving = true
 			this.errorMessage = ''
 
+			// A contactmoment is a `ticket` with ticketType 'contactmoment'
+			// (unify-ticket-supertype): subject→title, summary→description,
+			// contactedAt→occurredAt, agent→assignee, request→parentTicket.
 			const data = {
-				subject: this.form.subject,
+				ticketType: 'contactmoment',
+				title: this.form.title,
 				channel: this.form.channel,
-				contactedAt: new Date().toISOString(),
-				agent: OC.currentUser,
+				occurredAt: new Date().toISOString(),
+				assignee: OC.currentUser,
 				channelMetadata: {},
 			}
 
 			if (this.form.outcome) data.outcome = this.form.outcome
 			if (this.form.client) data.client = this.form.client
-			if (this.form.request) data.request = this.form.request
-			if (this.form.summary) data.summary = this.form.summary
+			if (this.form.parentTicket) data.parentTicket = this.form.parentTicket
+			if (this.form.description) data.description = this.form.description
 			if (this.form.duration) data.duration = this.form.duration
 			if (this.form.notes) data.notes = this.form.notes
 
 			try {
-				const result = await this.objectStore.saveObject('contactmoment', data)
+				const result = await this.objectStore.saveObject('ticket', data)
 				if (result) {
 					showSuccess(t('pipelinq', 'Contactmoment logged successfully'))
 					this.$emit('saved', result)
 				} else {
-					const error = this.objectStore.getError('contactmoment')
+					const error = this.objectStore.getError('ticket')
 					this.errorMessage = error?.message || t('pipelinq', 'Failed to save contactmoment')
 					showError(this.errorMessage)
 				}

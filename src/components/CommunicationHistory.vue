@@ -222,12 +222,20 @@ export default {
 			this.fetchHistory()
 		},
 
+		/**
+		 * Open a communication-history row on the unified ticket detail page.
+		 *
+		 * @param {object} row The contactmoment row (a `ticket` object).
+		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+		 */
 		goToContactmoment(row) {
 			if (!row || !row.id) {
 				return
 			}
+			// A contactmoment is a `ticket` with ticketType=contactmoment
+			// (unify-ticket-supertype) — open the unified detail page.
 			this.$router.push({
-				name: 'ContactmomentDetail',
+				name: 'TicketDetail',
 				params: { id: row.id },
 			})
 		},

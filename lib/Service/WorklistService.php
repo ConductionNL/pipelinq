@@ -14,8 +14,12 @@
  *  - Requests in a terminal status (completed / rejected / converted)
  *    are excluded (src/views/dashboard/widgets/MyWorkWidget.vue:90).
  *  - Lead overdue = expectedCloseDate strictly before now
- *    (MyWorkWidget.vue:85); request overdue = requestedAt older than
- *    30 days (MyWorkWidget.vue:99).
+ *    (MyWorkWidget.vue:85); request overdue = the request's own timestamp
+ *    older than 30 days (MyWorkWidget.vue:99) — `requestedAt` on the legacy
+ *    request schema, `occurredAt` on the unified ticket schema.
+ *
+ * Requests are a subtype of the unified `ticket` schema and are read through
+ * {@see TicketService} with a `ticketType` discriminator (unify-ticket-supertype).
  *  - Rows sort overdue-first, then priority (urgent > high > normal >
  *    low), then due date ascending with date-less rows last
  *    (MyWorkWidget.vue:103-112).
@@ -52,15 +56,16 @@ use RuntimeException;
 /**
  * "My work" worklist aggregation service.
  *
- * Stateless. Reads the current user's leads and requests plus the
- * pipeline definitions via the OpenRegister ObjectService (assignee
- * scoping is pushed into the OR query), normalizes both sources into
- * one row shape and sorts them with the exact comparator the dashboard
- * widget used client-side.
+ * Stateless. Reads the current user's leads and pipeline definitions via the
+ * OpenRegister ObjectService and the user's request tickets via
+ * {@see TicketService} (assignee scoping is pushed into the OR query in both
+ * cases), normalizes both sources into one row shape and sorts them with the
+ * exact comparator the dashboard widget used client-side.
  *
  * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Verbatim port of the client union/overdue/sort rules; the complexity is the mirrored spec, not accidental.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Verbatim port of the client
+ * union/overdue/sort rules; the complexity is the mirrored spec, not accidental.
  */
 class WorklistService
 {
@@ -93,8 +98,9 @@ class WorklistService
     public const TERMINAL_REQUEST_STATUSES = ['completed', 'rejected', 'converted'];
 
     /**
-     * A request counts as overdue when requestedAt is older than this
-     * (30 days; MyWorkWidget.vue:99).
+     * A request counts as overdue when its occurredAt (the ticket-schema name
+     * of the request's requestedAt) is older than this (30 days;
+     * MyWorkWidget.vue:99).
      *
      * @var int
      */
@@ -141,16 +147,18 @@ class WorklistService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container The DI container (OpenRegister lookup).
-     * @param IAppConfig         $appConfig App configuration (register/schema IDs).
-     * @param IL10N              $l10n      Localisation (request status labels).
-     * @param LoggerInterface    $logger    The logger.
+     * @param ContainerInterface $container     The DI container (OpenRegister lookup).
+     * @param IAppConfig         $appConfig     App configuration (register/schema IDs).
+     * @param IL10N              $l10n          Localisation (request status labels).
+     * @param LoggerInterface    $logger        The logger.
+     * @param TicketService      $ticketService Resolver for the unified ticket schema.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private IL10N $l10n,
         private LoggerInterface $logger,
+        private readonly TicketService $ticketService,
     ) {
     }//end __construct()
 
@@ -186,8 +194,8 @@ class WorklistService
             filters: ['assignee' => $userId],
             limit: self::LEAD_FETCH_LIMIT
         );
-        $requests  = $this->findObjects(
-            schemaKey: 'request_schema',
+        $requests  = $this->findTickets(
+            ticketType: TicketService::TYPE_REQUEST,
             filters: ['assignee' => $userId],
             limit: self::REQUEST_FETCH_LIMIT
         );
@@ -303,10 +311,10 @@ class WorklistService
      *
      * Port of the request branch in MyWorkWidget.vue:89-101: skip
      * terminal statuses, label the status like the client
-     * getStatusLabel, due date = requestedAt, overdue when requestedAt
-     * is older than 30 days.
+     * getStatusLabel, due date = the request's occurredAt (the ticket-schema
+     * name of requestedAt), overdue when that timestamp is older than 30 days.
      *
-     * @param array<int, array<string, mixed>> $requests Request rows from OpenRegister.
+     * @param array<int, array<string, mixed>> $requests Request-ticket rows from OpenRegister.
      * @param int                              $nowTs    Current Unix timestamp.
      *
      * @return array<int, array<string, mixed>>
@@ -321,7 +329,7 @@ class WorklistService
                 continue;
             }
 
-            $dueDate = $this->normalizeDate(value: ($request['requestedAt'] ?? null));
+            $dueDate = $this->normalizeDate(value: ($request['occurredAt'] ?? null));
             $dueTs   = $this->toTimestamp(value: $dueDate);
 
             $priority = (string) ($request['priority'] ?? '');
@@ -331,7 +339,7 @@ class WorklistService
 
             $isOverdue = false;
             if ($dueTs !== null && ($nowTs - $dueTs) > self::REQUEST_OVERDUE_AGE_SECONDS) {
-                // Request overdue = requestedAt older than 30 days (MyWorkWidget.vue:99).
+                // Request overdue = occurredAt older than 30 days (MyWorkWidget.vue:99).
                 $isOverdue = true;
             }
 
@@ -343,7 +351,9 @@ class WorklistService
                 'priority'      => $priority,
                 'dueDate'       => $dueDate,
                 'isOverdue'     => $isOverdue,
-                'routeName'     => 'RequestDetail',
+                // unify-ticket-supertype: request-type tickets render on the one
+                // unified detail page; the retired RequestDetail page is gone.
+                'routeName'     => 'TicketDetail',
                 'dueTimestamp'  => $dueTs,
             ];
         }//end foreach
@@ -523,6 +533,41 @@ class WorklistService
 
         return $timestamp;
     }//end toTimestamp()
+
+    /**
+     * Query tickets of one subtype via the shared TicketService.
+     *
+     * The legacy `request` / `complaint` / `contactmoment` schemas were merged
+     * into the unified `ticket` schema; a subtype is selected with the
+     * `ticketType` discriminator rather than with a separate schema id. The
+     * assignee filter and the fetch cap are still pushed into the OpenRegister
+     * query. TicketService is fail-soft: an unprovisioned ticket schema or an
+     * unreachable OpenRegister yields an empty row set (logged there), which
+     * degrades the worklist to its lead rows only.
+     *
+     * @param string               $ticketType One of the TicketService::TYPE_* constants.
+     * @param array<string, mixed> $filters    Additional equality filters.
+     * @param int                  $limit      Row limit pushed to OpenRegister.
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+     */
+    private function findTickets(string $ticketType, array $filters, int $limit): array
+    {
+        $results = $this->ticketService->findByType(
+            ticketType: $ticketType,
+            extraFilters: $filters,
+            limit: $limit
+        );
+
+        $objects = [];
+        foreach ($results as $result) {
+            $objects[] = $this->toArray(object: $result);
+        }
+
+        return $objects;
+    }//end findTickets()
 
     /**
      * Query objects of a configured schema via OpenRegister ObjectService.

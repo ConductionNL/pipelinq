@@ -339,12 +339,12 @@
           }
         }
       },
-      "request": {
-        "slug": "request",
+      "ticket": {
+        "slug": "ticket",
         "properties": {
           "zgwResourceMappings": {
             "type": "array",
-            "description": "References to zgwResourceMapping rows linking this Request to one or more ZGW zaak/besluit/rol/informatieobject URLs (zgw-api-bridge spec REQ-ZGW-008).",
+            "description": "References to zgwResourceMapping rows linking this ticket (ticketType=request) to one or more ZGW zaak/besluit/rol/informatieobject URLs (zgw-api-bridge spec REQ-ZGW-008). unify-ticket-supertype: retargeted from the retired `request` schema.",
             "items": {
               "type": "string",
               "description": "UUID of a zgwResourceMapping row"

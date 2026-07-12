@@ -1,0 +1,313 @@
+{
+  "components": {
+    "schemas": {
+      "ticket": {
+        "slug": "ticket",
+        "title": "Ticket",
+        "icon": "TicketOutline",
+        "version": "1.0.0",
+        "summary": "Unified inbound customer matter — request, complaint or contactmoment",
+        "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
+        "x-schema-org": "schema:Thing",
+        "x-schema-org-by-type": {
+          "request": "schema:Demand",
+          "complaint": "schema:Message",
+          "contactmoment": "schema:CommunicateAction"
+        },
+        "linkedTypes": [
+          "deck",
+          "flow",
+          "time-tracker",
+          "xwiki",
+          "email",
+          "calendar",
+          "forms"
+        ],
+        "configuration": {
+          "x-openregister-archival": {
+            "_note": "unify-ticket-supertype: the retired `contactmoment` schema carried a VNG/AVG retention policy (default P2Y, plus outcome rules). `request` and `complaint` carried NONE. A merged schema can hold only ONE archival block, and the condition DSL supports a single comparison (no AND), so the two postures are reconciled with ordered, first-match-wins rules: the two ticketType rules below exempt request/complaint tickets (P100Y == effectively never disposed, matching their previous no-retention behaviour), and everything after them applies only to contactmoment tickets, whose original default (P2Y) is preserved below. CONSEQUENCE: OpenRegister's SCHEMA_ARCHIVAL_IMMUTABLE guard is schema-level, so tickets can no longer be hard-deleted by hand — they expire via ArchivalRetentionTask. That is the intended posture for an auditable client-interaction record, but it IS a change for request/complaint tickets.",
+            "retention": {
+              "default": "P2Y",
+              "rules": [
+                {
+                  "condition": "ticketType == 'request'",
+                  "retention": "P100Y",
+                  "reason": "Request-type tickets carried no retention policy before the ticket merge; exempted here so the merge does not start auto-disposing them. Revisit with the DPO if requests should acquire a real retention term."
+                },
+                {
+                  "condition": "ticketType == 'complaint'",
+                  "retention": "P100Y",
+                  "reason": "Complaint-type tickets carried no retention policy before the ticket merge; exempted here so the merge does not start auto-disposing them. Klacht retention is a separate DPO decision."
+                },
+                {
+                  "condition": "outcome == 'afgehandeld'",
+                  "retention": "P2Y",
+                  "reason": "Resolved client contact moments (callback logs, counter/phone interactions) retained 2 years as the operational client-interaction record (VNG Klantinteracties), then disposed per ADR-024. DPO sign-off pending (task 4.1)."
+                },
+                {
+                  "condition": "outcome == 'doorverbonden'",
+                  "retention": "P1Y",
+                  "reason": "Transferred (doorverbonden) contact moments are short-lived routing records; 1-year retention before disposition. DPO sign-off pending."
+                }
+              ]
+            }
+          },
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "new",
+            "final": [
+              "completed",
+              "converted",
+              "resolved",
+              "rejected",
+              "closed"
+            ],
+            "transitions": {
+              "start": {
+                "from": ["new"],
+                "to": "in_progress",
+                "description": "Pick up the ticket for handling. Authorization: the assignee or a member of the sales group.",
+                "authorization": ["sales"]
+              },
+              "complete": {
+                "from": ["in_progress"],
+                "to": "completed",
+                "description": "Resolve a request-type ticket successfully. Authorization: the assignee (per-object owner RBAC)."
+              },
+              "convert": {
+                "from": ["in_progress"],
+                "to": "converted",
+                "description": "Convert a request-type ticket into a case (Procest). Authorization: the assignee (per-object owner RBAC)."
+              },
+              "resolve": {
+                "from": ["in_progress"],
+                "to": "resolved",
+                "description": "Resolve a complaint-type ticket to the customer's satisfaction. Authorization: the assignee (per-object owner RBAC)."
+              },
+              "reject": {
+                "from": ["new", "in_progress"],
+                "to": "rejected",
+                "description": "Reject the ticket as unfounded or out of scope. Authorization: the assignee or a member of the sales group.",
+                "authorization": ["sales"]
+              },
+              "close": {
+                "from": ["new", "in_progress"],
+                "to": "closed",
+                "description": "Close a contactmoment-type ticket (interaction logged, no further action). Authorization: the assignee (per-object owner RBAC)."
+              }
+            }
+          }
+        },
+        "x-openregister-handoff": [
+          {
+            "id": "convert-to-case",
+            "targetSemanticType": "https://openregister.app/ns#Case",
+            "trigger": "manual",
+            "whenUnavailable": "hide",
+            "_note": "Moved from the legacy `request` schema. Request-type tickets convert into a Procest case; the handoff is offered on the ticket surface and the source template keeps the `pipelinq:request:` prefix so already-converted cases still resolve.",
+            "mapping": {
+              "title": {
+                "from": "title"
+              },
+              "summary": {
+                "from": "description",
+                "default": ""
+              },
+              "channel": {
+                "from": "channel",
+                "default": "onbekend"
+              },
+              "source": {
+                "template": "pipelinq:request:{{title}}"
+              },
+              "requester": {
+                "semanticRef": "client"
+              }
+            }
+          }
+        ],
+        "x-openregister-notifications": {
+          "newTicket": {
+            "trigger": {
+              "type": "created"
+            },
+            "enabled": true,
+            "channels": ["nc-notification"],
+            "recipients": [
+              {
+                "kind": "groups",
+                "groups": ["sales"]
+              },
+              {
+                "kind": "field",
+                "field": "assignee"
+              }
+            ],
+            "subject": {
+              "nl": "Nieuw ticket: {{title}}",
+              "en": "New ticket: {{title}}"
+            }
+          }
+        },
+        "required": [
+          "ticketType",
+          "title"
+        ],
+        "properties": {
+          "ticketType": {
+            "type": "string",
+            "title": "Ticket Type",
+            "description": "Discriminator: request (demand/case), complaint (klacht) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice.",
+            "enum": ["request", "complaint", "contactmoment"],
+            "facetable": true
+          },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "Ticket headline. For a contactmoment this is the interaction subject.",
+            "maxLength": 255,
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Full description. For a contactmoment this is the interaction summary."
+          },
+          "client": {
+            "type": "string",
+            "title": "Client",
+            "description": "UUID reference to the associated client.",
+            "format": "uuid"
+          },
+          "contact": {
+            "type": "string",
+            "title": "Contact",
+            "description": "UUID reference to the associated contact person.",
+            "format": "uuid"
+          },
+          "assignee": {
+            "type": "string",
+            "title": "Assignee",
+            "description": "Nextcloud UID (or agent) handling the ticket.",
+            "facetable": true
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Unified lifecycle status across all ticket types.",
+            "enum": ["new", "in_progress", "resolved", "completed", "rejected", "converted", "closed"],
+            "default": "new",
+            "facetable": true
+          },
+          "priority": {
+            "type": "string",
+            "title": "Priority",
+            "description": "Ticket priority (request/complaint).",
+            "enum": ["low", "normal", "high", "urgent"],
+            "default": "normal",
+            "facetable": true
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel",
+            "description": "Intake/interaction channel. Free string spanning all type vocabularies (phone/email/web/counter/letter for request+complaint; telefoon/email/balie/chat/social/brief/sms for contactmoment).",
+            "facetable": true
+          },
+          "occurredAt": {
+            "type": "string",
+            "title": "Occurred At",
+            "description": "When the matter was raised (request.requestedAt) or the interaction happened (contactmoment.contactedAt).",
+            "format": "date-time"
+          },
+          "parentTicket": {
+            "type": "string",
+            "title": "Parent Ticket",
+            "description": "For a contactmoment: UUID of the parent request-ticket this interaction belongs to (migrated from contactmoment.request).",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "Free-text request category for classification (request only)."
+          },
+          "pipeline": {
+            "type": "string",
+            "title": "Pipeline",
+            "description": "UUID reference to the pipeline this request is tracked in (request only).",
+            "format": "uuid",
+            "visible": false
+          },
+          "stage": {
+            "type": "string",
+            "title": "Stage",
+            "description": "Current pipeline stage name (request only)."
+          },
+          "stageOrder": {
+            "type": "integer",
+            "title": "Stage Order",
+            "description": "Ordinal of the current pipeline stage (request only).",
+            "visible": false
+          },
+          "queue": {
+            "type": "string",
+            "title": "Queue",
+            "description": "UUID reference to the routing queue (request only).",
+            "format": "uuid"
+          },
+          "caseReference": {
+            "type": "string",
+            "title": "Case Reference",
+            "description": "UUID of the Procest case this request converted into (request only).",
+            "format": "uuid"
+          },
+          "complaintCategory": {
+            "type": "string",
+            "title": "Complaint Category",
+            "description": "Classification of a complaint-type ticket (migrated from complaint.category).",
+            "enum": ["service", "product", "communication", "billing", "other"],
+            "facetable": true
+          },
+          "slaDeadline": {
+            "type": "string",
+            "title": "SLA Deadline",
+            "description": "Service-level resolution deadline (complaint only).",
+            "format": "date-time"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "title": "Resolved At",
+            "description": "When the complaint was resolved (complaint only).",
+            "format": "date-time"
+          },
+          "resolution": {
+            "type": "string",
+            "title": "Resolution",
+            "description": "Resolution narrative (complaint only)."
+          },
+          "outcome": {
+            "type": "string",
+            "title": "Outcome",
+            "description": "Disposition of a contactmoment interaction.",
+            "enum": ["afgehandeld", "doorverbonden", "terugbelverzoek", "vervolgactie", "opgelost", "doorverwezen"],
+            "facetable": true
+          },
+          "duration": {
+            "type": "string",
+            "title": "Duration",
+            "description": "Interaction duration (ISO-8601 duration or free string) (contactmoment only)."
+          },
+          "channelMetadata": {
+            "type": "object",
+            "title": "Channel Metadata",
+            "description": "Channel-specific metadata envelope, e.g. call duration, email thread id, chat transcript link (contactmoment only)."
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "description": "Free-text notes on the interaction (contactmoment only)."
+          }
+        }
+      }
+    }
+  }
+}

@@ -58,8 +58,9 @@ function buildUrl(typeConfig, params = {}) {
  * widgets defined locally. Returns `[]` when the object type is not
  * registered in the app's settings (graceful no-op).
  *
- * @param {string} type - Object type slug (lead, request, pipeline, …).
- * @param {object} params - Query parameters.
+ * @param {string} type - Object type slug (lead, ticket, pipeline, …).
+ * @param {object} params - Query parameters (including `ticketType` when
+ *   narrowing the unified `ticket` schema to one subtype).
  * @return {Promise<Array>} Array of object records.
  */
 async function fetchRaw(type, params = {}) {
@@ -113,10 +114,17 @@ export function getLeads() {
 }
 
 /**
+ * Requests, read from the unified `ticket` schema and narrowed to the
+ * `request` subtype (unify-ticket-supertype).
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-21
+ * @return {Promise<Array>} The request-type ticket records.
  */
 export function getRequests() {
-	return cached('request', () => fetchRaw('request', { _limit: 500 }))
+	return cached('ticket:request', () => fetchRaw('ticket', {
+		ticketType: 'request',
+		_limit: 500,
+	}))
 }
 
 /**
@@ -138,10 +146,17 @@ export function getContracts() {
 }
 
 /**
+ * Complaints, read from the unified `ticket` schema and narrowed to the
+ * `complaint` subtype (unify-ticket-supertype).
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-16
+ * @return {Promise<Array>} The complaint-type ticket records.
  */
 export function getComplaints() {
-	return cached('complaint', () => fetchRaw('complaint', { _limit: 500 }))
+	return cached('ticket:complaint', () => fetchRaw('ticket', {
+		ticketType: 'complaint',
+		_limit: 500,
+	}))
 }
 
 /**
@@ -164,12 +179,17 @@ export function getMyLeads() {
 }
 
 /**
+ * The current user's requests, read from the unified `ticket` schema and
+ * narrowed to the `request` subtype (unify-ticket-supertype).
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-19
+ * @return {Promise<Array>} The request-type ticket records assigned to the user.
  */
 export function getMyRequests() {
 	const uid = window.OC?.getCurrentUser?.()?.uid
 	if (!uid) return Promise.resolve([])
-	return cached('request:mine', () => fetchRaw('request', {
+	return cached('ticket:request:mine', () => fetchRaw('ticket', {
+		ticketType: 'request',
 		assignee: uid,
 		_limit: 200,
 	}))

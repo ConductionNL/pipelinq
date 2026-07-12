@@ -36,13 +36,6 @@ export function objectTypeGroups() {
 			registerSlug: 'pipelinq',
 		},
 		{
-			key: 'service',
-			name: t(APP, 'Service & Feedback'),
-			description: t(APP, 'Contact moments, complaints and customer surveys'),
-			registerConfigKey: 'register',
-			registerSlug: 'pipelinq',
-		},
-		{
 			key: 'pos',
 			name: t(APP, 'Point of Sale'),
 			description: t(APP, 'POS transactions, receipts, refunds, cash drawer and staff'),
@@ -91,7 +84,11 @@ export function objectTypes() {
 		{ slug: 'client', group: 'core', label: t(APP, 'Client'), description: t(APP, 'Companies and organisations') },
 		{ slug: 'contact', group: 'core', label: t(APP, 'Contact'), description: t(APP, 'Contact persons') },
 		{ slug: 'lead', group: 'core', label: t(APP, 'Lead'), description: t(APP, 'Sales leads') },
-		{ slug: 'request', group: 'core', label: t(APP, 'Request'), description: t(APP, 'Customer requests') },
+		// Unified ticket supertype (unify-ticket-supertype): one `ticket` schema with a
+		// `ticketType` discriminator (request | complaint | contactmoment) replaces the
+		// former `request`, `complaint` and `contactmoment` schemas. Callers narrow by
+		// passing a `ticketType` filter/value, never by a separate schema slug.
+		{ slug: 'ticket', group: 'core', label: t(APP, 'Ticket'), description: t(APP, 'Requests, complaints and contact moments') },
 		{ slug: 'pipeline', group: 'core', label: t(APP, 'Pipeline'), description: t(APP, 'Pipeline stages') },
 		{ slug: 'product', group: 'core', label: t(APP, 'Product'), description: t(APP, 'Products and services') },
 		{ slug: 'productCategory', group: 'core', label: t(APP, 'Product Category'), description: t(APP, 'Product categories') },
@@ -102,9 +99,6 @@ export function objectTypes() {
 		{ slug: 'agentProfile', group: 'core', label: t(APP, 'Agent Profile'), description: t(APP, 'Agent skill profiles') },
 		{ slug: 'billingCategory', group: 'core', label: t(APP, 'Billing Category'), description: t(APP, 'Billable categories and tags') },
 		{ slug: 'task', group: 'core', label: t(APP, 'Task'), description: t(APP, 'Work items / tasks') },
-		// Service & Feedback (group: service)
-		{ slug: 'contactmoment', group: 'service', label: t(APP, 'Contact Moment'), description: t(APP, 'Registered interactions with a client') },
-		{ slug: 'complaint', group: 'service', label: t(APP, 'Complaint'), description: t(APP, 'Customer complaints for tracking and resolution') },
 		// Point of Sale (group: pos)
 		{ slug: 'posTransaction', group: 'pos', label: t(APP, 'POS Transaction'), description: t(APP, 'Point-of-sale transactions (kassabon)') },
 		{ slug: 'posTransactionLine', group: 'pos', label: t(APP, 'POS Line Item'), description: t(APP, 'Line items on a POS transaction') },
@@ -137,6 +131,16 @@ export function objectTypes() {
 		{ slug: 'exportRun', group: 'export', label: t(APP, 'Export Run'), description: t(APP, 'BI export run history') },
 		// Marketing (marketing-segmentation-and-blast)
 		{ slug: 'blast', group: 'marketing', label: t(APP, 'Blast'), description: t(APP, 'Marketing blasts / campaigns') },
+		// Outbound messaging (outbound-messaging-provider-wiring). These slugs are
+		// self-fetched by the conversation section on client/contact detail and by
+		// the Messaging settings page; register them so fetchCollection() resolves
+		// instead of throwing "Object type X is not registered" — which otherwise
+		// blanks the whole Messaging settings page and errors on every detail page.
+		{ slug: 'conversation', group: 'marketing', label: t(APP, 'Conversation'), description: t(APP, 'Messaging conversations (WhatsApp / SMS)') },
+		{ slug: 'message', group: 'marketing', label: t(APP, 'Message'), description: t(APP, 'Outbound / inbound messages within a conversation') },
+		{ slug: 'channelProvider', group: 'marketing', label: t(APP, 'Channel Provider'), description: t(APP, 'Messaging channel providers (WhatsApp / SMS gateways)') },
+		{ slug: 'messageSendBudget', group: 'marketing', label: t(APP, 'Message Send Budget'), description: t(APP, 'Per-channel outbound send budgets') },
+		{ slug: 'messageTemplate', group: 'marketing', label: t(APP, 'Message Template'), description: t(APP, 'Reusable outbound message templates') },
 	]
 }
 

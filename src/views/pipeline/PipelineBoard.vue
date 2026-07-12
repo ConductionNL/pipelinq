@@ -235,7 +235,7 @@
 							<span v-else>&#x2014;</span>
 						</td>
 						<td :class="{ 'overdue-date': isItemOverdue(item) }">
-							{{ formatDate(item.expectedCloseDate || item.requestedAt) }}
+							{{ formatDate(item.expectedCloseDate || item.occurredAt) }}
 						</td>
 						<td>
 							<span v-if="item.priority" :style="{ color: getPriorityColor(item.priority) }">
@@ -266,7 +266,7 @@ import PipelineCard from './PipelineCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { initializeStores } from '../../store/store.js'
 import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
-import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
+import { getDaysAge, isStale, getAgingClass, formatAge, resolveObjectType } from '../../services/pipelineUtils.js'
 import { formatDate } from '../../services/localeUtils.js'
 
 export default {
@@ -446,8 +446,8 @@ export default {
 					valB = Number(b.value) || 0
 					break
 				case 'dueDate':
-					valA = a.expectedCloseDate || a.requestedAt || ''
-					valB = b.expectedCloseDate || b.requestedAt || ''
+					valA = a.expectedCloseDate || a.occurredAt || ''
+					valB = b.expectedCloseDate || b.occurredAt || ''
 					break
 				case 'priority':
 					valA = priorityOrder[a.priority] ?? 2
@@ -777,15 +777,26 @@ export default {
 		},
 
 		/**
+		 * Fetch the pipeline's items for one logical schema slug.
+		 *
+		 * `schemaSlug` is a *logical* type — it comes from a pipeline's stored
+		 * propertyMappings, so it can still read `request` / `complaint` /
+		 * `contactmoment`. Those three now live in the `ticket` supertype, so the
+		 * slug is resolved to its registered object type plus a `ticketType`
+		 * filter (unify-ticket-supertype). Items keep the logical slug in
+		 * `_schemaSlug` so mappings, badges, filters and routing still line up.
+		 *
 		 * @param schemaSlug
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-8
 		 */
 		async fetchSchemaItems(schemaSlug) {
-			const config = this.objectStore.objectTypeRegistry[schemaSlug]
+			const { objectType, ticketType } = resolveObjectType(schemaSlug)
+			const config = this.objectStore.objectTypeRegistry[objectType]
 			if (!config) return []
 
 			try {
-				const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?pipeline=${this.selectedPipelineId}&_limit=200`
+				const ticketFilter = ticketType ? `ticketType=${ticketType}&` : ''
+				const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',
@@ -818,7 +829,13 @@ export default {
 				update[columnProp] = targetStage.name
 				update.stageOrder = targetStage.order
 
-				await this.objectStore.saveObject(data._schemaSlug, update)
+				// Resolve the logical slug onto its registered object type; a
+				// request/complaint/contactmoment writes to `ticket` and must carry
+				// its ticketType discriminator (unify-ticket-supertype).
+				const { objectType, ticketType } = resolveObjectType(data._schemaSlug)
+				if (ticketType) update.ticketType = ticketType
+
+				await this.objectStore.saveObject(objectType, update)
 				await this.fetchPipelineItems()
 			} catch {
 				// Invalid drop
@@ -851,7 +868,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-14
 		 */
 		isItemOverdue(item) {
-			const dateStr = item.expectedCloseDate || item.requestedAt
+			const dateStr = item.expectedCloseDate || item.occurredAt
 			if (!dateStr) return false
 			return new Date(dateStr) < new Date()
 		},
@@ -885,7 +902,10 @@ export default {
 			if (item._schemaSlug === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
 			} else if (item._schemaSlug === 'request') {
-				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
+				// `_schemaSlug` keeps the LOGICAL slug ('request'), but the row is
+				// stored as a `ticket` (unify-ticket-supertype) and opens on the
+				// unified TicketDetail page.
+				this.$router.push({ name: 'TicketDetail', params: { id: item.id } })
 			}
 		},
 	},

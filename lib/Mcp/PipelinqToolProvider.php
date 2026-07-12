@@ -27,10 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Mcp;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ActivityTimelineService;
+use OCA\Pipelinq\Service\TicketService;
 use OCA\OpenRegister\Mcp\IMcpToolProvider;
-use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -126,17 +125,17 @@ class PipelinqToolProvider implements IMcpToolProvider
      * Constructor for PipelinqToolProvider.
      *
      * Injects the same collaborators the request-facing controllers/services use:
-     * the app config (for the configured OpenRegister register + request schema),
-     * the DI container (for OR's ObjectService), the activity timeline service,
-     * and the PSR-3 logger.
+     * the ticket resolver (for the configured OpenRegister register + unified
+     * ticket schema), the DI container (for OR's ObjectService), the activity
+     * timeline service, and the PSR-3 logger.
      *
-     * @param IAppConfig              $appConfig       The app config service
+     * @param TicketService           $ticketService   Resolver for the unified ticket schema
      * @param ContainerInterface      $container       The DI container (for OR ObjectService)
      * @param ActivityTimelineService $timelineService The activity timeline aggregator
      * @param LoggerInterface         $logger          The PSR-3 logger
      */
     public function __construct(
-        private readonly IAppConfig $appConfig,
+        private readonly TicketService $ticketService,
         private readonly ContainerInterface $container,
         private readonly ActivityTimelineService $timelineService,
         private readonly LoggerInterface $logger,
@@ -234,9 +233,11 @@ class PipelinqToolProvider implements IMcpToolProvider
             return $config;
         }
 
+        // Narrow the unified ticket schema to the request subtype.
         $filters = [
-            'register' => $config['register'],
-            'schema'   => $config['schema'],
+            'register'   => $config['register'],
+            'schema'     => $config['schema'],
+            'ticketType' => TicketService::TYPE_REQUEST,
         ];
 
         $status = $this->optionalStringArg(args: $args, key: 'status');
@@ -309,11 +310,9 @@ class PipelinqToolProvider implements IMcpToolProvider
             // RBAC left at its default (true): OR's PermissionHandler runs the
             // per-object 'read' check here and raises if the caller is denied.
             $request = $objectService->find(
-                $id,
-                [],
-                false,
-                $config['register'],
-                $config['schema']
+                id: $id,
+                register: $config['register'],
+                schema: $config['schema']
             );
         } catch (\Exception $e) {
             return $this->mapServiceException(operation: 'get request', exception: $e);
@@ -323,8 +322,15 @@ class PipelinqToolProvider implements IMcpToolProvider
             return $this->errorEnvelope(code: 'not_found', message: 'Request not found.');
         }
 
+        // The ticket schema also holds complaints and contactmomenten; this tool
+        // only exposes the request subtype, so a non-request ticket is a miss.
+        $data = $this->toArray(item: $request);
+        if (($data['ticketType'] ?? '') !== TicketService::TYPE_REQUEST) {
+            return $this->errorEnvelope(code: 'not_found', message: 'Request not found.');
+        }
+
         return [
-            'request'  => $this->toArray(item: $request),
+            'request'  => $data,
             'timeline' => $this->fetchTimeline(requestId: $id),
         ];
 
@@ -384,25 +390,26 @@ class PipelinqToolProvider implements IMcpToolProvider
     }//end optionalStringArg()
 
     /**
-     * Resolve the configured OpenRegister register + request schema.
+     * Resolve the configured OpenRegister register + unified ticket schema.
+     *
+     * Requests are `ticket` objects with `ticketType: request`
+     * (unify-ticket-supertype); both tools narrow on the discriminator instead
+     * of resolving the retired `request_schema`.
      *
      * @return array<string, mixed> Either ['register' => ..., 'schema' => ...] or an error envelope.
      */
     private function resolveRequestContext(): array
     {
-        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schemaId   = $this->appConfig->getValueString(Application::APP_ID, 'request_schema', '');
-
-        if ($registerId === '' || $schemaId === '') {
+        if ($this->ticketService->isConfigured() === false) {
             return $this->errorEnvelope(
                 code: 'not_configured',
-                message: 'Pipelinq is not fully configured: the OpenRegister register or request schema is missing.'
+                message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
             );
         }
 
         return [
-            'register' => $registerId,
-            'schema'   => $schemaId,
+            'register' => $this->ticketService->getRegisterId(),
+            'schema'   => $this->ticketService->getSchemaId(),
         ];
 
     }//end resolveRequestContext()

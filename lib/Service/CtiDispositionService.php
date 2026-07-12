@@ -38,7 +38,12 @@ use Psr\Log\LoggerInterface;
  *   - escalated → task of type `opvolgtaak` in the configured queue
  *   - resolved / wrong-number / no-answer / abandoned → contactmoment closed only
  *
+ * The contactmoment is a `ticket` with `ticketType: contactmoment`
+ * (unify-ticket-supertype); it is resolved through {@see TicketService}. The
+ * follow-up task keeps its own `task` schema.
+ *
  * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
+ * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class CtiDispositionService
 {
@@ -59,13 +64,15 @@ class CtiDispositionService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container Container for OR lookups.
-     * @param IAppConfig         $appConfig App config.
-     * @param LoggerInterface    $logger    Logger.
+     * @param ContainerInterface $container     Container for OR lookups.
+     * @param IAppConfig         $appConfig     App config.
+     * @param TicketService      $ticketService Unified ticket resolver.
+     * @param LoggerInterface    $logger        Logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
+        private TicketService $ticketService,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -131,36 +138,33 @@ class CtiDispositionService
     }//end processDisposition()
 
     /**
-     * Write the disposition back onto the contactmoment.
+     * Write the disposition back onto the contactmoment ticket.
      *
-     * @param string $id      Contactmoment UUID.
+     * @param string $id      Contactmoment ticket UUID.
      * @param string $subject Disposition subject.
      * @param string $outcome Outcome enum value.
      * @param string $notes   Free-text notes.
      *
      * @return void
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     private function updateContactmoment(string $id, string $subject, string $outcome, string $notes): void
     {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
-        if ($register === '' || $schema === '') {
-            $this->logger->warning('CTI disposition: contactmoment register/schema not configured.');
+        if ($this->ticketService->isConfigured() === false) {
+            $this->logger->warning('CTI disposition: ticket register/schema not configured.');
             return;
         }
 
         try {
-            $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-            $objectService->saveObject(
-                [
+            $this->ticketService->save(
+                ticketType: TicketService::TYPE_CONTACTMOMENT,
+                payload: [
                     'disposition_subject' => $subject,
                     'disposition_outcome' => $outcome,
                     'disposition_notes'   => $notes,
                 ],
-                [],
-                $register,
-                $schema,
-                $id
+                uuid: $id,
             );
         } catch (\Throwable $e) {
             $this->logger->error(

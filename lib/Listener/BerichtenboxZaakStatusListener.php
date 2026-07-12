@@ -35,10 +35,10 @@ namespace OCA\Pipelinq\Listener;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\BerichtenboxService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -64,15 +64,15 @@ class BerichtenboxZaakStatusListener implements IEventListener
     /**
      * Constructor.
      *
-     * @param ContainerInterface  $container    DI container.
-     * @param IAppConfig          $appConfig    App config.
-     * @param BerichtenboxService $berichtenbox Bridge service.
-     * @param LoggerInterface     $logger       Logger.
+     * @param IAppConfig          $appConfig     App config.
+     * @param BerichtenboxService $berichtenbox  Bridge service.
+     * @param TicketService       $ticketService Resolver for the unified ticket schema.
+     * @param LoggerInterface     $logger        Logger.
      */
     public function __construct(
-        private readonly ContainerInterface $container,
         private readonly IAppConfig $appConfig,
         private readonly BerichtenboxService $berichtenbox,
+        private readonly TicketService $ticketService,
         private readonly LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -217,7 +217,12 @@ class BerichtenboxZaakStatusListener implements IEventListener
     /**
      * Resolve a BSN by reading the linked Contactmoment + Burger.
      *
-     * @param string $contactmomentId Contactmoment uuid.
+     * The contactmoment is a `ticket` with `ticketType: contactmoment`
+     * (unify-ticket-supertype), so the lookup resolves the unified ticket
+     * schema through TicketService instead of the retired
+     * `contactmoment_schema`.
+     *
+     * @param string $contactmomentId Contactmoment (ticket) uuid.
      *
      * @return string
      */
@@ -227,13 +232,14 @@ class BerichtenboxZaakStatusListener implements IEventListener
             return '';
         }
 
+        if ($this->ticketService->isConfigured() === false) {
+            return '';
+        }
+
         try {
-            $service  = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-            $schema   = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
-            if ($register === '' || $schema === '') {
-                return '';
-            }
+            $service  = $this->ticketService->getObjectService();
+            $register = $this->ticketService->getRegisterId();
+            $schema   = $this->ticketService->getSchemaId();
 
             $row = $service->find(id: $contactmomentId, register: $register, schema: $schema);
             if ($row === null) {

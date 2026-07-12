@@ -31,6 +31,7 @@ use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SlaEngineService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -58,13 +59,15 @@ class SlaAttainmentService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container DI container.
-     * @param IAppConfig         $appConfig App config.
-     * @param LoggerInterface    $logger    PSR logger.
+     * @param ContainerInterface $container     DI container.
+     * @param IAppConfig         $appConfig     App config.
+     * @param TicketService      $ticketService Resolver for the unified ticket schema.
+     * @param LoggerInterface    $logger        PSR logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
+        private TicketService $ticketService,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -509,7 +512,9 @@ class SlaAttainmentService
     /**
      * Count tracked objects that met all targets in the time range.
      *
-     * Walks request/complaint/callback schemas, picks the ones with
+     * Walks the SLA-tracked ticket subtypes (request + complaint, both on the
+     * unified `ticket` schema, narrowed with the `ticketType` discriminator)
+     * plus the callback schema, and picks the ones with
      * slaStatus.targets[*].metAt in range and no breached/at-risk
      * targets remaining.
      *
@@ -524,47 +529,92 @@ class SlaAttainmentService
         DateTimeInterface $end,
         string $policyFilter,
     ): array {
-        $total    = 0;
-        $byTarget = [];
-        $byGroup  = [];
+        $accumulator = ['total' => 0, 'byTarget' => [], 'byGroup' => []];
 
+        // SLA-tracked ticket subtypes — one schema, two discriminator values.
+        // findByType() is fail-soft: it yields [] when the ticket surface is
+        // unprovisioned or OpenRegister is unavailable.
+        foreach ([TicketService::TYPE_REQUEST, TicketService::TYPE_COMPLAINT] as $ticketType) {
+            $rows        = $this->ticketService->findByType($ticketType, [], 5000);
+            $accumulator = $this->accumulateMetRows(
+                rows: $rows,
+                accumulator: $accumulator,
+                start: $start,
+                end: $end,
+                policyFilter: $policyFilter
+            );
+        }
+
+        $accumulator = $this->accumulateMetRows(
+            rows: $this->fetchCallbackRows(),
+            accumulator: $accumulator,
+            start: $start,
+            end: $end,
+            policyFilter: $policyFilter
+        );
+
+        return $accumulator;
+    }//end countMetObjectsInRange()
+
+    /**
+     * Fold a batch of tracked-object rows into the met-object accumulator.
+     *
+     * @param array<int, mixed>    $rows         Tracked-object rows.
+     * @param array<string, mixed> $accumulator  Running counts.
+     * @param DateTimeInterface    $start        Start instant.
+     * @param DateTimeInterface    $end          End instant.
+     * @param string               $policyFilter Optional policy identity filter.
+     *
+     * @return array{total: int, byTarget: array<string, int>, byGroup: array<string, array<string, mixed>>} Counts.
+     */
+    private function accumulateMetRows(
+        array $rows,
+        array $accumulator,
+        DateTimeInterface $start,
+        DateTimeInterface $end,
+        string $policyFilter,
+    ): array {
+        foreach ($rows as $row) {
+            $result = $this->evaluateTrackedObjectRow(row: $row, start: $start, end: $end, policyFilter: $policyFilter);
+            if ($result === null) {
+                continue;
+            }
+
+            $accumulator['total']++;
+            foreach ($result['byTarget'] as $kind => $count) {
+                $accumulator['byTarget'][$kind] = ($accumulator['byTarget'][$kind] ?? 0) + $count;
+            }
+
+            $key = $result['groupKey'];
+
+            $accumulator['byGroup'][$key] = ($accumulator['byGroup'][$key] ?? ['name' => $key, 'total' => 0]);
+            $accumulator['byGroup'][$key]['total']++;
+        }//end foreach
+
+        return $accumulator;
+    }//end accumulateMetRows()
+
+    /**
+     * Fetch the callback rows (callbacks keep their own schema).
+     *
+     * @return array<int, mixed> Callback rows ([] when unconfigured/unavailable).
+     */
+    private function fetchCallbackRows(): array
+    {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        if ($register === '') {
-            return ['total' => 0, 'byTarget' => [], 'byGroup' => []];
+        $schemaId = $this->appConfig->getValueString(Application::APP_ID, 'callback_schema', '');
+        if ($register === '' || $schemaId === '') {
+            return [];
         }
 
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (Throwable $e) {
-            return ['total' => 0, 'byTarget' => [], 'byGroup' => []];
+            return [];
         }
 
-        foreach (['request_schema', 'complaint_schema', 'callback_schema'] as $configKey) {
-            $schemaId = $this->appConfig->getValueString(Application::APP_ID, $configKey, '');
-            if ($schemaId === '') {
-                continue;
-            }
-
-            $rows = $this->fetchTrackedObjectRows(objectService: $objectService, register: $register, schemaId: $schemaId);
-            foreach ($rows as $row) {
-                $result = $this->evaluateTrackedObjectRow(row: $row, start: $start, end: $end, policyFilter: $policyFilter);
-                if ($result === null) {
-                    continue;
-                }
-
-                $total++;
-                foreach ($result['byTarget'] as $kind => $count) {
-                    $byTarget[$kind] = ($byTarget[$kind] ?? 0) + $count;
-                }
-
-                $key           = $result['groupKey'];
-                $byGroup[$key] = ($byGroup[$key] ?? ['name' => $key, 'total' => 0]);
-                $byGroup[$key]['total']++;
-            }//end foreach
-        }//end foreach
-
-        return ['total' => $total, 'byTarget' => $byTarget, 'byGroup' => $byGroup];
-    }//end countMetObjectsInRange()
+        return $this->fetchTrackedObjectRows(objectService: $objectService, register: $register, schemaId: $schemaId);
+    }//end fetchCallbackRows()
 
     /**
      * Fetch tracked-object rows for a schema, tolerating findAll failures.

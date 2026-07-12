@@ -6,7 +6,7 @@
   -
   - Displays a chronological feed of CRM activity items (contactmomenten,
   - tasks, emails, calendar events) for a given entity. Embedded in
-  - ClientDetail, LeadDetail and RequestDetail views.
+  - ClientDetail, LeadDetail and TicketDetail views.
   -
   - @spec openspec/changes/activity-timeline/tasks.md#task-4
   -->

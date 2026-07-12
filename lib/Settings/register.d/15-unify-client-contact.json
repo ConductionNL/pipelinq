@@ -135,7 +135,7 @@
           }
         }
       },
-      "contactmoment": {
+      "ticket": {
         "properties": {
           "contactsUid": {
             "type": "string",

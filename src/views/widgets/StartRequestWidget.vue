@@ -51,7 +51,7 @@
 			<h4>{{ t('pipelinq', 'Recent requests') }}</h4>
 			<ul>
 				<li v-for="req in recentRequests" :key="req.id">
-					<a :href="generateUrl('/apps/pipelinq/requests/' + req.id)">
+					<a :href="generateUrl('/apps/pipelinq/tickets/' + req.id)">
 						{{ toText(req.title) || t('pipelinq', 'Untitled') }}
 					</a>
 					<span class="recent-status">{{ req.status }}</span>
@@ -148,21 +148,24 @@ export default {
 			if (!this.form.title) {
 				return
 			}
-			if (!this.config?.request) {
-				console.error('Request schema not configured')
+			// A request is a `ticket` with ticketType 'request'; `requestedAt` became
+			// `occurredAt` (unify-ticket-supertype).
+			if (!this.config?.ticket) {
+				console.error('Ticket schema not configured')
 				return
 			}
 
 			this.submitting = true
 			try {
-				const typeConfig = this.config.request
+				const typeConfig = this.config.ticket
 				const body = {
+					ticketType: 'request',
 					title: this.form.title,
 					status: 'new',
 					priority: typeof this.form.priority === 'object'
 						? this.form.priority.id
 						: (this.form.priority || 'normal'),
-					requestedAt: new Date().toISOString(),
+					occurredAt: new Date().toISOString(),
 				}
 
 				if (this.selectedClient) {
@@ -195,7 +198,7 @@ export default {
 				if (!response.ok) throw new Error('Failed to create request')
 				const created = await response.json()
 				const id = created.id || created.uuid
-				this.successLink = generateUrl('/apps/pipelinq/requests/' + id)
+				this.successLink = generateUrl('/apps/pipelinq/tickets/' + id)
 				this.success = true
 			} catch (err) {
 				console.error('StartRequestWidget create error:', err)
@@ -218,10 +221,12 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-52
 		 */
 		async fetchRecentRequests() {
-			if (!this.config?.request) return
+			if (!this.config?.ticket) return
 			try {
-				const typeConfig = this.config.request
-				const params = new URLSearchParams({ _limit: '3', _order: 'desc' })
+				// Narrow the shared `ticket` supertype to request-tickets so complaints
+				// and contactmomenten don't show up as "recent requests".
+				const typeConfig = this.config.ticket
+				const params = new URLSearchParams({ ticketType: 'request', _limit: '3', _order: 'desc' })
 				const url = generateUrl('/apps/openregister/api/objects/'
 					+ typeConfig.register + '/' + typeConfig.schema
 					+ '?' + params.toString())

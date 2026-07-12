@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\ReportingService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -51,6 +52,13 @@ class ReportingServiceTest extends TestCase
     private LoggerInterface $logger;
 
     /**
+     * The unified ticket resolver mock (unify-ticket-supertype).
+     *
+     * @var TicketService&MockObject
+     */
+    private TicketService $ticketService;
+
+    /**
      * The service under test.
      *
      * @var ReportingService
@@ -64,12 +72,18 @@ class ReportingServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->appConfig = $this->createMock(IAppConfig::class);
-        $this->logger    = $this->createMock(LoggerInterface::class);
+        $this->appConfig     = $this->createMock(IAppConfig::class);
+        $this->logger        = $this->createMock(LoggerInterface::class);
+        $this->ticketService = $this->createMock(TicketService::class);
+
+        // Reporting reads contactmoment tickets; with no tickets the KPI methods
+        // must still return zero-value data rather than throwing.
+        $this->ticketService->method('findByType')->willReturn([]);
 
         $this->service = new ReportingService(
             $this->appConfig,
             $this->logger,
+            $this->ticketService,
         );
     }//end setUp()
 

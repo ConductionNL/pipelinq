@@ -4,9 +4,13 @@
  * Pipelinq InitSlaStatus.
  *
  * Repair step that initialises `slaStatus` on existing tracked
- * objects (request / complaint) so post-upgrade SLA reporting can
- * include legacy rows. Idempotent: rows that already carry an
- * `slaStatus.policyId` are left untouched.
+ * objects (request + klacht tickets, callbacks) so post-upgrade SLA
+ * reporting can include legacy rows. Idempotent: rows that already carry
+ * an `slaStatus.policyId` are left untouched.
+ *
+ * The request and klacht surfaces live in the unified `ticket` schema
+ * (unify-ticket-supertype) and are narrowed with the `ticketType`
+ * discriminator; callbacks keep their own `callback_schema`.
  *
  * @category Repair
  * @package  OCA\Pipelinq\Repair
@@ -31,6 +35,7 @@ use DateTimeInterface;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SlaEngineService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -41,10 +46,10 @@ use Throwable;
 /**
  * Repair step: bootstrap slaStatus on tracked objects.
  *
- * Walks request + complaint registers, picks rows without slaStatus,
- * resolves the most-specific active policy, computes deadlines and
- * persists the snapshot. Logs every initialised object via the
- * `OCA\Pipelinq` logger.
+ * Walks every SLA-tracked surface (request + klacht tickets, callbacks),
+ * picks rows without slaStatus, resolves the most-specific active policy,
+ * computes deadlines and persists the snapshot. Logs every initialised
+ * object via the `OCA\Pipelinq` logger.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
@@ -55,15 +60,17 @@ class InitSlaStatus implements IRepairStep
     /**
      * Constructor.
      *
-     * @param SlaEngineService   $engine    SLA engine.
-     * @param ContainerInterface $container DI container.
-     * @param IAppConfig         $appConfig App config.
-     * @param LoggerInterface    $logger    PSR logger.
+     * @param SlaEngineService   $engine        SLA engine.
+     * @param ContainerInterface $container     DI container.
+     * @param IAppConfig         $appConfig     App config.
+     * @param TicketService      $ticketService Resolver for the unified `ticket` supertype.
+     * @param LoggerInterface    $logger        PSR logger.
      */
     public function __construct(
         private SlaEngineService $engine,
         private ContainerInterface $container,
         private IAppConfig $appConfig,
+        private TicketService $ticketService,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -85,11 +92,13 @@ class InitSlaStatus implements IRepairStep
      *
      * @return void
      *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Batched pagination over three tracked schema
-     *   types with per-batch and per-object fault tolerance; the per-object logic is extracted to
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity) Batched pagination over the tracked SLA
+     *   surfaces with per-batch and per-object fault tolerance; the per-object logic is extracted to
      *   initialiseObject(), leaving only the loop/paging scaffold here.
      * @SuppressWarnings(PHPMD.NPathComplexity)      Same rationale: the nested paging loop and its
      *   independent guard clauses inflate the theoretical path count.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
      */
     public function run(IOutput $output): void
     {
@@ -110,10 +119,17 @@ class InitSlaStatus implements IRepairStep
         $totalInit = 0;
         $totalSkip = 0;
 
-        foreach (['request_schema' => 'request', 'complaint_schema' => 'klacht', 'callback_schema' => 'callback'] as $configKey => $type) {
-            $schemaId = $this->appConfig->getValueString(Application::APP_ID, $configKey, '');
-            if ($schemaId === '') {
-                continue;
+        foreach ($this->resolveSurfaces() as $surface) {
+            $type       = $surface['type'];
+            $schemaId   = $surface['schema'];
+            $ticketType = $surface['ticketType'];
+
+            $filters = [
+                'register' => $register,
+                'schema'   => $schemaId,
+            ];
+            if ($ticketType !== null) {
+                $filters['ticketType'] = $ticketType;
             }
 
             $offset = 0;
@@ -121,10 +137,9 @@ class InitSlaStatus implements IRepairStep
                 try {
                     $rows = $objectService->findAll(
                         config: [
-                            'register' => $register,
-                            'schema'   => $schemaId,
-                            'limit'    => self::BATCH_SIZE,
-                            'offset'   => $offset,
+                            'filters' => $filters,
+                            'limit'   => self::BATCH_SIZE,
+                            'offset'  => $offset,
                         ]
                     );
                 } catch (Throwable $e) {
@@ -184,6 +199,46 @@ class InitSlaStatus implements IRepairStep
             ['initialised' => $totalInit, 'skipped' => $totalSkip]
         );
     }//end run()
+
+    /**
+     * The SLA-tracked surfaces to walk.
+     *
+     * The `request` and `klacht` SLA object types are both subtypes of the unified
+     * `ticket` schema (unify-ticket-supertype) and are read from it with a
+     * `ticketType` filter; `callback` keeps its own schema. A surface whose schema
+     * is unprovisioned is omitted.
+     *
+     * @return array<int, array{type: string, schema: string, ticketType: ?string}> The surfaces.
+     */
+    private function resolveSurfaces(): array
+    {
+        $surfaces = [];
+
+        $ticketSchemaId = $this->ticketService->getSchemaId();
+        if ($ticketSchemaId !== '') {
+            $surfaces[] = [
+                'type'       => 'request',
+                'schema'     => $ticketSchemaId,
+                'ticketType' => TicketService::TYPE_REQUEST,
+            ];
+            $surfaces[] = [
+                'type'       => 'klacht',
+                'schema'     => $ticketSchemaId,
+                'ticketType' => TicketService::TYPE_COMPLAINT,
+            ];
+        }
+
+        $callbackSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'callback_schema', '');
+        if ($callbackSchemaId !== '') {
+            $surfaces[] = [
+                'type'       => 'callback',
+                'schema'     => $callbackSchemaId,
+                'ticketType' => null,
+            ];
+        }
+
+        return $surfaces;
+    }//end resolveSurfaces()
 
     /**
      * Initialise slaStatus on a single tracked object.

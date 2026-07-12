@@ -93,6 +93,7 @@ class BerichtenboxService
      * @param EmailFallbackSender  $emailFallback    Email fallback sender.
      * @param DeliveryAuditLogger  $auditLogger      Audit logger.
      * @param DutchHolidayCalendar $holidayCalendar  Working-day helper.
+     * @param TicketService        $ticketService    Resolver for the unified ticket schema.
      * @param LoggerInterface      $logger           NC logger.
      *
      * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
@@ -111,6 +112,7 @@ class BerichtenboxService
         private readonly EmailFallbackSender $emailFallback,
         private readonly DeliveryAuditLogger $auditLogger,
         private readonly DutchHolidayCalendar $holidayCalendar,
+        private readonly TicketService $ticketService,
         private readonly LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -890,22 +892,28 @@ class BerichtenboxService
      * Create a Contactmoment row from an inbound reply, routed via
      * skill-routing.
      *
+     * The contactmoment is a `ticket` with `ticketType: contactmoment`
+     * (unify-ticket-supertype); the write is delegated to TicketService, which
+     * resolves the unified schema and stamps the discriminator. The legacy
+     * contactmoment fields are written under their ticket names
+     * (subject -> title, summary -> description).
+     *
      * @param array $parent Parent BerichtenboxMessage.
      * @param array $reply  Reply payload.
      *
      * @return string Contactmoment uuid.
+     *
+     * @throws RuntimeException If the ticket register or schema is not configured.
      */
     private function createContactmomentFromReply(array $parent, array $reply): string
     {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
-        if ($register === '' || $schema === '') {
+        if ($this->ticketService->isConfigured() === false) {
             throw new RuntimeException('Contactmoment register or schema not configured.');
         }
 
         $payload = [
-            'subject'             => 'Re: '.((string) ($parent['subject'] ?? '')),
-            'summary'             => (string) ($reply['bodyText'] ?? ''),
+            'title'               => 'Re: '.((string) ($parent['subject'] ?? '')),
+            'description'         => (string) ($reply['bodyText'] ?? ''),
             'kanaal'              => 'berichtenbox',
             'outcome'             => 'opvolging-nodig',
             'zaakId'              => (string) ($parent['zaakId'] ?? ''),
@@ -913,11 +921,9 @@ class BerichtenboxService
             'berichtenboxReplyId' => (string) ($reply['uuid'] ?? ''),
         ];
 
-        $saved      = $this->getObjectService()->saveObject(
-            object: $payload,
-            extend: [],
-            register: $register,
-            schema: $schema,
+        $saved      = $this->ticketService->save(
+            ticketType: TicketService::TYPE_CONTACTMOMENT,
+            payload: $payload,
             uuid: null
         );
         $savedArray = $this->toArray(row: $saved);

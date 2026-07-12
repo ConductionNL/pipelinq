@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SemanticHandoffService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,10 +52,16 @@ use Throwable;
  *   GET  /api/handoff/contract/{id}/availability
  *   POST /api/handoff/contract/{id}/send-to-invoicing
  *
+ * Since unify-ticket-supertype a request is a `ticket` carrying
+ * `ticketType: request` — the request endpoints read and write the unified
+ * ticket schema (resolved via {@see TicketService}) and refuse any ticket of
+ * another subtype. Contracts keep their own `contract` schema.
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Thin HTTP facade over the
  *  handoff service + the OR object surface.
  *
  * @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+ * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class SemanticHandoffController extends Controller
 {
@@ -71,12 +78,18 @@ class SemanticHandoffController extends Controller
     private const HANDOFF_SEND_TO_INVOICING = 'send-to-invoicing';
 
     /**
+     * Built-in slug of the unified ticket schema (app-config overridable).
+     */
+    private const TICKET_SCHEMA_SLUG = 'ticket';
+
+    /**
      * Constructor.
      *
      * @param IRequest               $request        HTTP request.
      * @param SemanticHandoffService $handoffService Kind resolution + emit wrapper.
      * @param ContainerInterface     $container      DI container (OR ObjectService).
      * @param IAppConfig             $appConfig      App config (register/schema slugs).
+     * @param TicketService          $ticketService  Unified ticket resolver.
      * @param IUserSession           $userSession    User session.
      * @param LoggerInterface        $logger         Logger.
      */
@@ -85,6 +98,7 @@ class SemanticHandoffController extends Controller
         private SemanticHandoffService $handoffService,
         private ContainerInterface $container,
         private IAppConfig $appConfig,
+        private TicketService $ticketService,
         private IUserSession $userSession,
         private LoggerInterface $logger,
     ) {
@@ -107,7 +121,7 @@ class SemanticHandoffController extends Controller
             return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
         }
 
-        $request = $this->loadObject(schemaKey: 'request_schema', defaultSchema: 'request', id: $id);
+        $request = $this->loadRequestTicket(id: $id);
         if ($request === null) {
             return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
         }
@@ -126,13 +140,14 @@ class SemanticHandoffController extends Controller
     }//end requestAvailability()
 
     /**
-     * Convert an in-progress request into a case via OR's handoff engine.
+     * Convert an in-progress request ticket into a case via OR's handoff engine.
      *
-     * @param string $id Request UUID.
+     * @param string $id Request-ticket UUID.
      *
      * @return JSONResponse The conversion outcome.
      *
      * @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     #[NoAdminRequired]
     public function convertRequestToCase(string $id=''): JSONResponse
@@ -141,7 +156,7 @@ class SemanticHandoffController extends Controller
             return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
         }
 
-        $request = $this->loadObject(schemaKey: 'request_schema', defaultSchema: 'request', id: $id);
+        $request = $this->loadRequestTicket(id: $id);
         if ($request === null) {
             return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
         }
@@ -159,7 +174,7 @@ class SemanticHandoffController extends Controller
 
         $result = $this->handoffService->handoff(
             register: $this->registerSlug(),
-            schema: $this->schemaSlug(key: 'request_schema', default: 'request'),
+            schema: $this->ticketSchema(),
             id: $id,
             handoffId: self::HANDOFF_CONVERT_TO_CASE
         );
@@ -171,9 +186,12 @@ class SemanticHandoffController extends Controller
             );
         }
 
+        // Keep the discriminator pinned on the round-tripped payload so the
+        // write can never silently untype the ticket.
+        $request['ticketType']    = TicketService::TYPE_REQUEST;
         $request['status']        = 'converted';
         $request['caseReference'] = (string) ($result['targetUuid'] ?? '');
-        $saved = $this->saveObject(schemaKey: 'request_schema', defaultSchema: 'request', id: $id, payload: $request);
+        $saved = $this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request);
         if ($saved === false) {
             // The case was created + linked by the engine; only the local
             // status write failed. Surface it honestly without a 5xx.
@@ -208,7 +226,7 @@ class SemanticHandoffController extends Controller
             return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
         }
 
-        $contract = $this->loadObject(schemaKey: 'contract_schema', defaultSchema: 'contract', id: $id);
+        $contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'contract'), id: $id);
         if ($contract === null) {
             return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
         }
@@ -241,7 +259,7 @@ class SemanticHandoffController extends Controller
             return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
         }
 
-        $contract = $this->loadObject(schemaKey: 'contract_schema', defaultSchema: 'contract', id: $id);
+        $contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'contract'), id: $id);
         if ($contract === null) {
             return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
         }
@@ -272,7 +290,11 @@ class SemanticHandoffController extends Controller
         }
 
         $contract['invoiceReference'] = (string) ($result['targetUuid'] ?? '');
-        $this->saveObject(schemaKey: 'contract_schema', defaultSchema: 'contract', id: $id, payload: $contract);
+        $this->saveObject(
+            schema: $this->schemaSlug(key: 'contract_schema', default: 'contract'),
+            id: $id,
+            payload: $contract
+        );
 
         return new JSONResponse(
                 [
@@ -284,15 +306,53 @@ class SemanticHandoffController extends Controller
     }//end sendContractToInvoicing()
 
     /**
-     * Load a pipelinq-register object by schema slug + id (per-object guard).
+     * Load a request-type ticket by id (per-object guard + subtype guard).
      *
-     * @param string $schemaKey     App-config schema-slug override key.
-     * @param string $defaultSchema Built-in schema slug default.
-     * @param string $id            Object UUID.
+     * A ticket of another subtype (complaint / contactmoment) is reported as
+     * absent so the request endpoints can never act on it.
+     *
+     * @param string $id Ticket UUID.
+     *
+     * @return array<string, mixed>|null The request ticket, or null when absent.
+     */
+    private function loadRequestTicket(string $id): ?array
+    {
+        $ticket = $this->loadObject(schema: $this->ticketSchema(), id: $id);
+        if ($ticket === null) {
+            return null;
+        }
+
+        if ((string) ($ticket['ticketType'] ?? '') !== TicketService::TYPE_REQUEST) {
+            return null;
+        }
+
+        return $ticket;
+    }//end loadRequestTicket()
+
+    /**
+     * The unified ticket schema: the configured id, else the built-in slug.
+     *
+     * @return string Schema id or slug.
+     */
+    private function ticketSchema(): string
+    {
+        $schemaId = $this->ticketService->getSchemaId();
+        if ($schemaId !== '') {
+            return $schemaId;
+        }
+
+        return self::TICKET_SCHEMA_SLUG;
+    }//end ticketSchema()
+
+    /**
+     * Load a pipelinq-register object by schema slug/id + id (per-object guard).
+     *
+     * @param string $schema Schema id or slug.
+     * @param string $id     Object UUID.
      *
      * @return array<string, mixed>|null The object, or null when absent.
      */
-    private function loadObject(string $schemaKey, string $defaultSchema, string $id): ?array
+    private function loadObject(string $schema, string $id): ?array
     {
         if ($id === '') {
             return null;
@@ -307,7 +367,7 @@ class SemanticHandoffController extends Controller
             $entity = $objectService->find(
                 id: $id,
                 register: $this->registerSlug(),
-                schema: $this->schemaSlug(key: $schemaKey, default: $defaultSchema),
+                schema: $schema,
             );
         } catch (Throwable $e) {
             return null;
@@ -323,14 +383,15 @@ class SemanticHandoffController extends Controller
     /**
      * Save an object payload back to the pipelinq register.
      *
-     * @param string               $schemaKey     App-config schema-slug override key.
-     * @param string               $defaultSchema Built-in schema slug default.
-     * @param string               $id            Object UUID.
-     * @param array<string, mixed> $payload       Full object payload.
+     * @param string               $schema  Schema id or slug.
+     * @param string               $id      Object UUID.
+     * @param array<string, mixed> $payload Full object payload.
      *
      * @return bool True on success.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
-    private function saveObject(string $schemaKey, string $defaultSchema, string $id, array $payload): bool
+    private function saveObject(string $schema, string $id, array $payload): bool
     {
         $objectService = $this->objectService();
         if ($objectService === null) {
@@ -341,7 +402,7 @@ class SemanticHandoffController extends Controller
             $objectService->saveObject(
                 object: $payload,
                 register: $this->registerSlug(),
-                schema: $this->schemaSlug(key: $schemaKey, default: $defaultSchema),
+                schema: $schema,
                 uuid: $id,
             );
         } catch (Throwable $e) {

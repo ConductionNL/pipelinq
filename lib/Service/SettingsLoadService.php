@@ -44,14 +44,15 @@ class SettingsLoadService
         'client',
         'contact',
         'lead',
-        'request',
-        'complaint',
+        // Unified inbound-matter supertype (unify-ticket-supertype). It replaced
+        // the retired `request`, `complaint` and `contactmoment` schemas; a
+        // subtype is selected with the `ticketType` discriminator.
+        'ticket',
         'pipeline',
         'product',
         'productCategory',
         'billingCategory',
         'leadProduct',
-        'contactmoment',
         'task',
         'relationship',
         'queue',

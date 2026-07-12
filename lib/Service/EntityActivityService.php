@@ -48,6 +48,11 @@ use Throwable;
  * `/api/timeline` endpoint). It serves a single purpose: provide the
  * narrow v1 wire format consumed by `CommunicationHistory.vue`.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class is a flat pipeline of
+ *  guard-heavy normalisers (OR rows and note payloads arrive in several shapes, each
+ *  branch a defensive coercion); the branches sum past the threshold but no single
+ *  method is complex, and splitting the pipeline would only relocate the guards.
+ *
  * @spec openspec/changes/entity-notes/tasks.md#task-2
  */
 class EntityActivityService
@@ -91,17 +96,22 @@ class EntityActivityService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container The DI container, used to
-     *                                      lazily resolve the OpenRegister
-     *                                      `ObjectService` so an outage of
-     *                                      OR cannot break Pipelinq DI.
-     * @param IAppConfig         $appConfig The app config.
-     * @param LoggerInterface    $logger    The logger.
+     * @param ContainerInterface $container     The DI container, used to
+     *                                          lazily resolve the OpenRegister
+     *                                          `ObjectService` so an outage of
+     *                                          OR cannot break Pipelinq DI.
+     * @param IAppConfig         $appConfig     The app config.
+     * @param LoggerInterface    $logger        The logger.
+     * @param TicketService      $ticketService Resolver for the unified `ticket`
+     *                                          supertype — both the contactmoment
+     *                                          source and the `request` entity are
+     *                                          tickets after unify-ticket-supertype.
      */
     public function __construct(
         private readonly ContainerInterface $container,
         private readonly IAppConfig $appConfig,
         private readonly LoggerInterface $logger,
+        private readonly TicketService $ticketService,
     ) {
     }//end __construct()
 
@@ -245,6 +255,11 @@ class EntityActivityService
     /**
      * Query and normalise the contactmomenten linked to an entity.
      *
+     * Contactmomenten live in the unified `ticket` schema with
+     * `ticketType=contactmoment` (unify-ticket-supertype); the wire shape of the
+     * returned items is unchanged, but it is now sourced from the ticket field
+     * names (title / description / occurredAt / assignee).
+     *
      * @param string $registerId The configured register id.
      * @param string $entityType The validated entity type.
      * @param string $entityId   The OR object UUID.
@@ -256,11 +271,7 @@ class EntityActivityService
         string $entityType,
         string $entityId
     ): array {
-        $schemaId = $this->appConfig->getValueString(
-            Application::APP_ID,
-            'contactmoment_schema',
-            ''
-        );
+        $schemaId = $this->ticketService->getSchemaId();
         if ($schemaId === '') {
             return [];
         }
@@ -275,7 +286,10 @@ class EntityActivityService
         $objects = $this->queryObjects(
             registerId: $registerId,
             schemaId: $schemaId,
-            filters: [$linkField => $entityId]
+            filters: [
+                'ticketType' => TicketService::TYPE_CONTACTMOMENT,
+                $linkField   => $entityId,
+            ]
         );
 
         $items = [];
@@ -283,11 +297,11 @@ class EntityActivityService
             $items[] = [
                 'type'      => 'contactmoment',
                 'id'        => (string) ($object['id'] ?? $object['uuid'] ?? ''),
-                'subject'   => (string) ($object['subject'] ?? ''),
+                'subject'   => (string) ($object['title'] ?? ''),
                 'channel'   => (string) ($object['channel'] ?? ''),
-                'agent'     => (string) ($object['agent'] ?? ''),
-                'timestamp' => (string) ($object['contactedAt'] ?? ''),
-                'summary'   => (string) ($object['summary'] ?? ''),
+                'agent'     => (string) ($object['assignee'] ?? ''),
+                'timestamp' => (string) ($object['occurredAt'] ?? ''),
+                'summary'   => (string) ($object['description'] ?? ''),
             ];
         }
 
@@ -295,19 +309,22 @@ class EntityActivityService
     }//end collectContactmomenten()
 
     /**
-     * Map an entity type to the contactmoment schema field that holds the
-     * back-reference UUID. Returns null when no native back-reference exists
-     * so the caller can omit the source rather than emit a junk filter.
+     * Map an entity type to the ticket field that holds the back-reference UUID
+     * on a contactmoment ticket. Returns null when no native back-reference
+     * exists so the caller can omit the source rather than emit a junk filter.
+     *
+     * The request back-reference is the ticket field `parentTicket` (formerly
+     * contactmoment.request).
      *
      * @param string $entityType The validated entity type.
      *
-     * @return string|null The contactmoment property name, or null.
+     * @return string|null The ticket property name, or null.
      */
     private function contactmomentLinkField(string $entityType): ?string
     {
         return match ($entityType) {
             'client'  => 'client',
-            'request' => 'request',
+            'request' => 'parentTicket',
             default   => null,
         };
     }//end contactmomentLinkField()
@@ -327,12 +344,7 @@ class EntityActivityService
         string $entityType,
         string $entityId
     ): array {
-        $schemaConfigKey = $entityType.'_schema';
-        $schemaId        = $this->appConfig->getValueString(
-            Application::APP_ID,
-            $schemaConfigKey,
-            ''
-        );
+        $schemaId = $this->entitySchemaId(entityType: $entityType);
         if ($schemaId === '') {
             return [];
         }
@@ -375,6 +387,30 @@ class EntityActivityService
 
         return $items;
     }//end collectNotes()
+
+    /**
+     * Resolve the schema id that stores an entity type's objects.
+     *
+     * `client|contact|lead` still map onto their own `<type>_schema` config key.
+     * `request` is a subtype of the unified `ticket` schema after
+     * unify-ticket-supertype, so it resolves through TicketService instead.
+     *
+     * @param string $entityType The validated entity type.
+     *
+     * @return string The schema id, or '' when unconfigured.
+     */
+    private function entitySchemaId(string $entityType): string
+    {
+        if ($entityType === 'request') {
+            return $this->ticketService->getSchemaId();
+        }
+
+        return $this->appConfig->getValueString(
+            Application::APP_ID,
+            $entityType.'_schema',
+            ''
+        );
+    }//end entitySchemaId()
 
     /**
      * Query a single schema using equality filters, capped by

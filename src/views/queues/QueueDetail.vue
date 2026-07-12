@@ -63,7 +63,7 @@
 						</div>
 						<div class="queue-item__meta">
 							<span v-if="item.category" class="meta-tag">{{ item.category }}</span>
-							<span class="meta-waiting">{{ getWaitingTime(item.requestedAt || item.dateCreated) }}</span>
+							<span class="meta-waiting">{{ getWaitingTime(item.occurredAt || item.dateCreated) }}</span>
 							<span v-if="item.assignee" class="meta-assignee">{{ item.assignee }}</span>
 							<span v-else class="meta-unassigned">{{ t('pipelinq', 'Unassigned') }}</span>
 						</div>
@@ -183,7 +183,9 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-9
 		 */
 		openItem(item) {
-			this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
+			// Queue items are `ticket` rows (unify-ticket-supertype); the
+			// unified detail page reads the row's own ticketType.
+			this.$router.push({ name: 'TicketDetail', params: { id: item.id } })
 		},
 
 		/**
@@ -203,8 +205,11 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-2
 		 */
 		async assignToMe(item) {
-			await this.objectStore.saveObject('request', {
+			// Queue items are request-tickets: the former `request` schema is now the
+			// `ticket` supertype discriminated by ticketType (unify-ticket-supertype).
+			await this.objectStore.saveObject('ticket', {
 				...item,
+				ticketType: item.ticketType || 'request',
 				assignee: OC.currentUser,
 			})
 			await this.queuesStore.fetchQueueItems(this.queueId)
@@ -224,8 +229,9 @@ export default {
 		async bulkAssignToMe() {
 			const promises = this.sortedItems
 				.filter(item => this.selectedIds.has(item.id))
-				.map(item => this.objectStore.saveObject('request', {
+				.map(item => this.objectStore.saveObject('ticket', {
 					...item,
+					ticketType: item.ticketType || 'request',
 					assignee: OC.currentUser,
 				}))
 

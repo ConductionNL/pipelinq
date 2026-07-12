@@ -62,10 +62,10 @@
 		<!-- Requested at -->
 		<div class="form-group">
 			<NcDateTimePickerNative
-				:value="requestedAtDate"
+				:value="occurredAtDate"
 				:label="t('pipelinq', 'Requested at')"
 				type="date"
-				@input="requestedAtDate = $event" />
+				@input="occurredAtDate = $event" />
 		</div>
 
 		<!-- Client -->
@@ -162,7 +162,7 @@ export default {
 				priority: 'normal',
 				channel: null,
 				category: '',
-				requestedAt: null,
+				occurredAt: null,
 				client: null,
 				pipeline: null,
 				stage: null,
@@ -172,15 +172,26 @@ export default {
 	},
 	computed: {
 		/**
-		 * Bridge the stored `requestedAt` string to NcDateTimePickerNative,
-		 * which works with Date objects.
+		 * Bridge the stored `occurredAt` string (formerly `requestedAt`, renamed by
+		 * unify-ticket-supertype) to NcDateTimePickerNative, which works with Date
+		 * objects. The user-facing label stays "Requested at".
+		 *
+		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 		 */
-		requestedAtDate: {
+		occurredAtDate: {
+			/**
+			 * @return {Date|null} The stored `occurredAt` as a Date.
+			 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+			 */
 			get() {
-				return toDateObject(this.form.requestedAt)
+				return toDateObject(this.form.occurredAt)
 			},
+			/**
+			 * @param {Date|null} date The picked date.
+			 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+			 */
 			set(date) {
-				this.form.requestedAt = toDateInputString(date)
+				this.form.occurredAt = toDateInputString(date)
 			},
 		},
 		/**
@@ -309,7 +320,7 @@ export default {
 				priority: this.request.priority || 'normal',
 				channel: this.request.channel || null,
 				category: this.request.category || '',
-				requestedAt: this.request.requestedAt || null,
+				occurredAt: this.request.occurredAt || null,
 				client: this.request.client || null,
 				pipeline: this.request.pipeline || null,
 				stage: this.request.stage || null,
@@ -357,7 +368,7 @@ export default {
 
 			const data = { ...this.form }
 			if (!data.channel) delete data.channel
-			if (!data.requestedAt) delete data.requestedAt
+			if (!data.occurredAt) delete data.occurredAt
 			if (!data.client) delete data.client
 			if (!data.pipeline) delete data.pipeline
 			if (!data.stage) delete data.stage

@@ -30,7 +30,7 @@
 				:title="card.label"
 				:data-testid="`service-card-${card.id}`"
 				class="service-hub__card"
-				@click="navigate(card.route)" />
+				@click="navigate(card)" />
 		</div>
 	</div>
 </template>
@@ -58,12 +58,17 @@ export default {
 			 * index (its primary route); the sub-group leaf pages
 			 * (Services / Resources / Bookings) stay routable via their
 			 * own manifest entries.
+			 *
+			 * The Requests / Contactmomenten / Complaints leaves collapsed into
+			 * the unified Tickets index (unify-ticket-supertype). Their cards
+			 * keep their own LABEL but deep-link into Tickets with a
+			 * `ticketType` query that preselects the matching subtype.
 			 */
 			cards: [
-				{ id: 'Requests', label: t('pipelinq', 'Requests'), route: 'Requests' },
+				{ id: 'Requests', label: t('pipelinq', 'Requests'), route: 'Tickets', query: { ticketType: 'request' } },
 				{ id: 'Tasks', label: t('pipelinq', 'Tasks'), route: 'Tasks' },
-				{ id: 'Contactmomenten', label: t('pipelinq', 'Contactmomenten'), route: 'Contactmomenten' },
-				{ id: 'Complaints', label: t('pipelinq', 'Complaints'), route: 'Complaints' },
+				{ id: 'Contactmomenten', label: t('pipelinq', 'Contactmomenten'), route: 'Tickets', query: { ticketType: 'contactmoment' } },
+				{ id: 'Complaints', label: t('pipelinq', 'Complaints'), route: 'Tickets', query: { ticketType: 'complaint' } },
 				{ id: 'Projects', label: t('pipelinq', 'Projects'), route: 'Projects' },
 				{ id: 'MyWork', label: t('pipelinq', 'My Work'), route: 'MyWork' },
 				{ id: 'BookingsGroup', label: t('pipelinq', 'Appointments'), route: 'Bookings' },
@@ -76,12 +81,15 @@ export default {
 		t,
 
 		/**
-		 * Navigate to a leaf page by route name.
+		 * Navigate to a leaf page by route name, carrying the card's optional
+		 * query (used by the ticket-subtype cards to preselect a ticketType on
+		 * the unified Tickets index).
 		 *
-		 * @param {string} routeName The manifest page id used as the route name.
+		 * @param {object} card The card whose `route` is a manifest page id.
+		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 		 */
-		navigate(routeName) {
-			this.$router.push({ name: routeName })
+		navigate(card) {
+			this.$router.push({ name: card.route, query: card.query || {} })
 		},
 	},
 }

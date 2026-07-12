@@ -72,6 +72,7 @@ import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../../store/modules/object.js'
+import { resolveObjectType } from '../../services/pipelineUtils.js'
 import PipelineForm from './PipelineForm.vue'
 import DeletePipelineDialog from '../../dialogs/DeletePipelineDialog.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
@@ -268,10 +269,16 @@ export default {
 				: ['lead', 'request'] // Legacy fallback
 
 			for (const slug of schemaSlugs) {
-				const config = this.objectStore.objectTypeRegistry[slug]
+				// `slug` is a *logical* type — stored propertyMappings still say
+				// `request` / `complaint` / `contactmoment`, which now live in the
+				// `ticket` supertype (unify-ticket-supertype). Resolve it to the
+				// registered object type plus its ticketType filter.
+				const { objectType, ticketType } = resolveObjectType(slug)
+				const config = this.objectStore.objectTypeRegistry[objectType]
 				if (!config) continue
 				try {
-					const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?pipeline=${pipelineId}&_limit=1`)
+					const ticketFilter = ticketType ? `ticketType=${ticketType}&` : ''
+					const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${pipelineId}&_limit=1`)
 					const resp = await fetch(url, { headers })
 					if (resp.ok) {
 						const data = await resp.json()
