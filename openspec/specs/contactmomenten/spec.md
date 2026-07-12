@@ -1,6 +1,6 @@
 # Contactmomenten Specification
 
-**OpenSpec changes**: [vng-klantinteracties-leaf](../../changes/vng-klantinteracties-leaf/) _(active — maps VNG `klantcontact` onto the `contactmoment` subtype of the unified `ticket` schema; the VNG ↔ canonical contract lives in the change until archive)_
+**OpenSpec changes**: [vng-klantinteracties-leaf](../../changes/archive/2026-07-12-vng-klantinteracties-leaf/) _(archived 2026-07-12 — maps VNG `klantcontact` onto the `contactmoment` subtype of the unified `ticket` schema; see [vng-klantinteracties-leaf](../vng-klantinteracties-leaf/spec.md) for the VNG ↔ canonical contract)_
 
 ## Purpose
 
