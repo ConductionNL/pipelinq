@@ -1,12 +1,12 @@
 ---
 sidebar_position: 9
 title: See the 360° client view
-description: "Open the klantbeeld: one screen that pulls together a client's contacts, leads, requests, interactions, and open work."
+description: "Open the customer 360 view: one screen that pulls together a client's contacts, leads, requests, interactions, and open work."
 ---
 
 # See the 360° client view
 
-The **360° client view** (klantbeeld) is the single screen a KCC agent or account manager opens to see everything about one client: who the contacts are, which leads and requests are open, the full interaction timeline, and any callbacks or tasks still due.
+The **360° client view** (customer 360) is the single screen a KCC agent or account manager opens to see everything about one client: who the contacts are, which leads and requests are open, the full interaction timeline, and any callbacks or tasks still due.
 
 ## Goal
 
@@ -24,7 +24,7 @@ From the Clients list, or by searching the client's name in the top search bar.
 
 The 360° view IS the default detail page. Opening any client row lands you here. The sidebar tabs on the right are the per-record-type drill-downs (*Contacts*, *Leads*, *Requests*, *Contactmomenten*, *Tasks*, *History*); the page header + summary panels are the 360° view itself.
 
-![Client 360° view](/screenshots/user-guide/user/09-klantbeeld.png)
+![Client 360° view](/screenshots/user-guide/user/09-customer-360.png)
 
 ### 2. Review the summary header
 
@@ -59,5 +59,5 @@ Click a lead, request, or contact moment to open it in place. The 360° view sta
 
 ## Reference
 
-- [Klantbeeld 360° feature reference](../../Features/klantbeeld-360.md)
+- [Customer 360° feature reference](../../Features/customer-360.md)
 - [Activity timeline feature reference](../../Features/activity-timeline.md)

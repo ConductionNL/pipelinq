@@ -261,33 +261,33 @@ scroll as one region with no cut-off action buttons.
 
 ---
 
-### Requirement: 360-degree Klantbeeld Integration
+### Requirement: 360-degree Customer 360 Integration
 
-The KCC werkplek MUST embed the klantbeeld-360 view (see klantbeeld-360 spec) in the center panel, showing all interactions, cases, documents, and notes for the identified client in a unified timeline.
+The KCC werkplek MUST embed the customer-360 view (see customer-360 spec) in the center panel, showing all interactions, cases, documents, and notes for the identified client in a unified timeline.
 
 **Feature tier**: MVP
-**Cross-reference**: `klantbeeld-360/spec.md`
+**Cross-reference**: `customer-360/spec.md`
 
-#### Scenario: Klantbeeld loads automatically after identification
+#### Scenario: Customer 360 loads automatically after identification
 
 - GIVEN an agent has identified citizen "Suzanne Moulin" via BSN 999993653
 - WHEN the identification is confirmed and a matching Pipelinq client exists
-- THEN the center panel MUST automatically load the klantbeeld-360 for this client
-- AND the klantbeeld MUST show: contact history (most recent first), open zaken, linked documents, and internal notes
+- THEN the center panel MUST automatically load the customer-360 for this client
+- AND the customer 360 MUST show: contact history (most recent first), open zaken, linked documents, and internal notes
 - AND loading MUST complete within 2 seconds to maintain agent flow
 
-#### Scenario: Klantbeeld shows interaction timeline
+#### Scenario: Customer 360 shows interaction timeline
 
-- GIVEN the klantbeeld is loaded for a client with 15 previous contactmomenten and 4 zaken
+- GIVEN the customer 360 is loaded for a client with 15 previous contactmomenten and 4 zaken
 - WHEN the agent scrolls the timeline
 - THEN the system MUST display all interactions in reverse chronological order, mixing contactmomenten and zaak status changes
 - AND each entry MUST show: date/time, channel icon, handling agent, subject, and outcome
 - AND the agent MUST be able to filter the timeline by channel type (telefoon/email/balie) or by date range
 
-#### Scenario: Klantbeeld for new (unknown) client
+#### Scenario: Customer 360 for new (unknown) client
 
 - GIVEN the agent has created a new client during this contact (no prior history)
-- WHEN the klantbeeld panel loads
+- WHEN the customer 360 panel loads
 - THEN the system MUST display "Eerste contact" with an empty timeline
 - AND the current contact being registered MUST appear as the first entry in the timeline
 
@@ -312,7 +312,7 @@ The system MUST provide a universal search bar in the werkplek header that searc
 - GIVEN an agent types "2024-001" in the universal search bar
 - WHEN the search is submitted
 - THEN the system MUST prioritize zaak results matching the zaak identification number
-- AND clicking a zaak result MUST load the linked client's klantbeeld and highlight the zaak in the context panel
+- AND clicking a zaak result MUST load the linked client's customer 360 and highlight the zaak in the context panel
 
 #### Scenario: Search by phone number with normalization
 
@@ -474,13 +474,13 @@ The system MUST support escalation workflows that transfer contacts to backoffic
 
 - GIVEN an agent previously escalated a contact for "Jan de Vries" to Juridische Zaken 2 hours ago
 - WHEN the agent opens the KCC werkplek and searches for "Jan de Vries"
-- THEN the klantbeeld MUST show the escalation with current status (Nieuw/In behandeling/Afgerond), assigned backoffice handler, and remaining SLA time
+- THEN the customer 360 MUST show the escalation with current status (Nieuw/In behandeling/Afgerond), assigned backoffice handler, and remaining SLA time
 - AND if the SLA deadline is within 1 hour, the escalation MUST be highlighted with a warning indicator
 
 #### Scenario: Citizen calls back about escalated issue
 
 - GIVEN citizen "Jan de Vries" calls back asking about the escalated issue
-- WHEN the agent identifies the citizen and sees the open escalation in the klantbeeld
+- WHEN the agent identifies the citizen and sees the open escalation in the customer 360
 - THEN the system MUST display the escalation details including any backoffice notes added since escalation
 - AND the agent MUST be able to register a new contactmoment linked to the same escalation
 - AND the new contactmoment MUST have a tag "Terugkoppeling escalatie"

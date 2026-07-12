@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Customer 360 English naming** (`customer-360-english-naming`): renames the
+  `klantbeeld-360-activation` code surface to English-canonical naming, per
+  the project's international/English-canonical-naming rule (Dutch stays in
+  i18n/l10n). `KlantbeeldSummaryService` -> `Customer360SummaryService`,
+  `KlantbeeldController` -> `Customer360Controller`,
+  `GET /api/klantbeeld/summary` -> `GET /api/customer-360/summary`, and the
+  `openspec/specs/klantbeeld-360/` capability -> `openspec/specs/customer-360/`.
+  Pure rename — no behavior, RBAC, or aggregation-logic change.
+
 ### Added
 
 - **Klantbeeld-360 activation** (`klantbeeld-360-activation`): activates the

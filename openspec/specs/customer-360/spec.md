@@ -1,16 +1,17 @@
 ---
-status: done
+status: in-progress
 ---
 
-# Klantbeeld 360 Specification
+# Customer 360 Specification
 
 **OpenSpec changes**: [klantbeeld-360-activation](../../changes/archive/2026-07-12-klantbeeld-360-activation/) _(archived 2026-07-12 — activated the draft to an MVP over the unified `ticket` schema; BRP/KVK, ZGW zaken, documents, and pinned notes remain follow-ups, see Follow-ups section below)_
+[customer-360-english-naming](../../changes/customer-360-english-naming/) _(in progress — renames the capability and its `KlantbeeldSummaryService`/`KlantbeeldController`/`/api/klantbeeld/summary` code surface from Dutch to English canonical naming; no behavior change)_
 
 ## Purpose
 
 @e2e exclude draft/unbuilt spec — 360-degree customer view aggregation not yet implemented; no UI surface to test
 
-Klantbeeld 360 provides a comprehensive, aggregated view of all interactions, cases, documents, and notes for a single person or business across all channels and systems. This "single pane of glass" is essential for KCC agents and case handlers to deliver consistent, informed service. **83% of klantinteractie-tenders** (43/52) require a 360-degree customer view.
+Customer 360 provides a comprehensive, aggregated view of all interactions, cases, documents, and notes for a single person or business across all channels and systems. This "single pane of glass" is essential for KCC agents and case handlers to deliver consistent, informed service. **83% of klantinteractie-tenders** (43/52) require a 360-degree customer view.
 
 **Standards**: VNG Klantinteracties (`Partij`, `Betrokkene`, `Contactmoment`), Haal Centraal BRP API, KVK API, ZGW Zaken API, AVG (doelbinding)
 **Feature tier**: MVP (core), V1 (extended), Enterprise (advanced)
@@ -18,7 +19,7 @@ Klantbeeld 360 provides a comprehensive, aggregated view of all interactions, ca
 
 ## Data Model
 
-The klantbeeld aggregates data from multiple sources into a unified view per person/business:
+The customer 360 aggregates data from multiple sources into a unified view per person/business:
 - **Client record**: Pipelinq client object (master record) with properties: name, type, email, phone, address, website, industry, notes, contactsUid
 - **Contactmomenten**: All registered contact moments linked to this client (from kcc-werkplek/contactmomenten specs)
 - **Zaken**: Open and closed cases from ZGW/Procest via OpenConnector
@@ -37,7 +38,7 @@ requirements below stay in this spec as the V1/Enterprise target, not as MVP
 scope:
 
 - **BRP/KVK enrichment** — base-registry lookups (Haal Centraal BRP, KVK API)
-  are not wired into the klantbeeld MVP; see the BRP-lookup surface
+  are not wired into the customer 360 MVP; see the BRP-lookup surface
   (`bsn-validatie-en-brp-lookup`) for the standalone BRP capability this would
   build on.
 - **ZGW/Procest case fetch** — "open/closed matters" is satisfied via the
@@ -62,15 +63,15 @@ The system MUST display a single, consolidated profile page for each client that
 #### Scenario: View person client profile
 
 - GIVEN a person client "Jan de Vries" with BSN linked, email "jan@devries.nl", telephone "+31 6 12345678"
-- WHEN the agent opens the klantbeeld for this client
+- WHEN the agent opens the customer 360 for this client
 - THEN the system MUST display: name, contact details (email, telephone, address), BSN (masked as "***456789" by default with a "Toon" toggle), and a "Verrijk met BRP" button
 - AND the profile header MUST show the client type (Persoon) with a person avatar icon
-- AND the profile MUST extend the existing `ClientDetail.vue` layout with additional klantbeeld tabs/sections
+- AND the profile MUST extend the existing `ClientDetail.vue` layout with additional customer 360 tabs/sections
 
 #### Scenario: View organization client profile
 
 - GIVEN an organization client "Acme B.V." with KVK number "12345678"
-- WHEN the agent opens the klantbeeld
+- WHEN the agent opens the customer 360
 - THEN the system MUST display: business name, KVK number, contact details, and linked contact persons (using the existing contacts table from `ClientDetail.vue`)
 - AND a "Verrijk met KVK" button MUST allow fetching current registration data via `KvkApiClient`
 - AND the organization profile MUST show the industry field and website
@@ -94,7 +95,7 @@ The system MUST display a single, consolidated profile page for each client that
 #### Scenario: Client profile with Nextcloud Contacts sync badge
 
 - GIVEN a client "Jan de Vries" with `contactsUid` set (synced with Nextcloud Contacts)
-- WHEN the agent opens the klantbeeld
+- WHEN the agent opens the customer 360
 - THEN the system MUST display the "Synced with Contacts" badge (existing pattern from `ClientDetail.vue`)
 - AND the agent MUST be able to navigate to the linked Nextcloud Contact
 - AND changes to the Nextcloud Contact MUST be reflected in Pipelinq via `ContactSyncService`
@@ -142,7 +143,7 @@ The system MUST display a chronological timeline of all interactions (contactmom
 - GIVEN the agent is viewing the interaction timeline
 - WHEN the agent clicks on a contactmoment entry
 - THEN the system MUST expand the entry inline to show the full details: subject, description, channel, duration, agent, and linked zaak
-- AND the agent MUST NOT leave the klantbeeld view (no full page navigation)
+- AND the agent MUST NOT leave the customer 360 view (no full page navigation)
 - AND the expanded entry MUST include a "Ga naar" link to open the full detail page if needed
 
 #### Scenario: Add interaction note from timeline
@@ -163,29 +164,29 @@ The system MUST display all cases (open and closed) for the client, grouped by s
 #### Scenario: Display open cases prominently
 
 - GIVEN a client "Jan de Vries" with 2 open and 5 closed zaken
-- WHEN the agent views the klantbeeld cases section
+- WHEN the agent views the customer 360 cases section
 - THEN open cases MUST be displayed first in a prominent card section
 - AND each case MUST show: zaaktype, identificatie, status, start date, and handler
 - AND closed cases MUST be shown below in a collapsible section (collapsed by default)
 
-#### Scenario: View case details from klantbeeld
+#### Scenario: View case details from customer 360
 
 - GIVEN a client with open zaak "Omgevingsvergunning #2024-001"
 - WHEN the agent clicks on the case
 - THEN the system MUST display case details in a side panel (matching the `CnDetailPage` sidebar pattern): full status history, linked documents, besluit (if any), and handler
-- AND the agent MUST NOT leave the klantbeeld view
+- AND the agent MUST NOT leave the customer 360 view
 
 #### Scenario: Display case statistics summary
 
 - GIVEN a client "Acme B.V." with 3 open zaken and 12 closed zaken over the past 2 years
-- WHEN the agent views the klantbeeld header
+- WHEN the agent views the customer 360 header
 - THEN the system MUST display summary statistics in a stats bar: open cases count (3), total cases (15), average case duration, and last case activity date
 - AND the stats MUST use `CnStatsBlock` components for consistent display
 
 #### Scenario: Cases fetched from Procest via API
 
 - GIVEN client "Jan de Vries" has cases in the Procest zaaksysteem
-- WHEN the klantbeeld loads the cases section
+- WHEN the customer 360 loads the cases section
 - THEN the system MUST query the Procest/ZGW Zaken API via OpenConnector to find cases linked to this client
 - AND the query MUST use the client's BSN (for persons) or KVK number (for organizations) as the search parameter
 - AND the results MUST be cached for 5 minutes to avoid excessive API calls
@@ -201,7 +202,7 @@ The system MUST display all documents associated with the client, either directl
 #### Scenario: Display documents from all linked cases
 
 - GIVEN a client "Jan de Vries" with 2 zaken, each having 3 documents
-- WHEN the agent opens the documents tab in the klantbeeld
+- WHEN the agent opens the documents tab in the customer 360
 - THEN the system MUST display all 6 documents with: filename, document type, date, and source case
 - AND each document MUST be downloadable or viewable inline (for PDFs) using Nextcloud's viewer
 
@@ -238,7 +239,7 @@ The system MUST display and manage contact persons associated with a client orga
 #### Scenario: View contact persons with roles
 
 - GIVEN organization client "Acme B.V." with 3 contact persons: CEO, Accountant, Project Manager
-- WHEN the agent views the klantbeeld contact persons section
+- WHEN the agent views the customer 360 contact persons section
 - THEN the system MUST display all 3 contacts with: name, role, email, phone (extending the existing contacts table from `ClientDetail.vue`)
 - AND the primary contact MUST be visually distinguished (star icon or "Primair" badge)
 
@@ -249,9 +250,9 @@ The system MUST display and manage contact persons associated with a client orga
 - THEN the system MUST show Petra's individual interactions: emails, meetings, and contactmomenten specific to Petra
 - AND the view MUST distinguish between interactions with Petra personally versus the organization generally
 
-#### Scenario: Add contact person from klantbeeld
+#### Scenario: Add contact person from customer 360
 
-- GIVEN the agent is viewing the klantbeeld for "Acme B.V."
+- GIVEN the agent is viewing the customer 360 for "Acme B.V."
 - WHEN the agent clicks "Contactpersoon toevoegen"
 - THEN the system MUST display the contact creation form (reusing `ClientDetail.vue`'s existing pattern)
 - AND the new contact MUST be automatically linked to "Acme B.V." via the `client` UUID property
@@ -267,7 +268,7 @@ The system MUST display all leads, requests, and tasks linked to the client in d
 #### Scenario: Display linked leads with pipeline context
 
 - GIVEN client "Acme B.V." has 2 open leads and 3 won leads
-- WHEN the agent views the klantbeeld leads section
+- WHEN the agent views the customer 360 leads section
 - THEN the system MUST display open leads first with: title, pipeline stage, value, probability, and assignee
 - AND won/lost leads MUST be shown in a collapsible "Gesloten" section
 - AND the total pipeline value for open leads MUST be displayed as a summary metric
@@ -275,29 +276,29 @@ The system MUST display all leads, requests, and tasks linked to the client in d
 #### Scenario: Display linked requests
 
 - GIVEN client "Jan de Vries" has 1 open request and 4 completed requests
-- WHEN the agent views the klantbeeld requests section
+- WHEN the agent views the customer 360 requests section
 - THEN the system MUST display the open request prominently with status, category, and assignee
 - AND completed requests MUST be shown below with completion date and outcome
 
-#### Scenario: Quick-create from klantbeeld
+#### Scenario: Quick-create from customer 360
 
-- GIVEN the agent is viewing the klantbeeld for "Jan de Vries"
+- GIVEN the agent is viewing the customer 360 for "Jan de Vries"
 - WHEN the agent clicks "Nieuw verzoek" in the requests section header
 - THEN the system MUST open the request creation form with the client pre-filled
-- AND after saving, the new request MUST immediately appear in the klantbeeld requests section
+- AND after saving, the new request MUST immediately appear in the customer 360 requests section
 
 ---
 
 ### Requirement: Privacy and Access Control (Doelbinding)
 
-The system MUST enforce AVG-compliant access to the klantbeeld, logging all data access with a purpose (doelbinding) and ensuring agents only see data relevant to their role.
+The system MUST enforce AVG-compliant access to the customer 360, logging all data access with a purpose (doelbinding) and ensuring agents only see data relevant to their role.
 
 **Feature tier**: MVP
 
-#### Scenario: Log access to klantbeeld
+#### Scenario: Log access to customer 360
 
-- GIVEN agent "Medewerker A" opens the klantbeeld for client "Jan de Vries"
-- WHEN the klantbeeld loads
+- GIVEN agent "Medewerker A" opens the customer 360 for client "Jan de Vries"
+- WHEN the customer 360 loads
 - THEN the system MUST create an audit log entry with: agent identity (Nextcloud UID), client identity (UUID), timestamp, and accessed data categories (profile/interactions/cases/documents)
 - AND the log entry MUST be immutable and available for AVG audits via OpenRegister's audit trail
 
@@ -312,7 +313,7 @@ The system MUST enforce AVG-compliant access to the klantbeeld, logging all data
 #### Scenario: Role-based data visibility
 
 - GIVEN a KCC agent with Nextcloud group "frontoffice" and a case handler with group "backoffice"
-- WHEN the KCC agent views the klantbeeld
+- WHEN the KCC agent views the customer 360
 - THEN the system MUST hide sensitive case details that are restricted to backoffice roles (e.g., internal case notes, financial details)
 - AND the agent MUST see an indication that restricted information exists: "[3 items verborgen - onvoldoende rechten]"
 - AND role-based visibility rules MUST be configurable per data category via admin settings
@@ -320,7 +321,7 @@ The system MUST enforce AVG-compliant access to the klantbeeld, logging all data
 #### Scenario: BSN masking and access logging
 
 - GIVEN a client has BSN "123456789" stored
-- WHEN any agent views the klantbeeld
+- WHEN any agent views the customer 360
 - THEN the BSN MUST be displayed as "***456789" by default
 - AND clicking "Toon volledige BSN" MUST require confirmation and log the access
 - AND the full BSN MUST be hidden again after 30 seconds or when the agent navigates away
@@ -329,30 +330,30 @@ The system MUST enforce AVG-compliant access to the klantbeeld, logging all data
 
 - GIVEN a citizen "Jan de Vries" requests an AVG inzageverzoek (data access request)
 - WHEN an administrator generates the access report
-- THEN the system MUST produce a list of all agents who accessed Jan's klantbeeld, with dates, times, and doelbinding reasons
+- THEN the system MUST produce a list of all agents who accessed Jan's customer 360, with dates, times, and doelbinding reasons
 - AND the report MUST include which data categories were accessed (profile, BRP, cases, documents)
 
 ---
 
 ### Requirement: Notes and Internal Communication
 
-The system MUST support adding internal notes to the klantbeeld that are visible to colleagues but not to the citizen.
+The system MUST support adding internal notes to the customer 360 that are visible to colleagues but not to the citizen.
 
 **Feature tier**: V1
 
 #### Scenario: Add internal note to client
 
-- GIVEN an agent viewing the klantbeeld for "Jan de Vries"
+- GIVEN an agent viewing the customer 360 for "Jan de Vries"
 - WHEN the agent adds a note "Let op: burger is slechthorend, communicatie bij voorkeur schriftelijk"
 - THEN the note MUST be stored via `ICommentsManager` linked to the client object (reusing the `EntityNotes.vue` pattern)
-- AND the note MUST be visible to all agents who open this client's klantbeeld
+- AND the note MUST be visible to all agents who open this client's customer 360
 - AND the note MUST appear in the interaction timeline with type "Notitie"
 
 #### Scenario: Pin important note
 
 - GIVEN a client "Jan de Vries" with 5 notes, including one marked as important
-- WHEN any agent opens the klantbeeld for this client
-- THEN the pinned note MUST be displayed prominently at the top of the klantbeeld in a yellow warning banner
+- WHEN any agent opens the customer 360 for this client
+- THEN the pinned note MUST be displayed prominently at the top of the customer 360 in a yellow warning banner
 - AND the pinned note MUST have a visual distinction (warning icon, contrasting background)
 - AND only one note can be pinned at a time per client
 
@@ -361,20 +362,20 @@ The system MUST support adding internal notes to the klantbeeld that are visible
 - GIVEN an agent adds a note "@petra.bakker Kun je deze casus oppakken?"
 - WHEN the note is saved
 - THEN the system MUST detect the @-mention and send a Nextcloud notification to Petra Bakker
-- AND the notification MUST include the client name, note text, and a link to the klantbeeld
+- AND the notification MUST include the client name, note text, and a link to the customer 360
 
 ---
 
 ### Requirement: Summary Statistics Panel
 
-The system MUST display an at-a-glance summary panel at the top of the klantbeeld with key metrics.
+The system MUST display an at-a-glance summary panel at the top of the customer 360 with key metrics.
 
 **Feature tier**: MVP
 
 #### Scenario: Display client summary statistics
 
 - GIVEN client "Acme B.V." with various linked entities
-- WHEN the agent opens the klantbeeld
+- WHEN the agent opens the customer 360
 - THEN the system MUST display a summary bar showing: Open leads (2, totaal EUR 45.000), Open requests (1), Open cases (3), Contactmomenten (15 dit jaar), Laatste contact (3 dagen geleden)
 - AND each metric MUST be clickable to scroll to the relevant section
 - AND the summary MUST use the `CnStatsBlock` component pattern from `Dashboard.vue`
@@ -382,16 +383,16 @@ The system MUST display an at-a-glance summary panel at the top of the klantbeel
 #### Scenario: Empty client summary
 
 - GIVEN a newly created client "Nieuw Bedrijf B.V." with no linked entities
-- WHEN the agent opens the klantbeeld
+- WHEN the agent opens the customer 360
 - THEN the summary bar MUST show all metrics as "0" or "Geen"
 - AND the system MUST suggest next actions: "Voeg een contactpersoon toe", "Maak een lead aan"
 
 ---
 
-### Requirement: Consolidated klantbeeld summary
+### Requirement: Consolidated customer 360 summary
 
 The system SHALL provide a consolidated 360 summary for a single client via a
-`KlantbeeldSummaryService` and a read endpoint. The summary SHALL aggregate, over
+`Customer360SummaryService` and a read endpoint. The summary SHALL aggregate, over
 the objects the caller may read: the count of **open tickets across all
 `ticketType`s** (request, complaint, contactmoment), the count of open leads and
 their total pipeline value, the client's SLA status (counts of open tickets whose
@@ -402,7 +403,7 @@ the equality-only declarative `summaryAggregates` / `stats-block` primitives can
 express (ADR-031 exception 2).
 
 #### Scenario: Summary counts open matters across ticket types
-- **WHEN** the klantbeeld summary is requested for a client with open request, complaint, and contactmoment tickets
+- **WHEN** the customer 360 summary is requested for a client with open request, complaint, and contactmoment tickets
 - **THEN** the summary returns a single open-ticket count spanning all three `ticketType`s, plus a per-type breakdown
 
 #### Scenario: Summary reports SLA status
@@ -413,11 +414,11 @@ express (ADR-031 exception 2).
 - **WHEN** the caller may not read some of the client's tickets or leads
 - **THEN** those objects do not contribute to any count or total in the summary
 
-### Requirement: Klantbeeld renders from the declarative Client 360 page
+### Requirement: Customer 360 renders from the declarative Client 360 page
 
 The consolidated summary SHALL be surfaced on the existing declarative
 `ClientDetail` page in `src/manifest.json`, bound to the summary endpoint. The
-klantbeeld MVP SHALL reuse the declarative detail machinery (default object data
+customer 360 MVP SHALL reuse the declarative detail machinery (default object data
 widget, `relatedCollections`, `ActivityTimeline`, `ContactmomentQuickLog`) and SHALL
 NOT introduce a bespoke `ClientDetail.vue` host component (ADR-062,
 declarative-view-system).
@@ -426,29 +427,29 @@ declarative-view-system).
 - **WHEN** a KCC agent opens a client's detail page
 - **THEN** the page renders the consolidated summary (open tickets, SLA/queue status, open leads + pipeline value, last activity) alongside the identity, related tickets/leads/contacts, and the activity timeline — all from the declarative page
 
-### Requirement: Quick actions from the klantbeeld
+### Requirement: Quick actions from the customer 360
 
 The Client 360 page SHALL offer quick actions to create a request ticket
 (`ticketType=request` pre-linked to the client), add a contact person, and add a
 note, in addition to the existing contactmoment quick-log. These SHALL be declared
 as page/header actions in `src/manifest.json`, not bespoke components.
 
-#### Scenario: Create a request from the klantbeeld
+#### Scenario: Create a request from the customer 360
 - **WHEN** the agent triggers "Nieuw verzoek" from the client page
 - **THEN** a new `ticket` with `ticketType=request` is created pre-linked to the client via its `client` field
 
-#### Scenario: Add a contact person from the klantbeeld
+#### Scenario: Add a contact person from the customer 360
 - **WHEN** the agent triggers "Contactpersoon toevoegen"
 - **THEN** a new contact is created pre-linked to the client
 
-### Requirement: Klantbeeld access is logged (doelbinding, MVP)
+### Requirement: Customer 360 access is logged (doelbinding, MVP)
 
-Each access to the consolidated klantbeeld summary SHALL be logged with the acting
+Each access to the consolidated customer 360 summary SHALL be logged with the acting
 user, the client accessed, and the timestamp, so the draft's privacy/doelbinding
 requirement is met at MVP level.
 
 #### Scenario: Access is recorded
-- **WHEN** a user requests the klantbeeld summary for a client
+- **WHEN** a user requests the customer 360 summary for a client
 - **THEN** an access-log entry records the user, client id, and time
 
 ### Requirement: MVP scope boundary is explicit
@@ -459,7 +460,7 @@ schema. BRP/KVK enrichment, ZGW/Procest case fetch, the documents overview, and
 pinned notes SHALL remain out of the MVP and be tracked as follow-ups.
 
 #### Scenario: Deferred enrichment is not required for the MVP
-- **WHEN** the klantbeeld MVP is evaluated
+- **WHEN** the customer 360 MVP is evaluated
 - **THEN** absence of BRP/KVK enrichment, ZGW case fetch, documents overview, and pinned notes does not fail the MVP; these are recorded as follow-up work
 
 ---
@@ -536,8 +537,8 @@ const response = await fetch(`/index.php/apps/openregister/api/objects/${brpRegi
 - **EspoCRM**: Record detail view with stream (activity feed), related panels (contacts, opportunities, cases, documents), and profile data. Strong side-panel navigation. No BRP/KVK integration (not government-focused).
 - **Twenty**: Record detail page with timeline, tasks, notes, and related records. Rich field-level customization. Auto-linking via email/calendar sync. No government registry integration.
 - **Krayin**: Contact detail with activities, notes, and linked leads. Basic profile view without aggregated statistics or document management.
-- **KISS (VNG reference)**: Purpose-built for 360-degree klantbeeld with BRP/KVK integration, contactmomenten timeline, and zaak overview. Closest competitor for Dutch government use case but not CRM-native.
-- **Pipelinq advantage**: Combines CRM capabilities (leads, pipeline, requests) with government klantbeeld requirements (BRP/KVK, doelbinding, zaak integration) in a single Nextcloud-native app.
+- **KISS (VNG reference)**: Purpose-built for 360-degree customer 360 with BRP/KVK integration, contactmomenten timeline, and zaak overview. Closest competitor for Dutch government use case but not CRM-native.
+- **Pipelinq advantage**: Combines CRM capabilities (leads, pipeline, requests) with government customer 360 requirements (BRP/KVK, doelbinding, zaak integration) in a single Nextcloud-native app.
 
 ### Standards & References
 - VNG Klantinteracties API -- `Partij`, `Betrokkene`, `Contactmoment` entities for unified customer view
@@ -552,7 +553,7 @@ const response = await fetch(`/index.php/apps/openregister/api/objects/${brpRegi
 - The spec is comprehensive and covers the full 360-degree customer view with detailed scenarios.
 - **Implementable incrementally**: Start with interaction timeline (MVP), then add case integration (V1), then BRP/KVK enrichment (V1).
 - **Resolved design decisions:**
-  - The klantbeeld is an **enhanced version of the existing `ClientDetail.vue`** (not a separate route), adding tabs for timeline, cases, documents.
+  - The customer 360 is an **enhanced version of the existing `ClientDetail.vue`** (not a separate route), adding tabs for timeline, cases, documents.
   - BRP/KVK enrichment data is **fetched on demand** (not cached on the client object) to ensure freshness and comply with data minimization principles.
   - BSN and KVK number need to be added as new fields to the `client` schema in `pipelinq_register.json`.
   - Role-based visibility uses **Nextcloud groups** (frontoffice/backoffice) matched against configurable access rules.
