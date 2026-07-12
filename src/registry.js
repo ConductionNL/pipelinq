@@ -144,17 +144,6 @@ import PosRefundFormView from './views/pos/PosRefundForm.vue'
 import CashShiftListView from './views/pos/CashShiftList.vue'
 import CashShiftActionsSection from './components/pos/CashShiftActionsSection.vue'
 
-// --- POS staff PIN + role permissions (pos-staff-pin-permissions). ---
-import PosRoleListView from './views/pos/PosRoleList.vue'
-import PosRoleFormView from './views/pos/PosRoleForm.vue'
-import PosStaffListView from './views/pos/PosStaffList.vue'
-import PosStaffFormView from './views/pos/PosStaffForm.vue'
-
-// --- POS split-tender admin (pos-split-tender REQ-PST-001).
-//     Tender-type registry: list + create/edit dialog. The dialog handles
-//     CRUD inline (no separate detail route). ---
-import PosTenderTypeListView from './views/pos/PosTenderTypeList.vue'
-
 // --- POS end-of-day Z-report. The per-report page is now a declarative
 //     type:"detail" page (pipelinq-detail-pages-declarative-r3): the Z-report's
 //     flat fields auto-render via CnObjectDataWidget; the BTW + payment-method
@@ -178,29 +167,6 @@ import BrpMonitorView from './views/admin/BrpMonitor.vue'
 //     view, or the date-range + format export modal. ---
 import KassakoppelingAuditListView from './views/kassakoppeling/KassakoppelingAuditList.vue'
 import KassakoppelingAuditDetailView from './views/kassakoppeling/KassakoppelingAuditDetail.vue'
-
-// --- Product barcode lookup (lib gap: index pages have no server-authoritative
-//     scan-to-navigate barcode search; this view calls the scoped lookup API). ---
-import ProductBarcodeSearchView from './views/products/ProductBarcodeSearch.vue'
-
-// --- CTI screen-pop and click-to-dial (lib gap: no telephony settings page
-//     type; admin needs platform + credentials + delay knobs and a webhook
-//     event log; cti-screenpop-adapter). ---
-import CtiSettingsView from './views/settings/CtiSettings.vue'
-import CtiEventLogView from './views/settings/CtiEventLog.vue'
-import CtiPageView from './views/settings/CtiPage.vue'
-
-// --- Outbound WhatsApp/SMS messaging admin (outbound-messaging-provider-
-//     wiring): channelProvider / messageSendBudget / messageTemplate CRUD +
-//     per-provider connectivity test + inbound webhook URL display. Lib gap:
-//     no messaging-provider-settings page type. ---
-import MessagingSettingsView from './views/settings/MessagingSettings.vue'
-
-// --- POS pluggable payment provider adapter (pos-payment-provider-adapter):
-//     admin-only credential form for Mollie / CCV / Adyen / Stripe with
-//     encrypted-at-rest secrets and a per-provider "Verbinding testen" button.
-//     Lib gap: no payment-provider-settings page type. ---
-import PaymentSettingsForm from './views/settings/PaymentSettingsForm.vue'
 
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
@@ -657,34 +623,12 @@ const registry = {
 		_note: 'Cash-shift in-body section for the declarative type:"detail" CashShiftDetail page. The Geld verwijderen (drop) / Shift afsluiten en tellen (count) / reconcile actions POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints (cashShift has no x-openregister-lifecycle). Hosts the latest/pending cashDiff VARIANCE projection (relatedCollections lists ALL children — it cannot pick the single most-relevant diff with its tolerance verdict) + manager-gated approve/reject. Self-fetches by @objectId.',
 	},
 
-	// --- POS staff PIN + role permissions (pos-staff-pin-permissions). ---
-	PosRoleListView: {
-		kind: 'page',
-		component: PosRoleListView,
-		_note: 'POS role permission-matrix list (canVoid / maxDiscountPercent / canRefund / canNoSale).',
-	},
-	PosRoleFormView: {
-		kind: 'page',
-		component: PosRoleFormView,
-		_note: 'POS role create/edit form; client-side validation on maxDiscountPercent in [0,100].',
-	},
-	PosStaffListView: {
-		kind: 'page',
-		component: PosStaffListView,
-		_note: 'POS staff list (display name, linked NC user, role badge, active toggle); admin-only.',
-	},
-	PosStaffFormView: {
-		kind: 'page',
-		component: PosStaffFormView,
-		_note: 'POS staff create/edit form with masked PIN field; on edit, blank PIN keeps the existing hash.',
-	},
-
-	// --- POS split-tender admin (pos-split-tender). ---
-	PosTenderTypeListView: {
-		kind: 'page',
-		component: PosTenderTypeListView,
-		_note: 'POS tender-type list (Contant / Betaalpas / Cadeaubon / ...) with inline create / edit / delete via PosTenderTypeFormDialog; admin-only configuration of available payment methods and their GL accounts.',
-	},
+	// POS staff, POS roles and POS tender types are administrator configuration,
+	// not operator surfaces, so they are no longer manifest pages: they render as
+	// sections on the Nextcloud admin page (/settings/admin/pipelinq) instead —
+	// see PosStaffManager / PosRoleManager / PosTenderTypeManager. The views are
+	// imported directly by those managers, so they need no registry entry here.
+	// (nav-ia-cleanup)
 
 	// --- POS end-of-day bookkeeping. The Z-report list is a declarative
 	//     type:"index" page and the per-report page is now a declarative
@@ -719,14 +663,10 @@ const registry = {
 		_note: 'Read-only Kassakoppeling audit entry detail: verification status badge ramp (green ok / red tampered / grey pending), summary + entry + crypto cards with truncated hex digests + copy buttons, an optional transaction-link card linking to pos-transaction-core and the manual server-side verify action (pos-kassakoppeling-audit REQ-AUDIT-002 / REQ-AUDIT-004 / REQ-AUDIT-006).',
 	},
 
-	// --- Product barcode lookup. ---
-	ProductBarcodeSearchView: {
-		kind: 'page',
-		component: ProductBarcodeSearchView,
-		_note: 'Scan-to-navigate barcode search; resolves via the server-authoritative scoped barcode-lookup API and routes to the matching product (highlighting a matched variant).',
-	},
-
-	// --- Billing categories (billable-categories-and-tags). ---
+	// --- Billing categories (billable-categories-and-tags). The Billing categories
+	//     PAGES are gone (nav-ia-cleanup) but the schema and its objects stay:
+	//     ShillinqWipService reads them, and this widget still charts hours by
+	//     category on the Operational dashboard. ---
 	BillingCategoryWidget: {
 		kind: 'widget',
 		component: BillingCategoryWidget,
@@ -831,36 +771,12 @@ const registry = {
 		_note: 'Export-run detail: file manifest, schema snapshots with detected drift, error log and a Retry action; fetched via the export run-detail endpoint.',
 	},
 
-	// --- CTI screen-pop and click-to-dial adapter (cti-screenpop-adapter). ---
-	CtiSettingsView: {
-		kind: 'page',
-		component: CtiSettingsView,
-		_note: 'CTI admin settings: platform, API base URL, auth method, OpenConnector credentials ref, screen-pop / click-to-dial toggles and connection test. Lib gap: no telephony-config page type.',
-	},
-	CtiEventLogView: {
-		kind: 'page',
-		component: CtiEventLogView,
-		_note: 'CTI admin event-log inspector (last 30 days): platform + event-type filters, payload modal; lib gap: no audit/event-log page type that filters by platform. Kept registered so the legacy /settings/cti/event-log deep link stays reachable; the navigation now uses the merged CtiPageView.',
-	},
-	CtiPageView: {
-		kind: 'page',
-		component: CtiPageView,
-		_note: 'Merged CTI (telephony) settings page (pipelinq-cti-and-catalog-ia): composes the CtiSettings integration config and the CtiEventLog webhook log into one settings-section page so the former two Administration menu entries become one entry under Settings.',
-	},
-
-	// --- Outbound WhatsApp/SMS messaging admin (outbound-messaging-provider-wiring). ---
-	MessagingSettingsView: {
-		kind: 'page',
-		component: MessagingSettingsView,
-		_note: 'Admin settings: channelProvider / messageSendBudget / messageTemplate CRUD via createObjectStore (no bespoke REST for these OR objects), per-provider zero-cost connectivity test (POST /api/messaging/providers/{id}/test) and the inbound webhook URL to paste into the vendor console. Provider rows carry NO credential field by design — vendor secrets live on the OpenConnector source addressed by sourceId. Lib gap: no messaging-provider-settings page type.',
-	},
-
-	// --- POS pluggable payment provider adapter (pos-payment-provider-adapter). ---
-	PaymentSettingsForm: {
-		kind: 'page',
-		component: PaymentSettingsForm,
-		_note: 'Admin-only credential form for Mollie / CCV / Adyen / Stripe with encrypted-at-rest secrets via ICrypto and per-provider connection test. Lib gap: no payment-provider-settings page type. Renders ***SET*** for already-stored secrets so the form never leaks credentials.',
-	},
+	// CTI telephony, outbound WhatsApp/SMS messaging and the POS payment providers
+	// are administrator configuration, so they are no longer manifest pages: they
+	// render as sections on the Nextcloud admin page (/settings/admin/pipelinq),
+	// which is where an admin already goes to configure an app and where NC's own
+	// admin delegation applies. Settings.vue imports the views directly, so they
+	// need no registry entry here. (nav-ia-cleanup)
 
 	// --- Project / WBS hierarchy (project-task-hierarchy). ---
 	ProjectDetail: {

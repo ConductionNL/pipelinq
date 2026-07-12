@@ -153,13 +153,6 @@
 			"order": 90
 		},
 		{
-			"id": "ProductBarcodeSearch",
-			"label": "Barcode lookup",
-			"icon": "icon-search",
-			"route": "ProductBarcodeSearch",
-			"order": 91
-		},
-		{
 			"id": "PosTransactions",
 			"label": "Kassabon",
 			"icon": "icon-category-monitoring",
@@ -181,20 +174,6 @@
 			"order": 97
 		},
 		{
-			"id": "PosStaffList",
-			"label": "POS medewerkers",
-			"icon": "icon-user",
-			"route": "PosStaffList",
-			"order": 70
-		},
-		{
-			"id": "PosRoleList",
-			"label": "POS rollen",
-			"icon": "icon-rename",
-			"route": "PosRoleList",
-			"order": 71
-		},
-		{
 			"id": "KassakoppelingAuditList",
 			"label": "Kassakoppeling audit",
 			"icon": "icon-checkmark",
@@ -206,18 +185,6 @@
 			"label": "Point of Sale",
 			"icon": "icon-category-monitoring",
 			"order": 90
-		},
-		{
-			"id": "Catalog",
-			"label": "Product catalog",
-			"icon": "icon-category-app-bundles",
-			"order": 92
-		},
-		{
-			"id": "AnalyticsGroup",
-			"label": "Reports & Compliance",
-			"icon": "icon-category-monitoring",
-			"order": 150
 		},
 		{
 			"id": "Pipeline",
@@ -1054,8 +1021,10 @@
 						"route": "ProductDetail"
 					}
 				],
+				"_searchNote": "The dedicated 'Barcode lookup' page is gone (nav-ia-cleanup): this index's search already matches on barcode, so scanning into the search box resolves the product here — one surface instead of two for the same question. Verified live: searching '8714100838623' returns exactly the matching product. `barcode` is a column so the value is visible on the row you land on, not just the key you searched by.",
 				"columns": [
 					{ "key": "name", "label": "Name" },
+					{ "key": "barcode", "label": "Barcode" },
 					{ "key": "category", "label": "Category" },
 					{ "key": "type", "label": "Type" },
 					{ "key": "status", "label": "Status" },
@@ -1065,18 +1034,6 @@
 					"enabled": true,
 					"showMetadata": true
 				}
-			}
-		},
-		{
-			"id": "ProductBarcodeSearch",
-			"_note": "ProductBarcodeSearch.vue is a single-purpose scanner surface: a barcode/EAN input that resolves one product and shows an NcEmptyContent fallback when nothing matches; it is neither a list nor an object-detail page, so no standard page type fits.",
-			"route": "/products-barcode",
-			"type": "custom",
-			"title": "Barcode lookup",
-			"component": "ProductBarcodeSearchView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "product"
 			}
 		},
 		{
@@ -1579,78 +1536,6 @@
 						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
 					]
 				}
-			}
-		},
-		{
-			"id": "PosRoleList",
-			"_note": "PosRoleList.vue is a CnIndexPage specialised for POS role definitions (permission-summary columns on the posRole schema); kept as a host-app component while those POS-permission presets live outside the library.",
-			"route": "/pos/roles",
-			"type": "custom",
-			"title": "POS rollen",
-			"component": "PosRoleListView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "posRole"
-			}
-		},
-		{
-			"id": "PosRoleNew",
-			"_note": "Uses PosRoleForm.vue, a bespoke role editor with a grid of NcCheckboxRadioSwitch permission toggles; the per-capability toggle matrix has no standard form page-type representation.",
-			"route": "/pos/roles/new",
-			"type": "custom",
-			"title": "Nieuwe rol",
-			"component": "PosRoleFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "posRole"
-			}
-		},
-		{
-			"id": "PosRoleDetail",
-			"_note": "Reuses PosRoleForm.vue (bespoke role editor with a permission-toggle grid) in edit mode; the per-capability NcCheckboxRadioSwitch matrix has no standard form/detail page-type representation.",
-			"route": "/pos/roles/:id",
-			"type": "custom",
-			"title": "POS rol",
-			"component": "PosRoleFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "posRole"
-			}
-		},
-		{
-			"id": "PosStaffList",
-			"_note": "PosStaffList.vue is a CnIndexPage specialised for POS staff accounts (role/PIN-status columns on the posStaff schema) with staff-only row actions; kept as a host-app component while those presets live outside the library.",
-			"route": "/pos/staff",
-			"type": "custom",
-			"title": "POS medewerkers",
-			"component": "PosStaffListView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "posStaff"
-			}
-		},
-		{
-			"id": "PosStaffNew",
-			"_note": "Uses PosStaffForm.vue, a bespoke staff editor combining identity NcTextFields, a role NcSelect and a PIN/active NcCheckboxRadioSwitch; the mixed credential + role-assignment form has no standard form page-type representation.",
-			"route": "/pos/staff/new",
-			"type": "custom",
-			"title": "Nieuwe medewerker",
-			"component": "PosStaffFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "posStaff"
-			}
-		},
-		{
-			"id": "PosStaffDetail",
-			"_note": "Reuses PosStaffForm.vue (bespoke staff editor: identity fields, role NcSelect, PIN/active toggles) in edit mode; the mixed credential + role-assignment form has no standard form/detail page-type representation.",
-			"route": "/pos/staff/:id",
-			"type": "custom",
-			"title": "POS medewerker",
-			"component": "PosStaffFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "posStaff"
 			}
 		},
 		{

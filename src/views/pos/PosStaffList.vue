@@ -8,8 +8,10 @@
   -->
 <template>
 	<div class="pos-staff-list">
+		<!-- No heading of its own: the host NcSettingsSection (PosStaffManager, on
+		     the admin page) already names this surface, and a second "POS staff"
+		     title would just repeat it. -->
 		<div class="pos-staff-list__header">
-			<h2>{{ t('pipelinq', 'POS staff') }}</h2>
 			<NcButton type="primary" @click="createNew">
 				{{ t('pipelinq', 'New staff member') }}
 			</NcButton>
@@ -98,11 +100,27 @@ export default {
 			const role = this.roles.find((r) => r.id === id)
 			return role?.name || id || '—'
 		},
+		/**
+		 * Ask the host to open this row for editing.
+		 *
+		 * POS staff is admin master-data, so this list now lives on the Nextcloud
+		 * admin page (nav-ia-cleanup), which is its own webpack entry with no
+		 * vue-router. It therefore emits instead of routing to a detail page, and
+		 * PosStaffManager opens the form in a dialog.
+		 *
+		 * @param {object} row The staff row.
+		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 */
 		edit(row) {
-			this.$router.push({ name: 'PosStaffDetail', params: { id: row.id } })
+			this.$emit('edit', row.id)
 		},
+		/**
+		 * Ask the host to open an empty form.
+		 *
+		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 */
 		createNew() {
-			this.$router.push({ name: 'PosStaffNew' })
+			this.$emit('create')
 		},
 	},
 }
