@@ -414,6 +414,12 @@ return [
         ['name' => 'blastWebhook#ses',      'url' => '/api/blast-webhooks/ses',      'verb' => 'POST'],
         ['name' => 'blastWebhook#twilio',   'url' => '/api/blast-webhooks/twilio',   'verb' => 'POST'],
 
+        // First-party marketing-email open/click tracking (HMAC-signed
+        // tokens, PublicPage, fail-closed) — marketing-email-open-click-tracking.
+        // camelCase slug matches BlastTrackingController class name.
+        ['name' => 'blastTracking#open',  'url' => '/api/blast/track/open/{token}',  'verb' => 'GET'],
+        ['name' => 'blastTracking#click', 'url' => '/api/blast/track/click/{token}', 'verb' => 'GET'],
+
         // Appointment booking — deposit payment webhook (signature-verified, PublicPage)
         // appointment-booking-08-deposit-payment / REQ-APT-010.
         // openconnector hits this URL with the payment outcome.
