@@ -876,4 +876,163 @@ class BlastServiceTest extends TestCase
         $this->assertSame(0, $persisted['totals']['unsubscribed']);
         $this->assertSame(0, $persisted['totals']['complained']);
     }//end testUpdateBlastTotalsZeroesAllStatusesWhenNoDeliveries()
+
+    /**
+     * marketing-email-open-click-tracking — with `blast.first_party_tracking`
+     * off (the default), the rendered body sent to openconnector is
+     * byte-for-byte unchanged: TrackingLinkService is never looked up.
+     *
+     * @return void
+     */
+    public function testSendOneDeliveryDoesNotInjectTrackingWhenFlagOff(): void
+    {
+        $blast    = [
+            'uuid'              => 'blast-flag-off',
+            'templateId'        => 'tmpl-flag',
+            'channel'           => 'email',
+            'status'            => 'sending',
+            'connectorSourceId' => 'oc-source-flag',
+        ];
+        $template = [
+            'uuid'     => 'tmpl-flag',
+            'subject'  => 'Hi',
+            'bodyHtml' => '<body><a href="https://pipelinq.nl/q4">Read more</a></body>',
+        ];
+        $this->objectService->store['blast-flag-off'] = $blast;
+        $this->objectService->store['tmpl-flag']       = $template;
+        $this->objectService->deliveries = [
+            ['uuid' => 'd-flag-off', 'blastId' => 'blast-flag-off', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
+        ];
+
+        $sourceService = new class {
+            /** @var array<int, array<string, mixed>> */
+            public array $calls = [];
+
+            public function executeAction(string $sourceId, string $action, array $payload): array
+            {
+                $this->calls[] = $payload;
+                return ['providerId' => 'p-1'];
+            }//end executeAction()
+        };
+
+        $objectService    = $this->objectService;
+        $this->container  = $this->createMock(ContainerInterface::class);
+        $this->container->method('get')->willReturnCallback(
+            function (string $id) use ($sourceService, $objectService) {
+                if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+                    return $objectService;
+                }
+
+                if ($id === 'OCA\\OpenConnector\\Service\\SourceService') {
+                    return $sourceService;
+                }
+
+                // TrackingLinkService must never be resolved when the flag is off.
+                throw new \RuntimeException('not registered: '.$id);
+            }
+        );
+
+        $service    = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+        $dispatched = $service->dispatchBlastDeliveries('blast-flag-off', 100);
+
+        $this->assertSame(1, $dispatched);
+        $this->assertSame(
+            '<body><a href="https://pipelinq.nl/q4">Read more</a></body>',
+            $sourceService->calls[0]['bodyHtml'],
+        );
+    }//end testSendOneDeliveryDoesNotInjectTrackingWhenFlagOff()
+
+    /**
+     * marketing-email-open-click-tracking — with `blast.first_party_tracking`
+     * on, the rendered body is passed through
+     * `TrackingLinkService::injectTracking()` before being sent, keyed by
+     * the delivery's own id.
+     *
+     * @return void
+     */
+    public function testSendOneDeliveryInjectsTrackingWhenFlagOn(): void
+    {
+        $blast    = [
+            'uuid'              => 'blast-flag-on',
+            'templateId'        => 'tmpl-flag-on',
+            'channel'           => 'email',
+            'status'            => 'sending',
+            'connectorSourceId' => 'oc-source-flag-on',
+        ];
+        $template = [
+            'uuid'     => 'tmpl-flag-on',
+            'subject'  => 'Hi',
+            'bodyHtml' => '<body>original</body>',
+        ];
+        $this->objectService->store['blast-flag-on'] = $blast;
+        $this->objectService->store['tmpl-flag-on']   = $template;
+        $this->objectService->deliveries = [
+            ['uuid' => 'd-flag-on', 'blastId' => 'blast-flag-on', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
+        ];
+
+        $this->appConfig = $this->createMock(IAppConfig::class);
+        $this->appConfig->method('getValueString')->willReturnCallback(
+            function (string $app, string $key, string $default) {
+                return match ($key) {
+                    'register'                    => 'pipelinq',
+                    'blast_schema'                => 'blast',
+                    'blastDelivery_schema'        => 'blastDelivery',
+                    'campaignTemplate_schema'     => 'campaignTemplate',
+                    'blast.dispatch_batch_size'   => '50',
+                    'blast.first_party_tracking'  => 'true',
+                    default                       => $default,
+                };
+            }
+        );
+
+        $sourceService = new class {
+            /** @var array<int, array<string, mixed>> */
+            public array $calls = [];
+
+            public function executeAction(string $sourceId, string $action, array $payload): array
+            {
+                $this->calls[] = $payload;
+                return ['providerId' => 'p-1'];
+            }//end executeAction()
+        };
+
+        $trackingLinkService = new class {
+            /** @var array<int, array<string, string>> */
+            public array $calls = [];
+
+            public function injectTracking(string $html, string $blastDeliveryId): string
+            {
+                $this->calls[] = ['html' => $html, 'blastDeliveryId' => $blastDeliveryId];
+                return ($html.'<!--tracked-->');
+            }//end injectTracking()
+        };
+
+        $objectService    = $this->objectService;
+        $this->container  = $this->createMock(ContainerInterface::class);
+        $this->container->method('get')->willReturnCallback(
+            function (string $id) use ($sourceService, $objectService, $trackingLinkService) {
+                if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+                    return $objectService;
+                }
+
+                if ($id === 'OCA\\OpenConnector\\Service\\SourceService') {
+                    return $sourceService;
+                }
+
+                if ($id === 'OCA\\Pipelinq\\Service\\TrackingLinkService') {
+                    return $trackingLinkService;
+                }
+
+                throw new \RuntimeException('not registered: '.$id);
+            }
+        );
+
+        $service    = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+        $dispatched = $service->dispatchBlastDeliveries('blast-flag-on', 100);
+
+        $this->assertSame(1, $dispatched);
+        $this->assertSame('<body>original</body><!--tracked-->', $sourceService->calls[0]['bodyHtml']);
+        $this->assertCount(1, $trackingLinkService->calls);
+        $this->assertSame('d-flag-on', $trackingLinkService->calls[0]['blastDeliveryId']);
+    }//end testSendOneDeliveryInjectsTrackingWhenFlagOn()
 }//end class
