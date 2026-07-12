@@ -1,11 +1,11 @@
 ---
-status: in-progress
+status: done
 ---
 
 # Customer 360 Specification
 
 **OpenSpec changes**: [klantbeeld-360-activation](../../changes/archive/2026-07-12-klantbeeld-360-activation/) _(archived 2026-07-12 — activated the draft to an MVP over the unified `ticket` schema; BRP/KVK, ZGW zaken, documents, and pinned notes remain follow-ups, see Follow-ups section below)_
-[customer-360-english-naming](../../changes/customer-360-english-naming/) _(in progress — renames the capability and its `KlantbeeldSummaryService`/`KlantbeeldController`/`/api/klantbeeld/summary` code surface from Dutch to English canonical naming; no behavior change)_
+[customer-360-english-naming](../../changes/archive/2026-07-12-customer-360-english-naming/) _(archived 2026-07-12 — renamed the capability and its `KlantbeeldSummaryService`/`KlantbeeldController`/`/api/klantbeeld/summary` code surface from Dutch to English canonical naming; no behavior change)_
 
 ## Purpose
 
