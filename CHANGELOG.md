@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CRM MCP tool surface** (`crm-mcp-tool-surface`): agent-addressable CRM
+  tools for the Nextcloud Hub Assistant / AI Chat Companion, extending
+  `PipelinqToolProvider` from 2 to 11 tools. New read tools: `listClients`,
+  `searchClients`, `getClient` (with a live 360 summary — open-ticket count,
+  open-lead count/value, recent contactmomenten), `listLeads`, `searchLeads`,
+  `getLead` (with `qualificationScore`, `weightedValue`, `winProbability`,
+  and its activity timeline), and `pipelineForecast` (per-stage totals over
+  open leads). New write tools: `createLead` and `logContactmoment`, both
+  RBAC-guarded through the existing `ObjectService`/`TicketService` write
+  path with `create` authorization enforced. Sovereign, no-per-seat-premium
+  alternative to Salesforce/HubSpot/Zoho AI copilots (ConductionNL/pipelinq#342).
 - **First-party marketing-email open/click tracking** (`marketing-email-open-click-tracking`):
   a pipelinq-hosted open pixel (`GET /api/blast/track/open/{token}`) and
   click-redirect (`GET /api/blast/track/click/{token}`) so open/click rates
