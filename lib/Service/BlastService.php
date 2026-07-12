@@ -1089,6 +1089,13 @@ class BlastService
     {
         $rendered = $this->renderTemplate(template: $template, delivery: $delivery);
 
+        if ($this->firstPartyTrackingEnabled() === true) {
+            $rendered['bodyHtml'] = $this->injectTrackingLinks(
+                html: (string) ($rendered['bodyHtml'] ?? ''),
+                blastDeliveryId: $this->extractId(payload: $delivery),
+            );
+        }
+
         $providerId = null;
         try {
             $sourceService = $this->container->get('OCA\\OpenConnector\\Service\\SourceService');
@@ -1134,6 +1141,71 @@ class BlastService
 
         return true;
     }//end sendOneDelivery()
+
+    /**
+     * Whether first-party open/click tracking is enabled.
+     *
+     * Off by default (`blast.first_party_tracking` app-config key) so the
+     * render path is byte-for-byte unchanged unless an admin opts in;
+     * telemetry then continues to arrive only via provider webhooks
+     * (marketing-email-open-click-tracking).
+     *
+     * @return bool True when the admin has enabled first-party tracking.
+     *
+     * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#3.2
+     */
+    private function firstPartyTrackingEnabled(): bool
+    {
+        return $this->appConfig->getValueString(
+            Application::APP_ID,
+            'blast.first_party_tracking',
+            'false',
+        ) === 'true';
+    }//end firstPartyTrackingEnabled()
+
+    /**
+     * Rewrite a rendered email body's links + append the open pixel via
+     * {@see TrackingLinkService::injectTracking()}.
+     *
+     * Resolved lazily through the DI container (not constructor-injected)
+     * because `TrackingLinkService` itself depends on `BlastService` for
+     * the totals roll-up — a constructor cycle would break the container.
+     * Fails soft: any resolution or injection error returns the original
+     * HTML unchanged so a tracking-service fault never blocks a send.
+     *
+     * @param string $html            Rendered email body HTML.
+     * @param string $blastDeliveryId BlastDelivery UUID or slug.
+     *
+     * @return string The rewritten HTML, or the original on failure.
+     *
+     * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#3.2
+     */
+    private function injectTrackingLinks(string $html, string $blastDeliveryId): string
+    {
+        if ($html === '' || $blastDeliveryId === '') {
+            return $html;
+        }
+
+        try {
+            $trackingLinkService = $this->container->get('OCA\\Pipelinq\\Service\\TrackingLinkService');
+        } catch (Throwable $e) {
+            $this->logger->info(
+                'BlastService.injectTrackingLinks: TrackingLinkService unavailable',
+                ['exception' => $e->getMessage()]
+            );
+            return $html;
+        }
+
+        try {
+            return $trackingLinkService->injectTracking(html: $html, blastDeliveryId: $blastDeliveryId);
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'BlastService.injectTrackingLinks: injection failed',
+                ['blastDeliveryId' => $blastDeliveryId, 'exception' => $e->getMessage()]
+            );
+            return $html;
+        }
+    }//end injectTrackingLinks()
 
     /**
      * Extract a provider message id from a `send-mail` action result.
