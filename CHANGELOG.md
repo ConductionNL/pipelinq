@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **CRM MCP tool surface** (`crm-mcp-tool-surface`): agent-addressable CRM
+  tools for the Nextcloud Hub Assistant / AI Chat Companion, extending
+  `PipelinqToolProvider` from 2 to 11 tools. New read tools: `listClients`,
+  `searchClients`, `getClient` (with a live 360 summary — open-ticket count,
+  open-lead count/value, recent contactmomenten), `listLeads`, `searchLeads`,
+  `getLead` (with `qualificationScore`, `weightedValue`, `winProbability`,
+  and its activity timeline), and `pipelineForecast` (per-stage totals over
+  open leads). New write tools: `createLead` and `logContactmoment`, both
+  RBAC-guarded through the existing `ObjectService`/`TicketService` write
+  path with `create` authorization enforced. Sovereign, no-per-seat-premium
+  alternative to Salesforce/HubSpot/Zoho AI copilots (ConductionNL/pipelinq#342).
 - **StUF-ZKN/BG adapter** (`stuf-zkn-bg-adapter`): SOAP 1.1 + StUF 0310
   bridge to legacy zaaksystemen (Centric Key2Zaken, Atos PinkRoccade, ...)
   enabling municipalities without ZGW REST APIs to use Pipelinq as a
