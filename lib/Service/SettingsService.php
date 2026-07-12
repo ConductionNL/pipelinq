@@ -255,6 +255,15 @@ class SettingsService
         'avg_handler_group'                        => '',
         'avg_teamlead_group'                       => '',
         'avg_dpo_group'                            => '',
+        // First-party marketing-email open/click tracking
+        // (marketing-email-open-click-tracking) — off by default so today's
+        // provider-webhook-only render path is unchanged until an admin
+        // opts in. `_ttl_days` is the admin-overridable token TTL (90-day
+        // fixed default per design.md's Open Questions ruling).
+        // spec ref: marketing-email-open-click-tracking Requirement "Render-time
+        // injection is feature-flagged with a provider fallback".
+        'blast.first_party_tracking'               => 'false',
+        'blast.tracking_token_ttl_days'            => '90',
     ];
 
     /**
