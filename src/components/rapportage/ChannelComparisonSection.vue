@@ -50,12 +50,13 @@ import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 
 const CHANNEL_COLORS = {
-	telefoon: '#4c84db',
+	phone: '#4c84db',
 	email: '#f5a623',
-	balie: '#7ed321',
+	counter: '#7ed321',
 	chat: '#9b59b6',
 	social: '#e74c3c',
-	brief: '#1abc9c',
+	letter: '#1abc9c',
+	sms: '#16a085',
 	unknown: '#95a5a6',
 }
 

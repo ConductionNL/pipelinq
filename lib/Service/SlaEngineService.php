@@ -56,7 +56,8 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.UnusedPrivateField)
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)     SLA lifecycle surface is the intended API (resolve/compute/evaluate/escalate/pause/resume/mark)
- * @SuppressWarnings(PHPMD.TooManyMethods)           The outbound sms/whatsapp escalation legs added several small single-purpose private helpers (dispatch/resolve/marker) kept cohesive within the one engine
+ * @SuppressWarnings(PHPMD.TooManyMethods)           The outbound sms/whatsapp escalation legs added several small
+ *   single-purpose private helpers (dispatch/resolve/marker) kept cohesive within the one engine
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Policy + deadline + escalation logic, split into helpers, still one cohesive engine
  */
 class SlaEngineService

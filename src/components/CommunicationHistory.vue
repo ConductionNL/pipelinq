@@ -83,17 +83,19 @@ import {
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 /**
- * Map the channel enum (telefoon|email|balie|chat|social|brief) onto the
- * English label used in screen-reader announcements. The visual label
- * stays Dutch because that's the canonical schema enum value.
+ * Map the channel enum (phone|email|counter|chat|social|letter|sms) onto the
+ * label used in screen-reader announcements. The enum values are English —
+ * the canonical schema vocabulary per ADR-001; Dutch naming is a mapping-layer
+ * concern, never a stored value.
  */
 const CHANNEL_LABEL_KEYS = {
-	telefoon: 'Phone',
+	phone: 'Phone',
 	email: 'Email',
-	balie: 'Counter',
+	counter: 'Counter',
 	chat: 'Chat',
 	social: 'Social media',
-	brief: 'Letter',
+	letter: 'Letter',
+	sms: 'SMS',
 }
 
 export default {
