@@ -1,10 +1,10 @@
 ---
-status: done
+status: in-progress
 ---
 
 # Spec: CRM MCP Tool Surface
 
-**OpenSpec changes**: [crm-mcp-tool-surface](../../changes/archive/2026-07-12-crm-mcp-tool-surface/) _(archived 2026-07-12)_
+**OpenSpec changes**: [crm-mcp-tool-surface](../../changes/archive/2026-07-12-crm-mcp-tool-surface/) _(archived 2026-07-12)_ · [mcp-provider-declarative-migration](../../changes/mcp-provider-declarative-migration/) _(in-progress — ADR-063 leaf migration)_
 
 ## Purpose
 
@@ -106,9 +106,10 @@ namespaced under `pipelinq.` and MUST be assertable as a fixture by unit tests.
 
 ## Notes
 
-- **`winProbability`** is exposed as a tool-response alias of the lead schema's raw
-  `probability` field (caller input, 0-100), not a new `x-openregister-calculations`
-  entry — the lead schema was intentionally left unchanged (no new schema, no field
-  changes) per this change's non-goals. `qualificationScore` and `weightedValue`
-  remain genuine backend calculations, read as materialised by OpenRegister rather
-  than recomputed by the provider.
+- **`winProbability`** is the lead schema's **declarative** `x-openregister-calculations`
+  field — a recency-decayed calc (`materialise:false`) that OpenRegister materialises on
+  read. It is NOT a tool-side alias of the raw `probability` input. _(Superseded by
+  `mcp-provider-declarative-migration` / ADR-063, resolving pipelinq #381: the earlier
+  `decorateLead` alias shadowed the declarative calc and is removed.)_ `qualificationScore`
+  and `weightedValue` are likewise genuine backend calculations, read as materialised by
+  OpenRegister rather than recomputed by the provider.
