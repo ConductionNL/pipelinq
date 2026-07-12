@@ -203,6 +203,12 @@ class SettingsService
         // "Timesheet approval" billing entry point through the registry instead of
         // the hard-coded /index.php/apps/shillinq/ path (REQ-PBTS-003).
         'shillinq_app_url'                         => '',
+        // Gates the real shillinq time-intake emit (time-billing-handoff-emit).
+        // Default off: an unconfigured install keeps today's deep-link-only
+        // handoff (shillinq_app_url) unchanged. The manager group allowed to
+        // trigger "Send to billing" (empty = NC admins only).
+        'shillinq_time_intake_enabled'             => 'false',
+        'billing_handoff_manager_group'            => '',
         // Lead-management: number of inactivity days before a lead is flagged stale.
         // Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
         // spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.

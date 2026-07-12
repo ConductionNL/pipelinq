@@ -449,6 +449,13 @@ return [
         ['name' => 'semanticHandoff#convertRequestToCase',   'url' => '/api/handoff/request/{id}/convert-to-case',    'verb' => 'POST'],
         ['name' => 'semanticHandoff#contractAvailability',   'url' => '/api/handoff/contract/{id}/availability',      'verb' => 'GET'],
         ['name' => 'semanticHandoff#sendContractToInvoicing','url' => '/api/handoff/contract/{id}/send-to-invoicing', 'verb' => 'POST'],
+
+        // Shillinq time-intake billing handoff — real emit side of the
+        // time-approval-workflow delegation (time-billing-handoff-emit).
+        // Manager-gated; the deep-link (shillinq_app_url) stays the fallback
+        // when unavailable.
+        ['name' => 'billingHandoff#availability', 'url' => '/api/billing/handoff/{clientId}/availability', 'verb' => 'GET'],
+        ['name' => 'billingHandoff#trigger',      'url' => '/api/billing/handoff/{clientId}',              'verb' => 'POST'],
         // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
         // Logius webhooks for read-receipt + inbound replies — HMAC-SHA256
         // signature-verified (REQ-RECEIPT-005 / REQ-INBOUND-006).

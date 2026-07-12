@@ -191,6 +191,12 @@ import BookingsCard from './components/bookings/BookingsCard.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
 
+// --- Shillinq time-intake billing handoff (time-billing-handoff-emit): the
+//     real emit side of the delegated time-approval-workflow. Self-fetches
+//     its availability endpoint and falls back to the existing Shillinq
+//     deep-link — same self-fetching-by-props pattern as the sections above. ---
+import ClientBillingHandoffSection from './components/billing/ClientBillingHandoffSection.vue'
+
 // --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
 //     provider-wiring): self-fetches conversation/message rows by contactId
 //     + the composer preflight facts, and hosts the SendMessageModal
@@ -714,6 +720,11 @@ const registry = {
 		kind: 'section',
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
+	},
+	ClientBillingHandoffSection: {
+		kind: 'section',
+		component: ClientBillingHandoffSection,
+		_note: 'Manager-gated "Send to billing" action for a client (time-billing-handoff-emit): self-fetches GET /api/billing/handoff/{clientId}/availability and posts the chosen period\'s approved, un-billed time entries to shillinq\'s time-intake as one idempotent batch. Falls back to the existing Shillinq deep-link when the real emit is disabled/unavailable or the user is not a billing-handoff manager.',
 	},
 	MessagingConversationSection: {
 		kind: 'section',
