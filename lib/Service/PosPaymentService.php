@@ -35,7 +35,9 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter;
 use OCA\Pipelinq\Service\Payment\AdyenAdapter;
+use OCA\Pipelinq\Service\Payment\BrokerHttpTransport;
 use OCA\Pipelinq\Service\Payment\CcvAdapter;
 use OCA\Pipelinq\Service\Payment\MollieAdapter;
 use OCA\Pipelinq\Service\Payment\PaymentProviderInterface;
@@ -46,6 +48,7 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IUserSession;
 use OCP\Security\ICrypto;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -120,9 +123,31 @@ class PosPaymentService
     /**
      * Sensitive credential field names (encrypted at rest, masked in responses).
      *
+     * `apiKey` and `apiSecret` are GONE from this list. They used to be encrypted here
+     * and decrypted into memory on every call, which is good hygiene but not custody:
+     * Pipelinq could read the key that moves the money, so Pipelinq was the trust
+     * boundary. The outbound call now goes through OpenRegister's credential broker,
+     * which holds the key and injects it server-side — see {@see BrokerHttpTransport}
+     * and `credentialId` below. `RemoveLegacyPspKeys` deletes any that were stored
+     * before this release.
+     *
+     * `webhookSecret` STAYS. It verifies an HMAC on an INBOUND webhook — a local verify
+     * operation, not an outbound request header — so a constrained HTTP proxy cannot
+     * carry it. It remains app-held until the broker grows a sign/verify capability.
+     *
      * @var array<int, string>
      */
-    public const SENSITIVE_FIELDS = ['apiKey', 'apiSecret', 'webhookSecret'];
+    public const SENSITIVE_FIELDS = ['webhookSecret'];
+
+    /**
+     * Credential-field names that used to be stored here and no longer may be.
+     *
+     * Kept only so the repair step and the update path can recognise — and refuse —
+     * them. Nothing reads their values.
+     *
+     * @var array<int, string>
+     */
+    public const RETIRED_SECRET_FIELDS = ['apiKey', 'apiSecret'];
 
     /**
      * Mask used for sensitive fields in API responses (never the actual value).
@@ -134,17 +159,22 @@ class PosPaymentService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container The DI container (OR services).
-     * @param IAppConfig         $appConfig App configuration.
-     * @param ICrypto            $crypto    Encryption service.
-     * @param IGroupManager      $groupMgr  Group manager for refund authorization.
-     * @param LoggerInterface    $logger    The logger.
+     * @param ContainerInterface $container   The DI container (OR services).
+     * @param IAppConfig         $appConfig   App configuration.
+     * @param ICrypto            $crypto      Encryption service (webhookSecret only —
+     *                                        the PSP keys live in the broker now).
+     * @param IGroupManager      $groupMgr    Group manager for refund authorization.
+     * @param IUserSession       $userSession Current session — the broker's ownership
+     *                                        guard needs an identity to check the
+     *                                        credential against.
+     * @param LoggerInterface    $logger      The logger.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private ICrypto $crypto,
         private IGroupManager $groupMgr,
+        private IUserSession $userSession,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -198,6 +228,9 @@ class PosPaymentService
             'config'       => $this->readObject(name: $name, key: 'config'),
             'lastTestedAt' => $this->readString(name: $name, key: 'lastTestedAt', default: ''),
             'testResult'   => $this->readObject(name: $name, key: 'testResult'),
+            // Not masked: a credential UUID is a reference, not a secret. The admin UI
+            // needs it back to show which credential is selected.
+            'credentialId' => $this->readString(name: $name, key: 'credentialId', default: ''),
         ];
 
         if ($includeMaskedSecrets === true) {
@@ -267,6 +300,13 @@ class PosPaymentService
         if (array_key_exists('config', $data) === true && is_array($data['config']) === true) {
             $this->writeObject(name: $name, key: 'config', value: $data['config']);
         }
+
+        // The broker credential UUID is a REFERENCE, not a secret: the key behind it
+        // lives in the vault and is injected server-side, so this app cannot read it.
+        // It is therefore stored and returned in the clear, and is not masked.
+        if (array_key_exists('credentialId', $data) === true) {
+            $this->writeString(name: $name, key: 'credentialId', value: (string) $data['credentialId']);
+        }
     }//end writeNonSensitiveFields()
 
     /**
@@ -282,6 +322,21 @@ class PosPaymentService
      */
     private function writeSensitiveFields(string $name, array $data): void
     {
+        // Refuse the retired fields outright. A client that still POSTs an apiKey must
+        // not have it quietly persisted — that is precisely the custody we just removed.
+        foreach (self::RETIRED_SECRET_FIELDS as $retired) {
+            if (array_key_exists($retired, $data) === true) {
+                $this->logger->warning(
+                    'Pipelinq POS payment: a retired credential field was submitted and ignored. '
+                    .'PSP keys live in the credential broker now; set `credentialId` instead.',
+                    [
+                        'provider' => $name,
+                        'field'    => $retired,
+                    ]
+                );
+            }
+        }
+
         foreach (self::SENSITIVE_FIELDS as $field) {
             if (array_key_exists($field, $data) === false) {
                 continue;
@@ -316,8 +371,28 @@ class PosPaymentService
     {
         $this->assertKnownProvider(name: $name);
 
+        // Fail closed on both halves. Without the broker, or without a credential, there
+        // is no key to call the PSP with — and deliberately no app-held fallback to reach
+        // for, because that fallback is the thing this change removes.
+        if (BrokerHttpTransport::isAvailable() === false) {
+            throw new OCSNotFoundException(
+                'Payment provider '.$name.' cannot be used: the OpenRegister credential broker is not available.'
+            );
+        }
+
+        $credentialId = $this->readString(name: $name, key: 'credentialId', default: '');
+        if ($credentialId === '') {
+            throw new OCSNotFoundException(
+                'Payment provider '.$name.' has no credential. Select one from the credential broker in the '
+                .'POS payment settings.'
+            );
+        }
+
+        // The adapter is handed NO apiKey. `webhookSecret` still comes through because it
+        // verifies inbound webhook HMACs locally — the broker cannot do a verify op.
         $credentials = $this->resolveDecryptedCredentials(name: $name);
-        $config      = [
+
+        $config = [
             'environment' => $this->readString(name: $name, key: 'environment', default: 'sandbox'),
             'testMode'    => $this->readBool(name: $name, key: 'testMode', default: true),
         ];
@@ -329,8 +404,37 @@ class PosPaymentService
             }
         }
 
-        return $this->instantiateAdapter(name: $name, credentials: $credentials, config: $config);
+        $adapter = $this->instantiateAdapter(name: $name, credentials: $credentials, config: $config);
+        $adapter->setHttpTransport(
+            new BrokerHttpTransport(
+                credentialId: $credentialId,
+                logger: $this->logger,
+                actingUserId: $this->currentUid()
+            )
+        );
+
+        return $adapter;
     }//end getPaymentProvider()
+
+    /**
+     * The calling user's UID, when there is a session.
+     *
+     * The broker's ownership guard needs an identity. On the webhook/background path
+     * there is no session, and the credential owner must come from elsewhere — today
+     * that means those paths cannot make brokered outbound calls, which is correct:
+     * a webhook should verify its HMAC and enqueue, not call back out.
+     *
+     * @return string|null The UID, or null when there is no session.
+     */
+    private function currentUid(): ?string
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return null;
+        }
+
+        return $user->getUID();
+    }//end currentUid()
 
     // ---------------------------------------------------------------------
     // Payment lifecycle (REQ-PAY-003 / REQ-PAY-004 / REQ-PAY-005).
@@ -797,7 +901,16 @@ class PosPaymentService
      */
     private function resolveDecryptedCredentials(string $name): array
     {
+        // The adapters' seventeen `if ($apiKey === '')` guards still expect a non-empty
+        // credential. They get a clearly-labelled placeholder, not a key — the real one is
+        // in the vault and the broker injects it. BrokerHttpTransport strips the auth
+        // header the adapter builds from this, and CurlHttpTransport refuses to send any
+        // request still carrying it, so it cannot reach the wire.
         $out = [];
+        foreach (self::RETIRED_SECRET_FIELDS as $field) {
+            $out[$field] = AbstractPaymentAdapter::BROKER_MANAGED_SECRET;
+        }
+
         foreach (self::SENSITIVE_FIELDS as $field) {
             $encrypted = $this->readString(name: $name, key: $field, default: '');
             if ($encrypted === '') {
