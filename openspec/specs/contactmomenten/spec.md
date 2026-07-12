@@ -1,5 +1,7 @@
 # Contactmomenten Specification
 
+**OpenSpec changes**: [vng-klantinteracties-leaf](../../changes/vng-klantinteracties-leaf/) _(active — maps VNG `klantcontact` onto the `contactmoment` subtype of the unified `ticket` schema; the VNG ↔ canonical contract lives in the change until archive)_
+
 ## Purpose
 
 Contactmomenten (contact moments) provide the core CRUD, list/detail views, quick-log form, and client/request integration for logging every client interaction. This capability sits between `omnichannel-registratie` (channel-aware form adaptation) and `contactmomenten-rapportage` (reporting/KPIs), providing the foundational entity and UI layer that both depend on.
