@@ -39,12 +39,16 @@
 					</div>
 				</div>
 				<div class="pipeline-actions">
-					<NcButton type="tertiary" @click="onEdit(pipeline)">
+					<NcButton type="tertiary"
+						:aria-label="t('pipelinq', 'Edit pipeline {title}', { title: pipeline.title })"
+						@click="onEdit(pipeline)">
 						<template #icon>
 							<Pencil :size="20" />
 						</template>
 					</NcButton>
-					<NcButton type="tertiary" @click="onDeleteClick(pipeline)">
+					<NcButton type="tertiary"
+						:aria-label="t('pipelinq', 'Delete pipeline {title}', { title: pipeline.title })"
+						@click="onDeleteClick(pipeline)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>

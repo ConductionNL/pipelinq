@@ -139,7 +139,7 @@ export default {
 					: generateUrl('/apps/pipelinq/api/pos/roles/{id}', { id: this.id })
 				const method = this.isNew ? 'post' : 'put'
 				await axios[method](url, { ...this.form })
-				this.$router.push({ name: 'PosRoleList' })
+				this.$emit('done')
 			} catch (error) {
 				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to save role')
 			} finally {
@@ -156,15 +156,21 @@ export default {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/pos/roles/{id}', { id: this.id })
 				await axios.delete(url)
-				this.$router.push({ name: 'PosRoleList' })
+				this.$emit('done')
 			} catch (error) {
 				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to delete role')
 			} finally {
 				this.saving = false
 			}
 		},
+		/**
+		 * Leave the form. The host (PosRoleManager, on the admin page) closes the
+		 * dialog — this form no longer routes back to a list page of its own.
+		 *
+		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 */
 		goBack() {
-			this.$router.push({ name: 'PosRoleList' })
+			this.$emit('done')
 		},
 	},
 }

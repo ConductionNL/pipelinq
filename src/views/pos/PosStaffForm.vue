@@ -163,7 +163,7 @@ export default {
 					payload.pin = this.form.pin
 				}
 				await axios[method](url, payload)
-				this.$router.push({ name: 'PosStaffList' })
+				this.$emit('done')
 			} catch (error) {
 				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to save staff')
 			} finally {
@@ -180,15 +180,21 @@ export default {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/pos/staff/{id}', { id: this.id })
 				await axios.delete(url)
-				this.$router.push({ name: 'PosStaffList' })
+				this.$emit('done')
 			} catch (error) {
 				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to delete staff')
 			} finally {
 				this.saving = false
 			}
 		},
+		/**
+		 * Leave the form. The host (PosStaffManager, on the admin page) closes the
+		 * dialog — this form no longer routes back to a list page of its own.
+		 *
+		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 */
 		goBack() {
-			this.$router.push({ name: 'PosStaffList' })
+			this.$emit('done')
 		},
 	},
 }

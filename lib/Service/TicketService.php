@@ -123,6 +123,8 @@ class TicketService
      * @return \OCA\OpenRegister\Service\ObjectService The object service.
      *
      * @throws RuntimeException If OpenRegister is not available.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
      */
     public function getObjectService(): \OCA\OpenRegister\Service\ObjectService
     {
@@ -174,6 +176,8 @@ class TicketService
      * @param int                  $limit         Max rows.
      *
      * @return array<int, mixed> The matching ticket rows.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
      */
     public function findByType(string $ticketType, array $extraFilters=[], int $limit=10000): array
     {
@@ -214,6 +218,8 @@ class TicketService
      * @return \OCA\OpenRegister\Db\ObjectEntity The saved ticket.
      *
      * @throws RuntimeException If the ticket surface is unconfigured.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function save(string $ticketType, array $payload, ?string $uuid=null): object
     {
@@ -248,6 +254,8 @@ class TicketService
      * @param array<string, mixed> $payload The ticket fields.
      *
      * @return array<string, mixed> The payload with date-times in ISO-8601.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function sanitizeForSave(array $payload): array
     {
