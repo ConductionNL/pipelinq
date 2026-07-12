@@ -49,11 +49,17 @@ final class RecordingObjectService
      * Mimic ObjectService::findAll(config) — filter the saved rows by the
      * natural-key filters (ignoring register/schema framing).
      *
-     * @param array<string, mixed> $config The find config.
+     * `$_rbac` / `$_multitenancy` mirror the real signature: a repair step has no
+     * user session, so it reads and writes in the system context. Omitting them
+     * here makes a by-name call throw "Unknown named parameter".
+     *
+     * @param array<string, mixed> $config        The find config.
+     * @param bool                 $_rbac         Whether to enforce RBAC scoping.
+     * @param bool                 $_multitenancy Whether to enforce tenant scoping.
      *
      * @return array<int, array<string, mixed>> Matching saved rows.
      */
-    public function findAll(array $config=[]): array
+    public function findAll(array $config=[], bool $_rbac=true, bool $_multitenancy=true): array
     {
         $filters = ($config['filters'] ?? []);
         unset($filters['register'], $filters['schema']);
@@ -77,16 +83,25 @@ final class RecordingObjectService
     /**
      * Mimic ObjectService::saveObject(...) — record the row.
      *
-     * @param array<string, mixed> $object   The object to save.
-     * @param array<string, mixed> $extend   Extend config (unused).
-     * @param mixed                $register The register (slug).
-     * @param mixed                $schema   The schema (slug).
-     * @param string|null          $uuid     The uuid (unused).
+     * @param array<string, mixed> $object        The object to save.
+     * @param array<string, mixed> $extend        Extend config (unused).
+     * @param mixed                $register      The register (slug).
+     * @param mixed                $schema        The schema (slug).
+     * @param string|null          $uuid          The uuid (unused).
+     * @param bool                 $_rbac         Whether to enforce RBAC scoping.
+     * @param bool                 $_multitenancy Whether to enforce tenant scoping.
      *
      * @return array<string, mixed> The saved row.
      */
-    public function saveObject(array $object, array $extend=[], mixed $register=null, mixed $schema=null, ?string $uuid=null): array
-    {
+    public function saveObject(
+        array $object,
+        array $extend=[],
+        mixed $register=null,
+        mixed $schema=null,
+        ?string $uuid=null,
+        bool $_rbac=true,
+        bool $_multitenancy=true
+    ): array {
         $this->saved[] = $object;
 
         return $object;
