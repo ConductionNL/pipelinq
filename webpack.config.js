@@ -95,7 +95,21 @@ webpackConfig.resolve = {
 			: { '@conduction/nextcloud-vue/integrations': path.resolve(__dirname, 'node_modules/@conduction/nextcloud-vue/src/integrations') }),
 		// Deduplicate shared packages so the aliased library source uses
 		// the same instances as the app (prevents dual-Pinia / dual-Vue bugs).
-		'vue$': path.resolve(__dirname, 'node_modules/vue'),
+		// Pin the CONCRETE CommonJS runtime build, NOT the package dir nor the
+		// `vue.runtime.common.js` switcher. webpack would otherwise pick vue's
+		// `module` field (vue.runtime.esm.js), whose ESM namespace omits Vue's
+		// static methods (`util`, `observable`, `defineComponent`, …). nc-vue's
+		// dist + its inlined vue-demi (via vue-codemirror6/@vueuse) and the
+		// consumer's pinia do `import Vue from 'vue'; Vue.<static>()`, compiled to
+		// `require('vue').<static>` — undefined on the ESM namespace, BLANKING the
+		// whole app at mount ("reading 'warn'" / "observable is not a function").
+		// Point straight at the dev/prod build file (each ends `module.exports =
+		// Vue`, the full constructor): the 173-byte `vue.runtime.common.js` switcher
+		// (`module.exports = require('./prod')`) hides the constructor behind an
+		// indirection webpack's default-import interop can't see through.
+		'vue$': isDev
+			? path.resolve(__dirname, 'node_modules/vue/dist/vue.runtime.common.dev.js')
+			: path.resolve(__dirname, 'node_modules/vue/dist/vue.runtime.common.prod.js'),
 		'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
 		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
 	},
@@ -111,6 +125,12 @@ webpackConfig.plugins = [
 
 // Force all shared packages to resolve from pipelinq's own node_modules,
 // preventing the nextcloud-vue submodule's nested deps (Vue 3) from leaking in.
+// Register the exact-match style.css alias BEFORE the bare package alias:
+// enhanced-resolve applies the first matching entry, and the bare alias maps the
+// package to its DIRECTORY, so '@nextcloud/dialogs/style.css' (imported by
+// nextcloud-vue's useAppInstaller) would resolve to a non-existent root style.css.
+// dialogs v6 ships the stylesheet at dist/style.css behind its "exports" map.
+webpackConfig.resolve.alias['@nextcloud/dialogs/style.css$'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs/dist/style.css')
 webpackConfig.resolve.alias['@nextcloud/dialogs'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs')
 
 // Bypass @nextcloud/axios's `exports` field which only declares the `import`
@@ -121,7 +141,39 @@ webpackConfig.resolve.alias['@nextcloud/dialogs'] = path.resolve(__dirname, 'nod
 // exports field gate. Use the $-suffixed exact-match form so subpath imports
 // (e.g. @nextcloud/axios/dist/foo) keep their normal resolution. Mirrors
 // decidesk's `ed34703c`.
-webpackConfig.resolve.alias['@nextcloud/axios$'] = path.resolve(__dirname, 'node_modules/@nextcloud/axios/dist/index.cjs')
+// Shim re-exports @nextcloud/axios's `default` so `require('@nextcloud/axios')`
+// yields the axios instance (with `.interceptors`) — see build/nextcloud-axios-default.cjs.
+// A plain alias to dist/index.cjs handed over the ESM namespace `{ default, … }`,
+// which nc-vue's interop double-wrapped so `.interceptors` was undefined →
+// password-confirmation blanked the app at mount.
+webpackConfig.resolve.alias['@nextcloud/axios$'] = path.resolve(__dirname, 'build/nextcloud-axios-default.cjs')
+
+// nc-vue ≥165 (CnRelatedObjectsWidget → @nextcloud/files → @nextcloud/paths;
+// notify_push) pulls these ESM-only packages that declare only the `import`
+// export condition, so nc-vue's CJS bundle's require() fails webpack 5's
+// CommonJS exports check ("." is not exported…). Alias to the ESM entry.
+webpackConfig.resolve.alias['@nextcloud/paths$'] = path.resolve(__dirname, 'node_modules/@nextcloud/paths/dist/index.mjs')
+webpackConfig.resolve.alias['@nextcloud/notify_push$'] = path.resolve(__dirname, 'node_modules/@nextcloud/notify_push/dist/index.js')
+
+// Pin vue-demi to its Vue-2.7 variant. pinia + @vueuse (bundled by webpack from
+// our own node_modules) import `vue-demi`, whose default `lib/index.mjs` does an
+// unguarded `import Vue from 'vue'; Vue.util.warn` (+ observable/defineComponent)
+// that blanks the app at mount. nc-vue fixes its OWN bundled copy the same way in
+// rollup; mirror it for the consumer's copies. `lib/v2.7/index.mjs` is a static
+// `import Vue from 'vue'; export * from 'vue'`, so every Vue-2.7 static resolves.
+webpackConfig.resolve.alias['vue-demi$'] = path.resolve(__dirname, 'node_modules/vue-demi/lib/v2.7/index.mjs')
+
+// @nextcloud/files (pulled transitively via @nextcloud/axios → @nextcloud/auth)
+// references the Node core `stream` module, which webpack 5 does not polyfill for
+// the browser. It is on a code path the app never hits, so provide an empty module.
+// Same story for `path`: @nextcloud/dialogs v6 drags in a FilePicker chunk that
+// imports it, and the app only uses the toast APIs (showError/showSuccess/
+// showWarning), so the FilePicker code path never executes.
+webpackConfig.resolve.fallback = {
+	...(webpackConfig.resolve.fallback || {}),
+	stream: false,
+	path: false,
+}
 
 // Share Vue + @nextcloud/vue + pinia + icons + @conduction/nextcloud-vue
 // across every entry-point so each widget bundle no longer inlines its own

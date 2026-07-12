@@ -63,6 +63,10 @@ use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\AppointmentPaymentProvider;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\BookingService;
+use OCA\Pipelinq\Service\BsnValidationService;
+use OCA\Pipelinq\Service\Gdpr\PipelinqApRegulatorEscalateProvider;
+use OCA\Pipelinq\Service\Gdpr\PipelinqBsnIdentityVerifyProvider;
+use OCA\Pipelinq\Service\HaalCentraalClient;
 use OCA\Pipelinq\Service\WalkInQueueService;
 use Throwable;
 use OCP\App\IAppManager;
@@ -107,6 +111,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
+     * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
      * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength) A flat DI registration
@@ -252,7 +257,46 @@ class Application extends App implements IBootstrap
 
         $this->registerPosLifecycleGuards(context: $context);
         $this->registerExportServices(context: $context);
+        $this->registerGdprSeamProviders(context: $context);
     }//end register()
+
+    /**
+     * Register pipelinq's two AVG/DSAR integration-seam providers as services
+     * (ADR-047 Phase-3 / ADR-019). The providers implement OpenRegister's
+     * `IdentityVerifyProvider` / `RegulatorEscalateProvider` contracts; they are
+     * registered here as lazy service factories and are added to OR's registries
+     * from {@see wireGdprSeamProviders()} in `boot()` — matching the OR registry
+     * contract's "each app registers its provider from its own boot hook"
+     * guidance, where the cross-app OR registry can be safely resolved. Both
+     * factories only construct the OR-interface-implementing class on resolve, so
+     * a disabled / absent OpenRegister never fatals bootstrap.
+     *
+     * @param IRegistrationContext $context The registration context.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
+     */
+    private function registerGdprSeamProviders(IRegistrationContext $context): void
+    {
+        $context->registerService(
+            PipelinqBsnIdentityVerifyProvider::class,
+            static function ($c): PipelinqBsnIdentityVerifyProvider {
+                return new PipelinqBsnIdentityVerifyProvider(
+                    bsnValidation: $c->get(BsnValidationService::class),
+                    brpClient: $c->get(HaalCentraalClient::class),
+                    logger: $c->get(LoggerInterface::class),
+                );
+            }
+        );
+
+        $context->registerService(
+            PipelinqApRegulatorEscalateProvider::class,
+            static function ($c): PipelinqApRegulatorEscalateProvider {
+                return new PipelinqApRegulatorEscalateProvider(logger: $c->get(LoggerInterface::class));
+            }
+        );
+    }//end registerGdprSeamProviders()
 
     /**
      * Wire the OpenRegister AppHost engine (ADR-040), scoped to the parity-safe
@@ -553,7 +597,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec exclude Framework bootstrap wiring (initial-state + comment resolvers + seams); no single behavioural spec.
+     * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
      */
     public function boot(IBootContext $context): void
     {
@@ -633,8 +677,45 @@ class Application extends App implements IBootstrap
 
         $this->wireAppointmentCalendarSeam();
         $this->wireAppointmentPaymentSeam();
+        $this->wireGdprSeamProviders();
         $this->registerDsarEvidenceSource();
     }//end boot()
+
+    /**
+     * Add pipelinq's two AVG/DSAR seam providers to OpenRegister's registries
+     * (ADR-047 Phase-3 / ADR-019, first-wins). The registries are OR-owned
+     * shared services resolved from the app container at boot; the whole wiring
+     * is wrapped per registry so a disabled / absent OpenRegister (or an OR build
+     * predating the Gdpr seams) never fatals boot — in that case the NL pack's
+     * selector simply resolves to OR's fail-closed default provider and identity
+     * stays unverified / escalation stays refused (ADR-005 / CWE-863).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
+     */
+    private function wireGdprSeamProviders(): void
+    {
+        $identityRegistryClass  = 'OCA\\OpenRegister\\Service\\Gdpr\\Identity\\IdentityVerifyRegistry';
+        $regulatorRegistryClass = 'OCA\\OpenRegister\\Service\\Gdpr\\Regulator\\RegulatorEscalateRegistry';
+        $container = $this->getContainer();
+
+        try {
+            $identityRegistry = $container->get($identityRegistryClass);
+            $identityRegistry->addProvider($container->get(PipelinqBsnIdentityVerifyProvider::class));
+        } catch (Throwable $e) {
+            // OpenRegister absent or the identity-verify seam not present — the
+            // NL pack selector resolves OR's fail-closed default (unverified).
+        }
+
+        try {
+            $regulatorRegistry = $container->get($regulatorRegistryClass);
+            $regulatorRegistry->addProvider($container->get(PipelinqApRegulatorEscalateProvider::class));
+        } catch (Throwable $e) {
+            // OpenRegister absent or the regulator-escalate seam not present — the
+            // NL pack selector resolves OR's fail-closed default (refused).
+        }
+    }//end wireGdprSeamProviders()
 
     /**
      * Register pipelinq's CRM objects as an evidence source in OpenRegister's

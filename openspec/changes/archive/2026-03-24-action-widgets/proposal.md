@@ -2,7 +2,7 @@
 
 ## Summary
 
-Add three action-oriented Nextcloud Dashboard widgets to Pipelinq: "Start Request", "Create Lead", and "Find Client". These widgets let users perform common CRM actions directly from the Nextcloud dashboard or MyDash without navigating into the Pipelinq app.
+Add three action-oriented Nextcloud Dashboard widgets to Pipelinq: "Start Request", "Create Lead", and "Find Client". These widgets let users perform common CRM actions directly from the Nextcloud dashboard or LaunchPad without navigating into the Pipelinq app.
 
 ## Motivation
 
@@ -96,7 +96,7 @@ A small `ClientAutocomplete.vue` component (used by Start Request and Create Lea
 ## Cross-Project Dependencies
 
 - **OpenRegister**: All CRUD via OpenRegister API (existing)
-- **MyDash** (optional): Widgets appear automatically in MyDash widget catalog
+- **LaunchPad** (optional): Widgets appear automatically in LaunchPad widget catalog
 - **Procest** (indirect): Requests created here may later become Procest cases via the existing request-to-case flow
 
 ## Rollback Strategy

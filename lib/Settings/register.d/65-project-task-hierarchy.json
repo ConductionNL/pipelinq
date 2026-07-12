@@ -106,12 +106,14 @@
             "type": "string",
             "description": "UUID reference to the parent projectPhase.",
             "format": "uuid",
+            "$ref": "projectPhase",
             "title": "Phase"
           },
           "project": {
             "type": "string",
             "description": "Denormalised UUID reference to the project (set on save) for faster project-scoped queries.",
             "format": "uuid",
+            "$ref": "project",
             "title": "Project"
           },
           "description": {
@@ -182,12 +184,14 @@
             "type": "string",
             "description": "UUID reference to the parent projectTask.",
             "format": "uuid",
+            "$ref": "projectTask",
             "title": "Task"
           },
           "project": {
             "type": "string",
             "description": "Denormalised UUID reference to the project (set on save).",
             "format": "uuid",
+            "$ref": "project",
             "title": "Project"
           },
           "description": {
