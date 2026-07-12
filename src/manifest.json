@@ -691,7 +691,13 @@
 				"register": "pipelinq",
 				"schema": "ticket",
 				"hideEmpty": true,
-				"documentationUrl": "https://pipelinq.conduction.nl"
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"_widgetsNote": "Widgets are declared (rather than left to the auto-body) only so the Besluitvorming leaf survives: development added a decidesk-decisions integration widget to RequestDetail (ADR-066) while this change was retiring that page. The relation belongs to the matter, not to whichever of the three names it used to have, so it moves onto the ticket alongside the `decisions` property on the schema. `content.hideEmpty` keeps the data widget type-aware — the page-level `hideEmpty` above only reaches the AUTO-body, which a declared widgets[] replaces.",
+				"widgets": [
+					{ "id": "ticket-data", "type": "data", "title": "Ticket details", "icon": "FileDocument", "content": { "columns": 2, "hideEmpty": true } },
+					{ "id": "ticket-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "ticket-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" }
+				]
 			}
 		},
 		{

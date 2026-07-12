@@ -129,6 +129,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
             <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+            <step>OCA\Pipelinq\Repair\RemoveRetiredAvgJobs</step>
             <step>OCA\Pipelinq\Repair\DrainMdmSyncQueue</step>
             <step>OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar</step>
         </post-migration>

@@ -154,6 +154,7 @@
           "shift": {
             "type": "string",
             "format": "uuid",
+            "$ref": "cashShift",
             "description": "UUID reference to the parent cashShift",
             "facetable": true,
             "title": "Shift"
@@ -204,6 +205,7 @@
           "shift": {
             "type": "string",
             "format": "uuid",
+            "$ref": "cashShift",
             "description": "UUID reference to the parent cashShift",
             "facetable": true,
             "title": "Shift"
@@ -262,6 +264,7 @@
           "shift": {
             "type": "string",
             "format": "uuid",
+            "$ref": "cashShift",
             "description": "UUID reference to the parent cashShift",
             "facetable": true,
             "title": "Shift"
@@ -269,6 +272,7 @@
           "count": {
             "type": "string",
             "format": "uuid",
+            "$ref": "cashCount",
             "description": "UUID reference to the cashCount this diff reconciles",
             "facetable": true,
             "title": "Count"
