@@ -103,6 +103,9 @@ return [
         ['name' => 'reporting#exportCsv',   'url' => '/api/rapportage/export',   'verb' => 'GET'],
         // Lead-management analytics endpoint (REQ-LM-006). Non-admin accessible.
         ['name' => 'rapportage#getPipelineStats', 'url' => '/api/rapportage/pipeline-stats', 'verb' => 'GET'],
+        // Klantbeeld-360 consolidated summary (klantbeeld-360-activation) — cross-ticketType/status
+        // aggregation the declarative layer can't express; per-object read guard on the client in the body.
+        ['name' => 'klantbeeld#summary', 'url' => '/api/klantbeeld/summary', 'verb' => 'GET'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
         // see openspec/changes/migrate-forms-to-forms-leaf.
 
