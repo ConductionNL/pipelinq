@@ -54,12 +54,16 @@ consumes:
   # lifecycle and reads those hours (via OR links or the WIP-sync integration).
   # The invoice surface is shillinq's `invoice-from-time-and-expense` spec
   # ("invoice generation from approved time entries"); approval gates billing and
-  # lives with billing in shillinq. Runtime hand-off available TODAY = a deep-link
-  # from pipelinq's manifest to shillinq's billing surface (src/manifest.json).
-  # A pipelinq->shillinq approval CloudEvent emit is BLOCKED-ON-PREREQ until
-  # shillinq ships an approval/invoice route or event consumer (its deployed
-  # controllers are Dashboard/Health/Metrics/Preferences/Settings only).
+  # lives with billing in shillinq. The real emit shipped
+  # (time-billing-handoff-emit, consuming shillinq's time-expense-invoice-intake
+  # change, `POST /apps/shillinq/api/billing/time-intake`): approved, un-billed
+  # time entries are batched per client + period and posted same-instance,
+  # idempotently, behind an off-by-default flag
+  # (`shillinq_time_intake_enabled`). The deep-link from pipelinq's manifest to
+  # shillinq's billing surface (src/manifest.json) remains the fallback when
+  # shillinq is absent/disabled or the flag is off.
   - invoice-from-time-and-expense      # shillinq: approval-before-billing + invoicing lifecycle owner (delegated, not built here)
+  - time-expense-invoice-intake        # shillinq: POST /apps/shillinq/api/billing/time-intake — consumed by time-billing-handoff-emit
 
 # Minimum OpenRegister version. Pinned to the OR release that ships the
 # `contacts-actions` integration provider (archived to OR main specs
