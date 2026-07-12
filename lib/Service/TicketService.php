@@ -171,9 +171,9 @@ class TicketService
      * Returns [] (never throws) when the schema is unprovisioned or OpenRegister
      * is unavailable, so callers can degrade to an empty surface.
      *
-     * @param string               $ticketType    One of the TYPE_* constants.
-     * @param array<string, mixed> $extraFilters  Additional OR filters merged in.
-     * @param int                  $limit         Max rows.
+     * @param string               $ticketType   One of the TYPE_* constants.
+     * @param array<string, mixed> $extraFilters Additional OR filters merged in.
+     * @param int                  $limit        Max rows.
      *
      * @return array<int, mixed> The matching ticket rows.
      *
@@ -227,7 +227,8 @@ class TicketService
             throw new RuntimeException('Ticket register or schema not configured.');
         }
 
-        $payload                = $this->sanitizeForSave(payload: $payload);
+        $payload = $this->sanitizeForSave(payload: $payload);
+
         $payload['ticketType'] = $ticketType;
 
         return $this->getObjectService()->saveObject(
