@@ -12,9 +12,14 @@
   -->
 <template>
 	<div class="payment-settings">
+		<!-- Named "payment providers", never "betaalmethoden": a provider is WHO
+		     processes the money (Mollie, CCV, Adyen, Stripe). A tender type is HOW
+		     the customer pays at the till (cash, pin, voucher) and lives in its own
+		     section below. The old nav had both as "Betalingsmethoden" and "POS
+		     betaalmethoden", which read as the same thing twice. -->
 		<NcSettingsSection
-			:name="t('pipelinq', 'POS payment providers')"
-			:description="t('pipelinq', 'Configure the payment providers used for in-store and online payments (Mollie, CCV, Adyen, Stripe). Credentials are stored encrypted.')">
+			:name="t('pipelinq', 'Payment providers (PSP)')"
+			:description="t('pipelinq', 'Who processes the money: the payment service providers used for in-store and online payments (Mollie, CCV, Adyen, Stripe). Credentials are stored encrypted. Distinct from POS tender types below, which are how a customer can pay at the till.')">
 			<div v-if="loading" class="payment-settings__loading">
 				<NcLoadingIcon :size="24" />
 				<span>{{ t('pipelinq', 'Loading providers…') }}</span>

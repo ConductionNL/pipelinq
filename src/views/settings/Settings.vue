@@ -225,6 +225,20 @@
 			</NcNoteCard>
 		</NcSettingsSection>
 
+		<!-- Channels & telephony. Configuration, not an operator surface, so it
+		     lives here rather than in the app nav (nav-ia-cleanup). -->
+		<MessagingSettings v-if="isAdmin && isConfigured" />
+		<CtiPage v-if="isAdmin && isConfigured" />
+
+		<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
+		     who processes the money) and `PosTenderTypeList` (tender types — how
+		     the customer pays at the register) read as duplicates but are two
+		     different things; the labels are what confused them. -->
+		<PaymentSettingsForm v-if="isAdmin && isConfigured" />
+		<PosTenderTypeManager v-if="isAdmin && isConfigured" />
+		<PosStaffManager v-if="isAdmin && isConfigured" />
+		<PosRoleManager v-if="isAdmin && isConfigured" />
+
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -254,10 +268,24 @@ import SkillSettings from '../../components/admin/SkillSettings.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
+// Configuration surfaces moved off the app nav onto this admin page
+// (nav-ia-cleanup): channels, telephony, and the POS master-data.
+import MessagingSettings from './MessagingSettings.vue'
+import CtiPage from './CtiPage.vue'
+import PaymentSettingsForm from './PaymentSettingsForm.vue'
+import PosTenderTypeManager from './PosTenderTypeManager.vue'
+import PosStaffManager from './PosStaffManager.vue'
+import PosRoleManager from './PosRoleManager.vue'
 
 export default {
 	name: 'Settings',
 	components: {
+		MessagingSettings,
+		CtiPage,
+		PaymentSettingsForm,
+		PosTenderTypeManager,
+		PosStaffManager,
+		PosRoleManager,
 		CnRegisterMapping,
 		CnVersionInfoCard,
 		NcButton,
