@@ -596,6 +596,26 @@
                   }
                 ]
               }
+            },
+            "winProbability": {
+              "type": "integer",
+              "materialise": false,
+              "description": "Recency-decayed win probability (0-100): the lead's stage-denormalised `probability`, decayed by inactivity (full <=14d, 80% <=30d, 50% <=60d, else 25%). materialise:false so a stalling deal cools on read with no write. Single-object (ADR-031): reads @self.updated + the lead's own probability only.",
+              "expression": {
+                "if": [
+                  { "gt": [ { "dateDiff": { "from": { "prop": "@self.updated" }, "to": "now", "unit": "days" } }, 60 ] },
+                  { "/": [ { "*": [ { "prop": "probability" }, 25 ] }, 100 ] },
+                  { "if": [
+                    { "gt": [ { "dateDiff": { "from": { "prop": "@self.updated" }, "to": "now", "unit": "days" } }, 30 ] },
+                    { "/": [ { "*": [ { "prop": "probability" }, 5 ] }, 10 ] },
+                    { "if": [
+                      { "gt": [ { "dateDiff": { "from": { "prop": "@self.updated" }, "to": "now", "unit": "days" } }, 14 ] },
+                      { "/": [ { "*": [ { "prop": "probability" }, 8 ] }, 10 ] },
+                      { "prop": "probability" }
+                    ] }
+                  ] }
+                ]
+              }
             }
           }
         },
@@ -4699,6 +4719,57 @@
         "stageOrder": 6,
         "status": "won",
         "notes": "Contract getekend 2026-03-28. Implementatie start Q2."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-gemeente-voorbeeld-kcc-portaal"
+        },
+        "title": "Gemeente Voorbeeld – KCC portaal",
+        "source": "referral",
+        "value": 45000,
+        "probability": 70,
+        "expectedCloseDate": "2026-09-30",
+        "priority": "high",
+        "stage": "Gekwalificeerd",
+        "stageOrder": 3,
+        "status": "open",
+        "notes": "Win-probability seed (hot band): recently touched, so winProbability reads the full stage probability on a fresh import."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-meridiaan-advies-data-governance-retainer"
+        },
+        "title": "Meridiaan Advies – data-governance retainer",
+        "source": "partner",
+        "value": 18000,
+        "probability": 50,
+        "expectedCloseDate": "2026-10-15",
+        "priority": "normal",
+        "stage": "Voorstel",
+        "stageOrder": 4,
+        "status": "open",
+        "notes": "Win-probability seed (warm band): a stalled deal — winProbability decays toward the 80%/50% bands as this seed ages past 14/30 days untouched."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-zonnereizen-boekingsplatform"
+        },
+        "title": "Zonnereizen – boekingsplatform",
+        "source": "cold-call",
+        "value": 9000,
+        "probability": 40,
+        "expectedCloseDate": "2026-11-30",
+        "priority": "low",
+        "stage": "Nieuw",
+        "stageOrder": 1,
+        "status": "open",
+        "notes": "Win-probability seed (cold band): long untouched — winProbability decays to the 25% band once this seed ages past 60 days untouched."
       },
       {
         "@self": {
