@@ -18,12 +18,12 @@
 				"register": "pipelinq",
 				"schema": "contract",
 				"columns": [
-					"contractNumber",
-					"title",
-					"status",
-					"billingInterval",
-					"valuePerInterval",
-					"endDate"
+					{ "key": "contractNumber", "label": "Contract number" },
+					{ "key": "title", "label": "Title" },
+					{ "key": "status", "label": "Status" },
+					{ "key": "billingInterval", "label": "Billing interval" },
+					{ "key": "valuePerInterval", "label": "Value per interval" },
+					{ "key": "endDate", "label": "End date" }
 				],
 				"filters": [
 					"status",

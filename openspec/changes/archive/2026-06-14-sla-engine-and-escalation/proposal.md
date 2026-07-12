@@ -54,13 +54,13 @@ The engine is deliberately scoped as **cross-cutting infrastructure**: it does n
 - **`omnichannel-registratie`**: customer's preferred channel feeds escalation routing.
 - **`openconnector`**: webhooks for external escalation endpoints (e.g., customer's incident-system) go out via openconnector source rows with retry/log.
 - **`openregister`**: engine is a listener app; uses `ObjectService` for CRUD; `seed-related-items` ships baseline policies; scheduled job uses standard background-job framework.
-- **`mydash`**: attainment endpoints feed the management dashboard's SLA tile; widget polls `/api/sla/attainment`.
+- **`launchpad`**: attainment endpoints feed the management dashboard's SLA tile; widget polls `/api/sla/attainment`.
 - **`docudesk`**: contract documents can carry an `slaTierOverride` annotation read during policy resolution.
 - **`hydra/openspec` shared specs**: `i18n-nl` and `i18n-en` cover all engine user-facing strings; holiday-calendar JSON shape may be promoted to shared spec.
 
 ### Out of Scope
 
-- Custom UI for drill-down analytics beyond the baseline attainment dashboard (those go to mydash as separate changes).
+- Custom UI for drill-down analytics beyond the baseline attainment dashboard (those go to launchpad as separate changes).
 - Reverse sync or override of SLA targets from customer-facing portals.
 - Machine-learning-based SLA time prediction or anomaly detection.
 - Integration with external ITSM platforms (ServiceNow, BMC Remedy) at this stage.

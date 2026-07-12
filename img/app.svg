@@ -1,17 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24">
-  <defs>
-    <style>
-      .cls-1 {
-        fill: #fff;
-      }
-    </style>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24" fill="#fff">
   <g>
-    <circle class="cls-1" cx="9" cy="7.5" r="3.5"/>
-    <path class="cls-1" d="M2,20V17.5C2,15.01,6.03,13,9,13S16,15.01,16,17.5V20Z"/>
-    <rect class="cls-1" x="18" y="5" width="4" height="2" rx="0.5"/>
-    <rect class="cls-1" x="18" y="10" width="4" height="2" rx="0.5"/>
-    <rect class="cls-1" x="18" y="15" width="3" height="2" rx="0.5"/>
+    <circle cx="9" cy="7.5" r="3.5"/>
+    <path d="M2,20V17.5C2,15.01,6.03,13,9,13S16,15.01,16,17.5V20Z"/>
+    <rect x="18" y="5" width="4" height="2" rx="0.5"/>
+    <rect x="18" y="10" width="4" height="2" rx="0.5"/>
+    <rect x="18" y="15" width="3" height="2" rx="0.5"/>
   </g>
 </svg>

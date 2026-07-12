@@ -55,7 +55,7 @@ Add three capabilities to pipelinq:
 ### Cross-App Integration
 - OpenRegister: snapshots, overrides, and quotas are OR schemas in the pipelinq register
 - Cron job: uses OR's `cron-trigger` extension for scheduled snapshot generation
-- mydash: reads snapshots via `/api/forecast/snapshots` for sales leadership dashboard widget
+- launchpad: reads snapshots via `/api/forecast/snapshots` for sales leadership dashboard widget
 - openconnector: snapshot export for Tableau/Power BI BI pipelines (handled by separate `bi-export-and-data-warehouse-sink` spec)
 
 ### Seed Data
