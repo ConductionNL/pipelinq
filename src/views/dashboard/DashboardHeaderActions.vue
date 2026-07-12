@@ -118,7 +118,9 @@ export default {
 		 */
 		onRequestCreated(requestId) {
 			this.showRequestDialog = false
-			this.$router.push({ name: 'RequestDetail', params: { id: requestId } })
+			// A request is a `ticket` with ticketType=request
+			// (unify-ticket-supertype) — open the unified detail page.
+			this.$router.push({ name: 'TicketDetail', params: { id: requestId } })
 		},
 		/**
 		 * @param clientId

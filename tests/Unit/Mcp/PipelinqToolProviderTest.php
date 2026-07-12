@@ -19,9 +19,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Mcp;
 
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Mcp\PipelinqToolProvider;
 use OCA\Pipelinq\Service\ActivityTimelineService;
-use OCP\IAppConfig;
+use OCA\Pipelinq\Service\TicketService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -36,11 +37,11 @@ class PipelinqToolProviderTest extends TestCase
 {
 
     /**
-     * The app config mock.
+     * The unified ticket resolver mock.
      *
-     * @var IAppConfig&MockObject
+     * @var TicketService&MockObject
      */
-    private IAppConfig $appConfig;
+    private TicketService $ticketService;
 
     /**
      * The DI container mock.
@@ -70,7 +71,7 @@ class PipelinqToolProviderTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->appConfig       = $this->createMock(originalClassName: IAppConfig::class);
+        $this->ticketService   = $this->createMock(originalClassName: TicketService::class);
         $this->container       = $this->createMock(originalClassName: ContainerInterface::class);
         $this->timelineService = $this->createMock(originalClassName: ActivityTimelineService::class);
         $this->logger          = $this->createMock(originalClassName: LoggerInterface::class);
@@ -84,7 +85,7 @@ class PipelinqToolProviderTest extends TestCase
     private function buildProvider(): PipelinqToolProvider
     {
         return new PipelinqToolProvider(
-            appConfig: $this->appConfig,
+            ticketService: $this->ticketService,
             container: $this->container,
             timelineService: $this->timelineService,
             logger: $this->logger,
@@ -201,13 +202,14 @@ class PipelinqToolProviderTest extends TestCase
     }//end testListRequestsWithBadLimitReturnsInvalidArguments()
 
     /**
-     * invokeTool('pipelinq.listRequests') returns not_configured when the register/schema are unset.
+     * invokeTool('pipelinq.listRequests') returns not_configured when the
+     * register / unified ticket schema are unset.
      *
      * @return void
      */
     public function testListRequestsWithoutConfigReturnsNotConfigured(): void
     {
-        $this->appConfig->method('getValueString')->willReturn('');
+        $this->ticketService->method('isConfigured')->willReturn(false);
 
         $result = $this->buildProvider()->invokeTool(toolId: 'pipelinq.listRequests', arguments: []);
 
@@ -215,4 +217,59 @@ class PipelinqToolProviderTest extends TestCase
         $this->assertArrayHasKey(key: 'error', array: $result);
         $this->assertSame(expected: 'not_configured', actual: $result['error']['code']);
     }//end testListRequestsWithoutConfigReturnsNotConfigured()
+
+    /**
+     * invokeTool('pipelinq.listRequests') queries the unified ticket schema and
+     * narrows on the `ticketType: request` discriminator (unify-ticket-supertype)
+     * rather than a dedicated `request_schema`.
+     *
+     * @return void
+     */
+    public function testListRequestsQueriesTicketSchemaWithDiscriminator(): void
+    {
+        $this->ticketService->method('isConfigured')->willReturn(true);
+        $this->ticketService->method('getRegisterId')->willReturn('reg-1');
+        $this->ticketService->method('getSchemaId')->willReturn('sch-ticket');
+
+        $captured      = [];
+        $objectService = $this->createMock(originalClassName: ObjectService::class);
+        $objectService->method('findAll')->willReturnCallback(
+            static function (array $config) use (&$captured): array {
+                $captured = $config;
+                return [['uuid' => 'tkt-1', 'ticketType' => 'request']];
+            }
+        );
+        $this->container->method('get')->willReturn($objectService);
+
+        $result = $this->buildProvider()->invokeTool(toolId: 'pipelinq.listRequests', arguments: []);
+
+        $this->assertSame(expected: 1, actual: $result['count']);
+        $this->assertSame(expected: 'sch-ticket', actual: $captured['filters']['schema']);
+        $this->assertSame(expected: 'request', actual: $captured['filters']['ticketType']);
+    }//end testListRequestsQueriesTicketSchemaWithDiscriminator()
+
+    /**
+     * invokeTool('pipelinq.getRequest') on a ticket that is not a request
+     * (e.g. a complaint sharing the unified schema) reports not_found.
+     *
+     * @return void
+     */
+    public function testGetRequestRejectsNonRequestTicket(): void
+    {
+        $this->ticketService->method('isConfigured')->willReturn(true);
+        $this->ticketService->method('getRegisterId')->willReturn('reg-1');
+        $this->ticketService->method('getSchemaId')->willReturn('sch-ticket');
+
+        $objectService = $this->createMock(originalClassName: ObjectService::class);
+        $objectService->method('find')->willReturn(['uuid' => 'tkt-2', 'ticketType' => 'complaint']);
+        $this->container->method('get')->willReturn($objectService);
+
+        $result = $this->buildProvider()->invokeTool(
+            toolId: 'pipelinq.getRequest',
+            arguments: ['id' => 'tkt-2']
+        );
+
+        $this->assertArrayHasKey(key: 'error', array: $result);
+        $this->assertSame(expected: 'not_found', actual: $result['error']['code']);
+    }//end testGetRequestRejectsNonRequestTicket()
 }//end class

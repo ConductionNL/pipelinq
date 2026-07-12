@@ -39,7 +39,10 @@ class SchemaMapService
         'client_schema'              => 'client',
         'contact_schema'             => 'contact',
         'lead_schema'                => 'lead',
-        'request_schema'             => 'request',
+        // Unified inbound-matter supertype (unify-ticket-supertype). Replaced the
+        // retired `request` / `complaint` / `contactmoment` schemas; a subtype is
+        // selected with the `ticketType` discriminator, not a separate schema.
+        'ticket_schema'              => 'ticket',
         'pipeline_schema'            => 'pipeline',
         'queue_schema'               => 'queue',
         'skill_schema'               => 'skill',
@@ -50,7 +53,6 @@ class SchemaMapService
         'projectActivity_schema'     => 'projectActivity',
         'timeEntry_schema'           => 'timeEntry',
         'task_schema'                => 'task',
-        'contactmoment_schema'       => 'contactmoment',
         'posTransaction_schema'      => 'posTransaction',
         // POS staff PIN + role permissions (pos-staff-pin-permissions).
         'posRole_schema'             => 'posRole',

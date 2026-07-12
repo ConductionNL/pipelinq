@@ -91,11 +91,13 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 			const objectStore = useObjectStore()
 			let count = 0
 
-			// Count open requests
-			const requestConfig = objectStore.objectTypeRegistry.request
+			// Count open requests. A request is a `ticket` with ticketType 'request'
+			// (unify-ticket-supertype), so the count must be narrowed by ticketType or
+			// complaints and contactmomenten would leak into the agent's workload.
+			const requestConfig = objectStore.objectTypeRegistry.ticket
 			if (requestConfig) {
 				try {
-					const url = generateUrl(`/apps/openregister/api/objects/${requestConfig.register}/${requestConfig.schema}?assignee=${encodeURIComponent(userId)}&_limit=1`)
+					const url = generateUrl(`/apps/openregister/api/objects/${requestConfig.register}/${requestConfig.schema}?ticketType=request&assignee=${encodeURIComponent(userId)}&_limit=1`)
 					const response = await fetch(url, {
 						headers: {
 							'Content-Type': 'application/json',
@@ -143,7 +145,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		/**
 		 * Count open (non-terminal) requests for a user.
 		 *
-		 * @param {object} config Request type config
+		 * @param {object} config Ticket type config (register/schema of the `ticket` supertype)
 		 * @param {string} userId User ID
 		 * @return {Promise<number>}
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-1
@@ -151,7 +153,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		async _countOpenRequests(config, userId) {
 			const terminalStatuses = ['completed', 'rejected', 'converted']
 			try {
-				const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?assignee=${encodeURIComponent(userId)}&_limit=200`)
+				const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?ticketType=request&assignee=${encodeURIComponent(userId)}&_limit=200`)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',

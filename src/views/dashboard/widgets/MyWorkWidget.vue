@@ -7,7 +7,7 @@
 	GET /apps/pipelinq/api/worklist/mine (WorklistController). This widget
 	is kept CUSTOM — and NOT dissolved into the built-in `object-table`
 	widget — because each row navigates to a DIFFERENT route (LeadDetail
-	vs RequestDetail via the row's `routeName` field) and object-table's
+	vs TicketDetail via the row's `routeName` field) and object-table's
 	`rowRoute` is a single static route name that cannot express a
 	per-row destination (ConductionNL/nextcloud-vue#91 Wave 2 gap).
 -->
@@ -51,6 +51,20 @@ import { formatDate } from '../../../services/localeUtils.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
 const WIDGET_LIMIT = 5
+
+/**
+ * Legacy detail-route names still emitted by the server-side worklist rows
+ * (WorklistService), mapped onto the unified ticket detail page. The
+ * request/complaint/contactmoment schemas collapsed into the `ticket`
+ * supertype (unify-ticket-supertype) and their pages were retired, so any
+ * legacy `routeName` must resolve to TicketDetail — the page reads the
+ * object's own `ticketType` discriminator.
+ */
+const LEGACY_ROUTE_MAP = {
+	RequestDetail: 'TicketDetail',
+	ComplaintDetail: 'TicketDetail',
+	ContactmomentDetail: 'TicketDetail',
+}
 
 export default {
 	name: 'MyWorkWidget',
@@ -115,14 +129,18 @@ export default {
 		},
 		/**
 		 * Navigate to the row's detail page. The route differs per row
-		 * (LeadDetail vs RequestDetail); the server-side worklist row carries
-		 * the destination route name in `routeName`.
+		 * (LeadDetail vs TicketDetail); the server-side worklist row carries
+		 * the destination route name in `routeName`. Rows emitted before the
+		 * ticket-supertype migration still carry a legacy detail-route name,
+		 * so map those onto TicketDetail rather than routing into a page that
+		 * no longer exists.
 		 *
-		 * @param {object} item - Work item row (lead or request).
+		 * @param {object} item - Work item row (lead or ticket).
 		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 		 */
 		openItem(item) {
-			const name = item.routeName || (item.entityType === 'lead' ? 'LeadDetail' : 'RequestDetail')
+			const raw = item.routeName || (item.entityType === 'lead' ? 'LeadDetail' : 'TicketDetail')
+			const name = LEGACY_ROUTE_MAP[raw] || raw
 			this.$router.push({ name, params: { id: item.id } })
 		},
 	},

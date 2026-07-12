@@ -20,9 +20,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\ContactmomentService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
-use OCP\IAppConfig;
 use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -30,6 +30,10 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Tests for ContactmomentService.
+ *
+ * Since unify-ticket-supertype the service resolves the unified `ticket`
+ * schema through TicketService rather than the retired `contactmoment_schema`
+ * app-config key.
  */
 class ContactmomentServiceTest extends TestCase
 {
@@ -48,11 +52,11 @@ class ContactmomentServiceTest extends TestCase
     private ContainerInterface $container;
 
     /**
-     * Mock app config.
+     * Mock unified ticket resolver.
      *
-     * @var IAppConfig
+     * @var TicketService
      */
-    private IAppConfig $appConfig;
+    private TicketService $ticketService;
 
     /**
      * Mock group manager.
@@ -75,51 +79,138 @@ class ContactmomentServiceTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->container    = $this->createMock(ContainerInterface::class);
-        $this->appConfig    = $this->createMock(IAppConfig::class);
-        $this->groupManager = $this->createMock(IGroupManager::class);
-        $this->logger       = $this->createMock(LoggerInterface::class);
+        $this->container     = $this->createMock(ContainerInterface::class);
+        $this->ticketService = $this->createMock(TicketService::class);
+        $this->groupManager  = $this->createMock(IGroupManager::class);
+        $this->logger        = $this->createMock(LoggerInterface::class);
 
         $this->service = new ContactmomentService(
             $this->container,
-            $this->appConfig,
+            $this->ticketService,
             $this->groupManager,
             $this->logger,
         );
     }//end setUp()
 
     /**
-     * Test getConfig returns register and schema from app config.
+     * Test getConfig returns the register + unified ticket schema.
      *
      * @return void
      */
     public function testGetConfigReturnsSettings(): void
     {
-        $this->appConfig->method('getValueString')->willReturnMap([
-            ['pipelinq', 'register', '', 'reg-123'],
-            ['pipelinq', 'contactmoment_schema', '', 'schema-456'],
-        ]);
+        $this->ticketService->method('isConfigured')->willReturn(true);
+        $this->ticketService->method('getRegisterId')->willReturn('reg-123');
+        $this->ticketService->method('getSchemaId')->willReturn('ticket-456');
 
         $config = $this->service->getConfig();
 
         $this->assertSame('reg-123', $config['register']);
-        $this->assertSame('schema-456', $config['schema']);
+        $this->assertSame('ticket-456', $config['schema']);
     }//end testGetConfigReturnsSettings()
 
     /**
-     * Test getConfig throws when register is not configured.
+     * Test getConfig throws when the ticket surface is not configured.
      *
      * @return void
      */
     public function testGetConfigThrowsWhenMissing(): void
     {
-        $this->appConfig->method('getValueString')->willReturn('');
+        $this->ticketService->method('isConfigured')->willReturn(false);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Contactmoment register or schema not configured.');
 
         $this->service->getConfig();
     }//end testGetConfigThrowsWhenMissing()
+
+    /**
+     * The outbound audit writes a ticket with ticketType=contactmoment and the
+     * renamed ticket fields (title / description / occurredAt / assignee).
+     *
+     * @return void
+     */
+    public function testRecordOutboundMessageWritesContactmomentTicket(): void
+    {
+        $this->ticketService->method('isConfigured')->willReturn(true);
+        $this->ticketService->method('getRegisterId')->willReturn('reg-123');
+        $this->ticketService->method('getSchemaId')->willReturn('ticket-456');
+
+        // The audit write is issued through the duck-typed OpenRegister probe
+        // (it must never depend on the concrete OR class being loadable).
+        $objectService = new class {
+            /** @var array<int, array<string, mixed>> */
+            public array $saves = [];
+
+            /**
+             * @param array<string, mixed> $object   Payload.
+             * @param mixed                $register Register.
+             * @param mixed                $schema   Schema.
+             * @param string|null          $uuid     Uuid.
+             *
+             * @return array<string, mixed> The saved row.
+             */
+            public function saveObject(array $object, $register=null, $schema=null, ?string $uuid=null): array
+            {
+                $this->saves[] = ['payload' => $object, 'register' => $register, 'schema' => $schema];
+                $object['uuid'] = 'ticket-uuid-1';
+                return $object;
+            }
+        };
+
+        $this->container->method('get')->willReturn($objectService);
+
+        $uuid = $this->service->recordOutboundMessage(
+            channel: 'sms',
+            subject: 'Outbound SMS',
+            summary: 'Your request is being handled.',
+            channelMetadata: ['platform' => 'sms', 'direction' => 'outbound'],
+            clientId: 'client-1',
+            agent: 'agent-1',
+        );
+
+        $this->assertSame('ticket-uuid-1', $uuid);
+        $this->assertCount(1, $objectService->saves);
+
+        $save = $objectService->saves[0];
+        $this->assertSame('reg-123', $save['register']);
+        $this->assertSame('ticket-456', $save['schema']);
+
+        $payload = $save['payload'];
+        $this->assertSame(TicketService::TYPE_CONTACTMOMENT, $payload['ticketType']);
+        $this->assertSame('Outbound SMS', $payload['title']);
+        $this->assertSame('Your request is being handled.', $payload['description']);
+        $this->assertSame('sms', $payload['channel']);
+        $this->assertSame('client-1', $payload['client']);
+        $this->assertSame('agent-1', $payload['assignee']);
+        $this->assertArrayHasKey('occurredAt', $payload);
+        // Legacy contactmoment field names must not survive the cutover.
+        $this->assertArrayNotHasKey('subject', $payload);
+        $this->assertArrayNotHasKey('summary', $payload);
+        $this->assertArrayNotHasKey('agent', $payload);
+        $this->assertArrayNotHasKey('contactedAt', $payload);
+    }//end testRecordOutboundMessageWritesContactmomentTicket()
+
+    /**
+     * The audit is log-and-continue: an unconfigured ticket schema returns null
+     * instead of throwing.
+     *
+     * @return void
+     */
+    public function testRecordOutboundMessageSkipsWhenUnconfigured(): void
+    {
+        $this->ticketService->method('isConfigured')->willReturn(false);
+        $this->container->expects($this->never())->method('get');
+
+        $this->assertNull(
+            $this->service->recordOutboundMessage(
+                channel: 'sms',
+                subject: 'Outbound SMS',
+                summary: 'Body',
+                channelMetadata: [],
+            )
+        );
+    }//end testRecordOutboundMessageSkipsWhenUnconfigured()
 
     /**
      * Test getObjectService throws when OpenRegister is unavailable.

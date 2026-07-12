@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Service\WorklistService;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -55,9 +56,21 @@ class WorklistServiceTest extends TestCase
     private ?object $objectService = null;
 
     /**
+     * Captured TicketService::findByType() calls of the most recently built
+     * service, in call order: {ticketType, filters, limit}.
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    private array $ticketCalls = [];
+
+    /**
      * Build a service with deterministic config and a fake ObjectService.
      *
-     * @param array<string, array<int, array<string, mixed>>> $byCollection           Per-schema fixture rows.
+     * Request fixtures are keyed `ticket_schema:request`: requests are a
+     * subtype of the unified `ticket` schema, narrowed with a `ticketType`
+     * filter rather than read from a schema of their own.
+     *
+     * @param array<string, array<int, array<string, mixed>>> $byCollection           Per-collection fixture rows.
      * @param bool                                            $registerMissing        Force the app-config `register` empty.
      * @param bool                                            $throwFromObjectService Force the fake to throw on findAll.
      *
@@ -104,8 +117,12 @@ class WorklistServiceTest extends TestCase
                 if ($this->throwAlways === true) {
                     throw new \RuntimeException('boom');
                 }
-                $schema = (string) ($config['filters']['schema'] ?? '');
-                return $this->byCollection[$schema] ?? [];
+                $filters = ($config['filters'] ?? []);
+                $key     = (string) ($filters['schema'] ?? '');
+                if (isset($filters['ticketType']) === true) {
+                    $key .= ':'.(string) $filters['ticketType'];
+                }
+                return $this->byCollection[$key] ?? [];
             }
         };
 
@@ -121,7 +138,42 @@ class WorklistServiceTest extends TestCase
 
         $logger = $this->createMock(LoggerInterface::class);
 
-        return new WorklistService(container: $container, appConfig: $appConfig, l10n: $l10n, logger: $logger);
+        // TicketService stub serving the `ticket_schema:<ticketType>` fixtures.
+        // It records its calls so the pushed-down assignee filter and fetch cap
+        // stay assertable, and mirrors the real resolver's fail-soft contract
+        // (unconfigured register / OR failure -> empty row set, never a throw).
+        $this->ticketCalls = [];
+        $ticketService     = $this->createMock(TicketService::class);
+        $ticketService->method('getRegisterId')->willReturn($registerMissing === true ? '' : 'register-1');
+        $ticketService->method('getSchemaId')->willReturn('ticket_schema');
+        $ticketService->method('isConfigured')->willReturn($registerMissing === false);
+        $ticketService->method('findByType')->willReturnCallback(
+            function (string $ticketType, array $extraFilters = [], int $limit = 10000) use (
+                $byCollection,
+                $registerMissing,
+                $throwFromObjectService
+            ): array {
+                $this->ticketCalls[] = [
+                    'ticketType' => $ticketType,
+                    'filters'    => $extraFilters,
+                    'limit'      => $limit,
+                ];
+
+                if ($registerMissing === true || $throwFromObjectService === true) {
+                    return [];
+                }
+
+                return $byCollection['ticket_schema:'.$ticketType] ?? [];
+            }
+        );
+
+        return new WorklistService(
+            container: $container,
+            appConfig: $appConfig,
+            l10n: $l10n,
+            logger: $logger,
+            ticketService: $ticketService
+        );
     }
 
     /**
@@ -154,13 +206,13 @@ class WorklistServiceTest extends TestCase
                     'expectedCloseDate' => self::iso('+5 days'),
                 ],
             ],
-            'request_schema' => [
+            'ticket_schema:request' => [
                 [
                     'id'          => 'req-1',
                     'title'       => 'Support question',
                     'status'      => 'in_progress',
                     'priority'    => 'low',
-                    'requestedAt' => self::iso('-2 days'),
+                    'occurredAt' => self::iso('-2 days'),
                 ],
             ],
         ]);
@@ -188,7 +240,9 @@ class WorklistServiceTest extends TestCase
         // Status label mirrors the client STATUS_LABELS map (requestStatus.js:15-21).
         $this->assertSame('In progress', $request['stageOrStatus']);
         $this->assertFalse($request['isOverdue']);
-        $this->assertSame('RequestDetail', $request['routeName']);
+        // unify-ticket-supertype: request-type tickets open on the single unified
+        // detail page; the RequestDetail page was retired with its schema.
+        $this->assertSame('TicketDetail', $request['routeName']);
     }
 
     /**
@@ -260,7 +314,7 @@ class WorklistServiceTest extends TestCase
     public function testTerminalRequestsAreExcluded(): void
     {
         $service = $this->buildService(byCollection: [
-            'request_schema' => [
+            'ticket_schema:request' => [
                 ['id' => 'r-new', 'title' => 'A', 'status' => 'new'],
                 ['id' => 'r-progress', 'title' => 'B', 'status' => 'in_progress'],
                 ['id' => 'r-completed', 'title' => 'C', 'status' => 'completed'],
@@ -277,17 +331,18 @@ class WorklistServiceTest extends TestCase
     }
 
     /**
-     * A request is overdue only when requestedAt is older than 30 days
+     * A request is overdue only when its occurredAt (the ticket-schema name of
+     * the request's requestedAt) is older than 30 days
      * (MyWorkWidget.vue:99 — strictly greater than the 30-day window).
      *
      * @return void
      */
-    public function testRequestOverdueOnlyWhenRequestedAtOlderThanThirtyDays(): void
+    public function testRequestOverdueOnlyWhenOccurredAtOlderThanThirtyDays(): void
     {
         $service = $this->buildService(byCollection: [
-            'request_schema' => [
-                ['id' => 'old', 'title' => 'Old', 'status' => 'new', 'requestedAt' => self::iso('-31 days')],
-                ['id' => 'recent', 'title' => 'Recent', 'status' => 'new', 'requestedAt' => self::iso('-29 days')],
+            'ticket_schema:request' => [
+                ['id' => 'old', 'title' => 'Old', 'status' => 'new', 'occurredAt' => self::iso('-31 days')],
+                ['id' => 'recent', 'title' => 'Recent', 'status' => 'new', 'occurredAt' => self::iso('-29 days')],
                 ['id' => 'undated', 'title' => 'Undated', 'status' => 'new'],
             ],
         ]);
@@ -343,20 +398,20 @@ class WorklistServiceTest extends TestCase
                     'priority' => 'urgent',
                 ],
             ],
-            'request_schema' => [
+            'ticket_schema:request' => [
                 [
                     'id'          => 'req-overdue-urgent',
                     'title'       => 'Overdue urgent',
                     'status'      => 'new',
                     'priority'    => 'urgent',
-                    'requestedAt' => self::iso('-40 days'),
+                    'occurredAt' => self::iso('-40 days'),
                 ],
                 [
                     'id'          => 'req-low',
                     'title'       => 'Low prio',
                     'status'      => 'new',
                     'priority'    => 'low',
-                    'requestedAt' => self::iso('-1 day'),
+                    'occurredAt' => self::iso('-1 day'),
                 ],
             ],
         ]);
@@ -410,8 +465,8 @@ class WorklistServiceTest extends TestCase
         }
 
         $service = $this->buildService(byCollection: [
-            'lead_schema'    => $leads,
-            'request_schema' => $requests,
+            'lead_schema'           => $leads,
+            'ticket_schema:request' => $requests,
         ]);
 
         $result = $service->getMine(userId: 'alice', limit: 5);
@@ -426,6 +481,8 @@ class WorklistServiceTest extends TestCase
      * Assignee scoping and fetch caps are pushed into the OpenRegister
      * query: leads/requests filter on assignee with limit 200, pipelines
      * are unscoped with limit 100 (mirrors dashboardData.js:126,160-175).
+     * Requests are queried on the unified ticket schema with a
+     * `ticketType: request` discriminator instead of on `request_schema`.
      *
      * @return void
      */
@@ -434,23 +491,37 @@ class WorklistServiceTest extends TestCase
         $service = $this->buildService(byCollection: []);
         $service->getMine(userId: 'alice');
 
+        // Leads + pipelines go straight to OpenRegister; requests go through
+        // the ticket resolver, so only two raw findAll() calls remain.
         $calls = $this->objectService->calls;
-        $this->assertCount(3, $calls);
+        $this->assertCount(2, $calls);
 
         $byQueriedSchema = [];
         foreach ($calls as $call) {
             $byQueriedSchema[(string) $call['filters']['schema']] = $call;
         }
 
+        $this->assertArrayNotHasKey('request_schema', $byQueriedSchema);
+
         $this->assertSame('alice', $byQueriedSchema['lead_schema']['filters']['assignee']);
         $this->assertSame(200, $byQueriedSchema['lead_schema']['limit']);
         $this->assertSame('register-1', $byQueriedSchema['lead_schema']['filters']['register']);
 
-        $this->assertSame('alice', $byQueriedSchema['request_schema']['filters']['assignee']);
-        $this->assertSame(200, $byQueriedSchema['request_schema']['limit']);
-
         $this->assertArrayNotHasKey('assignee', $byQueriedSchema['pipeline_schema']['filters']);
         $this->assertSame(100, $byQueriedSchema['pipeline_schema']['limit']);
+
+        // The request query narrows the unified ticket schema on ticketType and
+        // still pushes the assignee filter + the 200-row cap into OpenRegister.
+        $this->assertSame(
+            [
+                [
+                    'ticketType' => TicketService::TYPE_REQUEST,
+                    'filters'    => ['assignee' => 'alice'],
+                    'limit'      => 200,
+                ],
+            ],
+            $this->ticketCalls
+        );
     }
 
     /**
@@ -466,7 +537,7 @@ class WorklistServiceTest extends TestCase
             'lead_schema' => [
                 ['id' => 'lead-min', 'title' => 'Minimal lead'],
             ],
-            'request_schema' => [
+            'ticket_schema:request' => [
                 ['id' => 'req-odd', 'title' => 'Odd status', 'status' => 'somethingelse'],
             ],
         ]);

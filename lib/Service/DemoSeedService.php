@@ -6,18 +6,26 @@
  * Idempotent demo-data seed shared by the `occ pipelinq:demo:seed` command and
  * the optional `seed-demo-data` setup-wizard action (one write path, ADR-042).
  * Seeds a small coherent linked dataset — clients (person + organisation),
- * leads across pipeline stages, requests across statuses, and contactmomenten
- * across channels — from lib/Settings/demo_seed_data.json so lists, dashboards
- * and the 360° client view render populated on a fresh install.
+ * leads across pipeline stages, request tickets across statuses, and
+ * contactmoment tickets across channels — from lib/Settings/demo_seed_data.json
+ * so lists, dashboards and the 360° client view render populated on a fresh
+ * install.
+ *
+ * Since unify-ticket-supertype the requests and contactmomenten sections both
+ * seed the unified `ticket` schema, distinguished by the `ticketType`
+ * discriminator and written through {@see TicketService}. The seed file keeps
+ * its legacy (request / contactmoment) field names; they are mapped onto the
+ * ticket field names on load — see self::TICKET_FIELD_MAP.
  *
  * Every seeded object is marked with the `[Demo]` prefix on its lookup field
- * (client.name / lead.title / request.title / contactmoment.subject). The seed
- * is idempotent via exact-match lookup on that field, and `remove()` deletes
- * exactly the seeded set and nothing else. Client identities are provisioned
- * contact-first via ContactVcardService (the client schema requires
- * `contactsUid`); the backing Nextcloud addressbook contacts are matched or
- * created by that service and are intentionally NOT deleted by `remove()` —
- * they may be pre-existing addressbook entries the provisioning matched.
+ * (client.name / lead.title / ticket.title). The seed is idempotent via
+ * exact-match lookup on that field (narrowed by `ticketType` for tickets), and
+ * `remove()` deletes exactly the seeded set and nothing else. Client identities
+ * are provisioned contact-first via ContactVcardService (the client schema
+ * requires `contactsUid`); the backing Nextcloud addressbook contacts are
+ * matched or created by that service and are intentionally NOT deleted by
+ * `remove()` — they may be pre-existing addressbook entries the provisioning
+ * matched.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -51,6 +59,7 @@ use Psr\Log\LoggerInterface;
  * Idempotent demo-data seeding + removal against OpenRegister.
  *
  * @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+ * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class DemoSeedService
 {
@@ -62,18 +71,65 @@ class DemoSeedService
     public const DEMO_PREFIX = '[Demo]';
 
     /**
-     * Entity sections in seed order: section => [schemaConfigKey, lookupField].
+     * App-config key holding the unified ticket schema id.
+     *
+     * @var string
+     */
+    private const TICKET_SCHEMA_KEY = 'ticket_schema';
+
+    /**
+     * Entity sections in seed order: section => [schemaConfigKey, lookupField, ticketType].
+     *
+     * `ticketType` is null for sections that own their own schema, and one of
+     * the TicketService TYPE_* values for the sections folded into `ticket`.
      *
      * Seed order matters (clients before the objects that link to them);
      * removal runs in reverse.
      *
-     * @var array<string, array{0: string, 1: string}>
+     * @var array<string, array{0: string, 1: string, 2: string|null}>
      */
     private const SECTIONS = [
-        'clients'         => ['client_schema', 'name'],
-        'leads'           => ['lead_schema', 'title'],
-        'requests'        => ['request_schema', 'title'],
-        'contactmomenten' => ['contactmoment_schema', 'subject'],
+        'clients'         => ['client_schema', 'name', null],
+        'leads'           => ['lead_schema', 'title', null],
+        'requests'        => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_REQUEST],
+        'contactmomenten' => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_CONTACTMOMENT],
+    ];
+
+    /**
+     * Legacy seed-file field name => ticket field name, per ticket type.
+     *
+     * The shipped demo_seed_data.json still speaks the pre-unification field
+     * names; they are renamed onto the ticket supertype at load time.
+     *
+     * @var array<string, array<string, string>>
+     */
+    private const TICKET_FIELD_MAP = [
+        TicketService::TYPE_REQUEST       => ['requestedAt' => 'occurredAt'],
+        TicketService::TYPE_CONTACTMOMENT => [
+            'subject'     => 'title',
+            'summary'     => 'description',
+            'contactedAt' => 'occurredAt',
+            'agent'       => 'assignee',
+        ],
+    ];
+
+    /**
+     * Contactmoment `outcome` => unified ticket `status`.
+     *
+     * The legacy contactmoment schema had no status field; the ticket supertype
+     * does. Mirrors the mapping the MigrateToTicketSupertype repair step applied
+     * to the historical records, so seeded and migrated contactmomenten present
+     * identically in the Tickets workspace.
+     *
+     * @var array<string, string>
+     */
+    private const OUTCOME_STATUS = [
+        'afgehandeld'     => 'resolved',
+        'opgelost'        => 'resolved',
+        'doorverbonden'   => 'closed',
+        'doorverwezen'    => 'closed',
+        'terugbelverzoek' => 'in_progress',
+        'vervolgactie'    => 'in_progress',
     ];
 
     /**
@@ -82,12 +138,14 @@ class DemoSeedService
      * @param IAppConfig          $appConfig           App config (register/schema ids).
      * @param ContainerInterface  $container           Container for the OpenRegister ObjectService.
      * @param ContactVcardService $contactVcardService Contact-first identity provisioning (client.contactsUid).
+     * @param TicketService       $ticketService       Unified ticket resolver + write path.
      * @param LoggerInterface     $logger              Logger.
      */
     public function __construct(
         private readonly IAppConfig $appConfig,
         private readonly ContainerInterface $container,
         private readonly ContactVcardService $contactVcardService,
+        private readonly TicketService $ticketService,
         private readonly LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -118,7 +176,7 @@ class DemoSeedService
         // Maps section-local keys (e.g. clientKey "bakkerij") to saved uuids.
         $uuids = [];
 
-        foreach (self::SECTIONS as $section => [$schemaKey, $lookupField]) {
+        foreach (self::SECTIONS as $section => [$schemaKey, $lookupField, $ticketType]) {
             $created[$section] = 0;
             $skipped[$section] = 0;
 
@@ -128,11 +186,17 @@ class DemoSeedService
                 registerId: $registerId,
                 schemaId: $schemaIds[$schemaKey],
                 lookupField: $lookupField,
+                ticketType: $ticketType,
             );
 
             foreach (($definitions[$section] ?? []) as $definition) {
                 $data = $this->resolvePlaceholders(data: $definition['data']);
-                $data = $this->linkReferences(data: $data, definition: $definition, uuids: $uuids);
+                $data = $this->linkReferences(
+                    data: $data,
+                    definition: $definition,
+                    uuids: $uuids,
+                    ticketType: $ticketType,
+                );
 
                 $existingUuid = $index[(string) $data[$lookupField]][0] ?? null;
 
@@ -166,13 +230,22 @@ class DemoSeedService
                     $data['contactsUid'] = $provision['contactsUid'];
                 }
 
-                $saved = $objectService->saveObject(
-                    $data,
-                    [],
-                    $registerId,
-                    $schemaIds[$schemaKey],
-                    null
-                );
+                if ($ticketType !== null) {
+                    // Ticket sections write the unified schema with the
+                    // discriminator forced on by TicketService.
+                    $saved = $this->ticketService->save(
+                        ticketType: $ticketType,
+                        payload: $data,
+                    );
+                } else {
+                    $saved = $objectService->saveObject(
+                        $data,
+                        [],
+                        $registerId,
+                        $schemaIds[$schemaKey],
+                        null
+                    );
+                }
 
                 $uuids[$section.':'.$definition['key']] = (string) $saved->getUuid();
                 $created[$section]++;
@@ -185,8 +258,7 @@ class DemoSeedService
     /**
      * Remove exactly the seeded demo set (lookup-field exact match, [Demo] prefix guarded).
      *
-     * Archival (append-only) schemas — contactmoment declares
-     * x-openregister-archival — forbid user-driven deletes by design; their
+     * Archival (append-only) schemas forbid user-driven deletes by design; their
      * demo rows are reported as `retained` and expire via the OpenRegister
      * ArchivalRetentionTask cron instead.
      *
@@ -212,7 +284,7 @@ class DemoSeedService
         $retained = [];
         $sections = array_reverse(self::SECTIONS, true);
 
-        foreach ($sections as $section => [$schemaKey, $lookupField]) {
+        foreach ($sections as $section => [$schemaKey, $lookupField, $ticketType]) {
             $removed[$section]  = 0;
             $retained[$section] = 0;
 
@@ -223,6 +295,7 @@ class DemoSeedService
                 registerId: $registerId,
                 schemaId: $schemaIds[$schemaKey],
                 lookupField: $lookupField,
+                ticketType: $ticketType,
             );
 
             foreach (($definitions[$section] ?? []) as $definition) {
@@ -267,7 +340,16 @@ class DemoSeedService
 
         $schemaIds = [];
         foreach (self::SECTIONS as [$schemaKey]) {
+            if (isset($schemaIds[$schemaKey]) === true) {
+                continue;
+            }
+
             $schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+            if ($schemaKey === self::TICKET_SCHEMA_KEY) {
+                // The ticket schema has one resolution point (TicketService).
+                $schemaId = $this->ticketService->getSchemaId();
+            }
+
             if ($schemaId === '') {
                 return null;
             }
@@ -279,6 +361,8 @@ class DemoSeedService
         if ($definitions === null) {
             return null;
         }
+
+        $definitions = $this->mapDefinitionsToTickets(definitions: $definitions);
 
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
@@ -318,12 +402,14 @@ class DemoSeedService
      * Deliberately scans and matches in PHP instead of pushing an equality
      * filter down: magic-table filterability is schema-dependent (e.g.
      * lead.title equality filters silently match nothing on a live install),
-     * and a false negative here would break idempotency.
+     * and a false negative here would break idempotency. For the same reason
+     * the `ticketType` narrowing is applied in PHP over the scanned rows.
      *
-     * @param object $objectService The OpenRegister ObjectService.
-     * @param string $registerId    Register id.
-     * @param string $schemaId      Schema id.
-     * @param string $lookupField   Field used as the stable demo identifier.
+     * @param object      $objectService The OpenRegister ObjectService.
+     * @param string      $registerId    Register id.
+     * @param string      $schemaId      Schema id.
+     * @param string      $lookupField   Field used as the stable demo identifier.
+     * @param string|null $ticketType    Ticket subtype to narrow on, or null for own-schema sections.
      *
      * @return array<string, array<int, string>> Map of lookup value => uuids.
      */
@@ -332,6 +418,7 @@ class DemoSeedService
         string $registerId,
         string $schemaId,
         string $lookupField,
+        ?string $ticketType=null,
     ): array {
         $existing = $objectService->findAll(
             [
@@ -354,6 +441,10 @@ class DemoSeedService
                 continue;
             }
 
+            if ($ticketType !== null && ($data['ticketType'] ?? null) !== $ticketType) {
+                continue;
+            }
+
             $value = (string) ($data[$lookupField] ?? '');
             $uuid  = (string) ($data['id'] ?? ($data['uuid'] ?? ''));
             if ($value === '' || $uuid === '') {
@@ -365,6 +456,66 @@ class DemoSeedService
 
         return $index;
     }//end buildLookupIndex()
+
+    /**
+     * Rewrite the ticket sections of the seed definitions onto ticket fields.
+     *
+     * The shipped seed file still carries the pre-unification field names; this
+     * renames them (self::TICKET_FIELD_MAP), derives the contactmoment `status`
+     * from its `outcome`, and stamps the `ticketType` discriminator so both the
+     * seed and the removal lookup see one ticket-shaped payload.
+     *
+     * @param array<string, array<int, array<string, mixed>>> $definitions Raw seed definitions.
+     *
+     * @return array<string, array<int, array<string, mixed>>> Ticket-shaped definitions.
+     */
+    private function mapDefinitionsToTickets(array $definitions): array
+    {
+        foreach (self::SECTIONS as $section => [, , $ticketType]) {
+            if ($ticketType === null || isset($definitions[$section]) === false) {
+                continue;
+            }
+
+            foreach ($definitions[$section] as $i => $definition) {
+                $definitions[$section][$i]['data'] = $this->toTicketData(
+                    data: ($definition['data'] ?? []),
+                    ticketType: $ticketType,
+                );
+            }
+        }
+
+        return $definitions;
+    }//end mapDefinitionsToTickets()
+
+    /**
+     * Map one legacy seed payload onto the ticket supertype fields.
+     *
+     * @param array<string, mixed> $data       Raw definition data (legacy field names).
+     * @param string               $ticketType One of the TicketService TYPE_* values.
+     *
+     * @return array<string, mixed> Ticket-shaped payload.
+     */
+    private function toTicketData(array $data, string $ticketType): array
+    {
+        foreach ((self::TICKET_FIELD_MAP[$ticketType] ?? []) as $legacy => $field) {
+            if (array_key_exists($legacy, $data) === false) {
+                continue;
+            }
+
+            $data[$field] = $data[$legacy];
+            unset($data[$legacy]);
+        }
+
+        // The legacy contactmoment had no status; the ticket supertype does.
+        if ($ticketType === TicketService::TYPE_CONTACTMOMENT && isset($data['status']) === false) {
+            $outcome        = (string) ($data['outcome'] ?? '');
+            $data['status'] = (self::OUTCOME_STATUS[$outcome] ?? 'new');
+        }
+
+        $data['ticketType'] = $ticketType;
+
+        return $data;
+    }//end toTicketData()
 
     /**
      * Normalise a findAll row (ObjectEntity or rendered array) to an array.
@@ -422,13 +573,17 @@ class DemoSeedService
     /**
      * Wire clientKey / requestKey references onto the payload as uuids.
      *
+     * On a ticket the parent-request link is `parentTicket` (the legacy
+     * contactmoment field was `request`).
+     *
      * @param array<string, mixed>  $data       Definition data.
      * @param array<string, mixed>  $definition Full definition (may carry clientKey/requestKey).
      * @param array<string, string> $uuids      Already-seeded uuid map (section:key => uuid).
+     * @param string|null           $ticketType Ticket subtype, or null for own-schema sections.
      *
      * @return array<string, mixed> Data with relation fields set.
      */
-    private function linkReferences(array $data, array $definition, array $uuids): array
+    private function linkReferences(array $data, array $definition, array $uuids, ?string $ticketType=null): array
     {
         if (isset($definition['clientKey']) === true) {
             $clientUuid = $uuids['clients:'.$definition['clientKey']] ?? null;
@@ -440,7 +595,12 @@ class DemoSeedService
         if (isset($definition['requestKey']) === true) {
             $requestUuid = $uuids['requests:'.$definition['requestKey']] ?? null;
             if ($requestUuid !== null) {
-                $data['request'] = $requestUuid;
+                $field = 'request';
+                if ($ticketType !== null) {
+                    $field = 'parentTicket';
+                }
+
+                $data[$field] = $requestUuid;
             }
         }
 

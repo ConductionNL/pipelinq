@@ -26,7 +26,9 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\Service\AnalyticsService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,7 +42,11 @@ class AnalyticsServiceTest extends TestCase
     /**
      * Build a service with deterministic config and a fake ObjectService.
      *
-     * @param array<string, array<int, array<string, mixed>>> $byCollection           Per-schema fixture rows.
+     * Ticket subtypes (request / complaint / contactmoment) all live on the one
+     * `ticket` schema, so their fixtures are keyed `ticket_schema:<ticketType>`
+     * — the fake mirrors the `ticketType` discriminator the service filters on.
+     *
+     * @param array<string, array<int, array<string, mixed>>> $byCollection           Per-collection fixture rows.
      * @param bool                                            $registerMissing        Force the app-config `register` empty.
      * @param bool                                            $throwFromObjectService Force the fake to throw on findAll.
      *
@@ -79,8 +85,12 @@ class AnalyticsServiceTest extends TestCase
                 if ($this->throwAlways === true) {
                     throw new \RuntimeException('boom');
                 }
-                $schema = (string) ($config['filters']['schema'] ?? '');
-                return $this->byCollection[$schema] ?? [];
+                $filters = ($config['filters'] ?? []);
+                $key     = (string) ($filters['schema'] ?? '');
+                if (isset($filters['ticketType']) === true) {
+                    $key .= ':'.(string) $filters['ticketType'];
+                }
+                return $this->byCollection[$key] ?? [];
             }
         };
 
@@ -89,7 +99,44 @@ class AnalyticsServiceTest extends TestCase
 
         $logger = $this->createMock(LoggerInterface::class);
 
-        return new AnalyticsService(container: $container, appConfig: $appConfig, logger: $logger);
+        return new AnalyticsService(
+            container: $container,
+            appConfig: $appConfig,
+            logger: $logger,
+            ticketService: $this->createTicketService(
+                byCollection: $byCollection,
+                registerMissing: $registerMissing
+            )
+        );
+    }
+
+    /**
+     * A TicketService stub serving the `ticket_schema:<ticketType>` fixtures.
+     *
+     * Mirrors the real resolver's fail-soft contract: an unconfigured register
+     * yields an empty row set rather than an exception.
+     *
+     * @param array<string, array<int, array<string, mixed>>> $byCollection    Per-collection fixture rows.
+     * @param bool                                            $registerMissing Force the ticket surface unconfigured.
+     *
+     * @return TicketService&MockObject
+     */
+    private function createTicketService(array $byCollection, bool $registerMissing): TicketService
+    {
+        $ticketService = $this->createMock(TicketService::class);
+        $ticketService->method('getRegisterId')->willReturn($registerMissing === true ? '' : 'register-1');
+        $ticketService->method('getSchemaId')->willReturn('ticket_schema');
+        $ticketService->method('isConfigured')->willReturn($registerMissing === false);
+        $ticketService->method('findByType')->willReturnCallback(
+            static function (string $ticketType) use ($byCollection, $registerMissing): array {
+                if ($registerMissing === true) {
+                    return [];
+                }
+                return $byCollection['ticket_schema:'.$ticketType] ?? [];
+            }
+        );
+
+        return $ticketService;
     }
 
     /**
@@ -112,13 +159,15 @@ class AnalyticsServiceTest extends TestCase
                 ['status' => 'open', 'createdAt' => $recent,  'value' => 0],
                 ['status' => 'won',  'createdAt' => $earlier, 'value' => 0],
             ],
-            'request_schema' => [
-                ['requestedAt' => $recent, 'completedAt' => $recent, 'status' => 'completed'],
+            // request.requestedAt -> ticket.occurredAt, completion -> resolvedAt.
+            'ticket_schema:request' => [
+                ['occurredAt' => $recent, 'resolvedAt' => $recent, 'status' => 'completed'],
             ],
-            'contactmoment_schema' => [
-                ['contactedAt' => $recent],
-                ['contactedAt' => $recent],
-                ['contactedAt' => $earlier],
+            // contactmoment.contactedAt -> ticket.occurredAt.
+            'ticket_schema:contactmoment' => [
+                ['occurredAt' => $recent],
+                ['occurredAt' => $recent],
+                ['occurredAt' => $earlier],
             ],
         ]);
 
@@ -198,11 +247,11 @@ class AnalyticsServiceTest extends TestCase
         $recent  = (new \DateTimeImmutable('-2 days'))->format(\DateTimeInterface::ATOM);
 
         $service = $this->buildService(byCollection: [
-            'request_schema' => [
-                ['requestedAt' => $recent, 'category' => 'belastingen'],
-                ['requestedAt' => $recent, 'category' => 'belastingen'],
-                ['requestedAt' => $recent, 'category' => 'vergunningen'],
-                ['requestedAt' => $recent, 'category' => ''],
+            'ticket_schema:request' => [
+                ['occurredAt' => $recent, 'category' => 'belastingen'],
+                ['occurredAt' => $recent, 'category' => 'belastingen'],
+                ['occurredAt' => $recent, 'category' => 'vergunningen'],
+                ['occurredAt' => $recent, 'category' => ''],
             ],
         ]);
 
@@ -229,7 +278,7 @@ class AnalyticsServiceTest extends TestCase
                 ['status' => 'won'],
                 ['status' => 'lost'],
             ],
-            'request_schema' => [
+            'ticket_schema:request' => [
                 ['status' => 'new'],
                 ['status' => 'completed'],
                 ['status' => 'completed'],

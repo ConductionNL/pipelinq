@@ -68,11 +68,15 @@ class KccWerkplekService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container DI container — used to resolve the
-     *                                      OpenRegister `ObjectService` lazily.
-     * @param IAppConfig         $appConfig App config — used to read the
-     *                                      register slug and schema slugs.
-     * @param LoggerInterface    $logger    Logger.
+     * @param ContainerInterface $container     DI container — used to resolve the
+     *                                          OpenRegister `ObjectService` lazily.
+     * @param IAppConfig         $appConfig     App config — used to read the
+     *                                          register slug and schema slugs.
+     * @param LoggerInterface    $logger        Logger.
+     * @param TicketService      $ticketService Resolver for the unified `ticket`
+     *                                          supertype — the workspace inbox reads
+     *                                          `ticket` + `ticketType=request` instead
+     *                                          of the retired `request` schema.
      *
      * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
      */
@@ -80,6 +84,7 @@ class KccWerkplekService
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
+        private TicketService $ticketService,
     ) {
     }//end __construct()
 
@@ -135,7 +140,7 @@ class KccWerkplekService
     /**
      * Read a schema slug from the app config, falling back to a static key.
      *
-     * @param string $schemaKey App config key (e.g. `request_schema`).
+     * @param string $schemaKey App config key (e.g. `task_schema`).
      *
      * @return string Resolved schema slug, or empty string when missing.
      *
@@ -191,7 +196,7 @@ class KccWerkplekService
      * Find all objects of a given schema, swallowing OR outages so a partial
      * workspace still renders (REQ-KWP-010 - the page must remain usable).
      *
-     * @param string $schemaKey App config key (e.g. `request_schema`).
+     * @param string $schemaKey App config key (e.g. `queue_schema`).
      *
      * @return array<int, array<string, mixed>> Plain object arrays.
      *
@@ -238,7 +243,7 @@ class KccWerkplekService
      * field criteria (a scalar value is `eq`, an array value is `IN`). Swallows
      * OR outages so a partial workspace still renders, mirroring findAllSafe().
      *
-     * @param string               $schemaKey App config key (e.g. `request_schema`).
+     * @param string               $schemaKey App config key (e.g. `task_schema`).
      * @param array<string, mixed> $filters   Field criteria (eq / IN).
      *
      * @return array<int, array<string, mixed>> Plain object arrays.
@@ -278,6 +283,41 @@ class KccWerkplekService
     }//end findFilteredSafe()
 
     /**
+     * Find tickets of one subtype matching the given equality / IN filters.
+     *
+     * The `request` subtype of the unified `ticket` schema replaces the retired
+     * `request` schema (unify-ticket-supertype); resolution goes through
+     * {@see TicketService} so register/schema/discriminator stay in one place.
+     * TicketService::findByType already degrades to `[]` on an unprovisioned
+     * install or an OR outage, mirroring findFilteredSafe()'s fail-soft contract
+     * so a partial workspace still renders.
+     *
+     * @param string               $ticketType One of the TicketService::TYPE_* constants.
+     * @param array<string, mixed> $filters    Field criteria (eq / IN).
+     *
+     * @return array<int, array<string, mixed>> Plain object arrays.
+     *
+     * @spec openspec/changes/pipelinq-query-pushdown-batch-3/tasks.md#task-2.2
+     */
+    private function findTicketsSafe(string $ticketType, array $filters): array
+    {
+        if ($this->ticketService->isConfigured() === false) {
+            $this->logger->info(
+                message: '[KccWerkplekService] register or ticket schema not configured',
+                context: ['ticketType' => $ticketType]
+            );
+            return [];
+        }
+
+        $out = [];
+        foreach ($this->ticketService->findByType($ticketType, $filters) as $result) {
+            $out[] = $this->toArray(object: $result);
+        }
+
+        return $out;
+    }//end findTicketsSafe()
+
+    /**
      * Count open requests grouped by the stored `queue` field, pushing the
      * grouped COUNT down into OpenRegister rather than hydrating every request.
      *
@@ -294,16 +334,21 @@ class KccWerkplekService
      */
     private function openRequestCountsByQueue(): array
     {
-        $register = $this->getRegister();
-        $schema   = $this->getSchema(schemaKey: 'request_schema');
+        $register = $this->ticketService->getRegisterId();
+        $schema   = $this->ticketService->getSchemaId();
         if ($register === '' || $schema === '') {
             return [];
         }
 
         try {
+            // The grouped COUNT now runs over the unified `ticket` schema, so the
+            // `ticketType` discriminator narrows it back to requests only.
             $query  = AggregationQuery::create(
                 metric: 'count',
-                filter: ['status' => ['in' => self::OPEN_REQUEST_STATUSES]],
+                filter: [
+                    'ticketType' => TicketService::TYPE_REQUEST,
+                    'status'     => ['in' => self::OPEN_REQUEST_STATUSES],
+                ],
                 groupBy: ['field' => 'queue'],
             );
             $result = $this->getAggregationRunner()->runAdhocByRef(
@@ -360,8 +405,8 @@ class KccWerkplekService
         // an `eq` filter on `assignee` reproduces this exactly. The matching
         // subset keeps OpenRegister's natural order (the prior loop applied no
         // sort), so the lists are unchanged.
-        $assignedRequests = $this->findFilteredSafe(
-            schemaKey: 'request_schema',
+        $assignedRequests = $this->findTicketsSafe(
+            ticketType: TicketService::TYPE_REQUEST,
             filters: ['assignee' => $userId, 'status' => self::OPEN_REQUEST_STATUSES]
         );
 

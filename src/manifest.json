@@ -85,14 +85,14 @@
 				"name": "service_requests_total",
 				"type": "gauge",
 				"help": "Total service requests by status",
-				"source": { "kind": "objectCount", "register": "pipelinq", "schema": "request", "groupBy": ["status"] }
+				"source": { "kind": "objectCount", "register": "pipelinq", "schema": "ticket", "filter": { "ticketType": "request" }, "groupBy": ["status"] }
 			}
 		]
 	},
 	"deepLinks": [
 		{ "registerSlug": "pipelinq", "schemaSlug": "client", "urlTemplate": "/apps/pipelinq/clients/{uuid}", "displayName": "Client" },
 		{ "registerSlug": "pipelinq", "schemaSlug": "lead", "urlTemplate": "/apps/pipelinq/leads/{uuid}", "displayName": "Lead" },
-		{ "registerSlug": "pipelinq", "schemaSlug": "request", "urlTemplate": "/apps/pipelinq/requests/{uuid}", "displayName": "Request" },
+		{ "registerSlug": "pipelinq", "schemaSlug": "ticket", "urlTemplate": "/apps/pipelinq/tickets/{uuid}", "displayName": "Ticket" },
 		{ "registerSlug": "pipelinq", "schemaSlug": "contact", "urlTemplate": "/apps/pipelinq/contacts/{uuid}", "displayName": "Contact" }
 	],
 	"menu": [
@@ -132,10 +132,10 @@
 			"order": 40
 		},
 		{
-			"id": "Requests",
+			"id": "Tickets",
 			"label": "Tickets",
 			"icon": "icon-file",
-			"route": "Requests",
+			"route": "Tickets",
 			"order": 50
 		},
 		{
@@ -144,20 +144,6 @@
 			"icon": "icon-checkmark",
 			"route": "Tasks",
 			"order": 60
-		},
-		{
-			"id": "Contactmomenten",
-			"label": "Contactmomenten",
-			"icon": "icon-comment",
-			"route": "Contactmomenten",
-			"order": 70
-		},
-		{
-			"id": "Complaints",
-			"label": "Complaints",
-			"icon": "icon-error",
-			"route": "Complaints",
-			"order": 80
 		},
 		{
 			"id": "Products",
@@ -380,16 +366,16 @@
 				},
 				"widgets": [
 					{ "id": "open-leads",            "type": "stat", "title": "Open Leads", "content": { "label": "Open Leads", "icon": "FilterVariant", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open" } } } },
-					{ "id": "open-requests",         "type": "stat", "title": "Requests", "content": { "label": "Requests", "icon": "ClipboardList", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "request", "metric": "count", "filter": {} } } },
+					{ "id": "open-requests",         "type": "stat", "title": "Requests", "content": { "label": "Requests", "icon": "ClipboardList", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "ticket", "metric": "count", "filter": { "ticketType": "request" } } } },
 					{ "id": "pipeline-value",        "type": "stat", "title": "Pipeline Value", "content": { "label": "Pipeline Value", "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": {} } } },
 					{ "id": "overdue",               "type": "stat", "title": "Overdue", "content": { "label": "Overdue", "icon": "ScaleBalance", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open", "expectedCloseDate": { "lt": "@today" } } } } },
 					{ "id": "lead-conversion",       "type": "stat", "title": "Lead Conversion Rate", "content": { "label": "Lead Conversion Rate", "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "leadConversionRate", "previousField": "previousPeriod.leadConversionRate", "goodDirection": "up" } },
 					{ "id": "avg-resolution",        "type": "stat", "title": "Avg Request Resolution", "content": { "label": "Avg Request Resolution", "icon": "ClockOutline", "valueColor": "#0082c9", "format": { "style": "duration-hours", "decimals": 1 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "avgRequestResolutionTime", "previousField": "previousPeriod.avgRequestResolutionTime", "goodDirection": "down" } },
 					{ "id": "contact-volume",        "type": "stat", "title": "Contact Moment Volume", "content": { "label": "Contacts", "icon": "Account", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "contactMomentVolume", "previousField": "previousPeriod.contactMomentVolume", "goodDirection": "up" } },
 					{ "id": "leads-over-time",       "type": "chart", "title": "Leads over time", "content": { "chartKind": "area", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "bucket": { "field": "expectedCloseDate", "interval": "month", "metric": "count" } } } },
-					{ "id": "requests-by-category",  "type": "chart", "title": "Requests by category", "content": { "chartKind": "donut", "dataSource": { "register": "pipelinq", "schema": "request", "filter": {}, "groupBy": { "field": "category", "metric": "count", "sort": "desc" } } } },
-					{ "id": "requests-by-status",    "type": "chart", "title": "Requests by Status", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "request", "filter": {}, "groupBy": { "field": "status", "metric": "count", "sort": "desc" } } } },
-					{ "id": "complaints",            "type": "object-list", "title": "Complaints", "content": { "register": "pipelinq", "schema": "complaint", "filter": {}, "sort": { "field": "priority", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Complaint" }, { "key": "status", "label": "Status" }, { "key": "priority", "label": "Priority" }] } },
+					{ "id": "requests-by-category",  "type": "chart", "title": "Requests by category", "content": { "chartKind": "donut", "dataSource": { "register": "pipelinq", "schema": "ticket", "filter": { "ticketType": "request" }, "groupBy": { "field": "category", "metric": "count", "sort": "desc" } } } },
+					{ "id": "requests-by-status",    "type": "chart", "title": "Requests by Status", "content": { "chartKind": "bar", "dataSource": { "register": "pipelinq", "schema": "ticket", "filter": { "ticketType": "request" }, "groupBy": { "field": "status", "metric": "count", "sort": "desc" } } } },
+					{ "id": "complaints",            "type": "object-list", "title": "Complaints", "content": { "register": "pipelinq", "schema": "ticket", "filter": { "ticketType": "complaint" }, "sort": { "field": "priority", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Complaint" }, { "key": "status", "label": "Status" }, { "key": "priority", "label": "Priority" }] } },
 					{ "id": "my-work",               "type": "custom", "title": "My Work" },
 					{ "id": "client-overview",       "type": "object-table", "title": "Client Overview", "content": { "register": "pipelinq", "schema": "client", "filter": {}, "sort": { "field": "name", "dir": "asc" }, "limit": 5, "hideHeader": true, "borderless": true, "rowRoute": "ClientDetail", "viewAllRoute": { "name": "Clients" }, "viewAllLabel": "View all clients", "emptyText": "No clients yet", "columns": [{ "key": "name", "label": "Client", "cellClass": "cn-cell--strong" }, { "key": "email", "label": "Email", "cellClass": "cn-cell--muted cn-cell--end" }] } },
 					{ "id": "billing-categories",    "type": "custom", "title": "Hours by billing category" },
@@ -490,7 +476,7 @@
 						{ "title": "Won leads value", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "format": "currency", "filter": { "client": "@objectId", "status": "won" } }
 					] } },
 					{ "id": "client-kpis-new-requests", "type": "stats-block", "title": "New requests", "icon": "ChartBar", "content": { "entries": [
-						{ "title": "New requests", "register": "pipelinq", "schema": "request", "metric": "count", "filter": { "client": "@objectId", "status": "new" } }
+						{ "title": "New requests", "register": "pipelinq", "schema": "ticket", "metric": "count", "filter": { "ticketType": "request", "client": "@objectId", "status": "new" } }
 					] } },
 					{ "id": "client-email", "type": "integration", "integrationId": "email", "title": "Emails", "icon": "Email" },
 					{ "id": "client-files", "type": "integration", "integrationId": "files", "title": "Files", "icon": "FolderOutline" }
@@ -540,17 +526,17 @@
 					{
 						"title": "Requests",
 						"register": "pipelinq",
-						"schema": "request",
-						"filter": { "client": "@objectId" },
-						"sort": { "field": "requestedAt", "dir": "desc" },
+						"schema": "ticket",
+						"filter": { "ticketType": "request", "client": "@objectId" },
+						"sort": { "field": "occurredAt", "dir": "desc" },
 						"columns": [
 							{ "key": "title", "label": "Title" },
 							{ "key": "status", "label": "Status" },
 							{ "key": "priority", "label": "Priority" },
-							{ "key": "requestedAt", "label": "Requested" }
+							{ "key": "occurredAt", "label": "Requested" }
 						],
 						"limit": 10,
-						"rowRoute": "RequestDetail"
+						"rowRoute": "TicketDetail"
 					},
 					{
 						"title": "Projecten",
@@ -571,24 +557,24 @@
 					{
 						"title": "Contactmomenten",
 						"register": "pipelinq",
-						"schema": "contactmoment",
-						"filter": { "client": "@objectId" },
-						"sort": { "field": "contactedAt", "dir": "desc" },
+						"schema": "ticket",
+						"filter": { "ticketType": "contactmoment", "client": "@objectId" },
+						"sort": { "field": "occurredAt", "dir": "desc" },
 						"columns": [
-							{ "key": "subject", "label": "Subject" },
+							{ "key": "title", "label": "Subject" },
 							{ "key": "channel", "label": "Channel" },
-							{ "key": "contactedAt", "label": "Date" },
-							{ "key": "agent", "label": "Agent" },
+							{ "key": "occurredAt", "label": "Date" },
+							{ "key": "assignee", "label": "Agent" },
 							{ "key": "outcome", "label": "Outcome" }
 						],
 						"limit": 10,
-						"rowRoute": "ContactmomentDetail"
+						"rowRoute": "TicketDetail"
 					},
 					{
 						"title": "Complaints",
 						"register": "pipelinq",
-						"schema": "complaint",
-						"filter": { "client": "@objectId" },
+						"schema": "ticket",
+						"filter": { "ticketType": "complaint", "client": "@objectId" },
 						"sort": { "field": "_dateCreated", "dir": "desc" },
 						"columns": [
 							{ "key": "title", "label": "Title" },
@@ -596,7 +582,7 @@
 							{ "key": "_dateCreated", "label": "Date" }
 						],
 						"limit": 50,
-						"rowRoute": "ComplaintDetail"
+						"rowRoute": "TicketDetail"
 					},
 					{
 						"title": "Contracts",
@@ -662,30 +648,32 @@
 			}
 		},
 		{
-			"id": "Requests",
-			"route": "/requests",
+			"id": "Tickets",
+			"route": "/tickets",
 			"type": "index",
-			"title": "Requests",
+			"title": "Tickets",
+			"_note": "Unified ticket workspace (unify-ticket-supertype). One index over the ticket schema replacing the former Requests/Complaints/Contactmomenten pages; a ticketType quickFilter tab strip narrows to each subtype. Type-specific columns (complaintCategory, outcome) are omitted from the shared table — they surface on the detail page.",
 			"config": {
 				"register": "pipelinq",
-				"schema": "request",
+				"schema": "ticket",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
+				"quickFilters": [
+					{ "label": "All", "filter": {}, "default": true },
+					{ "label": "Tickets", "filter": { "ticketType": "request" } },
+					{ "label": "Complaints", "filter": { "ticketType": "complaint" } },
+					{ "label": "Contactmomenten", "filter": { "ticketType": "contactmoment" } }
+				],
 				"actions": [
-					{
-						"id": "view",
-						"label": "View",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "RequestDetail"
-					}
+					{ "id": "view", "label": "View", "icon": "Eye", "handler": "navigate", "route": "TicketDetail" }
 				],
 				"columns": [
+					"ticketType",
 					"title",
 					"status",
 					"priority",
 					"channel",
-					"requestedAt"
+					"occurredAt"
 				],
 				"sidebar": {
 					"enabled": true,
@@ -694,149 +682,22 @@
 			}
 		},
 		{
-			"id": "RequestDetail",
-			"route": "/requests/:id",
+			"id": "TicketDetail",
+			"route": "/tickets/:id",
 			"type": "detail",
-			"title": "Request",
+			"title": "Ticket",
+			"_note": "Type-aware ticket detail (unify-ticket-supertype REQ 'type-specific field relevance'). `ticket` is a supertype: a complaint carries none of the telephony fields a contactmoment does, so rendering the whole union showed every complaint a wall of em dashes. `hideEmpty` (nc-vue beta.197+) drops valueless fields from the data widget, so the page is type-aware from the object itself — no per-ticketType field lists here or in the schema. Non-destructive: the field being edited, a field with unsaved changes, and the full Edit form all stay visible, so an empty field is still reachable to fill in.",
 			"config": {
 				"register": "pipelinq",
-				"schema": "request",
+				"schema": "ticket",
+				"hideEmpty": true,
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Service-request case archetype. A handler works a request to resolution, so the body leads with the request fields + related graph (client, contact, pipeline, queue), then the comms-centric Email and Files leaves (a request is inherently correspondence-driven). Below, two FK-scoped child tables surface the work generated by the request: the contactmomenten logged against it (FK 'request') and the follow-up tasks (FK 'requestId'); an in-grid stats-block (rule 2, replacing the retired summaryAggregates chips) counts open tasks and logged contactmomenten @objectId-scoped. lifecycleActions drives the OR-authoritative status transitions (new -> in_progress -> completed/rejected/converted). The RequestConversionSection app widget stays in the body for the case-to-Procest conversion. Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule.",
+				"_widgetsNote": "Widgets are declared (rather than left to the auto-body) only so the Besluitvorming leaf survives: development added a decidesk-decisions integration widget to RequestDetail (ADR-066) while this change was retiring that page. The relation belongs to the matter, not to whichever of the three names it used to have, so it moves onto the ticket alongside the `decisions` property on the schema. `content.hideEmpty` keeps the data widget type-aware — the page-level `hideEmpty` above only reaches the AUTO-body, which a declared widgets[] replaces.",
 				"widgets": [
-					{ "id": "request-data", "type": "data", "title": "Request details", "icon": "FileDocument", "content": { "columns": 2 } },
-					{ "id": "request-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
-					{ "id": "request-kpis-open-tasks", "type": "stats-block", "title": "Open tasks", "icon": "ClipboardList", "content": { "entries": [
-						{ "title": "Open tasks", "register": "pipelinq", "schema": "task", "metric": "count", "filter": { "requestId": "@objectId", "status": "open" } }
-					] } },
-					{ "id": "request-kpis-contactmomenten", "type": "stats-block", "title": "Contactmomenten", "icon": "ClipboardList", "content": { "entries": [
-						{ "title": "Contactmomenten", "register": "pipelinq", "schema": "contactmoment", "metric": "count", "filter": { "request": "@objectId" } }
-					] } },
-					{ "id": "request-email", "type": "integration", "integrationId": "email", "title": "Emails", "icon": "Email" },
-					{ "id": "request-files", "type": "integration", "integrationId": "files", "title": "Files", "icon": "FolderOutline" },
-					{ "id": "request-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" }
-				],
-				"layout": [
-					{ "id": "1", "widgetId": "request-data",    "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "2", "widgetId": "request-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "5-1", "widgetId": "request-kpis-open-tasks",      "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "5-2", "widgetId": "request-kpis-contactmomenten", "gridX": 8, "gridY": 6, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "3", "widgetId": "request-email",   "gridX": 0, "gridY": 4, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "4", "widgetId": "request-files",   "gridX": 8, "gridY": 8, "gridWidth": 4, "gridHeight": 3 },
-					{ "id": "6", "widgetId": "request-decisions", "gridX": 0, "gridY": 11, "gridWidth": 12, "gridHeight": 4 }
-				],
-				"lifecycleActions": { "field": "status" },
-				"relatedCollections": [
-					{
-						"title": "Contactmomenten",
-						"register": "pipelinq",
-						"schema": "contactmoment",
-						"filter": { "request": "@objectId" },
-						"sort": { "field": "contactedAt", "dir": "desc" },
-						"columns": [
-							{ "key": "subject", "label": "Subject" },
-							{ "key": "channel", "label": "Channel" },
-							{ "key": "contactedAt", "label": "Date" },
-							{ "key": "outcome", "label": "Outcome" }
-						],
-						"limit": 25,
-						"rowRoute": "ContactmomentDetail"
-					},
-					{
-						"title": "Tasks",
-						"register": "pipelinq",
-						"schema": "task",
-						"filter": { "requestId": "@objectId" },
-						"sort": { "field": "deadline", "dir": "asc" },
-						"columns": [
-							{ "key": "subject", "label": "Subject" },
-							{ "key": "type", "label": "Type" },
-							{ "key": "status", "label": "Status" },
-							{ "key": "priority", "label": "Priority" },
-							{ "key": "deadline", "label": "Deadline" }
-						],
-						"limit": 25,
-						"rowRoute": "TaskDetail"
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "request-conversion",
-						"component": "RequestConversionSection",
-						"placement": "after-related",
-						"props": { "requestId": "@objectId" }
-					}
-				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
-					]
-				}
-			}
-		},
-		{
-			"id": "Complaints",
-			"route": "/complaints",
-			"type": "index",
-			"title": "Complaints",
-			"config": {
-				"register": "pipelinq",
-				"schema": "complaint",
-				"documentationUrl": "https://pipelinq.conduction.nl",
-				"showViewAction": false,
-				"actions": [
-					{
-						"id": "view",
-						"label": "View",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "ComplaintDetail"
-					}
-				],
-				"columns": [
-					"title",
-					"status",
-					"priority",
-					"category",
-					"channel",
-					"_dateCreated"
-				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
-			}
-		},
-		{
-			"id": "ComplaintDetail",
-			"route": "/complaints/:id",
-			"type": "detail",
-			"title": "Complaint",
-			"config": {
-				"register": "pipelinq",
-				"schema": "complaint",
-				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Case archetype (bespoke-detail-pages). A complaint is a service case a case-handler works to resolution against an SLA, so the body leads with the case fields (status / priority / channel / SLA deadline + slaStatus / assignedTo) at 8-wide and the related graph (client, contact, task) at 4-wide, then Documents (evidence, correspondence attachments) full-width. Comms leaves are NOT on the body: the complaint schema declares no email/calendar/talk linkedType, so per the hard rule they stay off — a complaint communicates via its linked client/contact records. lifecycleActions drives the OR-authoritative status transitions (new -> in_progress -> resolved/rejected). Generic Deck/Flow/Timeline leaves were dropped from the sidebar per the audit-only rule; the immutable change history is the only sidebar tab.",
-				"widgets": [
-					{ "id": "complaint-data", "type": "data", "title": "Complaint", "icon": "AlertCircleOutline", "content": { "columns": 2 } },
-					{ "id": "complaint-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
-					{ "id": "complaint-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" }
-				],
-				"layout": [
-					{ "id": "1", "widgetId": "complaint-data",    "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "2", "widgetId": "complaint-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "3", "widgetId": "complaint-files",   "gridX": 0, "gridY": 4, "gridWidth": 12, "gridHeight": 3 }
-				],
-				"lifecycleActions": { "field": "status" },
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
-					]
-				}
+					{ "id": "ticket-data", "type": "data", "title": "Ticket details", "icon": "FileDocument", "content": { "columns": 2, "hideEmpty": true } },
+					{ "id": "ticket-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "ticket-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" }
+				]
 			}
 		},
 		{
@@ -929,17 +790,17 @@
 					{
 						"title": "Requests",
 						"register": "pipelinq",
-						"schema": "request",
-						"filter": { "contact": "@objectId" },
-						"sort": { "field": "requestedAt", "dir": "desc" },
+						"schema": "ticket",
+						"filter": { "ticketType": "request", "contact": "@objectId" },
+						"sort": { "field": "occurredAt", "dir": "desc" },
 						"columns": [
 							{ "key": "title", "label": "Title" },
 							{ "key": "status", "label": "Status" },
 							{ "key": "priority", "label": "Priority" },
-							{ "key": "requestedAt", "label": "Requested" }
+							{ "key": "occurredAt", "label": "Requested" }
 						],
 						"limit": 25,
-						"rowRoute": "RequestDetail"
+						"rowRoute": "TicketDetail"
 					},
 					{
 						"title": "Appointments",
@@ -1097,78 +958,6 @@
 					{ "action": "win", "from": "open", "to": "won", "label": "Close as win", "confirm": "Close this lead as won?" },
 					{ "action": "lose", "from": "open", "to": "lost", "label": "Close as lose", "confirm": "Close this lead as lost?" }
 				] },
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true,
-					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
-					]
-				}
-			}
-		},
-		{
-			"id": "Contactmomenten",
-			"route": "/contactmomenten",
-			"type": "index",
-			"title": "Contactmomenten",
-			"config": {
-				"register": "pipelinq",
-				"schema": "contactmoment",
-				"documentationUrl": "https://pipelinq.conduction.nl",
-				"showViewAction": false,
-				"actions": [
-					{
-						"id": "view",
-						"label": "View",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "ContactmomentDetail"
-					}
-				],
-				"columns": [
-					"channel",
-					"subject",
-					"client",
-					"agent",
-					"occurredAt"
-				],
-				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
-				}
-			}
-		},
-		{
-			"id": "ContactmomentNew",
-			"route": "/contactmomenten/new",
-			"type": "custom",
-			"title": "New contactmoment",
-			"component": "CnWizardDialog",
-			"config": {
-				"register": "pipelinq",
-				"schema": "contactmoment"
-			}
-		},
-		{
-			"id": "ContactmomentDetail",
-			"route": "/contactmomenten/:id",
-			"type": "detail",
-			"title": "Contactmoment",
-			"config": {
-				"register": "pipelinq",
-				"schema": "contactmoment",
-				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Interaction-log archetype (bespoke-detail-pages). A contactmoment is the immutable record of a single interaction (call / email / chat / CTI-telephony), so it reads like a log entry, not a workspace: the interaction fields (channel, subject, outcome/disposition, agent, direction, timestamps, duration, CTI extension) fill the body 8-wide, with the related parties (client, contact, request) at 4-wide for one-click drill-through. Documents full-width carries the call recording (recording_url) and any attached correspondence. NO email/calendar body widgets — contactmoment declares no comms linkedType and is itself the communication record, not a live mailbox. There are no child collections, so no object-list; a lean two-row grid keeps it fast to scan.",
-				"widgets": [
-					{ "id": "cm-data", "type": "data", "title": "Interaction", "icon": "MessageTextOutline", "content": { "columns": 2, "include": ["channel", "subject", "outcome", "agent", "contactedAt", "duration"] } },
-					{ "id": "cm-related", "type": "related", "title": "Parties", "icon": "AccountGroup" },
-					{ "id": "cm-files", "type": "integration", "integrationId": "files", "title": "Recording & documents", "icon": "FolderOutline" }
-				],
-				"layout": [
-					{ "id": "1", "widgetId": "cm-data",    "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "2", "widgetId": "cm-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "3", "widgetId": "cm-files",   "gridX": 0, "gridY": 4, "gridWidth": 12, "gridHeight": 3 }
-				],
 				"sidebar": {
 					"enabled": true,
 					"showMetadata": true,
@@ -1915,7 +1704,7 @@
 					{ "id": "queue-data", "type": "data", "title": "Queue configuration", "icon": "Cog", "content": { "columns": 2 } },
 					{ "id": "queue-related", "type": "related", "title": "Assigned agents", "icon": "AccountGroup" },
 					{ "id": "queue-kpis", "type": "stats-block", "title": "Queue depth", "icon": "Gauge", "content": { "entries": [
-						{ "title": "Requests in queue", "register": "pipelinq", "schema": "request", "metric": "count", "filter": { "queue": "@objectId" } }
+						{ "title": "Requests in queue", "register": "pipelinq", "schema": "ticket", "metric": "count", "filter": { "ticketType": "request", "queue": "@objectId" } }
 					] } },
 					{
 						"id": "queue-requests",
@@ -1924,19 +1713,19 @@
 						"icon": "ClipboardList",
 						"content": {
 							"register": "pipelinq",
-							"schema": "request",
-							"filter": { "queue": "@objectId" },
-							"sort": { "field": "requestedAt", "dir": "desc" },
+							"schema": "ticket",
+							"filter": { "ticketType": "request", "queue": "@objectId" },
+							"sort": { "field": "occurredAt", "dir": "desc" },
 							"columns": [
 								{ "key": "title", "label": "Title" },
 								{ "key": "status", "label": "Status" },
 								{ "key": "priority", "label": "Priority" },
 								{ "key": "stage", "label": "Stage" },
-								{ "key": "requestedAt", "label": "Requested" }
+								{ "key": "occurredAt", "label": "Requested" }
 							],
 							"limit": 25,
-							"rowRoute": "RequestDetail",
-							"viewAllRoute": "Requests",
+							"rowRoute": "TicketDetail",
+							"viewAllRoute": "Tickets",
 							"emptyText": "No requests are routed to this queue right now."
 						}
 					}

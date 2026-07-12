@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\QueueService;
 use OCA\Pipelinq\Service\RegisterResolverService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -63,19 +64,30 @@ class QueueServiceTest extends TestCase
     private LoggerInterface $logger;
 
     /**
+     * The ticket resolver mock (unified `ticket` schema).
+     *
+     * @var TicketService&MockObject
+     */
+    private TicketService $ticketService;
+
+    /**
      * Set up test fixtures.
      *
      * @return void
      */
     protected function setUp(): void
     {
-        $this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
-        $this->container = $this->createMock(originalClassName: ContainerInterface::class);
-        $this->logger    = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->appConfig     = $this->createMock(originalClassName: IAppConfig::class);
+        $this->container     = $this->createMock(originalClassName: ContainerInterface::class);
+        $this->logger        = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->ticketService = $this->createMock(originalClassName: TicketService::class);
     }//end setUp()
 
     /**
      * Build the service under test.
+     *
+     * Queued items are request tickets, so the queue reads/writes resolve the
+     * unified `ticket` schema through TicketService.
      *
      * @return QueueService
      */
@@ -86,21 +98,36 @@ class QueueServiceTest extends TestCase
             container: $this->container,
             logger: $this->logger,
             registerResolver: new RegisterResolverService(appConfig: $this->appConfig),
+            ticketService: $this->ticketService,
         );
     }//end buildService()
 
     /**
-     * Configure app config to return register and request schema IDs.
+     * Configure the ticket resolver as provisioned (or not).
      *
-     * @param string $register      The register ID.
-     * @param string $requestSchema The request schema ID.
-     * @param string $queueSchema   The queue schema ID.
+     * @param string $ticketSchema The unified ticket schema ID ('' = unconfigured).
+     *
+     * @return void
+     */
+    private function configureTicketService(string $ticketSchema='ticket-schema-id'): void
+    {
+        $this->ticketService->method('getRegisterId')->willReturn($ticketSchema === '' ? '' : 'reg-id');
+        $this->ticketService->method('getSchemaId')->willReturn($ticketSchema);
+        $this->ticketService->method('isConfigured')->willReturn($ticketSchema !== '');
+    }//end configureTicketService()
+
+    /**
+     * Configure app config (register + queue schema) and the ticket resolver.
+     *
+     * @param string $register     The register ID.
+     * @param string $ticketSchema The unified ticket schema ID.
+     * @param string $queueSchema  The queue schema ID.
      *
      * @return void
      */
     private function configureAppConfig(
         string $register='reg-id',
-        string $requestSchema='req-schema-id',
+        string $ticketSchema='ticket-schema-id',
         string $queueSchema='queue-schema-id',
     ): void {
         $this->appConfig
@@ -108,10 +135,11 @@ class QueueServiceTest extends TestCase
             ->willReturnMap(
                 [
                     [Application::APP_ID, 'register', '', $register],
-                    [Application::APP_ID, 'request_schema', '', $requestSchema],
                     [Application::APP_ID, 'queue_schema', '', $queueSchema],
                 ]
             );
+
+        $this->configureTicketService(ticketSchema: $ticketSchema);
     }//end configureAppConfig()
 
     /**
@@ -137,15 +165,7 @@ class QueueServiceTest extends TestCase
      */
     public function testGetQueueDepthReturnsZeroWhenNotConfigured(): void
     {
-        $this->appConfig
-            ->method('getValueString')
-            ->willReturnMap(
-                [
-                    [Application::APP_ID, 'register', '', ''],
-                    [Application::APP_ID, 'request_schema', '', ''],
-                    [Application::APP_ID, 'queue_schema', '', ''],
-                ]
-            );
+        $this->configureAppConfig(register: '', ticketSchema: '', queueSchema: '');
 
         $this->logger->expects($this->once())->method('warning');
 
@@ -175,8 +195,11 @@ class QueueServiceTest extends TestCase
                     static function (array $config): bool {
                         $filters = ($config['filters'] ?? []);
                         return ($filters['queue'] ?? null) === 'queue-123'
+                        // Queued items are request tickets on the unified ticket
+                        // schema, narrowed by the ticketType discriminator.
+                        && ($filters['schema'] ?? null) === 'ticket-schema-id'
+                        && ($filters['ticketType'] ?? null) === TicketService::TYPE_REQUEST
                         && array_key_exists('register', $filters)
-                        && array_key_exists('schema', $filters)
                         && array_key_exists('limit', $config) === false;
                     }
                     )
@@ -256,30 +279,28 @@ class QueueServiceTest extends TestCase
     }//end testIsAtCapacityReturnsFalseWhenUnderLimit()
 
     /**
-     * Test assignToQueue calls saveObject with correct queue field.
+     * Test assignToQueue writes the queue field through the ticket resolver.
+     *
+     * The write no longer touches ObjectService::saveObject directly (the API
+     * mismatch of issue #286): it goes through TicketService::save(), which
+     * resolves the unified ticket schema and stamps the `ticketType`
+     * discriminator onto the payload.
      *
      * @return void
      */
     public function testAssignToQueueUpdatesSaveObject(): void
     {
-        $this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
         $this->configureAppConfig();
 
-        $objectService = $this->createObjectServiceMock();
-        $objectService
+        $this->ticketService
             ->expects($this->once())
-            ->method('saveObject')
+            ->method('save')
             ->with(
-                $this->callback(
-                        callback: function ($data) {
-                            return $data['id'] === 'request-123' && $data['queue'] === 'queue-456';
-                        }
-                        ),
-                $this->anything(),
-                $this->equalTo(value: 'reg-id'),
-                $this->equalTo(value: 'req-schema-id'),
-            );
+                $this->equalTo(value: TicketService::TYPE_REQUEST),
+                $this->equalTo(value: ['id' => 'request-123', 'queue' => 'queue-456']),
+                $this->isNull(),
+            )
+            ->willReturn(new \stdClass());
 
         $result = $this->buildService()->assignToQueue(requestId: 'request-123', queueId: 'queue-456');
         $this->assertTrue(condition: $result);
@@ -292,24 +313,17 @@ class QueueServiceTest extends TestCase
      */
     public function testRemoveFromQueueClearsQueueField(): void
     {
-        $this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
         $this->configureAppConfig();
 
-        $objectService = $this->createObjectServiceMock();
-        $objectService
+        $this->ticketService
             ->expects($this->once())
-            ->method('saveObject')
+            ->method('save')
             ->with(
-                $this->callback(
-                        callback: function ($data) {
-                            return $data['id'] === 'request-123' && $data['queue'] === null;
-                        }
-                        ),
-                $this->anything(),
-                $this->equalTo(value: 'reg-id'),
-                $this->equalTo(value: 'req-schema-id'),
-            );
+                $this->equalTo(value: TicketService::TYPE_REQUEST),
+                $this->equalTo(value: ['id' => 'request-123', 'queue' => null]),
+                $this->isNull(),
+            )
+            ->willReturn(new \stdClass());
 
         $result = $this->buildService()->removeFromQueue(requestId: 'request-123');
         $this->assertTrue(condition: $result);
@@ -322,15 +336,7 @@ class QueueServiceTest extends TestCase
      */
     public function testAssignToQueueReturnsFalseWhenNotConfigured(): void
     {
-        $this->appConfig
-            ->method('getValueString')
-            ->willReturnMap(
-                [
-                    [Application::APP_ID, 'register', '', ''],
-                    [Application::APP_ID, 'request_schema', '', ''],
-                    [Application::APP_ID, 'queue_schema', '', ''],
-                ]
-            );
+        $this->configureAppConfig(register: '', ticketSchema: '', queueSchema: '');
 
         $result = $this->buildService()->assignToQueue(requestId: 'req-1', queueId: 'queue-1');
         $this->assertFalse(condition: $result);
@@ -345,7 +351,8 @@ class QueueServiceTest extends TestCase
     {
         $this->configureAppConfig();
 
-        $this->container->method('get')->willThrowException(new RuntimeException('fail'));
+        // TicketService::save() throws when OpenRegister is unavailable.
+        $this->ticketService->method('save')->willThrowException(new RuntimeException('fail'));
         $this->logger->expects($this->once())->method('error');
 
         $result = $this->buildService()->assignToQueue(requestId: 'req-1', queueId: 'queue-1');
@@ -359,15 +366,7 @@ class QueueServiceTest extends TestCase
      */
     public function testProcessOverflowReturnsZeroWhenNotConfigured(): void
     {
-        $this->appConfig
-            ->method('getValueString')
-            ->willReturnMap(
-                [
-                    [Application::APP_ID, 'register', '', ''],
-                    [Application::APP_ID, 'request_schema', '', ''],
-                    [Application::APP_ID, 'queue_schema', '', ''],
-                ]
-            );
+        $this->configureAppConfig(register: '', ticketSchema: '', queueSchema: '');
 
         $this->logger->expects($this->once())->method('warning');
 

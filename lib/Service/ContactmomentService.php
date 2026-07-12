@@ -24,10 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
-use OCP\IAppConfig;
 use OCP\IGroupManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -38,21 +36,27 @@ use Psr\Log\LoggerInterface;
  * Handles permission-checked deletion (only the creating agent or a Nextcloud
  * admin may delete a contactmoment) and the unified outbound-send audit write.
  *
+ * Since unify-ticket-supertype a contactmoment is a `ticket` carrying
+ * `ticketType: contactmoment` — every read and write here resolves the unified
+ * ticket schema through {@see TicketService} and narrows on the discriminator;
+ * the legacy `contactmoment_schema` config key is no longer consulted.
+ *
  * @spec openspec/changes/outbound-messaging-provider-wiring/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
+ * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class ContactmomentService
 {
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container    The DI container.
-     * @param IAppConfig         $appConfig    The app config.
-     * @param IGroupManager      $groupManager The group manager.
-     * @param LoggerInterface    $logger       The logger.
+     * @param ContainerInterface $container     The DI container.
+     * @param TicketService      $ticketService The unified ticket resolver.
+     * @param IGroupManager      $groupManager  The group manager.
+     * @param LoggerInterface    $logger        The logger.
      */
     public function __construct(
         private ContainerInterface $container,
-        private IAppConfig $appConfig,
+        private TicketService $ticketService,
         private IGroupManager $groupManager,
         private LoggerInterface $logger,
     ) {
@@ -78,32 +82,25 @@ class ContactmomentService
     /**
      * Get the configured register and schema for contactmomenten.
      *
+     * Resolves the unified `ticket` schema (unify-ticket-supertype); callers
+     * narrow to contactmomenten with the `ticketType` discriminator.
+     *
      * @return array{register: string, schema: string} The register and schema IDs.
      *
      * @throws \RuntimeException If configuration is missing.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-40
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function getConfig(): array
     {
-        $register = $this->appConfig->getValueString(
-            Application::APP_ID,
-            'register',
-            ''
-        );
-        $schema   = $this->appConfig->getValueString(
-            Application::APP_ID,
-            'contactmoment_schema',
-            ''
-        );
-
-        if ($register === '' || $schema === '') {
+        if ($this->ticketService->isConfigured() === false) {
             throw new \RuntimeException('Contactmoment register or schema not configured.');
         }
 
         return [
-            'register' => $register,
-            'schema'   => $schema,
+            'register' => $this->ticketService->getRegisterId(),
+            'schema'   => $this->ticketService->getSchemaId(),
         ];
     }//end getConfig()
 
@@ -112,11 +109,16 @@ class ContactmomentService
      *
      * The single write path for REQ-OM-006: every successful outbound
      * WhatsApp / SMS send (agent composer or SLA escalation) is registered
-     * as a contactmoment linked to the client. WhatsApp is stored as
-     * `channel: chat` with `channelMetadata.platform = whatsapp`; SMS uses
-     * the `channel: sms` enum value. The write is log-and-continue: any
-     * failure (OpenRegister absent, schema unconfigured, save error) returns
-     * null and MUST never block, fail, or roll back the send itself.
+     * as a `ticket` with `ticketType: contactmoment`, linked to the client.
+     * WhatsApp is stored as `channel: chat` with
+     * `channelMetadata.platform = whatsapp`; SMS uses the `channel: sms` enum
+     * value. The write is log-and-continue: any failure (OpenRegister absent,
+     * schema unconfigured, save error) returns null and MUST never block,
+     * fail, or roll back the send itself.
+     *
+     * The `$subject` / `$summary` / `$agent` arguments keep their caller-facing
+     * names (the messaging adapters pass them by name) but are persisted onto
+     * the ticket fields `title` / `description` / `assignee`.
      *
      * @param string               $channel         `sms` or `chat` (WhatsApp).
      * @param string               $subject         Human-readable subject line.
@@ -130,9 +132,10 @@ class ContactmomentService
      *                                              (`system:sla-engine` for
      *                                              SLA escalations), or empty.
      *
-     * @return string|null The contactmoment UUID, or null when skipped/failed.
+     * @return string|null The contactmoment ticket UUID, or null when skipped/failed.
      *
      * @spec openspec/changes/outbound-messaging-provider-wiring/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function recordOutboundMessage(
         string $channel,
@@ -146,7 +149,7 @@ class ContactmomentService
             $config = $this->getConfig();
         } catch (\Throwable $e) {
             $this->logger->info(
-                'ContactmomentService.recordOutboundMessage: audit skipped (contactmoment schema unconfigured)',
+                'ContactmomentService.recordOutboundMessage: audit skipped (ticket schema unconfigured)',
                 ['exception' => $e->getMessage()]
             );
             return null;
@@ -154,7 +157,10 @@ class ContactmomentService
 
         // Resolve the object service loosely (duck-typed) so the audit path
         // never depends on the concrete OpenRegister class being loadable —
-        // it is a best-effort side-channel, not a hard dependency.
+        // it is a best-effort side-channel, not a hard dependency. That is why
+        // the write is issued here rather than through TicketService::save(),
+        // which resolves the concrete ObjectService type; TicketService still
+        // owns the schema resolution and the ticketType discriminator.
         $objectService = $this->objectServiceLoose();
         if ($objectService === null) {
             $this->logger->info('ContactmomentService.recordOutboundMessage: audit skipped (OpenRegister unavailable)');
@@ -162,10 +168,11 @@ class ContactmomentService
         }
 
         $payload = [
-            'subject'         => $subject,
-            'summary'         => $summary,
+            'ticketType'      => TicketService::TYPE_CONTACTMOMENT,
+            'title'           => $subject,
+            'description'     => $summary,
             'channel'         => $channel,
-            'contactedAt'     => gmdate('Y-m-d\TH:i:s\Z'),
+            'occurredAt'      => gmdate('Y-m-d\TH:i:s\Z'),
             'channelMetadata' => $channelMetadata,
         ];
         if ($clientId !== '') {
@@ -173,7 +180,7 @@ class ContactmomentService
         }
 
         if ($agent !== '') {
-            $payload['agent'] = $agent;
+            $payload['assignee'] = $agent;
         }
 
         try {
@@ -228,9 +235,12 @@ class ContactmomentService
     /**
      * Delete a contactmoment with permission checking.
      *
-     * Only the creating agent or a Nextcloud admin may delete.
+     * Only the creating agent or a Nextcloud admin may delete. The target is a
+     * `ticket` narrowed to `ticketType: contactmoment` — a request- or
+     * complaint-type ticket is reported as not-found, so this surface can never
+     * delete another ticket subtype.
      *
-     * @param string $id            The contactmoment object UUID.
+     * @param string $id            The contactmoment ticket UUID.
      * @param string $currentUserId The ID of the user requesting deletion.
      *
      * @return bool True if deleted successfully.
@@ -239,6 +249,7 @@ class ContactmomentService
      * @throws NotPermittedException  If user lacks permission.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-39
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function delete(string $id, string $currentUserId): bool
     {
@@ -258,10 +269,19 @@ class ContactmomentService
             );
         }
 
+        $data = $this->entityToArray(entity: $object);
+
+        if (($data['ticketType'] ?? '') !== TicketService::TYPE_CONTACTMOMENT) {
+            throw new DoesNotExistException(
+                'Contactmoment not found: '.$id
+            );
+        }
+
         // Use the OR-immutable createdBy field (set by the platform on every
-        // saveObject/createObject call) rather than the user-mutable `agent` field.
-        // Any caller with OR write-access can stamp `agent: victim_uid`; `createdBy`
-        // is protected by the platform and cannot be overwritten via the public API.
+        // saveObject/createObject call) rather than the user-mutable `assignee`
+        // field. Any caller with OR write-access can stamp `assignee: victim_uid`;
+        // `createdBy` is protected by the platform and cannot be overwritten via
+        // the public API.
         $createdBy = '';
         if (is_array($object) === true) {
             $createdBy = ($object['createdBy'] ?? '');
@@ -295,4 +315,34 @@ class ContactmomentService
 
         return true;
     }//end delete()
+
+    /**
+     * Normalise an OpenRegister entity (or already-rendered row) to an array.
+     *
+     * @param mixed $entity The entity returned by ObjectService::find().
+     *
+     * @return array<string, mixed> The rendered object data (empty when unreadable).
+     */
+    private function entityToArray(mixed $entity): array
+    {
+        if (is_array($entity) === true) {
+            return $entity;
+        }
+
+        if (is_object($entity) === true && method_exists($entity, 'getObject') === true) {
+            $data = $entity->getObject();
+            if (is_array($data) === true) {
+                return $data;
+            }
+        }
+
+        if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
+            $data = $entity->jsonSerialize();
+            if (is_array($data) === true) {
+                return $data;
+            }
+        }
+
+        return [];
+    }//end entityToArray()
 }//end class

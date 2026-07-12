@@ -6,7 +6,7 @@
 		:icon="FileDocument"
 		variant="primary"
 		horizontal
-		:route="{ name: 'Requests', query: { status: 'open' } }" />
+		:route="{ name: 'Tickets', query: { ticketType: 'request', status: 'open' } }" />
 </template>
 
 <script>

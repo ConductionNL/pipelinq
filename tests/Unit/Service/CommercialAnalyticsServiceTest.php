@@ -33,6 +33,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\Pipelinq\Service\AnalyticsService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -88,10 +89,21 @@ class CommercialAnalyticsServiceTest extends TestCase
         $container = $this->createMock(ContainerInterface::class);
         $container->method('get')->willReturn($objectService);
 
+        $logger = $this->createMock(LoggerInterface::class);
+
+        // Commercial KPIs read leads + POS only, so the ticket resolver is a
+        // stub that never yields rows.
+        $ticketService = $this->createMock(TicketService::class);
+        $ticketService->method('isConfigured')->willReturn(true);
+        $ticketService->method('getRegisterId')->willReturn('register-1');
+        $ticketService->method('getSchemaId')->willReturn('ticket_schema');
+        $ticketService->method('findByType')->willReturn([]);
+
         return new AnalyticsService(
             container: $container,
             appConfig: $appConfig,
-            logger: $this->createMock(LoggerInterface::class)
+            logger: $logger,
+            ticketService: $ticketService
         );
     }
 

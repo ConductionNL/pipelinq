@@ -95,8 +95,12 @@ import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 
-// The pipelinq schemas the export pipeline may read.
-const EXPORTABLE_SCHEMAS = ['client', 'contact', 'lead', 'request', 'task', 'contactmoment', 'complaint', 'product']
+// The pipelinq schemas the export pipeline may read. `ticket` is the unified
+// supertype (unify-ticket-supertype): the former `request`, `complaint` and
+// `contactmoment` schemas are one schema now, discriminated by `ticketType`.
+// Exporting `ticket` therefore covers all three; narrow to a single subtype
+// with a row filter (e.g. `ticketType = 'complaint'`).
+const EXPORTABLE_SCHEMAS = ['client', 'contact', 'lead', 'ticket', 'task', 'product']
 const FORMATS = ['csv', 'parquet', 'jsonl']
 const MODES = ['full', 'incremental']
 

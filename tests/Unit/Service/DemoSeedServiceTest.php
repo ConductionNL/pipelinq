@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\DemoSeedService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -41,32 +42,45 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for DemoSeedService.
  *
+ * Since unify-ticket-supertype the requests + contactmomenten sections both
+ * seed the unified `ticket` schema (id 25 here), separated by the `ticketType`
+ * discriminator, while the seed file keeps its legacy field names.
+ *
  * @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+ * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class DemoSeedServiceTest extends TestCase
 {
+    /**
+     * The unified ticket schema id used throughout this test.
+     *
+     * @var string
+     */
+    private const TICKET_SCHEMA_ID = '25';
+
     /**
      * Schema-id map used by the provisioned config (schema config key => id).
      *
      * @var array<string, string>
      */
     private const SCHEMA_IDS = [
-        'client_schema'        => '21',
-        'lead_schema'          => '22',
-        'request_schema'       => '23',
-        'contactmoment_schema' => '24',
+        'client_schema' => '21',
+        'lead_schema'   => '22',
     ];
 
     /**
-     * Section => [schema id, lookup field] (mirrors the service SECTIONS).
+     * Section => [schema id, seed-file field, persisted lookup field, ticketType].
      *
-     * @var array<string, array{0: string, 1: string}>
+     * Mirrors the service SECTIONS: the ticket sections read a legacy field name
+     * from the seed file and persist it under the ticket field name.
+     *
+     * @var array<string, array{0: string, 1: string, 2: string, 3: string|null}>
      */
     private const SECTION_SCHEMAS = [
-        'clients'         => ['21', 'name'],
-        'leads'           => ['22', 'title'],
-        'requests'        => ['23', 'title'],
-        'contactmomenten' => ['24', 'subject'],
+        'clients'         => ['21', 'name', 'name', null],
+        'leads'           => ['22', 'title', 'title', null],
+        'requests'        => [self::TICKET_SCHEMA_ID, 'title', 'title', 'request'],
+        'contactmomenten' => [self::TICKET_SCHEMA_ID, 'subject', 'title', 'contactmoment'],
     ];
 
     /**
@@ -98,6 +112,13 @@ class DemoSeedServiceTest extends TestCase
     private ContactVcardService $contactVcardService;
 
     /**
+     * Mocked unified ticket resolver.
+     *
+     * @var TicketService&MockObject
+     */
+    private TicketService $ticketService;
+
+    /**
      * Service under test.
      *
      * @var DemoSeedService
@@ -117,6 +138,7 @@ class DemoSeedServiceTest extends TestCase
         $this->container           = $this->createMock(ContainerInterface::class);
         $this->objectService       = $this->createMock(ObjectService::class);
         $this->contactVcardService = $this->createMock(ContactVcardService::class);
+        $this->ticketService       = $this->createMock(TicketService::class);
 
         $this->container->method('get')
             ->with('OCA\OpenRegister\Service\ObjectService')
@@ -137,6 +159,7 @@ class DemoSeedServiceTest extends TestCase
             appConfig: $this->appConfig,
             container: $this->container,
             contactVcardService: $this->contactVcardService,
+            ticketService: $this->ticketService,
             logger: $this->createMock(LoggerInterface::class),
         );
     }//end setUp()
@@ -155,6 +178,10 @@ class DemoSeedServiceTest extends TestCase
                     return $values[$key] ?? $default;
                 }
             );
+
+        $this->ticketService->method('getSchemaId')->willReturn(self::TICKET_SCHEMA_ID);
+        $this->ticketService->method('getRegisterId')->willReturn('11');
+        $this->ticketService->method('isConfigured')->willReturn(true);
     }//end provisionConfig()
 
     /**
@@ -172,26 +199,44 @@ class DemoSeedServiceTest extends TestCase
      * Build the rendered-row store an already-seeded install would return,
      * keyed by schema id, including a non-demo decoy row per schema.
      *
+     * The ticket schema holds both ticket sections; each row carries its
+     * `ticketType` so the service can narrow on the discriminator.
+     *
      * @return array<string, array<int, array<string, mixed>>>
      */
     private static function seededStore(): array
     {
         $store = [];
-        foreach (self::SECTION_SCHEMAS as $section => [$schemaId, $lookupField]) {
-            $rows = [];
+        foreach (self::SECTION_SCHEMAS as $section => [$schemaId, $sourceField, $lookupField, $ticketType]) {
+            $rows = ($store[$schemaId] ?? []);
             foreach (self::definitions()[$section] as $i => $definition) {
-                $rows[] = [
+                $row = [
                     'id'         => $section.'-uuid-'.$i,
-                    $lookupField => (string) $definition['data'][$lookupField],
+                    $lookupField => (string) $definition['data'][$sourceField],
                 ];
+                if ($ticketType !== null) {
+                    $row['ticketType'] = $ticketType;
+                }
+
+                $rows[] = $row;
             }
 
-            // Decoy: a real (non-demo) object that must never be touched.
-            $rows[] = [
-                'id'         => $section.'-real-object',
-                $lookupField => 'Real '.$section.' record',
-            ];
+            $store[$schemaId] = $rows;
+        }
 
+        // Decoy: one real (non-demo) object per schema that must never be touched.
+        // The ticket decoy is a real request-type ticket.
+        foreach ($store as $schemaId => $rows) {
+            $decoy = [
+                'id'    => 'schema-'.$schemaId.'-real-object',
+                'name'  => 'Real record '.$schemaId,
+                'title' => 'Real record '.$schemaId,
+            ];
+            if ($schemaId === self::TICKET_SCHEMA_ID) {
+                $decoy['ticketType'] = 'request';
+            }
+
+            $rows[]           = $decoy;
             $store[$schemaId] = $rows;
         }
 
@@ -269,6 +314,22 @@ class DemoSeedServiceTest extends TestCase
                 }
             );
 
+        // Ticket sections write through TicketService, which forces ticketType.
+        $this->ticketService->method('save')
+            ->willReturnCallback(
+                function (string $ticketType, array $payload, ?string $uuid=null) use (&$savedPayloads, &$sequence): object {
+                    $sequence++;
+                    $payload['ticketType'] = $ticketType;
+                    $newUuid = 'uuid-'.self::TICKET_SCHEMA_ID.'-'.$sequence;
+                    $savedPayloads[] = [
+                        'schema' => self::TICKET_SCHEMA_ID,
+                        'data'   => $payload,
+                        'uuid'   => $newUuid,
+                    ];
+                    return self::savedEntity($newUuid);
+                }
+            );
+
         $result = $this->service->seed();
 
         self::assertTrue($result['success']);
@@ -280,7 +341,7 @@ class DemoSeedServiceTest extends TestCase
 
         // Every seeded object carries the demo marker on its lookup field.
         foreach ($savedPayloads as $payload) {
-            $lookup = $payload['data']['name'] ?? ($payload['data']['title'] ?? ($payload['data']['subject'] ?? ''));
+            $lookup = $payload['data']['name'] ?? ($payload['data']['title'] ?? '');
             self::assertStringStartsWith(DemoSeedService::DEMO_PREFIX, $lookup);
         }
 
@@ -304,6 +365,51 @@ class DemoSeedServiceTest extends TestCase
         // Date placeholders are resolved to concrete dates.
         $firstLead = array_values($leads)[0]['data'];
         self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $firstLead['expectedCloseDate']);
+
+        // Both ticket sections land on the one ticket schema, typed, with the
+        // legacy field names mapped onto the ticket fields.
+        $tickets = array_values(
+            array_filter($savedPayloads, static fn (array $p): bool => $p['schema'] === self::TICKET_SCHEMA_ID)
+        );
+        self::assertCount(20, $tickets);
+
+        $requests = array_values(
+            array_filter($tickets, static fn (array $p): bool => $p['data']['ticketType'] === 'request')
+        );
+        $contactmomenten = array_values(
+            array_filter($tickets, static fn (array $p): bool => $p['data']['ticketType'] === 'contactmoment')
+        );
+        self::assertCount(8, $requests);
+        self::assertCount(12, $contactmomenten);
+
+        foreach ($requests as $request) {
+            self::assertArrayHasKey('occurredAt', $request['data']);
+            self::assertArrayNotHasKey('requestedAt', $request['data']);
+        }
+
+        foreach ($contactmomenten as $contactmoment) {
+            self::assertArrayHasKey('title', $contactmoment['data']);
+            self::assertArrayHasKey('description', $contactmoment['data']);
+            self::assertArrayHasKey('occurredAt', $contactmoment['data']);
+            self::assertArrayNotHasKey('subject', $contactmoment['data']);
+            self::assertArrayNotHasKey('summary', $contactmoment['data']);
+            self::assertArrayNotHasKey('contactedAt', $contactmoment['data']);
+            // The contactmoment status is derived from its outcome.
+            self::assertNotSame('', (string) $contactmoment['data']['status']);
+        }
+
+        // The parent-request link is written as parentTicket, pointing at a
+        // seeded request ticket.
+        $requestUuids = array_column($requests, 'uuid');
+        $linked       = array_filter(
+            $contactmomenten,
+            static fn (array $p): bool => isset($p['data']['parentTicket'])
+        );
+        self::assertNotEmpty($linked);
+        foreach ($linked as $contactmoment) {
+            self::assertContains($contactmoment['data']['parentTicket'], $requestUuids);
+            self::assertArrayNotHasKey('request', $contactmoment['data']);
+        }
     }//end testSeedOnCleanInstallCreatesLinkedDemoSet()
 
     /**
@@ -321,6 +427,7 @@ class DemoSeedServiceTest extends TestCase
         $this->mockFindAllFromStore($store);
 
         $this->objectService->expects(self::never())->method('saveObject');
+        $this->ticketService->expects(self::never())->method('save');
 
         $result = $this->service->seed();
 
@@ -378,6 +485,10 @@ class DemoSeedServiceTest extends TestCase
     /**
      * Archival (append-only) schemas retain their rows instead of failing.
      *
+     * Simulated here on the ticket schema: every section folded into it (both
+     * requests and contactmomenten) is reported as retained, and the sections
+     * on non-archival schemas still delete normally.
+     *
      * @return void
      *
      * @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
@@ -392,8 +503,8 @@ class DemoSeedServiceTest extends TestCase
         $this->objectService->method('deleteObject')
             ->willReturnCallback(
                 static function (string $uuid, string|int|null $register=null, string|int|null $schema=null) use (&$store): bool {
-                    if ((string) $schema === '24') {
-                        throw new \Exception('SCHEMA_ARCHIVAL_IMMUTABLE: contactmoment declares x-openregister-archival');
+                    if ((string) $schema === self::TICKET_SCHEMA_ID) {
+                        throw new \Exception('SCHEMA_ARCHIVAL_IMMUTABLE: schema declares x-openregister-archival');
                     }
 
                     foreach ($store as $schemaId => $rows) {
@@ -411,7 +522,10 @@ class DemoSeedServiceTest extends TestCase
         self::assertTrue($result['success']);
         self::assertSame(12, $result['retained']['contactmomenten']);
         self::assertSame(0, $result['removed']['contactmomenten']);
-        self::assertSame(19, array_sum($result['removed']));
+        self::assertSame(8, $result['retained']['requests']);
+        self::assertSame(0, $result['removed']['requests']);
+        // Clients (5) + leads (6) are on their own schemas and still delete.
+        self::assertSame(11, array_sum($result['removed']));
     }//end testRemoveRetainsArchivalSchemaRows()
 
     /**
@@ -465,6 +579,7 @@ class DemoSeedServiceTest extends TestCase
             appConfig: $this->appConfig,
             container: $this->container,
             contactVcardService: $failingVcard,
+            ticketService: $this->ticketService,
             logger: $this->createMock(LoggerInterface::class),
         );
 

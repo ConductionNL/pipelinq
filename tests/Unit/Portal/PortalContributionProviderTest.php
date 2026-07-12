@@ -13,6 +13,13 @@
  * whitelist field) fails here instead of silently scoping portal reads to
  * nothing or dropping a projected column.
  *
+ * Since unify-ticket-supertype, requests/complaints/contactmomenten are all rows
+ * of the ONE `ticket` schema discriminated by `ticketType`. The tests below pin
+ * that every ticket-backed collection carries a narrowing `filter` and every
+ * ticket-backed create action carries a server-side `defaults` stamp on that
+ * discriminator — dropping either would collapse all three kinds into one
+ * surface, so it must fail here rather than leak.
+ *
  * Subjects use nil-pattern UUIDs per the change design.md Seed Data section —
  * self-evidently fake, never colliding with live data.
  *
@@ -150,23 +157,53 @@ final class PortalContributionProviderTest extends TestCase
             'Client audience exposes request, complaint, contract and (field-projected) contactmoment'
         );
 
+        // Requests, complaints and contactmomenten are now all `ticket` rows; the
+        // per-collection ticketType filter is the ONLY thing keeping them apart.
         $expected = [
-            'clientRequests'       => ['request', 'client'],
-            'clientComplaints'     => ['complaint', 'client'],
-            'clientContracts'      => ['contract', 'clientRef'],
-            'clientContactmoments' => ['contactmoment', 'client'],
+            'clientRequests'       => ['ticket', 'client', 'request'],
+            'clientComplaints'     => ['ticket', 'client', 'complaint'],
+            'clientContracts'      => ['contract', 'clientRef', null],
+            'clientContactmoments' => ['ticket', 'client', 'contactmoment'],
         ];
-        foreach ($expected as $id => [$schema, $scopeField]) {
+        foreach ($expected as $id => [$schema, $scopeField, $ticketType]) {
             $this->assertSame('pipelinq', $collections[$id]['register']);
             $this->assertSame($schema, $collections[$id]['schema']);
             $this->assertSame($scopeField, $collections[$id]['scopeField']);
             $this->assertSame('clientId', $collections[$id]['scopeClaim'], 'Client surfaces scope by the clientId claim');
             $this->assertTrue($collections[$id]['listable']);
+
+            if ($ticketType === null) {
+                $this->assertArrayNotHasKey('filter', $collections[$id], 'Non-ticket collections declare no discriminator narrowing');
+                continue;
+            }
+
+            $this->assertSame(
+                ['ticketType' => $ticketType],
+                $collections[$id]['filter'],
+                "'{$id}' must narrow the ticket supertype to ticketType '{$ticketType}'"
+            );
         }
 
+        // The three ticket surfaces must narrow to three DISTINCT kinds — if two
+        // ever collapsed onto the same discriminator (or one dropped its filter),
+        // a client would see other kinds' tickets in the wrong list.
+        $ticketTypes = array_column(
+            array_column(
+                array_filter($manifest['collections'], static fn (array $c): bool => $c['schema'] === 'ticket'),
+                'filter'
+            ),
+            'ticketType'
+        );
+        sort($ticketTypes);
+        $this->assertSame(['complaint', 'contactmoment', 'request'], $ticketTypes, 'Each ticket collection narrows to its own kind');
+
         $schemas = array_column($manifest['collections'], 'schema');
-        $this->assertContains('contactmoment', $schemas, 'contactmoment is now field-projected in, not excluded');
         $this->assertNotContains('booking', $schemas, 'booking is a customer surface, never in the client manifest');
+        $this->assertSame(
+            [],
+            array_intersect(['request', 'complaint', 'contactmoment'], $schemas),
+            'The request/complaint/contactmoment schemas are retired — every one of them is a ticket row now'
+        );
     }//end testClientCollectionsAreOrgScoped()
 
     /**
@@ -184,14 +221,46 @@ final class PortalContributionProviderTest extends TestCase
         $actions = $this->indexById($manifest['actions']);
         $this->assertSame(['createComplaint', 'createRequest'], $this->sortedKeys($actions));
 
-        foreach (['createRequest' => 'request', 'createComplaint' => 'complaint'] as $id => $schema) {
+        // Both intakes write the unified `ticket` schema. The kind is stamped
+        // server-side from `defaults` — never taken from the client — and the
+        // complaint's classification is `complaintCategory` (an enum), NOT the
+        // supertype's free-text `category`, which belongs to the request.
+        $expected = [
+            'createRequest'   => ['request', ['title', 'description', 'category']],
+            'createComplaint' => ['complaint', ['title', 'description', 'complaintCategory']],
+        ];
+        foreach ($expected as $id => [$ticketType, $fields]) {
             $this->assertSame('create', $actions[$id]['type']);
             $this->assertSame('pipelinq', $actions[$id]['register']);
-            $this->assertSame($schema, $actions[$id]['schema']);
-            $this->assertSame(['title', 'description', 'category'], $actions[$id]['fields']);
+            $this->assertSame('ticket', $actions[$id]['schema']);
+            $this->assertSame(
+                ['ticketType' => $ticketType],
+                $actions[$id]['defaults'],
+                "'{$id}' must stamp ticketType '{$ticketType}' server-side"
+            );
+            $this->assertSame($fields, $actions[$id]['fields']);
+            $this->assertNotContains(
+                'ticketType',
+                $actions[$id]['fields'],
+                'ticketType is a server-side default, never a client-writable field — a client must not be able to file a complaint through the request form'
+            );
         }
 
-        $forbidden = ['status', 'assignee', 'assignedTo', 'priority', 'pipeline', 'queue', 'stage', 'slaDeadline', 'slaStatus'];
+        $forbidden = [
+            'status',
+            'assignee',
+            'assignedTo',
+            'priority',
+            'pipeline',
+            'queue',
+            'stage',
+            'slaDeadline',
+            'slaStatus',
+            'client',
+            'contact',
+            'resolution',
+            'resolvedAt',
+        ];
         foreach ($actions as $action) {
             foreach ($forbidden as $field) {
                 $this->assertNotContains($field, $action['fields'], "Whitelist must never expose '{$field}'");
@@ -303,26 +372,37 @@ final class PortalContributionProviderTest extends TestCase
         $this->assertIsArray($manifest);
 
         $contactmoment = $this->indexById($manifest['collections'])['clientContactmoments'];
-        $this->assertSame('contactmoment', $contactmoment['schema']);
+        $this->assertSame('ticket', $contactmoment['schema']);
+        $this->assertSame(['ticketType' => 'contactmoment'], $contactmoment['filter'], 'Narrowed to logged interactions only');
         $this->assertSame('client', $contactmoment['scopeField']);
         $this->assertSame('clientId', $contactmoment['scopeClaim']);
         $this->assertArrayNotHasKey('minTrust', $contactmoment, 'B2B contactmoment carries no special-category data — no trust floor');
         $this->assertSame(
-            ['subject', 'channel', 'outcome', 'contactedAt'],
+            ['title', 'channel', 'outcome', 'occurredAt'],
             $contactmoment['fields'],
             'Only the client-safe interaction facts are projected'
         );
 
-        // Staff-only / internal properties must never appear in the whitelist,
-        // including the CTI union fields merged in by register.d/70-cti.json.
+        // Staff-only / internal properties must never appear in the whitelist —
+        // the CTI union fields merged in by register.d/70-cti.json, and (since the
+        // ticket supertype merged all three kinds into one schema) the request /
+        // complaint properties this collection must not carry.
         $forbidden = [
             'notes',
-            'summary',
+            'description',
             'channelMetadata',
             'duration',
-            'agent',
+            'assignee',
             'contactsUid',
-            'request',
+            'parentTicket',
+            'category',
+            'complaintCategory',
+            'status',
+            'priority',
+            'pipeline',
+            'stage',
+            'contact',
+            'resolution',
             'recording_url',
             'disposition_notes',
             'agent_skill',
@@ -334,6 +414,60 @@ final class PortalContributionProviderTest extends TestCase
             $this->assertNotContains($field, $contactmoment['fields'], "Projection must never expose '{$field}'");
         }
     }//end testClientContactmomentIsFieldProjected()
+
+    /**
+     * Scenario: Client complaints ship a client-safe field projection.
+     *
+     * This collection was unprojected while it read the narrow `complaint` schema.
+     * `ticket` is a supertype whose properties are a strict superset, so without a
+     * whitelist the unification alone would newly leak the contactmoment CTI
+     * internals, the internal `notes` and the back-office fields to the client.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/portal-projected-collections/specs/portal-contribution/spec.md
+     */
+    public function testClientComplaintsAreFieldProjected(): void
+    {
+        $manifest = $this->provider->getContribution(self::CLIENT_SUBJECT);
+        $this->assertIsArray($manifest);
+
+        $complaints = $this->indexById($manifest['collections'])['clientComplaints'];
+        $this->assertSame('ticket', $complaints['schema']);
+        $this->assertSame(['ticketType' => 'complaint'], $complaints['filter']);
+        $this->assertSame(
+            ['title', 'complaintCategory', 'status', 'description', 'occurredAt'],
+            $complaints['fields'],
+            'Only the client-safe complaint facts are projected'
+        );
+
+        // Supertype bleed-through: CTI call internals and contactmoment/back-office
+        // properties ride along on `ticket` and must never reach a B2B client.
+        $forbidden = [
+            'notes',
+            'channelMetadata',
+            'duration',
+            'assignee',
+            'contactsUid',
+            'parentTicket',
+            'pipeline',
+            'stage',
+            'contact',
+            'priority',
+            'queue',
+            'slaDeadline',
+            'slaStatus',
+            'recording_url',
+            'disposition_notes',
+            'agent_skill',
+            'from_number',
+            'to_number',
+            'external_call_id',
+        ];
+        foreach ($forbidden as $field) {
+            $this->assertNotContains($field, $complaints['fields'], "Projection must never expose '{$field}'");
+        }
+    }//end testClientComplaintsAreFieldProjected()
 
     /**
      * Scenario: Customer booking ships a customer-safe field projection.
@@ -414,6 +548,16 @@ final class PortalContributionProviderTest extends TestCase
                         "Projected field '{$field}' must exist on schema '{$schema}'"
                     );
                 }
+
+                // A narrowing filter over a property the schema does not have would
+                // silently match nothing (or, worse, be ignored) — pin it too.
+                foreach (array_keys(($collection['filter'] ?? [])) as $property) {
+                    $this->assertContains(
+                        $property,
+                        $schemaProperties[$schema],
+                        "Filter property '{$property}' must exist on schema '{$schema}'"
+                    );
+                }
             }
 
             foreach ($manifest['actions'] as $action) {
@@ -422,9 +566,66 @@ final class PortalContributionProviderTest extends TestCase
                 foreach ($action['fields'] as $field) {
                     $this->assertContains($field, $schemaProperties[$schema], "Whitelisted field '{$field}' must exist on schema '{$schema}'");
                 }
+
+                // Server-side defaults are written to OR verbatim — an unknown
+                // property here would fail schema validation at create time.
+                foreach (array_keys(($action['defaults'] ?? [])) as $property) {
+                    $this->assertContains(
+                        $property,
+                        $schemaProperties[$schema],
+                        "Default property '{$property}' must exist on schema '{$schema}'"
+                    );
+                }
             }
         }
     }//end testManifestMatchesShippedRegisterSchemas()
+
+    /**
+     * Scenario: every ticket-backed surface carries its kind discriminator.
+     *
+     * `ticket` is a supertype: without a narrowing `filter` a collection lists ALL
+     * kinds (a client's complaints and logged contactmomenten would surface in the
+     * requests list), and without a `defaults` stamp a create action either fails
+     * the schema's `required` ticketType or lets the client choose the kind. This
+     * is a generic guard: any ticket surface added later must declare both, and the
+     * value must be one of the schema's three enum members.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/portal-projected-collections/specs/portal-contribution/spec.md
+     */
+    public function testTicketSurfacesCarryKindDiscriminator(): void
+    {
+        $kinds = ['request', 'complaint', 'contactmoment'];
+
+        foreach ([self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT] as $subject) {
+            $manifest = $this->provider->getContribution($subject);
+            $this->assertIsArray($manifest);
+
+            foreach ($manifest['collections'] as $collection) {
+                if ($collection['schema'] !== 'ticket') {
+                    continue;
+                }
+
+                $id = $collection['id'];
+                $this->assertArrayHasKey('filter', $collection, "Ticket collection '{$id}' must narrow by ticketType or it lists all three kinds");
+                $this->assertArrayHasKey('ticketType', $collection['filter'], "Ticket collection '{$id}' must narrow by ticketType");
+                $this->assertContains($collection['filter']['ticketType'], $kinds, "Ticket collection '{$id}' must narrow to a real ticketType");
+            }
+
+            foreach ($manifest['actions'] as $action) {
+                if (($action['schema'] ?? '') !== 'ticket') {
+                    continue;
+                }
+
+                $id = $action['id'];
+                $this->assertArrayHasKey('defaults', $action, "Ticket action '{$id}' must stamp ticketType server-side");
+                $this->assertArrayHasKey('ticketType', $action['defaults'], "Ticket action '{$id}' must stamp ticketType server-side");
+                $this->assertContains($action['defaults']['ticketType'], $kinds, "Ticket action '{$id}' must stamp a real ticketType");
+                $this->assertNotContains('ticketType', $action['fields'], "Ticket action '{$id}' must not let the client choose the kind");
+            }
+        }
+    }//end testTicketSurfacesCarryKindDiscriminator()
 
     /**
      * Collect schema property names from the main register + fragments.

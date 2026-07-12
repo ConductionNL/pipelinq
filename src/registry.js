@@ -435,7 +435,7 @@ const registry = {
 		kind: 'widget',
 		component: MyWorkWidget,
 		...PANEL_WIDGET_META,
-		_note: 'KEPT CUSTOM (ADR-049 Phase-4). Thin wrapper over the canonical GET /apps/pipelinq/api/worklist/mine union endpoint (leads + requests, server-sorted overdue → priority → due date). NOT dissolved into the built-in object-table widget because each row navigates to a DIFFERENT route (LeadDetail vs RequestDetail via the row\'s routeName field) and object-table\'s rowRoute is a single static route name — nextcloud-vue#91 Wave 2 has no per-row-route field. Dissolvable once the object-table widget gains a per-row route resolver.',
+		_note: 'KEPT CUSTOM (ADR-049 Phase-4). Thin wrapper over the canonical GET /apps/pipelinq/api/worklist/mine union endpoint (leads + tickets, server-sorted overdue → priority → due date). NOT dissolved into the built-in object-table widget because each row navigates to a DIFFERENT route (LeadDetail vs TicketDetail via the row\'s routeName field) and object-table\'s rowRoute is a single static route name — nextcloud-vue#91 Wave 2 has no per-row-route field. Dissolvable once the object-table widget gains a per-row route resolver. NOTE: WorklistService still emits the pre-migration routeName "RequestDetail"; the widget maps legacy detail-route names onto TicketDetail (unify-ticket-supertype).',
 	},
 	NaviAnalyticsWidget: {
 		kind: 'widget',
@@ -782,14 +782,14 @@ const registry = {
 	},
 
 	// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit).
-	//     Registered for RequestDetail / ContractDetail's declarative
+	//     Registered for TicketDetail / ContractDetail's declarative
 	//     `config.bodyWidgets`. Each self-fetches its GET .../availability
 	//     endpoint by @objectId and hides entirely (not disabled) when no
 	//     installed app implements the target kind. ---
 	RequestConversionSection: {
 		kind: 'section',
 		component: RequestConversionSection,
-		_note: '"Convert to case" action for the RequestDetail page (semantic-handoff-emit). Self-fetches GET /api/handoff/request/{id}/availability by @objectId; renders the button only when canConvert (an ns#Case implementer is installed AND status is in_progress). On success shows the converted notice + a copyable caseReference — the target app is kind-addressed and unknown to the frontend, so no precise cross-app route can be built.',
+		_note: '"Convert to case" action for the TicketDetail page (semantic-handoff-emit; formerly RequestDetail, retired by unify-ticket-supertype). Self-fetches GET /api/handoff/request/{id}/availability by @objectId; renders the button only when canConvert (an ns#Case implementer is installed AND status is in_progress). On success shows the converted notice + a copyable caseReference — the target app is kind-addressed and unknown to the frontend, so no precise cross-app route can be built.',
 	},
 	ContractInvoicingSection: {
 		kind: 'section',

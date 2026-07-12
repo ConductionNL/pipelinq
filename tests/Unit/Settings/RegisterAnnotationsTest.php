@@ -289,6 +289,20 @@ class RegisterAnnotationsTest extends TestCase
         'diffDays',
         'formatDate',
         'dateDiff',
+        // Kept in sync with OpenRegister's authoritative allowlist in
+        // lib/Service/Calculation/CalculationAnnotationValidator.php — this list
+        // had drifted, so a register legitimately using `round` (leadProduct.total)
+        // failed this test even though the OR evaluator supports the operator.
+        'dateAdd',
+        'sequence',
+        'max',
+        'min',
+        'coalesce',
+        'abs',
+        'round',
+        'year',
+        'monthsElapsed',
+        'sha256',
     ];
 
     /**

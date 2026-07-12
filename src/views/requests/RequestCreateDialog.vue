@@ -67,11 +67,15 @@ export default {
 		async onSave(formData) {
 			this.saving = true
 			try {
-				const result = await this.objectStore.saveObject('request', formData)
+				// A request is a `ticket` with ticketType 'request' (unify-ticket-supertype).
+				const result = await this.objectStore.saveObject('ticket', {
+					...formData,
+					ticketType: 'request',
+				})
 				if (result) {
 					this.$emit('created', result.id)
 				} else {
-					const error = this.objectStore.getError('request')
+					const error = this.objectStore.getError('ticket')
 					showError(error?.message || t('pipelinq', 'Failed to create request.'))
 				}
 			} finally {

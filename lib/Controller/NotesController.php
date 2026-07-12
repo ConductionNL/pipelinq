@@ -27,6 +27,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
 use OCA\Pipelinq\Service\SettingsService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -43,8 +44,10 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the collaborators a notes
  *  endpoint legitimately needs (notes + event services, session, l10n, logger,
- *  group manager, settings, OR container); splitting them would add indirection
- *  without reducing real coupling.
+ *  group manager, settings, ticket resolver, OR container); splitting them would
+ *  add indirection without reducing real coupling.
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
  */
 class NotesController extends Controller
 {
@@ -54,13 +57,29 @@ class NotesController extends Controller
      * This ensures objectExists() scopes OR lookups to this app's own register+schema,
      * preventing IDOR against objects in other apps or registers.
      *
+     * Ticket-backed object types (see OBJECT_TYPE_TO_TICKET_TYPE) are absent here:
+     * they resolve through TicketService instead of a per-entity schema key.
+     *
      * @var array<string, string>
      */
     private const OBJECT_TYPE_TO_SCHEMA_KEY = [
         'pipelinq_client'  => 'client_schema',
         'pipelinq_contact' => 'contact_schema',
         'pipelinq_lead'    => 'lead_schema',
-        'pipelinq_request' => 'request_schema',
+    ];
+
+    /**
+     * Maps the ticket-backed objectType slugs onto their `ticketType` discriminator.
+     *
+     * The EXTERNAL slugs (`pipelinq_request`) are a public contract and stay stable;
+     * internally they now resolve to the unified `ticket` schema narrowed by the
+     * discriminator (unify-ticket-supertype), so a note may still only be attached to
+     * a ticket of the matching subtype.
+     *
+     * @var array<string, string>
+     */
+    private const OBJECT_TYPE_TO_TICKET_TYPE = [
+        'pipelinq_request' => TicketService::TYPE_REQUEST,
     ];
 
     /**
@@ -75,6 +94,11 @@ class NotesController extends Controller
      * @param ContainerInterface $container        The DI container.
      * @param IGroupManager      $groupManager     The group manager.
      * @param SettingsService    $settingsService  The settings service.
+     * @param TicketService      $ticketService    The unified ticket resolver.
+     *
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList) Nextcloud controllers are wired
+     *  purely by constructor DI; every parameter is a collaborator the notes endpoint
+     *  uses directly, and a parameter object would only hide the wiring.
      */
     public function __construct(
         IRequest $request,
@@ -86,9 +110,67 @@ class NotesController extends Controller
         private ContainerInterface $container,
         private IGroupManager $groupManager,
         private SettingsService $settingsService,
+        private TicketService $ticketService,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
+
+    /**
+     * Resolve the register + schema an objectType's objects live in.
+     *
+     * Ticket-backed types (`pipelinq_request`) resolve to the unified `ticket`
+     * schema through TicketService; every other type keeps its own schema config
+     * key from the app settings.
+     *
+     * @param string|null $schemaKey The settings schema key, or null for ticket-backed types.
+     *
+     * @return array{0: string, 1: string} The [registerId, schemaId] pair ('' when unconfigured).
+     */
+    private function resolveScope(?string $schemaKey): array
+    {
+        if ($schemaKey === null) {
+            return [$this->ticketService->getRegisterId(), $this->ticketService->getSchemaId()];
+        }
+
+        $settings = $this->settingsService->getSettings();
+
+        return [
+            (string) ($settings['register'] ?? ''),
+            (string) ($settings[$schemaKey] ?? ''),
+        ];
+    }//end resolveScope()
+
+    /**
+     * Whether a found ticket carries the expected `ticketType` discriminator.
+     *
+     * The unified `ticket` schema holds every subtype, so schema scoping alone no
+     * longer proves the object is the subtype the caller named. A payload that
+     * cannot be read fails closed, mirroring objectExists()'s contract.
+     *
+     * @param mixed  $object     The object returned by OpenRegister.
+     * @param string $ticketType The expected TicketService::TYPE_* value.
+     *
+     * @return bool Whether the object is a ticket of that subtype.
+     */
+    private function isTicketOfType(mixed $object, string $ticketType): bool
+    {
+        $data = null;
+        if (is_array($object) === true) {
+            $data = $object;
+        } else if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+            $payload = $object->getObject();
+            if (is_array($payload) === true) {
+                $data = $payload;
+            }
+        }
+
+        if ($data === null) {
+            $this->logger->warning('NotesController: ticket payload unreadable', ['ticketType' => $ticketType]);
+            return false;
+        }
+
+        return (string) ($data['ticketType'] ?? '') === $ticketType;
+    }//end isTicketOfType()
 
     /**
      * Verify that the underlying OR object exists within this app's own register+schema.
@@ -96,8 +178,9 @@ class NotesController extends Controller
      * Scopes the lookup to the app's register and the schema that corresponds to
      * the given objectType. Returns false when the object is not found in the
      * expected schema (including when it exists in a different app's schema — IDOR
-     * prevention). Returns false on all unexpected errors (fail-closed) so that
-     * a broken OR connection does not silently grant access.
+     * prevention), and — for ticket-backed types — when the found ticket carries a
+     * different `ticketType`. Returns false on all unexpected errors (fail-closed)
+     * so that a broken OR connection does not silently grant access.
      *
      * @param string $objectType The pipelinq object type (must be in VALID_TYPES).
      * @param string $objectId   The OR object UUID.
@@ -106,15 +189,14 @@ class NotesController extends Controller
      */
     private function objectExists(string $objectType, string $objectId): bool
     {
-        $schemaKey = self::OBJECT_TYPE_TO_SCHEMA_KEY[$objectType] ?? null;
-        if ($schemaKey === null) {
+        $ticketType = (self::OBJECT_TYPE_TO_TICKET_TYPE[$objectType] ?? null);
+        $schemaKey  = (self::OBJECT_TYPE_TO_SCHEMA_KEY[$objectType] ?? null);
+        if ($ticketType === null && $schemaKey === null) {
             return false;
         }
 
         try {
-            $settings   = $this->settingsService->getSettings();
-            $registerId = $settings['register'] ?? '';
-            $schemaId   = $settings[$schemaKey] ?? '';
+            [$registerId, $schemaId] = $this->resolveScope(schemaKey: $schemaKey);
 
             if ($registerId === '' || $schemaId === '') {
                 // Settings not yet configured — fail closed.
@@ -128,7 +210,15 @@ class NotesController extends Controller
                 register: $registerId,
                 schema: $schemaId
             );
-            return $object !== null;
+            if ($object === null) {
+                return false;
+            }
+
+            if ($ticketType === null) {
+                return true;
+            }
+
+            return $this->isTicketOfType(object: $object, ticketType: $ticketType);
         } catch (\OCP\DB\Exception | \OCP\AppFramework\Db\DoesNotExistException $e) {
             // Expected "not found" path — return false without noise.
             return false;
