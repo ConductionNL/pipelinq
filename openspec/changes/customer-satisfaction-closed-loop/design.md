@@ -54,7 +54,7 @@ Stored as a JSON array in app config (`SettingsService`), edited from the survey
 - Response rate = responded / sent per survey, channel, period (suppressed and failed excluded from the denominator).
 - Per-client satisfaction: responses whose invitation's linked entity belongs to the client (or whose response `linkedEntityId` resolves to the client) → NPS, average rating, count, trend (current vs. previous 90-day window), recent verbatims (latest 3 open-text answers).
 
-Klantbeeld-360's client view renders this as a "Satisfaction" panel; empty state when the client has no responses.
+Customer-360's client view renders this as a "Satisfaction" panel; empty state when the client has no responses.
 
 ## Decisions
 
@@ -70,4 +70,4 @@ Klantbeeld-360's client view renders this as a "Satisfaction" panel; empty state
 - **Public endpoint surface grows** — mitigated by reusing V1 brute-force protection, UUID tokens, expiry, and single-use (`responded` invitations reject re-submission).
 - **Channel adapter optionality** — WhatsApp/SMS rules on instances without the adapter degrade to `suppressed (channel-unavailable)` or email fallback (rule flag); dispatch never hard-fails the triggering interaction's save.
 - **Detractor threshold opinionation** — NPS ≤ 6 follows the standard promoter/passive/detractor bands already in V1; the 1–5 rating threshold (≤ 2) is admin-overridable.
-- **Aggregation cost in klantbeeld** — on-the-fly computation over a client's responses is bounded (responses per client are low-volume); revisit pre-aggregation only if profiling demands it.
+- **Aggregation cost in customer 360** — on-the-fly computation over a client's responses is bounded (responses per client are low-volume); revisit pre-aggregation only if profiling demands it.

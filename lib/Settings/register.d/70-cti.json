@@ -173,7 +173,7 @@
           "screen_pop_enabled": {
             "type": "boolean",
             "default": true,
-            "description": "Whether inbound calls should auto-navigate the agent's tab to klantbeeld.",
+            "description": "Whether inbound calls should auto-navigate the agent's tab to customer 360.",
             "title": "Screen Pop Enabled"
           },
           "screen_pop_delay_ms": {

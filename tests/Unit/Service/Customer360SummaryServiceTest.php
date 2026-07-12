@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for KlantbeeldSummaryService.
+ * Unit tests for Customer360SummaryService.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service
@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\Service\ActivityTimelineService;
-use OCA\Pipelinq\Service\KlantbeeldSummaryService;
+use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCA\Pipelinq\Service\RegisterResolverService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
@@ -36,11 +36,11 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Tests for the klantbeeld-360 consolidated summary aggregation.
+ * Tests for the customer-360 consolidated summary aggregation.
  *
- * @spec openspec/changes/klantbeeld-360-activation/specs/klantbeeld-360/spec.md#requirement-consolidated-klantbeeld-summary
+ * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
  */
-class KlantbeeldSummaryServiceTest extends TestCase
+class Customer360SummaryServiceTest extends TestCase
 {
     /**
      * The ticket resolver mock (unify-ticket-supertype).
@@ -122,7 +122,7 @@ class KlantbeeldSummaryServiceTest extends TestCase
 
         $logger = $this->createMock(LoggerInterface::class);
 
-        $this->service = new KlantbeeldSummaryService(
+        $this->service = new Customer360SummaryService(
             $container,
             $registerResolver,
             $appConfig,
@@ -135,9 +135,9 @@ class KlantbeeldSummaryServiceTest extends TestCase
     /**
      * The service under test.
      *
-     * @var KlantbeeldSummaryService
+     * @var Customer360SummaryService
      */
-    private KlantbeeldSummaryService $service;
+    private Customer360SummaryService $service;
 
     /**
      * Configure `TicketService::findByType()` to return a fixed set of open

@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Pipelinq KlantbeeldSummaryService.
+ * Pipelinq Customer360SummaryService.
  *
  * Consolidated 360 summary for a single client — the one piece of the
- * klantbeeld-360 MVP the declarative layer cannot express (klantbeeld-360-activation).
+ * customer-360 MVP the declarative layer cannot express (klantbeeld-360-activation).
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -52,9 +52,9 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates across ticket/lead/queue/activity reads.
  *
- * @spec openspec/changes/klantbeeld-360-activation/specs/klantbeeld-360/spec.md#requirement-consolidated-klantbeeld-summary
+ * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
  */
-class KlantbeeldSummaryService
+class Customer360SummaryService
 {
     /**
      * Ticket statuses considered "open" (mirrors KccWerkplekService::OPEN_REQUEST_STATUSES
@@ -103,7 +103,7 @@ class KlantbeeldSummaryService
     }//end __construct()
 
     /**
-     * Build the consolidated klantbeeld summary for one client.
+     * Build the consolidated customer 360 summary for one client.
      *
      * All reads go through OpenRegister's `ObjectService` (via {@see TicketService}
      * for tickets, directly for leads/queues), which applies the caller's RBAC —
@@ -113,7 +113,7 @@ class KlantbeeldSummaryService
      *
      * @return array<string, mixed> The summary payload (see class docblock).
      *
-     * @spec openspec/changes/klantbeeld-360-activation/specs/klantbeeld-360/spec.md#requirement-consolidated-klantbeeld-summary
+     * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
      */
     public function getSummary(string $clientId): array
     {
@@ -231,7 +231,7 @@ class KlantbeeldSummaryService
             );
         } catch (Throwable $e) {
             $this->logger->warning(
-                'KlantbeeldSummaryService: last-activity lookup failed',
+                'Customer360SummaryService: last-activity lookup failed',
                 ['clientId' => $clientId, 'exception' => $e->getMessage()]
             );
             return null;
@@ -304,7 +304,7 @@ class KlantbeeldSummaryService
      */
     private function getRegister(): string
     {
-        return $this->registerResolver->resolve('klantbeeld');
+        return $this->registerResolver->resolve('customer-360');
     }//end getRegister()
 
     /**
@@ -368,7 +368,7 @@ class KlantbeeldSummaryService
             );
         } catch (Throwable $e) {
             $this->logger->warning(
-                'KlantbeeldSummaryService: findAll failed',
+                'Customer360SummaryService: findAll failed',
                 ['schemaKey' => $schemaKey, 'error' => $e->getMessage()]
             );
             return [];
@@ -404,7 +404,7 @@ class KlantbeeldSummaryService
             );
         } catch (Throwable $e) {
             $this->logger->warning(
-                'KlantbeeldSummaryService: lead findAll failed',
+                'Customer360SummaryService: lead findAll failed',
                 ['error' => $e->getMessage()]
             );
             return [];
