@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for KlantbeeldController.
+ * Unit tests for Customer360Controller.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Controller
@@ -24,8 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
-use OCA\Pipelinq\Controller\KlantbeeldController;
-use OCA\Pipelinq\Service\KlantbeeldSummaryService;
+use OCA\Pipelinq\Controller\Customer360Controller;
+use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUser;
@@ -35,12 +35,12 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Tests for KlantbeeldController::summary() — auth, the per-object read guard
+ * Tests for Customer360Controller::summary() — auth, the per-object read guard
  * (no IDOR), and the doelbinding access log.
  *
- * @spec openspec/changes/klantbeeld-360-activation/specs/klantbeeld-360/spec.md#requirement-klantbeeld-access-is-logged-doelbinding-mvp
+ * @spec openspec/specs/customer-360/spec.md#requirement-customer-360-access-is-logged-doelbinding-mvp
  */
-class KlantbeeldControllerTest extends TestCase
+class Customer360ControllerTest extends TestCase
 {
     /**
      * Build a controller with the given mocked collaborators, wiring
@@ -52,7 +52,7 @@ class KlantbeeldControllerTest extends TestCase
      * @param mixed       $summaryOrThrow The summary array to return, or a \Throwable to throw.
      * @param LoggerInterface|null $logger Optional pre-built logger mock (for asserting calls).
      *
-     * @return KlantbeeldController
+     * @return Customer360Controller
      */
     private function buildController(
         ?string $clientId,
@@ -60,7 +60,7 @@ class KlantbeeldControllerTest extends TestCase
         ?string $uid,
         mixed $summaryOrThrow,
         ?LoggerInterface $logger = null
-    ): KlantbeeldController {
+    ): Customer360Controller {
         $request = $this->createMock(IRequest::class);
         $request->method('getParam')->willReturnCallback(
             static function (string $key, $default = null) use ($clientId) {
@@ -97,14 +97,14 @@ class KlantbeeldControllerTest extends TestCase
         $container = $this->createMock(ContainerInterface::class);
         $container->method('get')->willReturn($objectService);
 
-        $summaryService = $this->createMock(KlantbeeldSummaryService::class);
+        $summaryService = $this->createMock(Customer360SummaryService::class);
         if ($summaryOrThrow instanceof \Throwable) {
             $summaryService->method('getSummary')->willThrowException($summaryOrThrow);
         } else {
             $summaryService->method('getSummary')->willReturn($summaryOrThrow ?? []);
         }
 
-        return new KlantbeeldController(
+        return new Customer360Controller(
             $request,
             $summaryService,
             $userSession,
@@ -207,7 +207,7 @@ class KlantbeeldControllerTest extends TestCase
         $logger->expects($this->once())
             ->method('info')
             ->with(
-                $this->stringContains('Klantbeeld accessed'),
+                $this->stringContains('Customer 360 accessed'),
                 $this->callback(
                     static function (array $context): bool {
                         return ($context['actor'] ?? null) === 'agent-1'

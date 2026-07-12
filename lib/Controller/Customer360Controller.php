@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Pipelinq KlantbeeldController.
+ * Pipelinq Customer360Controller.
  *
- * Read endpoint for the consolidated klantbeeld-360 summary (klantbeeld-360-activation).
+ * Read endpoint for the consolidated customer-360 summary (klantbeeld-360-activation).
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -19,8 +19,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/klantbeeld-360-activation/specs/klantbeeld-360/spec.md#requirement-consolidated-klantbeeld-summary
- * @spec openspec/changes/klantbeeld-360-activation/specs/klantbeeld-360/spec.md#requirement-klantbeeld-access-is-logged-doelbinding-mvp
+ * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
+ * @spec openspec/specs/customer-360/spec.md#requirement-customer-360-access-is-logged-doelbinding-mvp
  */
 
 declare(strict_types=1);
@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\KlantbeeldSummaryService;
+use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -41,26 +41,26 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Controller for the klantbeeld-360 consolidated summary endpoint.
+ * Controller for the customer-360 consolidated summary endpoint.
  *
- * @spec openspec/changes/klantbeeld-360-activation/specs/klantbeeld-360/spec.md#requirement-consolidated-klantbeeld-summary
+ * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
  */
-class KlantbeeldController extends Controller
+class Customer360Controller extends Controller
 {
     /**
      * Constructor.
      *
-     * @param IRequest                 $request        The request.
-     * @param KlantbeeldSummaryService $summaryService The klantbeeld summary aggregator.
-     * @param IUserSession             $userSession    Current user.
-     * @param IAppConfig               $appConfig      App config (register/schema resolution for the read guard).
-     * @param ContainerInterface       $container      DI container (OpenRegister ObjectService).
-     * @param LoggerInterface          $logger         Logger — also the doelbinding access-log sink
-     *                                                 (MVP).
+     * @param IRequest                  $request        The request.
+     * @param Customer360SummaryService $summaryService The customer 360 summary aggregator.
+     * @param IUserSession              $userSession    Current user.
+     * @param IAppConfig                $appConfig      App config (register/schema resolution for the read guard).
+     * @param ContainerInterface        $container      DI container (OpenRegister ObjectService).
+     * @param LoggerInterface           $logger         Logger — also the doelbinding access-log sink
+     *                                                  (MVP).
      */
     public function __construct(
         IRequest $request,
-        private KlantbeeldSummaryService $summaryService,
+        private Customer360SummaryService $summaryService,
         private IUserSession $userSession,
         private IAppConfig $appConfig,
         private ContainerInterface $container,
@@ -70,7 +70,7 @@ class KlantbeeldController extends Controller
     }//end __construct()
 
     /**
-     * GET /api/klantbeeld/summary?clientId=... — the consolidated klantbeeld summary.
+     * GET /api/customer-360/summary?clientId=... — the consolidated customer 360 summary.
      *
      * Per-object read guard (no IDOR): the caller must be able to READ the
      * client object itself — resolved through OpenRegister's ObjectService,
@@ -85,8 +85,8 @@ class KlantbeeldController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/klantbeeld-360-activation/specs/klantbeeld-360/spec.md#requirement-consolidated-klantbeeld-summary
-     * @spec openspec/changes/klantbeeld-360-activation/specs/klantbeeld-360/spec.md#requirement-klantbeeld-access-is-logged-doelbinding-mvp
+     * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
+     * @spec openspec/specs/customer-360/spec.md#requirement-customer-360-access-is-logged-doelbinding-mvp
      */
     public function summary(): JSONResponse
     {
@@ -108,7 +108,7 @@ class KlantbeeldController extends Controller
             $summary = $this->summaryService->getSummary(clientId: $clientId);
         } catch (Throwable $e) {
             $this->logger->error(
-                'KlantbeeldController: summary failed',
+                'Customer360Controller: summary failed',
                 ['clientId' => $clientId, 'exception' => $e->getMessage()]
             );
             return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
@@ -142,7 +142,7 @@ class KlantbeeldController extends Controller
             $object        = $objectService->find($clientId, $register, $schema);
         } catch (Throwable $e) {
             $this->logger->warning(
-                'KlantbeeldController: client read-guard failed',
+                'Customer360Controller: client read-guard failed',
                 ['clientId' => $clientId, 'exception' => $e->getMessage()]
             );
             return false;
@@ -152,7 +152,7 @@ class KlantbeeldController extends Controller
     }//end canReadClient()
 
     /**
-     * Log a klantbeeld access (doelbinding, MVP) via the app's standard
+     * Log a customer 360 access (doelbinding, MVP) via the app's standard
      * logger — {@see LoggerInterface} is the app's existing general-purpose
      * audit facility (used the same way across the app for auditable events);
      * design.md's Open Questions section resolves the access-log medium to
@@ -167,9 +167,9 @@ class KlantbeeldController extends Controller
     private function logAccess(string $actor, string $clientId): void
     {
         $this->logger->info(
-            'Klantbeeld accessed',
+            'Customer 360 accessed',
             [
-                'audit'    => 'klantbeeld-access',
+                'audit'    => 'customer-360-access',
                 'actor'    => $actor,
                 'clientId' => $clientId,
                 'time'     => (new DateTimeImmutable('now'))->format(DATE_ATOM),
