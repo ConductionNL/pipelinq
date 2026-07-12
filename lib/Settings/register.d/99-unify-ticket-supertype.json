@@ -52,6 +52,26 @@
               ]
             }
           },
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search inbound customer tickets — requests, complaints, and logged contactmomente — optionally filtered by ticketType discriminator, lifecycle status, or associated client. Returns RBAC-scoped ticket summaries, newest first.",
+                "scope": "read",
+                "filters": [
+                  "ticketType",
+                  "status",
+                  "client"
+                ],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single ticket by id, covering the unified request/complaint/contactmoment supertype fields relevant to its ticketType.",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
+          },
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "new",
