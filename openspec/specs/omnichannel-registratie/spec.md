@@ -4,6 +4,8 @@ status: done
 
 # Omnichannel Registratie Specification
 
+**OpenSpec changes**: [vng-klantinteracties-leaf](../../changes/vng-klantinteracties-leaf/) _(active — realises this capability's VNG Klantinteracties `Contactmoment`/`Kanaal` mapping over the canonical `ticket` schema; the VNG ↔ canonical contract + AVG BSN policy live in the change until archive)_
+
 ## Purpose
 
 @e2e exclude draft/partial spec — channel-specific metadata form adaptations not yet built as separate UI surface; covered by contactmomenten UI tests
