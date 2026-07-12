@@ -509,4 +509,4 @@ Every successful outbound WhatsApp or SMS send (agent composer or SLA escalation
 - **Resolved:** Contactmoment is a separate entity from request, with explicit schema definition.
 - **Resolved:** Channel configuration extends existing SystemTag infrastructure.
 - **Resolved:** Integration with existing ActivityService and NotificationService is specified.
-- **Dependency:** Requires `kcc-werkplek` and `klantbeeld-360` specs for full KCC workflow context. Procest integration for zaak linking is optional (gracefully degrades when not installed).
+- **Dependency:** Requires `kcc-werkplek` and `customer-360` specs for full KCC workflow context. Procest integration for zaak linking is optional (gracefully degrades when not installed).

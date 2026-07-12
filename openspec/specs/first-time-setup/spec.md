@@ -62,7 +62,7 @@ The system SHALL provide an idempotent demo-data seed invocable two ways from on
 
 - GIVEN a clean install with provisioned registers
 - WHEN `occ pipelinq:demo:seed` runs
-- THEN clients, leads, requests, and contactmomenten MUST exist, linked so klantbeeld-360 and the dashboards render populated
+- THEN clients, leads, requests, and contactmomenten MUST exist, linked so customer-360 and the dashboards render populated
 - AND every seeded object MUST be identifiable as demo data
 
 #### Scenario: Idempotent re-run

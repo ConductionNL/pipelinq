@@ -4736,7 +4736,7 @@
         "stageOrder": 3,
         "status": "open",
         "client": "994174bf-3e92-4bec-aea2-701b7131201f",
-        "notes": "Win-probability seed (hot band): recently touched, so winProbability reads the full stage probability on a fresh import. klantbeeld-360-activation: linked to client-gemeente-voorbeeld so the klantbeeld summary shows this lead's pipeline value."
+        "notes": "Win-probability seed (hot band): recently touched, so winProbability reads the full stage probability on a fresh import. klantbeeld-360-activation: linked to client-gemeente-voorbeeld so the customer 360 summary shows this lead's pipeline value."
       },
       {
         "@self": {
@@ -4754,7 +4754,7 @@
         "stageOrder": 4,
         "status": "open",
         "client": "5c9f4a52-ed0e-4519-b8d8-b2e1ef1d2554",
-        "notes": "Win-probability seed (warm band): a stalled deal — winProbability decays toward the 80%/50% bands as this seed ages past 14/30 days untouched. klantbeeld-360-activation: linked to client-meridiaan-advies-bv so the klantbeeld summary shows this lead's pipeline value."
+        "notes": "Win-probability seed (warm band): a stalled deal — winProbability decays toward the 80%/50% bands as this seed ages past 14/30 days untouched. klantbeeld-360-activation: linked to client-meridiaan-advies-bv so the customer 360 summary shows this lead's pipeline value."
       },
       {
         "@self": {
@@ -4772,7 +4772,7 @@
         "stageOrder": 1,
         "status": "open",
         "client": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb",
-        "notes": "Win-probability seed (cold band): long untouched — winProbability decays to the 25% band once this seed ages past 60 days untouched. klantbeeld-360-activation: linked to client-zonnereizen so the klantbeeld summary shows this lead's pipeline value."
+        "notes": "Win-probability seed (cold band): long untouched — winProbability decays to the 25% band once this seed ages past 60 days untouched. klantbeeld-360-activation: linked to client-zonnereizen so the customer 360 summary shows this lead's pipeline value."
       },
       {
         "@self": {
@@ -5376,7 +5376,7 @@
           "slug": "client-gemeente-voorbeeld",
           "id": "994174bf-3e92-4bec-aea2-701b7131201f"
         },
-        "_note": "klantbeeld-360-activation seed: municipality archetype — see design.md Seed Data. Client for lead-gemeente-voorbeeld-kcc-portaal + 4 open tickets (request/complaint/2x contactmoment) below, so the klantbeeld-360 summary is verifiable on a fresh install (open-ticket count 4, SLA breached 1, one queue, pipeline value from the lead).",
+        "_note": "klantbeeld-360-activation seed: municipality archetype — see design.md Seed Data. Client for lead-gemeente-voorbeeld-kcc-portaal + 4 open tickets (request/complaint/2x contactmoment) below, so the customer-360 summary is verifiable on a fresh install (open-ticket count 4, SLA breached 1, one queue, pipeline value from the lead).",
         "name": "Gemeente Voorbeeld",
         "type": "organization",
         "contactsUid": "seed-gemeente-voorbeeld-001",
