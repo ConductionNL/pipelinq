@@ -58,6 +58,9 @@ parameters:
         - '#Parameter (\#\d+ )?\$statusCode of class OCP\\AppFramework\\Http\\JSONResponse constructor expects#'
         # registerRepairStep exists on server; not yet in nextcloud/ocp stub used for analysis
         - '#Call to an undefined method OCP\\AppFramework\\Bootstrap\\IRegistrationContext::registerRepairStep#'
+        # RemoveRetiredAvgJobs unregisters deleted job classes by bare class name;
+        # the deleted classes are no longer class-string<IJob> for static analysis (ADR-047 Phase-3)
+        - '#Parameter \#1 \$job of method OCP\\BackgroundJob\\IJobList::remove\(\) expects#'
         # OCP stub gaps for methods that exist at runtime
         - '#Call to an undefined method OCP\\IRequest::getContent\(\)#'
         - '#Call to an undefined method OCP\\IRequest::setParameter\(\)#'

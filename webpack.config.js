@@ -125,6 +125,12 @@ webpackConfig.plugins = [
 
 // Force all shared packages to resolve from pipelinq's own node_modules,
 // preventing the nextcloud-vue submodule's nested deps (Vue 3) from leaking in.
+// Register the exact-match style.css alias BEFORE the bare package alias:
+// enhanced-resolve applies the first matching entry, and the bare alias maps the
+// package to its DIRECTORY, so '@nextcloud/dialogs/style.css' (imported by
+// nextcloud-vue's useAppInstaller) would resolve to a non-existent root style.css.
+// dialogs v6 ships the stylesheet at dist/style.css behind its "exports" map.
+webpackConfig.resolve.alias['@nextcloud/dialogs/style.css$'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs/dist/style.css')
 webpackConfig.resolve.alias['@nextcloud/dialogs'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs')
 
 // Bypass @nextcloud/axios's `exports` field which only declares the `import`
@@ -160,9 +166,13 @@ webpackConfig.resolve.alias['vue-demi$'] = path.resolve(__dirname, 'node_modules
 // @nextcloud/files (pulled transitively via @nextcloud/axios → @nextcloud/auth)
 // references the Node core `stream` module, which webpack 5 does not polyfill for
 // the browser. It is on a code path the app never hits, so provide an empty module.
+// Same story for `path`: @nextcloud/dialogs v6 drags in a FilePicker chunk that
+// imports it, and the app only uses the toast APIs (showError/showSuccess/
+// showWarning), so the FilePicker code path never executes.
 webpackConfig.resolve.fallback = {
 	...(webpackConfig.resolve.fallback || {}),
 	stream: false,
+	path: false,
 }
 
 // Share Vue + @nextcloud/vue + pinia + icons + @conduction/nextcloud-vue
