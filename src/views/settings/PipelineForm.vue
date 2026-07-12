@@ -96,6 +96,7 @@
 						</div>
 						<NcButton type="tertiary"
 							class="mapping-delete"
+							:aria-label="t('pipelinq', 'Remove this property mapping')"
 							@click="removeMapping(index)">
 							<template #icon>
 								<Delete :size="20" />
@@ -136,6 +137,7 @@
 							<div class="stage-reorder-buttons">
 								<NcButton type="tertiary"
 									:disabled="index === 0"
+									:aria-label="t('pipelinq', 'Move stage {name} up', { name: stage.name })"
 									@click="moveStage(stage, -1)">
 									<template #icon>
 										<ChevronUp :size="16" />
@@ -143,6 +145,7 @@
 								</NcButton>
 								<NcButton type="tertiary"
 									:disabled="index === sortedStages.length - 1"
+									:aria-label="t('pipelinq', 'Move stage {name} down', { name: stage.name })"
 									@click="moveStage(stage, 1)">
 									<template #icon>
 										<ChevronDown :size="16" />
@@ -190,6 +193,7 @@
 
 						<NcButton type="tertiary"
 							class="stage-delete"
+							:aria-label="t('pipelinq', 'Remove stage {name}', { name: stage.name })"
 							@click="removeStage(index)">
 							<template #icon>
 								<Delete :size="20" />

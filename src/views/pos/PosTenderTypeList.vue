@@ -8,11 +8,10 @@
   -->
 <template>
 	<div class="pos-tender-type-list">
+		<!-- No heading of its own: the host NcSettingsSection (PosTenderTypeManager,
+		     on the admin page) already names and describes this surface. -->
 		<div class="pos-tender-type-list__header">
-			<div class="pos-tender-type-list__title">
-				<h2>{{ t('pipelinq', 'POS tender types') }}</h2>
-				<p>{{ t('pipelinq', 'Available payment methods at the till and their GL posting accounts.') }}</p>
-			</div>
+			<div class="pos-tender-type-list__title" />
 			<div class="pos-tender-type-list__actions">
 				<NcButton :disabled="loading" @click="refresh">
 					<template #icon>
