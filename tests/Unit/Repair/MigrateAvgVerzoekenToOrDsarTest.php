@@ -197,7 +197,7 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase
                     'ingediendOp'       => '2026-01-01T00:00:00Z',
                     'ingediendVia'      => 'web',
                     'verzoekerContact'  => 'contact-9',
-                    'artikel'           => 'art-15',
+                    'artikel'           => 'art-15-inzage',
                     'specifiekeVraag'   => 'all data',
                     'scope'             => ['crm'],
                     'wettelijkeTermijnVerloopt' => '2026-02-01T00:00:00Z',
@@ -214,10 +214,14 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase
                 ['id' => 'b2', 'verzoekId' => 'v1', 'bronApp' => 'pipelinq-crm', 'contentHash' => 'sha256:def'],
             ],
             '42' => [
-                ['id' => 'w1', 'verzoekId' => 'v1', 'grond' => 'buitensporig', 'weigering' => 'no', 'toelichtingAvg23' => 'x'],
+                // grond is the Art-23 sub-paragraph the refusal rests on — the
+                // source enum, not a descriptive slug.
+                ['id' => 'w1', 'verzoekId' => 'v1', 'grond' => 'art-23-lid-1-sub-i', 'weigering' => 'gedeeltelijk', 'toelichtingAvg23' => 'x'],
             ],
             '43' => [
-                ['id' => 'r1', 'verzoekId' => 'v1', 'veldpad' => 'email', 'voorWaarde' => 'a@b', 'naWaarde' => '***', 'grond' => 'third-party-data'],
+                // A redactieActie hangs off a bewijsItem (bewijsItemId), never
+                // off the verzoek — it has no verzoekId field at all.
+                ['id' => 'r1', 'bewijsItemId' => 'b1', 'veldpad' => 'email', 'voorWaarde' => 'a@b', 'naWaarde' => '***', 'grond' => 'bescherming-rechten-derden'],
             ],
         ];
 
@@ -238,7 +242,7 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase
         self::assertSame('2027-01-01T00:00:00Z', $case['retainUntil']);
         self::assertStringStartsWith('2026-03-03', $case['extendedUntil']);
         self::assertSame('complex', $case['extensionReason']);
-        self::assertSame('excessive-request', $case['denialGround']);
+        self::assertSame('third-party-rights', $case['denialGround']);
         self::assertCount(2, $case['evidence']);
         self::assertSame('sha256:abc', $case['evidence'][0]['contentHash']);
         self::assertCount(1, $case['redactions']);
@@ -256,7 +260,7 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase
     }//end testMapsFullVerzoek()
 
     /**
-     * Article + status mapping matrix, including geen-avg and afgerond/outcome.
+     * Article + status mapping matrix, over the real `artikel` enum.
      *
      * @return void
      */
@@ -264,10 +268,9 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase
     {
         $this->store = [
             '40' => [
-                ['id' => 'a', 'artikel' => 'art-17', 'status' => 'ingediend'],
-                ['id' => 'b', 'artikel' => 'art-16', 'status' => 'afgerond', 'uitkomst' => 'geweigerd'],
-                ['id' => 'c', 'artikel' => 'geen-avg', 'status' => 'ingediend'],
-                ['id' => 'd', 'artikel' => 'art-20', 'status' => 'afgerond', 'uitkomst' => 'toegekend'],
+                ['id' => 'a', 'artikel' => 'art-17-wissing', 'status' => 'ingediend'],
+                ['id' => 'b', 'artikel' => 'art-16-rectificatie', 'status' => 'afgerond', 'uitkomst' => 'geweigerd'],
+                ['id' => 'd', 'artikel' => 'art-20-portabiliteit', 'status' => 'afgerond', 'uitkomst' => 'toegekend'],
             ],
         ];
 
@@ -280,9 +283,189 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase
 
         self::assertContains(['erasure', 'received'], $byType);
         self::assertContains(['rectification', 'refused'], $byType);
-        self::assertContains(['access', 'closed'], $byType);       // geen-avg
         self::assertContains(['portability', 'fulfilled'], $byType);
     }//end testArticleAndStatusMatrix()
+
+    /**
+     * An erasure request must never be filed as an access request.
+     *
+     * Guards the mapping bug this replaces: ARTICLE_TYPE was keyed on bare
+     * article numbers ('art-17') while the source enum is 'art-17-wissing', so
+     * every lookup missed and fell through to a default of 'access'. The old
+     * fixtures used the bare keys, so the suite was green against a mapper that
+     * mistyped every request it touched.
+     *
+     * @return void
+     */
+    public function testErasureIsNotFiledAsAccess(): void
+    {
+        $this->store = ['40' => [['id' => 'e1', 'artikel' => 'art-17-wissing', 'status' => 'ingediend']]];
+
+        $this->step->run($this->createStub(IOutput::class));
+
+        self::assertCount(1, $this->savedCases);
+        self::assertSame('erasure', $this->savedCases[0]['type']);
+    }//end testErasureIsNotFiledAsAccess()
+
+    /**
+     * `geen-avg` has no dataSubjectRequest equivalent, so it is left in place
+     * rather than coerced into a type — filing a "not a GDPR request" as an
+     * access request would invent a compliance record that never existed.
+     *
+     * @return void
+     */
+    public function testGeenAvgIsNotMigrated(): void
+    {
+        $this->store = ['40' => [['id' => 'c', 'artikel' => 'geen-avg', 'status' => 'ingediend']]];
+
+        $this->step->run($this->createStub(IOutput::class));
+
+        self::assertSame([], $this->savedCases);
+        self::assertSame([], $this->markedSources);
+    }//end testGeenAvgIsNotMigrated()
+
+    /**
+     * A trashed (soft-deleted) verzoek is not resurrected into the compliance
+     * register. `findAll()` does not filter soft-deletes, so the step must.
+     *
+     * @return void
+     */
+    public function testSoftDeletedVerzoekIsSkipped(): void
+    {
+        $this->store = [
+            '40' => [
+                [
+                    'id'      => 'gone',
+                    'artikel' => 'art-15-inzage',
+                    'status'  => 'afgerond',
+                    'deleted' => ['deletedAt' => '2026-06-23T12:58:15+00:00', 'deletedBy' => 'admin'],
+                ],
+            ],
+        ];
+
+        $this->step->run($this->createStub(IOutput::class));
+
+        self::assertSame([], $this->savedCases);
+    }//end testSoftDeletedVerzoekIsSkipped()
+
+    /**
+     * A LIVE verzoek carries an empty `deleted` block rather than a null one, so
+     * the trashed-object guard must test emptiness, not `!== null`. Guards the
+     * regression where a null-check skipped every object — including the ones
+     * the migration exists to move.
+     *
+     * @return void
+     */
+    public function testEmptyDeletedBlockIsNotTreatedAsTrashed(): void
+    {
+        $this->store = [
+            '40' => [
+                ['id' => 'live1', 'artikel' => 'art-15-inzage', 'status' => 'ingediend', 'deleted' => []],
+                ['id' => 'live2', 'artikel' => 'art-15-inzage', 'status' => 'ingediend', 'deleted' => null],
+                ['id' => 'live3', 'artikel' => 'art-15-inzage', 'status' => 'ingediend', 'deleted' => ''],
+            ],
+        ];
+
+        $this->step->run($this->createStub(IOutput::class));
+
+        self::assertCount(3, $this->savedCases);
+    }//end testEmptyDeletedBlockIsNotTreatedAsTrashed()
+
+    /**
+     * Redactions reach the case through the verzoek's bewijsItems, since a
+     * redactieActie is keyed by `bewijsItemId` and carries no `verzoekId`.
+     * Indexing it by `verzoekId` silently produced an empty `redactions[]` for
+     * every migrated request.
+     *
+     * @return void
+     */
+    public function testRedactionsResolveThroughBewijsItems(): void
+    {
+        $this->store = [
+            '40' => [['id' => 'v9', 'artikel' => 'art-15-inzage', 'status' => 'ingediend']],
+            '41' => [['id' => 'b9', 'verzoekId' => 'v9', 'bronApp' => 'pipelinq-crm']],
+            '43' => [
+                ['id' => 'r9', 'bewijsItemId' => 'b9', 'veldpad' => 'bsn', 'grond' => 'bescherming-rechten-derden'],
+            ],
+        ];
+
+        $this->step->run($this->createStub(IOutput::class));
+
+        self::assertCount(1, $this->savedCases);
+        self::assertCount(1, $this->savedCases[0]['redactions']);
+        self::assertSame('bsn', $this->savedCases[0]['redactions'][0]['field']);
+    }//end testRedactionsResolveThroughBewijsItems()
+
+    /**
+     * The source write-back must not carry nulls.
+     *
+     * An object read out of OpenRegister carries its unset properties as null,
+     * and the schema types them (`uitkomst` is a string). Saving the row back
+     * unchanged therefore failed validation on a field the migration never
+     * touched — so the `migratedTo` marker never landed, and because the case
+     * had already been created, every re-run produced a DUPLICATE case.
+     *
+     * @return void
+     */
+    public function testMarkerWriteBackStripsNulls(): void
+    {
+        $this->store = [
+            '40' => [
+                [
+                    'id'       => 'v1',
+                    'artikel'  => 'art-15-inzage',
+                    'status'   => 'ingediend',
+                    'uitkomst' => null,
+                ],
+            ],
+        ];
+
+        $this->step->run($this->createStub(IOutput::class));
+
+        self::assertCount(1, $this->savedCases);
+        self::assertCount(1, $this->markedSources);
+
+        $marked = $this->markedSources[0];
+        self::assertSame('dsar-1', $marked['migratedTo']);
+        self::assertArrayNotHasKey('uitkomst', $marked, 'null properties must not be written back');
+    }//end testMarkerWriteBackStripsNulls()
+
+    /**
+     * A re-run must not duplicate the case even when the source was never marked.
+     *
+     * This is the regression that mattered: the marker write-back CANNOT succeed
+     * from a repair step (the verzoek is system-owned and its folder is
+     * unreachable), so keying idempotency on the source marker meant the case was
+     * created, the marker failed, and the next run created a SECOND case. It ran
+     * three times here and produced three duplicates.
+     *
+     * Idempotency is therefore keyed on the target: the case records the source
+     * uuid in `notes.migratedFromId`.
+     *
+     * @return void
+     */
+    public function testRerunDoesNotDuplicateWhenSourceWasNeverMarked(): void
+    {
+        $this->store = [
+            '40' => [['id' => 'v1', 'artikel' => 'art-15-inzage', 'status' => 'ingediend']],
+        ];
+
+        // First pass creates the case.
+        $this->step->run($this->createStub(IOutput::class));
+        self::assertCount(1, $this->savedCases);
+
+        $notes = json_decode((string) $this->savedCases[0]['notes'], true);
+        self::assertSame('v1', $notes['migratedFromId'], 'the case must record its source');
+
+        // Simulate the real world: the marker never landed on the source, but the
+        // case is now present in the DSAR register.
+        $this->store['dataSubjectRequest'] = $this->savedCases;
+        $this->savedCases                  = [];
+
+        $this->step->run($this->createStub(IOutput::class));
+
+        self::assertSame([], $this->savedCases, 're-run must not create a second case');
+    }//end testRerunDoesNotDuplicateWhenSourceWasNeverMarked()
 
     /**
      * A re-run migrates nothing (idempotent via migratedTo marker).
@@ -293,7 +476,7 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase
     {
         $this->store = [
             '40' => [
-                ['id' => 'v1', 'artikel' => 'art-15', 'status' => 'ingediend'],
+                ['id' => 'v1', 'artikel' => 'art-15-inzage', 'status' => 'ingediend'],
             ],
         ];
 
