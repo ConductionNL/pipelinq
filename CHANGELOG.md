@@ -29,7 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   index column reusing the existing `lead-probability` cell widget — no new Vue
   component, no service class, no PHP. Seed leads (municipality, consultancy,
   travel agency) span the hot/warm/cold bands.
->>>>>>> origin/development
 - **StUF-ZKN/BG adapter** (`stuf-zkn-bg-adapter`): SOAP 1.1 + StUF 0310
   bridge to legacy zaaksystemen (Centric Key2Zaken, Atos PinkRoccade, ...)
   enabling municipalities without ZGW REST APIs to use Pipelinq as a
