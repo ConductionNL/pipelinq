@@ -44,13 +44,14 @@ class SettingsService
         'client_schema',
         'contact_schema',
         'lead_schema',
-        'request_schema',
-        'complaint_schema',
+        // Unified ticket supertype (unify-ticket-supertype): the separate request,
+        // complaint and contactmoment schemas were retired and folded into a single
+        // `ticket` schema, narrowed by the `ticketType` discriminator.
+        'ticket_schema',
         'pipeline_schema',
         'product_schema',
         'productCategory_schema',
         'leadProduct_schema',
-        'contactmoment_schema',
         'task_schema',
         'relationship_schema',
         'queue_schema',

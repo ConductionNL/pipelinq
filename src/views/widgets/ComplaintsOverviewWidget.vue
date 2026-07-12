@@ -1,5 +1,5 @@
 <template>
-	<div class="complaints-widget" @click="$router.push({ name: 'Complaints' })">
+	<div class="complaints-widget" @click="$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })">
 		<div v-if="loading" class="widget-loading">
 			{{ t('pipelinq', 'Loading...') }}
 		</div>

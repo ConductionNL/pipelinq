@@ -118,7 +118,7 @@ import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import Flag from 'vue-material-design-icons/Flag.vue'
 import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
 import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
-import { getDaysAge, getAgingClass, formatAge, getStaleThreshold } from '../../services/pipelineUtils.js'
+import { getDaysAge, getAgingClass, formatAge, getStaleThreshold, resolveObjectType } from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 // eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
@@ -177,6 +177,18 @@ export default {
 			return useObjectStore()
 		},
 		/**
+		 * The registered OpenRegister object type behind this card's *logical*
+		 * `entityType`, plus the `ticketType` discriminator when that logical type
+		 * is one of the three subtypes folded into the `ticket` supertype
+		 * (unify-ticket-supertype). `entityType` stays logical so the badge, the
+		 * overdue rule and the board's routing keep working unchanged.
+		 *
+		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+		 */
+		resolvedType() {
+			return resolveObjectType(this.entityType)
+		},
+		/**
 		 * Pinia settings store — holds the stale-threshold configuration
 		 * surfaced through the existing settings endpoint.
 		 *
@@ -214,8 +226,9 @@ export default {
 				return new Date(this.item.expectedCloseDate) < new Date()
 			}
 			if (this.entityType === 'request') {
-				if (!this.item.requestedAt) return false
-				const daysSince = Math.floor((Date.now() - new Date(this.item.requestedAt).getTime()) / 86400000)
+				// `requestedAt` became `occurredAt` on the ticket supertype.
+				if (!this.item.occurredAt) return false
+				const daysSince = Math.floor((Date.now() - new Date(this.item.occurredAt).getTime()) / 86400000)
 				return daysSince > 30
 			}
 			return false
@@ -331,21 +344,37 @@ export default {
 		},
 
 		/**
+		 * Copy the card's item into a save payload: drop the board-only `_` keys
+		 * and re-assert the `ticketType` discriminator when this card is a ticket
+		 * subtype, so a PUT can never strip it (unify-ticket-supertype).
+		 *
+		 * @return {object} Payload for objectStore.saveObject().
+		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 */
+		buildSavePayload() {
+			const updated = { ...this.item }
+			delete updated._entityType
+			delete updated._schemaSlug
+			if (this.resolvedType.ticketType && !updated.ticketType) {
+				updated.ticketType = this.resolvedType.ticketType
+			}
+			return updated
+		},
+
+		/**
 		 * @param newStage
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
 		 */
 		async onStageChange(newStage) {
 			if (!newStage || newStage === this.currentColumnValue) return
 			try {
-				const updated = { ...this.item }
-				delete updated._entityType
-				delete updated._schemaSlug
+				const updated = this.buildSavePayload()
 				updated[this.columnProperty] = newStage
 				const targetStage = this.stages.find(s => s.name === newStage)
 				if (targetStage && typeof targetStage.order === 'number' && this.columnProperty === 'stage') {
 					updated.stageOrder = targetStage.order
 				}
-				await this.objectStore.saveObject(this.entityType, updated)
+				await this.objectStore.saveObject(this.resolvedType.objectType, updated)
 				showSuccess(t('pipelinq', 'Lead moved to {stage}', { stage: newStage }))
 				this.$emit('refresh')
 			} catch (e) {
@@ -361,11 +390,9 @@ export default {
 		async onAssignChange(newAssignee) {
 			if (newAssignee === this.item.assignee) return
 			try {
-				const updated = { ...this.item }
-				delete updated._entityType
-				delete updated._schemaSlug
+				const updated = this.buildSavePayload()
 				updated.assignee = newAssignee || ''
-				await this.objectStore.saveObject(this.entityType, updated)
+				await this.objectStore.saveObject(this.resolvedType.objectType, updated)
 				showSuccess(t('pipelinq', 'Assignee updated'))
 				this.$emit('refresh')
 			} catch (e) {
@@ -435,11 +462,9 @@ export default {
 			this.priorityMenuOpen = false
 			if (priority === this.item.priority) return
 			try {
-				const updated = { ...this.item }
-				delete updated._entityType
-				delete updated._schemaSlug
+				const updated = this.buildSavePayload()
 				updated.priority = priority
-				await this.objectStore.saveObject(this.entityType, updated)
+				await this.objectStore.saveObject(this.resolvedType.objectType, updated)
 				showSuccess(t('pipelinq', 'Priority updated'))
 				this.$emit('refresh')
 			} catch (e) {

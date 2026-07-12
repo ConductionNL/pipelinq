@@ -16,7 +16,9 @@
  *     without the LLM stack wired up) Navi MUST still return a deterministic
  *     structured result for every supported intent.
  *   - NO new schemas — every query reuses the existing pipelinq registers
- *     (`lead`, `request`, `contactmoment`). Survey responses now live in
+ *     (`lead` plus the unified `ticket` supertype, whose `request` /
+ *     `contactmoment` subtypes replaced the schemas of the same name and are
+ *     resolved through {@see TicketService}). Survey responses now live in
  *     the OpenRegister forms leaf (NC Forms); a future Navi adapter can
  *     query the leaf via `FormLinkMapper`.
  *
@@ -83,14 +85,16 @@ class NaviService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container DI container (used to resolve OR services lazily).
-     * @param IAppConfig         $appConfig App configuration (register / schema IDs).
-     * @param LoggerInterface    $logger    Logger.
+     * @param ContainerInterface $container     DI container (used to resolve OR services lazily).
+     * @param IAppConfig         $appConfig     App configuration (register / schema IDs).
+     * @param LoggerInterface    $logger        Logger.
+     * @param TicketService      $ticketService Resolver for the unified ticket schema.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
+        private readonly TicketService $ticketService,
     ) {
     }//end __construct()
 
@@ -200,45 +204,70 @@ class NaviService
      */
     public function buildContext(string $intent, array $params): array
     {
-        $schemaKey = match ($intent) {
-            'trend'      => 'lead_schema',
-            'conversion' => 'lead_schema',
-            'breakdown'  => 'request_schema',
-            'count'      => $this->guessCountSchema(query: (string) ($params['query'] ?? '')),
-            default      => '',
+        return match ($intent) {
+            'trend', 'conversion' => $this->findObjects(schemaKey: 'lead_schema'),
+            'breakdown'           => $this->findTickets(ticketType: TicketService::TYPE_REQUEST),
+            'count'               => $this->buildCountContext(query: (string) ($params['query'] ?? '')),
+            default               => [],
         };
-
-        if ($schemaKey === '') {
-            return [];
-        }
-
-        return $this->findObjects(schemaKey: $schemaKey);
     }//end buildContext()
 
     /**
-     * Choose which schema to count for an ambiguous "hoeveel"-style query.
+     * Fetch the rows to count for an ambiguous "hoeveel"-style query.
+     *
+     * Requests and contactmomenten are subtypes of the unified `ticket` schema,
+     * so they are read through TicketService with a `ticketType` discriminator
+     * instead of from their own (retired) schemas.
      *
      * @param string $query Lower-case query (trimmed by caller).
      *
-     * @return string Schema config key, or '' to bail out.
+     * @return array<int, array<string, mixed>> Plain-array rows.
+     *
+     * @throws RuntimeException When OpenRegister is unreachable mid-query.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
      */
-    private function guessCountSchema(string $query): string
+    private function buildCountContext(string $query): array
     {
         $lower = mb_strtolower($query);
-        if (preg_match('/\b(lead|leads|kans|kansen)\b/u', $lower) === 1) {
-            return 'lead_schema';
-        }
 
         if (preg_match('/\b(request|verzoek|verzoeken|aanvraag|aanvragen)\b/u', $lower) === 1) {
-            return 'request_schema';
+            return $this->findTickets(ticketType: TicketService::TYPE_REQUEST);
         }
 
         if (preg_match('/\b(contactmoment|contactmomenten|contact)\b/u', $lower) === 1) {
-            return 'contactmoment_schema';
+            return $this->findTickets(ticketType: TicketService::TYPE_CONTACTMOMENT);
         }
 
-        return 'lead_schema';
-    }//end guessCountSchema()
+        // Leads are both the explicit lead match and the fallback.
+        return $this->findObjects(schemaKey: 'lead_schema');
+    }//end buildCountContext()
+
+    /**
+     * Query tickets of one subtype via the shared TicketService.
+     *
+     * TicketService is fail-soft: an unprovisioned ticket schema or an
+     * unreachable OpenRegister yields an empty row set (logged there), which
+     * processQuery degrades into the "no matching data" response.
+     *
+     * @param string $ticketType One of the TicketService::TYPE_* constants.
+     *
+     * @return array<int, array<string, mixed>> Plain-array rows.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+     */
+    private function findTickets(string $ticketType): array
+    {
+        $objects = [];
+        foreach ($this->ticketService->findByType(ticketType: $ticketType) as $result) {
+            $normalized = $this->normalizeFindObjectsResult(result: $result);
+            if ($normalized !== null) {
+                $objects[] = $normalized;
+            }
+        }
+
+        return $objects;
+    }//end findTickets()
 
     /**
      * Build the inner LLM-response envelope for a given intent.
@@ -358,7 +387,7 @@ class NaviService
     /**
      * Group requests by category for a bar chart.
      *
-     * @param array<int, array<string, mixed>> $rows Request rows.
+     * @param array<int, array<string, mixed>> $rows Request-ticket rows.
      *
      * @return array<string, mixed>
      */
@@ -366,6 +395,8 @@ class NaviService
     {
         $counts = [];
         foreach ($rows as $row) {
+            // The request's free-text `category` keeps its name on the ticket
+            // schema (the complaint's category became complaintCategory).
             $cat = (string) ($row['category'] ?? '');
             if ($cat === '') {
                 continue;

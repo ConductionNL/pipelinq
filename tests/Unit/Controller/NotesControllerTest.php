@@ -26,6 +26,7 @@ use OCA\Pipelinq\Controller\NotesController;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
 use OCA\Pipelinq\Service\SettingsService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -55,6 +56,20 @@ class NotesControllerTest extends TestCase
     private NotesService $notesService;
 
     /**
+     * The register/schema each objectExists() lookup was scoped to.
+     *
+     * @var array<int, array{register: string, schema: string}>
+     */
+    private array $findCalls = [];
+
+    /**
+     * The ticket payload find() hands back (drives the ticketType check).
+     *
+     * @var array<string, mixed>
+     */
+    private array $ticketPayload = ['ticketType' => 'request'];
+
+    /**
      * Set up the test.
      *
      * @return void
@@ -74,6 +89,8 @@ class NotesControllerTest extends TestCase
 
         // Provide a settings service that returns valid register + schema IDs
         // so objectExists() can scope the OR lookup to the correct entity.
+        // `request` is no longer a schema of its own (unify-ticket-supertype):
+        // the `pipelinq_request` slug resolves through TicketService instead.
         $settingsService = $this->createMock(SettingsService::class);
         $settingsService->method('getSettings')->willReturn(
                 [
@@ -81,15 +98,26 @@ class NotesControllerTest extends TestCase
                     'client_schema'  => 'schema-client',
                     'contact_schema' => 'schema-contact',
                     'lead_schema'    => 'schema-lead',
-                    'request_schema' => 'schema-request',
                 ]
                 );
 
+        $ticketService = $this->createMock(TicketService::class);
+        $ticketService->method('getRegisterId')->willReturn('reg-123');
+        $ticketService->method('getSchemaId')->willReturn('schema-ticket');
+
         // Object service mock: find() returns a non-null ObjectEntity for any scoped
-        // lookup, which makes objectExists() return true so subsequent controller logic runs.
+        // lookup, which makes objectExists() return true so subsequent controller logic
+        // runs; the scope of every lookup is recorded so the tests can assert which
+        // register+schema an object type resolved to.
         $objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
         $entityMock        = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
-        $objectServiceMock->method('find')->willReturn($entityMock);
+        $entityMock->method('getObject')->willReturnCallback(fn (): array => $this->ticketPayload);
+        $objectServiceMock->method('find')->willReturnCallback(
+            function (string $id, string $register='', string $schema='') use ($entityMock) {
+                $this->findCalls[] = ['register' => $register, 'schema' => $schema];
+                return $entityMock;
+            }
+        );
 
         $container = $this->createMock(ContainerInterface::class);
         $container->method('get')->willReturn($objectServiceMock);
@@ -107,6 +135,7 @@ class NotesControllerTest extends TestCase
             $container,
             $groupManager,
             $settingsService,
+            $ticketService,
         );
     }//end setUp()
 
@@ -140,6 +169,41 @@ class NotesControllerTest extends TestCase
         $data = $response->getData();
         $this->assertCount(1, $data['notes']);
     }//end testListReturnsNotes()
+
+    /**
+     * The external `pipelinq_request` slug stays valid and resolves to the unified
+     * ticket schema (unify-ticket-supertype) rather than a `request_schema`.
+     *
+     * @return void
+     */
+    public function testRequestSlugResolvesToTicketSchema(): void
+    {
+        $this->notesService->method('getNotes')->willReturn([]);
+
+        $response = $this->controller->list('pipelinq_request', '123');
+
+        $this->assertSame(200, $response->getStatus());
+        $this->assertSame(
+            [['register' => 'reg-123', 'schema' => 'schema-ticket']],
+            $this->findCalls
+        );
+    }//end testRequestSlugResolvesToTicketSchema()
+
+    /**
+     * A ticket of a different subtype is not a `pipelinq_request`: the ticketType
+     * discriminator must fail the existence check (404), since schema scoping alone
+     * no longer distinguishes the subtypes.
+     *
+     * @return void
+     */
+    public function testRequestSlugRejectsOtherTicketSubtype(): void
+    {
+        $this->ticketPayload = ['ticketType' => 'complaint'];
+
+        $response = $this->controller->list('pipelinq_request', '123');
+
+        $this->assertSame(404, $response->getStatus());
+    }//end testRequestSlugRejectsOtherTicketSubtype()
 
     /**
      * Test deleteAll returns 400 for invalid type.

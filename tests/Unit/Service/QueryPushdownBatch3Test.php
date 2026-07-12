@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\KccWerkplekService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -201,16 +202,26 @@ class QueryPushdownBatch3Test extends TestCase
      * The prior fetch-all-then-PHP oracle: build the workspace payload the old
      * code would have produced from the full row sets.
      *
-     * @param string                           $userId   The agent UID.
-     * @param array<int, array<string, mixed>> $requests All request rows.
-     * @param array<int, array<string, mixed>> $tasks    All task rows.
-     * @param array<int, array<string, mixed>> $agents   All agent rows.
-     * @param array<int, array<string, mixed>> $queues   All queue rows.
+     * `$tickets` is the full `ticket` row set (every subtype); the oracle narrows
+     * it to `ticketType=request` exactly as the discriminator filter now does.
+     *
+     * @param string                           $userId  The agent UID.
+     * @param array<int, array<string, mixed>> $tickets All ticket rows (any subtype).
+     * @param array<int, array<string, mixed>> $tasks   All task rows.
+     * @param array<int, array<string, mixed>> $agents  All agent rows.
+     * @param array<int, array<string, mixed>> $queues  All queue rows.
      *
      * @return array<string, mixed> The oracle payload.
      */
-    private function oracle(string $userId, array $requests, array $tasks, array $agents, array $queues): array
+    private function oracle(string $userId, array $tickets, array $tasks, array $agents, array $queues): array
     {
+        $requests = array_values(
+            array_filter(
+                $tickets,
+                static fn (array $ticket): bool => (string) ($ticket['ticketType'] ?? '') === TicketService::TYPE_REQUEST
+            )
+        );
+
         $assignedRequests = [];
         foreach ($requests as $request) {
             $assignee = (string) ($request['assignee'] ?? '');
@@ -264,7 +275,9 @@ class QueryPushdownBatch3Test extends TestCase
     /**
      * The pushed-down getWorkspaceState returns the SAME assigned/open/queue-count
      * payload the prior fetch-all PHP path produced — including the slug-or-id
-     * queue re-map, the empty-queue exclusion, and the missing-assignee exclusion.
+     * queue re-map, the empty-queue exclusion, and the missing-assignee exclusion —
+     * now reading the unified `ticket` schema narrowed by `ticketType=request`
+     * (unify-ticket-supertype), so sibling subtypes never leak into the inbox.
      *
      * @return void
      */
@@ -281,14 +294,18 @@ class QueryPushdownBatch3Test extends TestCase
             ['@self' => ['id' => 'qid-empty', 'slug' => 'q-empty'], 'title' => 'Empty', 'sortOrder' => 3, 'isActive' => true],
         ];
 
-        $requests = [
-            ['id' => 'r1', 'assignee' => 'alice', 'status' => 'new', 'queue' => 'q-sales'],
-            ['id' => 'r2', 'assignee' => 'alice', 'status' => 'in_progress', 'queue' => 'qid-sales'],
-            ['id' => 'r3', 'assignee' => 'bob', 'status' => 'new', 'queue' => 'q-supp'],
-            ['id' => 'r4', 'assignee' => 'alice', 'status' => 'closed', 'queue' => 'q-sales'],
-            ['id' => 'r5', 'status' => 'new', 'queue' => 'q-supp'],
-            ['id' => 'r6', 'assignee' => 'carol', 'status' => 'new', 'queue' => ''],
-            ['id' => 'r7', 'assignee' => 'dave', 'status' => 'new', 'queue' => 'q-unknown'],
+        // The ticket row set carries every subtype. c1 (a complaint) is assigned to
+        // alice, open and on q-supp: it must be excluded from BOTH the inbox and the
+        // queue counts purely by the `ticketType` discriminator.
+        $tickets = [
+            ['id' => 'r1', 'ticketType' => 'request', 'assignee' => 'alice', 'status' => 'new', 'queue' => 'q-sales'],
+            ['id' => 'r2', 'ticketType' => 'request', 'assignee' => 'alice', 'status' => 'in_progress', 'queue' => 'qid-sales'],
+            ['id' => 'r3', 'ticketType' => 'request', 'assignee' => 'bob', 'status' => 'new', 'queue' => 'q-supp'],
+            ['id' => 'r4', 'ticketType' => 'request', 'assignee' => 'alice', 'status' => 'closed', 'queue' => 'q-sales'],
+            ['id' => 'r5', 'ticketType' => 'request', 'status' => 'new', 'queue' => 'q-supp'],
+            ['id' => 'r6', 'ticketType' => 'request', 'assignee' => 'carol', 'status' => 'new', 'queue' => ''],
+            ['id' => 'r7', 'ticketType' => 'request', 'assignee' => 'dave', 'status' => 'new', 'queue' => 'q-unknown'],
+            ['id' => 'c1', 'ticketType' => 'complaint', 'assignee' => 'alice', 'status' => 'new', 'queue' => 'q-supp'],
         ];
 
         $tasks = [
@@ -302,22 +319,32 @@ class QueryPushdownBatch3Test extends TestCase
             ['@self' => ['id' => 'a1'], 'userId' => 'alice', 'isAvailable' => true, 'maxConcurrent' => 3, 'skills' => ['nl']],
         ];
 
+        // The appConfig stub maps every *_schema key to itself, so the ticket schema
+        // resolves to the literal `ticket_schema`.
         $bySchema = [
-            'request_schema'      => $requests,
+            'ticket_schema'       => $tickets,
             'task_schema'         => $tasks,
             'agentProfile_schema' => $agents,
             'queue_schema'        => $queues,
         ];
 
         $objectService = $this->fakeObjectService(bySchema: $bySchema);
-        $runner        = new FakeAggregationRunner($requests);
+        $runner        = new FakeAggregationRunner($tickets);
         $container     = $this->container(objectService: $objectService, runner: $runner);
         $logger        = $this->createMock(LoggerInterface::class);
+        $appConfig     = $this->appConfig();
 
-        $service = new KccWerkplekService(container: $container, appConfig: $this->appConfig(), logger: $logger);
+        $ticketService = new TicketService(container: $container, appConfig: $appConfig, logger: $logger);
+
+        $service = new KccWerkplekService(
+            container: $container,
+            appConfig: $appConfig,
+            logger: $logger,
+            ticketService: $ticketService
+        );
 
         $state  = $service->getWorkspaceState(userId: $userId);
-        $oracle = $this->oracle(userId: $userId, requests: $requests, tasks: $tasks, agents: $agents, queues: $queues);
+        $oracle = $this->oracle(userId: $userId, tickets: $tickets, tasks: $tasks, agents: $agents, queues: $queues);
 
         $this->assertSame($oracle['assignedRequests'], $state['assignedRequests']);
         $this->assertSame($oracle['openTasks'], $state['openTasks']);
@@ -327,9 +354,13 @@ class QueryPushdownBatch3Test extends TestCase
         // q-sales = 2 (one ref by slug r1 + one ref by id r2, both folded);
         // q-supp = 0 (r3 is bob's but still open on q-supp... counted? no — the
         // count is per OPEN status regardless of assignee, so r3 + r5 land here);
-        // q-empty = 0; q-unknown (r7) matches no queue so is dropped.
+        // q-empty = 0; q-unknown (r7) matches no queue so is dropped. The open
+        // complaint c1 on q-supp is excluded by the ticketType discriminator.
         $this->assertCount(2, $state['assignedRequests']);
         $this->assertCount(2, $state['openTasks']);
+
+        // The inbox holds only request tickets — alice's open complaint is not one.
+        $this->assertSame(['r1', 'r2'], array_column($state['assignedRequests'], 'id'));
 
         // Use ksort so the assertion is independent of map insertion order.
         $actualCounts = $state['queueCounts'];

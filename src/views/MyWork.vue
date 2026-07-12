@@ -242,7 +242,7 @@ export default {
 				const isTerminal = ['completed', 'rejected', 'converted'].includes(r.status)
 				if (!this.showCompleted && isTerminal) continue
 
-				const due = r.requestedAt ? new Date(r.requestedAt) : null
+				const due = r.occurredAt ? new Date(r.occurredAt) : null
 				const isOverdue = !isTerminal && due ? due < thirtyDaysAgo : false
 				const overdueDays = isOverdue ? daysBetween(due, now) : 0
 
@@ -254,7 +254,7 @@ export default {
 					pipelineName: r.pipeline ? (this.pipelineMap[r.pipeline] || '') : '',
 					priority: r.priority || 'normal',
 					value: null,
-					dueDate: r.requestedAt,
+					dueDate: r.occurredAt,
 					isOverdue,
 					isDueToday: false,
 					overdueDays,
@@ -388,9 +388,13 @@ export default {
 							.then(items => { this.myLeads = items }),
 					)
 				}
-				if (config.request && this.currentUser) {
+				// A request is a `ticket` narrowed by ticketType (unify-ticket-supertype).
+				// Without the filter, complaints and contactmomenten would leak into
+				// "my requests". Held in local state, never read from the shared
+				// collections.ticket bucket.
+				if (config.ticket && this.currentUser) {
 					promises.push(
-						this.fetchRaw('request', { assignee: this.currentUser, _limit: 200 })
+						this.fetchRaw('ticket', { ticketType: 'request', assignee: this.currentUser, _limit: 200 })
 							.then(items => { this.myRequests = items }),
 					)
 				}
@@ -462,7 +466,10 @@ export default {
 			if (item.entityType === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
 			} else {
-				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
+				// Requests are `ticket` rows narrowed by ticketType
+				// (unify-ticket-supertype) — every non-lead work item opens on
+				// the unified TicketDetail page, which reads its own ticketType.
+				this.$router.push({ name: 'TicketDetail', params: { id: item.id } })
 			}
 		},
 	},

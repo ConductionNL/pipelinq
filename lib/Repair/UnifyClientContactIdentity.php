@@ -11,9 +11,12 @@
  * fields via the EXISTING ContactVcardService — and stores the resulting
  * `contactsUid` on the object. The (now denormalised) identity fields
  * (`name`/`email`/`phone`/`address`/`website`) are KEPT in place as the initial
- * mirror value; nothing is ever deleted. It then re-keys every `contactmoment`
+ * mirror value; nothing is ever deleted. It then re-keys every contactmoment
  * interaction to the canonical `contactsUid` of its linked `client`, leaving
- * `contactmoment.client` untouched as a soft back-reference.
+ * the contactmoment's `client` reference untouched as a soft back-reference.
+ * Contactmomenten are a subtype of the unified `ticket` schema
+ * (unify-ticket-supertype) and are read with a `ticketType=contactmoment`
+ * filter rather than from a schema of their own.
  *
  * Provenance: one MDM `sourceRecord` (sourceSystem `pipelinq-identity-unify`) is
  * written per resolved object so the golden-record/dedup layer can later
@@ -49,6 +52,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ContactVcardService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -83,6 +87,7 @@ class UnifyClientContactIdentity implements IRepairStep
      * @param IAppConfig          $appConfig           The app configuration.
      * @param ContactVcardService $contactVcardService The existing vCard sync service (reused, no new engine).
      * @param ContainerInterface  $container           The DI container (OR ObjectService + Contacts IManager).
+     * @param TicketService       $ticketService       Resolver for the unified `ticket` supertype.
      * @param LoggerInterface     $logger              The logger.
      */
     public function __construct(
@@ -90,6 +95,7 @@ class UnifyClientContactIdentity implements IRepairStep
         private readonly IAppConfig $appConfig,
         private readonly ContactVcardService $contactVcardService,
         private readonly ContainerInterface $container,
+        private readonly TicketService $ticketService,
         private readonly LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -178,7 +184,10 @@ class UnifyClientContactIdentity implements IRepairStep
     {
         $clientSchema  = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
         $contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
-        $momentSchema  = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
+
+        // Contactmomenten live in the unified `ticket` schema and are narrowed by
+        // the `ticketType` discriminator (unify-ticket-supertype).
+        $momentSchema = $this->ticketService->getSchemaId();
 
         $clientsLinked  = 0;
         $contactsLinked = 0;
@@ -490,13 +499,17 @@ class UnifyClientContactIdentity implements IRepairStep
 
     /**
      * Re-key every contactmoment whose `client` UUID points at a client that now
-     * has a contactsUid. Sets contactmoment.contactsUid; leaves
-     * contactmoment.client untouched (soft back-reference). Idempotent: skips a
-     * moment whose contactsUid is already set.
+     * has a contactsUid. Sets the contactmoment's contactsUid; leaves its `client`
+     * reference untouched (soft back-reference). Idempotent: skips a moment whose
+     * contactsUid is already set.
+     *
+     * Contactmomenten are read from the unified `ticket` schema with a
+     * `ticketType=contactmoment` filter; the saved payload carries the row's own
+     * `ticketType` through unchanged.
      *
      * @param object               $objectService  The OR ObjectService.
      * @param string               $register       The register id/slug.
-     * @param string               $schema         The contactmoment schema id/slug.
+     * @param string               $schema         The ticket schema id/slug.
      * @param array<string,string> $clientUidByRef Map of client ref => contactsUid.
      *
      * @return int The number of contactmomenten re-keyed.
@@ -507,8 +520,15 @@ class UnifyClientContactIdentity implements IRepairStep
         string $schema,
         array $clientUidByRef,
     ): int {
+        $moments = $this->readAll(
+            objectService: $objectService,
+            register: $register,
+            schema: $schema,
+            ticketType: TicketService::TYPE_CONTACTMOMENT
+        );
+
         $rekeyed = 0;
-        foreach ($this->readAll(objectService: $objectService, register: $register, schema: $schema) as $moment) {
+        foreach ($moments as $moment) {
             if ((string) ($moment['contactsUid'] ?? '') !== '') {
                 // Already re-keyed on a prior run — no-op.
                 continue;
@@ -615,19 +635,32 @@ class UnifyClientContactIdentity implements IRepairStep
     /**
      * Read every object of a schema in the register (setRegister->setSchema->findAll).
      *
-     * @param object $objectService The OR object service.
-     * @param string $register      The register id/slug.
-     * @param string $schema        The schema id/slug.
+     * A ticket-backed surface narrows the shared `ticket` schema with the
+     * `ticketType` discriminator so only its own subtype is read.
+     *
+     * @param object      $objectService The OR object service.
+     * @param string      $register      The register id/slug.
+     * @param string      $schema        The schema id/slug.
+     * @param string|null $ticketType    The ticket subtype, or null for a plain schema.
      *
      * @return array<int,array<string,mixed>> The objects as plain arrays.
      */
-    private function readAll(object $objectService, string $register, string $schema): array
-    {
+    private function readAll(
+        object $objectService,
+        string $register,
+        string $schema,
+        ?string $ticketType=null,
+    ): array {
+        $config = [];
+        if ($ticketType !== null) {
+            $config = ['filters' => ['ticketType' => $ticketType]];
+        }
+
         try {
             $rows = $objectService
                 ->setRegister($register)
                 ->setSchema($schema)
-                ->findAll([]);
+                ->findAll($config);
         } catch (\Throwable $e) {
             $this->logger->warning(
                 'Identity unify: failed to read objects',

@@ -41,6 +41,7 @@ use OCA\Pipelinq\Service\EncryptionService;
 use OCA\Pipelinq\Service\LogiusConnector;
 use OCA\Pipelinq\Service\MailboxResolver;
 use OCA\Pipelinq\Service\TemplateRenderer;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
@@ -91,7 +92,7 @@ class BerichtenboxServiceTest extends TestCase
                     'berichtenboxMessage_schema'  => 'sch-msg',
                     'berichtenboxReply_schema'    => 'sch-reply',
                     'berichtenboxTemplate_schema' => 'sch-tpl',
-                    'contactmoment_schema'        => 'sch-cm',
+                    'ticket_schema'               => 'sch-ticket',
                     'mailboxResolution_schema'    => 'sch-mr',
                     'tenant_id'                   => 'tenant-a',
                     'tenant_display_name'         => 'Gemeente Amsterdam',
@@ -101,6 +102,22 @@ class BerichtenboxServiceTest extends TestCase
         );
         return $appConfig;
     }//end appConfigStub()
+
+    /**
+     * Stub the unified ticket resolver (unify-ticket-supertype): the inbound
+     * reply now writes a `ticket` with `ticketType: contactmoment` instead of a
+     * `contactmoment_schema` object.
+     *
+     * @return TicketService
+     */
+    private function ticketServiceStub(): TicketService
+    {
+        $ticketService = $this->createMock(TicketService::class);
+        $ticketService->method('isConfigured')->willReturn(true);
+        $ticketService->method('getRegisterId')->willReturn('reg-1');
+        $ticketService->method('getSchemaId')->willReturn('sch-ticket');
+        return $ticketService;
+    }//end ticketServiceStub()
 
     /**
      * Build an ObjectService that captures every save in $savedMessages.
@@ -158,6 +175,7 @@ class BerichtenboxServiceTest extends TestCase
             $email,
             $audit,
             new DutchHolidayCalendar(),
+            $this->ticketServiceStub(),
             $this->createMock(LoggerInterface::class)
         );
     }//end buildService()
@@ -472,6 +490,7 @@ class BerichtenboxServiceTest extends TestCase
             $this->createMock(EmailFallbackSender::class),
             $audit,
             new DutchHolidayCalendar(),
+            $this->ticketServiceStub(),
             $this->createMock(LoggerInterface::class)
         );
 

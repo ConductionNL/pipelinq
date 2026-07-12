@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\PipelinqEvidenceSourceProvider;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -42,15 +43,18 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase
     /**
      * Schema-config-key => id map (provisioned).
      *
+     * The `request` and `contactmoment` sources have no schema of their own since
+     * unify-ticket-supertype: both resolve to the unified `ticket` schema (26) and
+     * are narrowed by the `ticketType` discriminator.
+     *
      * @var array<string, string>
      */
     private const SCHEMA_IDS = [
-        'register'             => '11',
-        'client_schema'        => '21',
-        'contact_schema'       => '22',
-        'lead_schema'          => '23',
-        'request_schema'       => '24',
-        'contactmoment_schema' => '25',
+        'register'       => '11',
+        'client_schema'  => '21',
+        'contact_schema' => '22',
+        'lead_schema'    => '23',
+        'ticket_schema'  => '26',
     ];
 
     /**
@@ -95,8 +99,22 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase
         $store = &$this->store;
         $this->objectService->method('findAll')->willReturnCallback(
             static function (array $config) use (&$store): array {
-                $schemaId = (string) ($config['filters']['schema'] ?? '');
-                return $store[$schemaId] ?? [];
+                $filters  = (array) ($config['filters'] ?? []);
+                $schemaId = (string) ($filters['schema'] ?? '');
+                $rows     = ($store[$schemaId] ?? []);
+
+                // Honour the ticketType discriminator so the two ticket-backed
+                // sources each see only their own subtype of the shared schema.
+                if (isset($filters['ticketType']) === false) {
+                    return $rows;
+                }
+
+                return array_values(
+                    array_filter(
+                        $rows,
+                        static fn (array $row): bool => (string) ($row['ticketType'] ?? '') === (string) $filters['ticketType']
+                    )
+                );
             }
         );
 
@@ -107,6 +125,11 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase
             appConfig: $this->appConfig,
             container: $container,
             logger: new NullLogger(),
+            ticketService: new TicketService(
+                container: $container,
+                appConfig: $this->appConfig,
+                logger: new NullLogger(),
+            ),
         );
     }//end setUp()
 
@@ -158,6 +181,11 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase
      * Harvest matches the subject's own client record and its FK-linked
      * lead/request/contactmoment objects, and skips unrelated objects.
      *
+     * The request + contactmoment sources both read the unified ticket schema (26)
+     * and are separated only by the `ticketType` discriminator; a subtype that is
+     * not a harvested source (complaint) is never collected even when it FK-links
+     * to the subject.
+     *
      * @return void
      */
     public function testHarvestMatchesSubjectAcrossSchemas(): void
@@ -180,13 +208,13 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase
                 ['id' => 'lead-1', 'client' => 'subject-1'],
                 ['id' => 'lead-2', 'client' => 'other-client'],
             ],
-            // request 24: FK contact match.
-            '24' => [
-                ['id' => 'req-1', 'contact' => 'subject-1'],
-            ],
-            // contactmoment 25: no match.
-            '25' => [
-                ['id' => 'cm-1', 'client' => 'unrelated'],
+            // ticket 26: a request (FK contact match), a contactmoment (no match)
+            // and a complaint that DOES link to the subject but is not a harvested
+            // source — the discriminator must keep it out of the dossier.
+            '26' => [
+                ['id' => 'req-1', 'ticketType' => 'request', 'contact' => 'subject-1'],
+                ['id' => 'cm-1', 'ticketType' => 'contactmoment', 'client' => 'unrelated'],
+                ['id' => 'cpl-1', 'ticketType' => 'complaint', 'client' => 'subject-1'],
             ],
         ];
 
@@ -200,6 +228,22 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase
             self::assertStringStartsWith('sha256:', $item->getContentHash());
             self::assertSame('collected', $item->getStatus());
         }
+
+        // The dossier keeps a per-source `schema` label (and therefore a distinct
+        // content hash) even though request/contactmoment now share one schema.
+        $objectIds = array_map(static fn ($i): string => (string) ($i->getPayload()['objectId'] ?? ''), $items);
+        sort($objectIds);
+        self::assertSame(['contact-1', 'lead-1', 'req-1', 'subject-1'], $objectIds);
+
+        $requestItem = null;
+        foreach ($items as $item) {
+            if (($item->getPayload()['objectId'] ?? '') === 'req-1') {
+                $requestItem = $item;
+            }
+        }
+
+        self::assertNotNull($requestItem);
+        self::assertSame('ticket_request', $requestItem->getPayload()['schema']);
 
         // Content hashes are unique per object and stable (deterministic).
         $hashes = array_map(static fn ($i): string => $i->getContentHash(), $items);

@@ -31,15 +31,32 @@
 						"title": "Requests",
 						"content": {
 							"register": "pipelinq",
-							"schema": "request",
-							"filter": { "assignee": "@me", "status": "new", "queue": "@workspace.selectedQueue?" },
-							"sort": { "field": "requestedAt", "dir": "desc" },
+							"schema": "ticket",
+							"filter": {
+								"ticketType": "request",
+								"assignee": "@me",
+								"status": "new",
+								"queue": "@workspace.selectedQueue?"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
 							"limit": 12,
-							"rowRoute": "RequestDetail",
+							"rowRoute": "TicketDetail",
 							"columns": [
-								{ "key": "title", "label": "Request" },
-								{ "key": "channel", "label": "Channel" },
-								{ "key": "priority", "label": "Priority" }
+								{
+									"key": "title",
+									"label": "Request"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "priority",
+									"label": "Priority"
+								}
 							]
 						}
 					},
@@ -50,13 +67,28 @@
 						"content": {
 							"register": "pipelinq",
 							"schema": "task",
-							"filter": { "assigneeUserId": "@me", "status": "open" },
-							"sort": { "field": "deadline", "dir": "asc" },
+							"filter": {
+								"assigneeUserId": "@me",
+								"status": "open"
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
 							"limit": 12,
 							"columns": [
-								{ "key": "subject", "label": "Task" },
-								{ "key": "type", "label": "Type" },
-								{ "key": "deadline", "label": "Deadline" }
+								{
+									"key": "subject",
+									"label": "Task"
+								},
+								{
+									"key": "type",
+									"label": "Type"
+								},
+								{
+									"key": "deadline",
+									"label": "Deadline"
+								}
 							]
 						}
 					},
@@ -66,29 +98,66 @@
 						"title": "Active interaction",
 						"content": {
 							"register": "pipelinq",
-							"schema": "contactmoment",
+							"schema": "ticket",
 							"clientSchema": "client",
 							"clientField": "client",
 							"clientLabelField": "name",
-							"summaryField": "summary",
+							"summaryField": "description",
 							"channelField": "channel",
 							"outcomeField": "outcome",
-							"contactedAtField": "contactedAt",
+							"contactedAtField": "occurredAt",
 							"channels": [
-								{ "value": "telefoon", "label": "Phone" },
-								{ "value": "email", "label": "Email" },
-								{ "value": "balie", "label": "Counter" },
-								{ "value": "chat", "label": "Chat" },
-								{ "value": "social", "label": "Social media" },
-								{ "value": "brief", "label": "Letter" }
+								{
+									"value": "telefoon",
+									"label": "Phone"
+								},
+								{
+									"value": "email",
+									"label": "Email"
+								},
+								{
+									"value": "balie",
+									"label": "Counter"
+								},
+								{
+									"value": "chat",
+									"label": "Chat"
+								},
+								{
+									"value": "social",
+									"label": "Social media"
+								},
+								{
+									"value": "brief",
+									"label": "Letter"
+								}
 							],
 							"outcomes": [
-								{ "value": "opgelost", "label": "Resolved" },
-								{ "value": "doorverwezen", "label": "Forwarded" },
-								{ "value": "terugbelverzoek", "label": "Call back" },
-								{ "value": "doorverbonden", "label": "Transferred" },
-								{ "value": "vervolgactie", "label": "Follow-up" }
-							]
+								{
+									"value": "opgelost",
+									"label": "Resolved"
+								},
+								{
+									"value": "doorverwezen",
+									"label": "Forwarded"
+								},
+								{
+									"value": "terugbelverzoek",
+									"label": "Call back"
+								},
+								{
+									"value": "doorverbonden",
+									"label": "Transferred"
+								},
+								{
+									"value": "vervolgactie",
+									"label": "Follow-up"
+								}
+							],
+							"defaults": {
+								"ticketType": "contactmoment"
+							},
+							"subjectField": "title"
 						}
 					},
 					{
@@ -109,16 +178,31 @@
 						"title": "Client requests",
 						"content": {
 							"register": "pipelinq",
-							"schema": "request",
-							"filter": { "client": "@workspace.selectedClient" },
-							"sort": { "field": "requestedAt", "dir": "desc" },
+							"schema": "ticket",
+							"filter": {
+								"ticketType": "request",
+								"client": "@workspace.selectedClient"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
 							"limit": 8,
 							"prompt": "Select a client in the interaction panel to see their open requests.",
-							"rowRoute": "RequestDetail",
+							"rowRoute": "TicketDetail",
 							"columns": [
-								{ "key": "title", "label": "Request" },
-								{ "key": "status", "label": "Status" },
-								{ "key": "priority", "label": "Priority" }
+								{
+									"key": "title",
+									"label": "Request"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "priority",
+									"label": "Priority"
+								}
 							]
 						}
 					},
@@ -128,27 +212,91 @@
 						"title": "Recent contact moments",
 						"content": {
 							"register": "pipelinq",
-							"schema": "contactmoment",
-							"filter": { "client": "@workspace.selectedClient" },
-							"sort": { "field": "contactedAt", "dir": "desc" },
+							"schema": "ticket",
+							"filter": {
+								"ticketType": "contactmoment",
+								"client": "@workspace.selectedClient"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
 							"limit": 8,
 							"prompt": "Select a client to see their recent contact moments.",
 							"columns": [
-								{ "key": "subject", "label": "Subject" },
-								{ "key": "channel", "label": "Channel" },
-								{ "key": "outcome", "label": "Outcome" }
+								{
+									"key": "title",
+									"label": "Subject"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "outcome",
+									"label": "Outcome"
+								}
 							]
 						}
 					}
 				],
 				"layout": [
-					{ "id": "wq", "widgetId": "queue-filter",   "gridX": 0, "gridY": 0,  "gridWidth": 3, "gridHeight": 4 },
-					{ "id": "wr", "widgetId": "requests",       "gridX": 3, "gridY": 0,  "gridWidth": 5, "gridHeight": 4 },
-					{ "id": "wi", "widgetId": "interaction",    "gridX": 8, "gridY": 0,  "gridWidth": 4, "gridHeight": 8 },
-					{ "id": "wt", "widgetId": "tasks",          "gridX": 0, "gridY": 4,  "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "wk", "widgetId": "knowledge",      "gridX": 8, "gridY": 8,  "gridWidth": 4, "gridHeight": 6 },
-					{ "id": "wc", "widgetId": "client-cases",   "gridX": 0, "gridY": 8,  "gridWidth": 4, "gridHeight": 6 },
-					{ "id": "wm", "widgetId": "client-contacts", "gridX": 4, "gridY": 8, "gridWidth": 4, "gridHeight": 6 }
+					{
+						"id": "wq",
+						"widgetId": "queue-filter",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 4
+					},
+					{
+						"id": "wr",
+						"widgetId": "requests",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 5,
+						"gridHeight": 4
+					},
+					{
+						"id": "wi",
+						"widgetId": "interaction",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 8
+					},
+					{
+						"id": "wt",
+						"widgetId": "tasks",
+						"gridX": 0,
+						"gridY": 4,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": "wk",
+						"widgetId": "knowledge",
+						"gridX": 8,
+						"gridY": 8,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": "wc",
+						"widgetId": "client-cases",
+						"gridX": 0,
+						"gridY": 8,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": "wm",
+						"widgetId": "client-contacts",
+						"gridX": 4,
+						"gridY": 8,
+						"gridWidth": 4,
+						"gridHeight": 6
+					}
 				]
 			},
 			"slots": {

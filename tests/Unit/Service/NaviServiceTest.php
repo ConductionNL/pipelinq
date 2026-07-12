@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\NaviService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -40,7 +41,11 @@ class NaviServiceTest extends TestCase
     /**
      * Build a service with deterministic config and a fake ObjectService.
      *
-     * @param array<string, array<int, array<string, mixed>>> $byCollection Per-schema fixture rows.
+     * Request / contactmoment fixtures are keyed `ticket_schema:<ticketType>`:
+     * both are subtypes of the unified `ticket` schema and are narrowed with a
+     * `ticketType` filter rather than with a schema of their own.
+     *
+     * @param array<string, array<int, array<string, mixed>>> $byCollection Per-collection fixture rows.
      * @param bool                                            $configMissing Force the register/schema config blank.
      *
      * @return NaviService
@@ -77,8 +82,12 @@ class NaviServiceTest extends TestCase
              */
             public function findAll(array $config): array
             {
-                $schema = (string) ($config['filters']['schema'] ?? '');
-                return $this->byCollection[$schema] ?? [];
+                $filters = ($config['filters'] ?? []);
+                $key     = (string) ($filters['schema'] ?? '');
+                if (isset($filters['ticketType']) === true) {
+                    $key .= ':'.(string) $filters['ticketType'];
+                }
+                return $this->byCollection[$key] ?? [];
             }
         };
 
@@ -87,7 +96,27 @@ class NaviServiceTest extends TestCase
 
         $logger = $this->createMock(LoggerInterface::class);
 
-        return new NaviService(container: $container, appConfig: $appConfig, logger: $logger);
+        // TicketService stub serving the `ticket_schema:<ticketType>` fixtures;
+        // it mirrors the real resolver's fail-soft contract (unconfigured -> []).
+        $ticketService = $this->createMock(TicketService::class);
+        $ticketService->method('getRegisterId')->willReturn($configMissing === true ? '' : 'register-1');
+        $ticketService->method('getSchemaId')->willReturn($configMissing === true ? '' : 'ticket_schema');
+        $ticketService->method('isConfigured')->willReturn($configMissing === false);
+        $ticketService->method('findByType')->willReturnCallback(
+            static function (string $ticketType) use ($byCollection, $configMissing): array {
+                if ($configMissing === true) {
+                    return [];
+                }
+                return $byCollection['ticket_schema:'.$ticketType] ?? [];
+            }
+        );
+
+        return new NaviService(
+            container: $container,
+            appConfig: $appConfig,
+            logger: $logger,
+            ticketService: $ticketService
+        );
     }
 
     /**
@@ -209,6 +238,36 @@ class NaviServiceTest extends TestCase
         $row = $this->findTableRow($response['tableData']['rows'], 'Conversion rate (%)');
         $this->assertNotNull($row);
         $this->assertSame(50.0, $row[1]);
+    }
+
+    /**
+     * A breakdown query reads request TICKETS (ticketType: request on the
+     * unified ticket schema) and groups them by category.
+     *
+     * @return void
+     */
+    public function testProcessQueryBreakdownReadsRequestTickets(): void
+    {
+        $service = $this->buildService(byCollection: [
+            'ticket_schema:request' => [
+                ['category' => 'belastingen'],
+                ['category' => 'belastingen'],
+                ['category' => 'vergunningen'],
+            ],
+            // Contactmoment tickets share the schema but must not leak in.
+            'ticket_schema:contactmoment' => [
+                ['category' => 'should-not-appear'],
+            ],
+        ]);
+
+        $response = $service->processQuery(
+            query: 'Group requests by category',
+            userId: 'alice'
+        );
+
+        $this->assertSame('chart', $response['resultType']);
+        $this->assertSame(['belastingen', 'vergunningen'], $response['chartData']['labels']);
+        $this->assertSame([2, 1], $response['chartData']['series'][0]['data']);
     }
 
     /**

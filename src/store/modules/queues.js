@@ -112,13 +112,15 @@ export const useQueuesStore = defineStore('queues', {
 			this.error = null
 			try {
 				const objectStore = useObjectStore()
-				const config = objectStore.objectTypeRegistry.request
+				// Queue items are request-tickets: the former `request` schema is now
+				// the `ticket` supertype narrowed by ticketType (unify-ticket-supertype).
+				const config = objectStore.objectTypeRegistry.ticket
 				if (!config) {
 					this.queueItems = []
 					return []
 				}
 
-				const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?queue=${queueId}&_limit=200`)
+				const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?ticketType=request&queue=${queueId}&_limit=200`)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',

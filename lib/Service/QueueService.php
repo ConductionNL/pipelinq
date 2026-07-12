@@ -5,6 +5,11 @@
  *
  * Service for queue operations: capacity checks, overflow routing, and item assignment.
  *
+ * The queued items are request tickets: `request` is a subtype of the unified
+ * `ticket` schema, resolved through {@see TicketService} with a `ticketType`
+ * discriminator instead of the retired `request_schema` config key
+ * (unify-ticket-supertype).
+ *
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
@@ -46,12 +51,14 @@ class QueueService
      * @param ContainerInterface      $container        The container.
      * @param LoggerInterface         $logger           The logger.
      * @param RegisterResolverService $registerResolver The register resolver.
+     * @param TicketService           $ticketService    Resolver for the unified ticket schema.
      */
     public function __construct(
         private IAppConfig $appConfig,
         private ContainerInterface $container,
         private LoggerInterface $logger,
         private RegisterResolverService $registerResolver,
+        private readonly TicketService $ticketService,
     ) {
     }//end __construct()
 
@@ -66,10 +73,10 @@ class QueueService
     public function getQueueDepth(string $queueId): int
     {
         $registerId = $this->registerResolver->resolve('queue');
-        $schemaId   = $this->appConfig->getValueString(Application::APP_ID, 'request_schema', '');
+        $schemaId   = $this->ticketService->getSchemaId();
 
         if ($registerId === '' || $schemaId === '') {
-            $this->logger->warning('QueueService: Cannot get queue depth -- register or request schema not configured');
+            $this->logger->warning('QueueService: Cannot get queue depth -- register or ticket schema not configured');
             return 0;
         }
 
@@ -79,12 +86,15 @@ class QueueService
             // Push the count down into OpenRegister's query engine. The previous
             // implementation fetched findAll(limit: 1) and counted the result,
             // which capped the reported depth at 1 (a bug) and over-fetched.
+            // Only request tickets are queued, so the count narrows on the
+            // `ticketType` discriminator instead of on a per-type schema.
             return $objectService->count(
                 [
                     'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $schemaId,
-                        'queue'    => $queueId,
+                        'register'   => $registerId,
+                        'schema'     => $schemaId,
+                        'ticketType' => TicketService::TYPE_REQUEST,
+                        'queue'      => $queueId,
                     ],
                 ]
             );
@@ -246,7 +256,7 @@ class QueueService
     private function moveExcessItems(string $fromQueueId, string $toQueueId, int $count): int
     {
         $registerId = $this->registerResolver->resolve('queue');
-        $schemaId   = $this->appConfig->getValueString(Application::APP_ID, 'request_schema', '');
+        $schemaId   = $this->ticketService->getSchemaId();
 
         if ($registerId === '' || $schemaId === '') {
             return 0;
@@ -260,9 +270,10 @@ class QueueService
             $items = $objectService->findAll(
                 [
                     'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $schemaId,
-                        'queue'    => $fromQueueId,
+                        'register'   => $registerId,
+                        'schema'     => $schemaId,
+                        'ticketType' => TicketService::TYPE_REQUEST,
+                        'queue'      => $fromQueueId,
                     ],
                     'limit'   => $count,
                     'order'   => ['dateCreated' => 'DESC'],
@@ -290,7 +301,12 @@ class QueueService
     }//end moveExcessItems()
 
     /**
-     * Update the queue field on a request object.
+     * Update the queue field on a request ticket.
+     *
+     * The write goes through TicketService::save(), which resolves the unified
+     * ticket schema and stamps the `ticketType` discriminator onto the payload.
+     * The object is still identified by its `id` in the payload (uuid: null),
+     * exactly as before the ticket cutover.
      *
      * @param string      $requestId The request UUID.
      * @param string|null $queueId   The queue UUID, or null to clear.
@@ -299,23 +315,19 @@ class QueueService
      */
     private function updateRequestQueueField(string $requestId, ?string $queueId): bool
     {
-        $registerId = $this->registerResolver->resolve('queue');
-        $schemaId   = $this->appConfig->getValueString(Application::APP_ID, 'request_schema', '');
-
-        if ($registerId === '' || $schemaId === '') {
-            $this->logger->warning('QueueService: Cannot update request -- register or request schema not configured');
+        if ($this->ticketService->isConfigured() === false) {
+            $this->logger->warning('QueueService: Cannot update request -- register or ticket schema not configured');
             return false;
         }
 
         try {
-            $objectService = $this->getObjectService();
-
-            $objectService->saveObject(
-                ['id' => $requestId, 'queue' => $queueId],
-                [],
-                $registerId,
-                $schemaId,
-                null
+            $this->ticketService->save(
+                ticketType: TicketService::TYPE_REQUEST,
+                payload: [
+                    'id'    => $requestId,
+                    'queue' => $queueId,
+                ],
+                uuid: null
             );
 
             return true;

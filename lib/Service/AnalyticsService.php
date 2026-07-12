@@ -8,6 +8,11 @@
  * Klantbeeld 360 analytics dashboard. Avoids fetching full collections
  * client-side on large installations.
  *
+ * Requests and contactmomenten are no longer separate schemas: both are
+ * subtypes of the unified `ticket` schema and are read through
+ * {@see TicketService} with a `ticketType` discriminator
+ * (unify-ticket-supertype).
+ *
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
@@ -41,9 +46,10 @@ use RuntimeException;
 /**
  * Cross-module analytics summary service.
  *
- * Stateless. Reads leads, requests and contactmomenten via the
- * OpenRegister ObjectService, aggregates counts/sums in PHP and
- * returns the four headline KPIs for the Analytics dashboard.
+ * Stateless. Reads leads via the OpenRegister ObjectService and requests /
+ * contactmomenten via the unified ticket schema ({@see TicketService}),
+ * aggregates counts/sums in PHP and returns the four headline KPIs for the
+ * Analytics dashboard.
  *
  * @spec openspec/changes/klantbeeld-360/tasks.md#task-1.1
  *
@@ -126,16 +132,43 @@ class AnalyticsService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container The DI container (OpenRegister lookup).
-     * @param IAppConfig         $appConfig App configuration (register/schema IDs).
-     * @param LoggerInterface    $logger    The logger.
+     * @param ContainerInterface $container     The DI container (OpenRegister lookup).
+     * @param IAppConfig         $appConfig     App configuration (register/schema IDs).
+     * @param LoggerInterface    $logger        The logger.
+     * @param TicketService      $ticketService Resolver for the unified ticket schema.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
+        private readonly TicketService $ticketService,
     ) {
     }//end __construct()
+
+    /**
+     * Query tickets of one subtype via the shared TicketService.
+     *
+     * The legacy `request` / `complaint` / `contactmoment` schemas were merged
+     * into the unified `ticket` schema; a subtype is now selected with the
+     * `ticketType` discriminator rather than with a separate schema id.
+     * TicketService is fail-soft: an unprovisioned schema or an unreachable
+     * OpenRegister yields an empty row set (logged there).
+     *
+     * @param string $ticketType One of the TicketService::TYPE_* constants.
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+     */
+    private function findTickets(string $ticketType): array
+    {
+        $objects = [];
+        foreach ($this->ticketService->findByType(ticketType: $ticketType) as $result) {
+            $objects[] = $this->toArray(object: $result);
+        }
+
+        return $objects;
+    }//end findTickets()
 
     /**
      * Query objects of a configured schema via OpenRegister ObjectService.
@@ -234,9 +267,10 @@ class AnalyticsService
      *
      * Computes:
      *   - leadConversionRate:        won-leads / total-leads within the period (0-100)
-     *   - avgRequestResolutionTime:  mean hours between requestedAt and completedAt
-     *                                for requests resolved within the period (null if none)
-     *   - contactMomentVolume:       count of contactmoments within the period
+     *   - avgRequestResolutionTime:  mean hours between the request ticket's occurredAt
+     *                                and its resolvedAt for requests resolved within the
+     *                                period (null if none)
+     *   - contactMomentVolume:       count of contactmoment tickets within the period
      *   - customerSatisfactionScore: mean surveyResponse.score within the period (null if none)
      *   - period:                    echo of the period key
      *   - previousPeriod:            same metric block for the prior equal-length window
@@ -270,8 +304,8 @@ class AnalyticsService
         $previousStart = $currentStart->modify(sprintf('-%d days', $days));
 
         $leads    = $this->findObjects(schemaKey: 'lead_schema');
-        $requests = $this->findObjects(schemaKey: 'request_schema');
-        $cms      = $this->findObjects(schemaKey: 'contactmoment_schema');
+        $requests = $this->findTickets(ticketType: TicketService::TYPE_REQUEST);
+        $cms      = $this->findTickets(ticketType: TicketService::TYPE_CONTACTMOMENT);
         // Survey responses migrated to the OpenRegister forms leaf (NC Forms).
         // CSAT will be re-sourced from form-link responses once the leaf
         // exposes a query helper; see openspec/changes/migrate-forms-to-forms-leaf.
@@ -312,8 +346,8 @@ class AnalyticsService
      * @param DateTimeInterface                $from      Inclusive lower bound.
      * @param DateTimeInterface                $to        Exclusive upper bound.
      * @param array<int, array<string, mixed>> $leads     Lead rows.
-     * @param array<int, array<string, mixed>> $requests  Request rows.
-     * @param array<int, array<string, mixed>> $cms       Contactmoment rows.
+     * @param array<int, array<string, mixed>> $requests  Request-ticket rows.
+     * @param array<int, array<string, mixed>> $cms       Contactmoment-ticket rows.
      * @param array<int, array<string, mixed>> $responses Survey-response rows.
      *
      * @return array<string, float|int|null>
@@ -352,12 +386,14 @@ class AnalyticsService
             $leadConversionRate = round(($wonLeads * 100.0) / $totalLeads, 1);
         }
 
-        // Avg request resolution time.
+        // Avg request resolution time. On the ticket schema the request's
+        // `requestedAt` is `occurredAt` and the completion timestamp is
+        // `resolvedAt` (`completedAt` kept as a fallback for legacy rows).
         $resolutionHours = 0.0;
         $resolvedCount   = 0;
         foreach ($requests as $request) {
-            $requestedTs = $this->extractTimestamp(row: $request, fields: ['requestedAt']);
-            $completedTs = $this->extractTimestamp(row: $request, fields: ['completedAt']);
+            $requestedTs = $this->extractTimestamp(row: $request, fields: ['occurredAt']);
+            $completedTs = $this->extractTimestamp(row: $request, fields: ['resolvedAt', 'completedAt']);
             if ($requestedTs === null || $completedTs === null) {
                 continue;
             }
@@ -375,10 +411,11 @@ class AnalyticsService
             $avgResolutionHours = round($resolutionHours / $resolvedCount, 2);
         }
 
-        // Contact moment volume.
+        // Contact moment volume. The contactmoment's `contactedAt` is
+        // `occurredAt` on the ticket schema.
         $cmCount = 0;
         foreach ($cms as $cm) {
-            $timestamp = $this->extractTimestamp(row: $cm, fields: ['contactedAt', 'createdAt']);
+            $timestamp = $this->extractTimestamp(row: $cm, fields: ['occurredAt', 'createdAt']);
             if ($timestamp === null || $timestamp < $fromTs || $timestamp >= $toTs) {
                 continue;
             }
@@ -528,7 +565,7 @@ class AnalyticsService
      */
     private function buildCategorySeries(string $period): array
     {
-        $requests = $this->findObjects(schemaKey: 'request_schema');
+        $requests = $this->findTickets(ticketType: TicketService::TYPE_REQUEST);
         $days     = self::PERIOD_DAYS[$period];
         $now      = new DateTimeImmutable();
         $startTs  = $now->modify(sprintf('-%d days', $days))->getTimestamp();
@@ -536,11 +573,13 @@ class AnalyticsService
 
         $counts = [];
         foreach ($requests as $request) {
-            $timestamp = $this->extractTimestamp(row: $request, fields: ['requestedAt', 'createdAt']);
+            $timestamp = $this->extractTimestamp(row: $request, fields: ['occurredAt', 'createdAt']);
             if ($timestamp === null || $timestamp < $startTs || $timestamp > $nowTs) {
                 continue;
             }
 
+            // The request's own free-text `category` keeps its name on the
+            // ticket schema (the complaint's category became complaintCategory).
             $category = (string) ($request['category'] ?? '');
             if ($category === '') {
                 continue;
@@ -587,7 +626,7 @@ class AnalyticsService
     public function getFunnels(): array
     {
         $leads    = $this->findObjects(schemaKey: 'lead_schema');
-        $requests = $this->findObjects(schemaKey: 'request_schema');
+        $requests = $this->findTickets(ticketType: TicketService::TYPE_REQUEST);
 
         $leadCounts = ['open' => 0, 'won' => 0, 'lost' => 0];
         foreach ($leads as $lead) {

@@ -556,7 +556,9 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
 		 */
 		async checkRequestChannelUsage(channelName) {
-			return this.countObjectsWithField('request', 'channel', channelName)
+			// A request is a `ticket` narrowed by ticketType (unify-ticket-supertype),
+			// so the usage count must exclude complaints and contactmomenten.
+			return this.countObjectsWithField('ticket', 'channel', channelName, { ticketType: 'request' })
 		},
 		/**
 		 * Persist the Shillinq ledger webhook URL through the standard settings endpoint.
@@ -721,12 +723,18 @@ export default {
 		 * @param type
 		 * @param field
 		 * @param value
+		 * @param {object} [extraFilters] Additional query filters, e.g. the
+		 *   `ticketType` discriminator needed to narrow the `ticket` supertype
+		 *   down to one of its subtypes (unify-ticket-supertype).
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-71
 		 */
-		async countObjectsWithField(type, field, value) {
+		async countObjectsWithField(type, field, value, extraFilters = {}) {
 			const config = this.objectStore.objectTypeRegistry[type]
 			if (!config) return 0
-			const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?${field}=${encodeURIComponent(value)}&_limit=1`)
+			const extra = Object.entries(extraFilters)
+				.map(([k, v]) => `${k}=${encodeURIComponent(v)}&`)
+				.join('')
+			const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?${extra}${field}=${encodeURIComponent(value)}&_limit=1`)
 			const response = await fetch(url, {
 				headers: {
 					'Content-Type': 'application/json',

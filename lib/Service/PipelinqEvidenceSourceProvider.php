@@ -59,32 +59,61 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider
     public const SOURCE_ID = 'pipelinq-crm';
 
     /**
-     * Schemas harvested, in dossier order: schema config key => the field(s)
+     * Sources harvested, in dossier order: source key => the field(s)
      * that link an object to the data subject. `@self` means the object's own
      * identity (id / contactsUid) is the subject; the other entries are foreign
      * keys pointing at the subject's client/contact record.
      *
+     * The source key doubles as the dossier `schema` label and as the content-hash
+     * input, so it stays stable for the lifetime of a source.
+     *
      * @var array<string, array<int, string>>
      */
     private const SUBJECT_LINKS = [
-        'client_schema'        => ['@self'],
-        'contact_schema'       => ['@self', 'client'],
-        'lead_schema'          => ['client', 'contact'],
-        'request_schema'       => ['client', 'contact'],
-        'contactmoment_schema' => ['client', 'contact'],
+        'client'               => ['@self'],
+        'contact'              => ['@self', 'client'],
+        'lead'                 => ['client', 'contact'],
+        'ticket_request'       => ['client', 'contact'],
+        'ticket_contactmoment' => ['client', 'contact'],
+    ];
+
+    /**
+     * The sources that own a schema of their own: source key => app-config key.
+     *
+     * @var array<string, string>
+     */
+    private const SOURCE_SCHEMA_KEYS = [
+        'client'  => 'client_schema',
+        'contact' => 'contact_schema',
+        'lead'    => 'lead_schema',
+    ];
+
+    /**
+     * The source keys that are subtypes of the unified `ticket` schema
+     * (unify-ticket-supertype), mapped onto their `ticketType` discriminator.
+     * These resolve to the ticket schema and are read with a `ticketType` filter
+     * instead of a schema of their own.
+     *
+     * @var array<string, string>
+     */
+    private const SOURCE_TICKET_TYPES = [
+        'ticket_request'       => TicketService::TYPE_REQUEST,
+        'ticket_contactmoment' => TicketService::TYPE_CONTACTMOMENT,
     ];
 
     /**
      * Constructor.
      *
-     * @param IAppConfig         $appConfig App config (register/schema ids).
-     * @param ContainerInterface $container Container for the OpenRegister ObjectService.
-     * @param LoggerInterface    $logger    Logger (never receives the subject id value).
+     * @param IAppConfig         $appConfig     App config (register/schema ids).
+     * @param ContainerInterface $container     Container for the OpenRegister ObjectService.
+     * @param LoggerInterface    $logger        Logger (never receives the subject id value).
+     * @param TicketService      $ticketService Resolver for the unified `ticket` supertype.
      */
     public function __construct(
         private readonly IAppConfig $appConfig,
         private readonly ContainerInterface $container,
         private readonly LoggerInterface $logger,
+        private readonly TicketService $ticketService,
     ) {
     }//end __construct()
 
@@ -138,13 +167,14 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider
         [$objectService, $registerId, $schemaIds] = $context;
 
         $items = [];
-        foreach (self::SUBJECT_LINKS as $schemaKey => $linkFields) {
-            $schemaId = $schemaIds[$schemaKey];
+        foreach (self::SUBJECT_LINKS as $sourceKey => $linkFields) {
+            $schemaId = $schemaIds[$sourceKey];
 
             $rows = $this->safeFindAll(
                 objectService: $objectService,
                 registerId: $registerId,
-                schemaId: $schemaId
+                schemaId: $schemaId,
+                ticketType: (self::SOURCE_TICKET_TYPES[$sourceKey] ?? null)
             );
 
             foreach ($rows as $row) {
@@ -159,10 +189,10 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider
 
                 $items[] = new EvidenceItem(
                     self::SOURCE_ID,
-                    $this->contentHash(schemaKey: $schemaKey, data: $data),
+                    $this->contentHash(sourceKey: $sourceKey, data: $data),
                     EvidenceItem::STATUS_COLLECTED,
                     [
-                        'schema'   => $this->schemaSlug(schemaKey: $schemaKey),
+                        'schema'   => $sourceKey,
                         'objectId' => (string) ($data['id'] ?? ($data['uuid'] ?? '')),
                         'caseUuid' => $caseUuid,
                     ]
@@ -209,33 +239,48 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider
     }//end matchesSubject()
 
     /**
-     * Stable content hash for idempotent dedupe (schema + object id).
+     * Stable content hash for idempotent dedupe (source key + object id).
      *
-     * @param string               $schemaKey The schema config key.
+     * @param string               $sourceKey The harvested source key.
      * @param array<string, mixed> $data      The object data.
      *
      * @return string A `sha256:` prefixed hash.
      */
-    private function contentHash(string $schemaKey, array $data): string
+    private function contentHash(string $sourceKey, array $data): string
     {
         $objectId = (string) ($data['id'] ?? ($data['uuid'] ?? ''));
-        return 'sha256:'.hash('sha256', $this->schemaSlug(schemaKey: $schemaKey).':'.$objectId);
+        return 'sha256:'.hash('sha256', $sourceKey.':'.$objectId);
     }//end contentHash()
 
     /**
-     * The schema slug for a schema config key (`client_schema` -> `client`).
+     * Resolve the schema id backing one harvested source.
      *
-     * @param string $schemaKey The schema config key.
+     * Ticket-backed sources (request / contactmoment) live in the unified `ticket`
+     * schema; every other source keeps its own schema config key.
      *
-     * @return string The schema slug.
+     * @param string $sourceKey The source key.
+     *
+     * @return string The schema id, or '' when unprovisioned.
      */
-    private function schemaSlug(string $schemaKey): string
+    private function resolveSourceSchemaId(string $sourceKey): string
     {
-        return str_replace('_schema', '', $schemaKey);
-    }//end schemaSlug()
+        if (isset(self::SOURCE_TICKET_TYPES[$sourceKey]) === true) {
+            return $this->ticketService->getSchemaId();
+        }
+
+        $configKey = (self::SOURCE_SCHEMA_KEYS[$sourceKey] ?? '');
+        if ($configKey === '') {
+            return '';
+        }
+
+        return $this->appConfig->getValueString(Application::APP_ID, $configKey, '');
+    }//end resolveSourceSchemaId()
 
     /**
      * Resolve the ObjectService, register id and subject schema ids.
+     *
+     * The ticket-backed sources (request / contactmoment) resolve to the single
+     * unified `ticket` schema; the others keep their own schema config key.
      *
      * @return array{0: object, 1: string, 2: array<string, string>}|null
      *         Null when unprovisioned or OR is unavailable.
@@ -248,13 +293,13 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider
         }
 
         $schemaIds = [];
-        foreach (array_keys(self::SUBJECT_LINKS) as $schemaKey) {
-            $schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+        foreach (array_keys(self::SUBJECT_LINKS) as $sourceKey) {
+            $schemaId = $this->resolveSourceSchemaId(sourceKey: $sourceKey);
             if ($schemaId === '') {
                 return null;
             }
 
-            $schemaIds[$schemaKey] = $schemaId;
+            $schemaIds[$sourceKey] = $schemaId;
         }
 
         try {
@@ -267,23 +312,36 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider
     }//end resolveContext()
 
     /**
-     * Query a schema's objects, tolerating an OR read failure.
+     * Query a source's objects, tolerating an OR read failure.
      *
-     * @param object $objectService The OpenRegister ObjectService.
-     * @param string $registerId    Register id.
-     * @param string $schemaId      Schema id.
+     * A ticket-backed source narrows the unified `ticket` schema with the
+     * `ticketType` discriminator so each subtype still harvests only its own rows.
+     *
+     * @param object      $objectService The OpenRegister ObjectService.
+     * @param string      $registerId    Register id.
+     * @param string      $schemaId      Schema id.
+     * @param string|null $ticketType    The ticket subtype, or null for a plain schema.
      *
      * @return array<int, mixed> The rows (empty on failure).
      */
-    private function safeFindAll(object $objectService, string $registerId, string $schemaId): array
-    {
+    private function safeFindAll(
+        object $objectService,
+        string $registerId,
+        string $schemaId,
+        ?string $ticketType=null
+    ): array {
+        $filters = [
+            'register' => $registerId,
+            'schema'   => $schemaId,
+        ];
+        if ($ticketType !== null) {
+            $filters['ticketType'] = $ticketType;
+        }
+
         try {
             $rows = $objectService->findAll(
                 [
-                    'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $schemaId,
-                    ],
+                    'filters' => $filters,
                     'limit'   => 5000,
                 ]
             );
