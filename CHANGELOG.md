@@ -20,6 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fields and `BlastService::updateBlastTotals()` roll-up — no new schema.
   Feature-flagged via `blast.first_party_tracking` (default off; flag off
   preserves today's provider-webhook-only render path byte-for-byte).
+- **Lead scoring — win probability** (`lead-scoring-win-probability`): declarative
+  `winProbability` calculation on the `lead` schema (`x-openregister-calculations`,
+  `materialise: false`) — the lead's stage-denormalised `probability` decayed by
+  inactivity (full ≤14 days, 80% ≤30 days, 50% ≤60 days, 25% beyond), recomputed
+  fresh on every read so a stalling deal visibly cools with no write. Surfaced
+  declaratively on the `LeadDetail` Deal widget and as a colour-banded `Leads`
+  index column reusing the existing `lead-probability` cell widget — no new Vue
+  component, no service class, no PHP. Seed leads (municipality, consultancy,
+  travel agency) span the hot/warm/cold bands.
+>>>>>>> origin/development
 - **StUF-ZKN/BG adapter** (`stuf-zkn-bg-adapter`): SOAP 1.1 + StUF 0310
   bridge to legacy zaaksystemen (Centric Key2Zaken, Atos PinkRoccade, ...)
   enabling municipalities without ZGW REST APIs to use Pipelinq as a
