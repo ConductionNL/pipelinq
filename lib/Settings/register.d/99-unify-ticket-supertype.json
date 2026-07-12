@@ -225,6 +225,28 @@
             "description": "For a contactmoment: UUID of the parent request-ticket this interaction belongs to (migrated from contactmoment.request).",
             "format": "uuid"
           },
+          "decisions": {
+            "type": "array",
+            "title": "Decisions",
+            "description": "Governance decisions raised for this ticket (e.g. approval/escalation). References decidesk Decision objects (ADR-066); Decidesk owns the making and eIDAS signing. Carried over from the retired `request` schema when it folded into this supertype — the relation belongs to the matter, not to which of the three names it used to have.",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "$ref": "Decision",
+              "x-external-register": "decidesk"
+            },
+            "referenceType": "decision",
+            "x-allow-create": true
+          },
+          "contract": {
+            "type": "string",
+            "title": "Governing contract",
+            "description": "The Shillinq contract that governs this ticket (drives its SLA tier / entitlements). References a Shillinq Contract object (ADR-066 cross-app reference); Shillinq owns contract lifecycle. Carried over from the retired `request` schema when it folded into this supertype.",
+            "format": "uuid",
+            "$ref": "Contract",
+            "x-external-register": "shillinq",
+            "x-allow-create": true
+          },
           "category": {
             "type": "string",
             "title": "Category",

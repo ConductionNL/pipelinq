@@ -352,7 +352,7 @@ Data MUST be aggregated from ledger entries and redemptions; no denormalization 
 query performance caching (which is refreshed daily).
 
 **Feature tier**: MVP (core metrics), V1.5 (advanced cohort analysis)
-**Files**: `pipelinq/app/Service/LoyaltyReportingService.php`, `mydash` dashboard widget
+**Files**: `pipelinq/app/Service/LoyaltyReportingService.php`, `launchpad` dashboard widget
 
 ### Scenario REQ-LOY-008-01: Core KPIs displayed
 

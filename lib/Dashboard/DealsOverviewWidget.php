@@ -4,7 +4,7 @@
  * Deals Overview dashboard widget.
  *
  * Shows open leads with title, client name, value, and stage
- * in the Nextcloud Dashboard and MyDash.
+ * in the Nextcloud Dashboard and LaunchPad.
  *
  * @category Dashboard
  * @package  OCA\Pipelinq\Dashboard

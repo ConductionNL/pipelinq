@@ -1,18 +1,14 @@
 # Pre-merge quality gate — enforced lint + phpcs + all Hydra gates on every PR.
 # Required status check on protected branches.
 #
-# Runner/container: `runs-on: docker` (Codeberg's shared Forgejo runner label —
-# the same label every other passing .forgejo workflow uses, e.g. tests-live.yml)
-# + the official php:8.3-cli image + a base-tooling step. The old
-# `runs-on: codeberg-medium` label is not offered by Codeberg's shared runners, so
-# the job never matched a runner and fast-failed on EVERY PR fleet-wide (0 successes
-# across 500+ runs since 2026-05-29). The old code.forgejo.org/oci/ci-php:8.3 image
-# also 404s ("manifest unknown"); php:8.3-cli is pulled from Docker Hub instead.
+# Runner/container mirror the proven release-semrel workflow: codeberg-medium +
+# official php:8.3-cli + a base-tooling step. The old code.forgejo.org/oci/ci-php:8.3
+# image 404s ("manifest unknown"), which fast-failed every run at container-pull.
 #
 # The gate runs `composer lint` + `composer phpcs` directly: check:strict's
 # psalm/phpstan/phpmd/test:all are wrapped in `|| echo skipping` so they never
-# affect pass/fail (ADR-022 parks static analysis). lint+phpcs is the identical
-# enforced gate, fast and deterministic.
+# affect pass/fail (ADR-022 parks static analysis), and running them on the medium
+# runner OOMs it. lint+phpcs is the identical enforced gate, fast and deterministic.
 
 name: pre-merge-check-strict
 
@@ -25,7 +21,7 @@ on:
 
 jobs:
   quality-gates:
-    runs-on: docker
+    runs-on: codeberg-medium
     container:
       image: php:8.3-cli
     timeout-minutes: 15
@@ -35,20 +31,21 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends \
             git curl ca-certificates gnupg jq unzip zip \
-            libzip-dev libpng-dev python3 nodejs
+            libzip-dev libpng-dev python3
+          # Node is required by actions/checkout@v4 (a JS action) which runs
+          # inside this php:8.3-cli container; the stock image ships no node.
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          apt-get install -y --no-install-recommends nodejs
           docker-php-ext-install -j"$(nproc)" zip gd
           curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
       - name: Checkout PR
-        uses: https://code.forgejo.org/actions/checkout@v4
+        uses: https://github.com/actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Install composer deps
-        env:
-          COMPOSER_MAX_PARALLEL_HTTP: "1"
-          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GH_COMPOSER_TOKEN }}"}}'
-        run: n=0; until composer install --no-interaction --no-progress --prefer-dist --ignore-platform-reqs; do n=$((n+1)); [ $n -ge 5 ] && { echo "composer install failed after 5 attempts"; exit 1; }; echo "transient composer download failure, retry $n/5"; sleep 15; done
+        run: composer install --no-interaction --no-progress --prefer-dist --ignore-platform-reqs
 
       - name: Run lint + phpcs (the enforced gate)
         run: |
@@ -56,7 +53,7 @@ jobs:
           composer phpcs
 
       - name: Clone Hydra (for gate runner)
-        uses: https://code.forgejo.org/actions/checkout@v4
+        uses: https://github.com/actions/checkout@v4
         with:
           repository: Conduction/hydra
           ref: development
