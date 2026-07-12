@@ -569,7 +569,19 @@
           },
           "beloningWaarde": {
             "description": "Reward value (number for discount, string for product name, etc.).",
-            "title": "Beloning Waarde"
+            "title": "Beloning Waarde",
+            "oneOf": [
+              {
+                "type": "number",
+                "title": "Beloning Waarde (bedrag)",
+                "description": "Numeric reward value, e.g. a discount amount or percentage."
+              },
+              {
+                "type": "string",
+                "title": "Beloning Waarde (tekst)",
+                "description": "Textual reward value, e.g. a product name or voucher code."
+              }
+            ]
           },
           "kostBasisEur": {
             "type": "number",
