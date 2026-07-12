@@ -20,6 +20,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   RBAC-guarded through the existing `ObjectService`/`TicketService` write
   path with `create` authorization enforced. Sovereign, no-per-seat-premium
   alternative to Salesforce/HubSpot/Zoho AI copilots (ConductionNL/pipelinq#342).
+- **First-party marketing-email open/click tracking** (`marketing-email-open-click-tracking`):
+  a pipelinq-hosted open pixel (`GET /api/blast/track/open/{token}`) and
+  click-redirect (`GET /api/blast/track/click/{token}`) so open/click rates
+  populate on the base tier even without a webhook-capable ESP. Tokens are
+  HMAC-SHA256 signed and PII-free (`TrackingLinkService`, mirroring
+  `PortalController::signLink()`); the click endpoint trusts its redirect
+  target only after signature verification, so it cannot be used as an open
+  redirector. Recorded opens/clicks reuse the existing `blastDelivery`
+  fields and `BlastService::updateBlastTotals()` roll-up — no new schema.
+  Feature-flagged via `blast.first_party_tracking` (default off; flag off
+  preserves today's provider-webhook-only render path byte-for-byte).
+- **Lead scoring — win probability** (`lead-scoring-win-probability`): declarative
+  `winProbability` calculation on the `lead` schema (`x-openregister-calculations`,
+  `materialise: false`) — the lead's stage-denormalised `probability` decayed by
+  inactivity (full ≤14 days, 80% ≤30 days, 50% ≤60 days, 25% beyond), recomputed
+  fresh on every read so a stalling deal visibly cools with no write. Surfaced
+  declaratively on the `LeadDetail` Deal widget and as a colour-banded `Leads`
+  index column reusing the existing `lead-probability` cell widget — no new Vue
+  component, no service class, no PHP. Seed leads (municipality, consultancy,
+  travel agency) span the hot/warm/cold bands.
 - **StUF-ZKN/BG adapter** (`stuf-zkn-bg-adapter`): SOAP 1.1 + StUF 0310
   bridge to legacy zaaksystemen (Centric Key2Zaken, Atos PinkRoccade, ...)
   enabling municipalities without ZGW REST APIs to use Pipelinq as a
