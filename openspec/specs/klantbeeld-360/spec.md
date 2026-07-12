@@ -1,8 +1,10 @@
 ---
-status: draft
+status: in-progress
 ---
 
 # Klantbeeld 360 Specification
+
+**OpenSpec changes**: [klantbeeld-360-activation](../../changes/klantbeeld-360-activation/) _(in-progress — activates the draft to an MVP over the unified `ticket` schema)_
 
 ## Purpose
 
