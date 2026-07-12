@@ -603,6 +603,13 @@
 						"title": "Log contactmoment",
 						"placement": "end",
 						"props": { "clientId": "@objectId", "inline": true }
+					},
+					{
+						"id": "billing-handoff",
+						"component": "ClientBillingHandoffSection",
+						"title": "Billing",
+						"placement": "after-related",
+						"props": { "clientId": "@objectId" }
 					}
 				],
 				"sidebar": {

@@ -136,6 +136,15 @@
 				placeholder="https://shillinq.example.com/api/wip/events"
 				:error="wipUrlInvalid"
 				:helper-text="wipUrlInvalid ? t('pipelinq', 'Please enter a valid HTTPS URL') : ''" />
+			<!-- Real time-intake emit (time-billing-handoff-emit). Default off — an
+			     unconfigured install keeps the deep-link-only handoff unchanged. -->
+			<NcCheckboxRadioSwitch :checked.sync="shillinqTimeIntakeEnabled" type="switch">
+				{{ t('pipelinq', 'Send approved hours to Shillinq as draft invoices') }}
+			</NcCheckboxRadioSwitch>
+			<NcTextField v-model="config.billing_handoff_manager_group"
+				:label="t('pipelinq', 'Billing handoff manager group')"
+				placeholder="billing-managers"
+				:helper-text="t('pipelinq', 'Nextcloud group allowed to trigger \'Send to billing\'. Leave empty to restrict it to Nextcloud administrators.')" />
 			<NcButton type="primary"
 				:disabled="savingShillinq || shillinqUrlInvalid || wipUrlInvalid"
 				@click="saveShillinq">
@@ -251,7 +260,7 @@
 <script>
 import { loadState } from '@nextcloud/initial-state'
 import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
-import { NcButton, NcLoadingIcon, NcNoteCard, NcSettingsSection, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSettingsSection, NcTextField } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useSettingsStore } from '../../store/modules/settings.js'
@@ -289,6 +298,7 @@ export default {
 		CnRegisterMapping,
 		CnVersionInfoCard,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSettingsSection,
@@ -362,6 +372,21 @@ export default {
 		},
 		isConfigured() {
 			return !!this.config.register
+		},
+		/**
+		 * The real time-intake emit flag (time-billing-handoff-emit), converted
+		 * between the backend's string 'true'/'false' config value and a
+		 * checkbox boolean.
+		 *
+		 * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+		 */
+		shillinqTimeIntakeEnabled: {
+			get() {
+				return this.config.shillinq_time_intake_enabled === 'true'
+			},
+			set(value) {
+				this.config = { ...this.config, shillinq_time_intake_enabled: value ? 'true' : 'false' }
+			},
 		},
 		/**
 		 * Whether the entered Shillinq webhook URL is present but not a valid HTTPS URL.
