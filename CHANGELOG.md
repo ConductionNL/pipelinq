@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **First-party marketing-email open/click tracking** (`marketing-email-open-click-tracking`):
+  a pipelinq-hosted open pixel (`GET /api/blast/track/open/{token}`) and
+  click-redirect (`GET /api/blast/track/click/{token}`) so open/click rates
+  populate on the base tier even without a webhook-capable ESP. Tokens are
+  HMAC-SHA256 signed and PII-free (`TrackingLinkService`, mirroring
+  `PortalController::signLink()`); the click endpoint trusts its redirect
+  target only after signature verification, so it cannot be used as an open
+  redirector. Recorded opens/clicks reuse the existing `blastDelivery`
+  fields and `BlastService::updateBlastTotals()` roll-up — no new schema.
+  Feature-flagged via `blast.first_party_tracking` (default off; flag off
+  preserves today's provider-webhook-only render path byte-for-byte).
 - **Lead scoring — win probability** (`lead-scoring-win-probability`): declarative
   `winProbability` calculation on the `lead` schema (`x-openregister-calculations`,
   `materialise: false`) — the lead's stage-denormalised `probability` decayed by
