@@ -76,7 +76,7 @@ class ReportingServiceTest extends TestCase
     /**
      * Test calculateFcr with mixed outcomes returns correct percentage.
      *
-     * Given 10 contacts where 8 have outcome 'opgelost', FCR should be 80.0%.
+     * Given 10 contacts where 8 have outcome 'resolved', FCR should be 80.0%.
      *
      * @return void
      *
@@ -85,16 +85,16 @@ class ReportingServiceTest extends TestCase
     public function testCalculateFcrWithMixedOutcomes(): void
     {
         $contactmomenten = [
-            ['outcome' => 'opgelost'],
-            ['outcome' => 'opgelost'],
-            ['outcome' => 'opgelost'],
-            ['outcome' => 'opgelost'],
-            ['outcome' => 'opgelost'],
-            ['outcome' => 'opgelost'],
-            ['outcome' => 'opgelost'],
-            ['outcome' => 'opgelost'],
-            ['outcome' => 'doorverwezen'],
-            ['outcome' => 'doorverwezen'],
+            ['outcome' => 'resolved'],
+            ['outcome' => 'resolved'],
+            ['outcome' => 'resolved'],
+            ['outcome' => 'resolved'],
+            ['outcome' => 'resolved'],
+            ['outcome' => 'resolved'],
+            ['outcome' => 'resolved'],
+            ['outcome' => 'resolved'],
+            ['outcome' => 'referred'],
+            ['outcome' => 'referred'],
         ];
 
         $result = $this->service->calculateFcr($contactmomenten);
@@ -126,9 +126,9 @@ class ReportingServiceTest extends TestCase
     public function testCalculateFcrAllResolvedReturnsHundred(): void
     {
         $contactmomenten = [
-            ['outcome' => 'opgelost'],
-            ['outcome' => 'opgelost'],
-            ['outcome' => 'opgelost'],
+            ['outcome' => 'resolved'],
+            ['outcome' => 'resolved'],
+            ['outcome' => 'resolved'],
         ];
 
         $result = $this->service->calculateFcr($contactmomenten);
@@ -167,7 +167,7 @@ class ReportingServiceTest extends TestCase
      */
     public function testSlaComplianceEmptyDatasetReturnsHundred(): void
     {
-        $result = $this->service->getSlaCompliance('telefoon', '2026-04-01', '2026-04-30');
+        $result = $this->service->getSlaCompliance('phone', '2026-04-01', '2026-04-30');
 
         $this->assertSame(100.0, $result);
     }//end testSlaComplianceEmptyDatasetReturnsHundred()
@@ -215,10 +215,10 @@ class ReportingServiceTest extends TestCase
     {
         $this->appConfig
             ->method('getValueString')
-            ->with('pipelinq', 'sla_telefoon_target_percent', '90')
+            ->with('pipelinq', 'sla_phone_target_percent', '90')
             ->willReturn('85');
 
-        $result = $this->service->getSlaTarget('telefoon');
+        $result = $this->service->getSlaTarget('phone');
 
         $this->assertSame(85.0, $result);
     }//end testGetSlaTargetReadFromConfig()
@@ -269,7 +269,7 @@ class ReportingServiceTest extends TestCase
     {
         $this->appConfig->expects($this->never())->method('setValueString');
 
-        $result = $this->service->setSlaTarget('telefoon', 'unknown_metric', '99');
+        $result = $this->service->setSlaTarget('phone', 'unknown_metric', '99');
 
         $this->assertFalse($result);
     }//end testSetSlaTargetRejectsUnknownMetric()
@@ -286,9 +286,9 @@ class ReportingServiceTest extends TestCase
         $this->appConfig
             ->expects($this->once())
             ->method('setValueString')
-            ->with('pipelinq', 'sla_telefoon_target_percent', '95');
+            ->with('pipelinq', 'sla_phone_target_percent', '95');
 
-        $result = $this->service->setSlaTarget('telefoon', 'target_percent', '95');
+        $result = $this->service->setSlaTarget('phone', 'target_percent', '95');
 
         $this->assertTrue($result);
     }//end testSetSlaTargetAcceptsValidChannelAndMetric()

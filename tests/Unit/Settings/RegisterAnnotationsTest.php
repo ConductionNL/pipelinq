@@ -289,6 +289,16 @@ class RegisterAnnotationsTest extends TestCase
         'diffDays',
         'formatDate',
         'dateDiff',
+        'dateAdd',
+        'sequence',
+        'max',
+        'min',
+        'coalesce',
+        'abs',
+        'round',
+        'year',
+        'monthsElapsed',
+        'sha256',
     ];
 
     /**

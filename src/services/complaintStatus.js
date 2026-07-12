@@ -3,27 +3,43 @@
  *
  * Defines allowed transitions and provides validation helpers
  * for the complaint registration workflow.
+ *
+ * Mirrors the `x-openregister-lifecycle` block declared on the `complaint`
+ * schema — the Awb chapter-9 state machine. The register is the source of
+ * truth; this map exists so the form can offer only reachable next states.
  */
 
 const STATUS_TRANSITIONS = {
-	new: ['in_progress'],
-	in_progress: ['resolved', 'rejected'],
+	new: ['acknowledged', 'in_progress', 'rejected', 'withdrawn'],
+	acknowledged: ['in_progress', 'rejected', 'withdrawn'],
+	in_progress: ['hearing_scheduled', 'resolved', 'rejected', 'withdrawn'],
+	hearing_scheduled: ['hearing_completed', 'withdrawn'],
+	hearing_completed: ['resolved', 'rejected', 'withdrawn'],
 	resolved: [],
 	rejected: [],
+	withdrawn: [],
 }
 
 const STATUS_LABELS = {
 	new: t('pipelinq', 'New'),
+	acknowledged: t('pipelinq', 'Acknowledged'),
 	in_progress: t('pipelinq', 'In progress'),
+	hearing_scheduled: t('pipelinq', 'Hearing scheduled'),
+	hearing_completed: t('pipelinq', 'Hearing completed'),
 	resolved: t('pipelinq', 'Resolved'),
 	rejected: t('pipelinq', 'Rejected'),
+	withdrawn: t('pipelinq', 'Withdrawn'),
 }
 
 const STATUS_COLORS = {
 	new: '#0082c9',
+	acknowledged: '#00a2d9',
 	in_progress: '#e9a400',
+	hearing_scheduled: '#9b59b6',
+	hearing_completed: '#7e57c2',
 	resolved: '#46ba61',
 	rejected: '#e9322d',
+	withdrawn: '#95a5a6',
 }
 
 const PRIORITY_LABELS = {
@@ -54,12 +70,21 @@ const CHANNEL_LABELS = {
 	web: t('pipelinq', 'Web'),
 	counter: t('pipelinq', 'Counter'),
 	letter: t('pipelinq', 'Letter'),
+	social: t('pipelinq', 'Social media'),
 	other: t('pipelinq', 'Other'),
 }
 
 const VALID_PRIORITIES = ['low', 'normal', 'high', 'urgent']
+
+/**
+ * The complaint categories seeded as `complaintCategory` objects. `category` is
+ * now a reference to one of those objects, not an enum: these slugs are the
+ * seeded objects' slugs, kept so a complaint carrying a former enum value still
+ * resolves. The category picker moves to an object lookup in the chained
+ * mapping-layer change.
+ */
 const VALID_CATEGORIES = ['service', 'product', 'communication', 'billing', 'other']
-const VALID_CHANNELS = ['phone', 'email', 'web', 'counter', 'letter', 'other']
+const VALID_CHANNELS = ['phone', 'email', 'web', 'counter', 'letter', 'social', 'other']
 
 /**
  * Get allowed target statuses for a given current status.

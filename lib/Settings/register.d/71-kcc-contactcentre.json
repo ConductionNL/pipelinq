@@ -1,0 +1,1188 @@
+{
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "callPlan",
+          "callTransfer",
+          "contactSentiment",
+          "quickAction",
+          "routingRule",
+          "complaintCategory",
+          "complaintDisposition",
+          "hearing"
+        ]
+      }
+    },
+    "schemas": {
+      "callPlan": {
+        "x-schema-org": "schema:Schedule",
+        "slug": "callPlan",
+        "title": "Call Plan",
+        "icon": "PhoneForward",
+        "version": "1.0.0",
+        "summary": "Inbound telephony routing plan (menu, skill match, queue overflow)",
+        "description": "Configuration of an inbound call flow: which numbers it answers, the ordered routing steps (menu, skill match, queue overflow), opening hours and the fallback action taken outside them. Mapped to Schema.org Schedule.",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name of the call plan (schema:name)",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "triggerNumbers": {
+            "type": "array",
+            "description": "Phone number(s) in E.164 format this plan answers",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "title": "Trigger Numbers"
+          },
+          "routingSteps": {
+            "type": "array",
+            "description": "Ordered routing steps evaluated on an inbound call",
+            "items": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string",
+                  "enum": [
+                    "menu",
+                    "skill_match",
+                    "queue_overflow"
+                  ],
+                  "title": "Step",
+                  "description": "Routing step type evaluated at this position in the plan"
+                },
+                "skill": {
+                  "type": "string",
+                  "title": "Skill",
+                  "description": "Skill slug matched by a skill_match step"
+                },
+                "queue": {
+                  "type": "string",
+                  "title": "Queue",
+                  "description": "Queue title targeted by this step"
+                },
+                "thresholdWaitSeconds": {
+                  "type": "integer",
+                  "title": "Threshold Wait Seconds",
+                  "description": "Wait time in seconds after which a queue_overflow step fires"
+                },
+                "fallbackRole": {
+                  "type": "string",
+                  "title": "Fallback Role",
+                  "description": "Role that receives the call when this step cannot be satisfied"
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "title": "Key",
+                        "description": "Keypad digit the caller presses for this menu option"
+                      },
+                      "label": {
+                        "type": "string",
+                        "title": "Label",
+                        "description": "Spoken/displayed label of this menu option"
+                      },
+                      "queue": {
+                        "type": "string",
+                        "title": "Queue",
+                        "description": "Queue title this menu option routes to"
+                      }
+                    }
+                  },
+                  "title": "Options",
+                  "description": "Menu options offered by a menu step"
+                }
+              }
+            },
+            "default": [],
+            "title": "Routing Steps"
+          },
+          "openingHours": {
+            "type": "string",
+            "description": "Opening hours the plan applies to (e.g. 'Mo-Fr 08:00-17:00'); empty means 24/7 (schema:byDay)",
+            "title": "Opening Hours"
+          },
+          "fallbackAction": {
+            "type": "string",
+            "description": "Action taken outside opening hours or when every routing step fails",
+            "enum": [
+              "voicemail",
+              "sms_callback",
+              "email_callback"
+            ],
+            "default": "voicemail",
+            "title": "Fallback Action",
+            "facetable": true
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Matching priority when several plans answer the same number; higher wins",
+            "default": 0,
+            "title": "Priority"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether this call plan is active",
+            "default": true,
+            "title": "Active",
+            "facetable": true
+          }
+        }
+      },
+      "callTransfer": {
+        "x-schema-org": "schema:TransferAction",
+        "slug": "callTransfer",
+        "title": "Call Transfer",
+        "icon": "PhoneForward",
+        "version": "1.0.0",
+        "summary": "A warm transfer of a contact moment to a specialist or a queue",
+        "description": "Records a warm transfer of a contact moment, with an immutable context snapshot handed over to the receiving specialist. Mapped to Schema.org TransferAction.",
+        "required": [
+          "contactMoment",
+          "fromAgent"
+        ],
+        "properties": {
+          "contactMoment": {
+            "type": "string",
+            "description": "UUID reference to the contact moment being transferred (schema:object)",
+            "format": "uuid",
+            "$ref": "contactmoment",
+            "title": "Contact Moment"
+          },
+          "fromAgent": {
+            "type": "string",
+            "description": "Nextcloud user UID of the transferring agent (schema:agent)",
+            "title": "From Agent",
+            "facetable": true
+          },
+          "toAgent": {
+            "type": "string",
+            "description": "Nextcloud user UID of the receiving specialist; empty when transferring to a queue (schema:recipient)",
+            "title": "To Agent",
+            "facetable": true
+          },
+          "toQueue": {
+            "type": "string",
+            "description": "UUID reference to the target queue; empty when transferring to a specialist",
+            "format": "uuid",
+            "$ref": "queue",
+            "title": "To Queue"
+          },
+          "transferReason": {
+            "type": "string",
+            "description": "Reason the contact moment was transferred",
+            "title": "Transfer Reason"
+          },
+          "handoverNotes": {
+            "type": "string",
+            "description": "Append-only handover notes written for the receiving specialist",
+            "title": "Handover Notes"
+          },
+          "contextSnapshot": {
+            "type": "object",
+            "description": "Immutable snapshot of the caller context captured at transfer time",
+            "visible": false,
+            "title": "Context Snapshot"
+          },
+          "accepted": {
+            "type": "boolean",
+            "description": "Whether the receiving specialist accepted the transfer; unset until answered",
+            "title": "Accepted",
+            "facetable": true
+          },
+          "acceptedAt": {
+            "type": "string",
+            "description": "Timestamp at which the specialist answered (schema:endTime)",
+            "format": "date-time",
+            "title": "Accepted At"
+          },
+          "rejectionReason": {
+            "type": "string",
+            "description": "Reason the transfer was rejected; empty when accepted",
+            "title": "Rejection Reason"
+          },
+          "startedAt": {
+            "type": "string",
+            "description": "Timestamp at which the warm transfer was initiated (schema:startTime)",
+            "format": "date-time",
+            "title": "Started At"
+          }
+        }
+      },
+      "contactSentiment": {
+        "x-schema-org": "schema:Rating",
+        "slug": "contactSentiment",
+        "title": "Contact Sentiment",
+        "icon": "EmoticonSadOutline",
+        "version": "1.0.0",
+        "summary": "Sentiment classification of a contact moment, with an escalation recommendation",
+        "description": "Sentiment rating derived from a contact moment's transcript, carrying an escalation recommendation. Mapped to Schema.org Rating: the numeric score is stored as ratingValue.",
+        "required": [
+          "contactMoment",
+          "sentimentLabel"
+        ],
+        "properties": {
+          "contactMoment": {
+            "type": "string",
+            "description": "UUID reference to the analysed contact moment (schema:itemReviewed)",
+            "format": "uuid",
+            "$ref": "contactmoment",
+            "title": "Contact Moment"
+          },
+          "ratingValue": {
+            "type": "number",
+            "description": "Sentiment score from -1.0 (very negative) to +1.0 (very positive) (schema:ratingValue)",
+            "minimum": -1,
+            "maximum": 1,
+            "title": "Rating Value"
+          },
+          "bestRating": {
+            "type": "number",
+            "description": "Highest value the sentiment score can take (schema:bestRating)",
+            "default": 1,
+            "visible": false,
+            "title": "Best Rating"
+          },
+          "worstRating": {
+            "type": "number",
+            "description": "Lowest value the sentiment score can take (schema:worstRating)",
+            "default": -1,
+            "visible": false,
+            "title": "Worst Rating"
+          },
+          "sentimentLabel": {
+            "type": "string",
+            "description": "Classified sentiment label (schema:ratingExplanation)",
+            "enum": [
+              "positive",
+              "neutral",
+              "negative",
+              "angry"
+            ],
+            "title": "Sentiment Label",
+            "facetable": true
+          },
+          "triggerTerms": {
+            "type": "array",
+            "description": "Terms detected in the transcript that drove the classification",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "title": "Trigger Terms"
+          },
+          "transcriptExcerpt": {
+            "type": "string",
+            "description": "Excerpt of the transcript containing the trigger terms",
+            "visible": false,
+            "title": "Transcript Excerpt"
+          },
+          "escalationRecommended": {
+            "type": "boolean",
+            "description": "Whether escalation to a supervisor is recommended",
+            "default": false,
+            "title": "Escalation Recommended",
+            "facetable": true
+          },
+          "escalationLevel": {
+            "type": "string",
+            "description": "Recommended escalation level",
+            "enum": [
+              "none",
+              "yellow",
+              "orange",
+              "red"
+            ],
+            "default": "none",
+            "title": "Escalation Level",
+            "facetable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Timestamp at which the classification was made",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        }
+      },
+      "quickAction": {
+        "x-schema-org": "schema:Action",
+        "slug": "quickAction",
+        "title": "Quick Action",
+        "icon": "GestureTapButton",
+        "version": "1.0.0",
+        "summary": "A configurable one-click action available to a contact-centre agent",
+        "description": "A one-click action offered on the agent workspace (provide status, create a case, register a complaint, transfer, schedule a callback, send an email or a document copy). Mapped to Schema.org Action.",
+        "required": [
+          "name",
+          "actionType"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name of the quick action (schema:name)",
+            "maxLength": 255,
+            "minLength": 1,
+            "translatable": true,
+            "title": "Name"
+          },
+          "actionType": {
+            "type": "string",
+            "description": "Action performed when the agent triggers it",
+            "enum": [
+              "provide_status",
+              "new_case",
+              "register_complaint",
+              "transfer",
+              "schedule_callback",
+              "send_email",
+              "send_document_copy"
+            ],
+            "title": "Action Type",
+            "facetable": true
+          },
+          "requiredContext": {
+            "type": "array",
+            "description": "Context conditions that must hold before the action is offered",
+            "items": {
+              "type": "string",
+              "enum": [
+                "has_open_case",
+                "is_identified"
+              ]
+            },
+            "default": [],
+            "title": "Required Context"
+          },
+          "targetCaseType": {
+            "type": "string",
+            "description": "Target case-type slug used by new_case actions",
+            "title": "Target Case Type"
+          },
+          "template": {
+            "type": "string",
+            "description": "Template reference used by send_email / send_document_copy actions",
+            "title": "Template"
+          },
+          "permissions": {
+            "type": "array",
+            "description": "Nextcloud groups allowed to run this action",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "title": "Permissions"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "description": "Display order of the action on the agent workspace",
+            "default": 0,
+            "title": "Sort Order"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the action is offered",
+            "default": true,
+            "title": "Active",
+            "facetable": true
+          }
+        }
+      },
+      "routingRule": {
+        "slug": "routingRule",
+        "title": "Routing Rule",
+        "icon": "SignDirection",
+        "version": "1.0.0",
+        "summary": "Keyword/context routing rule assigning a contact moment to a team and a queue",
+        "description": "Configuration only — deliberately carries no x-schema-org marker, because a routing rule is not a Schema.org thing (kcc-schemaorg-model: 'Routing rules carry no schema.org type').",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable rule name",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "Evaluation priority; lower numbers are evaluated first",
+            "default": 0,
+            "title": "Priority"
+          },
+          "matchConditions": {
+            "type": "array",
+            "description": "Conditions that must all match for the rule to fire",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "keyword",
+                    "regex",
+                    "channel",
+                    "customer_type",
+                    "time_of_day",
+                    "day_of_week"
+                  ],
+                  "title": "Condition Type",
+                  "description": "Type of match condition evaluated against the contact moment"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "Condition Value",
+                  "description": "Value the condition matches against"
+                }
+              }
+            },
+            "default": [],
+            "title": "Match Conditions"
+          },
+          "assignedTeam": {
+            "type": "string",
+            "description": "Destination team when the rule fires",
+            "title": "Assigned Team",
+            "facetable": true
+          },
+          "assignedQueue": {
+            "type": "string",
+            "description": "UUID reference to the destination queue when the rule fires",
+            "format": "uuid",
+            "$ref": "queue",
+            "title": "Assigned Queue"
+          },
+          "escalationTeam": {
+            "type": "string",
+            "description": "Fallback team when no agent is available in the assigned team",
+            "title": "Escalation Team"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the rule is evaluated",
+            "default": true,
+            "title": "Enabled",
+            "facetable": true
+          }
+        }
+      },
+      "complaintCategory": {
+        "x-schema-org": "schema:DefinedTerm",
+        "slug": "complaintCategory",
+        "title": "Complaint Category",
+        "icon": "TagOutline",
+        "version": "1.0.0",
+        "summary": "Configurable complaint category with default handler and SLA override",
+        "description": "Per-tenant complaint category — defines the default handler, an SLA override in working days and whether new complaints may be filed against it. Replaces the former five-value complaint.category enum. Mapped to Schema.org DefinedTerm.",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Category name (schema:name)",
+            "maxLength": 255,
+            "minLength": 1,
+            "translatable": true,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the category (schema:description)",
+            "translatable": true,
+            "title": "Description"
+          },
+          "defaultHandler": {
+            "type": "string",
+            "description": "Default handler: a Nextcloud user ID, or a group ID prefixed with 'group:'",
+            "title": "Default Handler"
+          },
+          "slaOverride": {
+            "type": "integer",
+            "description": "Resolution deadline in working days, overriding the default Awb term",
+            "minimum": 1,
+            "title": "SLA Override"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether new complaints can be filed against this category",
+            "default": true,
+            "title": "Active",
+            "facetable": true
+          }
+        }
+      },
+      "complaintDisposition": {
+        "x-schema-org": "schema:Review",
+        "slug": "complaintDisposition",
+        "title": "Complaint Disposition",
+        "icon": "ClipboardCheckOutline",
+        "version": "1.0.0",
+        "summary": "Formal judgment closing a complaint under Awb chapter 9",
+        "description": "The formal disposition that closes a complaint: the judgment, its explanation, the measures taken and the closing letter. Mapped to Schema.org Review — it reviews the complaint it closes.",
+        "required": [
+          "complaint",
+          "judgment",
+          "closedAt"
+        ],
+        "properties": {
+          "complaint": {
+            "type": "string",
+            "description": "UUID reference to the complaint this disposition closes (schema:itemReviewed)",
+            "format": "uuid",
+            "$ref": "complaint",
+            "onDelete": "CASCADE",
+            "title": "Complaint"
+          },
+          "judgment": {
+            "type": "string",
+            "description": "Judgment on the complaint (schema:reviewRating)",
+            "enum": [
+              "upheld",
+              "partially_upheld",
+              "dismissed",
+              "withdrawn",
+              "inadmissible"
+            ],
+            "title": "Judgment",
+            "facetable": true
+          },
+          "explanation": {
+            "type": "string",
+            "description": "Explanation of the judgment; required when the judgment is upheld or partially_upheld (schema:reviewBody)",
+            "title": "Explanation"
+          },
+          "measures": {
+            "type": "array",
+            "description": "Measures taken or promised in response to the complaint",
+            "items": {
+              "type": "object",
+              "properties": {
+                "description": {
+                  "type": "string",
+                  "title": "Description",
+                  "description": "Description of the measure taken to address the complaint"
+                },
+                "responsible": {
+                  "type": "string",
+                  "title": "Responsible",
+                  "description": "Person or department responsible for implementing this measure"
+                }
+              }
+            },
+            "default": [],
+            "title": "Measures"
+          },
+          "closedAt": {
+            "type": "string",
+            "description": "Date on which the complaint was formally closed",
+            "format": "date",
+            "title": "Closed At"
+          },
+          "closingLetter": {
+            "type": "string",
+            "description": "Reference to the formal response letter document",
+            "title": "Closing Letter"
+          },
+          "approvedBy": {
+            "type": "string",
+            "description": "Nextcloud user UID of the coordinator who approved this disposition",
+            "title": "Approved By"
+          },
+          "approvalStatus": {
+            "type": "string",
+            "description": "Approval workflow status when coordinator approval is required",
+            "enum": [
+              "pending_approval",
+              "approved",
+              "rejected"
+            ],
+            "title": "Approval Status",
+            "facetable": true
+          }
+        }
+      },
+      "hearing": {
+        "x-schema-org": "schema:Event",
+        "slug": "hearing",
+        "title": "Hearing",
+        "icon": "AccountVoiceOutline",
+        "version": "1.0.0",
+        "summary": "Hearing held on a complaint under Awb chapter 9",
+        "description": "The hearing (hoorgesprek) held before a complaint is disposed of: scheduling, participants, attendees, report and conclusion. Mapped to Schema.org Event.",
+        "required": [
+          "complaint",
+          "date",
+          "type"
+        ],
+        "properties": {
+          "complaint": {
+            "type": "string",
+            "description": "UUID reference to the complaint this hearing belongs to (schema:about)",
+            "format": "uuid",
+            "$ref": "complaint",
+            "onDelete": "CASCADE",
+            "title": "Complaint"
+          },
+          "date": {
+            "type": "string",
+            "description": "Scheduled date and time of the hearing (schema:startDate)",
+            "format": "date-time",
+            "title": "Date"
+          },
+          "location": {
+            "type": "string",
+            "description": "Physical address or video-conference link (schema:location)",
+            "title": "Location"
+          },
+          "type": {
+            "type": "string",
+            "description": "Hearing format (schema:eventAttendanceMode)",
+            "enum": [
+              "in_person",
+              "phone",
+              "video"
+            ],
+            "title": "Type",
+            "facetable": true
+          },
+          "participants": {
+            "type": "array",
+            "description": "Planned participants (schema:attendee)",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "title": "Participants"
+          },
+          "attendees": {
+            "type": "array",
+            "description": "Actual attendees, recorded after the hearing",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "title": "Attendees"
+          },
+          "report": {
+            "type": "string",
+            "description": "Summary of the hearing; required once the hearing is completed",
+            "visible": false,
+            "title": "Report"
+          },
+          "conclusion": {
+            "type": "string",
+            "description": "Preliminary conclusion drawn from the hearing",
+            "visible": false,
+            "title": "Conclusion"
+          },
+          "completedAt": {
+            "type": "string",
+            "description": "Date on which the hearing actually took place (schema:endDate)",
+            "format": "date",
+            "title": "Completed At"
+          },
+          "talkRoomUrl": {
+            "type": "string",
+            "description": "Nextcloud Talk room URL used for a video hearing",
+            "format": "uri",
+            "title": "Talk Room URL"
+          },
+          "calendarEventId": {
+            "type": "string",
+            "description": "Nextcloud Calendar event ID of the hearing invitation",
+            "visible": false,
+            "title": "Calendar Event ID"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "routingRule",
+          "slug": "routing-rule-civil-affairs",
+          "id": "71cc0001-0000-4000-8000-000000000001"
+        },
+        "name": "Passport and ID documents to Civil Affairs",
+        "priority": 10,
+        "matchConditions": [
+          { "type": "keyword", "value": "paspoort" },
+          { "type": "keyword", "value": "identiteitskaart" }
+        ],
+        "assignedTeam": "Civil Affairs",
+        "assignedQueue": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02",
+        "escalationTeam": "Front Office",
+        "enabled": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "routingRule",
+          "slug": "routing-rule-public-space",
+          "id": "71cc0001-0000-4000-8000-000000000002"
+        },
+        "name": "Street lighting and pavement to Public Space Management",
+        "priority": 20,
+        "matchConditions": [
+          { "type": "keyword", "value": "lantaarnpaal" },
+          { "type": "keyword", "value": "stoeptegel" }
+        ],
+        "assignedTeam": "Public Space Management",
+        "assignedQueue": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01",
+        "escalationTeam": "Front Office",
+        "enabled": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "routingRule",
+          "slug": "routing-rule-social-domain",
+          "id": "71cc0001-0000-4000-8000-000000000003"
+        },
+        "name": "Social support (WMO) to Social Domain",
+        "priority": 30,
+        "matchConditions": [
+          { "type": "keyword", "value": "wmo" },
+          { "type": "keyword", "value": "huishoudelijke hulp" }
+        ],
+        "assignedTeam": "Social Domain",
+        "assignedQueue": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03",
+        "escalationTeam": "Front Office",
+        "enabled": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "callPlan",
+          "slug": "call-plan-general-number",
+          "id": "71cc0002-0000-4000-8000-000000000001"
+        },
+        "name": "General municipal number",
+        "triggerNumbers": [
+          "+31201234500"
+        ],
+        "routingSteps": [
+          {
+            "step": "menu",
+            "options": [
+              { "key": "1", "label": "Passports and ID documents", "queue": "Vergunningen" },
+              { "key": "2", "label": "Public space", "queue": "Algemene Zaken" },
+              { "key": "3", "label": "Social support", "queue": "WMO / Zorg" }
+            ]
+          },
+          {
+            "step": "skill_match",
+            "skill": "algemene-dienstverlening",
+            "fallbackRole": "kcc_medewerker"
+          },
+          {
+            "step": "queue_overflow",
+            "queue": "Algemene Zaken",
+            "thresholdWaitSeconds": 180,
+            "fallbackRole": "kcc_medewerker"
+          }
+        ],
+        "openingHours": "Mo-Fr 08:00-17:00",
+        "fallbackAction": "voicemail",
+        "priority": 10,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "callPlan",
+          "slug": "call-plan-permits-direct-line",
+          "id": "71cc0002-0000-4000-8000-000000000002"
+        },
+        "name": "Permits direct line",
+        "triggerNumbers": [
+          "+31201234522"
+        ],
+        "routingSteps": [
+          {
+            "step": "skill_match",
+            "skill": "vergunningen",
+            "fallbackRole": "kcc_medewerker"
+          },
+          {
+            "step": "queue_overflow",
+            "queue": "Vergunningen",
+            "thresholdWaitSeconds": 240,
+            "fallbackRole": "kcc_medewerker"
+          }
+        ],
+        "openingHours": "Mo-Fr 09:00-12:00",
+        "fallbackAction": "sms_callback",
+        "priority": 20,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "quickAction",
+          "slug": "quick-action-provide-status",
+          "id": "71cc0003-0000-4000-8000-000000000001"
+        },
+        "name": "Provide case status",
+        "actionType": "provide_status",
+        "requiredContext": [
+          "has_open_case",
+          "is_identified"
+        ],
+        "permissions": [
+          "kcc_medewerker"
+        ],
+        "sortOrder": 10,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "quickAction",
+          "slug": "quick-action-new-case",
+          "id": "71cc0003-0000-4000-8000-000000000002"
+        },
+        "name": "Create a new case",
+        "actionType": "new_case",
+        "requiredContext": [
+          "is_identified"
+        ],
+        "targetCaseType": "algemene-aanvraag",
+        "permissions": [
+          "kcc_medewerker"
+        ],
+        "sortOrder": 20,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "quickAction",
+          "slug": "quick-action-register-complaint",
+          "id": "71cc0003-0000-4000-8000-000000000003"
+        },
+        "name": "Register a complaint",
+        "actionType": "register_complaint",
+        "requiredContext": [],
+        "permissions": [
+          "kcc_medewerker",
+          "klachtenfunctionaris"
+        ],
+        "sortOrder": 30,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "quickAction",
+          "slug": "quick-action-transfer",
+          "id": "71cc0003-0000-4000-8000-000000000004"
+        },
+        "name": "Transfer to a specialist",
+        "actionType": "transfer",
+        "requiredContext": [],
+        "permissions": [
+          "kcc_medewerker"
+        ],
+        "sortOrder": 40,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "quickAction",
+          "slug": "quick-action-schedule-callback",
+          "id": "71cc0003-0000-4000-8000-000000000005"
+        },
+        "name": "Schedule a callback",
+        "actionType": "schedule_callback",
+        "requiredContext": [],
+        "permissions": [
+          "kcc_medewerker"
+        ],
+        "sortOrder": 50,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "complaintCategory",
+          "slug": "service",
+          "id": "71cc0004-0000-4000-8000-000000000001"
+        },
+        "name": "Service",
+        "description": "Complaint about the service provided by the organisation.",
+        "defaultHandler": "group:klachtenfunctionaris",
+        "slaOverride": 30,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "complaintCategory",
+          "slug": "communication",
+          "id": "71cc0004-0000-4000-8000-000000000002"
+        },
+        "name": "Communication",
+        "description": "Complaint about unclear, incorrect or absent communication.",
+        "defaultHandler": "group:klachtenfunctionaris",
+        "slaOverride": 30,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "complaintCategory",
+          "slug": "timeliness",
+          "id": "71cc0004-0000-4000-8000-000000000003"
+        },
+        "name": "Timeliness",
+        "description": "Complaint about the time taken to handle a request or a case.",
+        "defaultHandler": "group:klachtenfunctionaris",
+        "slaOverride": 20,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "complaintCategory",
+          "slug": "staff-conduct",
+          "id": "71cc0004-0000-4000-8000-000000000004"
+        },
+        "name": "Staff conduct",
+        "description": "Complaint about the conduct of an employee of the organisation.",
+        "defaultHandler": "group:klachtenfunctionaris",
+        "slaOverride": 15,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "complaintCategory",
+          "slug": "product",
+          "id": "71cc0004-0000-4000-8000-000000000005"
+        },
+        "name": "Product",
+        "description": "Complaint about a delivered product. Seeded so complaints carrying the former 'product' category enum value resolve once category became a reference.",
+        "defaultHandler": "group:klachtenfunctionaris",
+        "slaOverride": 30,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "complaintCategory",
+          "slug": "billing",
+          "id": "71cc0004-0000-4000-8000-000000000006"
+        },
+        "name": "Billing",
+        "description": "Complaint about an invoice or a payment. Seeded so complaints carrying the former 'billing' category enum value resolve once category became a reference.",
+        "defaultHandler": "group:klachtenfunctionaris",
+        "slaOverride": 30,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "complaintCategory",
+          "slug": "other",
+          "id": "71cc0004-0000-4000-8000-000000000007"
+        },
+        "name": "Other",
+        "description": "Complaint that does not fit another category. Seeded so complaints carrying the former 'other' category enum value resolve once category became a reference.",
+        "defaultHandler": "group:klachtenfunctionaris",
+        "slaOverride": 30,
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "kcc-contactmoment-passport-renewal",
+          "id": "71cc0006-0000-4000-8000-000000000001"
+        },
+        "subject": "Vraag over verlenging paspoort",
+        "summary": "Caller asked which documents are needed to renew a passport and whether an appointment is required. Answered in one call.",
+        "channel": "phone",
+        "outcome": "handled",
+        "direction": "inbound",
+        "contactType": "information_request",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "agent": "admin",
+        "contactedAt": "2026-06-02T09:12:00+02:00",
+        "endedAt": "2026-06-02T09:17:00+02:00",
+        "duration": "PT5M",
+        "callerIdentifier": "+31612300001",
+        "identificationMethod": "identity_questions",
+        "identificationConfidence": 0.9,
+        "detectedIntent": "passport_renewal_requirements",
+        "firstTimeFix": true,
+        "assignedTeam": "Civil Affairs",
+        "assignedDomain": "burgerzaken",
+        "tags": [
+          "paspoort",
+          "burgerzaken"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactmoment",
+          "slug": "kcc-contactmoment-permit-transfer",
+          "id": "71cc0006-0000-4000-8000-000000000002"
+        },
+        "subject": "Vraag over omgevingsvergunning dakkapel",
+        "summary": "Caller asked a detailed question about a building permit for a dormer. Transferred to a permits specialist after a warm handover.",
+        "channel": "phone",
+        "outcome": "transferred",
+        "direction": "inbound",
+        "contactType": "status_request",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "agent": "admin",
+        "contactedAt": "2026-06-02T10:41:00+02:00",
+        "endedAt": "2026-06-02T10:53:00+02:00",
+        "duration": "PT12M",
+        "callerIdentifier": "+31612300002",
+        "identificationMethod": "digid",
+        "identificationConfidence": 1.0,
+        "detectedIntent": "building_permit_status",
+        "firstTimeFix": false,
+        "transferredTo": "specialist.vergunningen",
+        "assignedTeam": "Civil Affairs",
+        "assignedDomain": "vergunningen",
+        "tags": [
+          "vergunningen",
+          "dakkapel"
+        ],
+        "relatedContactMoment": "71cc0006-0000-4000-8000-000000000001"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "callTransfer",
+          "slug": "kcc-call-transfer-permit-specialist",
+          "id": "71cc0007-0000-4000-8000-000000000001"
+        },
+        "contactMoment": "71cc0006-0000-4000-8000-000000000002",
+        "fromAgent": "admin",
+        "toAgent": "specialist.vergunningen",
+        "toQueue": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02",
+        "transferReason": "Detailed question about a building permit for a dormer — requires a permits specialist.",
+        "handoverNotes": "Caller identified with DigiD. Wants to know whether a dormer on the rear roof plane is permit-free.",
+        "contextSnapshot": {
+          "channel": "phone",
+          "detectedIntent": "building_permit_status",
+          "identificationMethod": "digid"
+        },
+        "accepted": true,
+        "startedAt": "2026-06-02T10:49:00+02:00",
+        "acceptedAt": "2026-06-02T10:50:00+02:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "contactSentiment",
+          "slug": "kcc-contact-sentiment-permit-transfer",
+          "id": "71cc0008-0000-4000-8000-000000000001"
+        },
+        "contactMoment": "71cc0006-0000-4000-8000-000000000002",
+        "ratingValue": 0.1,
+        "bestRating": 1,
+        "worstRating": -1,
+        "sentimentLabel": "neutral",
+        "triggerTerms": [],
+        "transcriptExcerpt": "Prima, dan wacht ik het gesprek met de specialist af.",
+        "escalationRecommended": false,
+        "escalationLevel": "none",
+        "createdAt": "2026-06-02T10:55:00+02:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "task",
+          "slug": "kcc-callback-passport-renewal",
+          "id": "71cc0005-0000-4000-8000-000000000001"
+        },
+        "type": "terugbelverzoek",
+        "subject": "Terugbelverzoek — verlenging paspoort",
+        "description": "Caller wants to be called back once the BRP check on the address change has been completed.",
+        "status": "open",
+        "priority": "normaal",
+        "contactMoment": "71cc0006-0000-4000-8000-000000000001",
+        "callbackPhoneNumber": "+31612300001",
+        "preferredTimeSlot": "Dinsdag 14:00 - 16:00",
+        "scheduledFor": "2026-06-03T14:00:00+02:00",
+        "deadline": "2026-06-04T17:00:00+02:00",
+        "assigneeUserId": "admin",
+        "createdBy": "admin",
+        "attempts": []
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "task",
+          "slug": "kcc-callback-permit-specialist",
+          "id": "71cc0005-0000-4000-8000-000000000002"
+        },
+        "type": "terugbelverzoek",
+        "subject": "Terugbelverzoek — omgevingsvergunning dakkapel",
+        "description": "First callback attempt reached voicemail; a second attempt is scheduled.",
+        "status": "in_behandeling",
+        "priority": "normaal",
+        "contactMoment": "71cc0006-0000-4000-8000-000000000002",
+        "callbackPhoneNumber": "+31612300002",
+        "preferredTimeSlot": "Woensdag 09:00 - 11:00",
+        "scheduledFor": "2026-06-04T09:00:00+02:00",
+        "nextAttemptAt": "2026-06-05T09:00:00+02:00",
+        "deadline": "2026-06-06T17:00:00+02:00",
+        "assigneeUserId": "admin",
+        "createdBy": "admin",
+        "attempts": [
+          {
+            "timestamp": "2026-06-04T09:04:00+02:00",
+            "result": "no_answer",
+            "notes": "Voicemail — left a message asking the caller to call back or wait for the second attempt."
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "complaint",
+          "slug": "kcc-complaint-waiting-time-counter",
+          "id": "71cc0009-0000-4000-8000-000000000001"
+        },
+        "title": "Klacht over wachttijd aan de balie",
+        "description": "Complainant waited more than an hour at the counter despite holding an appointment, and was then told the case file was incomplete.",
+        "complaintNumber": "KL-2026-0001",
+        "category": "71cc0004-0000-4000-8000-000000000003",
+        "priority": "normal",
+        "status": "acknowledged",
+        "channel": "counter",
+        "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
+        "assignedTo": "admin",
+        "receivedAt": "2026-06-01",
+        "acknowledgementDeadline": "2026-06-08",
+        "slaDeadline": "2026-07-13T17:00:00+02:00",
+        "extensionAvailable": true,
+        "subjectDepartment": "Civil Affairs"
+      }
+    ]
+  }
+}

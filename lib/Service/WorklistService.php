@@ -60,7 +60,8 @@ use RuntimeException;
  *
  * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Verbatim port of the client union/overdue/sort rules; the complexity is the mirrored spec, not accidental.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Verbatim port of the client union/overdue/sort rules;
+ *   the complexity is the mirrored spec, not accidental.
  */
 class WorklistService
 {

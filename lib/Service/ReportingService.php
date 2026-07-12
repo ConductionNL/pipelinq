@@ -53,10 +53,10 @@ class ReportingService
      * @var array<string, array<string, mixed>>
      */
     private const DEFAULT_SLA_TARGETS = [
-        'telefoon' => ['wait_seconds' => 30, 'target_percent' => 90, 'handle_minutes' => 5],
-        'email'    => ['response_hours' => 8, 'target_percent' => 90, 'resolution_hours' => 24],
-        'balie'    => ['wait_minutes' => 5, 'target_percent' => 90, 'handle_minutes' => 10],
-        'chat'     => ['response_seconds' => 30, 'target_percent' => 90, 'handle_minutes' => 10],
+        'phone'   => ['wait_seconds' => 30, 'target_percent' => 90, 'handle_minutes' => 5],
+        'email'   => ['response_hours' => 8, 'target_percent' => 90, 'resolution_hours' => 24],
+        'counter' => ['wait_minutes' => 5, 'target_percent' => 90, 'handle_minutes' => 10],
+        'chat'    => ['response_seconds' => 30, 'target_percent' => 90, 'handle_minutes' => 10],
     ];
 
     /**
@@ -294,7 +294,7 @@ class ReportingService
     /**
      * Calculate first-call resolution rate from an array of contactmoment objects.
      *
-     * FCR = count(outcome == 'opgelost') / count(total) * 100.
+     * FCR = count(outcome == 'resolved') / count(total) * 100.
      * Returns 0.0 for an empty dataset.
      *
      * @param array<array<string, mixed>> $contactmomenten Array of contactmoment data arrays.
@@ -314,7 +314,7 @@ class ReportingService
         $resolved = count(
             array_filter(
                 $contactmomenten,
-                static fn($moment) => ($moment['outcome'] ?? '') === 'opgelost',
+                static fn($moment) => ($moment['outcome'] ?? '') === 'resolved',
             )
         );
 
@@ -558,7 +558,7 @@ class ReportingService
     /**
      * Count contacts within SLA for a channel.
      *
-     * Uses channelMetadata.waitTime (seconds) for telefoon/balie/chat, or
+     * Uses channelMetadata.waitTime (seconds) for phone/counter/chat, or
      * channelMetadata.responseTime (hours) for email. Falls back to 0 when
      * the metadata is absent (conservative: not within SLA).
      *
@@ -572,11 +572,11 @@ class ReportingService
         $within    = 0;
         $targets   = self::DEFAULT_SLA_TARGETS[$channel] ?? [];
         $threshold = match ($channel) {
-            'telefoon' => (int) ($targets['wait_seconds'] ?? 30),
-            'balie'    => (int) ($targets['wait_minutes'] ?? 5) * 60,
-            'chat'     => (int) ($targets['response_seconds'] ?? 30),
-            'email'    => (int) ($targets['response_hours'] ?? 8) * 3600,
-            default    => 0,
+            'phone'   => (int) ($targets['wait_seconds'] ?? 30),
+            'counter' => (int) ($targets['wait_minutes'] ?? 5) * 60,
+            'chat'    => (int) ($targets['response_seconds'] ?? 30),
+            'email'   => (int) ($targets['response_hours'] ?? 8) * 3600,
+            default   => 0,
         };
 
         if ($threshold === 0) {
