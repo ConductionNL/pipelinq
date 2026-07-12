@@ -21,6 +21,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\RoutingService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -29,6 +30,10 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Tests for RoutingService::getAgentWorkload.
+ *
+ * Since unify-ticket-supertype the open-requests leg reads the unified `ticket`
+ * schema narrowed to `ticketType=request` via TicketService::findByType(); the
+ * open-leads leg still counts the `lead` schema server-side.
  *
  * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-6
  */
@@ -50,6 +55,13 @@ class RoutingServiceWorkloadTest extends TestCase
     private IAppConfig $appConfig;
 
     /**
+     * The unified ticket resolver mock.
+     *
+     * @var TicketService&MockObject
+     */
+    private TicketService $ticketService;
+
+    /**
      * The logger mock.
      *
      * @var LoggerInterface&MockObject
@@ -63,21 +75,58 @@ class RoutingServiceWorkloadTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->container = $this->createMock(ContainerInterface::class);
-        $this->appConfig = $this->createMock(IAppConfig::class);
-        $this->logger    = $this->createMock(LoggerInterface::class);
+        $this->container     = $this->createMock(ContainerInterface::class);
+        $this->appConfig     = $this->createMock(IAppConfig::class);
+        $this->ticketService = $this->createMock(TicketService::class);
+        $this->logger        = $this->createMock(LoggerInterface::class);
 
         $this->appConfig->method('getValueString')->willReturnCallback(
             static function (string $app, string $key, string $default): string {
                 return match ($key) {
-                    'register'       => 'pipelinq',
-                    'request_schema' => 'request',
-                    'lead_schema'    => 'lead',
-                    default          => $default,
+                    'register'      => 'pipelinq',
+                    'ticket_schema' => 'ticket',
+                    'lead_schema'   => 'lead',
+                    default         => $default,
                 };
             }
         );
+
+        $this->ticketService->method('getRegisterId')->willReturn('pipelinq');
+        $this->ticketService->method('getSchemaId')->willReturn('ticket');
+        $this->ticketService->method('isConfigured')->willReturn(true);
     }//end setUp()
+
+    /**
+     * Wire TicketService::findByType to serve the ticket rows matching the
+     * requested subtype + the extra (assignee) filters.
+     *
+     * @param array<int, array<string, mixed>> $rows The full row set.
+     *
+     * @return void
+     */
+    private function mockTicketRows(array $rows): void
+    {
+        $this->ticketService->method('findByType')->willReturnCallback(
+            static function (string $ticketType, array $extraFilters=[], int $limit=10000) use ($rows): array {
+                $out = [];
+                foreach ($rows as $row) {
+                    if (($row['schema'] ?? null) !== 'ticket' || ($row['ticketType'] ?? null) !== $ticketType) {
+                        continue;
+                    }
+
+                    foreach ($extraFilters as $key => $value) {
+                        if (($row[$key] ?? null) !== $value) {
+                            continue 2;
+                        }
+                    }
+
+                    $out[] = $row;
+                }
+
+                return $out;
+            }
+        );
+    }//end mockTicketRows()
 
     /**
      * Build a fake OR ObjectService.
@@ -146,18 +195,20 @@ class RoutingServiceWorkloadTest extends TestCase
     }//end fakeObjectService()
 
     /**
-     * Open requests (non-terminal, counted in PHP) plus open leads (counted
-     * server-side via count()) are summed into the workload.
+     * Open request tickets (non-terminal, counted in PHP) plus open leads
+     * (counted server-side via count()) are summed into the workload.
      *
      * @return void
      */
     public function testGetAgentWorkloadSumsRequestsAndLeads(): void
     {
         $rows = [
-            // Requests for user-1: 2 open (new, in_progress), 1 terminal (closed).
-            ['schema' => 'request', 'assignee' => 'user-1', 'status' => 'new'],
-            ['schema' => 'request', 'assignee' => 'user-1', 'status' => 'in_progress'],
-            ['schema' => 'request', 'assignee' => 'user-1', 'status' => 'closed'],
+            // Request tickets for user-1: 2 open (new, in_progress), 1 terminal (closed).
+            ['schema' => 'ticket', 'ticketType' => 'request', 'assignee' => 'user-1', 'status' => 'new'],
+            ['schema' => 'ticket', 'ticketType' => 'request', 'assignee' => 'user-1', 'status' => 'in_progress'],
+            ['schema' => 'ticket', 'ticketType' => 'request', 'assignee' => 'user-1', 'status' => 'closed'],
+            // A contactmoment ticket for user-1 — another subtype, never counted.
+            ['schema' => 'ticket', 'ticketType' => 'contactmoment', 'assignee' => 'user-1', 'status' => 'new'],
             // Leads for user-1 with status open: 3.
             ['schema' => 'lead', 'assignee' => 'user-1', 'status' => 'open'],
             ['schema' => 'lead', 'assignee' => 'user-1', 'status' => 'open'],
@@ -169,9 +220,10 @@ class RoutingServiceWorkloadTest extends TestCase
         ];
 
         $this->container->method('get')->willReturn($this->fakeObjectService($rows));
-        $service = new RoutingService($this->appConfig, $this->container, $this->logger);
+        $this->mockTicketRows($rows);
+        $service = new RoutingService($this->appConfig, $this->container, $this->ticketService, $this->logger);
 
-        // 2 open requests + 3 open leads = 5.
+        // 2 open request tickets + 3 open leads = 5.
         $this->assertSame(5, $service->getAgentWorkload(userId: 'user-1'));
     }//end testGetAgentWorkloadSumsRequestsAndLeads()
 
@@ -183,7 +235,8 @@ class RoutingServiceWorkloadTest extends TestCase
     public function testGetAgentWorkloadEmptyUserReturnsZero(): void
     {
         $this->container->method('get')->willReturn($this->fakeObjectService([]));
-        $service = new RoutingService($this->appConfig, $this->container, $this->logger);
+        $this->mockTicketRows([]);
+        $service = new RoutingService($this->appConfig, $this->container, $this->ticketService, $this->logger);
 
         $this->assertSame(0, $service->getAgentWorkload(userId: ''));
     }//end testGetAgentWorkloadEmptyUserReturnsZero()

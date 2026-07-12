@@ -5,6 +5,34 @@
 import { translate as t } from '@nextcloud/l10n'
 
 /**
+ * Logical entity types that were folded into the unified `ticket` schema by
+ * unify-ticket-supertype. They survive as `ticketType` discriminator values —
+ * and as `schemaSlug` values inside stored pipeline `propertyMappings` — so
+ * anything that turns a logical slug into an OpenRegister object type must
+ * route through resolveObjectType().
+ */
+const TICKET_SUBTYPES = ['request', 'complaint', 'contactmoment']
+
+/**
+ * Map a logical entity slug onto the OpenRegister object type it now lives in.
+ *
+ * The former `request` / `complaint` / `contactmoment` schemas are one `ticket`
+ * schema discriminated by `ticketType`; every other slug maps to itself.
+ *
+ * @param {string} schemaSlug Logical slug ('lead', 'request', 'ticket', …).
+ * @return {{objectType: string, ticketType: (string|null)}} Registered object
+ *   type plus the `ticketType` filter/field to narrow it, or null when the type
+ *   needs no discriminator.
+ * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+ */
+export function resolveObjectType(schemaSlug) {
+	if (TICKET_SUBTYPES.includes(schemaSlug)) {
+		return { objectType: 'ticket', ticketType: schemaSlug }
+	}
+	return { objectType: schemaSlug, ticketType: null }
+}
+
+/**
  * @param item
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-30
  */

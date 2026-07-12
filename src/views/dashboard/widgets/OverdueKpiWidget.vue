@@ -46,10 +46,13 @@ export default {
 					return new Date(l.expectedCloseDate) < now
 				}).length
 
+				// `requestedAt` became `occurredAt` on the ticket supertype
+				// (unify-ticket-supertype); getRequests() already narrows to
+				// ticketType 'request'.
 				const overdueRequests = requests.filter(r => {
 					if (r.status !== 'new' && r.status !== 'in_progress') return false
-					if (!r.requestedAt) return false
-					return new Date(r.requestedAt) < thirtyDaysAgo
+					if (!r.occurredAt) return false
+					return new Date(r.occurredAt) < thirtyDaysAgo
 				}).length
 
 				this.count = overdueLeads + overdueRequests

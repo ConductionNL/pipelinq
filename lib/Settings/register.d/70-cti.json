@@ -10,8 +10,9 @@
       }
     },
     "schemas": {
-      "contactmoment": {
-        "slug": "contactmoment",
+      "ticket": {
+        "slug": "ticket",
+        "_note": "unify-ticket-supertype: these CTI telephony fields used to overlay the `contactmoment` schema. Contactmomenten are now the `contactmoment` SUBTYPE of the unified `ticket` schema and CtiService writes/filters (external_call_id) on `ticket`, so the overlay must land here or OpenRegister's magic-table columns for these fields never exist. Retargeted rather than duplicated: no historical contactmoment object carries CTI data, so nothing is lost.",
         "properties": {
           "telephony_platform": {
             "type": "string",

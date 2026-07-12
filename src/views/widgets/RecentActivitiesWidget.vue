@@ -67,7 +67,9 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-51
 		 */
 		onShow(item) {
-			const type = item._entityType === 'lead' ? 'leads' : 'requests'
+			// Non-lead activities are `ticket` rows (unify-ticket-supertype) and
+			// open on the unified /tickets detail route.
+			const type = item._entityType === 'lead' ? 'leads' : 'tickets'
 			navigateTo(generateUrl('/apps/pipelinq/' + type + '/' + item._entityId))
 		},
 		/**
@@ -115,9 +117,13 @@ export default {
 					)
 				}
 
-				if (config.request) {
+				if (config.ticket) {
+					// A request is a `ticket` narrowed by ticketType
+					// (unify-ticket-supertype); the row's `entityType` stays 'request'
+					// so the LABEL keeps reading "Request", while navigation goes
+					// to the unified /tickets route (see onShow).
 					promises.push(
-						this.fetchRaw(config, 'request', { _limit: 10, _order: 'updated:desc' })
+						this.fetchRaw(config, 'ticket', { ticketType: 'request', _limit: 10, _order: 'updated:desc' })
 							.then(items => items.map(item => ({
 								...item,
 								entityType: 'request',

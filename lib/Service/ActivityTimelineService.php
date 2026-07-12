@@ -8,6 +8,10 @@
  * provides worklog read/create operations stored as contactmomenten with
  * channel='worklog'.
  *
+ * Since unify-ticket-supertype the contactmoment source is not a schema of its
+ * own: contactmomenten (and therefore worklogs) are rows of the unified `ticket`
+ * schema carrying `ticketType=contactmoment`, resolved through TicketService.
+ *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2024 Conduction B.V.
  *
@@ -48,6 +52,8 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ *
+ * @spec openspec/changes/activity-timeline/tasks.md#task-1
  */
 class ActivityTimelineService
 {
@@ -71,16 +77,20 @@ class ActivityTimelineService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container   The DI container (used to lazily fetch ObjectService).
-     * @param IAppConfig         $appConfig   The app config service.
-     * @param IUserSession       $userSession The current user session.
-     * @param LoggerInterface    $logger      The logger.
+     * @param ContainerInterface $container     The DI container (used to lazily fetch ObjectService).
+     * @param IAppConfig         $appConfig     The app config service.
+     * @param IUserSession       $userSession   The current user session.
+     * @param LoggerInterface    $logger        The logger.
+     * @param TicketService      $ticketService Resolver for the unified `ticket` supertype —
+     *                                          contactmomenten (incl. worklogs) are tickets with
+     *                                          `ticketType=contactmoment`, not their own schema.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private IUserSession $userSession,
         private LoggerInterface $logger,
+        private TicketService $ticketService,
     ) {
     }//end __construct()
 
@@ -103,13 +113,17 @@ class ActivityTimelineService
     /**
      * Read the configured register and schema IDs.
      *
-     * @return array<string,string> Map of config-key => value.
+     * The `contactmoment` source is no longer a schema of its own: after
+     * unify-ticket-supertype it is the `ticket` schema narrowed by
+     * `ticketType=contactmoment`, so its id is resolved through TicketService.
+     *
+     * @return array<string,string> Map of source-key => value.
      */
     private function getConfig(): array
     {
         return [
             'register'      => $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-            'contactmoment' => $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', ''),
+            'contactmoment' => $this->ticketService->getSchemaId(),
             'task'          => $this->appConfig->getValueString(Application::APP_ID, 'task_schema', ''),
             'emailLink'     => $this->appConfig->getValueString(Application::APP_ID, 'emailLink_schema', ''),
             'calendarLink'  => $this->appConfig->getValueString(Application::APP_ID, 'calendarLink_schema', ''),
@@ -568,7 +582,11 @@ class ActivityTimelineService
     }//end isBeforeTo()
 
     /**
-     * Build per-schema filter arrays for an entity-type/id pair.
+     * Build per-source filter arrays for an entity-type/id pair.
+     *
+     * The `contactmoment` source reads the unified `ticket` schema, so its filter
+     * always carries the `ticketType` discriminator, and the back-reference to a
+     * request is the ticket field `parentTicket` (formerly contactmoment.request).
      *
      * @param string $entityType The entity type (client|request|lead|contact).
      * @param string $entityId   The entity UUID.
@@ -581,13 +599,19 @@ class ActivityTimelineService
     {
         return match ($entityType) {
             'client' => [
-                'contactmoment' => ['client' => $entityId],
+                'contactmoment' => [
+                    'ticketType' => TicketService::TYPE_CONTACTMOMENT,
+                    'client'     => $entityId,
+                ],
                 'task'          => ['clientId' => $entityId],
                 'emailLink'     => ['linkedEntityType' => 'client', 'linkedEntityId' => $entityId],
                 'calendarLink'  => ['linkedEntityType' => 'client', 'linkedEntityId' => $entityId],
             ],
             'request' => [
-                'contactmoment' => ['request' => $entityId],
+                'contactmoment' => [
+                    'ticketType'   => TicketService::TYPE_CONTACTMOMENT,
+                    'parentTicket' => $entityId,
+                ],
                 'task'          => ['requestId' => $entityId],
                 'emailLink'     => ['linkedEntityType' => 'request', 'linkedEntityId' => $entityId],
                 'calendarLink'  => ['linkedEntityType' => 'request', 'linkedEntityId' => $entityId],
@@ -622,6 +646,8 @@ class ActivityTimelineService
 
         switch ($sourceType) {
             case 'contactmoment':
+                // Ticket field names (unify-ticket-supertype): subject -> title,
+                // summary -> description, contactedAt -> occurredAt, agent -> assignee.
                 $channel = (string) ($object['channel'] ?? '');
                 $type    = 'contactmoment';
                 if ($channel === 'worklog') {
@@ -630,10 +656,10 @@ class ActivityTimelineService
                 return [
                     'type'        => $type,
                     'id'          => $id,
-                    'title'       => (string) ($object['subject'] ?? $object['summary'] ?? ''),
-                    'description' => (string) ($object['summary'] ?? ''),
-                    'date'        => $this->stringOrNull(value: ($object['contactedAt'] ?? null)),
-                    'user'        => $this->stringOrNull(value: ($object['agent'] ?? null)),
+                    'title'       => (string) ($object['title'] ?? $object['description'] ?? ''),
+                    'description' => (string) ($object['description'] ?? ''),
+                    'date'        => $this->stringOrNull(value: ($object['occurredAt'] ?? null)),
+                    'user'        => $this->stringOrNull(value: ($object['assignee'] ?? null)),
                     'entityType'  => $entityType,
                     'entityId'    => $entityId,
                     'metadata'    => [
@@ -697,7 +723,12 @@ class ActivityTimelineService
     }//end normalizeActivity()
 
     /**
-     * Create a worklog entry as a contactmoment with channel='worklog'.
+     * Create a worklog entry as a contactmoment ticket with channel='worklog'.
+     *
+     * Written to the unified `ticket` schema with `ticketType=contactmoment`
+     * (unify-ticket-supertype) using the ticket field names: description
+     * (was summary), occurredAt (was contactedAt), assignee (was agent) and
+     * parentTicket (was request).
      *
      * The acting agent is derived from the current IUserSession and MUST NOT be
      * supplied via request payload.
@@ -732,27 +763,19 @@ class ActivityTimelineService
 
         $payload = [
             'channel'     => 'worklog',
-            'summary'     => $summary ?? '',
+            'description' => $summary ?? '',
             'duration'    => $duration ?? '',
-            'contactedAt' => $date,
-            'agent'       => $agentUid,
+            'occurredAt'  => $date,
+            'assignee'    => $agentUid,
         ];
 
         if ($entityType === 'client') {
             $payload['client'] = $entityId;
         } else if ($entityType === 'request') {
-            $payload['request'] = $entityId;
+            $payload['parentTicket'] = $entityId;
         }
 
-        $objectService = $this->getObjectService();
-
-        $saved = $objectService->saveObject(
-            $payload,
-            [],
-            $config['register'],
-            $config['contactmoment'],
-            null
-        );
+        $saved = $this->ticketService->save(TicketService::TYPE_CONTACTMOMENT, $payload);
 
         $savedArray = $this->extractObjectArray(saved: $saved);
         $normalized = $this->normalizeActivity(
@@ -793,11 +816,17 @@ class ActivityTimelineService
             ];
         }
 
-        $filters = ['channel' => 'worklog'];
+        // Worklogs are contactmoment tickets: narrow the unified `ticket` schema
+        // with the discriminator, and back-reference a request through the ticket
+        // field `parentTicket` (formerly contactmoment.request).
+        $filters = [
+            'ticketType' => TicketService::TYPE_CONTACTMOMENT,
+            'channel'    => 'worklog',
+        ];
         if ($entityType === 'client') {
             $filters['client'] = $entityId;
         } else if ($entityType === 'request') {
-            $filters['request'] = $entityId;
+            $filters['parentTicket'] = $entityId;
         }
 
         $rawObjects = $this->querySchema(

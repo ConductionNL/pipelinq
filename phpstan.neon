@@ -37,6 +37,12 @@ parameters:
         - '#has invalid return type OCA\\OpenRegister\\#'
         - '#has invalid type OCA\\OpenRegister\\#'
         - '#implements unknown interface OCA\\OpenRegister\\#'
+        # Same root cause: ObjectService is not on the analysis path, so PHPStan cannot
+        # verify its named parameters either. These three are real — they are how
+        # OpenRegister sanctions a system-context (CLI / repair-step) read+write, where
+        # there is no session and RBAC would otherwise fail closed. See
+        # Repair\NormaliseTicketTitle.
+        - '#Unknown parameter \$(_rbac|_multitenancy|currentUser) in call to method OCA\\OpenRegister\\Service\\ObjectService::#'
         # GuzzleHttp is available at runtime via Nextcloud but not in composer require
         - '#unknown class GuzzleHttp\\#'
         - '#GuzzleHttp\\[a-zA-Z\\]+.*not found#'

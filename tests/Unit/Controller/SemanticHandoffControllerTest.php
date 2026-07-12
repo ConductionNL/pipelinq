@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\SemanticHandoffController;
 use OCA\Pipelinq\Service\SemanticHandoffService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -117,11 +118,17 @@ class SemanticHandoffControllerTest extends TestCase
             }
         );
 
+        // Unconfigured ticket schema id → the controller falls back to the
+        // built-in `ticket` slug, exactly as it does on a fresh install.
+        $ticketService = $this->createMock(TicketService::class);
+        $ticketService->method('getSchemaId')->willReturn('');
+
         $this->controller = new SemanticHandoffController(
             $this->createMock(IRequest::class),
             $this->handoffService,
             $container,
             $appConfig,
+            $ticketService,
             $this->userSession,
             $this->createMock(LoggerInterface::class),
         );
@@ -172,7 +179,7 @@ class SemanticHandoffControllerTest extends TestCase
     public function testConvertInvalidStatus(): void
     {
         $this->signIn();
-        $this->objectService->store['req-1'] = ['uuid' => 'req-1', 'status' => 'new'];
+        $this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'new'];
         $this->handoffService->expects($this->never())->method('handoff');
 
         $response = $this->controller->convertRequestToCase(id: 'req-1');
@@ -188,7 +195,7 @@ class SemanticHandoffControllerTest extends TestCase
     public function testConvertNotAvailable(): void
     {
         $this->signIn();
-        $this->objectService->store['req-1'] = ['uuid' => 'req-1', 'status' => 'in_progress'];
+        $this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'in_progress'];
         $this->handoffService->method('hasImplementer')->willReturn(false);
         $this->handoffService->expects($this->never())->method('handoff');
 
@@ -205,7 +212,7 @@ class SemanticHandoffControllerTest extends TestCase
     public function testConvertHandoffFailedLeavesRequestUntouched(): void
     {
         $this->signIn();
-        $this->objectService->store['req-1'] = ['uuid' => 'req-1', 'status' => 'in_progress'];
+        $this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'in_progress'];
         $this->handoffService->method('hasImplementer')->willReturn(true);
         $this->handoffService->method('handoff')->willReturn(['ok' => false, 'reason' => 'handoff-failed']);
 
@@ -224,7 +231,12 @@ class SemanticHandoffControllerTest extends TestCase
     public function testConvertSuccess(): void
     {
         $this->signIn();
-        $this->objectService->store['req-1'] = ['uuid' => 'req-1', 'status' => 'in_progress', 'title' => 'Broken bin'];
+        $this->objectService->store['req-1'] = [
+            'uuid'       => 'req-1',
+            'ticketType' => 'request',
+            'status'     => 'in_progress',
+            'title'      => 'Broken bin',
+        ];
         $this->handoffService->method('hasImplementer')->willReturn(true);
         $this->handoffService->method('handoff')->willReturn([
             'ok'            => true,
@@ -237,10 +249,34 @@ class SemanticHandoffControllerTest extends TestCase
         $this->assertSame(Http::STATUS_OK, $response->getStatus());
         $this->assertSame('converted', $response->getData()['status']);
         $this->assertSame('case-42', $response->getData()['caseReference']);
-        // Persisted.
+        // Persisted, with the discriminator kept pinned on the round-tripped payload.
         $this->assertSame('converted', $this->objectService->store['req-1']['status']);
         $this->assertSame('case-42', $this->objectService->store['req-1']['caseReference']);
+        $this->assertSame('request', $this->objectService->store['req-1']['ticketType']);
     }//end testConvertSuccess()
+
+    /**
+     * A ticket of another subtype is not reachable through the request
+     * endpoints — it is reported as absent (404) and never converted.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+     */
+    public function testConvertRefusesNonRequestTicket(): void
+    {
+        $this->signIn();
+        $this->objectService->store['cm-1'] = [
+            'uuid'       => 'cm-1',
+            'ticketType' => 'contactmoment',
+            'status'     => 'in_progress',
+        ];
+        $this->handoffService->expects($this->never())->method('handoff');
+
+        $response = $this->controller->convertRequestToCase(id: 'cm-1');
+        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+        $this->assertCount(0, $this->objectService->saves);
+    }//end testConvertRefusesNonRequestTicket()
 
     /**
      * requestAvailability reports canConvert only for in_progress + implementer.
@@ -250,7 +286,7 @@ class SemanticHandoffControllerTest extends TestCase
     public function testRequestAvailability(): void
     {
         $this->signIn();
-        $this->objectService->store['req-1'] = ['uuid' => 'req-1', 'status' => 'in_progress'];
+        $this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'in_progress'];
         $this->handoffService->method('hasImplementer')->willReturn(true);
 
         $response = $this->controller->requestAvailability(id: 'req-1');

@@ -10,6 +10,9 @@
  * row and the outbound contactmoment audit (REQ-OM-006) written through the
  * unified ContactmomentService write path resolved via the container.
  *
+ * Since unify-ticket-supertype the audit lands on the `ticket` schema with
+ * `ticketType: contactmoment` and the renamed ticket fields.
+ *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Integration
  *
@@ -36,6 +39,7 @@ use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCA\Pipelinq\Service\SmsAdapter;
 use OCA\Pipelinq\Service\SmsProviderFactory;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
@@ -118,17 +122,17 @@ class OutboundMessagingContractTest extends TestCase
         $appConfig->method('getValueString')->willReturnCallback(
             static function (string $app, string $key, string $default): string {
                 return match ($key) {
-                    'register'            => 'pipelinq',
-                    'tenant_id'           => 'tenant-1',
-                    'contactmoment_schema' => 'contactmoment',
-                    default               => $default,
+                    'register'      => 'pipelinq',
+                    'tenant_id'     => 'tenant-1',
+                    'ticket_schema' => 'ticket',
+                    default         => $default,
                 };
             }
         );
 
         $contactmomentService = new ContactmomentService(
             $this->container,
-            $appConfig,
+            new TicketService($this->container, $appConfig, $logger),
             $this->createMock(IGroupManager::class),
             $logger,
         );
@@ -206,7 +210,7 @@ class OutboundMessagingContractTest extends TestCase
 
     /**
      * A network-free SMS send persists the outbound row with the mock id and
-     * writes an outbound `channel: sms` contactmoment audit (REQ-OM-006).
+     * writes an outbound `channel: sms` contactmoment-ticket audit (REQ-OM-006).
      *
      * @return void
      */
@@ -230,12 +234,16 @@ class OutboundMessagingContractTest extends TestCase
         $outbound = $this->rowsBySchema(schema: 'message');
         $this->assertNotEmpty($outbound, 'outbound message row not persisted');
 
-        $contactmomenten = $this->rowsBySchema(schema: 'contactmoment');
+        $contactmomenten = $this->rowsBySchema(schema: 'ticket');
         $this->assertCount(1, $contactmomenten, 'exactly one outbound contactmoment audit row expected');
         $audit = $contactmomenten[0];
+        $this->assertSame('contactmoment', $audit['ticketType']);
         $this->assertSame('sms', $audit['channel']);
         $this->assertSame('client-1', $audit['client']);
-        $this->assertSame('agent-1', $audit['agent']);
+        // Ticket field names: subject → title, summary → description, agent → assignee.
+        $this->assertSame('Outbound SMS', $audit['title']);
+        $this->assertSame('Your request is being handled.', $audit['description']);
+        $this->assertSame('agent-1', $audit['assignee']);
         $this->assertSame('outbound', $audit['channelMetadata']['direction']);
         $this->assertSame('sms', $audit['channelMetadata']['platform']);
     }//end testSmsSendPersistsAndAudits()
@@ -248,7 +256,7 @@ class OutboundMessagingContractTest extends TestCase
      */
     public function testAuditFailureNeverBlocksSend(): void
     {
-        // Fully isolated wiring: the contactmoment schema is unconfigured, so
+        // Fully isolated wiring: the ticket schema is unconfigured, so
         // ContactmomentService.getConfig throws → recordOutboundMessage returns
         // null → the send is unaffected.
         $logger    = $this->createMock(LoggerInterface::class);
@@ -267,7 +275,7 @@ class OutboundMessagingContractTest extends TestCase
         $container = $this->createMock(ContainerInterface::class);
         $contactmomentService = new ContactmomentService(
             $container,
-            $appConfig,
+            new TicketService($container, $appConfig, $logger),
             $this->createMock(IGroupManager::class),
             $logger,
         );
@@ -307,7 +315,7 @@ class OutboundMessagingContractTest extends TestCase
         );
 
         $this->assertSame('sent', $result['status']);
-        $this->assertSame([], $this->rowsBySchema(schema: 'contactmoment'));
+        $this->assertSame([], $this->rowsBySchema(schema: 'ticket'));
     }//end testAuditFailureNeverBlocksSend()
 
     /**

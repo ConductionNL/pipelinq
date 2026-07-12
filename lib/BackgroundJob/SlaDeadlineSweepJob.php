@@ -32,6 +32,7 @@ use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ComplaintSlaService;
 use OCA\Pipelinq\Service\SlaEngineService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -47,31 +48,54 @@ use Throwable;
  *
  * Idempotent: per-object `currentEscalationLevel` prevents duplicate
  * firings across runs.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Sweep root — it bridges the SLA
+ *  engine, the per-category complaint SLA service, the ticket resolver and OR's
+ *  ObjectService over date/time value objects. Splitting would only shuffle the
+ *  same collaborators between two halves of one sweep.
  */
 class SlaDeadlineSweepJob extends TimedJob
 {
     private const BATCH_SIZE = 100;
 
+    /**
+     * Ticket subtypes that carry SLA tracking, mapped to the tracked-object
+     * "type" label the SLA engine escalates on (unify-ticket-supertype: both
+     * subtypes now live on the single `ticket` schema and are narrowed with
+     * the `ticketType` discriminator; the SLA type labels are unchanged).
+     *
+     * @var array<string, string>
+     */
+    private const TICKET_TYPE_LABELS = [
+        TicketService::TYPE_REQUEST   => 'request',
+        TicketService::TYPE_COMPLAINT => 'klacht',
+    ];
+
+    /**
+     * Tracked surfaces that still own a dedicated schema of their own.
+     *
+     * @var array<int, string>
+     */
     private const TRACKED_SCHEMA_KEYS = [
-        'request_schema',
-        'complaint_schema',
         'callback_schema',
     ];
 
     /**
      * Constructor.
      *
-     * @param ITimeFactory        $time         Time factory.
-     * @param SlaEngineService    $engine       SLA engine.
-     * @param ComplaintSlaService $complaintSla Per-category complaint SLA service.
-     * @param ContainerInterface  $container    DI container (OR ObjectService).
-     * @param IAppConfig          $appConfig    App config.
-     * @param LoggerInterface     $logger       PSR logger.
+     * @param ITimeFactory        $time          Time factory.
+     * @param SlaEngineService    $engine        SLA engine.
+     * @param ComplaintSlaService $complaintSla  Per-category complaint SLA service.
+     * @param TicketService       $ticketService Resolver for the unified ticket schema.
+     * @param ContainerInterface  $container     DI container (OR ObjectService).
+     * @param IAppConfig          $appConfig     App config.
+     * @param LoggerInterface     $logger        PSR logger.
      */
     public function __construct(
         ITimeFactory $time,
         private SlaEngineService $engine,
         private ComplaintSlaService $complaintSla,
+        private TicketService $ticketService,
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
@@ -138,9 +162,11 @@ class SlaDeadlineSweepJob extends TimedJob
             return;
         }
 
-        foreach (self::TRACKED_SCHEMA_KEYS as $schemaConfigKey) {
+        foreach ($this->trackedSurfaces() as $surface) {
             $counts     = $this->sweepSchema(
-                schemaConfigKey: $schemaConfigKey,
+                schemaId: $surface['schemaId'],
+                type: $surface['type'],
+                extraFilters: $surface['filters'],
                 register: $register,
                 policies: $policies,
                 now: $now,
@@ -158,29 +184,78 @@ class SlaDeadlineSweepJob extends TimedJob
     }//end run()
 
     /**
-     * Sweep one tracked schema in batches, processing each object.
+     * Enumerate every tracked surface to sweep.
      *
-     * @param string                              $schemaConfigKey App-config key naming the schema.
-     * @param string                              $register        Register UUID.
-     * @param array<string, array<string, mixed>> $policies        Policy index by identity.
-     * @param DateTimeInterface                   $now             Now.
-     * @param object                              $objectService   OR ObjectService.
+     * The `request` and `klacht` surfaces both resolve to the unified `ticket`
+     * schema and are narrowed with a `ticketType` filter; `callback` still owns
+     * its own schema.
      *
-     * @return array{processed: int, escalated: int} Per-schema counters.
+     * @return array<int, array{schemaId: string, type: string, filters: array<string, mixed>}> Surfaces.
+     */
+    private function trackedSurfaces(): array
+    {
+        $surfaces     = [];
+        $ticketSchema = $this->ticketService->getSchemaId();
+        if ($ticketSchema !== '') {
+            foreach (self::TICKET_TYPE_LABELS as $ticketType => $label) {
+                $surfaces[] = [
+                    'schemaId' => $ticketSchema,
+                    'type'     => $label,
+                    'filters'  => ['ticketType' => $ticketType],
+                ];
+            }
+        }
+
+        foreach (self::TRACKED_SCHEMA_KEYS as $schemaConfigKey) {
+            $schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaConfigKey, '');
+            if ($schemaId === '') {
+                continue;
+            }
+
+            $surfaces[] = [
+                'schemaId' => $schemaId,
+                'type'     => $this->schemaTypeFromKey(key: $schemaConfigKey),
+                'filters'  => [],
+            ];
+        }
+
+        return $surfaces;
+    }//end trackedSurfaces()
+
+    /**
+     * Sweep one tracked surface in batches, processing each object.
+     *
+     * @param string                              $schemaId      Schema UUID to sweep.
+     * @param string                              $type          Tracked object type label.
+     * @param array<string, mixed>                $extraFilters  Extra OR filters (e.g. the ticketType discriminator).
+     * @param string                              $register      Register UUID.
+     * @param array<string, array<string, mixed>> $policies      Policy index by identity.
+     * @param DateTimeInterface                   $now           Now.
+     * @param object                              $objectService OR ObjectService.
+     *
+     * @return array{processed: int, escalated: int} Per-surface counters.
      */
     private function sweepSchema(
-        string $schemaConfigKey,
+        string $schemaId,
+        string $type,
+        array $extraFilters,
         string $register,
         array $policies,
         DateTimeInterface $now,
         object $objectService
     ): array {
-        $schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaConfigKey, '');
         if ($schemaId === '') {
             return ['processed' => 0, 'escalated' => 0];
         }
 
-        $type      = $this->schemaTypeFromKey(key: $schemaConfigKey);
+        $filters = array_merge(
+            [
+                'register' => $register,
+                'schema'   => $schemaId,
+            ],
+            $extraFilters
+        );
+
         $processed = 0;
         $escalated = 0;
         $offset    = 0;
@@ -188,10 +263,9 @@ class SlaDeadlineSweepJob extends TimedJob
             try {
                 $rows = $objectService->findAll(
                     config: [
-                        'register' => $register,
-                        'schema'   => $schemaId,
-                        'limit'    => self::BATCH_SIZE,
-                        'offset'   => $offset,
+                        'filters' => $filters,
+                        'limit'   => self::BATCH_SIZE,
+                        'offset'  => $offset,
                     ]
                 );
             } catch (Throwable $e) {
@@ -422,7 +496,7 @@ class SlaDeadlineSweepJob extends TimedJob
             'SlaDeadlineSweepJob: complaint past its SLA deadline',
             [
                 'uuid'        => $uuid,
-                'category'    => (string) ($data['category'] ?? ''),
+                'category'    => (string) ($data['complaintCategory'] ?? ''),
                 'status'      => (string) ($data['status'] ?? ''),
                 'slaDeadline' => (string) ($data['slaDeadline'] ?? ''),
             ]
@@ -450,17 +524,19 @@ class SlaDeadlineSweepJob extends TimedJob
     /**
      * Map a schema-config-key back to its tracked object type.
      *
-     * @param string $key The config key (e.g. request_schema).
+     * Only surfaces that still own a dedicated schema are resolved here; the
+     * `request` and `klacht` types are derived from the ticket discriminator
+     * (see self::TICKET_TYPE_LABELS).
+     *
+     * @param string $key The config key (e.g. callback_schema).
      *
      * @return string Tracked object type slug.
      */
     private function schemaTypeFromKey(string $key): string
     {
         return match ($key) {
-            'request_schema'   => 'request',
-            'complaint_schema' => 'klacht',
-            'callback_schema'  => 'callback',
-            default            => 'unknown',
+            'callback_schema' => 'callback',
+            default           => 'unknown',
         };
     }//end schemaTypeFromKey()
 }//end class

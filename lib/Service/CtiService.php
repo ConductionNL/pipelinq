@@ -36,8 +36,14 @@ use Psr\Log\LoggerInterface;
  * Core CTI orchestration service.
  *
  * Routes inbound webhook events through the registered adapter, logs them to
- * `ctiEventLog`, creates/updates `contactmoment` records, drives the
- * screen-pop lookup and originates outbound calls.
+ * `ctiEventLog`, creates/updates contactmoment records, drives the screen-pop
+ * lookup and originates outbound calls.
+ *
+ * Since unify-ticket-supertype a contactmoment is a `ticket` carrying
+ * `ticketType: contactmoment`; every contactmoment read/write here goes through
+ * {@see TicketService}. The CTI-owned schemas (`ctiEventLog`,
+ * `ctiAdapterConfig`, `ctiAgentPresence`) are unaffected and keep their own
+ * app-config keys.
  *
  * All public mutating methods log to the event log; all OR writes use
  * `saveObject` (per Hydra OR ObjectService API).
@@ -50,6 +56,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregate of many small guard-clause methods; no single hotspot.
  *
  * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
+ * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class CtiService
 {
@@ -62,6 +69,7 @@ class CtiService
      * @param PhoneNormaliser       $phoneNormaliser    Phone normaliser.
      * @param CtiContactMatcher     $contactMatcher     Contact matcher.
      * @param CtiDispositionService $dispositionService Disposition service.
+     * @param TicketService         $ticketService      Unified ticket resolver.
      * @param LoggerInterface       $logger             Logger.
      */
     public function __construct(
@@ -71,6 +79,7 @@ class CtiService
         private PhoneNormaliser $phoneNormaliser,
         private CtiContactMatcher $contactMatcher,
         private CtiDispositionService $dispositionService,
+        private TicketService $ticketService,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
@@ -194,7 +203,7 @@ class CtiService
     }//end initiateScreenPop()
 
     /**
-     * Create a pending contactmoment.
+     * Create a pending contactmoment ticket.
      *
      * @param string              $direction  inbound|outbound.
      * @param string              $fromNumber Caller number.
@@ -203,7 +212,9 @@ class CtiService
      * @param string              $extension  Agent extension.
      * @param array<string,mixed> $extra      Extra fields to merge in.
      *
-     * @return string|null The new contactmoment UUID or null on failure.
+     * @return string|null The new contactmoment ticket UUID or null on failure.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function createPendingContactmoment(
         string $direction,
@@ -213,10 +224,8 @@ class CtiService
         string $extension,
         array $extra=[],
     ): ?string {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
-        if ($register === '' || $schema === '') {
-            $this->logger->warning('CTI: contactmoment register/schema not configured.');
+        if ($this->ticketService->isConfigured() === false) {
+            $this->logger->warning('CTI: ticket register/schema not configured.');
             return null;
         }
 
@@ -230,16 +239,18 @@ class CtiService
                 'from_number'   => ($fromE164 ?? $fromNumber),
                 'to_number'     => ($toE164 ?? $toNumber),
                 'cti_extension' => $extension,
-                'agent'         => $userId,
+                'assignee'      => $userId,
                 'started_at'    => gmdate('Y-m-d\TH:i:s\Z'),
-                'subject'       => 'CTI '.$direction.' call',
+                'title'         => 'CTI '.$direction.' call',
             ],
             $extra
         );
 
         try {
-            $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-            $saved         = $objectService->saveObject($payload, [], $register, $schema, null);
+            $saved = $this->ticketService->save(
+                ticketType: TicketService::TYPE_CONTACTMOMENT,
+                payload: $payload,
+            );
             return $this->extractId(object: $saved);
         } catch (\Throwable $e) {
             $this->logger->error(
@@ -251,9 +262,9 @@ class CtiService
     }//end createPendingContactmoment()
 
     /**
-     * Update a contactmoment with final metadata once the call ended.
+     * Update a contactmoment ticket with final metadata once the call ended.
      *
-     * @param string $contactmomentId    Contactmoment UUID.
+     * @param string $contactmomentId    Contactmoment ticket UUID.
      * @param int    $durationSeconds    Talk duration.
      * @param string $outcome            Disposition outcome (may be empty).
      * @param string $dispositionSubject Disposition subject.
@@ -262,6 +273,7 @@ class CtiService
      * @return void
      *
      * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function completeContactmoment(
         string $contactmomentId,
@@ -270,31 +282,26 @@ class CtiService
         string $dispositionSubject,
         string $dispositionNotes,
     ): void {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
-        if ($register === '' || $schema === '') {
+        if ($this->ticketService->isConfigured() === false) {
             return;
         }
 
         try {
-            $objectService      = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
             $dispositionOutcome = 'resolved';
             if ($outcome !== '') {
                 $dispositionOutcome = $outcome;
             }
 
-            $objectService->saveObject(
-                [
+            $this->ticketService->save(
+                ticketType: TicketService::TYPE_CONTACTMOMENT,
+                payload: [
                     'duration_seconds'    => $durationSeconds,
                     'ended_at'            => gmdate('Y-m-d\TH:i:s\Z'),
                     'disposition_subject' => $dispositionSubject,
                     'disposition_outcome' => $dispositionOutcome,
                     'disposition_notes'   => $dispositionNotes,
                 ],
-                [],
-                $register,
-                $schema,
-                $contactmomentId
+                uuid: $contactmomentId,
             );
         } catch (\Throwable $e) {
             $this->logger->error(
@@ -305,33 +312,30 @@ class CtiService
     }//end completeContactmoment()
 
     /**
-     * Attach recording metadata to an existing contactmoment.
+     * Attach recording metadata to an existing contactmoment ticket.
      *
-     * @param string $contactmomentId Contactmoment UUID.
+     * @param string $contactmomentId Contactmoment ticket UUID.
      * @param string $recordingUrl    URL of the recording.
      * @param string $expiresAt       ISO 8601 retention expiry.
      *
      * @return void
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function attachRecording(string $contactmomentId, string $recordingUrl, string $expiresAt): void
     {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
-        if ($register === '' || $schema === '') {
+        if ($this->ticketService->isConfigured() === false) {
             return;
         }
 
         try {
-            $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-            $objectService->saveObject(
-                [
+            $this->ticketService->save(
+                ticketType: TicketService::TYPE_CONTACTMOMENT,
+                payload: [
                     'recording_url'                  => $recordingUrl,
                     'recording_retention_expires_at' => $expiresAt,
                 ],
-                [],
-                $register,
-                $schema,
-                $contactmomentId
+                uuid: $contactmomentId,
             );
         } catch (\Throwable $e) {
             $this->logger->error(
@@ -915,11 +919,11 @@ class CtiService
     }//end attachRecordingFromEvent()
 
     /**
-     * Resolve a contactmoment by external call ID.
+     * Resolve a contactmoment ticket by external call ID.
      *
      * @param string $externalCallId Platform call UUID.
      *
-     * @return string|null Contactmoment UUID, null when none.
+     * @return string|null Contactmoment ticket UUID, null when none.
      */
     private function findContactmomentByCallId(string $externalCallId): ?string
     {
@@ -927,56 +931,41 @@ class CtiService
             return null;
         }
 
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
-        if ($register === '' || $schema === '') {
-            return null;
-        }
+        $found = $this->ticketService->findByType(
+            ticketType: TicketService::TYPE_CONTACTMOMENT,
+            extraFilters: ['external_call_id' => $externalCallId],
+            limit: 1,
+        );
 
-        try {
-            $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-            $found         = $objectService->findAll(
-                [
-                    'filters' => [
-                        'register'         => $register,
-                        'schema'           => $schema,
-                        'external_call_id' => $externalCallId,
-                    ],
-                    'limit'   => 1,
-                ]
-            );
-            if (is_array($found) === true && count($found) > 0) {
-                return $this->extractId(object: $found[0]);
-            }
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'CTI findContactmomentByCallId failed',
-                ['exception' => $e->getMessage(), 'externalCallId' => $externalCallId]
-            );
-        }//end try
+        if (count($found) > 0) {
+            return $this->extractId(object: $found[0]);
+        }
 
         return null;
     }//end findContactmomentByCallId()
 
     /**
-     * Save partial fields onto an existing contactmoment.
+     * Save partial fields onto an existing contactmoment ticket.
      *
-     * @param string              $id     Contactmoment UUID.
+     * @param string              $id     Contactmoment ticket UUID.
      * @param array<string,mixed> $fields Fields to merge.
      *
      * @return void
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     private function updateContactmoment(string $id, array $fields): void
     {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'contactmoment_schema', '');
-        if ($register === '' || $schema === '') {
+        if ($this->ticketService->isConfigured() === false) {
             return;
         }
 
         try {
-            $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-            $objectService->saveObject($fields, [], $register, $schema, $id);
+            $this->ticketService->save(
+                ticketType: TicketService::TYPE_CONTACTMOMENT,
+                payload: $fields,
+                uuid: $id,
+            );
         } catch (\Throwable $e) {
             $this->logger->warning(
                 'CTI updateContactmoment failed',

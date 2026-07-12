@@ -38,9 +38,15 @@ use Psr\Log\LoggerInterface;
  *
  * This is NOT a CRUD layer — it composes existing ObjectService queries.
  *
+ * Since unify-ticket-supertype a "request" is a `ticket` carrying
+ * `ticketType: request`; the request legs resolve through {@see TicketService}
+ * instead of the retired `request_schema` config key. Leads keep their own
+ * `lead` schema.
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/changes/skill-routing/tasks.md#task-1
+ * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class RoutingService
 {
@@ -59,19 +65,23 @@ class RoutingService
     /**
      * Constructor.
      *
-     * @param IAppConfig         $appConfig The app config.
-     * @param ContainerInterface $container The container (for OpenRegister ObjectService).
-     * @param LoggerInterface    $logger    The logger.
+     * @param IAppConfig         $appConfig     The app config.
+     * @param ContainerInterface $container     The container (for OpenRegister ObjectService).
+     * @param TicketService      $ticketService The unified ticket resolver.
+     * @param LoggerInterface    $logger        The logger.
      */
     public function __construct(
         private IAppConfig $appConfig,
         private ContainerInterface $container,
+        private TicketService $ticketService,
         private LoggerInterface $logger,
     ) {
     }//end __construct()
 
     /**
      * Get suggested agents for a queued request or lead.
+     *
+     * A 'request' entity is a `ticket` with `ticketType: request`.
      *
      * @param string $entityType Either 'request' or 'lead'.
      * @param string $entityId   The entity UUID.
@@ -84,12 +94,10 @@ class RoutingService
     {
         $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 
-        $schemaKey = 'request_schema';
+        $schemaId = $this->ticketService->getSchemaId();
         if ($entityType === 'lead') {
-            $schemaKey = 'lead_schema';
+            $schemaId = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
         }
-
-        $schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
 
         if ($registerId === '' || $schemaId === '') {
             $this->logger->warning('RoutingService: register or schema not configured for '.$entityType);
@@ -166,7 +174,7 @@ class RoutingService
     }//end buildSuggestions()
 
     /**
-     * Count open items (requests + leads) assigned to a user.
+     * Count open items (request tickets + leads) assigned to a user.
      *
      * @param string $userId The Nextcloud user UID.
      *
@@ -180,9 +188,8 @@ class RoutingService
             return 0;
         }
 
-        $registerId      = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $requestSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'request_schema', '');
-        $leadSchemaId    = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+        $registerId   = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $leadSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
 
         if ($registerId === '') {
             return 0;
@@ -191,36 +198,24 @@ class RoutingService
         $objectService = $this->getObjectService();
         $count         = 0;
 
-        // Open requests: the "non-terminal" predicate is a NOT IN over
+        // Open request tickets: the "non-terminal" predicate is a NOT IN over
         // TERMINAL_STATUSES, which OpenRegister's query engine cannot express
         // (no NOT IN operator), and the comparison is case-folded in PHP. This
         // leg therefore stays a PHP-side count over the assignee-filtered set.
-        if ($requestSchemaId !== '') {
-            try {
-                $requests = $objectService->findAll(
-                    [
-                        'filters' => [
-                            'register' => $registerId,
-                            'schema'   => $requestSchemaId,
-                            'assignee' => $userId,
-                        ],
-                        'limit'   => 999,
-                    ]
-                );
+        // TicketService::findByType pins register + schema + ticketType=request
+        // and degrades to [] on any failure (it logs the cause itself).
+        $requests = $this->ticketService->findByType(
+            ticketType: TicketService::TYPE_REQUEST,
+            extraFilters: ['assignee' => $userId],
+            limit: 999,
+        );
 
-                foreach ($requests as $request) {
-                    $status = strtolower((string) ($request['status'] ?? ''));
-                    if (in_array($status, self::TERMINAL_STATUSES, true) === false) {
-                        $count++;
-                    }
-                }
-            } catch (\Throwable $e) {
-                $this->logger->error(
-                    'RoutingService: failed to count open requests',
-                    ['exception' => $e->getMessage(), 'userId' => $userId]
-                );
-            }//end try
-        }//end if
+        foreach ($requests as $request) {
+            $status = strtolower((string) ($request['status'] ?? ''));
+            if (in_array($status, self::TERMINAL_STATUSES, true) === false) {
+                $count++;
+            }
+        }
 
         // Open leads (status=open) — push the COUNT down into OpenRegister
         // since every predicate is a server-side equality filter.

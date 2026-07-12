@@ -53,13 +53,21 @@ namespace OCA\Pipelinq\Portal;
  *
  * Field-projected surfaces (portaliq now whitelist-projects rows after per-row
  * verification — identifiers always survive, a malformed `fields` declaration
- * degrades to identifiers-only): `contactmoment` (client) and `booking`
+ * degrades to identifiers-only): the client `ticket` collections and `booking`
  * (customer) ship with explicit `fields` whitelists that drop every staff-only/
- * internal property — agent identity + CTI call internals on contactmoment;
- * `internalNotes`, the audit `statusHistory` and resource assignments on
- * booking. The `berichtenboxMessage` inbox stays excluded (BSN-scoped, not
+ * internal property — assignee identity + CTI call internals on the contactmoment
+ * collection; `internalNotes`, the audit `statusHistory` and resource assignments
+ * on booking. The `berichtenboxMessage` inbox stays excluded (BSN-scoped, not
  * contact/customer-scoped). Rationale + whitelist tables:
  * openspec/changes/portal-projected-collections/design.md.
+ *
+ * The former `request`, `complaint` and `contactmoment` schemas were unified into
+ * the single `ticket` supertype discriminated by `ticketType`. Each client
+ * collection therefore declares a narrowing `filter` on `ticketType`, and each
+ * create action declares a `defaults` map stamping `ticketType` server-side (it is
+ * `required` on the schema and is never client-editable). Because `ticket` is a
+ * supertype it also carries the OTHER kinds' properties — the per-collection
+ * `fields` whitelist below is what stops them leaking across kinds.
  *
  * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
  */
@@ -137,14 +145,22 @@ class PortalContributionProvider
      * Manifest for the `client` audience (B2B organisation contact).
      *
      * Read surfaces are org-scoped: the subject's `claims.pipelinq.clientId`
-     * (the pipelinq `client` object UUID) matches `request.client`,
-     * `complaint.client`, `contract.clientRef` and `contactmoment.client`.
-     * `contactmoment` ships field-projected — only `subject`, `channel`,
-     * `outcome` and `contactedAt` — so the internal `notes`, raw
-     * `channelMetadata`, `duration`, agent identity and CTI call internals
-     * (recording URL, disposition notes) never reach the client. Create actions
-     * whitelist intake fields only; status, assignment, pipeline/queue and SLA
-     * fields stay back-office-only.
+     * (the pipelinq `client` object UUID) matches `ticket.client` and
+     * `contract.clientRef`.
+     *
+     * Requests, complaints and contactmomenten are all rows of the one `ticket`
+     * supertype, so each collection additionally declares a narrowing `filter` on
+     * the `ticketType` discriminator. The filter is merged into the OR query
+     * BEFORE the scope filter, so it can only ever subset the subject's own rows —
+     * it can never widen them. Without it, all three kinds would list together.
+     *
+     * The contactmoment collection ships field-projected — only `title`, `channel`,
+     * `outcome` and `occurredAt` — so the internal `notes`, raw `channelMetadata`,
+     * `duration`, assignee identity and CTI call internals (recording URL,
+     * disposition notes) never reach the client. Create actions whitelist intake
+     * fields only; status, assignment, pipeline/queue and SLA fields stay
+     * back-office-only, and `ticketType` is stamped server-side via `defaults`
+     * rather than accepted from the client.
      *
      * @return array<string, mixed> The client manifest.
      *
@@ -158,7 +174,11 @@ class PortalContributionProvider
                 [
                     'id'          => 'clientRequests',
                     'register'    => self::REGISTER,
-                    'schema'      => 'request',
+                    'schema'      => 'ticket',
+                    // Narrowing filter on the supertype discriminator: only the
+                    // subject's REQUEST tickets. Merged before the scope filter, so
+                    // it can only subset the subject's own rows, never widen them.
+                    'filter'      => ['ticketType' => 'request'],
                     'scopeField'  => 'client',
                     'scopeClaim'  => 'clientId',
                     'label'       => 'My requests',
@@ -168,12 +188,15 @@ class PortalContributionProvider
                     // back-office `assignee`, `pipeline`, `stage`, `contact` and
                     // `priority` fields are dropped here — columns alone are
                     // presentation-only and would NOT stop them being returned.
+                    // `ticket` is a supertype, so it also carries the complaint and
+                    // contactmoment properties; this whitelist is what keeps them
+                    // out of the request surface.
                     'fields'      => [
                         'title',
                         'category',
                         'status',
                         'description',
-                        'requestedAt',
+                        'occurredAt',
                     ],
                     // Contribution-manifest-v3 UI (ADR-063), presentation-only:
                     // a column set, a detail layout, and a newest-first sort,
@@ -182,19 +205,36 @@ class PortalContributionProvider
                         ['field' => 'title', 'label' => 'Onderwerp'],
                         ['field' => 'category', 'label' => 'Categorie'],
                         ['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
-                        ['field' => 'requestedAt', 'label' => 'Ingediend', 'render' => 'date'],
+                        ['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
                     ],
-                    'detail'      => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'requestedAt']],
-                    'defaultSort' => ['field' => 'requestedAt', 'direction' => 'desc'],
+                    'detail'      => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt']],
+                    'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
                 ],
                 [
                     'id'         => 'clientComplaints',
                     'register'   => self::REGISTER,
-                    'schema'     => 'complaint',
+                    'schema'     => 'ticket',
+                    // Only the subject's COMPLAINT tickets (see clientRequests).
+                    'filter'     => ['ticketType' => 'complaint'],
                     'scopeField' => 'client',
                     'scopeClaim' => 'clientId',
                     'label'      => 'My complaints',
                     'listable'   => true,
+                    // This collection was UNPROJECTED while it read the narrow
+                    // `complaint` schema. `ticket` is a supertype whose property set
+                    // is a strict superset of it, so leaving it unprojected would
+                    // newly hand the client the contactmoment CTI internals
+                    // (recording URL, disposition notes, caller numbers), the
+                    // internal `notes` and the back-office assignee/pipeline/stage
+                    // fields. The whitelist below restores the pre-unification
+                    // surface: complaint facts only.
+                    'fields'     => [
+                        'title',
+                        'complaintCategory',
+                        'status',
+                        'description',
+                        'occurredAt',
+                    ],
                 ],
                 [
                     'id'         => 'clientContracts',
@@ -208,16 +248,22 @@ class PortalContributionProvider
                 [
                     'id'         => 'clientContactmoments',
                     'register'   => self::REGISTER,
-                    'schema'     => 'contactmoment',
+                    'schema'     => 'ticket',
+                    // Only the subject's CONTACTMOMENT tickets (see clientRequests).
+                    'filter'     => ['ticketType' => 'contactmoment'],
                     'scopeField' => 'client',
                     'scopeClaim' => 'clientId',
                     'label'      => 'My contact history',
                     'listable'   => true,
+                    // Client-safe interaction facts only. The internal `notes`, raw
+                    // `channelMetadata`, `duration`, `assignee` identity, the
+                    // `parentTicket` backlink and the CTI call internals (recording
+                    // URL, disposition notes) all stay server-side.
                     'fields'     => [
-                        'subject',
+                        'title',
                         'channel',
                         'outcome',
-                        'contactedAt',
+                        'occurredAt',
                     ],
                 ],
             ],
@@ -227,7 +273,12 @@ class PortalContributionProvider
                     'type'             => 'create',
                     'label'            => 'Submit a request',
                     'register'         => self::REGISTER,
-                    'schema'           => 'request',
+                    'schema'           => 'ticket',
+                    // Stamped server-side over the whitelisted client payload, so a
+                    // client can never file a complaint or contactmoment through the
+                    // request form. `ticketType` is required on the schema and is
+                    // deliberately NOT a whitelisted field.
+                    'defaults'         => ['ticketType' => 'request'],
                     'fields'           => [
                         'title',
                         'description',
@@ -273,11 +324,16 @@ class PortalContributionProvider
                     'type'     => 'create',
                     'label'    => 'File a complaint',
                     'register' => self::REGISTER,
-                    'schema'   => 'complaint',
+                    'schema'   => 'ticket',
+                    // Stamped server-side (see createRequest).
+                    'defaults' => ['ticketType' => 'complaint'],
+                    // The complaint's classification is `complaintCategory` on the
+                    // unified ticket — the supertype's plain `category` is the
+                    // REQUEST's free-text category and is not part of this intake.
                     'fields'   => [
                         'title',
                         'description',
-                        'category',
+                        'complaintCategory',
                     ],
                 ],
             ],

@@ -140,6 +140,7 @@ import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.v
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import { initializeStores } from '../../store/store.js'
+import { resolveObjectType } from '../../services/pipelineUtils.js'
 import { toText } from '../../utils/widgetText.js'
 
 export default {
@@ -307,7 +308,11 @@ export default {
 			this.actionSubmitting = true
 			try {
 				const type = this.actionType
-				const typeConfig = this.config[type]
+				// `type` is the *logical* entity ('request' | 'lead'). A request is a
+				// `ticket` with ticketType 'request', and `requestedAt` became
+				// `occurredAt` (unify-ticket-supertype).
+				const { objectType, ticketType } = resolveObjectType(type)
+				const typeConfig = this.config[objectType]
 				if (!typeConfig) throw new Error('Schema not configured for ' + type)
 
 				const body = {
@@ -315,10 +320,14 @@ export default {
 					client: this.actionClient.id,
 				}
 
+				if (ticketType) {
+					body.ticketType = ticketType
+				}
+
 				if (type === 'request') {
 					body.status = 'new'
 					body.priority = 'normal'
-					body.requestedAt = new Date().toISOString()
+					body.occurredAt = new Date().toISOString()
 				} else {
 					body.status = 'open'
 				}
@@ -339,7 +348,9 @@ export default {
 				if (!response.ok) throw new Error('Failed to create ' + type)
 				const created = await response.json()
 				const id = created.id || created.uuid
-				const path = type === 'request' ? 'requests' : 'leads'
+				// A request is a `ticket` with ticketType=request
+				// (unify-ticket-supertype) and opens on the unified /tickets page.
+				const path = type === 'request' ? 'tickets' : 'leads'
 				window.location.href = generateUrl('/apps/pipelinq/' + path + '/' + id)
 			} catch (err) {
 				console.error('Action submit error:', err)

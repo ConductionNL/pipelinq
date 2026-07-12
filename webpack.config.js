@@ -191,6 +191,13 @@ webpackConfig.optimization = {
 			defaultVendors: false,
 			ncVue: {
 				name: appId + '-shared-nc-vue',
+				// Initial chunks ONLY. The outer `chunks: 'all'` would also match
+				// modules the library imports dynamically, hoisting them into this
+				// eager chunk and destroying the code-splitting they exist for —
+				// nc-vue's RVO icon set (~1.9 MB) landed here in full, loaded on
+				// every page, instead of being fetched when its picker tab is
+				// opened. 'initial' leaves async imports in their own chunks.
+				chunks: 'initial',
 				// Matches both node_modules entries AND the monorepo-dev alias
 				// `../nextcloud-vue/src/...` which webpack resolves outside
 				// node_modules when @conduction/nextcloud-vue is aliased to it.

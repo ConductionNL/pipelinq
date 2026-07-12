@@ -62,12 +62,14 @@ class ReportingService
     /**
      * Constructor.
      *
-     * @param IAppConfig      $appConfig The app config.
-     * @param LoggerInterface $logger    The logger.
+     * @param IAppConfig      $appConfig     The app config.
+     * @param LoggerInterface $logger        The logger.
+     * @param TicketService   $ticketService The unified ticket resolver (unify-ticket-supertype).
      */
     public function __construct(
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
+        private TicketService $ticketService,
     ) {
     }//end __construct()
 
@@ -516,26 +518,97 @@ class ReportingService
     }//end calculateAverageHandlingTime()
 
     /**
-     * Fetch contactmoment objects for the given date range.
+     * Fetch the contactmoment tickets that fall inside the given date range.
      *
-     * Uses ObjectService when available (injected at runtime by the repair step).
-     * Falls back to an empty array when OpenRegister is not available so that
-     * the reporting endpoints degrade gracefully rather than crashing.
+     * Reads the unified `ticket` schema narrowed to `ticketType=contactmoment`
+     * (unify-ticket-supertype) and normalises the two renamed fields back to the
+     * vocabulary the KPI/channel/agent calculators below already speak
+     * (`occurredAt` -> `contactedAt`, `assignee` -> `agent`). Keeping that
+     * translation at this single boundary means the calculators — and their unit
+     * tests, which feed them plain arrays — stay untouched.
      *
-     * @param string $from ISO 8601 start date.
-     * @param string $to   ISO 8601 end date.
+     * Degrades to an empty array (never throws) when the ticket schema is
+     * unprovisioned or OpenRegister is unavailable, so the reporting endpoints
+     * return zero-value KPIs rather than a 500.
      *
-     * @return array<array<string, mixed>> Raw contactmoment data arrays.
+     * @param string $from Start date (inclusive), `YYYY-MM-DD`.
+     * @param string $to   End date (inclusive), `YYYY-MM-DD`.
      *
-     * @psalm-suppress                                UnusedParam
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @return array<array<string, mixed>> Normalised contactmoment data arrays.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#scenario-contactmomenten-reporting-reads-tickets
      */
     private function fetchContactmomenten(string $from, string $to): array
     {
-        // When ObjectService is not wired (tests, OpenRegister unavailable),
-        // return empty so all KPI methods return zero-value data.
-        return [];
+        $rows = $this->ticketService->findByType(ticketType: TicketService::TYPE_CONTACTMOMENT);
+        if ($rows === []) {
+            return [];
+        }
+
+        $moments = [];
+        foreach ($rows as $row) {
+            $data = $row;
+            if (is_array($data) === false) {
+                if (($row instanceof \JsonSerializable) === false) {
+                    continue;
+                }
+
+                $data = $row->jsonSerialize();
+                if (is_array($data) === false) {
+                    continue;
+                }
+            }
+
+            $occurredAt = (string) ($data['occurredAt'] ?? '');
+            if ($this->withinRange(occurredAt: $occurredAt, from: $from, to: $to) === false) {
+                continue;
+            }
+
+            $moments[] = [
+                // Renamed on the ticket schema — translate back for the calculators.
+                'contactedAt'     => $occurredAt,
+                'agent'           => ($data['assignee'] ?? 'unknown'),
+                // Unchanged between contactmoment and ticket.
+                'channel'         => ($data['channel'] ?? 'unknown'),
+                'outcome'         => ($data['outcome'] ?? ''),
+                'duration'        => ($data['duration'] ?? null),
+                'channelMetadata' => ($data['channelMetadata'] ?? []),
+            ];
+        }//end foreach
+
+        return $moments;
     }//end fetchContactmomenten()
+
+    /**
+     * Whether an occurrence timestamp falls inside an inclusive date window.
+     *
+     * Compares on the date part only, so a `YYYY-MM-DD` bound matches any time
+     * of day on that date. An empty bound is treated as unbounded; an
+     * unparseable/absent timestamp is excluded (conservative).
+     *
+     * @param string $occurredAt The ticket's `occurredAt` (ISO-8601 or empty).
+     * @param string $from       Start date (inclusive), `YYYY-MM-DD`, or ''.
+     * @param string $to         End date (inclusive), `YYYY-MM-DD`, or ''.
+     *
+     * @return bool True when the timestamp is inside the window.
+     */
+    private function withinRange(string $occurredAt, string $from, string $to): bool
+    {
+        if ($occurredAt === '') {
+            return false;
+        }
+
+        $date = substr($occurredAt, 0, 10);
+        if ($from !== '' && $date < substr($from, 0, 10)) {
+            return false;
+        }
+
+        if ($to !== '' && $date > substr($to, 0, 10)) {
+            return false;
+        }
+
+        return true;
+    }//end withinRange()
 
     /**
      * Group contactmomenten by channel.
