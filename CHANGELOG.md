@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Shillinq time-intake billing handoff** (`time-billing-handoff-emit`): the
+  real emit side of the delegated time-approval-workflow. A manager-facing
+  "Send to billing" action (`POST /api/billing/handoff/{clientId}`) batches a
+  client's approved, un-billed time entries for a period and posts them
+  same-instance, in the acting user's session, to shillinq's
+  `POST /apps/shillinq/api/billing/time-intake` (`TimeBillingHandoffService`).
+  Idempotent via a deterministic UUIDv5 `batchId` (client + period + sorted
+  entry ids) so a re-send replays to the same draft invoice
+  (`duplicated:true`) instead of double-billing. Outcome is traceable on every
+  entry (`billingSyncStatus`/`billingBatchId`/`billingInvoiceId`, new
+  `timeEntry` overlay fields); a transient failure notifies administrators and
+  `BillingHandoffRetryJob` (TimedJob, 15-min poll) re-notifies outstanding
+  failures — the guaranteed re-send is the manual action, re-triggered in
+  session context. A 422 (unresolvable `organisationRef`) surfaces the
+  unmapped client by name and is never blind-retried. New `client` overlay
+  field `shillinqOrganisationRef` maps a client to its shillinq
+  customer/organisation. Gated behind an off-by-default
+  `shillinq_time_intake_enabled` admin flag; the existing Shillinq deep-link
+  remains the fallback when shillinq is absent/disabled or the flag is off.
+  Seed archetypes (municipality, consultancy, travel agency) demonstrate the
+  un-billed batch, already-billed exclusion, and unmapped-client cases.
 - **CRM MCP tool surface** (`crm-mcp-tool-surface`): agent-addressable CRM
   tools for the Nextcloud Hub Assistant / AI Chat Companion, extending
   `PipelinqToolProvider` from 2 to 11 tools. New read tools: `listClients`,
