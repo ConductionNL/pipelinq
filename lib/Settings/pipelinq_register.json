@@ -62,7 +62,22 @@
           "implements": [
             "https://openregister.app/ns#Customer",
             "https://schema.org/Organization"
-          ]
+          ],
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search clients (people or organizations) in the CRM by name, email, industry, or type. Returns RBAC-scoped client summaries, newest first.",
+                "scope": "read",
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single client by id, including its full CRM profile (contact details, industry, address, notes).",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
+          }
         },
         "slug": "client",
         "title": "Client",
@@ -357,6 +372,26 @@
             "title": "{{subject}}",
             "source": "email",
             "notes": "From: {{senderName}} <{{sender}}>\nReceived: {{date}}\nMail: {{mailRef}}\n\n{{preview}}"
+          },
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search sales leads/opportunities, optionally filtered by lifecycle status, pipeline stage, or associated client. Returns RBAC-scoped lead summaries, newest first, including the declarative qualificationScore, weightedValue, and recency-decayed winProbability calculated fields.",
+                "scope": "read",
+                "filters": [
+                  "status",
+                  "stage",
+                  "client"
+                ],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single lead by id, including the declarative qualificationScore, weightedValue, and recency-decayed winProbability calculated fields materialised by OpenRegister.",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
           },
           "x-openregister-lifecycle": {
             "field": "status",

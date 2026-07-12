@@ -20,6 +20,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **MCP provider declarative migration** (`mcp-provider-declarative-migration`): declares
+  the `x-openregister-mcp` dialect (ADR-063) on the `client`, `lead`, and `ticket` schemas
+  (`lib/Settings/pipelinq_register.json`, `lib/Settings/register.d/99-unify-ticket-supertype.json`),
+  config-only, no PHP. Each schema gets `enabled:true` `search`/`get` verbs with
+  agent-facing descriptions and `readOnlyHint:true`; `lead` and `ticket` search filters
+  cover `status`/`stage`/`client` and `ticketType`/`status`/`client` respectively; no
+  write verb is declared anywhere (curated `createLead`/`logContactmoment` service tools
+  stay the write path). Inert until OpenRegister's derived-tool engine ships — the
+  hand-written `PipelinqToolProvider` keeps serving unchanged in the meantime
+  (`hand-written > derived` precedence guarantees a zero-downtime, schema-by-schema
+  cutover). Also resolves pipelinq #381: the `crm-mcp-tool-surface` spec now documents
+  `winProbability` as the lead schema's declarative recency-decayed
+  `x-openregister-calculations` field, not a tool-side alias of raw `probability` — the
+  actual `decorateLead()` alias removal is deferred to the blocked follow-up code spec
+  `plq-mcp-provider-surgery` (gated on OpenRegister's `or-mcp-derived-tool-provider` +
+  `or-mcp-tool-attribute`).
 - **VNG Klantinteracties leaf** (`vng-klantinteracties-leaf`): the pipelinq-side
   binding for VNG Klantinteracties / OpenKlant 2.x interop, config-only
   (`lib/Settings/register.d/82-vng-klantinteracties.json`, no PHP). Adds the
