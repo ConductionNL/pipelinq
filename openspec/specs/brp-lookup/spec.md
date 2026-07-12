@@ -1,5 +1,7 @@
 # brp-lookup Specification
 
+**OpenSpec changes**: [vng-klantinteracties-leaf](../../changes/vng-klantinteracties-leaf/) _(active — consumes this capability's 11-proef + `brpPersoon.bsnHash` flow for the AVG hash-only handling of VNG `partijIdentificator` BSNs; no requirement of this spec changes)_
+
 ## Purpose
 TBD - created by archiving change pipelinq-brp-via-or-leaf. Update Purpose after archive.
 ## Requirements
