@@ -70,6 +70,28 @@ class CurlHttpTransport implements HttpTransport
      */
     public function request(string $method, string $url, array $headers=[], ?string $body=null): array
     {
+        // Tripwire. The adapters are handed AbstractPaymentAdapter::BROKER_MANAGED_SECRET
+        // in place of a real PSP key; BrokerHttpTransport strips the resulting auth header
+        // and the broker injects the real secret. If that placeholder ever reaches THIS
+        // transport, the call has been routed around the broker — sending it would put a
+        // meaningless bearer token on the wire and, worse, mean somebody has reintroduced
+        // a direct, app-authenticated PSP call. Fail loudly rather than send it.
+        foreach ($headers as $value) {
+            if (is_string($value) === true
+                && str_contains($value, AbstractPaymentAdapter::BROKER_MANAGED_SECRET) === true
+            ) {
+                $this->logger->error(
+                    'Pipelinq POS payment: refusing to send a PSP request directly — it carries the '
+                    .'broker-managed placeholder, which means it bypassed the credential broker.'
+                );
+                return [
+                    'status' => 0,
+                    'body'   => [],
+                    'raw'    => '',
+                ];
+            }
+        }
+
         if (function_exists('curl_init') === false) {
             $this->logger->warning('Pipelinq POS payment: cURL not available');
             return [

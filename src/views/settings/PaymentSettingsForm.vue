@@ -44,21 +44,34 @@
 						label="label"
 						:reduce="(o) => o.value" />
 
-					<NcTextField
-						:value="provider.apiKey === MASK ? '' : provider.apiKey"
-						:label="apiKeyLabel(provider.name)"
-						:placeholder="provider.apiKey === MASK ? t('pipelinq', '(opgeslagen — laat leeg om te behouden)') : ''"
-						type="password"
-						@update:value="(v) => onSecretChange(provider, 'apiKey', v)" />
+					<!--
+						The API-key field is gone. Pipelinq no longer holds the key that moves
+						the money: it picks a credential from the broker, and OpenRegister
+						injects the secret server-side on every call.
+					-->
+					<NcSelect
+						v-model="provider.credential"
+						:options="credentialsFor(provider.name)"
+						:input-label="t('pipelinq', 'API credential')"
+						:loading="loadingCredentials"
+						:placeholder="t('pipelinq', 'Select a credential')"
+						label="label"
+						@input="(v) => onCredentialChange(provider, v)" />
 
-					<NcTextField
-						v-if="hasApiSecret(provider.name)"
-						:value="provider.apiSecret === MASK ? '' : provider.apiSecret"
-						:label="t('pipelinq', 'API secret')"
-						:placeholder="provider.apiSecret === MASK ? t('pipelinq', '(opgeslagen — laat leeg om te behouden)') : ''"
-						type="password"
-						@update:value="(v) => onSecretChange(provider, 'apiSecret', v)" />
+					<p class="payment-settings__hint">
+						<template v-if="!loadingCredentials && !credentialsFor(provider.name).length">
+							{{ t('pipelinq', 'No {provider} credential yet. Add one under Personal settings → Additional settings, then reopen this page.', { provider: displayName(provider.name) }) }}
+						</template>
+						<template v-else>
+							{{ t('pipelinq', 'The key stays in your credential vault. Pipelinq sends only the request it wants made, and the broker injects the key and refuses anything outside the allowed calls.') }}
+						</template>
+					</p>
 
+					<!--
+						The webhook secret STAYS app-held. It verifies an HMAC on an INBOUND
+						webhook — a local verify operation, not an outbound request header — so
+						a constrained HTTP proxy cannot carry it.
+					-->
 					<NcTextField
 						:value="provider.webhookSecret === MASK ? '' : provider.webhookSecret"
 						:label="t('pipelinq', 'Webhook secret')"
@@ -116,6 +129,8 @@
 <script>
 import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcSelect, NcSettingsSection, NcTextField } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
+import axios from '@nextcloud/axios'
 import {
 	listProviders,
 	updateProvider,
@@ -123,6 +138,20 @@ import {
 } from '../../services/posPaymentApi.js'
 
 const MASK = '***SET***'
+
+/**
+ * Pipelinq provider name → the broker provider identifiers that can serve it.
+ *
+ * Live and test are SEPARATE broker entries, not a flag: the catalogue host-locks each
+ * provider to a base URL, so `checkout-live.adyen.com` and `checkout-test.adyen.com`
+ * cannot share one entry (and the credentials differ anyway).
+ */
+const BROKER_PROVIDERS = {
+	mollie: ['mollie'],
+	stripe: ['stripe'],
+	adyen: ['adyen', 'adyen-test'],
+	ccv: ['ccv', 'ccv-sandbox'],
+}
 
 export default {
 	name: 'PaymentSettingsForm',
@@ -140,6 +169,10 @@ export default {
 			loading: true,
 			savingProvider: null,
 			testingProvider: null,
+			// The user's broker credentials. Pipelinq only ever learns their UUIDs —
+			// never the keys behind them.
+			credentials: [],
+			loadingCredentials: false,
 			MASK,
 		}
 	},
@@ -152,6 +185,9 @@ export default {
 		},
 	},
 	async mounted() {
+		// Credentials first: refresh() preselects each provider's saved credential from
+		// this list, so it has to be populated before the providers land.
+		await this.fetchCredentials()
 		await this.refresh()
 	},
 	methods: {
@@ -160,6 +196,11 @@ export default {
 			try {
 				const providers = await listProviders()
 				this.providers = providers.map((p) => this.normalizeProvider(p))
+				// Reflect the stored credentialId back into the picker.
+				for (const provider of this.providers) {
+					provider.credential = this.credentialsFor(provider.name)
+						.find((o) => o.value === provider.credentialId) || null
+				}
 			} catch (e) {
 				showError(t('pipelinq', 'Kon providers niet laden: {error}', { error: e.message || 'netwerkfout' }))
 			} finally {
@@ -183,20 +224,54 @@ export default {
 			if (p.name === 'adyen' && config.merchantAccount == null) config.merchantAccount = ''
 			return {
 				...p,
-				apiKey: p.apiKey ?? '',
-				apiSecret: p.apiSecret ?? '',
+				// `credentialId` is a reference, not a secret, so it comes back unmasked.
+				credentialId: p.credentialId ?? '',
+				credential: null,
 				webhookSecret: p.webhookSecret ?? '',
 				config,
 			}
 		},
-		hasApiSecret(name) {
-			return name === 'ccv' || name === 'stripe'
+		/**
+		 * The broker credentials this provider can use.
+		 *
+		 * A provider name maps to one or more broker provider identifiers: the catalogue
+		 * host-locks live and test to separate entries (adyen / adyen-test, ccv /
+		 * ccv-sandbox), because a base URL is the host-lock and the two cannot share one.
+		 *
+		 * @param {string} name The Pipelinq provider name.
+		 * @return {Array} NcSelect options.
+		 */
+		credentialsFor(name) {
+			const wanted = BROKER_PROVIDERS[name] || [name]
+			return this.credentials
+				.filter((c) => wanted.includes(c.provider))
+				.map((c) => ({ label: c.name || c.id, value: c.id }))
 		},
-		apiKeyLabel(name) {
-			if (name === 'stripe') {
-				return t('pipelinq', 'Stripe publishable key')
+		displayName(name) {
+			const p = this.providers.find((x) => x.name === name)
+			return (p && p.displayName) || name
+		},
+		/**
+		 * Load the user's broker credentials.
+		 *
+		 * The endpoint already scopes to the caller's own credentials and the response
+		 * carries no secrets — only names, providers and UUIDs.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async fetchCredentials() {
+			this.loadingCredentials = true
+			try {
+				const { data } = await axios.get(generateUrl('/apps/openregister/api/credentials'))
+				this.credentials = data.results || []
+			} catch (e) {
+				this.credentials = []
+			} finally {
+				this.loadingCredentials = false
 			}
-			return t('pipelinq', 'API key')
+		},
+		onCredentialChange(provider, option) {
+			provider.credentialId = option ? option.value : ''
 		},
 		providerTypeLabel(type) {
 			return type === 'terminal' ? t('pipelinq', 'PIN-terminal') : t('pipelinq', 'Online')
@@ -215,12 +290,14 @@ export default {
 					environment: provider.environment,
 					testMode: provider.testMode,
 					config: provider.config || {},
+					// A broker credential UUID — a reference, not a secret.
+					credentialId: provider.credentialId || '',
 				}
-				// Only ship secret fields when the admin actually typed something.
-				for (const field of ['apiKey', 'apiSecret', 'webhookSecret']) {
-					if (provider[field] && provider[field] !== MASK) {
-						payload[field] = provider[field]
-					}
+				// The webhook secret is the only secret left in this form: it verifies an
+				// HMAC on an inbound webhook, which the broker cannot do for us. Ship it
+				// only when the admin actually typed something.
+				if (provider.webhookSecret && provider.webhookSecret !== MASK) {
+					payload.webhookSecret = provider.webhookSecret
 				}
 				const saved = await updateProvider(provider.name, payload)
 				if (saved) {
