@@ -203,6 +203,12 @@ class SettingsService
         // "Timesheet approval" billing entry point through the registry instead of
         // the hard-coded /index.php/apps/shillinq/ path (REQ-PBTS-003).
         'shillinq_app_url'                         => '',
+        // Gates the real shillinq time-intake emit (time-billing-handoff-emit).
+        // Default off: an unconfigured install keeps today's deep-link-only
+        // handoff (shillinq_app_url) unchanged. The manager group allowed to
+        // trigger "Send to billing" (empty = NC admins only).
+        'shillinq_time_intake_enabled'             => 'false',
+        'billing_handoff_manager_group'            => '',
         // Lead-management: number of inactivity days before a lead is flagged stale.
         // Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
         // spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.
@@ -249,6 +255,15 @@ class SettingsService
         'avg_handler_group'                        => '',
         'avg_teamlead_group'                       => '',
         'avg_dpo_group'                            => '',
+        // First-party marketing-email open/click tracking
+        // (marketing-email-open-click-tracking) — off by default so today's
+        // provider-webhook-only render path is unchanged until an admin
+        // opts in. `_ttl_days` is the admin-overridable token TTL (90-day
+        // fixed default per design.md's Open Questions ruling).
+        // spec ref: marketing-email-open-click-tracking Requirement "Render-time
+        // injection is feature-flagged with a provider fallback".
+        'blast.first_party_tracking'               => 'false',
+        'blast.tracking_token_ttl_days'            => '90',
     ];
 
     /**
