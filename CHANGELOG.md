@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Klantbeeld-360 activation** (`klantbeeld-360-activation`): activates the
+  klantbeeld-360 draft to an MVP unified customer view over the existing
+  declarative `ClientDetail` page. New `KlantbeeldSummaryService` +
+  `GET /api/klantbeeld/summary` endpoint aggregate a client's open tickets
+  across all `ticketType`s (request/complaint/contactmoment), SLA
+  breached/at-risk counts (24h at-risk window), distinct open-ticket queues,
+  open-lead count + pipeline value, and last-activity time — the
+  cross-type/cross-status aggregation the declarative `summaryAggregates`
+  primitives can't express (ADR-031 exception 2). Per-object read guard on
+  the client (no IDOR) plus a doelbinding access log entry (user, client,
+  time) on every summary read. Surfaced on `ClientDetail` as five
+  endpoint-bound `stat` widgets and a `notes` integration widget; "Nieuw
+  verzoek" and "Contactpersoon toevoegen" quick actions ship as
+  `allowCreate` object-list widgets (client FK pre-linked automatically;
+  ticketType still needs one manual pick pending an nc-vue
+  `initialData`/`lockedFields` wiring follow-up). Seed data tops up the
+  municipality/consultancy/travel-agency archetype clients with linked
+  leads and open tickets (one breached, one at-risk) so the summary is
+  verifiable on a fresh install. BRP/KVK enrichment, ZGW/Procest case
+  fetch, documents overview, and pinned notes remain explicit follow-ups.
 - **Lead scoring — win probability** (`lead-scoring-win-probability`): declarative
   `winProbability` calculation on the `lead` schema (`x-openregister-calculations`,
   `materialise: false`) — the lead's stage-denormalised `probability` decayed by

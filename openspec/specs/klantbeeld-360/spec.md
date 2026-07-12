@@ -1,10 +1,10 @@
 ---
-status: in-progress
+status: done
 ---
 
 # Klantbeeld 360 Specification
 
-**OpenSpec changes**: [klantbeeld-360-activation](../../changes/klantbeeld-360-activation/) _(in-progress — activates the draft to an MVP over the unified `ticket` schema)_
+**OpenSpec changes**: [klantbeeld-360-activation](../../changes/archive/2026-07-12-klantbeeld-360-activation/) _(archived 2026-07-12 — activated the draft to an MVP over the unified `ticket` schema; BRP/KVK, ZGW zaken, documents, and pinned notes remain follow-ups, see Follow-ups section below)_
 
 ## Purpose
 
@@ -26,6 +26,28 @@ The klantbeeld aggregates data from multiple sources into a unified view per per
 - **Notes**: Internal notes via `EntityNotes.vue` component (ICommentsManager)
 - **Leads and Requests**: Existing CRM entities linked to this client
 - **BRP/KVK data**: Enrichment from base registries via OpenConnector sources
+
+## Follow-ups (out of MVP scope)
+
+`klantbeeld-360-activation` satisfies the MVP core (identity, open/closed tickets
+across the unified `ticket` schema, leads, contactmomenten timeline, SLA/queue
+status, quick actions, doelbinding access logging) over the already-declarative
+`ClientDetail` page. The following remain explicit, tracked follow-ups — their
+requirements below stay in this spec as the V1/Enterprise target, not as MVP
+scope:
+
+- **BRP/KVK enrichment** — base-registry lookups (Haal Centraal BRP, KVK API)
+  are not wired into the klantbeeld MVP; see the BRP-lookup surface
+  (`bsn-validatie-en-brp-lookup`) for the standalone BRP capability this would
+  build on.
+- **ZGW/Procest case fetch** — "open/closed matters" is satisfied via the
+  unified `ticket` schema for the MVP; folding in Procest zaken (ZGW) is
+  deferred.
+- **Documents overview** — a documents tab aggregating files linked via zaken
+  or directly to the client is not built.
+- **Pinned notes** — a colleague-visible pinned-note banner is not built; the
+  MVP's "Notitie toevoegen" quick action uses the generic `notes` integration
+  widget (unpinned).
 
 ## Requirements
 
@@ -363,6 +385,82 @@ The system MUST display an at-a-glance summary panel at the top of the klantbeel
 - WHEN the agent opens the klantbeeld
 - THEN the summary bar MUST show all metrics as "0" or "Geen"
 - AND the system MUST suggest next actions: "Voeg een contactpersoon toe", "Maak een lead aan"
+
+---
+
+### Requirement: Consolidated klantbeeld summary
+
+The system SHALL provide a consolidated 360 summary for a single client via a
+`KlantbeeldSummaryService` and a read endpoint. The summary SHALL aggregate, over
+the objects the caller may read: the count of **open tickets across all
+`ticketType`s** (request, complaint, contactmoment), the count of open leads and
+their total pipeline value, the client's SLA status (counts of open tickets whose
+`slaDeadline` is breached and at-risk), the distinct queues on the client's open
+tickets, and the timestamp of the client's most recent activity. This aggregation
+SHALL be computed in the service because it spans ticket types and statuses in a way
+the equality-only declarative `summaryAggregates` / `stats-block` primitives cannot
+express (ADR-031 exception 2).
+
+#### Scenario: Summary counts open matters across ticket types
+- **WHEN** the klantbeeld summary is requested for a client with open request, complaint, and contactmoment tickets
+- **THEN** the summary returns a single open-ticket count spanning all three `ticketType`s, plus a per-type breakdown
+
+#### Scenario: Summary reports SLA status
+- **WHEN** the client has open tickets whose `slaDeadline` is in the past or imminent
+- **THEN** the summary returns the count of breached and at-risk tickets
+
+#### Scenario: Summary is RBAC-scoped
+- **WHEN** the caller may not read some of the client's tickets or leads
+- **THEN** those objects do not contribute to any count or total in the summary
+
+### Requirement: Klantbeeld renders from the declarative Client 360 page
+
+The consolidated summary SHALL be surfaced on the existing declarative
+`ClientDetail` page in `src/manifest.json`, bound to the summary endpoint. The
+klantbeeld MVP SHALL reuse the declarative detail machinery (default object data
+widget, `relatedCollections`, `ActivityTimeline`, `ContactmomentQuickLog`) and SHALL
+NOT introduce a bespoke `ClientDetail.vue` host component (ADR-062,
+declarative-view-system).
+
+#### Scenario: Client 360 shows the unified summary panel
+- **WHEN** a KCC agent opens a client's detail page
+- **THEN** the page renders the consolidated summary (open tickets, SLA/queue status, open leads + pipeline value, last activity) alongside the identity, related tickets/leads/contacts, and the activity timeline — all from the declarative page
+
+### Requirement: Quick actions from the klantbeeld
+
+The Client 360 page SHALL offer quick actions to create a request ticket
+(`ticketType=request` pre-linked to the client), add a contact person, and add a
+note, in addition to the existing contactmoment quick-log. These SHALL be declared
+as page/header actions in `src/manifest.json`, not bespoke components.
+
+#### Scenario: Create a request from the klantbeeld
+- **WHEN** the agent triggers "Nieuw verzoek" from the client page
+- **THEN** a new `ticket` with `ticketType=request` is created pre-linked to the client via its `client` field
+
+#### Scenario: Add a contact person from the klantbeeld
+- **WHEN** the agent triggers "Contactpersoon toevoegen"
+- **THEN** a new contact is created pre-linked to the client
+
+### Requirement: Klantbeeld access is logged (doelbinding, MVP)
+
+Each access to the consolidated klantbeeld summary SHALL be logged with the acting
+user, the client accessed, and the timestamp, so the draft's privacy/doelbinding
+requirement is met at MVP level.
+
+#### Scenario: Access is recorded
+- **WHEN** a user requests the klantbeeld summary for a client
+- **THEN** an access-log entry records the user, client id, and time
+
+### Requirement: MVP scope boundary is explicit
+
+The activation MVP SHALL satisfy the unified customer view over identity, tickets,
+leads, contactmomenten timeline, and SLA/queue status using the unified `ticket`
+schema. BRP/KVK enrichment, ZGW/Procest case fetch, the documents overview, and
+pinned notes SHALL remain out of the MVP and be tracked as follow-ups.
+
+#### Scenario: Deferred enrichment is not required for the MVP
+- **WHEN** the klantbeeld MVP is evaluated
+- **THEN** absence of BRP/KVK enrichment, ZGW case fetch, documents overview, and pinned notes does not fail the MVP; these are recorded as follow-up work
 
 ---
 
