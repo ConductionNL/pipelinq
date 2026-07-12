@@ -251,13 +251,11 @@ import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget
 import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
-// --- AVG (GDPR data-subject request) workflow (lib gap: list needs deadline
-//     colour-coding + masked names; detail needs the tabbed evidence/redaction/
-//     bundle/denial lifecycle; intake needs article classification). ---
-// AVG/DSAR views removed by consume-or-dsar (ADR-047 Phase 3): the data-subject
-// request workflow is owned by OpenRegister's case engine; pipelinq deep-links
-// handlers into OR's AVG surface (/apps/openregister/avg) instead of embedding
-// its own dashboard/detail/intake pages.
+// --- AVG (GDPR data-subject request) workflow removed by consume-or-dsar
+//     (ADR-047 Phase 3): the data-subject request workflow is owned by
+//     OpenRegister's case engine; pipelinq deep-links handlers into OR's AVG
+//     surface (/apps/openregister/avg) instead of embedding its own
+//     dashboard/detail/intake pages. No local AVG view components remain. ---
 // --- Master Data Management (MDM) steward surfaces are no longer hosted in
 //     pipelinq (ADR-045 #D). OpenRegister now owns the survivorship / dedup /
 //     merge / data-quality surface, driven by the x-openregister-survivorship

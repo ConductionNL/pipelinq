@@ -1,0 +1,47 @@
+{
+  "_note": "ADR-047 / ADR-031 Phase-3 consumer: pipelinq's NL jurisdiction AVG/DSAR policy pack, shipped as DATA (not a PHP PolicyService). It is a single dsarPolicyPack object seeded onto OpenRegister's core `dsar-policy-packs` register (owned by OR, seeded at OR install). pipelinq does NOT redefine that register/schema here (avoids the register-import union-merge corruption, ADR-037) — it only adds this object via the additive `components.objects` seed list, imported through OR's ConfigurationService on the existing SettingsService/InitializeSettings path. Every id/token/role is a safe placeholder. The two seam selectors (identityVerifyProvider / regulatorEscalateProvider) name the provider ids pipelinq self-registers into OR's registries at boot (lib/AppInfo/Application.php). All property names conform to OR's released dsarPolicyPack schema (lib/Settings/dsar_policy_pack_register.json).",
+  "components": {
+    "objects": [
+      {
+        "@self": {
+          "register": "dsar-policy-packs",
+          "schema": "dsarPolicyPack",
+          "slug": "pack-nl-pipelinq"
+        },
+        "name": "Nederland — AVG/DSAR beleidspakket (pipelinq)",
+        "jurisdiction": "nl",
+        "deadlineDurationDays": 30,
+        "extensionDurationDays": 60,
+        "escalationTiers": [
+          { "tier": "reminder", "offsetDays": -7 },
+          { "tier": "escalation", "offsetDays": -3 },
+          { "tier": "breach", "offsetDays": 0 }
+        ],
+        "intakeChannels": ["handmatig", "email", "balie", "post", "webformulier"],
+        "roleMapping": {
+          "dpo": "<role-id>",
+          "fg": "<role-id>",
+          "handler": "<role-id>"
+        },
+        "templates": {
+          "acknowledgement": "<template-id>",
+          "denial": "<template-id>",
+          "extension": "<template-id>"
+        },
+        "denialGrounds": [
+          { "key": "manifestly-unfounded", "label": "Kennelijk ongegrond of buitensporig verzoek", "citation": "AVG art. 12 lid 5" },
+          { "key": "third-party-rights", "label": "Rechten en vrijheden van anderen", "citation": "AVG art. 15 lid 4 / art. 23 lid 1 sub i" },
+          { "key": "legal-obligation", "label": "Wettelijke bewaarplicht", "citation": "AVG art. 23 lid 1 sub e" },
+          { "key": "national-security", "label": "Nationale veiligheid", "citation": "AVG art. 23 lid 1 sub a" }
+        ],
+        "retentionWindows": [
+          { "key": "standard", "durationMonths": 12 },
+          { "key": "boekhoudplicht", "durationMonths": 84 },
+          { "key": "rvig", "durationMonths": 60 }
+        ],
+        "identityVerifyProvider": "pipelinq-bsn-brp",
+        "regulatorEscalateProvider": "pipelinq-ap-complaint"
+      }
+    ]
+  }
+}

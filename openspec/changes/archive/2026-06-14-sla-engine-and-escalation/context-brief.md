@@ -157,7 +157,7 @@ The set of recognised holiday calendars MUST be configurable without code change
 - **`omnichannel-registratie`** (pipelinq spec): the customer's preferred contact channel feeds escalation routing when the actor is `customer`.
 - **`openconnector`**: webhooks for `channel: webhook` and for external escalation endpoints (e.g. a customer's own incident-system) go out via openconnector source rows with retry/log.
 - **`openregister`**: the engine is implemented as a register listener app; uses `ObjectService` for reads/writes; `seed-related-items` ships the baseline policies; deadline-sweep job uses the standard background-job framework.
-- **`mydash`**: attainment endpoints (REQ-006) feed the management dashboard's "SLA-vinger aan de pols" tile; widget polls `/api/sla/attainment?bucket=week`.
+- **`launchpad`**: attainment endpoints (REQ-006) feed the management dashboard's "SLA-vinger aan de pols" tile; widget polls `/api/sla/attainment?bucket=week`.
 - **`docudesk`**: contract documents can carry an `slaTierOverride` annotation read during policy resolution (REQ-005) so a signed contract upgrade flows through without a separate UI step.
 - **`hydra/openspec` shared specs**: cross-app `i18n-nl` and `i18n-en` cover all engine user-facing strings; the holiday-calendar JSON shape is a candidate for promotion to a shared spec once a second app needs it.
 
