@@ -38,6 +38,22 @@ namespace OCA\Pipelinq\Service\Payment;
 interface PaymentProviderInterface
 {
     /**
+     * Inject the HTTP transport this provider makes its outbound calls through.
+     *
+     * Part of the contract, not an implementation detail: `PosPaymentService` attaches a
+     * {@see BrokerHttpTransport} here, and that attachment is the ONLY thing standing
+     * between an adapter and a direct, app-authenticated PSP call. An implementation that
+     * did not honour it would quietly keep its own transport — and its own key.
+     *
+     * @param HttpTransport|null $transport The transport, or null to reset to the default.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pos-psp-keys-via-broker/tasks.md#task-1-brokerhttptransport
+     */
+    public function setHttpTransport(?HttpTransport $transport): void;
+
+    /**
      * Initiate a payment session with the provider.
      *
      * @param array<string, mixed> $transactionData The posTransaction data (reference, total etc.).
