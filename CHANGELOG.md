@@ -20,6 +20,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **VNG Klantinteracties leaf** (`vng-klantinteracties-leaf`): the pipelinq-side
+  binding for VNG Klantinteracties / OpenKlant 2.x interop, config-only
+  (`lib/Settings/register.d/82-vng-klantinteracties.json`, no PHP). Adds the
+  `vngActor` schema — a declarative bridge mapping a VNG `actor` UUID +
+  `actorType` (medewerker/geautomatiseerdeActor/organisatorischeEenheid) to a
+  Nextcloud `userId`, seeded with one row per actor type — and the
+  `vngKlantinteractieBinding` schema wiring pipelinq to the OpenConnector
+  `vng-klantinteracties-adapter`'s Endpoint/Rule slugs. Documents the VNG ↔
+  canonical mapping contract (`klantcontact`↔`ticket` ticketType=contactmoment,
+  `partij`↔`client`, `betrokkene`↔`contact`, `digitaalAdres`↔`contact.email`/
+  `.phone`, `internetaak`↔`task`, `onderwerpobject`↔`ticket.caseReference`/
+  `.parentTicket`) over pipelinq's existing international schemas (ADR-001 —
+  Dutch government standards are a mapping layer, not storage), and mandates
+  the AVG BSN policy: inbound `partijIdentificator` BSNs are 11-proef-validated
+  and SHA-256-hashed via the existing BRP flow, never stored or reconstructed
+  raw. Corrected slug drift against the adapter's real as-built config (one
+  Endpoint per HTTP method, a second AVG Rule for the outbound guard) —
+  see the archived change's tasks.md for the full correction list.
 - **Klantbeeld-360 activation** (`klantbeeld-360-activation`): activates the
   klantbeeld-360 draft to an MVP unified customer view over the existing
   declarative `ClientDetail` page. New `KlantbeeldSummaryService` +
