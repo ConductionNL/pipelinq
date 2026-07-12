@@ -266,6 +266,42 @@ De totalen blijven actueel via webhook-ingest vanuit de ingerichte
 provider (SendGrid, SES, Twilio). Webhook-events worden
 HMAC-geverifieerd voordat ze geaccepteerd worden.
 
+#### Eigen open/click-tracking (basis-tier)
+
+Provider-webhooks zijn standaard de bron van open/click-telemetrie,
+maar vereisen een webhook-capable provider. Verstuurt uw instance via
+een gewone per-tenant connector zonder webhook-ondersteuning? Zet dan
+**eigen tracking** aan zodat open- en klikpercentages toch gevuld
+worden:
+
+- Een beheerder zet **`blast.first_party_tracking`** aan onder **Admin
+  settings → Pipelinq**. Standaard **uit** — staat de instelling uit,
+  dan gedragen rendering en levertelemetrie van blasts zich exact als
+  voorheen.
+- Staat de instelling aan, dan wordt elke link in een verzonden blast
+  herschreven naar een ondertekende Pipelinq-redirect en wordt een
+  1×1-trackingpixel toegevoegd aan de e-mailbody. Beide gebruiken
+  opaque, HMAC-ondertekende tokens (standaard 90 dagen geldig,
+  door de beheerder aan te passen) die alleen het leverings-id
+  bevatten — er verschijnt nooit een e-mailadres, naam of ander
+  persoonsgegeven in een trackingURL.
+- Opens en clicks die zo geregistreerd worden, vullen **dezelfde**
+  velden (`openedAt`, `firstClickAt`, `status`) en dezelfde
+  totalenoptelling als provider-webhooks, dus de tabbladen Overview en
+  A/B testing hieronder werken identiek, ongeacht welke bron de
+  gebeurtenis registreerde. Beide bronnen tegelijk gebruiken leidt niet
+  tot dubbeltellingen — elke gebeurtenis wordt één keer per levering
+  geregistreerd.
+- **Bewaartermijn**: eigen open/click-gebeurtenissen worden opgeslagen
+  op de bestaande `blastDelivery`-rij (geen apart eventlog) en worden
+  dus precies zo lang bewaard als de bijbehorende blast/levering — het
+  verwijderen of archiveren van de blast verwijdert ook de
+  bijbehorende trackingdata.
+- **Privacy**: de pixel en redirect registreren nooit IP-adres of
+  user-agent; de unsubscribe-link en het verplichte fysieke-adresblok
+  worden nooit herschreven, dus uitschrijven en compliance-rapportage
+  blijven onaangetast door het aanzetten van deze instelling.
+
 Een lopende verzending stoppen? Klik **Cancel**. Alle nog niet
 verstuurde leveringen worden afgebroken; reeds aan de provider
 overgedragen berichten gaan door. De blast gaat naar `canceled`.
