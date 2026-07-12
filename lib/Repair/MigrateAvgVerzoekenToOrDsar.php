@@ -209,7 +209,16 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
 
         foreach ((array) $cases as $case) {
             $row   = $this->rowToArray(row: $case);
-            $notes = json_decode((string) ($row['notes'] ?? ''), true);
+            $notes = ($row['notes'] ?? null);
+
+            // OpenRegister may hand `notes` back as the raw JSON string OR as an
+            // already-decoded array (it hydrates JSON-shaped values), so accept
+            // both. Casting an array to string and json_decode()-ing it yields
+            // null, which silently emptied this map and duplicated every case.
+            if (is_string($notes) === true) {
+                $notes = json_decode($notes, true);
+            }
+
             if (is_array($notes) === false) {
                 continue;
             }
@@ -218,7 +227,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
             if ($sourceId !== '') {
                 $migrated[$sourceId] = true;
             }
-        }
+        }//end foreach
 
         return $migrated;
     }//end alreadyMigrated()

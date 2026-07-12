@@ -468,6 +468,33 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase
     }//end testRerunDoesNotDuplicateWhenSourceWasNeverMarked()
 
     /**
+     * The existing-case scan must recognise a case whose `notes` OpenRegister
+     * hands back as an already-decoded array rather than a JSON string.
+     *
+     * This is the live-only regression the string-notes fixture above missed:
+     * `mapVerzoek()` json_encodes notes, so a case built in-process carries a
+     * string — but OpenRegister hydrates a stored `notes` value into an array on
+     * read. Casting that array to string and json_decode()-ing it yields null, so
+     * `migratedFromId` was never extracted and every re-run duplicated the case.
+     *
+     * @return void
+     */
+    public function testRerunSkipsWhenExistingCaseNotesIsAnArray(): void
+    {
+        $this->store = [
+            '40' => [['id' => 'v1', 'artikel' => 'art-15-inzage', 'status' => 'ingediend']],
+            // An existing case exactly as OR returns it on read: notes decoded.
+            'dataSubjectRequest' => [
+                ['id' => 'dsar-existing', 'notes' => ['migratedFrom' => 'pipelinq/avgVerzoek', 'migratedFromId' => 'v1']],
+            ],
+        ];
+
+        $this->step->run($this->createStub(IOutput::class));
+
+        self::assertSame([], $this->savedCases, 'array-shaped notes must still be recognised as already-migrated');
+    }//end testRerunSkipsWhenExistingCaseNotesIsAnArray()
+
+    /**
      * A re-run migrates nothing (idempotent via migratedTo marker).
      *
      * @return void
