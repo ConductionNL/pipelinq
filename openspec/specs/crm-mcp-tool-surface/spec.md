@@ -1,79 +1,88 @@
 ---
-status: in-progress
+status: done
 ---
 
 # Spec: CRM MCP Tool Surface
 
-**OpenSpec changes**: [crm-mcp-tool-surface](../../changes/archive/2026-07-12-crm-mcp-tool-surface/) _(archived 2026-07-12)_ · [mcp-provider-declarative-migration](../../changes/archive/2026-07-13-mcp-provider-declarative-migration/) _(archived 2026-07-13 — ADR-063 leaf migration; config-only, PHP provider surgery is a blocked follow-up)_
+**OpenSpec changes**: [crm-mcp-tool-surface](../../changes/archive/2026-07-12-crm-mcp-tool-surface/) _(archived 2026-07-12)_ · [mcp-provider-declarative-migration](../../changes/archive/2026-07-13-mcp-provider-declarative-migration/) _(archived 2026-07-13 — ADR-063 leaf migration steps 1–2, config-only)_ · [plq-mcp-provider-surgery](../../changes/archive/2026-07-13-plq-mcp-provider-surgery/) _(archived 2026-07-13 — ADR-063 leaf migration steps 3–6, completes the migration)_
 
 ## Purpose
 
-Defines the agent-addressable CRM tool surface exposed by Pipelinq's MCP provider
-(`OCA\Pipelinq\Mcp\PipelinqToolProvider`) to the Nextcloud Hub Assistant / AI Chat
-Companion (ADR-034, ADR-035). Beyond the original 2-tool MVP (list/get request), the
-provider exposes RBAC-scoped read tools for clients (incl. a 360 summary), leads, and
-the pipeline forecast, plus RBAC-guarded write tools to create a lead and log a
-contactmoment. Every read is scoped through OpenRegister's `ObjectService` with RBAC
-enabled; every write goes through the app's existing write path (`ObjectService`
-/`TicketService`) with `create` authorization enforced. This is Pipelinq's sovereign
-AI wedge: bring-your-own-LLM through Nextcloud's Assistant at no per-seat AI premium.
+Defines the agent-addressable CRM tool surface Pipelinq exposes to the Nextcloud Hub
+Assistant / AI Chat Companion (ADR-034, ADR-035) via OpenRegister's MCP tool registry
+(ADR-063). Reads for clients, leads, and tickets (incl. the `request` subtype) are served
+entirely by OpenRegister's schema-derived `pipelinq.{schema}.{search|get}` tools, declared
+via `x-openregister-mcp` on the respective schemas. Three curated, non-CRUD operations —
+create a lead, log a contactmoment, and the pipeline forecast — are `#[McpTool]`-attributed
+methods on `LeadService`/`TicketService`, discovered by OpenRegister's `AttributeToolScanner`
+via Pipelinq's `IMcpScannableServices::pipelinq` opt-in (`PipelinqScannableServices`).
+Pipelinq ships no hand-written `IMcpToolProvider` of its own any more. Every read is scoped
+through OpenRegister's `ObjectService` with RBAC enabled; every write goes through the app's
+existing write path (`ObjectService`/`TicketService`) with `create` authorization enforced.
+This is Pipelinq's sovereign AI wedge: bring-your-own-LLM through Nextcloud's Assistant at
+no per-seat AI premium.
 
-**Standards**: Model Context Protocol (MCP); OpenRegister `IMcpToolProvider`
+**Standards**: Model Context Protocol (MCP); OpenRegister `x-openregister-mcp` dialect, `SchemaDerivedToolProvider`, `#[McpTool]` attribute + `IMcpScannableServices` (ADR-063)
 **Primary feature tier**: V1
-
 ## Requirements
-
 ### Requirement: MCP provider exposes a CRM read tool surface
 
 The Pipelinq CRM read tool surface (clients, leads, and the sales pipeline) SHALL
 resolve its objects through OpenRegister's `ObjectService` with RBAC left at its
 default (enabled), so only objects the calling user may read are returned; a
 permission denial SHALL be surfaced as a `forbidden` error envelope and MUST NOT
-be swallowed into an empty success result. Reads MAY be served by the hand-written
-`PipelinqToolProvider` or, once OpenRegister's derived-tool engine ships, by the
+be swallowed into an empty success result. Reads SHALL be served exclusively by the
 OpenRegister-derived `pipelinq.{schema}.{search|get}` tools declared via
-`x-openregister-mcp` (see the declarative-tool-surface requirement below) — the
-RBAC guarantee is identical. For leads, `winProbability` SHALL be the schema's
-**declarative** `x-openregister-calculations` field (the recency-decayed value
+`x-openregister-mcp` (see the declarative-tool-surface requirement below) — Pipelinq
+ships no hand-written read tool of its own. For leads, `winProbability` SHALL be the
+schema's **declarative** `x-openregister-calculations` field (the recency-decayed value
 materialised by OpenRegister on read), NOT a tool-side alias of the raw
-`probability` input; the provider SHALL NOT alias `probability` into
-`winProbability` (pipelinq #381). `qualificationScore` and `weightedValue`
-likewise SHALL be read as materialised, never recomputed.
+`probability` input; no Pipelinq code path SHALL alias `probability` into
+`winProbability` (pipelinq #381, now fully resolved — the `decorateLead()` alias and
+every hand-written read tool that called it are deleted). `qualificationScore` and
+`weightedValue` likewise SHALL be read as materialised, never recomputed.
 
 #### Scenario: List clients returns only readable clients
-- **WHEN** the assistant lists clients (`pipelinq.listClients` or, once declared, the derived `pipelinq.client.search`) with an optional `type` or `query` filter
-- **THEN** the query runs through `ObjectService->findAll` with RBAC enabled
-- **AND** returns at most the list cap of client summaries the caller may read, newest first, with a `count`
+- **WHEN** the assistant lists clients via the derived `pipelinq.client.search` tool with
+  an optional `type` or `query` filter
+- **THEN** the query runs through OpenRegister's schema-derived read with RBAC enabled
+- **AND** returns at most the derived tool's list cap of client summaries the caller may
+  read
 
-#### Scenario: Search clients by free text
-- **WHEN** the assistant searches clients (`pipelinq.searchClients` or the derived `pipelinq.client.search`) with a `query` argument
-- **THEN** the provider returns clients whose name/email/organisation match the query, RBAC-scoped, capped to the list cap
+#### Scenario: Get client returns the object plus its declarative calculated fields
+- **WHEN** the assistant invokes the derived `pipelinq.client.get` tool with a client `id`
+- **THEN** the tool returns the client record plus any declarative
+  `x-openregister-calculations` fields the `client` schema declares
+- **AND** a client-360-summary style enrichment (open-ticket count, open-lead count/value,
+  recent contactmomenten) is NOT part of this MCP surface (see Non-Goals in the
+  `plq-mcp-provider-surgery` design — an open question, not silently dropped)
 
-#### Scenario: Get client returns a 360 summary
-- **WHEN** the assistant invokes `pipelinq.getClient` with a client `id`
-- **THEN** the provider returns the client record plus a `summary` object containing: the count of open tickets for that client (across all `ticketType`s), the count of open leads and their total pipeline value, and the most recent contactmomenten (via `ActivityTimelineService`)
-- **AND** a timeline aggregation failure degrades to an empty `recentContactmomenten` list without failing the whole read
-- **AND** this enrichment is specific to the hand-written tool; a coarse derived `pipelinq.client.get` returns only the object plus its declarative calculated fields (re-exposing the 360 summary as its own tool is an open question tracked for the follow-up `plq-mcp-provider-surgery` code spec)
-
-#### Scenario: Get client not found
-- **WHEN** the requested client `id` does not resolve (or the caller may not read it)
-- **THEN** the provider returns a `not_found` or `forbidden` error envelope, never a partial/empty client object presented as success
+#### Scenario: Get client not found or denied
+- **WHEN** the requested client `id` does not resolve, or the caller may not read it
+- **THEN** the derived tool returns a `not_found` or `forbidden` error envelope, never a
+  partial/empty client object presented as success
 
 #### Scenario: List and get leads expose the declarative winProbability
-- **WHEN** the assistant lists leads (`pipelinq.listLeads`, optionally filtered by `status`, `stage`, or `clientId`) or gets a lead by `id` (`pipelinq.getLead`) — or, once declared, invokes the derived `pipelinq.lead.search`/`pipelinq.lead.get`
-- **THEN** the provider/derived read returns RBAC-scoped lead summaries (or the single lead) including the backend-computed `qualificationScore`, `weightedValue`, and the declarative recency-decayed `winProbability` calculated field, and — for the hand-written `getLead` — its activity timeline
-- **AND** the provider does NOT overwrite `winProbability` with the raw `probability` input (the retired `decorateLead` alias behaviour), per pipelinq #381
+- **WHEN** the assistant invokes the derived `pipelinq.lead.search` (optionally filtered by
+  `status`, `stage`, or `client`) or `pipelinq.lead.get` tool
+- **THEN** the tool returns RBAC-scoped lead data including the backend-computed
+  `qualificationScore`, `weightedValue`, and the declarative recency-decayed
+  `winProbability` calculated field
+- **AND** no Pipelinq code overwrites `winProbability` with the raw `probability` input —
+  there is no Pipelinq-owned lead-read code path left to do so (pipelinq #381)
 
 #### Scenario: Pipeline forecast summary
 - **WHEN** the assistant invokes `pipelinq.pipelineForecast`
-- **THEN** the provider returns per-stage rows over open leads the caller may read, each with the stage name, lead count, summed `value`, and summed probability-weighted value, plus a grand total
-- **AND** the aggregation reads only RBAC-visible leads
+- **THEN** `LeadService::pipelineForecast()` (`#[McpTool]`-attributed) returns per-stage
+  rows over open leads the caller may read, each with the stage name, lead count, summed
+  `value`, and summed probability-weighted `weightedValue`, plus a grand total
+- **AND** the aggregation reads only RBAC-visible leads via `ObjectService`
 
 ### Requirement: CRM CRUD tools are declared on the schema, not hand-coded
 
 The Pipelinq CRM CRUD tool surface SHALL be **declared** via the `x-openregister-mcp`
 dialect (ADR-063) on the `client`, `lead`, and `ticket` schemas rather than hand-coded in
-`PipelinqToolProvider`. Each opted-in schema SHALL carry an `x-openregister-mcp` block
+a per-app `IMcpToolProvider` implementation. Each opted-in schema SHALL carry an `x-openregister-mcp` block
 with `enabled: true` and a `tools` map declaring the coarse verbs OpenRegister derives
 (`search`, `get`), each with a `scope` (`read`), a per-verb `description`, and optional
 `filters`; write verbs (`create`/`update`/`delete`) SHALL be omitted or disabled where no
@@ -101,66 +110,73 @@ OpenRegister RBAC enforced at invoke time.
 
 ### Requirement: Hand-written service tools take precedence over derived tools
 
-During and after migration, a retained hand-written tool SHALL take precedence over a
-derived tool on tool-id collision (`hand-written > derived`, an explicit form of the
-registry's first-wins). This SHALL permit a zero-downtime, schema-by-schema cutover: a
-schema's `x-openregister-mcp` MAY be enabled while its hand-written CRUD tools still exist,
-and the hand-written tools SHALL keep serving until they are removed in the follow-up code
-change. Only `createLead`, `logContactmoment`, and `pipelineForecast` SHALL remain
-Pipelinq-owned tools after migration.
+`#[McpTool]`-attributed service methods (OpenRegister's `AttributeToolProvider`, ADR-063 chain 3) SHALL take precedence over a schema-derived tool on tool-id collision, and
+SHALL be self-suppressed (not registered) on collision with any other provider's id — an explicit
+form of the registry's first-wins, applied by OpenRegister at discovery time. Pipelinq's
+three retained ids (`pipelinq.createLead`, `pipelinq.logContactmoment`,
+`pipelinq.pipelineForecast`) SHALL be the only Pipelinq-owned MCP tools; each SHALL be
+declared via `#[McpTool]` on a public method of a class Pipelinq lists in its
+`IMcpScannableServices::pipelinq` DI-aliased opt-in (`PipelinqScannableServices`), not via a
+hand-written `IMcpToolProvider` implementation — Pipelinq ships no `IMcpToolProvider`
+implementation of its own any more.
 
-#### Scenario: enabling a schema dialect does not break existing tools
-- **WHEN** `x-openregister-mcp` is enabled on a schema whose hand-written CRUD tools are still present
-- **THEN** both surfaces are available and no hand-written tool is shadowed or removed by the derivation
-- **AND** the hand-written tool wins for any colliding tool id
+#### Scenario: Retained tools are attribute-scanned, not hand-dispatched
+- **WHEN** OpenRegister enumerates MCP tool providers
+- **THEN** it resolves `IMcpScannableServices::pipelinq` to `PipelinqScannableServices`,
+  which declares `LeadService` and `TicketService` as scannable
+- **AND** reflection finds `#[McpTool]` on `LeadService::createLead()`,
+  `LeadService::pipelineForecast()`, and `TicketService::logContactmoment()`, registering
+  `pipelinq.createLead`, `pipelinq.pipelineForecast`, and `pipelinq.logContactmoment`
+- **AND** none of these three ids collides with a derived `pipelinq.{client,lead,ticket}.
+  {search,get}` id, so the collision/precedence policy is a discovery-time safety net here,
+  not an active behaviour
 
-#### Scenario: retained service tools survive the migration
-- **WHEN** the migration completes and the derived-equivalent CRUD tools are removed
-- **THEN** `createLead`, `logContactmoment`, and `pipelineForecast` remain as the only Pipelinq-owned tools (to be re-annotated `#[McpTool]` once OpenRegister's attribute support ships)
+#### Scenario: No hand-written IMcpToolProvider remains
+- **WHEN** OpenRegister looks up the `IMcpToolProvider::pipelinq` DI alias
+- **THEN** it resolves nothing (the alias is not registered) — `PipelinqToolProvider` and
+  its registration were deleted once every tool it served was either superseded by a
+  derived read or migrated to an attributed service method
 
 ### Requirement: MCP provider exposes RBAC-guarded CRM write tools
 
-The provider SHALL expose write tools to create a lead and log a contactmoment.
-Each write SHALL go through the same OpenRegister write path used elsewhere in the
-app (`ObjectService->saveObject` for leads, `TicketService::save` with
+Pipelinq SHALL expose `#[McpTool]`-attributed methods to create a lead and log a
+contactmoment. Each write SHALL go through the same OpenRegister write path used
+elsewhere in the app (`LeadService::createLead()` calling `ObjectService->saveObject`
+for leads, `TicketService::logContactmoment()` calling `TicketService::save()` with
 `ticketType=contactmoment` for contactmomenten), so OpenRegister's `create`
-authorization is enforced. The provider SHALL NOT introduce any write path that
-bypasses that authorization, and a denied write SHALL return a `forbidden`
-envelope. Argument validation SHALL run before authorization, which SHALL run
-before the write (cheap-before-expensive, then authorize-before-act).
+authorization is enforced. Neither method SHALL introduce a write path that bypasses that
+authorization, and a denied write SHALL return a `forbidden` envelope. Argument validation
+SHALL run before authorization, which SHALL run before the write (cheap-before-expensive,
+then authorize-before-act) — unchanged from the pre-migration hand-written tools, just
+invoked in-process by OpenRegister's `AttributeToolProvider` instead of Pipelinq's own
+`invokeTool()` dispatch.
 
 #### Scenario: Create lead with required fields
-- **WHEN** the assistant invokes `pipelinq.createLead` with at least a `title` and optionally `client`, `value`, `source`, `assignee`
-- **THEN** the provider writes a new `lead` object through `ObjectService->saveObject` on the configured lead schema with RBAC enforced
-- **AND** returns the created lead including its server-computed `qualificationScore`
+- **WHEN** the assistant invokes `pipelinq.createLead` with at least a `title` and
+  optionally `client`, `value`, `source`, `assignee`
+- **THEN** `LeadService::createLead()` writes a new `lead` object through
+  `ObjectService->saveObject` on the configured lead schema with RBAC enforced
+- **AND** returns the created lead including its server-computed `qualificationScore` and
+  the declarative `winProbability`, unmodified by any Pipelinq-side alias
 
 #### Scenario: Create lead missing required title
-- **WHEN** `pipelinq.createLead` is invoked without a `title`
-- **THEN** the provider returns an `invalid_arguments` error envelope and writes nothing
+- **WHEN** `pipelinq.createLead` is invoked with a blank/missing `title`
+- **THEN** `LeadService::createLead()` returns an `invalid_arguments` error envelope and
+  writes nothing
 
 #### Scenario: Log contactmoment as a ticket
-- **WHEN** the assistant invokes `pipelinq.logContactmoment` with a `client`, `channel`, `title`, and optional `outcome`/`notes`
-- **THEN** the provider writes a `ticket` with `ticketType=contactmoment` via `TicketService::save`, so date-time fields are normalised and the discriminator is forced
+- **WHEN** the assistant invokes `pipelinq.logContactmoment` with a `client`, `channel`,
+  and `title`, and optional `outcome`/`notes`
+- **THEN** `TicketService::logContactmoment()` writes a `ticket` with
+  `ticketType=contactmoment` via `TicketService::save()`, so date-time fields are
+  normalised and the discriminator is forced
 - **AND** returns the created ticket UUID
 
 #### Scenario: Write denied by RBAC
-- **WHEN** a write tool is invoked by a caller lacking `create` permission on the target schema
-- **THEN** OpenRegister raises, and the provider maps it to a `forbidden` error envelope rather than reporting success
-
-### Requirement: The tool catalogue is self-describing and stable
-
-`getTools()` SHALL return the full catalogue of tool descriptors (id, name,
-description, JSON input schema) regardless of caller permissions; per-object
-authorization happens only at `invokeTool` time. Each new tool id SHALL be
-namespaced under `pipelinq.` and MUST be assertable as a fixture by unit tests.
-
-#### Scenario: Unknown tool id
-- **WHEN** `invokeTool` is called with an id not in the catalogue
-- **THEN** the provider returns an `unknown_tool` error envelope listing the available tool ids, and throws no exception
-
-#### Scenario: Catalogue advertises every CRM tool
-- **WHEN** `getTools()` is called
-- **THEN** the returned catalogue includes the client, lead, pipeline-forecast, create-lead, and log-contactmoment tools alongside the pre-existing request tools, each with a valid `inputSchema`
+- **WHEN** `pipelinq.createLead` or `pipelinq.logContactmoment` is invoked by a caller
+  lacking `create` permission on the target schema
+- **THEN** OpenRegister raises, and the attributed method maps it to a `forbidden` error
+  envelope rather than reporting success
 
 ## Notes
 
@@ -171,15 +187,15 @@ namespaced under `pipelinq.` and MUST be assertable as a fixture by unit tests.
   `decorateLead` alias shadowed the declarative calc and is removed.)_ `qualificationScore`
   and `weightedValue` are likewise genuine backend calculations, read as materialised by
   OpenRegister rather than recomputed by the provider.
-- **Follow-up (blocked):** `plq-mcp-provider-surgery` (kind: code, not yet created — no
-  actionable OpenSpec change scaffold exists for it yet) will delete the 8
-  derived-equivalent descriptors + handlers from `PipelinqToolProvider`
-  (`listClients`/`searchClients`/`getClient`/`listLeads`/`searchLeads`/`getLead`/
-  `listRequests`/`getRequest`), drop the `decorateLead()` `winProbability` alias, and
-  annotate `createLead`/`logContactmoment`/`pipelineForecast` with `#[McpTool]`. It is
-  gated on OpenRegister's `or-mcp-derived-tool-provider` and `or-mcp-tool-attribute`
-  shipping (cross-repo predecessors the Hydra supervisor cannot resolve against Pipelinq
-  issues — `depends_on` on this change is intentionally empty). Whether to re-expose the
-  `getClient` 360 summary / `getLead` activity timeline as dedicated `#[McpTool]` tools is
-  an open question tracked for that follow-up (see `mcp-provider-declarative-migration/design.md`
-  Open Questions OQ1–OQ3).
+- **Migration complete (2026-07-13):** `plq-mcp-provider-surgery` executed Migration Plan
+  steps 3–6 of `mcp-provider-declarative-migration` — the 8 derived-equivalent descriptors
+  + handlers (`listClients`/`searchClients`/`getClient`/`listLeads`/`searchLeads`/`getLead`/
+  `listRequests`/`getRequest`) and the `decorateLead()` `winProbability` alias are deleted;
+  `createLead`/`logContactmoment`/`pipelineForecast` are `#[McpTool]`-attributed; and
+  `PipelinqToolProvider` itself is deleted (it carried zero tools once the CRUD reads were
+  gone) — Pipelinq's sole MCP-tool-provider seam is now the `IMcpScannableServices::pipelinq`
+  opt-in. **Open (unchanged, not blocking):** whether to re-expose the `getClient` 360
+  summary / `getRequest`/`getLead` activity timeline as dedicated `#[McpTool]` tools remains
+  an open question (`mcp-provider-declarative-migration/design.md` OQ2) — deliberately out of
+  scope for both migration changes; those summaries stay available via the app UI /
+  `ActivityTimelineService`/`Customer360SummaryService`, not MCP.
