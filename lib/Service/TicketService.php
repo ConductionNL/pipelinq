@@ -43,7 +43,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 use Exception;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -139,6 +141,8 @@ class TicketService
      * The pipelinq register id.
      *
      * @return string The register id ('' when unconfigured).
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
      */
     public function getRegisterId(): string
     {
@@ -149,6 +153,8 @@ class TicketService
      * The unified ticket schema id.
      *
      * @return string The schema id ('' when unconfigured).
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
      */
     public function getSchemaId(): string
     {
@@ -159,6 +165,8 @@ class TicketService
      * Whether the register + ticket schema are both provisioned.
      *
      * @return bool True when the ticket surface is usable.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
      */
     public function isConfigured(): bool
     {
@@ -276,4 +284,165 @@ class TicketService
 
         return $payload;
     }//end sanitizeForSave()
+
+    /**
+     * Log a client interaction as a contactmoment (client, channel and title
+     * are required; outcome and notes are optional).
+     *
+     * Validates the required arguments, then writes through
+     * save(TYPE_CONTACTMOMENT, ...) so the `ticketType` discriminator is
+     * forced and date-time fields are normalised (sanitizeForSave()).
+     * Migrated out of `OCA\Pipelinq\Mcp\PipelinqToolProvider` (deleted) by
+     * `plq-mcp-provider-surgery`; annotated `#[McpTool]` (OpenRegister
+     * ADR-063 chain 3/3, PR #363) so OpenRegister's AttributeToolScanner can
+     * discover it via `OCA\Pipelinq\Mcp\PipelinqScannableServices`.
+     *
+     * @param string      $client  The client UUID this interaction is with.
+     * @param string      $channel The interaction channel (e.g. telefoon, email, balie, chat).
+     * @param string      $title   A short summary of the interaction.
+     * @param string|null $outcome Optional outcome (e.g. afgehandeld, doorverbonden, terugbelverzoek).
+     * @param string|null $notes   Optional free-text notes about the interaction.
+     *
+     * @return array<string, mixed>
+     *
+     * @spec openspec/specs/crm-mcp-tool-surface/spec.md
+     *   (Requirement: MCP provider exposes RBAC-guarded CRM write tools)
+     */
+    #[McpTool(
+        name: 'logContactmoment',
+        description: 'Log a client interaction as a contactmoment (client, channel and title are required; outcome and notes are optional).'
+    )]
+    public function logContactmoment(
+        string $client,
+        string $channel,
+        string $title,
+        ?string $outcome=null,
+        ?string $notes=null
+    ): array {
+        $client = trim($client);
+        if ($client === '') {
+            return $this->mcpErrorEnvelope(code: 'invalid_arguments', message: 'Required argument client is missing.');
+        }
+
+        $channel = trim($channel);
+        if ($channel === '') {
+            return $this->mcpErrorEnvelope(code: 'invalid_arguments', message: 'Required argument channel is missing.');
+        }
+
+        $title = trim($title);
+        if ($title === '') {
+            return $this->mcpErrorEnvelope(code: 'invalid_arguments', message: 'Required argument title is missing.');
+        }
+
+        if ($this->isConfigured() === false) {
+            return $this->mcpErrorEnvelope(
+                code: 'not_configured',
+                message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
+            );
+        }
+
+        $payload = [
+            'client'     => $client,
+            'channel'    => $channel,
+            'title'      => $title,
+            'occurredAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+        ];
+
+        if ($outcome !== null && $outcome !== '') {
+            $payload['outcome'] = $outcome;
+        }
+
+        if ($notes !== null && $notes !== '') {
+            $payload['description'] = $notes;
+        }
+
+        try {
+            $saved = $this->save(ticketType: self::TYPE_CONTACTMOMENT, payload: $payload);
+        } catch (\Exception $e) {
+            return $this->mapMcpServiceException(operation: 'log contactmoment', exception: $e);
+        }
+
+        $data = $this->mcpToArray(item: $saved);
+
+        return [
+            'ticketId' => (string) ($data['id'] ?? $data['uuid'] ?? ''),
+        ];
+
+    }//end logContactmoment()
+
+    /**
+     * Map an exception raised by OpenRegister into a structured MCP error envelope.
+     *
+     * OpenRegister's PermissionHandler raises a plain exception whose message
+     * mentions "permission" when the caller is not authorised; we surface that as
+     * `forbidden`. Everything else is an `internal_error` (logged for the operator).
+     *
+     * @param string     $operation Short label of the failed operation (for the log).
+     * @param \Exception $exception The caught exception.
+     *
+     * @return array<string, mixed>
+     */
+    private function mapMcpServiceException(string $operation, \Exception $exception): array
+    {
+        $message = $exception->getMessage();
+
+        if (stripos($message, 'permission') !== false || stripos($message, 'not authoriz') !== false) {
+            return $this->mcpErrorEnvelope(code: 'forbidden', message: 'You are not allowed to access this resource.');
+        }
+
+        $this->logger->error(
+            "Pipelinq MCP: failed to {$operation}",
+            ['exception' => $message]
+        );
+
+        return $this->mcpErrorEnvelope(
+            code: 'internal_error',
+            message: "Failed to {$operation}. See server log for details."
+        );
+
+    }//end mapMcpServiceException()
+
+    /**
+     * Build a structured MCP error envelope.
+     *
+     * @param string $code    Machine-readable error code.
+     * @param string $message Human-readable message for the LLM.
+     *
+     * @return array<string, mixed>
+     */
+    private function mcpErrorEnvelope(string $code, string $message): array
+    {
+        return [
+            'error' => [
+                'code'    => $code,
+                'message' => $message,
+            ],
+        ];
+
+    }//end mcpErrorEnvelope()
+
+    /**
+     * Normalise an OpenRegister object to a plain PHP array.
+     *
+     * @param mixed $item Raw item from ObjectService.
+     *
+     * @return array<string, mixed>
+     */
+    private function mcpToArray(mixed $item): array
+    {
+        if (is_array(value: $item) === true) {
+            return $item;
+        }
+
+        if (is_object(value: $item) === true && method_exists($item, 'getObject') === true) {
+            return $item->getObject();
+        }
+
+        if (is_object(value: $item) === true && method_exists($item, 'jsonSerialize') === true) {
+            return $item->jsonSerialize();
+        }
+
+        return (array) $item;
+
+    }//end mcpToArray()
 }//end class
