@@ -116,7 +116,11 @@ class LeadService
      */
     #[McpTool(
         name: 'createLead',
-        description: 'Create a new sales lead. Only "title" is required; client, value, source and assignee are optional.'
+        description: 'Create a new sales lead. Only "title" is required; client, value, source and assignee are optional.',
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        scope: 'create'
     )]
     public function createLead(
         string $title,
@@ -187,7 +191,11 @@ class LeadService
      */
     #[McpTool(
         name: 'pipelineForecast',
-        description: 'Per-stage totals over open leads: lead count, summed value, weighted value, plus a grand total.'
+        description: 'Per-stage totals over open leads: lead count, summed value, weighted value, plus a grand total.',
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        scope: 'read'
     )]
     public function pipelineForecast(): array
     {

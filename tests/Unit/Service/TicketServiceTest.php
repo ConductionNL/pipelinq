@@ -152,6 +152,13 @@ class TicketServiceTest extends TestCase
         $this->assertSame(expected: 'logContactmoment', actual: $instance->name);
         $this->assertStringContainsString(needle: 'contactmoment', haystack: (string) $instance->description);
         $this->assertTrue(condition: $method->isPublic());
+
+        // ADR-063 hints/scope: save() is called with no uuid — always creates
+        // a new ticket, never destructive, never idempotent.
+        $this->assertFalse(condition: $instance->readOnlyHint);
+        $this->assertFalse(condition: $instance->destructiveHint);
+        $this->assertFalse(condition: $instance->idempotentHint);
+        $this->assertSame(expected: 'create', actual: $instance->scope);
     }//end testLogContactmomentHasMcpToolAttribute()
 
     // =========================================================================
