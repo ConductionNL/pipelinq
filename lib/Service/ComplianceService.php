@@ -570,7 +570,18 @@ class ComplianceService
         }
 
         try {
-            $rows = $objectService->findAll(filters: [], register: $register, schema: $schema);
+            // OpenRegister's ObjectService::findAll() takes a single $config array;
+            // register/schema travel INSIDE $config['filters'] (see prepareFindAllConfig()).
+            // The old findAll(register:, schema:, filters:) named-argument form no longer
+            // exists and threw "Unknown named parameter $register" at runtime.
+            $rows = $objectService->findAll(
+                config: [
+                    'filters' => [
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                ]
+            );
         } catch (Throwable $e) {
             $this->logger->warning(
                 'ComplianceService.loadTemplatesRaw: findAll failed',
@@ -887,9 +898,13 @@ class ComplianceService
 
         try {
             $rows = $objectService->findAll(
-                filters: ['contactId' => $contactId],
-                register: $register,
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'contactId' => $contactId,
+                        'register'  => $register,
+                        'schema'    => $schema,
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->info(
@@ -972,12 +987,14 @@ class ComplianceService
 
         try {
             $rows = $objectService->findAll(
-                filters: [
-                    'contactId' => $contactId,
-                    'channel'   => $channel,
-                ],
-                register: $register,
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'contactId' => $contactId,
+                        'channel'   => $channel,
+                        'register'  => $register,
+                        'schema'    => $schema,
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(
@@ -989,7 +1006,7 @@ class ComplianceService
                 ]
             );
             return null;
-        }
+        }//end try
 
         foreach (($rows ?? []) as $row) {
             $array = $this->toArray(value: $row);

@@ -768,13 +768,15 @@ class IngestProductVendorMaster implements IRepairStep
     ): ?array {
         foreach (array_filter(['sku' => $sku, 'barcode' => $barcode]) as $field => $value) {
             $results = $objectService->findAll(
-                limit: 1,
-                offset: 0,
-                filters: [$field => $value],
-                sort: [],
-                search: '',
-                register: $registerId,
-                schema: $schemaId,
+                config: [
+                    'filters' => [
+                        $field     => $value,
+                        'register' => $registerId,
+                        'schema'   => $schemaId,
+                    ],
+                    'limit'   => 1,
+                    'offset'  => 0,
+                ]
             );
 
             if (empty($results) === false) {
@@ -807,13 +809,15 @@ class IngestProductVendorMaster implements IRepairStep
         string $contactsUid,
     ): ?array {
         $results = $objectService->findAll(
-            limit: 1,
-            offset: 0,
-            filters: ['contactsUid' => $contactsUid],
-            sort: [],
-            search: '',
-            register: $registerId,
-            schema: $schemaId,
+            config: [
+                'filters' => [
+                    'contactsUid' => $contactsUid,
+                    'register'    => $registerId,
+                    'schema'      => $schemaId,
+                ],
+                'limit'   => 1,
+                'offset'  => 0,
+            ]
         );
 
         if (empty($results) === true) {

@@ -90,9 +90,14 @@ class ChannelProviderRepository
 
         try {
             $rows = $objectService->findAll(
-                filters: ['kind' => $kind, 'active' => true],
-                register: $this->getRegisterSlug(),
-                schema: $this->getSchemaSlug(),
+                config: [
+                    'filters' => [
+                        'kind'     => $kind,
+                        'active'   => true,
+                        'register' => $this->getRegisterSlug(),
+                        'schema'   => $this->getSchemaSlug(),
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(

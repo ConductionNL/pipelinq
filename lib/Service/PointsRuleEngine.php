@@ -368,13 +368,15 @@ class PointsRuleEngine
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: [
-                    'programmeId' => $programmeId,
-                    'trigger'     => $trigger,
-                ],
-                register: $register,
-                schema: $schema,
-                limit: 200
+                config: [
+                    'filters' => [
+                        'programmeId' => $programmeId,
+                        'trigger'     => $trigger,
+                        'register'    => $register,
+                        'schema'      => $schema,
+                    ],
+                    'limit'   => 200,
+                ]
             );
         } catch (\Throwable $e) {
             $this->logger->debug('Pipelinq: rule findAll failed', ['exception' => $e->getMessage()]);

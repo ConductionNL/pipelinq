@@ -729,13 +729,18 @@ class WhatsAppAdapter
 
         try {
             $rows = $objectService->findAll(
-                filters: [
-                    'contactId' => $contactId,
-                    'channel'   => 'whatsapp',
-                    'direction' => 'inbound',
-                ],
-                register: $this->getRegisterSlug(),
-                schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
+                config: [
+                    'filters' => [
+                        'contactId' => $contactId,
+                        'channel'   => 'whatsapp',
+                        'direction' => 'inbound',
+                        'register'  => $this->getRegisterSlug(),
+                        'schema'    => $this->resolveSchemaSlug(
+                            key: 'message_schema',
+                            default: self::DEFAULT_MESSAGE_SCHEMA_SLUG
+                        ),
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(
@@ -743,7 +748,7 @@ class WhatsAppAdapter
                 ['contactId' => $contactId, 'exception' => $e->getMessage()]
             );
             return false;
-        }
+        }//end try
 
         if (is_array($rows) === false || $rows === []) {
             return false;
@@ -1033,9 +1038,13 @@ class WhatsAppAdapter
 
         try {
             $rows = $objectService->findAll(
-                filters: ['phoneNumber' => $phone],
-                register: $this->getRegisterSlug(),
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'phoneNumber' => $phone,
+                        'register'    => $this->getRegisterSlug(),
+                        'schema'      => $schema,
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $rows = [];
@@ -1094,14 +1103,16 @@ class WhatsAppAdapter
 
         try {
             $rows = $objectService->findAll(
-                filters: [
-                    'contactId'  => $contactId,
-                    'providerId' => $providerId,
-                    'channel'    => $channel,
-                    'status'     => 'open',
-                ],
-                register: $this->getRegisterSlug(),
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'contactId'  => $contactId,
+                        'providerId' => $providerId,
+                        'channel'    => $channel,
+                        'status'     => 'open',
+                        'register'   => $this->getRegisterSlug(),
+                        'schema'     => $schema,
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $rows = [];

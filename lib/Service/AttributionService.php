@@ -451,9 +451,15 @@ class AttributionService
 
         try {
             $rows = $objectService->findAll(
-                filters: $filters,
-                register: $register,
-                schema: $schema,
+                config: [
+                    'filters' => array_merge(
+                        $filters,
+                        [
+                            'register' => $register,
+                            'schema'   => $schema,
+                        ]
+                    ),
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(

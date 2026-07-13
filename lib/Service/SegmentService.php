@@ -571,9 +571,15 @@ class SegmentService
 
         try {
             $rows = $objectService->findAll(
-                filters: $filters,
-                register: $register,
-                schema: $schemaSlug,
+                config: [
+                    'filters' => array_merge(
+                        $filters,
+                        [
+                            'register' => $register,
+                            'schema'   => $schemaSlug,
+                        ]
+                    ),
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(
@@ -1758,9 +1764,12 @@ class SegmentService
 
         try {
             $rows = $objectService->findAll(
-                filters: [],
-                register: $register,
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(

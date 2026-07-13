@@ -656,14 +656,16 @@ class SmsAdapter
 
         try {
             $rows = $objectService->findAll(
-                filters: [
-                    'contactId'  => $contactId,
-                    'providerId' => $providerId,
-                    'channel'    => $channel,
-                    'status'     => 'open',
-                ],
-                register: $this->getRegisterSlug(),
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'contactId'  => $contactId,
+                        'providerId' => $providerId,
+                        'channel'    => $channel,
+                        'status'     => 'open',
+                        'register'   => $this->getRegisterSlug(),
+                        'schema'     => $schema,
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(
@@ -720,9 +722,13 @@ class SmsAdapter
 
         try {
             $rows = $objectService->findAll(
-                filters: ['phoneNumber' => $phone],
-                register: $this->getRegisterSlug(),
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'phoneNumber' => $phone,
+                        'register'    => $this->getRegisterSlug(),
+                        'schema'      => $schema,
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $rows = [];
