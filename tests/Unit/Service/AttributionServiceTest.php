@@ -86,14 +86,19 @@ class AttributionServiceTest extends TestCase
              * Mock findAll() — returns attribution links matching every
              * filter.
              *
-             * @param array<string, mixed> $filters  Filter map.
-             * @param mixed                $register Register slug.
-             * @param mixed                $schema   Schema slug.
+             * Mirrors OR's real ObjectService::findAll(array $config): the
+             * register/schema context travels INSIDE $config['filters'] and OR
+             * treats both as reserved params, never as object-field filters.
+             *
+             * @param array<string, mixed> $config Config with a `filters` map.
              *
              * @return array<int, array<string, mixed>> Rows.
              */
-            public function findAll(array $filters = [], $register = null, $schema = null): array
+            public function findAll(array $config = []): array
             {
+                $filters = $config['filters'] ?? [];
+                unset($filters['register'], $filters['schema']);
+
                 $out = [];
                 foreach ($this->attributionLinks as $row) {
                     foreach ($filters as $k => $v) {

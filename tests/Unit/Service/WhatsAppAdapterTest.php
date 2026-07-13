@@ -116,14 +116,16 @@ class WhatsAppAdapterTest extends TestCase
              * Mock findAll. For 'inbound' filter return the seeded
              * inbound messages.
              *
-             * @param array<string, mixed> $filters  Filters.
-             * @param mixed                $register Register.
-             * @param mixed                $schema   Schema.
+             * Mirrors OR's real ObjectService::findAll(array $config): the
+             * data-property filters travel inside $config['filters'].
+             *
+             * @param array<string, mixed> $config Config with a `filters` map.
              *
              * @return array<int, array<string, mixed>>
              */
-            public function findAll(array $filters = [], $register = null, $schema = null): array
+            public function findAll(array $config = []): array
             {
+                $filters = $config['filters'] ?? [];
                 if (($filters['direction'] ?? '') === 'inbound') {
                     return $this->inboundMessages;
                 }

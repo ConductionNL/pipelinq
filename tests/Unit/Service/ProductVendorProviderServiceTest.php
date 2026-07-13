@@ -58,25 +58,14 @@ class FakePvmObjectService
     /**
      * Return the canned rows (ignores filters — the test controls the dataset).
      *
-     * @param int                  $limit    Ignored.
-     * @param int                  $offset   Ignored.
-     * @param array<string,mixed>  $filters  Ignored.
-     * @param array<string,mixed>  $sort     Ignored.
-     * @param string               $search   Ignored.
-     * @param string               $register Ignored.
-     * @param string               $schema   Ignored.
+     * Mirrors OR's real ObjectService::findAll(array $config).
+     *
+     * @param array<string,mixed> $config Ignored (config with `filters`, `limit`, `offset`).
      *
      * @return array<int, array<string,mixed>>
      */
-    public function findAll(
-        int $limit = 100,
-        int $offset = 0,
-        array $filters = [],
-        array $sort = [],
-        string $search = '',
-        string $register = '',
-        string $schema = ''
-    ): array {
+    public function findAll(array $config = []): array
+    {
         if ($this->throw === true) {
             throw new \RuntimeException('object service unavailable');
         }

@@ -80,10 +80,14 @@ class TierService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['programmeId' => $programmeId],
-                register: $register,
-                schema: $schema,
-                limit: 100
+                config: [
+                    'filters' => [
+                        'programmeId' => $programmeId,
+                        'register'    => $register,
+                        'schema'      => $schema,
+                    ],
+                    'limit'   => 100,
+                ]
             );
         } catch (\Throwable $e) {
             return [];

@@ -188,13 +188,15 @@ class LoyaltyAccountService
 
         try {
             $result = $this->getObjectService()->findAll(
-                filters: [
-                    'klantId'     => $klantId,
-                    'programmeId' => $programmeId,
-                ],
-                register: $register,
-                schema: $schema,
-                limit: 1
+                config: [
+                    'filters' => [
+                        'klantId'     => $klantId,
+                        'programmeId' => $programmeId,
+                        'register'    => $register,
+                        'schema'      => $schema,
+                    ],
+                    'limit'   => 1,
+                ]
             );
         } catch (\Throwable $e) {
             $this->logger->debug('Pipelinq: account findAll failed', ['exception' => $e->getMessage()]);
@@ -341,11 +343,15 @@ class LoyaltyAccountService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['programmeId' => $programmeId],
-                register: $register,
-                schema: $schema,
-                limit: $limit,
-                offset: $offset
+                config: [
+                    'filters' => [
+                        'programmeId' => $programmeId,
+                        'register'    => $register,
+                        'schema'      => $schema,
+                    ],
+                    'limit'   => $limit,
+                    'offset'  => $offset,
+                ]
             );
         } catch (\Throwable $e) {
             return [];

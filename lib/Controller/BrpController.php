@@ -822,9 +822,13 @@ class BrpController extends Controller
 
         try {
             $results = $this->getObjectService()->findAll(
-                filters: ['gekoppeldContact' => $contactId],
-                register: $register,
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'gekoppeldContact' => $contactId,
+                        'register'         => $register,
+                        'schema'           => $schema,
+                    ],
+                ]
             );
             $latest  = null;
             foreach (($results ?? []) as $object) {

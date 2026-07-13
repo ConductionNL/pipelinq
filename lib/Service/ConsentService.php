@@ -429,9 +429,13 @@ class ConsentService
 
         try {
             $rows = $objectService->findAll(
-                filters: ['contactId' => $contactId],
-                register: $this->getRegisterSlug(),
-                schema: $this->getSchemaSlug(),
+                config: [
+                    'filters' => [
+                        'contactId' => $contactId,
+                        'register'  => $this->getRegisterSlug(),
+                        'schema'    => $this->getSchemaSlug(),
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(

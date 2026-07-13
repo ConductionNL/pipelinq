@@ -108,9 +108,13 @@ class BrpMonitorJob extends TimedJob
             $window = $now->modify('-24 hours');
 
             $records = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-                filters: ['actie' => 'brp-lookup-uitgevoerd'],
-                register: $register,
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'actie'    => 'brp-lookup-uitgevoerd',
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                ]
             );
 
             $audit  = $this->aggregateAuditRecords(records: ($records ?? []), window: $window);
@@ -254,9 +258,12 @@ class BrpMonitorJob extends TimedJob
         $cacheHits    = 0;
         $durations    = [];
         $verzoeken    = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-            filters: [],
-            register: $register,
-            schema: $verzoekSchema,
+            config: [
+                'filters' => [
+                    'register' => $register,
+                    'schema'   => $verzoekSchema,
+                ],
+            ]
         );
         foreach (($verzoeken ?? []) as $rec) {
             $arr      = $this->recordToArray(rec: $rec);

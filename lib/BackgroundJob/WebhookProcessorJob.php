@@ -120,9 +120,13 @@ class WebhookProcessorJob extends TimedJob
 
         try {
             $rows = $objectService->findAll(
-                filters: ['status' => 'queued'],
-                register: $this->getRegisterSlug(),
-                schema: $this->getSchemaSlug(),
+                config: [
+                    'filters' => [
+                        'status'   => 'queued',
+                        'register' => $this->getRegisterSlug(),
+                        'schema'   => $this->getSchemaSlug(),
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(
