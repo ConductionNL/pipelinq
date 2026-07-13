@@ -239,9 +239,14 @@ class BudgetService
 
         try {
             $rows = $objectService->findAll(
-                filters: ['tenantId' => $tenantId, 'providerId' => $providerId],
-                register: $this->getRegisterSlug(),
-                schema: $this->getSchemaSlug(),
+                config: [
+                    'filters' => [
+                        'tenantId'   => $tenantId,
+                        'providerId' => $providerId,
+                        'register'   => $this->getRegisterSlug(),
+                        'schema'     => $this->getSchemaSlug(),
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(
@@ -273,9 +278,12 @@ class BudgetService
 
         try {
             $rows = $objectService->findAll(
-                filters: [],
-                register: $this->getRegisterSlug(),
-                schema: $this->getSchemaSlug(),
+                config: [
+                    'filters' => [
+                        'register' => $this->getRegisterSlug(),
+                        'schema'   => $this->getSchemaSlug(),
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(

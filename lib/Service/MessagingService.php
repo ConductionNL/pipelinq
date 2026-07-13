@@ -355,9 +355,13 @@ class MessagingService
 
         try {
             $rows = $objectService->findAll(
-                filters: ['status' => 'approved'],
-                register: $register,
-                schema: $this->schemaSlug(key: 'messageTemplate_schema', default: 'messageTemplate'),
+                config: [
+                    'filters' => [
+                        'status'   => 'approved',
+                        'register' => $register,
+                        'schema'   => $this->schemaSlug(key: 'messageTemplate_schema', default: 'messageTemplate'),
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             return [];

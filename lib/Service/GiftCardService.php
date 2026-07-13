@@ -454,10 +454,14 @@ class GiftCardService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['serial' => $serial],
-                register: $register,
-                schema: $schema,
-                limit: 1
+                config: [
+                    'filters' => [
+                        'serial'   => $serial,
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                    'limit'   => 1,
+                ]
             );
         } catch (\Throwable $e) {
             return null;
@@ -493,10 +497,14 @@ class GiftCardService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['klantId' => $klantId],
-                register: $register,
-                schema: $schema,
-                limit: 1000
+                config: [
+                    'filters' => [
+                        'klantId'  => $klantId,
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                    'limit'   => 1000,
+                ]
             );
         } catch (\Throwable $e) {
             return [];

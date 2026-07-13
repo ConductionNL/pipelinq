@@ -299,9 +299,13 @@ class PosStaffReportService
 
         try {
             $results = $this->getObjectService()->findAll(
-                register: $register,
-                schema: $schema,
-                limit: 5000
+                config: [
+                    'filters' => [
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                    'limit'   => 5000,
+                ]
             );
         } catch (\Throwable $e) {
             $this->logger->warning(

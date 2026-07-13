@@ -171,14 +171,16 @@ class SegmentServiceTest extends TestCase
             /**
              * Mock findAll() — returns contacts when the schema is `contact`.
              *
-             * @param array<string, mixed> $filters  Filter map (ignored).
-             * @param mixed                $register Register slug.
-             * @param mixed                $schema   Schema slug.
+             * Mirrors OR's real ObjectService::findAll(array $config): the
+             * register/schema context travels INSIDE $config['filters'].
+             *
+             * @param array<string, mixed> $config Config with a `filters` map.
              *
              * @return array<int, array<string, mixed>> Rows.
              */
-            public function findAll(array $filters = [], $register = null, $schema = null): array
+            public function findAll(array $config = []): array
             {
+                $schema = $config['filters']['schema'] ?? null;
                 if ($schema === 'contact') {
                     return $this->contacts;
                 }

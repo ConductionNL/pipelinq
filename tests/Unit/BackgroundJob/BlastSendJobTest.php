@@ -99,14 +99,16 @@ class BlastSendJobTest extends TestCase
             /**
              * Mock findAll() — returns the seeded sending blasts.
              *
-             * @param array<string, mixed> $filters  Filters.
-             * @param mixed                $register Register slug.
-             * @param mixed                $schema   Schema slug.
+             * Mirrors OR's real ObjectService::findAll(array $config): the
+             * data-property filters travel inside $config['filters'].
+             *
+             * @param array<string, mixed> $config Config with a `filters` map.
              *
              * @return array<int, array<string, mixed>>
              */
-            public function findAll(array $filters = [], mixed $register = null, mixed $schema = null): array
+            public function findAll(array $config = []): array
             {
+                $filters = $config['filters'] ?? [];
                 if (($filters['status'] ?? null) === 'sending') {
                     return $this->sendingBlasts;
                 }

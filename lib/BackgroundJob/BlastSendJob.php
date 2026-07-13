@@ -248,9 +248,13 @@ class BlastSendJob extends TimedJob
 
         try {
             $rows = $objectService->findAll(
-                filters: ['status' => 'sending'],
-                register: $register,
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'status'   => 'sending',
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(
