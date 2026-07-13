@@ -57,7 +57,7 @@ use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
-use OCA\Pipelinq\Mcp\PipelinqToolProvider;
+use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\AppointmentPaymentProvider;
@@ -231,14 +231,21 @@ class Application extends App implements IBootstrap
         $context->registerDashboardWidget(StartRequestWidget::class);
         $context->registerDashboardWidget(CreateLeadWidget::class);
 
-        // Register PipelinqToolProvider as the MCP tool provider for the AI Chat Companion.
-        // The alias key 'OCA\OpenRegister\Mcp\IMcpToolProvider::pipelinq' is the format
-        // that OR's McpToolsService enumerates to discover per-app providers (design D3).
-        // The interface ships in openregister PR #1466 (ai-chat-companion-orchestrator);
-        // until then this app implements the tests/Stubs/Mcp/IMcpToolProvider.php stub.
+        // Register PipelinqScannableServices as the MCP attribute-scan opt-in for the
+        // AI Chat Companion (ADR-063 chain 3/3, openregister PR #363). The alias key
+        // 'OCA\OpenRegister\Mcp\IMcpScannableServices::pipelinq' is the format OR's
+        // Application::collectAttributeMcpProviders() enumerates to discover each app's
+        // scannable service classes, mirroring the retired per-app
+        // 'IMcpToolProvider::pipelinq' convention. Pipelinq no longer ships a
+        // hand-written IMcpToolProvider — every CRUD read is served by OpenRegister's
+        // schema-derived tools, and the three curated tools (createLead,
+        // logContactmoment, pipelineForecast) are `#[McpTool]`-attributed methods on
+        // LeadService/TicketService, reflected via this opt-in (plq-mcp-provider-surgery).
+        // Until openregister is installed this app implements the
+        // tests/Stubs/Mcp/IMcpScannableServices.php + tests/Stubs/Mcp/Attribute/McpTool.php stubs.
         $context->registerServiceAlias(
-            'OCA\\OpenRegister\\Mcp\\IMcpToolProvider::pipelinq',
-            PipelinqToolProvider::class
+            'OCA\\OpenRegister\\Mcp\\IMcpScannableServices::pipelinq',
+            PipelinqScannableServices::class
         );
 
         // Wave-4 external-API ports (low-volume families).
