@@ -147,6 +147,13 @@ class LeadServiceTest extends TestCase
         $this->assertSame(expected: 'createLead', actual: $instance->name);
         $this->assertStringContainsString(needle: 'title', haystack: (string) $instance->description);
         $this->assertTrue(condition: $method->isPublic());
+
+        // ADR-063 hints/scope: createLead writes a brand-new object (uuid
+        // always null) — never destructive, never idempotent.
+        $this->assertFalse(condition: $instance->readOnlyHint);
+        $this->assertFalse(condition: $instance->destructiveHint);
+        $this->assertFalse(condition: $instance->idempotentHint);
+        $this->assertSame(expected: 'create', actual: $instance->scope);
     }//end testCreateLeadHasMcpToolAttribute()
 
     /**
@@ -166,6 +173,12 @@ class LeadServiceTest extends TestCase
         $this->assertSame(expected: 'pipelineForecast', actual: $instance->name);
         $this->assertStringContainsString(needle: 'stage', haystack: (string) $instance->description);
         $this->assertTrue(condition: $method->isPublic());
+
+        // ADR-063 hints/scope: pure read/aggregation over already-materialised data.
+        $this->assertTrue(condition: $instance->readOnlyHint);
+        $this->assertFalse(condition: $instance->destructiveHint);
+        $this->assertTrue(condition: $instance->idempotentHint);
+        $this->assertSame(expected: 'read', actual: $instance->scope);
     }//end testPipelineForecastHasMcpToolAttribute()
 
     // =========================================================================
