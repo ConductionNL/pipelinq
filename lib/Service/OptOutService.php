@@ -87,9 +87,13 @@ class OptOutService
             [$register, $schema] = $this->config();
             $hash    = BsnValidationService::hash($rawBsn);
             $results = $this->getObjectService()->findAll(
-                filters: ['bsnHash' => $hash],
-                register: $register,
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'bsnHash'  => $hash,
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                ]
             );
 
             $today = new DateTimeImmutable('now', new DateTimeZone('UTC'));

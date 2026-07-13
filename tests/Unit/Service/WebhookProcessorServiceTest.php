@@ -121,14 +121,19 @@ class WebhookProcessorServiceTest extends TestCase
             /**
              * Mock findAll() — flat filter over the in-memory store.
              *
-             * @param array<string, mixed> $filters  Filters.
-             * @param mixed                $register Register slug.
-             * @param mixed                $schema   Schema slug.
+             * Mirrors OR's real ObjectService::findAll(array $config): the
+             * register/schema context travels INSIDE $config['filters'] and OR
+             * treats both as reserved params, never as object-field filters.
+             *
+             * @param array<string, mixed> $config Config with a `filters` map.
              *
              * @return array<int, array<string, mixed>>
              */
-            public function findAll(array $filters = [], mixed $register = null, mixed $schema = null): array
+            public function findAll(array $config = []): array
             {
+                $filters = $config['filters'] ?? [];
+                unset($filters['register'], $filters['schema']);
+
                 $out = [];
                 foreach ($this->store as $row) {
                     $match = true;

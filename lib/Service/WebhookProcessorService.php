@@ -759,14 +759,30 @@ class WebhookProcessorService
         }
 
         try {
-            $rows = $objectService->findAll(filters: $filters, register: $register, schema: $schema);
+            // OpenRegister's ObjectService::findAll() takes a single $config array;
+            // register/schema travel INSIDE $config['filters'] (prepareFindAllConfig()
+            // reads them from there to set the context, and the search handler treats
+            // both as reserved params so they never leak as object-field filters).
+            // The old findAll(register:, schema:, filters:) named-argument form no
+            // longer exists and threw "Unknown named parameter $register" at runtime.
+            $rows = $objectService->findAll(
+                config: [
+                    'filters' => array_merge(
+                        $filters,
+                        [
+                            'register' => $register,
+                            'schema'   => $schema,
+                        ]
+                    ),
+                ]
+            );
         } catch (Throwable $e) {
             $this->logger->warning(
                 'WebhookProcessorService.findDeliveries: findAll failed',
                 ['filters' => $filters, 'exception' => $e->getMessage()]
             );
             return [];
-        }
+        }//end try
 
         $out = [];
         foreach (($rows ?? []) as $row) {

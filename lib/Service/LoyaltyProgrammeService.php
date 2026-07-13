@@ -217,10 +217,14 @@ class LoyaltyProgrammeService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['programmeId' => $programmeId],
-                register: $register,
-                schema: $schema,
-                limit: 1000
+                config: [
+                    'filters' => [
+                        'programmeId' => $programmeId,
+                        'register'    => $register,
+                        'schema'      => $schema,
+                    ],
+                    'limit'   => 1000,
+                ]
             );
         } catch (\Throwable $e) {
             return 0;

@@ -303,10 +303,14 @@ class RedemptionService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['programmeId' => $programmeId],
-                register: $register,
-                schema: $schema,
-                limit: 200
+                config: [
+                    'filters' => [
+                        'programmeId' => $programmeId,
+                        'register'    => $register,
+                        'schema'      => $schema,
+                    ],
+                    'limit'   => 200,
+                ]
             );
         } catch (\Throwable $e) {
             return [];
@@ -373,10 +377,14 @@ class RedemptionService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['beloningCode' => $code],
-                register: $register,
-                schema: $schema,
-                limit: 1
+                config: [
+                    'filters' => [
+                        'beloningCode' => $code,
+                        'register'     => $register,
+                        'schema'       => $schema,
+                    ],
+                    'limit'   => 1,
+                ]
             );
         } catch (\Throwable $e) {
             return null;
@@ -433,14 +441,16 @@ class RedemptionService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: [
-                    'accountId' => $accountId,
-                    'optionId'  => $optionId,
-                    'status'    => 'gebruikt',
-                ],
-                register: $register,
-                schema: $schema,
-                limit: 1000
+                config: [
+                    'filters' => [
+                        'accountId' => $accountId,
+                        'optionId'  => $optionId,
+                        'status'    => 'gebruikt',
+                        'register'  => $register,
+                        'schema'    => $schema,
+                    ],
+                    'limit'   => 1000,
+                ]
             );
         } catch (\Throwable $e) {
             return 0;

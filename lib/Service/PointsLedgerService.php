@@ -298,10 +298,14 @@ class PointsLedgerService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['accountId' => $accountId],
-                register: $register,
-                schema: $schema,
-                limit: 10000
+                config: [
+                    'filters' => [
+                        'accountId' => $accountId,
+                        'register'  => $register,
+                        'schema'    => $schema,
+                    ],
+                    'limit'   => 10000,
+                ]
             );
         } catch (\Throwable $e) {
             $this->logger->debug('Pipelinq: ledger findAll failed', ['exception' => $e->getMessage()]);

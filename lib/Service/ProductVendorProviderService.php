@@ -252,13 +252,15 @@ class ProductVendorProviderService
             }
 
             $results = $objectService->findAll(
-                limit: 1,
-                offset: 0,
-                filters: [$idField => $idValue],
-                sort: [],
-                search: '',
-                register: $registerId,
-                schema: $schemaId,
+                config: [
+                    'filters' => [
+                        $idField   => $idValue,
+                        'register' => $registerId,
+                        'schema'   => $schemaId,
+                    ],
+                    'limit'   => 1,
+                    'offset'  => 0,
+                ]
             );
 
             if (empty($results) === true) {

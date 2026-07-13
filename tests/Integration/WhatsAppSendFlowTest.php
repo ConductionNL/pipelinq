@@ -118,14 +118,19 @@ class WhatsAppSendFlowTest extends TestCase
              * direction=inbound is filtered; otherwise filters the
              * store.
              *
-             * @param array<string, mixed> $filters  Filters.
-             * @param mixed                $register Register.
-             * @param mixed                $schema   Schema.
+             * Mirrors OR's real ObjectService::findAll(array $config): the
+             * register/schema context travels INSIDE $config['filters'] and OR
+             * treats both as reserved params, never as object-field filters.
+             *
+             * @param array<string, mixed> $config Config with a `filters` map.
              *
              * @return array<int, array<string, mixed>>
              */
-            public function findAll(array $filters = [], $register = null, $schema = null): array
+            public function findAll(array $config = []): array
             {
+                $filters = $config['filters'] ?? [];
+                unset($filters['register'], $filters['schema']);
+
                 if (($filters['direction'] ?? '') === 'inbound') {
                     return $this->inbound;
                 }
