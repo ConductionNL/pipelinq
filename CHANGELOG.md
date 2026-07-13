@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **MCP provider surgery** (`plq-mcp-provider-surgery`): completes Migration Plan
+  steps 3–6 of `mcp-provider-declarative-migration` now that OpenRegister's ADR-063
+  chain (#355 dialect, #360 schema-derived tool provider, #363 `#[McpTool]` attribute
+  + `AttributeToolScanner`/`IMcpScannableServices`) is fully merged. Deletes the 8
+  hand-written CRUD tools from `PipelinqToolProvider` (`listRequests`, `getRequest`,
+  `listClients`, `searchClients`, `getClient`, `listLeads`, `searchLeads`, `getLead`) —
+  now served exclusively by OpenRegister's schema-derived `pipelinq.{client,lead,ticket}.
+  {search,get}` tools. Migrates the three curated tools to `#[McpTool]`-attributed
+  service methods: `LeadService::createLead()` (new service) and
+  `LeadService::pipelineForecast()`, `TicketService::logContactmoment()` (new method on
+  the existing service). Adds `PipelinqScannableServices` implementing OpenRegister's
+  `IMcpScannableServices`, registered under the `IMcpScannableServices::pipelinq` DI
+  alias. **Deletes `PipelinqToolProvider` entirely** (and its `IMcpToolProvider::pipelinq`
+  alias) — after the migration it carried zero tools, so the scannable-services opt-in
+  is Pipelinq's sole MCP tool-provider seam. Fully resolves pipelinq #381: the
+  `decorateLead()` `winProbability = probability` alias, and every hand-written read
+  tool that called it, are deleted — nothing shadows the lead schema's declarative
+  `x-openregister-calculations` `winProbability` any more. Zero behaviour change to the
+  three retained tools' RBAC/validation contract; zero new test failures (1601 → 1579
+  tests: -37 from the deleted `PipelinqToolProviderTest`, +15 ported/new across
+  `LeadServiceTest`, `TicketServiceTest`, `PipelinqScannableServicesTest`).
 - **Customer 360 English naming** (`customer-360-english-naming`): renames the
   `klantbeeld-360-activation` code surface to English-canonical naming, per
   the project's international/English-canonical-naming rule (Dutch stays in
