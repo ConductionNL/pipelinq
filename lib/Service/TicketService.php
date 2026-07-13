@@ -310,7 +310,11 @@ class TicketService
      */
     #[McpTool(
         name: 'logContactmoment',
-        description: 'Log a client interaction as a contactmoment (client, channel and title are required; outcome and notes are optional).'
+        description: 'Log a client interaction as a contactmoment (client, channel and title are required; outcome and notes are optional).',
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        scope: 'create'
     )]
     public function logContactmoment(
         string $client,
