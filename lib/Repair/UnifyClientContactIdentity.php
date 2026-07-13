@@ -104,6 +104,8 @@ class UnifyClientContactIdentity implements IRepairStep
      * Get the name of this repair step.
      *
      * @return string The step name.
+     *
+     * @spec exclude repair-step display name accessor, no behavioural spec surface.
      */
     public function getName(): string
     {
@@ -455,6 +457,31 @@ class UnifyClientContactIdentity implements IRepairStep
     }//end createContactViaSync()
 
     /**
+     * Execute an OpenRegister write under the scoped system-operation context.
+     *
+     * Repair steps run without a user session (web-triggered upgrades, webcron),
+     * so OpenRegister RBAC denies every write as 'Anonymous'
+     * (NotAuthorizedException). ObjectService::runAsSystem scopes trusted-system
+     * elevation to the callable; older OpenRegister versions without it fall
+     * back to the direct call.
+     *
+     * @param object   $objectService The OR ObjectService.
+     * @param callable $operation     The write operation to execute.
+     *
+     * @return mixed Whatever the operation returns.
+     *
+     * @spec exclude system-context adoption — back-compat elevation shim around OR writes, no behavioural spec surface.
+     */
+    private function execAsSystem(object $objectService, callable $operation): mixed
+    {
+        if (method_exists($objectService, 'runAsSystem') === true) {
+            return $objectService->runAsSystem($operation);
+        }
+
+        return $operation();
+    }//end execAsSystem()
+
+    /**
      * Persist a matched contactsUid back on the object, keeping every existing
      * identity field in place as the mirror (non-destructive).
      *
@@ -479,20 +506,23 @@ class UnifyClientContactIdentity implements IRepairStep
         unset($payload['@self']);
 
         try {
-            $objectService
-                ->setRegister($register)
-                ->setSchema($schema)
-                ->saveObject(
-                    object: $payload,
-                    extend: [],
-                    register: $register,
-                    schema: $schema,
-                    uuid: $objectId
-                );
+            $this->execAsSystem(
+                objectService: $objectService,
+                operation: static fn () => $objectService
+                    ->setRegister($register)
+                    ->setSchema($schema)
+                    ->saveObject(
+                        object: $payload,
+                        extend: [],
+                        register: $register,
+                        schema: $schema,
+                        uuid: $objectId
+                    )
+            );
         } catch (\Throwable $e) {
             $this->logger->warning(
                 'Identity unify: failed to persist contactsUid on object',
-                ['objectId' => $objectId, 'exception' => $e->getMessage()]
+                ['objectId' => $objectId, 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
             );
         }
     }//end persistContactsUid()
@@ -545,23 +575,26 @@ class UnifyClientContactIdentity implements IRepairStep
             unset($payload['@self']);
 
             try {
-                $objectService
-                    ->setRegister($register)
-                    ->setSchema($schema)
-                    ->saveObject(
-                        object: $payload,
-                        extend: [],
-                        register: $register,
-                        schema: $schema,
-                        uuid: $momentId
-                    );
+                $this->execAsSystem(
+                    objectService: $objectService,
+                    operation: static fn () => $objectService
+                        ->setRegister($register)
+                        ->setSchema($schema)
+                        ->saveObject(
+                            object: $payload,
+                            extend: [],
+                            register: $register,
+                            schema: $schema,
+                            uuid: $momentId
+                        )
+                );
                 $rekeyed++;
             } catch (\Throwable $e) {
                 $this->logger->warning(
                     'Identity unify: failed to re-key contactmoment',
-                    ['momentId' => $momentId, 'exception' => $e->getMessage()]
+                    ['momentId' => $momentId, 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
                 );
-            }
+            }//end try
         }//end foreach
 
         return $rekeyed;
@@ -600,34 +633,37 @@ class UnifyClientContactIdentity implements IRepairStep
         $now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
 
         try {
-            $objectService
-                ->setRegister($register)
-                ->setSchema($sourceRecordSchema)
-                ->saveObject(
-                    object: [
-                        'sourceRecordId'      => self::SOURCE_SYSTEM.':'.$nativeId,
-                        'sourceSystem'        => self::SOURCE_SYSTEM,
-                        'nativeId'            => $nativeId,
-                        'entityType'          => $entityType,
-                        'currentMasterEntity' => $currentMasterEntity,
-                        'rawAttributes'       => $raw,
-                        'mappedAttributes'    => ['contactsUid' => $currentMasterEntity],
-                        'firstSeen'           => $now,
-                        'lastSeen'            => $now,
-                        'lastChange'          => $now,
-                        'linkageMethod'       => 'system-auto-merge',
-                        'linkageConfidence'   => 1.0,
-                        'confidence'          => 1.0,
-                    ],
-                    extend: [],
-                    register: $register,
-                    schema: $sourceRecordSchema,
-                    uuid: null
-                );
+            $this->execAsSystem(
+                objectService: $objectService,
+                operation: static fn () => $objectService
+                    ->setRegister($register)
+                    ->setSchema($sourceRecordSchema)
+                    ->saveObject(
+                        object: [
+                            'sourceRecordId'      => self::SOURCE_SYSTEM.':'.$nativeId,
+                            'sourceSystem'        => self::SOURCE_SYSTEM,
+                            'nativeId'            => $nativeId,
+                            'entityType'          => $entityType,
+                            'currentMasterEntity' => $currentMasterEntity,
+                            'rawAttributes'       => $raw,
+                            'mappedAttributes'    => ['contactsUid' => $currentMasterEntity],
+                            'firstSeen'           => $now,
+                            'lastSeen'            => $now,
+                            'lastChange'          => $now,
+                            'linkageMethod'       => 'system-auto-merge',
+                            'linkageConfidence'   => 1.0,
+                            'confidence'          => 1.0,
+                        ],
+                        extend: [],
+                        register: $register,
+                        schema: $sourceRecordSchema,
+                        uuid: null
+                    )
+            );
         } catch (\Throwable $e) {
             $this->logger->warning(
                 'Identity unify: sourceRecord provenance write failed',
-                ['nativeId' => $nativeId, 'exception' => $e->getMessage()]
+                ['nativeId' => $nativeId, 'exceptionClass' => get_class($e), 'exception' => $e->getMessage()]
             );
         }//end try
     }//end writeSourceRecord()
