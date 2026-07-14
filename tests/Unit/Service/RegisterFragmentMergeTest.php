@@ -207,6 +207,73 @@ class RegisterFragmentMergeTest extends TestCase
     }//end testBareSchemasKeyOutsidePathIsReplaced()
 
     /**
+     * A fragment that re-declares a schema's `configuration` with a DIFFERENT
+     * annotation key must deep-merge (union) the configuration object, keeping
+     * the base's `x-openregister-mcp` block intact (pipelinq#396).
+     *
+     * Regression guard: the forecast fragment (50-forecast.json) re-declares
+     * `lead.configuration` to add `x-pipelinq-forecast-lifecycle`. Because both
+     * the base and fragment `configuration` are associative maps, deepMergeConfig
+     * recurses and unions their keys — it must NOT shallow-replace the base
+     * configuration (which would drop `x-openregister-mcp` and stop the derived
+     * `pipelinq.lead.search/get` MCP tools from ever registering).
+     *
+     * @return void
+     */
+    public function testFragmentConfigurationUnionKeepsBaseMcpAnnotation(): void
+    {
+        $base = [
+            'components' => [
+                'schemas' => [
+                    'lead' => [
+                        'slug'          => 'lead',
+                        'configuration' => [
+                            'x-openregister-mcp' => [
+                                'enabled' => true,
+                                'tools'   => [
+                                    'search' => ['scope' => 'read', 'filters' => ['status', 'stage', 'client']],
+                                    'get'    => ['scope' => 'read'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $fragment = [
+            'components' => [
+                'schemas' => [
+                    'lead' => [
+                        'slug'          => 'lead',
+                        'configuration' => [
+                            'x-pipelinq-forecast-lifecycle' => ['field' => 'forecast_category'],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $result   = $this->deepMerge($base, $fragment);
+        $leadConf = $result['components']['schemas']['lead']['configuration'];
+
+        $this->assertArrayHasKey(
+            'x-openregister-mcp',
+            $leadConf,
+            'the base x-openregister-mcp block must survive a fragment that re-declares lead.configuration'
+        );
+        $this->assertArrayHasKey(
+            'x-pipelinq-forecast-lifecycle',
+            $leadConf,
+            'the fragment forecast annotation must be unioned in'
+        );
+        $this->assertSame(
+            ['status', 'stage', 'client'],
+            $leadConf['x-openregister-mcp']['tools']['search']['filters'],
+            'the mcp search filters must be preserved unchanged'
+        );
+    }//end testFragmentConfigurationUnionKeepsBaseMcpAnnotation()
+
+    /**
      * isList() distinguishes sequential lists from associative maps.
      *
      * @return void
