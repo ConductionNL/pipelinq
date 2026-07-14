@@ -82,7 +82,7 @@
         "slug": "client",
         "title": "Client",
         "icon": "AccountGroup",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A client (person or organization) in the CRM",
         "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "linkedTypes": [
@@ -351,7 +351,7 @@
         },
         "title": "Lead",
         "icon": "TrendingUp",
-        "version": "1.2.0",
+        "version": "1.3.0",
         "summary": "A sales lead or business opportunity",
         "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "linkedTypes": [
