@@ -280,6 +280,70 @@ class ConfigFileLoaderServiceTest extends TestCase
     }//end testRegisterSchemasMembershipIsUnioned()
 
     /**
+     * End-to-end #396 guard: the forecast fragment re-declares
+     * `lead.configuration` (to add `x-pipelinq-forecast-lifecycle`) and the
+     * loaded, fully-merged config MUST still carry the base's
+     * `x-openregister-mcp` block — otherwise OpenRegister never derives the
+     * `pipelinq.lead.search/get` tools. Exercises the real
+     * loadConfigurationFile() path (deep-merge of monolith + fragment), the
+     * exact shape ConfigurationService imports.
+     *
+     * @return void
+     */
+    public function testForecastFragmentPreservesLeadMcpAnnotation(): void
+    {
+        $monolith = [
+            'info'       => ['version' => '1.0.0'],
+            'components' => [
+                'schemas' => [
+                    'lead' => [
+                        'slug'          => 'lead',
+                        'version'       => '1.3.0',
+                        'configuration' => [
+                            'x-openregister-mcp' => [
+                                'enabled' => true,
+                                'tools'   => [
+                                    'search' => ['scope' => 'read', 'filters' => ['status', 'stage', 'client']],
+                                    'get'    => ['scope' => 'read'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        // Mirrors lib/Settings/register.d/50-forecast.json: extends
+        // lead.configuration with a pipelinq-namespaced lifecycle key.
+        $fragment = [
+            'components' => [
+                'schemas' => [
+                    'lead' => [
+                        'slug'          => 'lead',
+                        'configuration' => [
+                            'x-pipelinq-forecast-lifecycle' => ['field' => 'forecast_category'],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $result   = $this->serviceWithFixture($monolith, ['50-forecast.json' => $fragment])
+            ->loadConfigurationFile();
+        $leadConf = $result['components']['schemas']['lead']['configuration'];
+
+        $this->assertArrayHasKey(
+            'x-openregister-mcp',
+            $leadConf,
+            'lead x-openregister-mcp must survive the forecast fragment merge (pipelinq#396)'
+        );
+        $this->assertArrayHasKey('x-pipelinq-forecast-lifecycle', $leadConf);
+        $this->assertSame(
+            ['status', 'stage', 'client'],
+            $leadConf['x-openregister-mcp']['tools']['search']['filters']
+        );
+    }//end testForecastFragmentPreservesLeadMcpAnnotation()
+
+    /**
      * Non-additive list values (e.g. a schema enum) MUST still be replaced by
      * the fragment, preserving the default ADR-037 list semantics.
      *
