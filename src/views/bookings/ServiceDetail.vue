@@ -155,7 +155,8 @@
 <script>
 import { NcButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
+import { computed } from 'vue'
+import { CnDetailPage, CnDetailCard, useObjectSubscription } from '@conduction/nextcloud-vue'
 import ServiceForm from './ServiceForm.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -177,6 +178,25 @@ export default {
 	},
 	props: {
 		id: { type: String, default: null },
+	},
+	/**
+	 * Live updates for the viewed service (or-object-{uuid} via the
+	 * nc-vue liveUpdatesPlugin, default-on since beta.212). Events are
+	 * refetch hints — the plugin re-runs fetchObject('service', id)
+	 * into the same store cache serviceData renders from. Re-scopes on
+	 * id change, releases on unmount, skips the create archetype.
+	 *
+	 * @param {object} props Component props
+	 * @return {object} Empty — the subscription is side-effect only
+	 * @spec openspec/specs/realtime-updates-ui/spec.md
+	 */
+	setup(props) {
+		const objectStore = useObjectStore()
+		const liveObjectId = computed(() => (props.id && props.id !== 'new' ? props.id : null))
+		useObjectSubscription(objectStore, 'service', liveObjectId, {
+			enabled: computed(() => Boolean(liveObjectId.value && objectStore.objectTypeRegistry?.service)),
+		})
+		return {}
 	},
 	data() {
 		return {

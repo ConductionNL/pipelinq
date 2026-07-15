@@ -253,7 +253,8 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { CnDetailPage, CnDetailCard, CnFormDialog } from '@conduction/nextcloud-vue'
+import { computed } from 'vue'
+import { CnDetailPage, CnDetailCard, CnFormDialog, useObjectSubscription } from '@conduction/nextcloud-vue'
 import ProjectWbsTree from '../../components/ProjectWbsTree.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -275,6 +276,31 @@ export default {
 			type: String,
 			default: null,
 		},
+	},
+	/**
+	 * Live updates for the viewed project (nc-vue liveUpdatesPlugin,
+	 * default-on since beta.212): subscribe to or-object-{uuid}. Events
+	 * are refetch hints — the plugin re-runs fetchObject('project', id)
+	 * into the same store cache this view renders from (projectData →
+	 * objectStore.getObject), so no extra bridging is needed. The
+	 * composable re-scopes on id change and releases on unmount; the
+	 * enabled gate waits for the (bootstrap-time) type registration and
+	 * skips the create archetype.
+	 *
+	 * @param {object} props Component props
+	 * @return {object} Empty — the subscription is side-effect only
+	 * @spec openspec/specs/realtime-updates-ui/spec.md
+	 */
+	setup(props) {
+		const objectStore = useObjectStore()
+		const liveObjectId = computed(() => {
+			const id = props.id || props.projectIdProp
+			return id && id !== 'new' ? id : null
+		})
+		useObjectSubscription(objectStore, 'project', liveObjectId, {
+			enabled: computed(() => Boolean(liveObjectId.value && objectStore.objectTypeRegistry.project)),
+		})
+		return {}
 	},
 	data() {
 		return {
