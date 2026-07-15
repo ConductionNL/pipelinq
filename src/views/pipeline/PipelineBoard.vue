@@ -299,6 +299,22 @@ export default {
 			sortBy: 'title',
 			sortDir: 'asc',
 			/**
+			 * Live-updates handles for the or-collection-{register}-{schema}
+			 * subscriptions of every object type mapped into the selected
+			 * pipeline (nc-vue liveUpdatesPlugin, default-on since
+			 * beta.212). Managed by syncLiveSubscriptions(). liveTypesKey
+			 * marks the (possibly in-flight) subscribed scope so a
+			 * concurrent same-scope call doesn't double-subscribe;
+			 * liveEpoch invalidates in-flight resolutions after a release
+			 * (pipeline switch / destroy). Events are refetch HINTS only:
+			 * the board re-runs fetchPipelineItems() (debounced via
+			 * liveRefetchTimer) rather than patching from any payload.
+			 */
+			liveHandles: [],
+			liveTypesKey: '',
+			liveEpoch: 0,
+			liveRefetchTimer: null,
+			/**
 			 * Map of leadId → LeadProduct[] for the visible pipeline. Populated
 			 * after fetchPipelineItems so stage breakdowns are aggregated client-side.
 			 *
@@ -347,6 +363,37 @@ export default {
 		selectedPipeline() {
 			if (!this.selectedPipelineId) return null
 			return this.pipelines.find(p => p.id === this.selectedPipelineId) || null
+		},
+		/**
+		 * The registered object types the selected pipeline renders, used
+		 * to scope the live collection subscriptions. Logical mapping
+		 * slugs (request/complaint/contactmoment) resolve onto their
+		 * registered supertype via resolveObjectType, mirroring
+		 * fetchSchemaItems. Reactive on both the selected pipeline and
+		 * the (async) type registration in initializeStores().
+		 *
+		 * @return {Array<string>} Sorted unique registered type slugs
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		liveTypes() {
+			const pipeline = this.selectedPipeline
+			if (!pipeline) return []
+			let slugs = []
+			if (pipeline.propertyMappings && pipeline.propertyMappings.length > 0) {
+				slugs = pipeline.propertyMappings.map(m => m.schemaSlug)
+			} else if (pipeline.entityType === 'both') {
+				slugs = ['lead', 'request']
+			} else if (pipeline.entityType) {
+				slugs = [pipeline.entityType]
+			}
+			const types = new Set()
+			for (const slug of slugs) {
+				const { objectType } = resolveObjectType(slug)
+				if (this.objectStore.objectTypeRegistry[objectType]) {
+					types.add(objectType)
+				}
+			}
+			return [...types].sort()
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-24
@@ -469,11 +516,30 @@ export default {
 	},
 	watch: {
 		/**
-		 * @param val
+		 * @param {object|null} val The newly selected pipeline object
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
 		 */
 		selectedPipeline(val) {
 			this.syncSidebarState(val)
+		},
+		/**
+		 * Re-scope the live collection subscriptions when the selected
+		 * pipeline (or the async type registration) changes.
+		 *
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		liveTypes() {
+			this.syncLiveSubscriptions()
+		},
+		/**
+		 * Live event hint received on the store (or-collection event →
+		 * liveUpdatesPlugin) — refresh the board through the existing
+		 * fetch path, debounced, never patched from a payload.
+		 *
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		'objectStore.liveLastEventAt'() {
+			this.onLiveEvent()
 		},
 	},
 	/**
@@ -499,11 +565,14 @@ export default {
 			await this.fetchPipelineItems()
 		}
 		this.loading = false
+		this.syncLiveSubscriptions()
 	},
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-2
 	 */
 	beforeDestroy() {
+		clearTimeout(this.liveRefetchTimer)
+		this.releaseLiveSubscriptions()
 		if (this.pipelineSidebarState) {
 			this.pipelineSidebarState.active = false
 			this.pipelineSidebarState.pipeline = null
@@ -515,7 +584,95 @@ export default {
 		getPriorityColor,
 
 		/**
-		 * @param pipeline
+		 * Subscribe to live updates for every object type the selected
+		 * pipeline renders (or-collection-{register}-{schema} via
+		 * notify_push, visibility-gated polling fallback). Idempotent per
+		 * scope; releases the previous subscriptions when the pipeline
+		 * changes. Guarded with a pending-scope marker (liveTypesKey set
+		 * before the awaits) plus an epoch counter so a release during an
+		 * in-flight subscribe drops the stale handles instead of leaking
+		 * them.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		async syncLiveSubscriptions() {
+			const store = this.objectStore
+			if (typeof store.subscribe !== 'function') {
+				return
+			}
+			const types = this.liveTypes
+			const key = types.join(',')
+			if (key === this.liveTypesKey) {
+				// Same scope already subscribed (or subscribe in flight).
+				return
+			}
+			this.releaseLiveSubscriptions()
+			if (types.length === 0) {
+				return
+			}
+			this.liveTypesKey = key
+			const epoch = this.liveEpoch
+			const handles = []
+			try {
+				for (const type of types) {
+					handles.push(await store.subscribe(type))
+				}
+			} catch (e) {
+				console.warn('[PipelineBoard] live subscription failed:', e?.message ?? e)
+			}
+			if (this.liveEpoch !== epoch) {
+				// Released while awaiting (pipeline switch / destroy) — drop
+				// the now-stale subscriptions instead of leaking them.
+				handles.forEach((h) => store.unsubscribe(h))
+				return
+			}
+			this.liveHandles = handles
+			if (handles.length === 0) {
+				this.liveTypesKey = ''
+			}
+		},
+
+		/**
+		 * Release the current live subscriptions, if any, and invalidate
+		 * any in-flight subscribe (its resolution unsubscribes itself via
+		 * the epoch check).
+		 *
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		releaseLiveSubscriptions() {
+			this.liveEpoch += 1
+			this.liveTypesKey = ''
+			if (typeof this.objectStore.unsubscribe === 'function') {
+				this.liveHandles.forEach((h) => this.objectStore.unsubscribe(h))
+			}
+			this.liveHandles = []
+		},
+
+		/**
+		 * Debounced refetch on a live event hint. The board keeps its own
+		 * filtered item set (pipeline + ticketType filters), so re-run the
+		 * existing fetchPipelineItems() path instead of reading the
+		 * store's generic collection refetch. Skipped while a fetch is
+		 * already in flight.
+		 *
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		onLiveEvent() {
+			if (this.liveHandles.length === 0) {
+				return
+			}
+			clearTimeout(this.liveRefetchTimer)
+			this.liveRefetchTimer = setTimeout(() => {
+				if (this.loading) {
+					return
+				}
+				this.fetchPipelineItems()
+			}, 500)
+		},
+
+		/**
+		 * @param {object|null} pipeline The pipeline to mirror into the sidebar state
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-30
 		 */
 		syncSidebarState(pipeline) {
@@ -534,7 +691,7 @@ export default {
 		},
 
 		/**
-		 * @param pipelineData
+		 * @param {object} pipelineData The edited pipeline payload to save
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
 		 */
 		async onSidebarSave(pipelineData) {
@@ -549,7 +706,7 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * @param {object} item The board item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-10
 		 */
 		getColumnProperty(item) {
@@ -562,7 +719,7 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * @param {object} item The board item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-11
 		 */
 		getItemTotalsValue(item) {
@@ -576,7 +733,7 @@ export default {
 		 * Returns items in the given stage, filtered by searchQuery via filteredItems.
 		 * Empty columns remain visible even when search is active.
 		 *
-		 * @param stageName
+		 * @param {string} stageName The stage (column) name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
 		 */
@@ -592,7 +749,7 @@ export default {
 		},
 
 		/**
-		 * @param stageName
+		 * @param {string} stageName The stage (column) name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-13
 		 */
 		getStageTotalValue(stageName) {
@@ -735,7 +892,7 @@ export default {
 		},
 
 		/**
-		 * @param pipeline
+		 * @param {object} pipeline The pipeline whose propertyMappings drive the fetch
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
 		 */
 		async fetchItemsViaMappings(pipeline) {
@@ -753,7 +910,7 @@ export default {
 		},
 
 		/**
-		 * @param pipeline
+		 * @param {object|null} pipeline The pipeline whose legacy entityType drives the fetch
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
 		 */
 		async fetchItemsLegacy(pipeline) {
@@ -786,7 +943,7 @@ export default {
 		 * filter (unify-ticket-supertype). Items keep the logical slug in
 		 * `_schemaSlug` so mappings, badges, filters and routing still line up.
 		 *
-		 * @param schemaSlug
+		 * @param {string} schemaSlug The logical schema slug from the pipeline's propertyMappings
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-8
 		 */
 		async fetchSchemaItems(schemaSlug) {
@@ -813,8 +970,8 @@ export default {
 		},
 
 		/**
-		 * @param event
-		 * @param targetStage
+		 * @param {DragEvent} event The drop event carrying the dragged item JSON
+		 * @param {object} targetStage The stage the item was dropped on
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
 		 */
 		async onDrop(event, targetStage) {
@@ -843,7 +1000,7 @@ export default {
 		},
 
 		/**
-		 * @param stageName
+		 * @param {string} stageName The closed stage to expand or collapse
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-31
 		 */
 		toggleClosedStage(stageName) {
@@ -851,7 +1008,7 @@ export default {
 		},
 
 		/**
-		 * @param column
+		 * @param {string} column The list-view column key to sort by
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-33
 		 */
 		toggleSort(column) {
@@ -864,7 +1021,7 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * @param {object} item The board item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-14
 		 */
 		isItemOverdue(item) {
@@ -874,7 +1031,7 @@ export default {
 		},
 
 		/**
-		 * @param dateStr
+		 * @param {string|null} dateStr The ISO date string to format
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-9
 		 */
 		formatDate(dateStr) {
@@ -895,7 +1052,7 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * @param {object} item The board item to open
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-20
 		 */
 		openItem(item) {
