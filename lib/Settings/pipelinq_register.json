@@ -351,7 +351,7 @@
         },
         "title": "Lead",
         "icon": "TrendingUp",
-        "version": "1.3.0",
+        "version": "1.3.1",
         "summary": "A sales lead or business opportunity",
         "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "linkedTypes": [
@@ -365,8 +365,7 @@
         ],
         "configuration": {
           "linkedTypes": [
-            "mail",
-            "decidesk-decisions"
+            "mail"
           ],
           "mailObjectTemplate": {
             "title": "{{subject}}",
