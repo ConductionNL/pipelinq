@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-006--downstream-sync-queue-with-retries-and-confirmation
+ * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-006-downstream-sync-queue-with-retries-and-confirmation
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -94,7 +94,7 @@ class ObjectsMergedSyncListener implements IEventListener
      *
      * @return void
      *
-     * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-006--downstream-sync-queue-with-retries-and-confirmation
+     * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-006-downstream-sync-queue-with-retries-and-confirmation
      */
     public function handle(Event $event): void
     {

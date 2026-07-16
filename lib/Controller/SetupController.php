@@ -239,7 +239,7 @@ class SetupController extends Controller
      *
      * @return DataResponse `{ success, message }`.
      *
-     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
      */
     private function seedDemoData(): DataResponse
     {

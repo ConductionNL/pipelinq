@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+ * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Seed (or remove) the pipelinq demo dataset.
  *
- * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+ * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
 class SeedDemoDataCommand extends Command
 {
@@ -85,7 +85,7 @@ class SeedDemoDataCommand extends Command
      *
      * @return int Symfony command exit code.
      *
-     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
