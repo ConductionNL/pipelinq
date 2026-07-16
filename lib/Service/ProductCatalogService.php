@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-003
+ * @spec openspec/specs/pos-product-catalogue/spec.md
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use Psr\Log\LoggerInterface;
  *  single-purpose methods; the cohesion is intentional and splitting it would
  *  scatter one concern across several classes without reducing real complexity.
  *
- * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-003
+ * @spec openspec/specs/pos-product-catalogue/spec.md
  */
 class ProductCatalogService
 {
@@ -94,7 +94,7 @@ class ProductCatalogService
      *
      * @return int The tax rate percentage.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-004
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     public function btwClassToRate(?string $btwClass): int
     {
@@ -112,7 +112,7 @@ class ProductCatalogService
      *
      * @return bool Whether the class is valid.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-004
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     public function isValidBtwClass(?string $btwClass): bool
     {
@@ -129,7 +129,7 @@ class ProductCatalogService
      *
      * @return array<int, array<string, mixed>> The cleaned, sorted tiers.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-003
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     public function sortPriceTiers(array $tiers): array
     {
@@ -168,7 +168,7 @@ class ProductCatalogService
      *
      * @return array<string, mixed>|null The applicable tier, or null.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-003
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     public function resolveTier(array $tiers, float $quantity): ?array
     {
@@ -208,7 +208,7 @@ class ProductCatalogService
      *                              (base|tier|variant), tierLabel, btwClass,
      *                              taxRate.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-003
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     public function resolveEffectivePrice(array $product, float $quantity, ?string $variantSku=null): array
     {
@@ -268,7 +268,7 @@ class ProductCatalogService
      * @throws OCSNotFoundException   If the variant does not exist.
      * @throws OCSBadRequestException If the variant is inactive.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-001
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     private function resolveVariantPrice(array $product, string $sku, float $basePrice): array
     {
@@ -296,7 +296,7 @@ class ProductCatalogService
      *
      * @return array<string, mixed>|null The variant, or null when not present.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-001
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     public function findVariant(array $product, string $sku): ?array
     {
@@ -316,7 +316,7 @@ class ProductCatalogService
      *
      * @return bool Whether every variant SKU is present and unique.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-001
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     public function variantSkusUnique(array $variants): bool
     {
@@ -359,7 +359,7 @@ class ProductCatalogService
      *
      * @return bool Whether the candidate is an acceptable barcode.
      *
-     * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-004
+     * @spec openspec/specs/pos-barcode-scan/spec.md
      */
     public function isValidBarcode(string $barcode): bool
     {
@@ -387,8 +387,8 @@ class ProductCatalogService
      * @return array{product: array<string, mixed>, variantIndex: int|null}|null
      *         The match, or null when nothing matches.
      *
-     * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-004
-     * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-005
+     * @spec openspec/specs/pos-barcode-scan/spec.md
+     * @spec openspec/specs/pos-barcode-scan/spec.md
      */
     public function matchProductByBarcode(array $products, string $barcode): ?array
     {
@@ -426,7 +426,7 @@ class ProductCatalogService
      *
      * @return int|null The zero-based variant index, or null.
      *
-     * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-005
+     * @spec openspec/specs/pos-barcode-scan/spec.md
      */
     private function matchActiveVariantIndex(array $product, string $barcode): ?int
     {
@@ -464,8 +464,8 @@ class ProductCatalogService
      *
      * @throws OCSBadRequestException If the barcode is empty or malformed.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-005
-     * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-005
+     * @spec openspec/specs/pos-product-catalogue/spec.md
+     * @spec openspec/specs/pos-barcode-scan/spec.md
      */
     public function lookupByBarcode(string $barcode): ?array
     {
@@ -498,7 +498,7 @@ class ProductCatalogService
      *
      * @return array<int, array<string, mixed>> The product objects.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-005
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     private function fetchProducts(string $register, string $schema): array
     {
@@ -531,7 +531,7 @@ class ProductCatalogService
      *
      * @throws OCSNotFoundException If the register or schema is not configured.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-005
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     private function config(): array
     {
@@ -552,7 +552,7 @@ class ProductCatalogService
      *
      * @throws RuntimeException If OpenRegister is not available.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-005
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     private function getObjectService(): object
     {

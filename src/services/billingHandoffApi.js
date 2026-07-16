@@ -8,7 +8,7 @@
 // and the trigger itself, which posts a client's approved, un-billed time
 // entries for a period to shillinq's time-intake as one idempotent batch.
 //
-// @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+// @spec openspec/specs/time-approval-workflow/spec.md
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'

@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use OCP\IUserSession;
  * — closes the IDOR that a plain `#[NoAdminRequired]` alone would leave open
  * (any authenticated user could otherwise bill any client's hours).
  *
- * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 class BillingHandoffController extends Controller
 {
@@ -81,7 +81,7 @@ class BillingHandoffController extends Controller
      *
      * @return JSONResponse {available, deepLinkUrl, isManager}.
      *
-     * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+     * @spec openspec/specs/time-approval-workflow/spec.md
      */
     #[NoAdminRequired]
     public function availability(): JSONResponse
@@ -109,7 +109,7 @@ class BillingHandoffController extends Controller
      *
      * @return JSONResponse The handoff outcome.
      *
-     * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+     * @spec openspec/specs/time-approval-workflow/spec.md
      */
     #[NoAdminRequired]
     public function trigger(string $clientId, string $periodStart='', string $periodEnd=''): JSONResponse

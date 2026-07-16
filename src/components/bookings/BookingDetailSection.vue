@@ -22,7 +22,7 @@
   - Self-fetches the booking by id (passed as `bookingId` via @objectId, with a
   - cnSectionContext inject fallback) so it stays in sync after an action.
   -
-  - @spec openspec/changes/appointment-booking-11-admin-ui/specs/appointment-booking/spec.md#REQ-APT-015
+  - @spec openspec/specs/appointment-booking/spec.md
   -->
 <template>
 	<div class="booking-section">

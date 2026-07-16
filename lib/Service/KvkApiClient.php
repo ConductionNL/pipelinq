@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-36
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-kvk-api-integration
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use Throwable;
 /**
  * Client for the KVK Handelsregister Zoeken API.
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-36
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-kvk-api-integration
  */
 class KvkApiClient
 {
@@ -92,7 +92,7 @@ class KvkApiClient
      *
      * @return array The search results.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-36
+     * @spec openspec/specs/prospect-discovery/spec.md#requirement-kvk-api-integration
      */
     public function search(string $apiKey, array $criteria): array
     {

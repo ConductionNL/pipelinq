@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
  */
 
 declare(strict_types=1);
@@ -40,8 +40,8 @@ use Throwable;
 /**
  * Nightly renewal-window evaluation job (runs every 24h).
  *
- * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
- * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
  */
 class RenewalWindowJob extends TimedJob
 {
@@ -74,7 +74,7 @@ class RenewalWindowJob extends TimedJob
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
      */
     protected function run($argument): void
     {

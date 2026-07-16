@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
+ * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-trigger-conditions
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ class ObjectUpdateDiffService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
+     * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-trigger-conditions
      */
     public function dispatchAssigneeChangeIfNeeded(
         array $oldData,
@@ -77,7 +77,7 @@ class ObjectUpdateDiffService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
+     * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-trigger-conditions
      */
     public function dispatchStageChangeIfNeeded(
         array $newData,
@@ -137,7 +137,7 @@ class ObjectUpdateDiffService
      *
      * @return bool True when the value changed by more than epsilon.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
+     * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-trigger-conditions
      */
     public function hasValueChanged(array $newData, array $oldData): bool
     {
@@ -161,7 +161,7 @@ class ObjectUpdateDiffService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-48
+     * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-trigger-conditions
      */
     public function dispatchStatusChangeIfNeeded(
         array $newData,

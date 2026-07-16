@@ -16,8 +16,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-8
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md
  */
 
 declare(strict_types=1);
@@ -123,7 +123,7 @@ class SettingsController extends Controller
      *
      * @return JSONResponse The settings response.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
+     * @spec openspec/specs/admin-settings/spec.md
      * @spec openspec/changes/admin-settings/tasks.md#task-3
      */
     #[NoAdminRequired]
@@ -155,7 +155,7 @@ class SettingsController extends Controller
      *
      * @return JSONResponse The updated settings response.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
+     * @spec openspec/specs/admin-settings/spec.md
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function create(): JSONResponse
@@ -176,7 +176,7 @@ class SettingsController extends Controller
      *
      * @return JSONResponse The re-import result.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-8
+     * @spec openspec/specs/admin-settings/spec.md
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function reimport(): JSONResponse

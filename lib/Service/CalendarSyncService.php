@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
+ * @spec openspec/specs/email-calendar-sync/spec.md#requirement-calendar-events-must-sync-with-nextcloud-calendar
  */
 
 declare(strict_types=1);
@@ -59,7 +59,7 @@ class CalendarSyncService
      *
      * @return array<string, mixed> The CalendarLink data.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
+     * @spec openspec/specs/email-calendar-sync/spec.md#requirement-calendar-events-must-sync-with-nextcloud-calendar
      */
     public function buildCalendarLinkData(
         string $eventUid,
@@ -102,7 +102,7 @@ class CalendarSyncService
      *
      * @return string The iCalendar VEVENT string.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-60
+     * @spec openspec/specs/email-calendar-sync/spec.md#requirement-calendar-events-must-sync-with-nextcloud-calendar
      */
     public function generateVEvent(
         string $title,

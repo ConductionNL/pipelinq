@@ -48,7 +48,7 @@ export function getDaysAge(item) {
  *
  * @param {object|null} config Pipelinq settings config (settingsStore.config).
  * @return {number}
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+ * @spec openspec/specs/lead-management/spec.md
  */
 export function getStaleThreshold(config) {
 	const raw = config && config.lead_stale_threshold_days
@@ -78,7 +78,7 @@ export function isStale(item, entityType, threshold = 14) {
  * @param {object} lead The lead object.
  * @param {Array<{name:string,isClosed?:boolean}>} stages Pipeline stages.
  * @return {boolean}
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+ * @spec openspec/specs/lead-management/spec.md
  */
 export function isLeadOverdue(lead, stages = []) {
 	if (!lead || !lead.expectedCloseDate) return false
@@ -94,7 +94,7 @@ export function isLeadOverdue(lead, stages = []) {
  * @param {object} lead The lead object.
  * @param {Array<{name:string,isClosed?:boolean}>} stages Pipeline stages.
  * @return {number}
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+ * @spec openspec/specs/lead-management/spec.md
  */
 export function getOverdueDays(lead, stages = []) {
 	if (!isLeadOverdue(lead, stages)) return 0

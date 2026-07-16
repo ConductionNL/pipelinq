@@ -26,7 +26,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+ * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Throwable;
 /**
  * Kind-resolution + emit wrapper around OpenRegister's handoff engine.
  *
- * @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+ * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges to two OR services
  *  behind a container; the surface is deliberately tiny.
@@ -84,7 +84,7 @@ class SemanticHandoffService
      *
      * @return bool True when at least one installed+enabled schema implements the kind.
      *
-     * @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+     * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
      */
     public function hasImplementer(string $kindUri): bool
     {
@@ -125,7 +125,7 @@ class SemanticHandoffService
      *
      * @return array{ok: bool, targetUuid: string, correlationId: string, reason: string} Outcome.
      *
-     * @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+     * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
      */
     public function handoff(string $register, string $schema, string $id, string $handoffId): array
     {

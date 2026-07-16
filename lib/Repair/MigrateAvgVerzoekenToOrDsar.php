@@ -29,7 +29,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-017--migration-of-existing-avgverzoek-data-to-or
+ * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-017--migration-of-existing-avgverzoek-data-to-or
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use Psr\Log\LoggerInterface;
 /**
  * One-time migration of pipelinq avgVerzoek objects into OR dataSubjectRequest.
  *
- * @spec                                           openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-017--migration-of-existing-avgverzoek-data-to-or
+ * @spec                                           openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-017--migration-of-existing-avgverzoek-data-to-or
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class MigrateAvgVerzoekenToOrDsar implements IRepairStep
@@ -154,7 +154,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
      *
      * @return void
      *
-     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-017--migration-of-existing-avgverzoek-data-to-or
+     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-017--migration-of-existing-avgverzoek-data-to-or
      */
     public function run(IOutput $output): void
     {

@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-19
+ * @spec openspec/specs/notifications-activity/spec.md
  */
 
 declare(strict_types=1);
@@ -76,7 +76,7 @@ class Provider implements IProvider
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $previousEvent required by IProvider interface
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-19
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function parse($language, IEvent $event, ?IEvent $previousEvent=null): IEvent
     {

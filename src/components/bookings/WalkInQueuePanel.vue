@@ -8,7 +8,7 @@ ordered by `arrivedAt`, exposes Call next / Serve / Abandon actions, and
 auto-refreshes every 10 seconds so ETAs surface as the queue rebalances after
 a Booking completes (member 04 -> member 09).
 
-@spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+@spec openspec/specs/appointment-booking/spec.md
 -->
 <template>
 	<div class="walkin-queue-panel">
@@ -100,7 +100,7 @@ import axios from '@nextcloud/axios'
 /**
  * Pipelinq walk-in queue operator panel.
  *
- * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export default {
 	name: 'WalkInQueuePanel',

@@ -34,7 +34,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Throwable;
 /**
  * Periodic re-notification job for failed billing-handoff batches.
  *
- * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 class BillingHandoffRetryJob extends TimedJob
 {
@@ -89,7 +89,7 @@ class BillingHandoffRetryJob extends TimedJob
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
      *
-     * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+     * @spec openspec/specs/time-approval-workflow/spec.md
      */
     protected function run(mixed $argument): void
     {

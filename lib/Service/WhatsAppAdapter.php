@@ -173,7 +173,7 @@ class WhatsAppAdapter
      * } Send outcome.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
      */
     public function send(
         array $contact,
@@ -312,7 +312,7 @@ class WhatsAppAdapter
      *
      * @return bool True when the send may proceed.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
      */
     private function consentForSend(string $contactId, bool $businessInitiated): bool
     {
@@ -513,7 +513,7 @@ class WhatsAppAdapter
      *
      * @return void
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
+     * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
      */
     private function auditOutbound(
         string $contactId,

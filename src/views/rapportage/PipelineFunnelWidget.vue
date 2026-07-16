@@ -3,7 +3,7 @@
 <!--
   Pipeline value per stage — bar chart with two series (total + weighted).
 
-  @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
+  @spec openspec/specs/lead-management/spec.md
 -->
 <template>
 	<div class="pipeline-funnel-widget">

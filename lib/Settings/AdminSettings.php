@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-1
+ * @spec openspec/specs/admin-settings/spec.md
  */
 
 declare(strict_types=1);
@@ -57,7 +57,7 @@ class AdminSettings implements IDelegatedSettings
      *
      * @return TemplateResponse The settings form template.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-1
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getForm(): TemplateResponse
     {

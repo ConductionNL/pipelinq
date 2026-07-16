@@ -190,7 +190,7 @@ class SetupController extends Controller
      *
      * @return DataResponse `{ success, message }`.
      *
-     * @spec openspec/changes/pipelinq-setup-wizard-complete/specs/first-time-setup/spec.md
+     * @spec openspec/specs/first-time-setup/spec.md
      */
     private function provisionRegister(): DataResponse
     {
@@ -239,7 +239,7 @@ class SetupController extends Controller
      *
      * @return DataResponse `{ success, message }`.
      *
-     * @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
      */
     private function seedDemoData(): DataResponse
     {

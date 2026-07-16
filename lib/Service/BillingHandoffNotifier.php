@@ -22,7 +22,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCP\IGroupManager;
  * does not couple directly to both the group manager and the notification
  * service.
  *
- * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 class BillingHandoffNotifier
 {
@@ -63,7 +63,7 @@ class BillingHandoffNotifier
      *
      * @return void
      *
-     * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+     * @spec openspec/specs/time-approval-workflow/spec.md
      */
     public function notifyFailure(string $clientName, string $clientId, string $batchId): void
     {

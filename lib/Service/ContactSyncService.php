@@ -16,8 +16,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
+ * @spec openspec/specs/contacts-sync/spec.md
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 
 declare(strict_types=1);
@@ -73,7 +73,7 @@ class ContactSyncService
      *
      * @throws RuntimeException When name is missing or the contact cannot be provisioned.
      *
-     * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
+     * @spec openspec/specs/unify-client-contact/spec.md
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential validation + contact-provisioning guard clauses; extraction adds no clarity.
      * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential validation + contact-provisioning guard clauses; extraction adds no clarity.
@@ -155,7 +155,7 @@ class ContactSyncService
      *
      * @return array The matching contacts.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
+     * @spec openspec/specs/contacts-sync/spec.md
      */
     public function searchContacts(string $query): array
     {
@@ -185,7 +185,7 @@ class ContactSyncService
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $addressBookKey kept for future per-book import support
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
+     * @spec openspec/specs/contacts-sync/spec.md
      */
     public function importContact(string $uid, string $addressBookKey, string $type='client', ?string $clientId=null): array
     {
@@ -222,7 +222,7 @@ class ContactSyncService
      *
      * @return ?string The contacts UID or null.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
+     * @spec openspec/specs/contacts-sync/spec.md
      */
     public function syncToContacts(string $objectType, string $objectId): ?string
     {
