@@ -1,3 +1,9 @@
+---
+kind: code
+status: done
+archived: 2026-07-16
+---
+
 # pipelinq — money-and-bridge-fixes
 
 ## Why
