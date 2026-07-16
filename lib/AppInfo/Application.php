@@ -736,7 +736,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016--pipelinq-evidence-source-registration
+     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016-pipelinq-evidence-source-registration
      */
     private function registerDsarEvidenceSource(): void
     {

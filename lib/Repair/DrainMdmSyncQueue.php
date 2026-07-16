@@ -32,7 +32,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-014--one-time-drain-of-in-flight-queue-rows
+ * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-014-one-time-drain-of-in-flight-queue-rows
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Drains in-flight MDM sync-queue rows through OR WebhookService once.
  *
- * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-014--one-time-drain-of-in-flight-queue-rows
+ * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-014-one-time-drain-of-in-flight-queue-rows
  */
 class DrainMdmSyncQueue implements IRepairStep
 {
@@ -112,7 +112,7 @@ class DrainMdmSyncQueue implements IRepairStep
      *
      * @return void
      *
-     * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-014--one-time-drain-of-in-flight-queue-rows
+     * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-014-one-time-drain-of-in-flight-queue-rows
      */
     public function run(IOutput $output): void
     {

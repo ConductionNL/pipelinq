@@ -30,7 +30,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016--pipelinq-evidence-source-registration
+ * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016-pipelinq-evidence-source-registration
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Pipelinq CRM evidence source for OpenRegister DSAR fulfilment.
  *
- * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016--pipelinq-evidence-source-registration
+ * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016-pipelinq-evidence-source-registration
  */
 class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider
 {
@@ -122,7 +122,7 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider
      *
      * @return string `pipelinq-crm`.
      *
-     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016--pipelinq-evidence-source-registration
+     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016-pipelinq-evidence-source-registration
      */
     public function getSourceId(): string
     {
@@ -135,7 +135,7 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider
      *
      * @return bool True when harvesting is possible.
      *
-     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016--pipelinq-evidence-source-registration
+     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016-pipelinq-evidence-source-registration
      */
     public function isEnabled(): bool
     {
@@ -150,7 +150,7 @@ class PipelinqEvidenceSourceProvider implements EvidenceSourceProvider
      *
      * @return EvidenceItem[] One item per matching pipelinq object (possibly empty).
      *
-     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016--pipelinq-evidence-source-registration
+     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016-pipelinq-evidence-source-registration
      */
     public function harvest(string $caseUuid, array $case): array
     {
