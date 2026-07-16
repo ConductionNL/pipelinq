@@ -479,6 +479,91 @@ class ScheduledTaskServiceTest extends TestCase
     }//end testProcessScheduledTasksTransitionsOverdueTaskToVerlopen()
 
     /**
+     * Expiring an overdue task must escalate to its assignee via notifyTaskExpired.
+     *
+     * Regression guard for the money/data-integrity bug where an overdue task
+     * was silently expired but no assignee was ever notified — the orphaned
+     * NotificationService::notifyTaskExpired had zero callers, and the
+     * separately-registered TaskExpiryJob only logged.
+     *
+     * @return void
+     */
+    public function testExpiredTaskEscalatesToAssignee(): void
+    {
+        $pastDeadline = (new \DateTimeImmutable('-24 hours'))->format(\DateTimeInterface::ATOM);
+
+        $overdueTask = [
+            'id'             => 'task-overdue-2',
+            'status'         => 'open',
+            'subject'        => 'Overdue with assignee',
+            'deadline'       => $pastDeadline,
+            'assigneeUserId' => 'alice',
+            'attempts'       => [],
+        ];
+
+        $stub2 = new class($overdueTask) {
+
+            public array $lastSaveArgs = [];
+
+            /**
+             * @var array<string, mixed>
+             */
+            private array $overdueTask;
+
+            public function __construct(array $overdueTask)
+            {
+                $this->overdueTask = $overdueTask;
+            }//end __construct()
+
+            /**
+             * @param  array<string, mixed> $config
+             * @return array<int, mixed>
+             */
+            public function findAll(array $config=[], bool $_rbac=true, bool $_multitenancy=true): array
+            {
+                $deadlineFilter = $config['filters']['deadline'] ?? [];
+                if (isset($deadlineFilter['<']) === true) {
+                    return [$this->overdueTask];
+                }
+
+                return [];
+            }//end findAll()
+
+            /**
+             * @param  array<string, mixed>|object $object
+             * @param  array<int|string, mixed>    $extend
+             * @return mixed
+             */
+            public function saveObject(
+                array | object $object,
+                ?array $extend=[],
+                $register=null,
+                $schema=null,
+                ?string $uuid=null,
+                bool $_rbac=true,
+                bool $_multitenancy=true,
+                bool $silent=false,
+                ?array $uploadedFiles=null
+            ) {
+                $this->lastSaveArgs = ['object' => $object];
+                return $object;
+            }//end saveObject()
+        };
+
+        $this->container->method('get')->willReturn($stub2);
+
+        // The assignee MUST be escalated exactly once with the expiry details.
+        $this->notificationService->expects($this->once())
+            ->method('notifyTaskExpired')
+            ->with('Overdue with assignee', 'alice', 'task-overdue-2', $pastDeadline);
+
+        $service = $this->makeService();
+        $service->processScheduledTasks();
+
+        $this->assertSame('verlopen', $stub2->lastSaveArgs['object']['status']);
+    }//end testExpiredTaskEscalatesToAssignee()
+
+    /**
      * applyAcceptLanguage no-ops on an empty header (container is never queried).
      *
      * @return void

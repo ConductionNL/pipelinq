@@ -33,11 +33,6 @@ parameters:
 			path: lib/BackgroundJob/TaskEscalationJob.php
 
 		-
-			message: "#^Property OCA\\\\Pipelinq\\\\BackgroundJob\\\\TaskExpiryJob\\:\\:\\$notificationService is never read, only written\\.$#"
-			count: 1
-			path: lib/BackgroundJob/TaskExpiryJob.php
-
-		-
 			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
 			count: 1
 			path: lib/Controller/LedgerController.php
@@ -166,7 +161,7 @@ parameters:
 		# entries (runtime accepts plain string; nextcloud/ocp stub requires class-string).
 		-
 			message: "#^Parameter \\#1 \\$settings of attribute class OCP\\\\AppFramework\\\\Http\\\\Attribute\\\\AuthorizedAdminSetting constructor expects class\\-string\\<OCP\\\\Settings\\\\IDelegatedSettings\\>, string given\\.$#"
-			count: 1
+			count: 2
 			path: lib/Controller/LoyaltyController.php
 
 		-

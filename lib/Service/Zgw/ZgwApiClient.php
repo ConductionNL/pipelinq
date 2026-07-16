@@ -3,9 +3,9 @@
 /**
  * Pipelinq ZgwApiClient.
  *
- * Low-level HTTP transport + JWT minter shared by every typed ZGW resource
- * client (ZrcClient, DrcClient, BrcClient, ZtcClient, AcClient) and by
- * NrcSubscriptionService. Concentrates three pieces of behaviour:
+ * Low-level HTTP transport + JWT minter shared by the typed ZGW resource
+ * clients (ZrcClient, ZtcClient, AcClient) and by NrcSubscriptionService.
+ * Concentrates three pieces of behaviour:
  *
  *   1. JWT minting per VNG-API-Common (HS256, fresh per request, no caching,
  *      ±60s leeway honoured by the receiving server).
@@ -14,8 +14,8 @@
  *      certificate trust store.
  *   3. Fault-translation: 401/403 with VNG "JWT verlopen"/"JWT nog niet
  *      geldig" → `ClockSkewException`; 404 → `ZgwResourceNotFoundException`.
- *      Optimistic-locking 412 handling is delegated to ZrcClient / DrcClient
- *      since the fresh-fetch step is resource-specific.
+ *      Optimistic-locking 412 handling is delegated to the resource clients
+ *      (e.g. ZrcClient) since the fresh-fetch step is resource-specific.
  *
  * Client secret retrieval: `$client->secretKluisRef` is a vault URI
  * (`vault://...`); resolution is delegated to `IAppConfig` so the gemeente
@@ -297,7 +297,7 @@ class ZgwApiClient
         }
 
         if ($status === 412) {
-            // Caller (ZrcClient/DrcClient) handles the fresh-fetch step;
+            // The resource client (e.g. ZrcClient) handles the fresh-fetch step;
             // surface a bare OptimisticLockException with empty payloads.
             throw new OptimisticLockException(
                 sprintf('ZGW: 412 Precondition Failed on %s %s', $method, $url),
