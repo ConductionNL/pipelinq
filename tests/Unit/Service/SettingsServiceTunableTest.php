@@ -83,7 +83,7 @@ class SettingsServiceTunableTest extends TestCase
         $this->assertSame(
             900,
             $this->service->getIntValue('task_expiry.poll_interval_seconds', 900),
-            'Default must preserve the historical TaskExpiryJob interval'
+            'Default must preserve the historical 15-minute task-expiry interval'
         );
         $this->assertSame(
             8,

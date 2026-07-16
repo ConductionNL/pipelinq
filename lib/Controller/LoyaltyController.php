@@ -402,6 +402,74 @@ class LoyaltyController extends Controller
     }//end activateGiftCard()
 
     /**
+     * Issue a new gift card (back-office / staff issuance).
+     *
+     * Mints a card in `issued` status with a bcrypt-hashed PIN and records the
+     * opening `issue` ledger entry. The plaintext PIN is returned exactly once
+     * in the response body and is never stored or logged (PCI-DSS). Restricted
+     * to app administrators because issuance creates monetary value; the POS
+     * activate/redeem endpoints then operate on the issued population.
+     *
+     * Body: `initialBalance` (required, > 0), optional `programmeId`,
+     * `expiryDays` (default 365), `kanaal` (default `purchased`),
+     * `uitgegevenAan`.
+     *
+     * @return JSONResponse The created card + one-time PIN (200), or 400 on invalid input.
+     *
+     * @spec exclude Reinstates loyalty gift-card issuance (money-and-bridge-fixes); loyalty-program canonical spec archived 2026-06-14.
+     */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
+    public function issueGiftCard(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Authentication required')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        $initialBalance = (float) $this->request->getParam('initialBalance', 0);
+        if ($initialBalance <= 0) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('initialBalance must be a positive amount')],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
+
+        $programmeIdRaw = $this->request->getParam('programmeId');
+        $programmeId    = null;
+        if (is_string($programmeIdRaw) === true && $programmeIdRaw !== '') {
+            $programmeId = $programmeIdRaw;
+        }
+
+        $expiryDays = (int) $this->request->getParam('expiryDays', 365);
+        if ($expiryDays <= 0) {
+            $expiryDays = 365;
+        }
+
+        $kanaal           = (string) $this->request->getParam('kanaal', 'purchased');
+        $uitgegevenAanRaw = $this->request->getParam('uitgegevenAan');
+        $uitgegevenAan    = null;
+        if (is_string($uitgegevenAanRaw) === true && $uitgegevenAanRaw !== '') {
+            $uitgegevenAan = $uitgegevenAanRaw;
+        }
+
+        try {
+            $result = $this->giftCardService->issueGiftCard(
+                programmeId: $programmeId,
+                initialBalance: $initialBalance,
+                expiryDays: $expiryDays,
+                kanaal: $kanaal,
+                uitgegevenAan: $uitgegevenAan
+            );
+            return new JSONResponse($result);
+        } catch (Throwable $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        }
+    }//end issueGiftCard()
+
+    /**
      * Activate a loyalty programme (admin-only — relies on NC SecurityMiddleware default).
      *
      * @param string $programmeId The programme UUID.

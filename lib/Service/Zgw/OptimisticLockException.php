@@ -3,7 +3,7 @@
 /**
  * Pipelinq OptimisticLockException.
  *
- * Raised by ZrcClient/DrcClient when a PATCH operation returns HTTP 412
+ * Raised by a ZGW resource client (e.g. ZrcClient) when a PATCH operation returns HTTP 412
  * Precondition Failed. The bridge follows up with a fresh GET and packages
  * both representations (the stale pre-image we attempted to PATCH and the
  * fresh server representation) plus the field name whose mismatch caused

@@ -17,7 +17,7 @@
         "icon": "Server",
         "version": "1.0.0",
         "summary": "Configuration profile for a single ZGW deployment per gemeente (ZRC/DRC/BRC/ZTC/AC/NRC component URLs).",
-        "description": "Tracks the per-gemeente ZGW deployment configuration: the six component base URLs (ZRC, DRC, BRC, ZTC, AC, NRC), the bound ZgwClient credential reference, the actief/readOnly write toggles, and the optional mTLS material. Used by ZgwApiClient + ZrcClient + DrcClient + BrcClient + ZtcClient + AcClient + NrcSubscriptionService to address the right host per call. One endpoint per gemeente (gemeenteCode is the natural key); coexistence-validator gates against same-gemeente double write paths versus stuf-zkn-bg-adapter. Mapped to Schema.org SoftwareApplication for register tooling.",
+        "description": "Tracks the per-gemeente ZGW deployment configuration: the six component base URLs (ZRC, DRC, BRC, ZTC, AC, NRC), the bound ZgwClient credential reference, the actief/readOnly write toggles, and the optional mTLS material. Currently addressed only by the inbound status path (NrcNotificationListener via ZrcClient::getStatus) and NrcSubscriptionService; the ZGW write bridge (zaak/document/besluit creation) is not wired in this app — ZGW writes are routed via the openconnector ZGW connector instead. One endpoint per gemeente (gemeenteCode is the natural key). Mapped to Schema.org SoftwareApplication for register tooling.",
         "x-schema-org": "schema:SoftwareApplication",
         "required": [
           "naam",
