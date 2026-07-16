@@ -5,7 +5,6 @@
   <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/BackgroundJob/KennisbankReviewJob.php"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/BackgroundJob/KennisbankReviewJob.php"/>
   <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/BackgroundJob/TaskEscalationJob.php"/>
-  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/BackgroundJob/TaskExpiryJob.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Controller/PublicFormController.php"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Controller/PublicKennisbankController.php"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Controller/PublicSurveyController.php"/>
