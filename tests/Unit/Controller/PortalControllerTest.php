@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\PortalController;
+use OCA\Pipelinq\Service\AppointmentDepositService;
 use OCA\Pipelinq\Service\BookingService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -70,7 +71,8 @@ class PortalControllerTest extends TestCase
      *   0: PortalController,
      *   1: BookingService,
      *   2: object,
-     *   3: IRequest
+     *   3: IRequest,
+     *   4: AppointmentDepositService
      * }
      */
     private function build(
@@ -96,6 +98,7 @@ class PortalControllerTest extends TestCase
         );
 
         $booking = $this->createMock(BookingService::class);
+        $deposit = $this->createMock(AppointmentDepositService::class);
 
         $appConfig = $this->createMock(IAppConfig::class);
         $appConfig->method('getValueString')->willReturnCallback(
@@ -186,6 +189,7 @@ class PortalControllerTest extends TestCase
         $controller = new PortalController(
             $request,
             $booking,
+            $deposit,
             $appConfig,
             $container,
             $appManager,
@@ -195,7 +199,7 @@ class PortalControllerTest extends TestCase
             $logger
         );
 
-        return [$controller, $booking, $objectService, $request];
+        return [$controller, $booking, $objectService, $request, $deposit];
     }//end build()
 
     /**
@@ -323,6 +327,112 @@ class PortalControllerTest extends TestCase
         $this->assertArrayHasKey('cancel', $data['manageLinks']);
         $this->assertStringContainsString('token=', $data['manageLinks']['reschedule']);
     }//end testBookCreatesBookingForValidInput()
+
+    /**
+     * POST /portal/book on a deposit-required Service opens a payment session
+     * and forwards the customer to the hosted checkout URL (REQ-APT-010).
+     *
+     * Regression guard for the money bug where `paymentRedirect` was hardcoded
+     * null and the deposit service was never invoked, so a deposit booking was
+     * created in `pending-deposit` but the customer was never charged.
+     *
+     * @return void
+     */
+    public function testBookDepositServiceOpensPaymentSession(): void
+    {
+        $service = [
+            '@self'           => ['id' => 'svc-1'],
+            'name'            => 'Massage',
+            'durationMinutes' => 60,
+            'bookableOnline'  => true,
+            'requiresDeposit' => true,
+            'depositAmount'   => 20.0,
+            'currency'        => 'EUR',
+        ];
+
+        [$controller, $booking, , , $deposit] = $this->build(
+            serviceStub: $service,
+            bookingStub: [
+                '@self'      => ['id' => 'bk-dep'],
+                'customerId' => 'ct-new',
+            ],
+            requestParams: [
+                'customerName' => 'Bram',
+                'email'        => 'bram@example.com',
+                'phone'        => '+31600000001',
+                'serviceId'    => 'svc-1',
+                'startAt'      => '2026-06-10T09:00:00+00:00',
+            ]
+        );
+
+        $booking->expects($this->once())
+            ->method('createBooking')
+            ->willReturn('bk-dep');
+
+        // The controller MUST invoke the deposit orchestrator with the deposit
+        // amount converted to integer cents (20.00 EUR -> 2000 cents).
+        $deposit->expects($this->once())
+            ->method('createDepositSession')
+            ->with(
+                'bk-dep',
+                2000,
+                'EUR',
+                $this->stringContains('Massage'),
+                $this->stringContains('bk-dep')
+            )
+            ->willReturn(
+                [
+                    'sessionUrl'        => 'https://pay.example.test/checkout/abc123',
+                    'status'            => 'pending',
+                    'providerReference' => 'tr_abc123',
+                ]
+            );
+
+        $response = $controller->book();
+        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $data = $response->getData();
+        $this->assertSame('bk-dep', $data['bookingId']);
+        $this->assertSame('https://pay.example.test/checkout/abc123', $data['paymentRedirect']);
+    }//end testBookDepositServiceOpensPaymentSession()
+
+    /**
+     * POST /portal/book on a non-deposit Service returns a null paymentRedirect
+     * and never opens a payment session.
+     *
+     * @return void
+     */
+    public function testBookNonDepositReturnsNullPaymentRedirect(): void
+    {
+        $service = [
+            '@self'           => ['id' => 'svc-1'],
+            'name'            => 'Knipbeurt',
+            'durationMinutes' => 30,
+            'bookableOnline'  => true,
+            'requiresDeposit' => false,
+        ];
+
+        [$controller, $booking, , , $deposit] = $this->build(
+            serviceStub: $service,
+            bookingStub: [
+                '@self'      => ['id' => 'bk-1'],
+                'customerId' => 'ct-new',
+            ],
+            requestParams: [
+                'customerName' => 'Annie',
+                'email'        => 'annie@example.com',
+                'phone'        => '+31600000000',
+                'serviceId'    => 'svc-1',
+                'startAt'      => '2026-06-10T09:00:00+00:00',
+            ]
+        );
+
+        $booking->expects($this->once())->method('createBooking')->willReturn('bk-1');
+        $deposit->expects($this->never())->method('createDepositSession');
+
+        $response = $controller->book();
+        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertNull($response->getData()['paymentRedirect']);
+    }//end testBookNonDepositReturnsNullPaymentRedirect()
 
     /**
      * POST /portal/book returns 400 on a malformed email (REQ-APT-005 scenario 3).

@@ -32,6 +32,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\AppointmentDepositService;
 use OCA\Pipelinq\Service\BookingService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -94,19 +95,21 @@ class PortalController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest           $request        The request.
-     * @param BookingService     $bookingService Booking lifecycle service (member 04).
-     * @param IAppConfig         $appConfig      The app config.
-     * @param ContainerInterface $container      The DI container (OpenRegister lookup).
-     * @param IAppManager        $appManager     The app manager (OR-availability guard).
-     * @param IURLGenerator      $urlGenerator   The URL generator (signed deep-links).
-     * @param ITimeFactory       $time           The time factory (signed-link expiry).
-     * @param ISecureRandom      $secureRandom   The CSPRNG (signing-key minting).
-     * @param LoggerInterface    $logger         The logger.
+     * @param IRequest                  $request        The request.
+     * @param BookingService            $bookingService Booking lifecycle service (member 04).
+     * @param AppointmentDepositService $depositService Deposit payment orchestrator (member 08).
+     * @param IAppConfig                $appConfig      The app config.
+     * @param ContainerInterface        $container      The DI container (OpenRegister lookup).
+     * @param IAppManager               $appManager     The app manager (OR-availability guard).
+     * @param IURLGenerator             $urlGenerator   The URL generator (signed deep-links).
+     * @param ITimeFactory              $time           The time factory (signed-link expiry).
+     * @param ISecureRandom             $secureRandom   The CSPRNG (signing-key minting).
+     * @param LoggerInterface           $logger         The logger.
      */
     public function __construct(
         IRequest $request,
         private BookingService $bookingService,
+        private AppointmentDepositService $depositService,
         private IAppConfig $appConfig,
         private ContainerInterface $container,
         private IAppManager $appManager,
@@ -191,7 +194,7 @@ class PortalController extends Controller
         }
 
         try {
-            $bookingId = $this->createBookingFromPortal(params: $params);
+            $created = $this->createBookingFromPortal(params: $params);
         } catch (InvalidArgumentException $e) {
             return new JSONResponse(['error' => 'Invalid booking request'], Http::STATUS_BAD_REQUEST);
         } catch (\Throwable $e) {
@@ -199,16 +202,77 @@ class PortalController extends Controller
             return new JSONResponse(['error' => 'Booking could not be created'], Http::STATUS_SERVICE_UNAVAILABLE);
         }
 
+        $bookingId = $created['bookingId'];
+
         return new JSONResponse(
             [
                 'bookingId'       => $bookingId,
                 'manageLinks'     => $this->buildManageLinks(bookingId: $bookingId),
-                'paymentRedirect' => null,
+                'paymentRedirect' => $this->resolvePaymentRedirect(bookingId: $bookingId, created: $created),
                 'message'         => 'Booking received',
             ],
             Http::STATUS_OK
         );
     }//end book()
+
+    /**
+     * Resolve the payment-redirect URL for a freshly created booking.
+     *
+     * When the booked Service requires a deposit, opens an openconnector
+     * payment session via {@see AppointmentDepositService::createDepositSession}
+     * and returns its hosted checkout URL so the portal can forward the
+     * customer to pay. Returns null for non-deposit bookings, and also when
+     * openconnector is unavailable / unconfigured (the deposit service degrades
+     * to an empty session URL, and the 15-minute timeout job then releases the
+     * slot) — the portal surfaces a static fallback in that case.
+     *
+     * @param string               $bookingId The freshly created booking UUID.
+     * @param array<string, mixed> $created   The createBookingFromPortal result.
+     *
+     * @return string|null The hosted payment URL, or null when no charge is due / possible.
+     *
+     * @spec openspec/specs/appointment-booking/spec.md#req-apt-010
+     */
+    private function resolvePaymentRedirect(string $bookingId, array $created): ?string
+    {
+        $requiresDeposit = (bool) ($created['requiresDeposit'] ?? false);
+        $depositAmount   = (float) ($created['depositAmount'] ?? 0.0);
+        if ($requiresDeposit === false || $depositAmount <= 0.0) {
+            return null;
+        }
+
+        $amountCents = (int) round($depositAmount * 100);
+        if ($amountCents <= 0) {
+            return null;
+        }
+
+        $returnUrl = $this->urlGenerator->getAbsoluteURL(
+            '/index.php/apps/pipelinq/portal/api/booking/'.rawurlencode($bookingId)
+        );
+
+        try {
+            $session = $this->depositService->createDepositSession(
+                bookingId: $bookingId,
+                amountCents: $amountCents,
+                currency: (string) ($created['currency'] ?? 'EUR'),
+                description: 'Deposit for '.(string) ($created['serviceName'] ?? 'appointment'),
+                returnUrl: $returnUrl
+            );
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq portal: deposit session could not be opened',
+                ['booking' => $bookingId]
+            );
+            return null;
+        }
+
+        $sessionUrl = (string) $session['sessionUrl'];
+        if ($sessionUrl === '') {
+            return null;
+        }
+
+        return $sessionUrl;
+    }//end resolvePaymentRedirect()
 
     /**
      * GET /portal/booking/{bookingId} — fetch a booking (optionally signed).
@@ -393,12 +457,12 @@ class PortalController extends Controller
      *
      * @param array<string, string> $params The validated payload.
      *
-     * @return string The new booking UUID.
+     * @return array{bookingId: string, requiresDeposit: bool, depositAmount: float, currency: string, serviceName: string}
      *
      * @throws InvalidArgumentException If the service or input is unusable.
      * @throws RuntimeException If OpenRegister is unavailable.
      */
-    private function createBookingFromPortal(array $params): string
+    private function createBookingFromPortal(array $params): array
     {
         $service = $this->loadService(serviceId: $params['serviceId']);
         if ($service === null) {
@@ -422,7 +486,7 @@ class PortalController extends Controller
             phone: $params['phone']
         );
 
-        return $this->bookingService->createBooking(
+        $bookingId = $this->bookingService->createBooking(
             data: [
                 'customerId' => $customerId,
                 'serviceId'  => $params['serviceId'],
@@ -432,6 +496,14 @@ class PortalController extends Controller
             ],
             source: 'portal'
         );
+
+        return [
+            'bookingId'       => $bookingId,
+            'requiresDeposit' => (bool) ($service['requiresDeposit'] ?? false),
+            'depositAmount'   => (float) ($service['depositAmount'] ?? 0.0),
+            'currency'        => (string) ($service['currency'] ?? 'EUR'),
+            'serviceName'     => (string) ($service['name'] ?? 'appointment'),
+        ];
     }//end createBookingFromPortal()
 
     /**
