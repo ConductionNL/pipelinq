@@ -29,7 +29,7 @@ import dashboardRefreshMixin from './dashboardRefreshMixin.js'
  * Horizontal bar funnel: open-lead value summed per pipeline stage,
  * ordered by stage. Title comes from the widget chrome.
  *
- * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export default {
 	name: 'PipelineByStageChartWidget',
@@ -69,7 +69,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		async load() {
 			this.error = null

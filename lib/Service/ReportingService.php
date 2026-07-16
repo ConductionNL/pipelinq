@@ -17,9 +17,9 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-51
+ * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
+ * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
+ * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -304,7 +304,7 @@ class ReportingService
      * @return float FCR as a percentage (0-100).
      *
      * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-51
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
      */
     public function calculateFcr(array $contactmomenten): float
     {
@@ -344,7 +344,7 @@ class ReportingService
      *
      * @return array{compliance: float, target: float, status: string} SLA data.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
      */
     public function calculateSlaCompliance(
         string $channel,
@@ -379,7 +379,7 @@ class ReportingService
      *
      * @return float The target percentage.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
      */
     public function getSlaTarget(string $channel): float
     {
@@ -398,7 +398,7 @@ class ReportingService
      *
      * @return array<string, array<string, mixed>> SLA targets per channel.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
      */
     public function getAllSlaTargets(): array
     {
@@ -432,7 +432,7 @@ class ReportingService
      *
      * @return bool False when channel or metric is not in the allowlist.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
      */
     public function setSlaTarget(string $channel, string $metric, string $value): bool
     {
@@ -461,7 +461,7 @@ class ReportingService
      *
      * @return string The CSV content.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
      */
     public function generateCsv(array $headers, array $rows): string
     {
@@ -485,7 +485,7 @@ class ReportingService
      *
      * @return string Formatted average duration (MM:SS).
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-51
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
      */
     public function calculateAverageHandlingTime(array $durations): string
     {

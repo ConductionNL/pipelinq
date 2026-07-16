@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-34
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-prospect-to-lead-conversion
  */
 
 declare(strict_types=1);
@@ -100,7 +100,7 @@ class ProspectController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-34
+     * @spec openspec/specs/prospect-discovery/spec.md#requirement-prospect-to-lead-conversion
      */
     public function createLead(): JSONResponse
     {

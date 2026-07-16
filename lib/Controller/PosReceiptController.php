@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-008
+ * @spec openspec/specs/pos-receipt-engine/spec.md
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-008
+ * @spec openspec/specs/pos-receipt-engine/spec.md
  * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
  */
 class PosReceiptController extends Controller
@@ -83,7 +83,7 @@ class PosReceiptController extends Controller
      *
      * @return JSONResponse The preview payload.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-003
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     #[NoAdminRequired]
     public function preview(string $id): JSONResponse
@@ -113,7 +113,7 @@ class PosReceiptController extends Controller
      *
      * @return JSONResponse The email result.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-002
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     #[NoAdminRequired]
     public function email(string $id): JSONResponse
@@ -145,7 +145,7 @@ class PosReceiptController extends Controller
      *
      * @return JSONResponse The print result (base64 ESC/POS bytes + log id).
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-006
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     #[NoAdminRequired]
     public function print(string $id): JSONResponse

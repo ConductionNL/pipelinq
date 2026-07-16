@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
+ * @spec openspec/specs/entity-notes/spec.md
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
  *  group manager, settings, ticket resolver, OR container); splitting them would
  *  add indirection without reducing real coupling.
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
+ * @spec openspec/specs/entity-notes/spec.md
  */
 class NotesController extends Controller
 {
@@ -239,7 +239,7 @@ class NotesController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
+     * @spec openspec/specs/entity-notes/spec.md
      */
     public function list(string $objectType, string $objectId): JSONResponse
     {
@@ -278,7 +278,7 @@ class NotesController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
+     * @spec openspec/specs/entity-notes/spec.md
      */
     public function create(string $objectType, string $objectId): JSONResponse
     {
@@ -331,7 +331,7 @@ class NotesController extends Controller
      *
      * @return JSONResponse The response.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
+     * @spec openspec/specs/entity-notes/spec.md
      */
     #[NoAdminRequired]
     public function deleteAll(string $objectType, string $objectId): JSONResponse
@@ -374,7 +374,7 @@ class NotesController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-29
+     * @spec openspec/specs/entity-notes/spec.md
      */
     public function deleteSingle(int $noteId): JSONResponse
     {

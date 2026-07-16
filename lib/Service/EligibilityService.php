@@ -20,7 +20,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-03-skill-routing-eligibility/specs/appointment-booking/spec.md#req-apt-004
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Cohesive eligibility matching logic; splitting would fragment a single primitive.
  *
- * @spec openspec/changes/appointment-booking-03-skill-routing-eligibility/specs/appointment-booking/spec.md#req-apt-004
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class EligibilityService
 {
@@ -97,7 +97,7 @@ class EligibilityService
      *
      * @return array<int, array<string, mixed>>
      *
-     * @spec openspec/changes/appointment-booking-03-skill-routing-eligibility/specs/appointment-booking/spec.md#req-apt-004
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function getEligibleResources(string $serviceId): array
     {
@@ -138,7 +138,7 @@ class EligibilityService
      *     skillRequired: string, allowGap: bool,
      *     eligibleResources: array<int, array<string, mixed>>}>
      *
-     * @spec openspec/changes/appointment-booking-03-skill-routing-eligibility/specs/appointment-booking/spec.md#req-apt-004
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function getEligibleResourcesPerStep(string $serviceId): array
     {
@@ -200,7 +200,7 @@ class EligibilityService
      *
      * @return array<int, array<string, mixed>>
      *
-     * @spec openspec/changes/appointment-booking-03-skill-routing-eligibility/specs/appointment-booking/spec.md#req-apt-004
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function getEligibleResourcesForSlot(string $serviceId, string $date, int $durationMinutes): array
     {
@@ -251,7 +251,7 @@ class EligibilityService
      *
      * @return bool
      *
-     * @spec openspec/changes/appointment-booking-03-skill-routing-eligibility/specs/appointment-booking/spec.md#req-apt-004
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function matchesSkillRequirements(array $resource, array $requiredSkills): bool
     {

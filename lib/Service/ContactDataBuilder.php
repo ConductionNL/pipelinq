@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ class ContactDataBuilder
      *
      * @return array The client data ready for saving.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
+     * @spec openspec/specs/contacts-sync/spec.md
      */
     public function buildClientImportData(array $ncContact, string $uid): array
     {
@@ -80,7 +80,7 @@ class ContactDataBuilder
      *
      * @return array The contact data ready for saving.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
+     * @spec openspec/specs/contacts-sync/spec.md
      */
     public function buildContactImportData(array $ncContact, string $uid, ?string $clientId): array
     {

@@ -18,7 +18,7 @@
   - the reference is shown as a labeled, copyable value rather than a
   - guessed/broken cross-app link.
   -
-  - @spec openspec/changes/semantic-handoff-emit/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+  - @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
   -->
 <template>
 	<div v-if="loading" class="contract-invoicing-section">

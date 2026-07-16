@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for writing vCard data to Nextcloud addressbooks.
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 class ContactVcardWriterService
 {
@@ -63,7 +63,7 @@ class ContactVcardWriterService
      *
      * @return ?string The contacts UID or null.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
+     * @spec openspec/specs/contacts-sync/spec.md
      */
     public function writeToAddressBook(array $properties, array $objData, string $objectType): ?string
     {
@@ -119,7 +119,7 @@ class ContactVcardWriterService
      * @return ?string The created/updated contact UID, or null when no addressbook
      *                 is available or the write failed.
      *
-     * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
+     * @spec openspec/specs/unify-client-contact/spec.md
      */
     public function writeVcard(array $properties, ?string $existingUid=null): ?string
     {

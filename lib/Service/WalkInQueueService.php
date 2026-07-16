@@ -20,7 +20,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -55,7 +55,7 @@ use RuntimeException;
  *  rebalance in one cohesive service; splitting would scatter one
  *  transactional concern.
  *
- * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class WalkInQueueService
 {
@@ -147,7 +147,7 @@ class WalkInQueueService
      * @throws InvalidArgumentException If displayName is missing.
      * @throws RuntimeException If OpenRegister is unavailable.
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function createTicket(array $data): string
     {
@@ -204,7 +204,7 @@ class WalkInQueueService
      *
      * @return string The transitioned ticket UUID, or '' when the queue is empty.
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function callNext(string $assignedResourceId=''): string
     {
@@ -245,7 +245,7 @@ class WalkInQueueService
      *
      * @throws InvalidArgumentException If the transition is rejected.
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function callTicket(string $ticketId, string $assignedResourceId='', ?array $preloaded=null): void
     {
@@ -272,7 +272,7 @@ class WalkInQueueService
      *
      * @throws InvalidArgumentException If the transition is rejected.
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function serveTicket(string $ticketId): void
     {
@@ -295,7 +295,7 @@ class WalkInQueueService
      *
      * @throws InvalidArgumentException If the transition is rejected.
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function abandonTicket(string $ticketId): void
     {
@@ -317,7 +317,7 @@ class WalkInQueueService
      *
      * @return int The number of tickets touched.
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function rebalance(): int
     {
@@ -407,7 +407,7 @@ class WalkInQueueService
      *
      * @throws InvalidArgumentException When rejected.
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function assertTransitionAllowed(string $from, string $to): void
     {

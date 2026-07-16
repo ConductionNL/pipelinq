@@ -18,8 +18,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-007
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
  */
 
 declare(strict_types=1);
@@ -77,8 +77,8 @@ class SlaObjectCreatedListener implements IEventListener
      *
      * @return void
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-007
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function handle(Event $event): void
     {

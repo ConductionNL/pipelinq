@@ -21,7 +21,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-per-user-matching-settings
+ * @spec openspec/specs/email-calendar-sync/spec.md
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Throwable;
  * REST endpoints for the per-user email-matching settings, manual trigger,
  * and last-run status.
  *
- * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-per-user-matching-settings
+ * @spec openspec/specs/email-calendar-sync/spec.md
  */
 class EmailSyncController extends Controller
 {
@@ -74,7 +74,7 @@ class EmailSyncController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-per-user-matching-settings
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function getSettings(): JSONResponse
     {
@@ -103,7 +103,7 @@ class EmailSyncController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-per-user-matching-settings
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function saveSettings(): JSONResponse
     {
@@ -155,7 +155,7 @@ class EmailSyncController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-per-user-matching-settings
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function trigger(): JSONResponse
     {
@@ -189,7 +189,7 @@ class EmailSyncController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-matching-job-status-display
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function getStatus(): JSONResponse
     {

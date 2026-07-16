@@ -79,13 +79,13 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		settingsStore() {
 			return useSettingsStore()
 		},
 		/**
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -94,7 +94,7 @@ export default {
 		 * Effective stale threshold from the settings store. Falls back to
 		 * 14 days when the store hasn't initialised yet.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		staleThreshold() {
 			return getStaleThreshold(this.settingsStore.config)
@@ -127,7 +127,7 @@ export default {
 		 *
 		 * @param {object} item The lead row.
 		 * @return {string}
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		rowClassFor(item) {
 			return isLeadOverdue(item, this.stages) ? 'lead-overdue' : ''
@@ -138,7 +138,7 @@ export default {
 		 *
 		 * @param {Array<object>} items The base item list.
 		 * @return {Array<object>}
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		itemsFilter(items) {
 			if (!Array.isArray(items)) return []
@@ -157,7 +157,7 @@ export default {
 		 * (REQ-LM-004) can honour each stage's `isClosed` flag. Falls back to
 		 * a plain date check when no pipeline is configured.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		async loadDefaultPipeline() {
 			try {

@@ -20,8 +20,8 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/activity-timeline/tasks.md#task-2
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-11
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
+ * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-entries-must-be-available-via-api
+ * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
  */
 
 declare(strict_types=1);
@@ -106,7 +106,7 @@ class ActivityTimelineController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-11
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-entries-must-be-available-via-api
      */
     public function getTimeline(): JSONResponse
     {
@@ -166,7 +166,7 @@ class ActivityTimelineController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
      */
     public function getWorklog(): JSONResponse
     {
@@ -223,7 +223,7 @@ class ActivityTimelineController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
      */
     public function createWorklog(): JSONResponse
     {

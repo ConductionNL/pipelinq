@@ -15,7 +15,7 @@
   customer page never crashes on a relation lookup — REQ-KB360-006).
 
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
-  @spec openspec/changes/appointment-booking-11-admin-ui/specs/appointment-booking/spec.md#REQ-APT-014
+  @spec openspec/specs/appointment-booking/spec.md
 -->
 <template>
 	<CnDetailCard :title="t('pipelinq', 'Bookings')">

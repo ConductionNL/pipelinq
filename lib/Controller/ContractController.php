@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
  */
 
 declare(strict_types=1);
@@ -48,7 +48,7 @@ use Throwable;
 /**
  * Contract lifecycle + recurring-revenue controller.
  *
- * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
  */
 class ContractController extends Controller
 {
@@ -90,7 +90,7 @@ class ContractController extends Controller
      *
      * @return JSONResponse The created contract or an error.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
      */
     #[NoAdminRequired]
     public function create(): JSONResponse
@@ -136,7 +136,7 @@ class ContractController extends Controller
      *
      * @return JSONResponse The updated contract or an error.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
      */
     #[NoAdminRequired]
     public function transition(string $id): JSONResponse
@@ -191,7 +191,7 @@ class ContractController extends Controller
      * @no-admin-idor-exempt returns tenant-wide aggregate metrics only (MRR/ARR/counts);
      *                       takes no caller-supplied object id, exposes no per-object data.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     #[NoAdminRequired]
     public function summary(): JSONResponse
@@ -212,7 +212,7 @@ class ContractController extends Controller
      * @no-admin-idor-exempt returns tenant-wide period aggregates only (renewal rate /
      *                       churned MRR); takes a date range, not an object id.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     #[NoAdminRequired]
     public function renewalMetrics(): JSONResponse

@@ -16,8 +16,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
+ * @spec openspec/specs/contacts-sync/spec.md
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 
 declare(strict_types=1);
@@ -65,7 +65,7 @@ class ContactSyncController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
+     * @spec openspec/specs/contacts-sync/spec.md
      */
     public function search(): JSONResponse
     {
@@ -98,7 +98,7 @@ class ContactSyncController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
+     * @spec openspec/specs/contacts-sync/spec.md
      */
     public function import(): JSONResponse
     {
@@ -151,7 +151,7 @@ class ContactSyncController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
+     * @spec openspec/specs/unify-client-contact/spec.md
      */
     public function create(): JSONResponse
     {
@@ -192,7 +192,7 @@ class ContactSyncController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
+     * @spec openspec/specs/contacts-sync/spec.md
      */
     public function writeBack(): JSONResponse
     {

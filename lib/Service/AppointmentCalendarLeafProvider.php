@@ -20,7 +20,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -65,7 +65,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Mirrors AvailabilityService /
  *  BookingService — leaf bridge orchestration is fundamentally orchestral.
  *
- * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentCalendarLeafProvider
 {
@@ -134,7 +134,7 @@ class AppointmentCalendarLeafProvider
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function setLeaf(?object $leaf): void
     {
@@ -158,7 +158,7 @@ class AppointmentCalendarLeafProvider
      *
      * @return array<int, array{startTime: string, endTime: string}>
      *
-     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function getBlockedTimes(string $resourceId, string $date): array
     {
@@ -216,7 +216,7 @@ class AppointmentCalendarLeafProvider
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function pushBookingEvent(string $bookingId): void
     {

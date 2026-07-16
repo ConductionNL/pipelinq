@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
+ * @spec openspec/specs/admin-settings/spec.md
  */
 
 declare(strict_types=1);
@@ -63,7 +63,7 @@ class RequestChannelController extends Controller
      *
      * @return JSONResponse The response containing tags.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
+     * @spec openspec/specs/admin-settings/spec.md
      */
     #[NoAdminRequired]
     public function index(): JSONResponse
@@ -86,7 +86,7 @@ class RequestChannelController extends Controller
      *
      * @return JSONResponse The response containing the created tag.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
+     * @spec openspec/specs/admin-settings/spec.md
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function create(): JSONResponse
@@ -111,7 +111,7 @@ class RequestChannelController extends Controller
      *
      * @return JSONResponse The response containing the renamed tag.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
+     * @spec openspec/specs/admin-settings/spec.md
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function update(string $id): JSONResponse
@@ -137,7 +137,7 @@ class RequestChannelController extends Controller
      *
      * @return JSONResponse The response.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-10
+     * @spec openspec/specs/admin-settings/spec.md
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function destroy(string $id): JSONResponse
