@@ -21,7 +21,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-009
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -78,7 +78,7 @@ class SlaPolicyController extends Controller
      *
      * @return JSONResponse Saved policy or error.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-009
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function create(): JSONResponse
@@ -126,7 +126,7 @@ class SlaPolicyController extends Controller
      *
      * @return JSONResponse Saved policy or error.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-009
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function update(string $id): JSONResponse

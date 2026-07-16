@@ -25,7 +25,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -55,7 +55,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentPaymentProvider
 {
@@ -103,7 +103,7 @@ class AppointmentPaymentProvider
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function chargeNoShowFee(string $bookingId, float $amount): void
     {
@@ -126,7 +126,7 @@ class AppointmentPaymentProvider
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function chargeCancellationFee(string $bookingId, float $amount): void
     {
@@ -145,7 +145,7 @@ class AppointmentPaymentProvider
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function setPaymentService(?object $service): void
     {

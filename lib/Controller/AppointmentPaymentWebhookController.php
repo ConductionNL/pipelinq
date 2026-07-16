@@ -24,7 +24,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use Throwable;
  * dispatch) lives in the deposit service so the controller stays a thin
  * authentication boundary.
  *
- * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentPaymentWebhookController extends Controller
 {
@@ -64,7 +64,7 @@ class AppointmentPaymentWebhookController extends Controller
      * @param AppointmentDepositService $deposit   The deposit service (callback handler).
      * @param LoggerInterface           $logger    The logger.
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function __construct(
         IRequest $request,
@@ -91,7 +91,7 @@ class AppointmentPaymentWebhookController extends Controller
      * @return JSONResponse Acknowledgement (HTTP 200 + status), 422 on
      *                      invalid signature, 400 on malformed payload.
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     #[PublicPage]
     #[NoCSRFRequired]

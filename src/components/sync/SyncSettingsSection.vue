@@ -7,8 +7,8 @@
   - (NOT a routed page — ADR-004). Pipelinq owns the matching rule;
   - the OpenRegister `email` leaf owns the link record.
   -
-  - @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-per-user-matching-settings
-  - @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-matching-job-status-display
+  - @spec openspec/specs/email-calendar-sync/spec.md
+  - @spec openspec/specs/email-calendar-sync/spec.md
   -->
 <template>
 	<NcSettingsSection

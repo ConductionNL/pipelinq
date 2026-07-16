@@ -13,7 +13,7 @@
   rebuilds the cache hourly.
 
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
-  @spec openspec/changes/appointment-booking-11-admin-ui/specs/appointment-booking/spec.md#REQ-APT-015
+  @spec openspec/specs/appointment-booking/spec.md
 -->
 <template>
 	<div v-if="editing || isNew">
@@ -288,7 +288,7 @@ export default {
 		 * @param {string} serviceId The saved service id.
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/appointment-booking-11-admin-ui/specs/appointment-booking/spec.md#REQ-APT-015
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		async invalidateAvailability(serviceId) {
 			if (!serviceId) return

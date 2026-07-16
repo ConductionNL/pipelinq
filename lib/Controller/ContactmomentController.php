@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-39
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contactmoment-update-and-deletion
  */
 
 declare(strict_types=1);
@@ -70,7 +70,7 @@ class ContactmomentController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-39
+     * @spec openspec/specs/contactmomenten/spec.md#requirement-contactmoment-update-and-deletion
      */
     public function destroy(string $id): JSONResponse
     {

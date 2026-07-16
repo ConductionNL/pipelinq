@@ -27,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-005
+ * @spec openspec/specs/product-vendor-master/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -54,7 +54,7 @@ use Psr\Log\LoggerInterface;
  *   productId   — equals the OpenRegister object UUID; never changes after first write.
  *   contactsUid — equals the Nextcloud addressbook UID of the supplier contact.
  *
- * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-005
+ * @spec openspec/specs/product-vendor-master/spec.md
  */
 class ProductVendorProviderService
 {
@@ -110,7 +110,7 @@ class ProductVendorProviderService
      *  other providers call this method positionally and changing the signature
      *  would be a breaking cross-app change.
      *
-     * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-005
+     * @spec openspec/specs/product-vendor-master/spec.md
      */
     public function getProduct(string $productId, string $consumerAppSlug='', bool $authorisedConsumer=false): ?array
     {
@@ -151,7 +151,7 @@ class ProductVendorProviderService
      *
      * @return array<string,mixed>|null The supplier commercial profile, or null on failure.
      *
-     * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-005
+     * @spec openspec/specs/product-vendor-master/spec.md
      */
     public function resolveSupplier(string $contactsUid, string $consumerAppSlug=''): ?array
     {

@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
  * @spec openspec/specs/klachtenregistratie/spec.md#Background-Job-for-SLA-Monitoring
  */
 
@@ -125,7 +125,7 @@ class SlaDeadlineSweepJob extends TimedJob
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     protected function run($argument): void
     {
@@ -387,7 +387,7 @@ class SlaDeadlineSweepJob extends TimedJob
      *
      * @return bool True when an escalation fired (for run stats).
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      * @spec openspec/specs/klachtenregistratie/spec.md#Background-Job-for-SLA-Monitoring
      */
     private function processEntity(

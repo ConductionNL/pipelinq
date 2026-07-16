@@ -162,7 +162,7 @@ export default {
 		 * Emits update:modelValue and schedules estimate + validate calls.
 		 *
 		 * @param {object} updated The new tree value.
-		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		onTreeUpdate(updated) {
 			this.tree = updated
@@ -173,7 +173,7 @@ export default {
 		/**
 		 * Debounce a backend size-estimate call.
 		 *
-		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#scenario-live-size-estimate-shown
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-live-size-estimate-shown
 		 */
 		scheduleEstimate() {
 			if (this.estimateTimer) {
@@ -216,7 +216,7 @@ export default {
 		/**
 		 * Debounce a backend rule-tree validate call.
 		 *
-		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
 		 */
 		scheduleValidate() {
 			if (this.validateTimer) {

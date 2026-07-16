@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
+ * @spec openspec/specs/task-background-jobs/spec.md#requirement-task-expiry-background-job
  */
 
 declare(strict_types=1);
@@ -93,7 +93,7 @@ class TaskExpiryJob extends TimedJob
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-23
+     * @spec openspec/specs/task-background-jobs/spec.md#requirement-task-expiry-background-job
      */
     protected function run(mixed $argument): void
     {

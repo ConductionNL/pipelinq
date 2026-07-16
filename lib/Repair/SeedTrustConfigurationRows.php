@@ -27,7 +27,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-005
+ * @spec openspec/specs/master-data-management/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,7 +49,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the small NC + OR
  *  collaborator set a data-seed step needs.
  *
- * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-005
+ * @spec openspec/specs/master-data-management/spec.md
  */
 class SeedTrustConfigurationRows implements IRepairStep
 {
@@ -137,7 +137,7 @@ class SeedTrustConfigurationRows implements IRepairStep
      *
      * @return void
      *
-     * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-005
+     * @spec openspec/specs/master-data-management/spec.md
      */
     public function run(IOutput $output): void
     {

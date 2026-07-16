@@ -138,7 +138,7 @@ export function getPipelines() {
  * Get all contracts (contract-renewal-tracking). Returns [] when the contract
  * schema is not registered (graceful no-op for instances without the feature).
  *
- * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  * @return {Promise<Array>} The contract records.
  */
 export function getContracts() {
@@ -219,7 +219,7 @@ async function fetchAppJson(path) {
  *
  * @param {string} period - week | month | quarter | year.
  * @return {Promise<object>} Overview payload (REQ-DASH-011).
- * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+ * @spec openspec/specs/dashboard/spec.md
  */
 export function getAnalyticsOverview(period) {
 	return cached('analytics:overview:' + period,
@@ -233,7 +233,7 @@ export function getAnalyticsOverview(period) {
  * @param {string} period - week | month | quarter | year.
  * @return {Promise<object>} Commercial overview (revenue, wonValue, winRate,
  *   avgDealSize, weightedForecast, openPipelineValue, previousPeriod).
- * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function getCommercialOverview(period) {
 	return cached('analytics:commercial:' + period,
@@ -246,7 +246,7 @@ export function getCommercialOverview(period) {
  * @param {string} metric - leads | requests-by-category | pipeline-value.
  * @param {string} period - week | month | quarter | year.
  * @return {Promise<object>} `{ metric, period, series }` (REQ-DASH-011).
- * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+ * @spec openspec/specs/dashboard/spec.md
  */
 export function getAnalyticsTrend(metric, period) {
 	return cached('analytics:trend:' + metric + ':' + period,

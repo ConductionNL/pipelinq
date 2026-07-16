@@ -16,8 +16,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
+ * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
+ * @spec openspec/specs/notifications-activity/spec.md
  */
 
 declare(strict_types=1);
@@ -69,7 +69,7 @@ class ActivityService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
      */
     public function publishCreated(
         string $entityType,
@@ -105,7 +105,7 @@ class ActivityService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
      */
     public function publishAssigned(
         string $entityType,
@@ -142,7 +142,7 @@ class ActivityService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
      */
     public function publishStageChanged(
         string $title,
@@ -173,7 +173,7 @@ class ActivityService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
      */
     public function publishStatusChanged(
         string $title,
@@ -204,7 +204,7 @@ class ActivityService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-15
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
      */
     public function publishNoteAdded(
         string $entityType,
@@ -235,7 +235,7 @@ class ActivityService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function publishDealWon(
         string $title,

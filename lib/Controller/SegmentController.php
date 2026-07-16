@@ -66,7 +66,7 @@ class SegmentController extends Controller
      *
      * @return JSONResponse `{data[], pagination}`.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function index(int $page=1, int $limit=20): JSONResponse
@@ -84,7 +84,7 @@ class SegmentController extends Controller
      *
      * @return JSONResponse 201 with segment+estimatedSize, 400 on invalid input.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#segment-create-validates-rule-tree
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function create(): JSONResponse
@@ -106,7 +106,7 @@ class SegmentController extends Controller
      *
      * @return JSONResponse 200 with Segment+estimatedSize or 404 generic.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function show(string $id): JSONResponse
@@ -132,7 +132,7 @@ class SegmentController extends Controller
      *
      * @return JSONResponse `{members[]}` projected for the blast engine.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function members(string $id, int $limit=50): JSONResponse
@@ -152,7 +152,7 @@ class SegmentController extends Controller
      *
      * @return JSONResponse `{estimatedSize}`.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function refreshSize(string $id): JSONResponse

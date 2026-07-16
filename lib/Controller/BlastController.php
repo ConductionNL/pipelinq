@@ -74,7 +74,7 @@ class BlastController extends Controller
      *
      * @return JSONResponse `{data[], pagination}`.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function index(?string $status=null, int $page=1, int $limit=20): JSONResponse
@@ -92,7 +92,7 @@ class BlastController extends Controller
      *
      * @return JSONResponse 201 with the new Blast, 400 on invalid input.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function create(): JSONResponse
@@ -114,7 +114,7 @@ class BlastController extends Controller
      *
      * @return JSONResponse 200 with the Blast or 404 generic.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function show(string $id): JSONResponse
@@ -138,7 +138,7 @@ class BlastController extends Controller
      *
      * @return JSONResponse 200 with the patched Blast, 400/404 on failure.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function update(string $id): JSONResponse
@@ -167,7 +167,7 @@ class BlastController extends Controller
      *
      * @return JSONResponse 200 with the send-summary envelope.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function send(string $id): JSONResponse
@@ -187,7 +187,7 @@ class BlastController extends Controller
      *
      * @return JSONResponse 200 with the cancel summary.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function cancel(string $id): JSONResponse
@@ -209,7 +209,7 @@ class BlastController extends Controller
      *
      * @return JSONResponse `{data[], pagination}` scoped to the supplied Blast.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function deliveries(string $id, int $page=1, int $limit=20): JSONResponse

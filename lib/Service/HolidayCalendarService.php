@@ -18,8 +18,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-010
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
  */
 
 declare(strict_types=1);
@@ -89,7 +89,7 @@ class HolidayCalendarService
      *
      * @return array<string, mixed> The parsed calendar definition.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-010
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function loadCalendar(string $calendarName): array
     {
@@ -141,7 +141,7 @@ class HolidayCalendarService
      *
      * @return array<string, mixed> The merged calendar definition.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-010
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function compositeCalendar(array $calendarNames): array
     {
@@ -167,7 +167,7 @@ class HolidayCalendarService
      *
      * @return bool True when $date is a recognised holiday.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function isHoliday(string $calendarName, DateTimeInterface $date): bool
     {
@@ -313,7 +313,7 @@ class HolidayCalendarService
      *
      * @SuppressWarnings(PHPMD.ShortVariable) Single-letter names (a..m) mirror the canonical Meeus/Jones/Butcher formula.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function easterDate(int $year): DateTimeImmutable
     {

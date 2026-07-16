@@ -4,7 +4,7 @@
   Source performance — sortable table of total / won / conversion / avg
   per lead source.
 
-  @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-007
+  @spec openspec/specs/lead-management/spec.md
 -->
 <template>
 	<NcEmptyContent
@@ -37,7 +37,7 @@ export default {
 		 * Column descriptors consumed by CnDataTable. Each row is
 		 * rendered with sortable per-column behaviour.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-007
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		columns() {
 			return [

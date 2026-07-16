@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-37
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-opencorporates-integration
  */
 
 declare(strict_types=1);

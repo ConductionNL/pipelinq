@@ -20,10 +20,10 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-003
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-004
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
  */
 
 declare(strict_types=1);
@@ -96,7 +96,7 @@ class SlaEngineService
      *
      * @return HolidayCalendarService Holiday calendar.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-010
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function getHolidayService(): HolidayCalendarService
     {
@@ -120,7 +120,7 @@ class SlaEngineService
      *
      * @return ?array<string, mixed> The matched policy array, or null.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
@@ -209,7 +209,7 @@ class SlaEngineService
      * @return array<int, array<string, mixed>> Targets array with `dueAt`,
      *         `status`, `consumedPercentage` initialised.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      *
      * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface() is a value-object factory, not a collaborator to inject
      */
@@ -269,7 +269,7 @@ class SlaEngineService
      *
      * @return array<int, array<string, mixed>> Updated targets array.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-006
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function evaluateTargets(array $currentTargets, array $policy, DateTimeInterface $now): array
     {
@@ -328,7 +328,7 @@ class SlaEngineService
      *
      * @return array{level:int, eventIds:array<int,string>} The new escalation level + event UUIDs.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-004
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) $priorTargets is part of the public signature (positional callers exist outside this class)
      */
@@ -400,7 +400,7 @@ class SlaEngineService
      *
      * @return array<string, mixed> Updated slaStatus.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-003
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function pauseTimer(array $slaStatus, DateTimeInterface $now): array
     {
@@ -423,7 +423,7 @@ class SlaEngineService
      *
      * @return array<string, mixed> Updated slaStatus.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-003
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function resumeTimer(array $slaStatus, array $policy, DateTimeInterface $now): array
     {
@@ -486,7 +486,7 @@ class SlaEngineService
      *
      * @return array<string, mixed> The initial slaStatus.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function initialiseStatus(array $policy, DateTimeInterface $startTime): array
     {
@@ -510,7 +510,7 @@ class SlaEngineService
      *
      * @return array<string, mixed> Updated slaStatus.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-006
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function markTargetMet(array $slaStatus, string $kind, DateTimeInterface $when): array
     {
@@ -541,7 +541,7 @@ class SlaEngineService
      *
      * @return array<int, array<string, mixed>> Active policies.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function loadActivePolicies(): array
     {
@@ -832,7 +832,7 @@ class SlaEngineService
      *
      * @return array<int, string> Notified actor identifiers / markers.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/sla-engine-and-escalation/spec.md#requirement-escalation-chain-execution
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-escalation-chain-execution
      */
     private function dispatchNotification(
         string $channel,
@@ -930,7 +930,7 @@ class SlaEngineService
      *
      * @return array<int, string> Notified actor identifiers / markers.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/sla-engine-and-escalation/spec.md#requirement-escalation-chain-execution
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-escalation-chain-execution
      */
     private function dispatchChannelAdapter(
         string $channel,
@@ -1365,7 +1365,7 @@ class SlaEngineService
      *
      * @return string Identity.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function policyIdentity(array $policy): string
     {
@@ -1387,7 +1387,7 @@ class SlaEngineService
      *
      * @return DateInterval Parsed interval.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function parseDuration(string $duration): DateInterval
     {
@@ -1413,7 +1413,7 @@ class SlaEngineService
      *
      * @return ?DateTimeImmutable Parsed instant.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function parseIsoOrNull($value): ?DateTimeImmutable
     {

@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-2
+ * @spec openspec/specs/openregister-integration/spec.md#requirement-auto-configuration-on-install-repair-step
  */
 
 declare(strict_types=1);
@@ -88,7 +88,7 @@ class InitializeSettings implements IRepairStep
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-2
+     * @spec openspec/specs/openregister-integration/spec.md#requirement-auto-configuration-on-install-repair-step
      */
     public function run(IOutput $output): void
     {
