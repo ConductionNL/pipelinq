@@ -740,7 +740,7 @@ class ScheduledTaskService
      *
      * @return void
      *
-     * @spec openspec/changes/task-background-jobs/tasks.md#task-1
+     * @spec openspec/specs/task-background-jobs/spec.md#requirement-deadline-escalation-notifications
      */
     private function notifyTaskExpired(array $task): void
     {
