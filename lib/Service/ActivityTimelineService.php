@@ -27,9 +27,9 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/activity-timeline/tasks.md#task-1
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-13
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-14
+ * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
+ * @spec openspec/specs/activity-timeline/spec.md#requirement-every-entity-must-have-a-timeline-view
+ * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
  */
 
 declare(strict_types=1);
@@ -139,7 +139,7 @@ class ActivityTimelineService
      *
      * @return array{items: array<int,array<string,mixed>>, total: int, page: int, pages: int}
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-13
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-every-entity-must-have-a-timeline-view
      */
     public function getTimeline(string $entityType, string $entityId, array $params): array
     {
@@ -593,7 +593,7 @@ class ActivityTimelineService
      *
      * @return array<string,array<string,mixed>> Map of source-type => filter array.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-13
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-every-entity-must-have-a-timeline-view
      */
     public function resolveEntityQueryParams(string $entityType, string $entityId): array
     {
@@ -638,7 +638,7 @@ class ActivityTimelineService
      *
      * @return array<string,mixed>|null The normalised item, or null if it should be skipped.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-14
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-activity-events-must-cover-all-entity-types
      */
     public function normalizeActivity(string $sourceType, array $object, string $entityType, string $entityId): ?array
     {
@@ -741,7 +741,7 @@ class ActivityTimelineService
      *
      * @throws \RuntimeException If configuration or services are missing.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
      */
     public function createWorklog(string $entityType, string $entityId, array $data): array
     {
@@ -798,7 +798,7 @@ class ActivityTimelineService
      *
      * @return array{items: array<int,array<string,mixed>>, total: int, page: int, pages: int, totalDuration: string}
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-12
+     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
      */
     public function getWorklog(string $entityType, string $entityId, array $params): array
     {

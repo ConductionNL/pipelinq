@@ -20,7 +20,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-or-register-resolver/specs/pipelinq-or-adoption/spec.md
+ * @spec openspec/specs/pipelinq-or-adoption/spec.md
  */
 
 declare(strict_types=1);

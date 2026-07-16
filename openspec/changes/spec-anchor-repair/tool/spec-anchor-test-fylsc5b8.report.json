@@ -1,0 +1,14 @@
+{
+ "root": "/tmp/spec-anchor-test-fylsc5b8",
+ "counts": {
+  "REPOINT_ANCHOR": 1,
+  "DANGLING": 1
+ },
+ "repoint_anchor": 1,
+ "repoint_file": 0,
+ "dangling": 1,
+ "files_changed": 1,
+ "changed_files": [
+  "/tmp/spec-anchor-test-fylsc5b8/lib/WidgetService.php"
+ ]
+}

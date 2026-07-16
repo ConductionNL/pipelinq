@@ -35,7 +35,7 @@ import { showError } from '@nextcloud/dialogs'
  * not stick (REQ-KWP-040).
  *
  * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.1
- * @spec openspec/changes/kcc-werkplek/specs/kcc-werkplek/spec.md#REQ-KWP-040
+ * @spec openspec/specs/kcc-werkplek/spec.md
  */
 export default {
 	name: 'WerkplekAgentStatus',

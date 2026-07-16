@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-38
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-prospect-fit-scoring
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ class ProspectScoringService
      *
      * @return array The prospect with fitScore and fitBreakdown added.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-38
+     * @spec openspec/specs/prospect-discovery/spec.md#requirement-prospect-fit-scoring
      */
     public function score(array $prospect, array $criteria): array
     {
@@ -102,7 +102,7 @@ class ProspectScoringService
      *
      * @return array The scored and sorted prospects.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-38
+     * @spec openspec/specs/prospect-discovery/spec.md#requirement-prospect-fit-scoring
      */
     public function scoreAll(array $prospects, array $criteria): array
     {

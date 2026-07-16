@@ -19,8 +19,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-003
- * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-016
+ * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -56,8 +56,8 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive availability engine; splitting would fragment slot/cache logic.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Slot computation over many working-hour/booking/calendar dimensions is inherently complex.
  *
- * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-003
- * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-016
+ * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class AvailabilityService
 {
@@ -150,7 +150,7 @@ class AvailabilityService
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-003
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function setCalendarProvider(?object $provider): void
     {
@@ -170,7 +170,7 @@ class AvailabilityService
      *
      * @return array<int, array{startTime: string, endTime: string, durationMinutes: int}>
      *
-     * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-003
+     * @spec openspec/specs/appointment-booking/spec.md
      *
      * @SuppressWarnings(PHPMD.LongVariable) $serviceDurationMinutes is a public named-argument param; renaming breaks callers.
      */
@@ -226,7 +226,7 @@ class AvailabilityService
      *
      * @return array{openTime: string, closeTime: string}|null
      *
-     * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-003
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function getWorkingHours(string $resourceId, string $weekDay): ?array
     {
@@ -284,7 +284,7 @@ class AvailabilityService
      *
      * @return array<int, array{startMin: int, endMin: int}>
      *
-     * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-003
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function getBlockedTimes(string $resourceId, string $date): array
     {
@@ -341,7 +341,7 @@ class AvailabilityService
      *
      * @return array<int, int> Slot start offsets in minutes from midnight.
      *
-     * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-003
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function alignToSlots(string $startTime, string $endTime, int $intervalMinutes): array
     {
@@ -375,7 +375,7 @@ class AvailabilityService
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-016
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function invalidateCache(string $resourceId, string $date): void
     {
@@ -423,7 +423,7 @@ class AvailabilityService
      *
      * @return array<string, mixed> A `{freeBlocks, generatedAt, expiresAt, stale}` cache snapshot.
      *
-     * @spec openspec/changes/appointment-booking-02-availability-service/specs/appointment-booking/spec.md#req-apt-016
+     * @spec openspec/specs/appointment-booking/spec.md
      *
      * @SuppressWarnings(PHPMD.LongVariable) $serviceDurationMinutes is a public named-argument param; renaming breaks callers.
      */

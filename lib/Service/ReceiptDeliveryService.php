@@ -22,7 +22,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-002
+ * @spec openspec/specs/pos-receipt-engine/spec.md
  */
 
 declare(strict_types=1);
@@ -57,7 +57,7 @@ use Psr\Log\LoggerInterface;
  *  the workflow's breadth, not tangled logic, and splitting it would scatter a
  *  single transactional concern across several classes.
  *
- * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-002
+ * @spec openspec/specs/pos-receipt-engine/spec.md
  */
 class ReceiptDeliveryService
 {
@@ -108,7 +108,7 @@ class ReceiptDeliveryService
      * @throws OCSNotFoundException  If the transaction is not in this app's register.
      * @throws OCSForbiddenException If the caller may not access the transaction.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-003
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.1
      */
     public function preview(string $transactionId, ?string $templateId=null, string $userId=''): array
@@ -152,7 +152,7 @@ class ReceiptDeliveryService
      * @throws OCSNotFoundException   If the transaction is not in this app's register.
      * @throws OCSBadRequestException If the transaction is not receiptable or has no customer email.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-002
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     public function emailReceipt(
         string $transactionId,
@@ -248,7 +248,7 @@ class ReceiptDeliveryService
      * @throws OCSNotFoundException   If the transaction is not in this app's register.
      * @throws OCSBadRequestException If the transaction is not receiptable.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-006
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     public function printReceipt(string $transactionId, ?string $templateId, string $userId): array
     {
@@ -302,7 +302,7 @@ class ReceiptDeliveryService
      *
      * @throws OCSBadRequestException If no customer email is available or the request mismatches it.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-002
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     private function resolveCustomerRecipient(array $transaction, ?string $requested): string
     {
@@ -379,7 +379,7 @@ class ReceiptDeliveryService
      *
      * @return array<string, mixed> The transaction, possibly with invoiceNumber set.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     private function ensureInvoiceNumber(array $transaction): array
     {
@@ -430,7 +430,7 @@ class ReceiptDeliveryService
      *
      * @return bool Whether a prior log entry recorded this number for this transaction.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     private function isServerIssuedInvoiceNumber(string $transactionId, string $number): bool
     {
@@ -473,7 +473,7 @@ class ReceiptDeliveryService
      *
      * @return string The created log id (or '' on failure).
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-005
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     private function writeLog(array $transaction, array $template, string $action, string $status, array $extra): string
     {

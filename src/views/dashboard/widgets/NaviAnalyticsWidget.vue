@@ -98,8 +98,8 @@ import { CnChartWidget, CnDataTable } from '@conduction/nextcloud-vue'
 /**
  * NaviAnalyticsWidget — conversational analytics chat panel.
  *
- * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-001
- * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-003
+ * @spec openspec/specs/dashboard/spec.md
+ * @spec openspec/specs/dashboard/spec.md
  */
 export default {
 	name: 'NaviAnalyticsWidget',
@@ -123,7 +123,7 @@ export default {
 		 * Post the current query to /api/navi/query and append the response
 		 * to the conversation history.
 		 *
-		 * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-001
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		async submitQuery() {
 			const text = this.query.trim()
@@ -162,7 +162,7 @@ export default {
 		 * Pre-fill the input with a suggestion and submit immediately.
 		 *
 		 * @param {string} suggestion - The follow-up text to send.
-		 * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-003
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		selectSuggestion(suggestion) {
 			this.query = suggestion

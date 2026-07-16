@@ -16,8 +16,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+ * @spec openspec/specs/notifications-activity/spec.md
+ * @spec openspec/specs/notifications-activity/spec.md
  */
 
 declare(strict_types=1);
@@ -108,7 +108,7 @@ class NotificationService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function notifyAssignment(
         string $entityType,
@@ -152,7 +152,7 @@ class NotificationService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function notifyTaskCompleted(
         string $title,
@@ -189,7 +189,7 @@ class NotificationService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function notifyTaskReassigned(
         string $title,
@@ -225,7 +225,7 @@ class NotificationService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function notifyTaskExpired(
         string $title,
@@ -256,7 +256,7 @@ class NotificationService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function notifyStageChange(
         string $title,
@@ -293,7 +293,7 @@ class NotificationService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function notifyStatusChange(
         string $title,
@@ -330,7 +330,7 @@ class NotificationService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-17
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function notifyNoteAdded(
         string $entityType,
@@ -367,7 +367,7 @@ class NotificationService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-16
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function notifyDealWon(
         string $title,

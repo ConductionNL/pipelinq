@@ -41,8 +41,8 @@ use Throwable;
 /**
  * Contract lifecycle service.
  *
- * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
- * @spec openspec/changes/pipelinq-lifecycle-batch-b/specs/openregister-integration/spec.md
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+ * @spec openspec/specs/openregister-integration/spec.md
  */
 class ContractService
 {
@@ -150,7 +150,7 @@ class ContractService
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential transition guards; extraction adds no clarity.
      * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential transition guards; extraction adds no clarity.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
      */
     public function assertTransitionAllowed(array $contract, string $newStatus, bool $byEngine=false): void
     {
@@ -207,7 +207,7 @@ class ContractService
      *
      * @return string The next contract number.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
      */
     public function generateContractNumber(array $existing, ?int $year=null): string
     {
@@ -245,7 +245,7 @@ class ContractService
      *
      * @return array<string,mixed> The successor draft payload.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
      */
     public function buildSuccessorDraft(array $predecessor): array
     {
@@ -302,7 +302,7 @@ class ContractService
      *
      * @return array<string,mixed>|null The saved object (array), or null on failure.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
      */
     public function save(array $data, ?string $uuid=null): ?array
     {
@@ -336,7 +336,7 @@ class ContractService
      *
      * @return array<int, array<string,mixed>> The contract objects.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     public function loadAll(): array
     {

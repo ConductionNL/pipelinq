@@ -238,7 +238,7 @@ class MdmObjectRepository
      *
      * @return array<string, mixed>|null The entity, or null if absent.
      *
-     * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-001
+     * @spec openspec/specs/master-data-management/spec.md
      */
     public function findMasterEntity(string $masterId): ?array
     {
@@ -253,7 +253,7 @@ class MdmObjectRepository
      *
      * @return array<int, array<string, mixed>> The matching entities.
      *
-     * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-001
+     * @spec openspec/specs/master-data-management/spec.md
      */
     public function findMasterEntities(?string $entityType=null, ?string $status=null): array
     {
@@ -276,7 +276,7 @@ class MdmObjectRepository
      *
      * @return array<int, array<string, mixed>> The linked source records.
      *
-     * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-009
+     * @spec openspec/specs/master-data-management/spec.md
      */
     public function linkedSourceRecords(string $masterId): array
     {

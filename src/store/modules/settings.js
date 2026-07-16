@@ -35,7 +35,7 @@ export const useSettingsStore = defineStore('settings', {
 		 *
 		 * @param {object} state Store state.
 		 * @return {number}
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		getLeadStaleThresholdDays: (state) => {
 			if (!state.config) return 14

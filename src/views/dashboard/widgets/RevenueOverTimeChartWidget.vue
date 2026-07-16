@@ -26,7 +26,7 @@ import dashboardRefreshMixin from './dashboardRefreshMixin.js'
  * Line chart: revenue over time (settled POS turnover + won-deal value)
  * for the selected period. Title comes from the widget chrome.
  *
- * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export default {
 	name: 'RevenueOverTimeChartWidget',
@@ -60,7 +60,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		async load() {
 			this.error = null

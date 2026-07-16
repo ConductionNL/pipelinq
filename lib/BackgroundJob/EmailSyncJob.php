@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-22
+ * @spec openspec/specs/email-calendar-sync/spec.md#requirement-sync-must-be-near-real-time-and-handle-conflicts
  * @spec openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-7
  */
 
@@ -37,7 +37,7 @@ use Psr\Log\LoggerInterface;
  * Runs every 5 minutes to sync new emails from Nextcloud Mail
  * and match them to CRM entities by email address and domain.
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-22
+ * @spec openspec/specs/email-calendar-sync/spec.md#requirement-sync-must-be-near-real-time-and-handle-conflicts
  */
 class EmailSyncJob extends TimedJob
 {
@@ -73,7 +73,7 @@ class EmailSyncJob extends TimedJob
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-22
+     * @spec openspec/specs/email-calendar-sync/spec.md#requirement-sync-must-be-near-real-time-and-handle-conflicts
      */
     protected function run($argument): void
     {

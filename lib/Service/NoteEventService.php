@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-30
+ * @spec openspec/specs/entity-notes/spec.md
  */
 
 declare(strict_types=1);
@@ -77,7 +77,7 @@ class NoteEventService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-30
+     * @spec openspec/specs/entity-notes/spec.md
      */
     public function triggerNoteEvents(string $objectType, string $objectId): void
     {

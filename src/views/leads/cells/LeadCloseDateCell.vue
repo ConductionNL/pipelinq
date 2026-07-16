@@ -36,7 +36,7 @@ import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
  * never colour alone. Hidden visually-hidden label adds screen-reader
  * context.
  *
- * @spec openspec/changes/customer-360/specs/customer-360/spec.md#REQ-KB360-014
+ * @spec openspec/specs/customer-360/spec.md
  */
 export default {
 	name: 'LeadCloseDateCell',

@@ -28,7 +28,7 @@ import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue
  * Per WCAG AA, the badge ALWAYS combines an icon plus a text label
  * — colour is never the sole conveyor.
  *
- * @spec openspec/changes/customer-360/specs/customer-360/spec.md#REQ-KB360-015
+ * @spec openspec/specs/customer-360/spec.md
  */
 export default {
 	name: 'LeadProbabilityCell',
