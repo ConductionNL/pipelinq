@@ -84,8 +84,8 @@ import { CnMassExportDialog } from '@conduction/nextcloud-vue'
  * ReportExportPanel — collapsible exporter delegating to ExportService /
  * CnMassExportDialog.
  *
- * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-020
- * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-021
+ * @spec openspec/specs/dashboard/spec.md
+ * @spec openspec/specs/dashboard/spec.md
  */
 export default {
 	name: 'ReportExportPanel',
@@ -154,7 +154,7 @@ export default {
 		/**
 		 * Open the CnMassExportDialog with the current filters applied.
 		 *
-		 * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-020
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		downloadReport() {
 			this.showDialog = true

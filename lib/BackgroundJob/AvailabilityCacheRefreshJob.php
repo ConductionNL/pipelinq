@@ -21,7 +21,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class AvailabilityCacheRefreshJob extends TimedJob
 {
@@ -105,7 +105,7 @@ class AvailabilityCacheRefreshJob extends TimedJob
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by
      *  TimedJob::run().
      *
-     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     protected function run(mixed $argument): void
     {

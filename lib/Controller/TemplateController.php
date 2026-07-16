@@ -66,7 +66,7 @@ class TemplateController extends Controller
      *
      * @return JSONResponse `{data[], pagination}`.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function index(int $page=1, int $limit=20): JSONResponse
@@ -84,7 +84,7 @@ class TemplateController extends Controller
      *
      * @return JSONResponse 201 with the template or 400 generic error.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#template-create-validates-compliance
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function create(): JSONResponse
@@ -106,7 +106,7 @@ class TemplateController extends Controller
      *
      * @return JSONResponse 200 with the template or 404 generic.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function show(string $id): JSONResponse
@@ -130,7 +130,7 @@ class TemplateController extends Controller
      *
      * @return JSONResponse 200 with the patched template or 400 / 404.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#template-create-validates-compliance
+     * @spec openspec/specs/marketing-api/spec.md
      */
     #[NoAdminRequired]
     public function update(string $id): JSONResponse

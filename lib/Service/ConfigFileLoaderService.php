@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-64
+ * @spec openspec/specs/openregister-integration/spec.md#requirement-register-configuration-file-format-compliance
  */
 
 declare(strict_types=1);

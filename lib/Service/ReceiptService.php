@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+ * @spec openspec/specs/pos-receipt-engine/spec.md
  */
 
 declare(strict_types=1);
@@ -54,7 +54,7 @@ use OCP\IL10N;
  *  aggregate complexity reflects the breadth of receipt formatting, not tangled
  *  logic, and splitting it across classes would scatter one rendering concern.
  *
- * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-009
+ * @spec openspec/specs/pos-receipt-engine/spec.md
  */
 class ReceiptService
 {
@@ -144,7 +144,7 @@ class ReceiptService
      *
      * @return bool Whether the legal-invoice variant is required.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     public function isInvoiceTransaction(array $transaction): bool
     {
@@ -158,7 +158,7 @@ class ReceiptService
      *
      * @return float The threshold.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     public function invoiceThreshold(): float
     {
@@ -178,7 +178,7 @@ class ReceiptService
      *
      * @return string The rendered plain-text receipt.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-009
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     public function renderText(array $transaction, array $template=[]): string
     {
@@ -369,7 +369,7 @@ class ReceiptService
      *
      * @return string The HTML body (escaped content inside a <pre> block).
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-013
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     public function renderHtml(array $transaction, array $template=[]): string
     {
@@ -397,7 +397,7 @@ class ReceiptService
      *
      * @return string The raw ESC/POS byte stream.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-006
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     public function renderEscPos(array $transaction, array $template=[]): string
     {
@@ -430,7 +430,7 @@ class ReceiptService
      *
      * @return array<string, mixed> The render context.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     public function buildContext(array $transaction): array
     {
@@ -490,7 +490,7 @@ class ReceiptService
      * @return array{name: string, address: string, phone: string, vatId: string, kvk: string}
      *  The company details.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-007
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     public function companyDetails(): array
     {
@@ -535,7 +535,7 @@ class ReceiptService
      *
      * @return array<int, string> The footer lines.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     private function complianceFooter(array $context): array
     {

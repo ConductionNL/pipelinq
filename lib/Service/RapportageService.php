@@ -21,9 +21,9 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-007
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-008
+ * @spec openspec/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use RuntimeException;
  *  each broken into small single-purpose methods; the sum is high but each
  *  method is individually under threshold.
  *
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
+ * @spec openspec/specs/lead-management/spec.md
  */
 class RapportageService
 {
@@ -75,7 +75,7 @@ class RapportageService
      *
      * @return array<int, array{stage: string, count: int, totalValue: float, weightedValue: float}>
      *
-     * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
+     * @spec openspec/specs/lead-management/spec.md
      */
     public function getStageValues(?string $pipelineId=null): array
     {
@@ -115,7 +115,7 @@ class RapportageService
      *
      * @return array<int, array{source: string, total: int, won: int, conversionRate: float, avgWonValue: float}>
      *
-     * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-007
+     * @spec openspec/specs/lead-management/spec.md
      */
     public function getSourcePerformance(?string $dateFrom=null, ?string $dateTo=null): array
     {
@@ -170,7 +170,7 @@ class RapportageService
      *
      * @return array<int, array{bucket: string, count: int, totalValue: float}>
      *
-     * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
+     * @spec openspec/specs/lead-management/spec.md
      */
     public function getAgingBuckets(): array
     {
@@ -225,7 +225,7 @@ class RapportageService
      *
      * @return array{wonCount:int, lostCount:int, winRate:float, avgWonValue:float, avgLostValue:float, avgDaysToClose:float}
      *
-     * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-008
+     * @spec openspec/specs/lead-management/spec.md
      */
     public function getWinLossAnalysis(?string $dateFrom=null, ?string $dateTo=null): array
     {

@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
+ * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Throwable;
 /**
  * Orchestrates the send / preflight / consent / provider-test surface.
  *
- * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
+ * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Wires the two adapters +
  *  consent + provider repository + OpenRegister into one send surface.
@@ -102,7 +102,7 @@ class MessagingService
      *
      * @return array<string, mixed>|null The object, or null.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
      */
     public function loadContact(string $contactId): ?array
     {
@@ -145,7 +145,7 @@ class MessagingService
      *
      * @return array{sms: bool, whatsapp: bool} Channel availability.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-003--agent-send-surface-on-client-and-contact-detail
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-003--agent-send-surface-on-client-and-contact-detail
      */
     public function availableChannels(): array
     {
@@ -169,7 +169,7 @@ class MessagingService
      *     templates: array<int, array<string, mixed>>
      * } Preflight facts.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
      */
     public function preflight(string $contactId): array
     {
@@ -198,7 +198,7 @@ class MessagingService
      *
      * @return array{status: string, messageId?: string, reason?: string} Sanitised outcome.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
      */
     public function send(
         array $contact,
@@ -252,7 +252,7 @@ class MessagingService
      *
      * @return array{reachable: bool, mock?: bool, cause?: string} Test result.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-002--zero-cost-provider-connectivity-test
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-002--zero-cost-provider-connectivity-test
      */
     public function runProviderTest(array $provider): array
     {
@@ -305,7 +305,7 @@ class MessagingService
      *
      * @return array<string, string> Channel → relative webhook path.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-001--messaging-provider-administration
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-001--messaging-provider-administration
      */
     public function webhookUrls(string $providerId, string $kind): array
     {

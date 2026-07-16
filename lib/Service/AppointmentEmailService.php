@@ -22,8 +22,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-006
- * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-007
+ * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -56,7 +56,7 @@ use RuntimeException;
  *  localisation and ICS building for two email types drive the aggregate
  *  complexity; each method stays individually simple.
  *
- * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-006
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentEmailService
 {
@@ -140,7 +140,7 @@ class AppointmentEmailService
      *
      * @return bool True when the message was accepted for delivery.
      *
-     * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-006
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function sendConfirmation(string $bookingId): bool
     {
@@ -182,7 +182,7 @@ class AppointmentEmailService
      *
      * @return bool True when the reminder was accepted for delivery.
      *
-     * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-007
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function sendReminder(string $bookingId): bool
     {
@@ -226,7 +226,7 @@ class AppointmentEmailService
      *
      * @return string The encoded token (URL-safe base64-free, slash-free payload).
      *
-     * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-006
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function signLinkToken(string $bookingId, string $action, int $expiresAt): string
     {
@@ -345,7 +345,7 @@ class AppointmentEmailService
      *
      * @return string
      *
-     * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-006
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     private function buildIcs(array $context): string
     {

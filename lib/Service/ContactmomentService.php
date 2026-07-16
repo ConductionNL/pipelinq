@@ -16,8 +16,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-39
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-40
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contactmoment-update-and-deletion
+ * @spec openspec/specs/contactmomenten/spec.md#requirement-contactmomentservice-backend
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * ticket schema through {@see TicketService} and narrows on the discriminator;
  * the legacy `contactmoment_schema` config key is no longer consulted.
  *
- * @spec openspec/changes/outbound-messaging-provider-wiring/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
+ * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class ContactmomentService
@@ -89,7 +89,7 @@ class ContactmomentService
      *
      * @throws \RuntimeException If configuration is missing.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-40
+     * @spec openspec/specs/contactmomenten/spec.md#requirement-contactmomentservice-backend
      * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function getConfig(): array
@@ -134,7 +134,7 @@ class ContactmomentService
      *
      * @return string|null The contactmoment ticket UUID, or null when skipped/failed.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
+     * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
      * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function recordOutboundMessage(
@@ -248,7 +248,7 @@ class ContactmomentService
      * @throws DoesNotExistException  If contactmoment not found.
      * @throws NotPermittedException  If user lacks permission.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-39
+     * @spec openspec/specs/contactmomenten/spec.md#requirement-contactmoment-update-and-deletion
      * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     public function delete(string $id, string $currentUserId): bool

@@ -13,7 +13,7 @@
  *
  * @param {{ from: string, to: string, preset: string }|null} range - Injected range.
  * @return {string} week | month | quarter | year.
- * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+ * @spec openspec/specs/dashboard/spec.md
  */
 export function rangeToPeriod(range) {
 	const periods = ['week', 'month', 'quarter', 'year']

@@ -16,10 +16,10 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-5
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/skill-routing/spec.md
  */
 
 declare(strict_types=1);
@@ -232,7 +232,7 @@ class SettingsService
         'xwiki_cache_ttl'                          => '300',
         'xwiki_direct_url'                         => '',
         // SLA engine (sla-engine-and-escalation) — admin settings.
-        // @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008 .
+        // @spec openspec/specs/sla-engine-and-escalation/spec.md .
         'sla_sweep_interval_seconds'               => '300',
         'sla_business_hours_start'                 => '09:00',
         'sla_business_hours_end'                   => '17:00',
@@ -291,7 +291,7 @@ class SettingsService
      *
      * @return array The settings as key-value pairs.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getSettings(): array
     {
@@ -314,7 +314,7 @@ class SettingsService
      *
      * @return array The updated settings.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function updateSettings(array $data): array
     {
@@ -357,7 +357,7 @@ class SettingsService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function createDefaultPipelines(): void
     {
@@ -370,7 +370,7 @@ class SettingsService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-5
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function createDefaultQueues(): void
     {
@@ -383,7 +383,7 @@ class SettingsService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
+     * @spec openspec/specs/skill-routing/spec.md
      */
     public function createDefaultSkills(): void
     {
@@ -486,7 +486,7 @@ class SettingsService
      *
      * @return int The configured value, or the default if unset.
      *
-     * @spec openspec/changes/pipelinq-admin-config-magic-numbers/specs/pipelinq-or-adoption/spec.md
+     * @spec openspec/specs/pipelinq-or-adoption/spec.md
      */
     public function getIntValue(string $key, int $default): int
     {
@@ -506,7 +506,7 @@ class SettingsService
      *
      * @return string The configured value, or the default if unset.
      *
-     * @spec openspec/changes/pipelinq-admin-config-magic-numbers/specs/pipelinq-or-adoption/spec.md
+     * @spec openspec/specs/pipelinq-or-adoption/spec.md
      */
     public function getStringValue(string $key, string $default): string
     {

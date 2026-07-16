@@ -25,7 +25,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use Throwable;
  * Errors are logged and skipped so a single bad row never aborts the
  * pass.
  *
- * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentDepositTimeoutJob extends TimedJob
 {
@@ -103,7 +103,7 @@ class AppointmentDepositTimeoutJob extends TimedJob
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) Required by TimedJob::run.
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     protected function run(mixed $argument): void
     {

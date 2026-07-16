@@ -18,7 +18,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+ * @spec openspec/specs/appointment-booking/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * delegates to {@see WalkInQueueService::rebalance()} and logs the touched
  * ticket count.
  *
- * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class WalkInQueueRebalanceJob extends Job
 {
@@ -70,7 +70,7 @@ class WalkInQueueRebalanceJob extends Job
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     protected function run(mixed $argument): void
     {

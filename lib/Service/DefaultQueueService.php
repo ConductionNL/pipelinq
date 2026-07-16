@@ -16,8 +16,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
+ * @spec openspec/specs/skill-routing/spec.md
+ * @spec openspec/specs/queue-management/spec.md
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for creating default queues and skills.
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
+ * @spec openspec/specs/queue-management/spec.md
  */
 class DefaultQueueService
 {
@@ -124,7 +124,7 @@ class DefaultQueueService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
+     * @spec openspec/specs/queue-management/spec.md
      */
     public function createDefaultQueues(): void
     {
@@ -179,7 +179,7 @@ class DefaultQueueService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
+     * @spec openspec/specs/skill-routing/spec.md
      */
     public function createDefaultSkills(): void
     {

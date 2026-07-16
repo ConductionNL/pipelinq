@@ -11,7 +11,7 @@
   - route.
   -
   - @spec openspec/changes/entity-notes/tasks.md#task-5
-  - @spec openspec/changes/entity-notes/specs/entity-notes/spec.md#req-ent-002
+  - @spec openspec/specs/entity-notes/spec.md
   -->
 
 <template>

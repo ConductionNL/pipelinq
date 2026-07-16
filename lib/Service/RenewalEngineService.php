@@ -43,8 +43,8 @@ use Throwable;
 /**
  * Renewal-window detection + renewal-lead automation engine.
  *
- * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
- * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
  */
 class RenewalEngineService
 {
@@ -76,7 +76,7 @@ class RenewalEngineService
      *
      * @return int Days.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
      */
     public function getDefaultLeadTimeDays(): int
     {
@@ -97,7 +97,7 @@ class RenewalEngineService
      *
      * @return int The window width in days.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
      */
     public function renewalWindowDays(array $contract): int
     {
@@ -116,7 +116,7 @@ class RenewalEngineService
      *
      * @return bool
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
      */
     public function isInRenewalWindow(array $contract, string $today): bool
     {
@@ -143,7 +143,7 @@ class RenewalEngineService
      *
      * @return float The annualized value.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
      */
     public function annualizedValue(array $contract): float
     {
@@ -167,7 +167,7 @@ class RenewalEngineService
      *
      * @return array<string,mixed> The lead payload.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
      */
     public function buildRenewalLead(array $contract): array
     {
@@ -192,8 +192,8 @@ class RenewalEngineService
      *
      * @return string A short action code: 'expiring', 'churned-silent', 'noticed', or 'noop'.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
      */
     public function processContract(array $contract, string $today): string
     {
@@ -267,7 +267,7 @@ class RenewalEngineService
      *
      * @return string 'renewed', 'churned', or 'noop'.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
      */
     public function reconcile(array $contract): string
     {

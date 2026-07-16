@@ -192,7 +192,7 @@ export default {
 		 * Pinia settings store — holds the stale-threshold configuration
 		 * surfaced through the existing settings endpoint.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		settingsStore() {
 			return useSettingsStore()
@@ -201,7 +201,7 @@ export default {
 		 * Resolved stale threshold (days) from settings; defaults to 14 if
 		 * the store hasn't been initialised yet.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		staleThreshold() {
 			return getStaleThreshold(this.settingsStore.config)
@@ -214,7 +214,7 @@ export default {
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		isOverdue() {
 			if (this.entityType === 'lead') {
@@ -255,7 +255,7 @@ export default {
 		 * Stale = no activity for `staleThreshold` days. Driven by the
 		 * settings store, not a hardcoded constant.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		isStaleItem() {
 			if (this.entityType !== 'lead') return false
@@ -276,7 +276,7 @@ export default {
 		/**
 		 * Priority levels exposed in the quick action menu.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		priorityOptions() {
 			return [
@@ -404,7 +404,7 @@ export default {
 		/**
 		 * Open the move-to-stage dialog.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		openMoveMenu() {
 			this.moveMenuOpen = true
@@ -413,7 +413,7 @@ export default {
 		/**
 		 * Open the assignee picker dialog.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		openAssignMenu() {
 			this.pickedAssignee = this.item.assignee || null
@@ -423,7 +423,7 @@ export default {
 		/**
 		 * Open the priority picker dialog.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		openPriorityMenu() {
 			this.priorityMenuOpen = true
@@ -433,7 +433,7 @@ export default {
 		 * Handle stage selection from the move dialog.
 		 *
 		 * @param {object} stage The selected stage.
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		async onPickStage(stage) {
 			this.moveMenuOpen = false
@@ -444,7 +444,7 @@ export default {
 		 * Handle assignee selection from the assign dialog.
 		 *
 		 * @param {string|null} uid The selected user id.
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		async onPickAssignee(uid) {
 			this.assignMenuOpen = false
@@ -456,7 +456,7 @@ export default {
 		 * writes in try/catch with user-visible feedback per REQ-LM-001.
 		 *
 		 * @param {string} priority The chosen priority.
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-001
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		async onPickPriority(priority) {
 			this.priorityMenuOpen = false

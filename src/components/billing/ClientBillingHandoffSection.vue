@@ -18,7 +18,7 @@
   - selection recomputes the identical deterministic batchId, so retrying a
   - failed batch is just clicking the button again.
   -
-  - @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+  - @spec openspec/specs/time-approval-workflow/spec.md
   -->
 <template>
 	<div v-if="loading" class="client-billing-handoff-section">

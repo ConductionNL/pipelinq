@@ -26,8 +26,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
- * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
+ * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -61,7 +61,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
- * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class AppointmentDepositService
 {
@@ -118,7 +118,7 @@ class AppointmentDepositService
      * @param BookingService     $bookingService Member 04 — transition + status changes.
      * @param LoggerInterface    $logger         The logger.
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function __construct(
         private ContainerInterface $container,
@@ -148,7 +148,7 @@ class AppointmentDepositService
      *
      * @throws InvalidArgumentException When the bookingId is empty or amountCents <= 0.
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function createDepositSession(
         string $bookingId,
@@ -254,7 +254,7 @@ class AppointmentDepositService
      *
      * @throws InvalidArgumentException When inputs are empty.
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function handlePaymentCallback(string $bookingId, string $status): string
     {
@@ -303,7 +303,7 @@ class AppointmentDepositService
      *
      * @return bool
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function isDepositExpired(string $createdAtIso, ?int $nowEpoch=null): bool
     {
@@ -331,7 +331,7 @@ class AppointmentDepositService
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function releaseExpiredDeposit(string $bookingId): void
     {
@@ -362,7 +362,7 @@ class AppointmentDepositService
      *
      * @return object|null
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function resolvePaymentService(): ?object
     {
@@ -393,7 +393,7 @@ class AppointmentDepositService
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-010
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function setPaymentService(?object $service): void
     {

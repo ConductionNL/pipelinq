@@ -13,9 +13,9 @@
   Tab 3 Attribution     attributed deal count + summed attributed EUR value
                         per blast, fetched from GET /api/blasts/:id/attribution.
 
-  @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/specs/marketing-analytics/spec.md#requirement-overview-metrics-table
-  @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/specs/marketing-analytics/spec.md#requirement-a-b-significance-reported-in-dashboard
-  @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+  @spec openspec/specs/marketing-analytics/spec.md#requirement-overview-metrics-table
+  @spec openspec/specs/marketing-analytics/spec.md#requirement-a-b-significance-reported-in-dashboard
+  @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
 -->
 <template>
 	<div class="performance-dashboard">
