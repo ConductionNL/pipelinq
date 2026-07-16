@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+ * @spec openspec/specs/pos-receipt-engine/spec.md
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use RuntimeException;
 /**
  * Race-safe legal invoice number allocator.
  *
- * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+ * @spec openspec/specs/pos-receipt-engine/spec.md
  */
 class InvoiceSequenceService
 {
@@ -89,7 +89,7 @@ class InvoiceSequenceService
      *
      * @throws RuntimeException If a unique number cannot be allocated after retries.
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     public function next(): string
     {
@@ -129,7 +129,7 @@ class InvoiceSequenceService
      *
      * @return int The claimed counter value, or 0 when the race was lost (retry).
      *
-     * @spec openspec/changes/pos-receipt-engine/specs/pos-receipt-engine/spec.md#REQ-PRE-004
+     * @spec openspec/specs/pos-receipt-engine/spec.md
      */
     private function compareAndIncrement(int $year): int
     {

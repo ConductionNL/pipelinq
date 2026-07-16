@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use OCP\IGroupManager;
 /**
  * Authorization predicate for the billing-handoff trigger endpoint.
  *
- * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 class BillingHandoffAccessPolicy
 {
@@ -74,7 +74,7 @@ class BillingHandoffAccessPolicy
      *
      * @return bool Whether the user may trigger the billing handoff.
      *
-     * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+     * @spec openspec/specs/time-approval-workflow/spec.md
      */
     public function isManager(string $userId): bool
     {

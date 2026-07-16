@@ -6,7 +6,7 @@
   Per ADR-017 (self-contained components) the CnChartWidget and
   CnStatsBlock are rendered directly without an outer CnDetailCard wrap.
 
-  @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-008
+  @spec openspec/specs/lead-management/spec.md
 -->
 <template>
 	<div class="win-loss-widget">
@@ -92,7 +92,7 @@ export default {
 		 * payload and emit it to the parent dashboard view.
 		 *
 		 * @param {object|null} option The selected option.
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-008
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		onRangeChange(option) {
 			const value = option?.value || 'all'

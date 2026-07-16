@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-005
+ * @spec openspec/specs/pos-product-catalogue/spec.md
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
- * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-005
+ * @spec openspec/specs/pos-product-catalogue/spec.md
  * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
  */
 class ProductCatalogController extends Controller
@@ -84,7 +84,7 @@ class ProductCatalogController extends Controller
      *
      * @return JSONResponse The matching product, or 404 when none matches.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-005
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     #[NoAdminRequired]
     public function lookupBarcode(): JSONResponse
@@ -128,7 +128,7 @@ class ProductCatalogController extends Controller
      *
      * @return JSONResponse The resolved price.
      *
-     * @spec openspec/changes/pos-product-catalogue/specs/pos-product-catalogue/spec.md#REQ-PPC-003
+     * @spec openspec/specs/pos-product-catalogue/spec.md
      */
     #[NoAdminRequired]
     public function resolvePrice(): JSONResponse

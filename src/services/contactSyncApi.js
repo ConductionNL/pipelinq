@@ -24,7 +24,7 @@ const base = (path) => generateUrl('/apps/pipelinq' + path)
  * @param {object} form The raw create-form fields (name/type/email/phone/...).
  * @return {Promise<object>} The created object (serialised by OpenRegister).
  * @throws {Error} With the backend message on a 400/500 (e.g. Contacts disabled).
- * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
+ * @spec openspec/specs/unify-client-contact/spec.md
  */
 export async function createWithContact(objectType, form) {
 	const { data } = await axios.post(base('/api/contacts-sync/create'), {

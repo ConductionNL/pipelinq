@@ -52,7 +52,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 
 declare(strict_types=1);
@@ -74,7 +74,7 @@ use Throwable;
  *  OR ObjectService + shillinq's two services, resolved loosely via the
  *  container, plus the notifier/config/session collaborators.
  *
- * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+ * @spec openspec/specs/time-approval-workflow/spec.md
  */
 class TimeBillingHandoffService
 {
@@ -140,7 +140,7 @@ class TimeBillingHandoffService
      *
      * @return bool Whether the intake emit may be attempted.
      *
-     * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+     * @spec openspec/specs/time-approval-workflow/spec.md
      */
     public function handoffAvailable(): bool
     {
@@ -170,7 +170,7 @@ class TimeBillingHandoffService
      *
      * @return array<int, array<string, mixed>> The selected time entries.
      *
-     * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+     * @spec openspec/specs/time-approval-workflow/spec.md
      */
     public function selectBatch(string $clientId, string $periodStart, string $periodEnd): array
     {
@@ -250,7 +250,7 @@ class TimeBillingHandoffService
      *
      * @return array<string, mixed> The outcome.
      *
-     * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+     * @spec openspec/specs/time-approval-workflow/spec.md
      */
     public function sendToBilling(string $clientId, string $periodStart, string $periodEnd): array
     {
@@ -282,7 +282,7 @@ class TimeBillingHandoffService
      *
      * @return array<int, string> The batch ids that were re-notified.
      *
-     * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+     * @spec openspec/specs/time-approval-workflow/spec.md
      */
     public function notifyPendingFailures(): array
     {

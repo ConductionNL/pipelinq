@@ -37,8 +37,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-005
- * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-006
+ * @spec openspec/specs/unify-client-contact/spec.md
+ * @spec openspec/specs/unify-client-contact/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -68,8 +68,8 @@ use Psr\Log\LoggerInterface;
  *  client identities, resolve contact identities, match-or-create NC contacts, and re-key
  *  contactmomenten are one unit of work, deliberately kept in a single repair step.
  *
- * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-005
- * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-006
+ * @spec openspec/specs/unify-client-contact/spec.md
+ * @spec openspec/specs/unify-client-contact/spec.md
  */
 class UnifyClientContactIdentity implements IRepairStep
 {
@@ -124,7 +124,7 @@ class UnifyClientContactIdentity implements IRepairStep
      *
      * @return void
      *
-     * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-005
+     * @spec openspec/specs/unify-client-contact/spec.md
      */
     public function run(IOutput $output): void
     {
@@ -173,8 +173,8 @@ class UnifyClientContactIdentity implements IRepairStep
      *
      * @return array<string,mixed> Counters + auditMap.
      *
-     * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-005
-     * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-006
+     * @spec openspec/specs/unify-client-contact/spec.md
+     * @spec openspec/specs/unify-client-contact/spec.md
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Two structurally-identical resolve loops (clients,
      *   contacts) plus a conditional contactmoment re-key; each status tally is a flat guard, not

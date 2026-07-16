@@ -24,7 +24,7 @@ import dashboardRefreshMixin from './dashboardRefreshMixin.js'
  * Line chart: lead count over time for the selected period. Title is
  * rendered by the dashboard widget chrome, not in the body.
  *
- * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+ * @spec openspec/specs/dashboard/spec.md
  */
 export default {
 	name: 'LeadsOverTimeChartWidget',
@@ -40,13 +40,13 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		chartLabels() {
 			return (this.trend?.series || []).map(pt => pt.date)
 		},
 		/**
-		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		chartSeries() {
 			const values = (this.trend?.series || []).map(pt => pt.value)
@@ -55,7 +55,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		async load() {
 			this.error = null

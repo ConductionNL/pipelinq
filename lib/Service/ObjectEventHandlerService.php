@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
+ * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-crm-automation-triggers
  * @spec openspec/changes/migrate-automation-to-flow-leaf/tasks.md#task-1.1
  */
 
@@ -56,7 +56,7 @@ class ObjectEventHandlerService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
+     * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-crm-automation-triggers
      */
     public function handleCreated(object $objectEntity): void
     {
@@ -84,7 +84,7 @@ class ObjectEventHandlerService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-47
+     * @spec openspec/specs/crm-workflow-automation/spec.md#requirement-crm-automation-triggers
      */
     public function handleUpdated(object $newObject, ?object $oldObject): void
     {

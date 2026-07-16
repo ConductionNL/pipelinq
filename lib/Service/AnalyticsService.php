@@ -78,7 +78,7 @@ class AnalyticsService
      * @var array<int, string>
      *
      * @spec openspec/changes/dashboard/tasks.md#task-2.2
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      */
     public const ALLOWED_TREND_METRICS = [
         'leads',
@@ -95,7 +95,7 @@ class AnalyticsService
      *
      * @var array<int, string>
      *
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      */
     private const REVENUE_POS_STATUSES = ['settled', 'confirmed'];
 
@@ -104,7 +104,7 @@ class AnalyticsService
      *
      * @var int
      *
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      */
     private const TOP_CUSTOMERS_LIMIT = 8;
 
@@ -690,7 +690,7 @@ class AnalyticsService
      * @throws InvalidArgumentException When the period is not recognised.
      * @throws RuntimeException         When OpenRegister is unreachable.
      *
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      */
     public function getCommercialOverview(string $period=self::DEFAULT_PERIOD): array
     {
@@ -734,7 +734,7 @@ class AnalyticsService
      *
      * @return array{revenue: float, wonValue: float, winRate: float|null, avgDealSize: float|null}
      *
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential POS + lead window filters; extraction adds no clarity.
      * @SuppressWarnings(PHPMD.NPathComplexity)      Independent guard clauses inflate NPath without real branching depth.
@@ -808,7 +808,7 @@ class AnalyticsService
      *
      * @return array{weightedForecast: float, openPipelineValue: float}
      *
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      */
     private function aggregateOpenPipeline(array $leads): array
     {
@@ -838,7 +838,7 @@ class AnalyticsService
      *
      * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
      *
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      */
     private function buildRevenueSeries(string $period): array
     {
@@ -890,7 +890,7 @@ class AnalyticsService
      *
      * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
      *
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      */
     private function buildPipelineByStageSeries(string $period): array
     {
@@ -945,7 +945,7 @@ class AnalyticsService
      *
      * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
      *
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential filter/index/group loops; extraction adds no clarity.
      */
@@ -1012,7 +1012,7 @@ class AnalyticsService
      *
      * @return array{metric: string, period: string, series: array<int, array<string, mixed>>}
      *
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential lead + POS grouping loops; extraction adds no clarity.
      */

@@ -112,7 +112,7 @@ class Application extends App implements IBootstrap
      * @return void
      *
      * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
-     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md
+     * @spec openspec/specs/avg-verzoeken-workflow/spec.md
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength) A flat DI registration
      *  manifest — one linear list of service/listener wirings, not branching logic.
@@ -736,7 +736,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016--pipelinq-evidence-source-registration
+     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016--pipelinq-evidence-source-registration
      */
     private function registerDsarEvidenceSource(): void
     {
@@ -849,7 +849,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-006
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     private function wireAppointmentEmailSeam(): void
     {
@@ -878,7 +878,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     private function wireAppointmentCalendarSeam(): void
     {
@@ -908,7 +908,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     private function wireAppointmentPaymentSeam(): void
     {

@@ -3,7 +3,7 @@
 <!--
   Aging distribution donut chart — 4 buckets keyed by _dateModified.
 
-  @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
+  @spec openspec/specs/lead-management/spec.md
 -->
 <template>
 	<NcEmptyContent

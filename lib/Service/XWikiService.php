@@ -114,7 +114,7 @@ class XWikiService
      *
      * @return array<string, mixed> {results: array, total: int, limit: int, offset: int}
      *
-     * @spec openspec/changes/pipelinq-xwiki-through-or/specs/xwiki-proxy/spec.md
+     * @spec openspec/specs/xwiki-proxy/spec.md
      */
     public function search(string $query, ?string $space=null, array $tags=[], int $limit=10, int $offset=0): array
     {
@@ -178,7 +178,7 @@ class XWikiService
      *
      * @return array<string, mixed>
      *
-     * @spec openspec/changes/pipelinq-xwiki-through-or/specs/xwiki-proxy/spec.md
+     * @spec openspec/specs/xwiki-proxy/spec.md
      */
     private function finishSearch(array $results, ?string $space, array $tags, int $limit, int $offset, string $cacheKey): array
     {
@@ -234,7 +234,7 @@ class XWikiService
      *
      * @return array<int,array<string,mixed>>|null Normalised rows, or null to fall back.
      *
-     * @spec openspec/changes/pipelinq-xwiki-through-or/specs/xwiki-proxy/spec.md
+     * @spec openspec/specs/xwiki-proxy/spec.md
      */
     private function searchViaOpenRegister(string $query, int $limit, int $offset): ?array
     {

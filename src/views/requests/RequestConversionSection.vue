@@ -17,7 +17,7 @@
   - cross-app route can be built — the reference is shown as a labeled,
   - copyable value rather than a guessed/broken link.
   -
-  - @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+  - @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
   -->
 <template>
 	<div v-if="loading" class="request-conversion-section">

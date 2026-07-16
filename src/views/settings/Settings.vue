@@ -378,7 +378,7 @@ export default {
 		 * between the backend's string 'true'/'false' config value and a
 		 * checkbox boolean.
 		 *
-		 * @spec openspec/changes/time-billing-handoff-emit/specs/time-approval-workflow/spec.md
+		 * @spec openspec/specs/time-approval-workflow/spec.md
 		 */
 		shillinqTimeIntakeEnabled: {
 			get() {
@@ -684,7 +684,7 @@ export default {
 		/**
 		 * Persist the lead stale threshold through the standard settings endpoint.
 		 *
-		 * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		async saveStaleThreshold() {
 			this.savingStale = true

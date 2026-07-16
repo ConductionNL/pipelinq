@@ -19,10 +19,10 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-008
- * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-009
- * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-011
- * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
+ * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -62,7 +62,7 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.TooManyMethods)           Cohesive booking-lifecycle service; splitting would fragment one state machine.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Cohesive booking-lifecycle service; splitting would fragment one state machine.
  *
- * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class BookingService
 {
@@ -197,7 +197,7 @@ class BookingService
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-009
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function setPaymentProvider(?object $provider): void
     {
@@ -211,7 +211,7 @@ class BookingService
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function setEmailProvider(?object $provider): void
     {
@@ -228,7 +228,7 @@ class BookingService
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function setWalkInQueueRebalance(?object $service): void
     {
@@ -242,7 +242,7 @@ class BookingService
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function setCalendarProvider(?object $provider): void
     {
@@ -269,7 +269,7 @@ class BookingService
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential validation guards; extraction adds no clarity.
      * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential validation guards; extraction adds no clarity.
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function createBooking(array $data, string $source): string
     {
@@ -353,7 +353,7 @@ class BookingService
      *
      * @return array<int, array{startTime: string, endTime: string, durationMinutes: int, resourceId: string}>
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function getAvailableSlots(string $serviceId, string $date): array
     {
@@ -410,7 +410,7 @@ class BookingService
      *
      * @throws InvalidArgumentException If the booking cannot be transitioned.
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function confirmBooking(string $bookingId, string $reason): void
     {
@@ -454,7 +454,7 @@ class BookingService
      *
      * @throws InvalidArgumentException If validation fails.
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-008
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function rescheduleBooking(string $bookingId, string $newStartAt): string
     {
@@ -560,7 +560,7 @@ class BookingService
      *
      * @throws InvalidArgumentException If the booking cannot be transitioned.
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-009
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function cancelBooking(string $bookingId, string $reason, string $cancelledBy): void
     {
@@ -623,7 +623,7 @@ class BookingService
      *
      * @throws InvalidArgumentException If the booking cannot be transitioned.
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-011
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function markNoShow(string $bookingId, string $staffUserId): void
     {
@@ -668,7 +668,7 @@ class BookingService
      *
      * @throws InvalidArgumentException If the booking cannot be transitioned.
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function completeBooking(string $bookingId): void
     {
@@ -701,7 +701,7 @@ class BookingService
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     private function rebalanceWalkInQueue(): void
     {
@@ -731,7 +731,7 @@ class BookingService
      *
      * @throws InvalidArgumentException When the transition is rejected.
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function assertTransitionAllowed(string $from, string $to): void
     {
@@ -763,8 +763,8 @@ class BookingService
      *
      * @return array<string, array<int, string>>
      *
-     * @spec openspec/changes/appointment-booking-04-booking-service/specs/appointment-booking/spec.md#req-apt-013
-     * @spec openspec/changes/pipelinq-lifecycle-batch-b/specs/openregister-integration/spec.md
+     * @spec openspec/specs/appointment-booking/spec.md
+     * @spec openspec/specs/openregister-integration/spec.md
      */
     public static function allowedTransitions(): array
     {
@@ -1277,7 +1277,7 @@ class BookingService
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     private function pushCalendarEvent(string $bookingId): void
     {

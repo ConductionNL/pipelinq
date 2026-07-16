@@ -21,7 +21,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -63,7 +63,7 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Same cohesion rationale — the endpoints and
  *  their input-validation / link-signing helpers belong together.
  *
- * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class PortalController extends Controller
 {
@@ -127,7 +127,7 @@ class PortalController extends Controller
      * @PublicPage
      * @CORS
      *
-     * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function services(): JSONResponse
     {
@@ -151,7 +151,7 @@ class PortalController extends Controller
      * @PublicPage
      * @CORS
      *
-     * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function availability(): JSONResponse
     {
@@ -180,7 +180,7 @@ class PortalController extends Controller
      * @PublicPage
      * @CORS
      *
-     * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function book(): JSONResponse
     {
@@ -226,7 +226,7 @@ class PortalController extends Controller
      * @PublicPage
      * @CORS
      *
-     * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function getBooking(string $bookingId): JSONResponse
     {
@@ -257,7 +257,7 @@ class PortalController extends Controller
      * @PublicPage
      * @CORS
      *
-     * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function reschedule(): JSONResponse
     {
@@ -301,7 +301,7 @@ class PortalController extends Controller
      * @PublicPage
      * @CORS
      *
-     * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function cancel(): JSONResponse
     {
@@ -705,7 +705,7 @@ class PortalController extends Controller
      *
      * @return string The dotted `<payload>.<signature>` token.
      *
-     * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function signLink(string $bookingId, string $action, string $customerId=''): string
     {
@@ -735,7 +735,7 @@ class PortalController extends Controller
      *
      * @return array<string, mixed>|string The payload, `'expired'`, or `'invalid'`.
      *
-     * @spec openspec/changes/appointment-booking-05-portal-controller/specs/appointment-booking/spec.md#req-apt-005
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function openSignedLink(string $token): array|string
     {

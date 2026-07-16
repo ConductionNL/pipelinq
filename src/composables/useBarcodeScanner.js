@@ -15,9 +15,9 @@
  * The HID timing logic is exported as the pure `createHidBufferReducer` factory
  * so it can be unit-tested without a DOM.
  *
- * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-001
- * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-002
- * @spec openspec/changes/pos-barcode-scan/specs/pos-barcode-scan/spec.md#REQ-PBS-003
+ * @spec openspec/specs/pos-barcode-scan/spec.md
+ * @spec openspec/specs/pos-barcode-scan/spec.md
+ * @spec openspec/specs/pos-barcode-scan/spec.md
  */
 
 import { onMounted, onUnmounted, ref } from 'vue'

@@ -34,8 +34,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-007
- * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-008
+ * @spec openspec/specs/product-vendor-master/spec.md
+ * @spec openspec/specs/product-vendor-master/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -74,8 +74,8 @@ use Psr\Log\LoggerInterface;
  *  create, vendor match/fill/create, contact resolution and source-record writing are one
  *  cohesive idempotent migration, deliberately kept in a single class.
  *
- * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-007
- * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-008
+ * @spec openspec/specs/product-vendor-master/spec.md
+ * @spec openspec/specs/product-vendor-master/spec.md
  */
 class IngestProductVendorMaster implements IRepairStep
 {
@@ -232,8 +232,8 @@ class IngestProductVendorMaster implements IRepairStep
      *         FK maps: products = {shillinqRef → productId},
      *                  vendors  = {shillinqVendorRef → contactsUid}.
      *
-     * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-007
-     * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-008
+     * @spec openspec/specs/product-vendor-master/spec.md
+     * @spec openspec/specs/product-vendor-master/spec.md
      */
     public function ingest(array $export): array
     {
@@ -279,7 +279,7 @@ class IngestProductVendorMaster implements IRepairStep
      *
      * @return string|null The pipelinq productId, or null on failure.
      *
-     * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-007
+     * @spec openspec/specs/product-vendor-master/spec.md
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Idempotent match-fill-or-create with defensive
      *   OR-shape guards and productId==UUID reconciliation; each branch is one migration step.
@@ -382,7 +382,7 @@ class IngestProductVendorMaster implements IRepairStep
      * @return array{0: string|null, 1: array<string,mixed>}
      *         [contactsUid|null, apPayload (financial fields routed back to shillinq)].
      *
-     * @spec openspec/changes/pipelinq-product-vendor-master/specs/product-vendor-master/spec.md#REQ-PVM-008
+     * @spec openspec/specs/product-vendor-master/spec.md
      */
     private function ingestVendor(array $shillinqVendor): array
     {

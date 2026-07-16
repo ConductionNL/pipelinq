@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
+ * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Thin HTTP facade over the
  *  send-surface services.
  *
- * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
+ * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
  */
 class MessagingController extends Controller
 {
@@ -91,7 +91,7 @@ class MessagingController extends Controller
      *
      * @return JSONResponse The sanitised outcome envelope.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
      */
     #[NoAdminRequired]
     public function send(
@@ -140,7 +140,7 @@ class MessagingController extends Controller
      *
      * @return JSONResponse Available channels, session-window, consent, templates.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-004--server-side-send-endpoint
      */
     #[NoAdminRequired]
     public function preflight(string $contactId=''): JSONResponse
@@ -169,7 +169,7 @@ class MessagingController extends Controller
      *
      * @return JSONResponse The recorded state.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
      */
     #[NoAdminRequired]
     public function consent(
@@ -233,7 +233,7 @@ class MessagingController extends Controller
      *
      * @return void
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
      */
     private function recordConsent(
         string $action,
@@ -270,7 +270,7 @@ class MessagingController extends Controller
      *
      * @return JSONResponse Reachable / degraded-cause (with mock badge).
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-002--zero-cost-provider-connectivity-test
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-002--zero-cost-provider-connectivity-test
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function testProvider(string $id=''): JSONResponse

@@ -21,7 +21,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-59
+ * @spec openspec/specs/queue-management/spec.md
  * @spec openspec/changes/queue-management/tasks.md#task-1.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -115,7 +115,7 @@ class QueueService
      *
      * @return bool True on success.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-59
+     * @spec openspec/specs/queue-management/spec.md
      */
     public function assignToQueue(string $requestId, string $queueId): bool
     {
@@ -129,7 +129,7 @@ class QueueService
      *
      * @return bool True on success.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-59
+     * @spec openspec/specs/queue-management/spec.md
      */
     public function removeFromQueue(string $requestId): bool
     {

@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-006
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
  */
 
 declare(strict_types=1);
