@@ -1,6 +1,7 @@
 ---
 kind: code
 status: done
+archived: 2026-07-16
 ---
 
 # pipelinq — orphan-auth remediation (Hydra gate-6)
