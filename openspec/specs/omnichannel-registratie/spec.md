@@ -4,6 +4,8 @@ status: done
 
 # Omnichannel Registratie Specification
 
+**OpenSpec changes**: [vng-klantinteracties-leaf](../../changes/vng-klantinteracties-leaf/) _(active — realises this capability's VNG Klantinteracties `Contactmoment`/`Kanaal` mapping over the canonical `ticket` schema; the VNG ↔ canonical contract + AVG BSN policy live in the change until archive)_
+
 ## Purpose
 
 @e2e exclude draft/partial spec — channel-specific metadata form adaptations not yet built as separate UI surface; covered by contactmomenten UI tests
@@ -507,4 +509,4 @@ Every successful outbound WhatsApp or SMS send (agent composer or SLA escalation
 - **Resolved:** Contactmoment is a separate entity from request, with explicit schema definition.
 - **Resolved:** Channel configuration extends existing SystemTag infrastructure.
 - **Resolved:** Integration with existing ActivityService and NotificationService is specified.
-- **Dependency:** Requires `kcc-werkplek` and `klantbeeld-360` specs for full KCC workflow context. Procest integration for zaak linking is optional (gracefully degrades when not installed).
+- **Dependency:** Requires `kcc-werkplek` and `customer-360` specs for full KCC workflow context. Procest integration for zaak linking is optional (gracefully degrades when not installed).

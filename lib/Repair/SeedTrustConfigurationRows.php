@@ -124,6 +124,8 @@ class SeedTrustConfigurationRows implements IRepairStep
      * Get the name of this repair step.
      *
      * @return string The step name.
+     *
+     * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-005
      */
     public function getName(): string
     {
@@ -162,12 +164,18 @@ class SeedTrustConfigurationRows implements IRepairStep
                     continue;
                 }
 
+                // A repair step runs from `occ` with no user session, so RBAC
+                // resolves the actor to 'Anonymous' and refuses the write. Seed
+                // rows are system data, not user data — run them in the system
+                // context, as the other repair/CLI writers do.
                 $objectService->saveObject(
                     object: $row,
                     extend: [],
                     register: self::OR_TRUST_REGISTER,
                     schema: self::OR_TRUST_SCHEMA,
-                    uuid: null
+                    uuid: null,
+                    _rbac: false,
+                    _multitenancy: false
                 );
                 $seeded++;
             } catch (\Throwable $e) {
@@ -203,6 +211,9 @@ class SeedTrustConfigurationRows implements IRepairStep
      */
     private function rowExists(mixed $objectService, array $row): bool
     {
+        // Read in the system context too: an RBAC-filtered read as 'Anonymous'
+        // returns nothing, which would make an existing row look absent and the
+        // seed re-insert a duplicate on every upgrade.
         $results = $objectService->findAll(
             config: [
                 'filters' => [
@@ -212,7 +223,9 @@ class SeedTrustConfigurationRows implements IRepairStep
                     'attribute'    => $row['attribute'],
                     'sourceSystem' => $row['sourceSystem'],
                 ],
-            ]
+            ],
+            _rbac: false,
+            _multitenancy: false
         );
 
         return empty($results) === false;

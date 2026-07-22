@@ -12,7 +12,7 @@ The KTO/NPS V1 capability (archived change `2026-03-22-customer-satisfaction`) s
 
 4. **The loop is open: detractors disappear** — An NPS 0–6 response is the single highest-value signal a CRM can produce, and today it lands silently in an analytics view nobody watches. Closed-loop feedback (alert the account owner, create a follow-up task, track resolution) is the entire point of NPS as practiced by Bain's methodology and every major CRM.
 
-5. **Satisfaction is invisible in the 360° client view** — `klantbeeld-360` aggregates contactmomenten, requests, and leads per client, but per-client satisfaction (promised in the feature doc: "Aggregate satisfaction per client for 360-degree client view") was never delivered. An account manager opening a client cannot see "this client's NPS is 2 and falling."
+5. **Satisfaction is invisible in the 360° client view** — `customer-360` aggregates contactmomenten, requests, and leads per client, but per-client satisfaction (promised in the feature doc: "Aggregate satisfaction per client for 360-degree client view") was never delivered. An account manager opening a client cannot see "this client's NPS is 2 and falling."
 
 6. **Stale documentation** — `docs/Features/customer-satisfaction.md` still says "Status: Planned" although V1 is implemented and archived, and `docs/Features/terugbel-taakbeheer.md` says "Planned" although the `callback-management` capability covers it. Both misrepresent the product (flagged by the 2026-06-11 feature re-evaluation).
 
@@ -30,7 +30,7 @@ Close the feedback loop on top of the existing V1 engine:
 
 5. **Detractor closed-loop follow-up** — When a response scores NPS ≤ 6 (or rating ≤ 2 on a 1–5 scale), create a My Work follow-up task assigned to the linked client's owner (fallback: configured default assignee) and emit a notification through the OpenRegister x-openregister-notifications dialect (ADR-031). The follow-up task references the response so the operator sees verbatims before calling back.
 
-6. **Klantbeeld-360 satisfaction panel** — Per-client NPS, average rating, response count, trend direction, and the most recent verbatims, computed from responses linked (directly or via their invitation's entity) to the client.
+6. **Customer 360 satisfaction panel** — Per-client NPS, average rating, response count, trend direction, and the most recent verbatims, computed from responses linked (directly or via their invitation's entity) to the client.
 
 7. **Documentation conformance** — Update `docs/Features/customer-satisfaction.md` to reflect implemented V1 + this change's scope, and re-point `docs/Features/terugbel-taakbeheer.md` at the `callback-management` capability.
 
@@ -52,14 +52,14 @@ Backend services:
 Frontend:
 - Dispatch-rule management section in survey settings (per-survey trigger/channel/delay/cooldown)
 - Response-rate block in SurveyAnalytics
-- Satisfaction panel in the klantbeeld-360 client view
+- Satisfaction panel in the customer-360 client view
 - Opt-out checkbox on the public survey form
 
 Notifications: schema-rule based via the x-openregister-notifications dialect in `lib/Settings/pipelinq_register.json` (ADR-031) — no imperative dispatch.
 
 Seed data: 1 example dispatch rule (contactmoment closed → KTO survey, email, 30-day cooldown).
 
-**Depends on:** `customer-satisfaction` V1 (archived 2026-03-22), `crm-workflow-automation` (event stream + email action), `contacts-sync` (contact/contactsUid), `klantbeeld-360`, `my-work` (follow-up tasks), OpenRegister notifications (ADR-031). Optional: `whatsapp-sms-channel-adapter` (extra channels when installed).
+**Depends on:** `customer-satisfaction` V1 (archived 2026-03-22), `crm-workflow-automation` (event stream + email action), `contacts-sync` (contact/contactsUid), `customer-360`, `my-work` (follow-up tasks), OpenRegister notifications (ADR-031). Optional: `whatsapp-sms-channel-adapter` (extra channels when installed).
 
 ## Out of Scope
 
@@ -78,5 +78,5 @@ Seed data: 1 example dispatch rule (contactmoment closed → KTO survey, email, 
 - A contact who ticks "don't ask me again" never receives another invitation, across all surveys
 - SurveyAnalytics shows invitations sent, responses received, and response rate per channel and period
 - An NPS-3 response creates a My Work task for the client owner within one cron run and the owner receives a Nextcloud notification via the OR notification engine
-- Opening a client in klantbeeld-360 shows the client's NPS, average rating, response count, and last verbatim
+- Opening a client in customer-360 shows the client's NPS, average rating, response count, and last verbatim
 - `docs/Features/customer-satisfaction.md` no longer claims "Planned"; `terugbel-taakbeheer.md` points at callback-management

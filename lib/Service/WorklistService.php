@@ -351,7 +351,7 @@ class WorklistService
                 'priority'      => $priority,
                 'dueDate'       => $dueDate,
                 'isOverdue'     => $isOverdue,
-                // unify-ticket-supertype: request-type tickets render on the one
+                // Unify-ticket-supertype: request-type tickets render on the one
                 // unified detail page; the retired RequestDetail page is gone.
                 'routeName'     => 'TicketDetail',
                 'dueTimestamp'  => $dueTs,
