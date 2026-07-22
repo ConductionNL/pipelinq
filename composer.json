@@ -14,13 +14,6 @@
 			"OCA\\Pipelinq\\": "lib/"
 		}
 	},
-	"autoload-dev": {
-		"psr-4": {
-			"OCA\\OpenRegister\\": "tests/Stubs/",
-			"Doctrine\\DBAL\\": "tests/Stubs/DBAL/",
-			"OC\\": "tests/Stubs/OC/"
-		}
-	},
 	"require": {
 		"php": "^8.3",
 		"nextcloud/ocp": "^31.0"
