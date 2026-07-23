@@ -1,0 +1,212 @@
+[
+  {
+    "slug": "activity-timeline",
+    "title": "Activity Timeline",
+    "summary": "Provide a chronological activity feed per contact, organization, and pipeline item in Pipelinq.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/activity-timeline/spec.md"
+  },
+  {
+    "slug": "admin-settings",
+    "title": "Admin Settings",
+    "summary": "The admin settings page provides a Nextcloud admin panel for configuring Pipelinq.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/admin-settings/spec.md"
+  },
+  {
+    "slug": "client-management",
+    "title": "Client Management",
+    "summary": "Client management is the core capability of Pipelinq.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/client-management/spec.md"
+  },
+  {
+    "slug": "contact-relationship-mapping",
+    "title": "Contact Relationship Mapping",
+    "summary": "Model bidirectional typed relationships between contacts (parent/child, partner, colleague, employer/employee).",
+    "status": "beta",
+    "docsUrl": "openspec/specs/contact-relationship-mapping/spec.md"
+  },
+  {
+    "slug": "contactmomenten-rapportage",
+    "title": "Contactmomenten Rapportage",
+    "summary": "Contactmomenten rapportage provides management dashboards, KPI monitoring, and reporting on all registered contact moments.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/contactmomenten-rapportage/spec.md"
+  },
+  {
+    "slug": "contacts-sync",
+    "title": "Contacts Sync",
+    "summary": "Sync Pipelinq clients and contacts with Nextcloud Contacts via IManager to eliminate duplicate data entry and keep address books current.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/contacts-sync/spec.md"
+  },
+  {
+    "slug": "crm-workflow-automation",
+    "title": "CRM Workflow Automation",
+    "summary": "Expose n8n workflow automation capabilities within the Pipelinq UI.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/crm-workflow-automation/spec.md"
+  },
+  {
+    "slug": "dashboard",
+    "title": "Dashboard",
+    "summary": "The Pipelinq CRM dashboard provides an at-a-glance overview of key performance indicators, pipeline health, assigned work, and client activity.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/dashboard/spec.md"
+  },
+  {
+    "slug": "email-calendar-sync",
+    "title": "Email Calendar Sync",
+    "summary": "Enable bidirectional email and calendar synchronization in Pipelinq.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/email-calendar-sync/spec.md"
+  },
+  {
+    "slug": "entity-notes",
+    "title": "Entity Notes",
+    "summary": "Add internal notes/comments to all Pipelinq entities (clients, contacts, leads, requests) using Nextcloud's ICommentsManager, enabling team collaboration and context tracking.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/entity-notes/spec.md"
+  },
+  {
+    "slug": "kcc-werkplek",
+    "title": "KCC Werkplek",
+    "summary": "The KCC werkplek (frontoffice workspace) is the unified agent screen for KCC (Klant Contact Centrum) employees.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/kcc-werkplek/spec.md"
+  },
+  {
+    "slug": "kennisbank",
+    "title": "Kennisbank",
+    "summary": "The kennisbank (knowledge base) provides KCC agents with a searchable repository of articles, FAQs, and procedures to answer citizen questions quickly and consistently.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/kennisbank/spec.md"
+  },
+  {
+    "slug": "klantbeeld-360",
+    "title": "Klantbeeld 360",
+    "summary": "Klantbeeld 360 provides a comprehensive, aggregated view of all interactions, cases, documents, and notes for a single person or business across all channels and systems.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/klantbeeld-360/spec.md"
+  },
+  {
+    "slug": "lead-management",
+    "title": "Lead Management",
+    "summary": "Lead management handles sales opportunities, from first contact through to won or lost.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/lead-management/spec.md"
+  },
+  {
+    "slug": "lead-product-link",
+    "title": "Lead-Product Link",
+    "summary": "The lead-product link enables sales reps to attach specific products (with quantities and pricing) to leads, replacing or supplementing manual value entry.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/lead-product-link/spec.md"
+  },
+  {
+    "slug": "my-work",
+    "title": "My Work (Werkvoorraad)",
+    "summary": "My Work provides a personal workload view aggregating all items assigned to the current user, leads, requests, and optionally tasks from Procest.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/my-work/spec.md"
+  },
+  {
+    "slug": "notifications-activity",
+    "title": "Notifications & Activity Stream",
+    "summary": "Deliver real-time notifications and a team-visible activity timeline for CRM events so users stay informed about leads, requests, and collaboration actions.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/notifications-activity/spec.md"
+  },
+  {
+    "slug": "omnichannel-registratie",
+    "title": "Omnichannel Registratie",
+    "summary": "Omnichannel registratie enables KCC agents to register contact moments from any communication channel (telefoon, e-mail, balie, chat, social media, brief) using a unified data model.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/omnichannel-registratie/spec.md"
+  },
+  {
+    "slug": "openregister-integration",
+    "title": "OpenRegister Integration",
+    "summary": "Pipelinq stores all data as OpenRegister objects, it owns no database tables.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/openregister-integration/spec.md"
+  },
+  {
+    "slug": "pipeline",
+    "title": "Pipeline & Kanban",
+    "summary": "Pipelines provide configurable kanban-style boards where leads and requests flow through ordered stages.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/pipeline/spec.md"
+  },
+  {
+    "slug": "pipeline-insights",
+    "title": "Pipeline Insights",
+    "summary": "Add temporal, financial, and analytical context to pipeline views so users can spot bottlenecks, prioritize overdue items, forecast revenue, and see conversion metrics at a glance.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/pipeline-insights/spec.md"
+  },
+  {
+    "slug": "product-catalog",
+    "title": "Product Catalog",
+    "summary": "The product catalog allows Pipelinq users to manage the products and services their organization sells.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/product-catalog/spec.md"
+  },
+  {
+    "slug": "product-catalog-quoting",
+    "title": "Product Catalog Quoting",
+    "summary": "Extend the existing product catalog with quote generation capabilities: line items with quantities and discounts, quote lifecycle management, and PDF proposal generation.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/product-catalog-quoting/spec.md"
+  },
+  {
+    "slug": "product-service-catalog",
+    "title": "Product & Service Catalog (PDC)",
+    "summary": "Implement a government product and service catalog (PDC - Producten- en Dienstencatalogus) as a core Pipelinq capability for CRM-driven citizen service delivery, conforming to the Uniforme Productnamenlijst (UPL) and Single Digital Gateway (SDG) standards.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/product-service-catalog/spec.md"
+  },
+  {
+    "slug": "prometheus-metrics",
+    "title": "Prometheus Metrics Endpoint",
+    "summary": "Expose application metrics in Prometheus text exposition format at GET /api/metrics for monitoring, alerting, and operational dashboards.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/prometheus-metrics/spec.md"
+  },
+  {
+    "slug": "prospect-discovery",
+    "title": "Prospect Discovery",
+    "summary": "The prospect discovery capability enables sales teams to find new potential clients by searching public company registries (KVK Handelsregister, OpenCorporates) against a configurable Ideal Customer Profile (ICP).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/prospect-discovery/spec.md"
+  },
+  {
+    "slug": "public-intake-forms",
+    "title": "Public Intake Forms",
+    "summary": "Provide embeddable HTML forms for external websites that create contacts and leads in Pipelinq upon submission.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/public-intake-forms/spec.md"
+  },
+  {
+    "slug": "register-i18n",
+    "title": "Register Content Internationalization",
+    "summary": "Enable multi-language support for Pipelinq's register objects, allowing users to view and manage CRM and pipeline content in their preferred language.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/register-i18n/spec.md"
+  },
+  {
+    "slug": "request-management",
+    "title": "Request Management",
+    "summary": "Request management handles the intake and tracking of requests (verzoeken).",
+    "status": "stable",
+    "docsUrl": "openspec/specs/request-management/spec.md"
+  },
+  {
+    "slug": "terugbel-taakbeheer",
+    "title": "Terugbel- en Taakbeheer",
+    "summary": "Terugbel- en taakbeheer (callback and task management) enables KCC agents to create callback requests (terugbelverzoeken) and follow-up tasks when a citizen question cannot be resolved immediately.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/terugbel-taakbeheer/spec.md"
+  }
+]
