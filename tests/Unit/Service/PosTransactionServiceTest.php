@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosTransactionService;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
@@ -83,6 +84,7 @@ class PosTransactionServiceTest extends TestCase
             $this->appConfig,
             $policy,
             $logger,
+            $this->createMock(IEventDispatcher::class),
         );
     }//end setUp()
 

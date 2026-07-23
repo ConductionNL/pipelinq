@@ -29,11 +29,13 @@ use DateTimeInterface;
 use ReflectionClass;
 use RuntimeException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -88,6 +90,15 @@ class PosTransactionService
     public const EVENT_CONFIRMED = 'pipelinq.PosTransaction.confirmed';
 
     /**
+     * CloudEvent type emitted per settled transaction (stock decrement / COGS).
+     *
+     * @var string
+     *
+     * @spec openspec/changes/pos-stock-moved-event/specs/pos-stock-moved-event/spec.md#Requirement:-A-settled-POS-sale-SHALL-emit-a-typed-stock-moved-CloudEvent
+     */
+    public const EVENT_STOCK_MOVED = 'nl.pipelinq.pos.stock.moved';
+
+    /**
      * CloudEvents source identifier for this app's POS surface.
      *
      * @var string
@@ -95,18 +106,29 @@ class PosTransactionService
     private const EVENT_SOURCE = '/apps/pipelinq/pos';
 
     /**
+     * Cross-app soft-dependency: shillinq's administration context resolver
+     * (mirrors {@see \OCA\Shillinq\Service\AdministrationContextService}, the
+     * same seam TimeBillingHandoffService::resolveAdministrationId() uses).
+     *
+     * @var string
+     */
+    private const SHILLINQ_ADMINISTRATION_CONTEXT_SERVICE = 'OCA\\Shillinq\\Service\\AdministrationContextService';
+
+    /**
      * Constructor.
      *
-     * @param ContainerInterface $container The DI container.
-     * @param IAppConfig         $appConfig The app config.
-     * @param PosAccessPolicy    $policy    The shared POS access policy.
-     * @param LoggerInterface    $logger    The logger.
+     * @param ContainerInterface $container       The DI container.
+     * @param IAppConfig         $appConfig       The app config.
+     * @param PosAccessPolicy    $policy          The shared POS access policy.
+     * @param LoggerInterface    $logger          The logger.
+     * @param IEventDispatcher   $eventDispatcher Event dispatcher for PosStockMovedEvent.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private PosAccessPolicy $policy,
         private LoggerInterface $logger,
+        private IEventDispatcher $eventDispatcher,
     ) {
     }//end __construct()
 
@@ -637,6 +659,19 @@ class PosTransactionService
             }
         }
 
+        // Emit the stock-moved CloudEvent from the SAME commit path as the
+        // tender-posted event(s) above, so a POS sale posts payment AND stock
+        // atomically (pos-stock-moved-event). Fire-and-forget: a downstream
+        // failure (e.g. shillinq offline) NEVER aborts a completed settle.
+        try {
+            $this->emitStockMovedEvent(transactionId: $id);
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq: stock-moved CloudEvent emission failed',
+                ['id' => $id, 'exception' => $e->getMessage()]
+            );
+        }
+
         $this->logger->info('Pipelinq: POS transaction settled', ['id' => $id, 'userId' => $userId]);
 
         return $saved;
@@ -665,6 +700,163 @@ class PosTransactionService
 
         return null;
     }//end resolveTenderService()
+
+    /**
+     * Emit a PosStockMovedEvent for every sold line on a settled transaction.
+     *
+     * Called from settleTransaction() AFTER the status transition + tender
+     * emission have completed. Resolves each line's `product` ref to its SKU
+     * (the shared key shillinq's inventory keys on) via this app's own
+     * `product` schema — the same field product-vendor-master ingest already
+     * syncs from shillinq (see IngestProductVendorMaster). A line whose
+     * product cannot be resolved to a SKU is still carried with an empty
+     * `productRef`, never dropped, so the shillinq consumer's unmatched-line
+     * audit surface sees it.
+     *
+     * @param string $transactionId The settled transaction UUID.
+     *
+     * @return string The emitted event id, or empty string when there were no
+     *                sold lines / the transaction could not be resolved.
+     *
+     * @spec openspec/changes/pos-stock-moved-event/specs/pos-stock-moved-event/spec.md#Requirement:-A-settled-POS-sale-SHALL-emit-a-typed-stock-moved-CloudEvent
+     */
+    public function emitStockMovedEvent(string $transactionId): string
+    {
+        try {
+            $transaction = $this->fetchTransaction(id: $transactionId);
+        } catch (\Throwable $e) {
+            return '';
+        }
+
+        $lines = $this->fetchLines(transactionId: $transactionId);
+        if ($lines === []) {
+            return '';
+        }
+
+        $eventLines = [];
+        foreach ($lines as $line) {
+            $productId    = (string) ($line['product'] ?? '');
+            [$sku, $unit] = $this->resolveProductSkuAndUnit(productId: $productId);
+            $eventLines[] = [
+                'productRef' => $sku,
+                'qty'        => (float) ($line['quantity'] ?? 0),
+                'unit'       => $unit,
+                // Reserved for future multi-location POS support (out of scope
+                // today — see the pos-stock-moved-event proposal).
+                'location'   => '',
+            ];
+        }
+
+        $eventId = $this->uuid();
+        $event   = new PosStockMovedEvent(
+            eventId: $eventId,
+            transactionUuid: $transactionId,
+            transactionReference: (string) ($transaction['reference'] ?? ''),
+            administrationId: $this->resolveAdministrationId(),
+            lines: $eventLines,
+            emittedAt: $this->now(),
+        );
+
+        try {
+            $this->eventDispatcher->dispatchTyped(event: $event);
+        } catch (\Throwable $e) {
+            $this->logger->info(
+                'Pipelinq POS stock: typed dispatch failed; falling back to webhook',
+                ['transactionId' => $transactionId, 'exception' => $e->getMessage()]
+            );
+        }
+
+        // Fire-and-forget to OR WebhookService so external subscribers
+        // (Shillinq) get the CloudEvent over their configured webhook URL,
+        // mirroring PosTenderService::emitSingleTenderPosted().
+        try {
+            $webhookService = $this->container->get('OCA\\OpenRegister\\Service\\WebhookService');
+            $webhookService->dispatchEvent(
+                _event: new Event(),
+                eventName: self::EVENT_STOCK_MOVED,
+                payload: $event->toCloudEvent()
+            );
+        } catch (\Throwable $e) {
+            $this->logger->debug(
+                'Pipelinq POS stock: WebhookService unavailable; skipping external dispatch',
+                ['transactionId' => $transactionId, 'exception' => $e->getMessage()]
+            );
+        }
+
+        return $eventId;
+    }//end emitStockMovedEvent()
+
+    /**
+     * Resolve a line's `product` ref to its `[sku, unit]` pair via this app's
+     * own `product` schema. Returns `['', '']` when the ref is empty or the
+     * product cannot be resolved / has no sku — the caller still carries the
+     * line (empty productRef), it never silently drops it.
+     *
+     * @param string $productId The product UUID referenced by the line.
+     *
+     * @return array{0: string, 1: string} The `[sku, unit]` pair.
+     *
+     * @spec openspec/changes/pos-stock-moved-event/specs/pos-stock-moved-event/spec.md#Requirement:-A-settled-POS-sale-SHALL-emit-a-typed-stock-moved-CloudEvent
+     */
+    private function resolveProductSkuAndUnit(string $productId): array
+    {
+        if ($productId === '') {
+            return ['', ''];
+        }
+
+        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'product_schema', '');
+        if ($register === '' || $schema === '') {
+            return ['', ''];
+        }
+
+        try {
+            $product = $this->getObjectService()->find(id: $productId, register: $register, schema: $schema);
+        } catch (\Throwable $e) {
+            return ['', ''];
+        }
+
+        if ($product === null) {
+            return ['', ''];
+        }
+
+        $productArr = $this->toArray(object: $product);
+
+        return [
+            (string) ($productArr['sku'] ?? ''),
+            (string) ($productArr['unit'] ?? ''),
+        ];
+    }//end resolveProductSkuAndUnit()
+
+    /**
+     * Resolve the shillinq administration/tenant id this sale posts to.
+     *
+     * Mirrors {@see TimeBillingHandoffService::resolveAdministrationId()}:
+     * a soft cross-app dependency on shillinq's AdministrationContextService,
+     * falling back to `'default'` when shillinq is not installed/available or
+     * the context cannot be built.
+     *
+     * @return string The administration id.
+     *
+     * @spec openspec/changes/pos-stock-moved-event/specs/pos-stock-moved-event/spec.md#Requirement:-A-settled-POS-sale-SHALL-emit-a-typed-stock-moved-CloudEvent
+     */
+    private function resolveAdministrationId(): string
+    {
+        try {
+            $contextService = $this->container->get(self::SHILLINQ_ADMINISTRATION_CONTEXT_SERVICE);
+            if (is_object($contextService) === true && method_exists($contextService, 'buildContext') === true) {
+                $context   = $contextService->buildContext();
+                $candidate = (string) ($context['activeAdministrationId'] ?? '');
+                if ($candidate !== '') {
+                    return $candidate;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fall through to the default below.
+        }
+
+        return 'default';
+    }//end resolveAdministrationId()
 
     /**
      * Refund / void a confirmed or settled transaction (manager only).
