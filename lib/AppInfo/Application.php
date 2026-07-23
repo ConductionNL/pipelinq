@@ -57,7 +57,7 @@ use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
-use OCA\Pipelinq\Mcp\PipelinqToolProvider;
+use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\AppointmentPaymentProvider;
@@ -112,7 +112,7 @@ class Application extends App implements IBootstrap
      * @return void
      *
      * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
-     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md
+     * @spec openspec/specs/avg-verzoeken-workflow/spec.md
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength) A flat DI registration
      *  manifest — one linear list of service/listener wirings, not branching logic.
@@ -231,14 +231,21 @@ class Application extends App implements IBootstrap
         $context->registerDashboardWidget(StartRequestWidget::class);
         $context->registerDashboardWidget(CreateLeadWidget::class);
 
-        // Register PipelinqToolProvider as the MCP tool provider for the AI Chat Companion.
-        // The alias key 'OCA\OpenRegister\Mcp\IMcpToolProvider::pipelinq' is the format
-        // that OR's McpToolsService enumerates to discover per-app providers (design D3).
-        // The interface ships in openregister PR #1466 (ai-chat-companion-orchestrator);
-        // until then this app implements the tests/Stubs/Mcp/IMcpToolProvider.php stub.
+        // Register PipelinqScannableServices as the MCP attribute-scan opt-in for the
+        // AI Chat Companion (ADR-063 chain 3/3, openregister PR #363). The alias key
+        // 'OCA\OpenRegister\Mcp\IMcpScannableServices::pipelinq' is the format OR's
+        // Application::collectAttributeMcpProviders() enumerates to discover each app's
+        // scannable service classes, mirroring the retired per-app
+        // 'IMcpToolProvider::pipelinq' convention. Pipelinq no longer ships a
+        // hand-written IMcpToolProvider — every CRUD read is served by OpenRegister's
+        // schema-derived tools, and the three curated tools (createLead,
+        // logContactmoment, pipelineForecast) are `#[McpTool]`-attributed methods on
+        // LeadService/TicketService, reflected via this opt-in (plq-mcp-provider-surgery).
+        // Until openregister is installed this app implements the
+        // tests/Stubs/Mcp/IMcpScannableServices.php + tests/Stubs/Mcp/Attribute/McpTool.php stubs.
         $context->registerServiceAlias(
-            'OCA\\OpenRegister\\Mcp\\IMcpToolProvider::pipelinq',
-            PipelinqToolProvider::class
+            'OCA\\OpenRegister\\Mcp\\IMcpScannableServices::pipelinq',
+            PipelinqScannableServices::class
         );
 
         // Wave-4 external-API ports (low-volume families).
@@ -729,7 +736,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016--pipelinq-evidence-source-registration
+     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-016-pipelinq-evidence-source-registration
      */
     private function registerDsarEvidenceSource(): void
     {
@@ -842,7 +849,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-006
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     private function wireAppointmentEmailSeam(): void
     {
@@ -871,7 +878,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     private function wireAppointmentCalendarSeam(): void
     {
@@ -901,7 +908,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec openspec/changes/appointment-booking-08-deposit-payment/specs/appointment-booking/spec.md#req-apt-011a
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     private function wireAppointmentPaymentSeam(): void
     {

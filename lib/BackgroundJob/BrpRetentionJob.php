@@ -97,9 +97,12 @@ class BrpRetentionJob extends TimedJob
             $now     = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 
             $records = $objects->findAll(
-                filters: [],
-                register: $register,
-                schema: $persoonSchema,
+                config: [
+                    'filters' => [
+                        'register' => $register,
+                        'schema'   => $persoonSchema,
+                    ],
+                ]
             );
 
             $deleted = 0;

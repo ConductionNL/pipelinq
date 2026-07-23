@@ -94,13 +94,13 @@ class SmsAdapterTest extends TestCase
             /**
              * Mock findAll — always empty (no conversation / contact match).
              *
-             * @param array<string, mixed> $filters  Filters.
-             * @param mixed                $register Register.
-             * @param mixed                $schema   Schema.
+             * Mirrors OR's real ObjectService::findAll(array $config).
+             *
+             * @param array<string, mixed> $config Config with a `filters` map.
              *
              * @return array<int, array<string, mixed>>
              */
-            public function findAll(array $filters = [], $register = null, $schema = null): array
+            public function findAll(array $config = []): array
             {
                 return [];
             }

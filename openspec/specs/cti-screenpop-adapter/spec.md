@@ -13,14 +13,14 @@ The system MUST automatically navigate the agent's browser tab to the caller's C
 
 **Feature tier**: MVP
 
-#### Scenario: Single contact match navigates to klantbeeld view
+#### Scenario: Single contact match navigates to customer 360 view
 
 - GIVEN a call arrives on the agent's extension from phone number `+31612345678`
 - AND exactly one contact exists in the database with this phone number (after E.164 normalisation)
 - WHEN the telephony platform sends a `answered` webhook to pipelinq
 - AND screen-pop is enabled in `cti_adapter_config.screen_pop_enabled = true`
 - THEN pipelinq calls `POST /api/cti/screen-pop` with the caller's phone number
-- AND within 500ms + `screen_pop_delay_ms` (default 0), the agent's browser navigates to `/klantbeeld/contact/{contactId}` for that contact's klantbeeld-360 view
+- AND within 500ms + `screen_pop_delay_ms` (default 0), the agent's browser navigates to `/customer-360/contact/{contactId}` for that contact's customer-360 view
 - AND the contactmoment is created and linked to the contact (see REQ-CTI-003)
 
 #### Scenario: Multiple contact matches show chooser modal
@@ -44,7 +44,7 @@ The system MUST automatically navigate the agent's browser tab to the caller's C
   - Optional "Company" dropdown (existing clients)
   - Optional "Email" field
   - A "Create & continue" button
-- AND on submission, a new contact is created and the agent is routed to its klantbeeld view
+- AND on submission, a new contact is created and the agent is routed to its customer 360 view
 - AND the contactmoment is linked to the newly created contact
 
 #### Scenario: Screen-pop delay allows agent to hear greeting
@@ -113,7 +113,7 @@ Phone number fields throughout Pipelinq MUST support one-click call initiation.
 
 #### Scenario: Click-to-dial icon appears on phone number fields
 
-- GIVEN a phone number is displayed in any Pipelinq view (contact detail, deal detail, klantbeeld-360, request detail)
+- GIVEN a phone number is displayed in any Pipelinq view (contact detail, deal detail, customer-360, request detail)
 - WHEN the agent hovers over the phone number field
 - THEN a phone icon (📞) MUST appear next to the number
 - AND the icon is styled consistently across all fields (via `v-click-to-dial` directive or component property)

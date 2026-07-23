@@ -397,10 +397,14 @@ class LoyaltyEngineService
 
         try {
             $rows = $this->getObjectService()->findAll(
-                filters: ['status' => 'actief'],
-                register: $register,
-                schema: $schema,
-                limit: 200
+                config: [
+                    'filters' => [
+                        'status'   => 'actief',
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                    'limit'   => 200,
+                ]
             );
         } catch (Throwable $e) {
             return [];

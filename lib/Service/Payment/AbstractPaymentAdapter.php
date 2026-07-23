@@ -41,6 +41,28 @@ use Throwable;
 abstract class AbstractPaymentAdapter implements PaymentProviderInterface
 {
     /**
+     * Placeholder standing in for a PSP key the adapter is not allowed to know.
+     *
+     * The adapters used to receive the real, decrypted apiKey and paste it into an
+     * `Authorization`/`X-API-Key` header. They no longer get one: the key lives in
+     * OpenRegister's credential broker and is injected server-side.
+     *
+     * Rather than rewrite seventeen `if ($apiKey === '')` guards into a second code path
+     * that could drift from the first, `PosPaymentService` hands the adapters THIS value.
+     * The guards see a non-empty credential and behave exactly as before, and
+     * {@see BrokerHttpTransport} strips the resulting auth header before the call — the
+     * broker discards caller-supplied auth headers anyway.
+     *
+     * It is deliberately not secret-shaped, and it must never reach the wire.
+     * {@see CurlHttpTransport} refuses to send any request carrying it, so a future
+     * change that swaps the transport back fails loudly instead of quietly sending a
+     * placeholder as a bearer token.
+     *
+     * @var string
+     */
+    public const BROKER_MANAGED_SECRET = '__managed_by_credential_broker__';
+
+    /**
      * Constructor.
      *
      * @param array<string, mixed> $credentials Decrypted credentials (apiKey, apiSecret, webhookSecret).

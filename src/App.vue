@@ -153,8 +153,8 @@ export default {
 		 * manifest column references (ADR-036).
 		 *
 		 * @return {Record<string, object>}
-		 * @spec openspec/changes/klantbeeld-360/tasks.md#task-6.1
-		 * @spec openspec/changes/klantbeeld-360/tasks.md#task-6.2
+		 * @spec openspec/changes/customer-360/tasks.md#task-6.1
+		 * @spec openspec/changes/customer-360/tasks.md#task-6.2
 		 */
 		cellWidgets() {
 			return {

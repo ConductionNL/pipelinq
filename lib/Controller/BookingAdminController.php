@@ -56,7 +56,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the booking
  *  service, the optional email seam, the user session and i18n.
  *
- * @spec openspec/changes/appointment-booking-11-admin-ui/specs/appointment-booking/spec.md
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class BookingAdminController extends Controller
 {
@@ -92,7 +92,7 @@ class BookingAdminController extends Controller
      *
      * @return JSONResponse The new booking UUID, or an error.
      *
-     * @spec openspec/changes/appointment-booking-11-admin-ui/specs/appointment-booking/spec.md
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     #[NoAdminRequired]
     public function reschedule(string $id): JSONResponse

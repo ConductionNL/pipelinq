@@ -20,7 +20,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+ * @spec openspec/specs/email-calendar-sync/spec.md
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregate complexity is driven
  *     by the number of matching strategies; each method stays individually simple.
  *
- * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+ * @spec openspec/specs/email-calendar-sync/spec.md
  */
 class EmailMatchService
 {
@@ -129,7 +129,7 @@ class EmailMatchService
      *
      * @return array<int,array{entityType:string,entityId:string}>
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-email-contact-matching
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function matchEmailToEntities(string $address): array
     {
@@ -165,7 +165,7 @@ class EmailMatchService
      *
      * @return array{entityType:string,entityId:string}|null
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-domain-organization-matching
+     * @spec openspec/specs/email-calendar-sync/spec.md
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Ordered domain-matching strategies
      *  guarded by flat early returns; extraction adds no clarity.
@@ -248,7 +248,7 @@ class EmailMatchService
      *
      * @return bool
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-public-domain-skip
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function isPublicDomain(string $domain): bool
     {
@@ -275,7 +275,7 @@ class EmailMatchService
      *
      * @return int Number of new links created via the leaf.
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+     * @spec openspec/specs/email-calendar-sync/spec.md
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential address/entity linking
      *  guards; each condition is a flat skip, extraction adds no clarity.
@@ -385,7 +385,7 @@ class EmailMatchService
      *
      * @return array{linked:int,scanned:int} Counts for the run.
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function runForUser(string $userId): array
     {
@@ -436,7 +436,7 @@ class EmailMatchService
      *
      * @return array{account:int,enabled:bool,excludedAddresses:array<int,string>,cursor:int}
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function getSettings(string $userId): array
     {
@@ -482,7 +482,7 @@ class EmailMatchService
      *
      * @return void
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function writeSettings(string $userId, array $settings): void
     {
@@ -508,7 +508,7 @@ class EmailMatchService
      *
      * @return array{lastRunAt:?string,linked:int,scanned:int,error:?string}
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function getStatus(string $userId): array
     {
@@ -556,7 +556,7 @@ class EmailMatchService
      *
      * @return void
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     public function writeStatus(string $userId, int $linked, int $scanned, ?string $error=null): void
     {

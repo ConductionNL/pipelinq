@@ -262,6 +262,37 @@ The totals are kept fresh by webhook ingest from the configured
 provider (SendGrid, SES, Twilio). Webhook events are HMAC-verified
 before they are accepted.
 
+#### First-party open/click tracking (base tier)
+
+Provider webhooks are the default source of open/click telemetry, but
+they require a webhook-capable provider. If your instance sends
+through a plain per-tenant connector without webhook support, enable
+**first-party tracking** so open/click rates still populate:
+
+- An admin turns on **`blast.first_party_tracking`** under **Admin
+  settings → Pipelinq**. It is **off by default** — when off, blast
+  rendering and delivery telemetry behave exactly as before.
+- When on, every outbound link in a sent blast is rewritten to a
+  signed Pipelinq redirect and a 1×1 tracking pixel is appended to the
+  email body. Both use opaque, HMAC-signed tokens (default 90-day
+  validity, admin-overridable) that encode only the delivery id — no
+  email address, name, or other personal identifier ever appears in a
+  tracking URL.
+- Opens and clicks recorded this way feed the **same** `openedAt` /
+  `firstClickAt` / `status` fields and the same totals roll-up as
+  provider webhooks, so the Overview and A/B testing tabs below work
+  identically regardless of which source recorded the event. Running
+  both a webhook-capable provider and first-party tracking at once
+  does not double-count — each event is recorded once per delivery.
+- **Retention**: first-party open/click events are stored on the
+  existing `blastDelivery` row (no separate event log), so they are
+  retained for exactly as long as the parent blast/delivery record —
+  deleting or archiving the blast removes its tracking data with it.
+- **Privacy**: the pixel and redirect never capture IP address or
+  user-agent; the unsubscribe link and the required physical-address
+  footer are never rewritten, so unsubscribing and compliance
+  reporting are unaffected by enabling this setting.
+
 To stop a blast that is currently sending, click **Cancel**. All
 queued deliveries are aborted; deliveries already handed to the
 provider continue. The blast moves to `canceled`.

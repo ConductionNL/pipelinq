@@ -218,7 +218,7 @@ export default {
 		/**
 		 * Fetch the latest blast + its recent deliveries; update totals/timeline.
 		 *
-		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#scenario-progress-bar-and-totals-update-by-polling
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-progress-bar-and-totals-update-by-polling
 		 */
 		async fetchOnce() {
 			try {
@@ -277,7 +277,7 @@ export default {
 		/**
 		 * POST the cancel endpoint and reflect a cancelling status locally.
 		 *
-		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#scenario-cancel-a-sending-blast
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-cancel-a-sending-blast
 		 */
 		async cancel() {
 			this.cancelling = true

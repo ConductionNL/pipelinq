@@ -100,14 +100,20 @@ class ComplianceServiceTest extends TestCase
              * rows depending on the schema slug, filtered by the supplied
              * key-value map.
              *
-             * @param array<string, mixed> $filters  Filter map.
-             * @param mixed                $register Register slug.
-             * @param mixed                $schema   Schema slug.
+             * Mirrors OR's real ObjectService::findAll(array $config): the
+             * register/schema context travels INSIDE $config['filters'] and OR
+             * treats both as reserved params, never as object-field filters.
+             *
+             * @param array<string, mixed> $config Config with a `filters` map.
              *
              * @return array<int, array<string, mixed>> Rows.
              */
-            public function findAll(array $filters = [], $register = null, $schema = null): array
+            public function findAll(array $config = []): array
             {
+                $filters = $config['filters'] ?? [];
+                $schema  = $filters['schema'] ?? null;
+                unset($filters['register'], $filters['schema']);
+
                 if ($schema === 'consentRecord') {
                     $source = $this->consentRecords;
                 } elseif ($schema === 'blastDelivery') {

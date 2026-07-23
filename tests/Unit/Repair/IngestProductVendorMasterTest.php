@@ -61,27 +61,23 @@ class FakeIngestObjectService
     private int $seq = 0;
 
     /**
-     * Filter-aware lookup.
+     * Filter-aware lookup — mirrors OR's real ObjectService::findAll(array $config).
      *
-     * @param int                 $limit    Result cap.
-     * @param int                 $offset   Offset.
-     * @param array<string,mixed> $filters  Equality filters.
-     * @param array<string,mixed> $sort     Ignored.
-     * @param string              $search   Ignored.
-     * @param string              $register Ignored.
-     * @param string              $schema   Ignored.
+     * The register/schema context travels INSIDE $config['filters']; OR treats
+     * both as reserved params, never as object-field filters, so they are
+     * stripped before the equality match. Pagination lives at the top level.
+     *
+     * @param array<string,mixed> $config Config with `filters`, `limit`, `offset`.
      *
      * @return array<int, array<string,mixed>>
      */
-    public function findAll(
-        int $limit = 100,
-        int $offset = 0,
-        array $filters = [],
-        array $sort = [],
-        string $search = '',
-        string $register = '',
-        string $schema = ''
-    ): array {
+    public function findAll(array $config = []): array
+    {
+        $filters = $config['filters'] ?? [];
+        unset($filters['register'], $filters['schema']);
+        $limit  = (int) ($config['limit'] ?? 100);
+        $offset = (int) ($config['offset'] ?? 0);
+
         $matches = [];
         foreach ($this->store as $obj) {
             $ok = true;

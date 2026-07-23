@@ -62,12 +62,27 @@
           "implements": [
             "https://openregister.app/ns#Customer",
             "https://schema.org/Organization"
-          ]
+          ],
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search clients (people or organizations) in the CRM by name, email, industry, or type. Returns RBAC-scoped client summaries, newest first.",
+                "scope": "read",
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single client by id, including its full CRM profile (contact details, industry, address, notes).",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
+          }
         },
         "slug": "client",
         "title": "Client",
         "icon": "AccountGroup",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A client (person or organization) in the CRM",
         "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "linkedTypes": [
@@ -336,7 +351,7 @@
         },
         "title": "Lead",
         "icon": "TrendingUp",
-        "version": "1.2.0",
+        "version": "1.3.1",
         "summary": "A sales lead or business opportunity",
         "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "linkedTypes": [
@@ -350,13 +365,32 @@
         ],
         "configuration": {
           "linkedTypes": [
-            "mail",
-            "decidesk-decisions"
+            "mail"
           ],
           "mailObjectTemplate": {
             "title": "{{subject}}",
             "source": "email",
             "notes": "From: {{senderName}} <{{sender}}>\nReceived: {{date}}\nMail: {{mailRef}}\n\n{{preview}}"
+          },
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search sales leads/opportunities, optionally filtered by lifecycle status, pipeline stage, or associated client. Returns RBAC-scoped lead summaries, newest first, including the declarative qualificationScore, weightedValue, and recency-decayed winProbability calculated fields.",
+                "scope": "read",
+                "filters": [
+                  "status",
+                  "stage",
+                  "client"
+                ],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single lead by id, including the declarative qualificationScore, weightedValue, and recency-decayed winProbability calculated fields materialised by OpenRegister.",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
           },
           "x-openregister-lifecycle": {
             "field": "status",
@@ -4735,7 +4769,8 @@
         "stage": "Gekwalificeerd",
         "stageOrder": 3,
         "status": "open",
-        "notes": "Win-probability seed (hot band): recently touched, so winProbability reads the full stage probability on a fresh import."
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "notes": "Win-probability seed (hot band): recently touched, so winProbability reads the full stage probability on a fresh import. klantbeeld-360-activation: linked to client-gemeente-voorbeeld so the customer 360 summary shows this lead's pipeline value."
       },
       {
         "@self": {
@@ -4752,7 +4787,8 @@
         "stage": "Voorstel",
         "stageOrder": 4,
         "status": "open",
-        "notes": "Win-probability seed (warm band): a stalled deal — winProbability decays toward the 80%/50% bands as this seed ages past 14/30 days untouched."
+        "client": "5c9f4a52-ed0e-4519-b8d8-b2e1ef1d2554",
+        "notes": "Win-probability seed (warm band): a stalled deal — winProbability decays toward the 80%/50% bands as this seed ages past 14/30 days untouched. klantbeeld-360-activation: linked to client-meridiaan-advies-bv so the customer 360 summary shows this lead's pipeline value."
       },
       {
         "@self": {
@@ -4769,7 +4805,8 @@
         "stage": "Nieuw",
         "stageOrder": 1,
         "status": "open",
-        "notes": "Win-probability seed (cold band): long untouched — winProbability decays to the 25% band once this seed ages past 60 days untouched."
+        "client": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb",
+        "notes": "Win-probability seed (cold band): long untouched — winProbability decays to the 25% band once this seed ages past 60 days untouched. klantbeeld-360-activation: linked to client-zonnereizen so the customer 360 summary shows this lead's pipeline value."
       },
       {
         "@self": {
@@ -5365,6 +5402,176 @@
           "informatie"
         ],
         "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "client",
+          "slug": "client-gemeente-voorbeeld",
+          "id": "994174bf-3e92-4bec-aea2-701b7131201f"
+        },
+        "_note": "klantbeeld-360-activation seed: municipality archetype — see design.md Seed Data. Client for lead-gemeente-voorbeeld-kcc-portaal + 4 open tickets (request/complaint/2x contactmoment) below, so the customer-360 summary is verifiable on a fresh install (open-ticket count 4, SLA breached 1, one queue, pipeline value from the lead).",
+        "name": "Gemeente Voorbeeld",
+        "type": "organization",
+        "contactsUid": "seed-gemeente-voorbeeld-001",
+        "email": "kcc@gemeente-voorbeeld.nl",
+        "phone": "0800-1234500",
+        "address": "Raadhuisplein 1, 1234 AB Voorbeeldstad",
+        "industry": "Lokale overheid",
+        "notes": "Seed client for klantbeeld-360-activation (municipality archetype)."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "client",
+          "slug": "client-meridiaan-advies-bv",
+          "id": "5c9f4a52-ed0e-4519-b8d8-b2e1ef1d2554"
+        },
+        "_note": "klantbeeld-360-activation seed: consultancy archetype — see design.md Seed Data. Client for lead-meridiaan-advies-data-governance-retainer + 1 open request ticket (slaDeadline near-future, at-risk on import) below.",
+        "name": "Meridiaan Advies B.V.",
+        "type": "organization",
+        "contactsUid": "seed-meridiaan-advies-001",
+        "email": "info@meridiaan-advies.nl",
+        "phone": "020-5551234",
+        "address": "Zuidas 88, 1082 MS Amsterdam",
+        "industry": "Consultancy",
+        "notes": "Seed client for klantbeeld-360-activation (consultancy archetype)."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "client",
+          "slug": "client-zonnereizen",
+          "id": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb"
+        },
+        "_note": "klantbeeld-360-activation seed: travel agency archetype — see design.md Seed Data. Client for lead-zonnereizen-boekingsplatform + 2 open contactmoment tickets below (SLA breached 0, open-ticket count 2).",
+        "name": "Zonnereizen",
+        "type": "organization",
+        "contactsUid": "seed-zonnereizen-001",
+        "email": "klantenservice@zonnereizen.nl",
+        "phone": "030-7778899",
+        "address": "Reiskade 12, 3511 ZZ Utrecht",
+        "industry": "Reisbranche",
+        "notes": "Seed client for klantbeeld-360-activation (travel agency archetype)."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-gv-verzoek-parkeervergunning",
+          "id": "8530d325-eecb-4904-be61-5fc94094d571"
+        },
+        "ticketType": "request",
+        "title": "Aanvraag parkeervergunning bedrijventerrein",
+        "description": "Verzoek om een parkeervergunning voor het bedrijventerrein aan de Industrieweg.",
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "status": "new",
+        "priority": "normal",
+        "channel": "web",
+        "occurredAt": "2026-07-10T09:00:00+02:00",
+        "category": "vergunningen",
+        "queue": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-gv-klacht-openbare-ruimte",
+          "id": "43a318c6-933e-4eb1-b9d7-9f602e2798e2"
+        },
+        "ticketType": "complaint",
+        "title": "Klacht over afhandeling melding openbare ruimte",
+        "description": "Klant klaagt over de trage afhandeling van een eerdere melding kapotte lantaarnpaal.",
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "status": "in_progress",
+        "priority": "high",
+        "channel": "phone",
+        "occurredAt": "2026-06-25T11:00:00+02:00",
+        "complaintCategory": "service",
+        "slaDeadline": "2026-07-01T17:00:00+02:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-gv-contactmoment-telefoon-1",
+          "id": "152f695c-2541-4d7c-a1f0-845c63da5e73"
+        },
+        "ticketType": "contactmoment",
+        "title": "Vraag over openingstijden balie",
+        "description": "Inwoner belt met een vraag over de openingstijden van de publieksbalie.",
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "status": "new",
+        "channel": "telefoon",
+        "occurredAt": "2026-07-09T13:30:00+02:00",
+        "outcome": "afgehandeld"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-gv-contactmoment-balie-1",
+          "id": "3f2317f0-f62d-45c2-abe4-544beb5cbe76"
+        },
+        "ticketType": "contactmoment",
+        "title": "Informatie afgifte reisdocument",
+        "description": "Inwoner aan de balie geïnformeerd over de afgifte van een nieuw reisdocument.",
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "status": "new",
+        "channel": "balie",
+        "occurredAt": "2026-07-11T10:15:00+02:00",
+        "outcome": "afgehandeld"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-ma-verzoek-retainer-uitbreiding",
+          "id": "bc897780-2a4c-45cc-8b22-c25e53eadd85"
+        },
+        "_note": "slaDeadline is a fixed instant chosen to fall within the 24h at-risk window on/around the klantbeeld-360-activation seed date (2026-07-12); like the lead-scoring win-probability seed's decay bands, this is a known static-seed limitation — the ticket transitions from at-risk to breached as the install ages past this timestamp. Re-seed (or bump the date) to keep the at-risk demo fresh.",
+        "ticketType": "request",
+        "title": "Uitbreiding data-governance retainer scope",
+        "description": "Verzoek om de bestaande retainer uit te breiden met een extra kwartaal aan advieswerk.",
+        "client": "5c9f4a52-ed0e-4519-b8d8-b2e1ef1d2554",
+        "status": "new",
+        "priority": "normal",
+        "channel": "email",
+        "occurredAt": "2026-07-11T15:00:00+02:00",
+        "category": "sales",
+        "slaDeadline": "2026-07-13T12:00:00+02:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-zr-contactmoment-boeking-vraag",
+          "id": "50ad65e1-e45e-45e7-94a8-90cf2f36c810"
+        },
+        "ticketType": "contactmoment",
+        "title": "Vraag over bagagevoorwaarden boeking",
+        "description": "Klant belt met een vraag over de bagagevoorwaarden van een lopende boeking.",
+        "client": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb",
+        "status": "new",
+        "channel": "telefoon",
+        "occurredAt": "2026-07-08T16:00:00+02:00",
+        "outcome": "afgehandeld"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-zr-contactmoment-annulering",
+          "id": "ffc8a9e1-9282-48db-b586-9a1daa7dd1f1"
+        },
+        "ticketType": "contactmoment",
+        "title": "Verzoek annulering reis wegens ziekte",
+        "description": "Klant vraagt naar de annuleringsvoorwaarden voor een geboekte reis wegens ziekte.",
+        "client": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb",
+        "status": "in_progress",
+        "channel": "email",
+        "occurredAt": "2026-07-10T08:45:00+02:00",
+        "outcome": "vervolgactie"
       }
     ]
   }

@@ -176,7 +176,7 @@ class PosTransactionService
      *
      * @return string Either 'excl' or 'incl'.
      *
-     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-004
+     * @spec openspec/specs/pos-nl-btw-engine/spec.md
      */
     public function normalizePriceMode(mixed $mode): string
     {
@@ -199,7 +199,7 @@ class PosTransactionService
      *
      * @return string The description.
      *
-     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     * @spec openspec/specs/pos-nl-btw-engine/spec.md
      */
     private function rateDescription(float $rate): string
     {
@@ -239,7 +239,7 @@ class PosTransactionService
      * @return array<string, mixed> The line data with computed net, taxAmount and lineTotal.
      *
      * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
-     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-004
+     * @spec openspec/specs/pos-nl-btw-engine/spec.md
      */
     public function recalculateLine(array $lineData, ?string $priceMode=null): array
     {
@@ -294,7 +294,7 @@ class PosTransactionService
      *                               taxBreakdown, invoiceBreakdown, totalTax, total.
      *
      * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
-     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-002, #REQ-BTW-003, #REQ-BTW-004
+     * @spec openspec/specs/pos-nl-btw-engine/spec.md #REQ-BTW-003, #REQ-BTW-004
      */
     public function computeTotals(array $lines, ?string $priceMode=null): array
     {
@@ -375,7 +375,7 @@ class PosTransactionService
      *
      * @return float The net amount before discount.
      *
-     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-004
+     * @spec openspec/specs/pos-nl-btw-engine/spec.md
      */
     private function lineNetBeforeDiscount(array $line, string $mode): float
     {
@@ -408,7 +408,7 @@ class PosTransactionService
      * @return array<string, mixed> A report: rates (per-rate base/tax/description),
      *                              totals, and the count of transactions included.
      *
-     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     * @spec openspec/specs/pos-nl-btw-engine/spec.md
      */
     public function buildTaxReport(array $transactions): array
     {
@@ -489,7 +489,7 @@ class PosTransactionService
      *
      * @throws OCSForbiddenException If the caller is not a POS manager / admin.
      *
-     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     * @spec openspec/specs/pos-nl-btw-engine/spec.md
      * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.3
      */
     public function taxReport(?string $status=null, string $userId=''): array
@@ -1113,7 +1113,7 @@ class PosTransactionService
      *
      * @return array<int, array<string, mixed>> The transactions.
      *
-     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     * @spec openspec/specs/pos-nl-btw-engine/spec.md
      */
     private function fetchAllTransactions(?string $status=null): array
     {

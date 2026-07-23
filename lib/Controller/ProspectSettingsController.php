@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 
 declare(strict_types=1);
@@ -106,7 +106,7 @@ class ProspectSettingsController extends Controller
      *
      * @return JSONResponse The ICP settings.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
+     * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function index(): JSONResponse
@@ -121,7 +121,7 @@ class ProspectSettingsController extends Controller
      *
      * @return JSONResponse The save result.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
+     * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function update(): JSONResponse

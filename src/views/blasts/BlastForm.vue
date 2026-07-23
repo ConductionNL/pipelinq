@@ -311,7 +311,7 @@ export default {
 		/**
 		 * Load all segments for the segment picker.
 		 *
-		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
 		 */
 		async loadSegments() {
 			this.segmentsLoading = true
@@ -362,7 +362,7 @@ export default {
 		 * Call the template validation endpoint for email templates; SMS
 		 * templates skip the check (per ComplianceService).
 		 *
-		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#scenario-email-template-validated-before-save
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-email-template-validated-before-save
 		 */
 		async validateTemplate() {
 			this.templateValidationError = ''
@@ -403,7 +403,7 @@ export default {
 		 * cancel actions and submission waits on the user's decision.
 		 *
 		 * @return {Promise<boolean>} True when the form is allowed to proceed.
-		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
 		 */
 		async preflightCompliance() {
 			if (!this.selectedSegment) {
@@ -470,7 +470,7 @@ export default {
 		/**
 		 * Final submit: preflight compliance, POST /api/blasts, redirect to monitor.
 		 *
-		 * @spec openspec/changes/marketing-segmentation-and-blast-07-segment-blast-views/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
 		 */
 		async submit() {
 			this.submitError = ''

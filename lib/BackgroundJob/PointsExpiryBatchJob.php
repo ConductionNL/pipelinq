@@ -223,10 +223,14 @@ class PointsExpiryBatchJob extends TimedJob
 
         try {
             $rows = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-                filters: ['status' => 'actief'],
-                register: $register,
-                schema: $schema,
-                limit: 500
+                config: [
+                    'filters' => [
+                        'status'   => 'actief',
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                    'limit'   => 500,
+                ]
             );
         } catch (Throwable $e) {
             return [];

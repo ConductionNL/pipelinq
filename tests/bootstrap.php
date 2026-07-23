@@ -24,6 +24,22 @@ define('PHPUNIT_RUN', 1);
 // ClassLoader instance is returned even when PHPUnit has already pulled it in.
 $autoloader = require __DIR__ . '/../vendor/autoload.php';
 
+// Register the test-only stub namespaces on the composer loader at test time.
+// These previously lived in composer.json "autoload-dev" (mapping the real
+// cross-app / framework namespaces OCA\OpenRegister\, Doctrine\DBAL\ and OC\ to
+// tests/Stubs/). When vendor/ is built WITH dev dependencies — as the shared dev
+// instance does — that mapping enters the RUNTIME classmap and the stubs SHADOW the
+// real classes instance-wide, producing 500s everywhere (openregister#2036). The
+// mapping is therefore removed from composer.json and re-registered here, at
+// test-time only, so the unit suite still resolves the stubs while no runtime
+// autoloader is ever polluted. Loading is lazy, so ordering relative to the
+// OCP/NC registration below is irrelevant.
+if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
+    $autoloader->addPsr4('OCA\\OpenRegister\\', __DIR__ . '/Stubs/');
+    $autoloader->addPsr4('Doctrine\\DBAL\\', __DIR__ . '/Stubs/DBAL/');
+    $autoloader->addPsr4('OC\\', __DIR__ . '/Stubs/OC/');
+}
+
 // Register the OCP/NCU namespaces from the nextcloud/ocp dev dependency so that
 // unit tests can run in a bare environment (no installed Nextcloud server). When
 // NC is present its own autoloader provides these and these mappings are inert.

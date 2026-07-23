@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-011--sync-golden-record-to-openregister
+ * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-011-sync-golden-record-to-openregister
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for syncing golden records to OpenRegister schema instances.
  *
- * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-011--sync-golden-record-to-openregister
+ * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-011-sync-golden-record-to-openregister
  */
 class OpenRegisterSyncService
 {
@@ -78,7 +78,7 @@ class OpenRegisterSyncService
      *
      * @return string|null The OR schema slug.
      *
-     * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-011--sync-golden-record-to-openregister
+     * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-011-sync-golden-record-to-openregister
      */
     public function schemaForEntityType(string $entityType): ?string
     {
@@ -97,7 +97,7 @@ class OpenRegisterSyncService
      * @return array<string, mixed>|null The synced OR object, or null when the
      *                                   entity is missing / its type is unmapped.
      *
-     * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-011--sync-golden-record-to-openregister
+     * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-011-sync-golden-record-to-openregister
      */
     public function syncMasterToRegister(string $masterId): ?array
     {
@@ -166,7 +166,7 @@ class OpenRegisterSyncService
      *
      * @return void
      *
-     * @spec openspec/changes/retire-mdm-sync-queue/specs/master-data-management/spec.md#requirement-req-mdm-011--sync-golden-record-to-openregister
+     * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-011-sync-golden-record-to-openregister
      */
     public function demoteRecord(string $schemaSlug, string $objectId): void
     {

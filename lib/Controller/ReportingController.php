@@ -17,8 +17,8 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
+ * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
+ * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -179,7 +179,7 @@ class ReportingController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
      */
     public function getSla(): JSONResponse
     {
@@ -203,7 +203,7 @@ class ReportingController extends Controller
      *
      * @return JSONResponse The updated SLA targets.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-49
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
     public function updateSla(): JSONResponse
@@ -255,7 +255,7 @@ class ReportingController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-50
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
      */
     public function exportCsv(): DataDownloadResponse|JSONResponse
     {

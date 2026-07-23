@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
  */
 
 declare(strict_types=1);
@@ -82,7 +82,7 @@ class BusinessHoursCalculator
      *
      * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface is a stdlib factory, not injectable.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function addDuration(
         string $calendarType,
@@ -116,7 +116,7 @@ class BusinessHoursCalculator
      *
      * @return int Minutes.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function intervalToMinutes(DateInterval $duration): int
     {
@@ -131,7 +131,7 @@ class BusinessHoursCalculator
      *
      * @return array{start: string, end: string} HH:MM window.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function getBusinessHoursWindow(): array
     {
@@ -163,7 +163,7 @@ class BusinessHoursCalculator
      *
      * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface is a stdlib factory, not injectable.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     public function elapsedBusinessMinutes(
         DateTimeInterface $start,

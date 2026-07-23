@@ -218,9 +218,13 @@ class BsnAuditService
             $newHash = hash_hmac('sha256', $rawBsn, $secret);
 
             $records = $this->getObjectService()->findAll(
-                filters: ['bsnHash' => $oldHash],
-                register: $register,
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'bsnHash'  => $oldHash,
+                        'register' => $register,
+                        'schema'   => $schema,
+                    ],
+                ]
             );
 
             $count = 0;

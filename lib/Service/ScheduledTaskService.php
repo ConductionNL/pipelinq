@@ -649,6 +649,8 @@ class ScheduledTaskService
                 'timestamp' => $timestamp,
                 'result'    => 'expired',
             ];
+
+            $this->notifyTaskExpired(task: $task);
         }
 
         if ($deadline >= $expiryCut) {
@@ -725,6 +727,42 @@ class ScheduledTaskService
             );
         }
     }//end notifyTaskAssignee()
+
+    /**
+     * Escalate an expired task to its assignee.
+     *
+     * Fired when an open task passes its deadline beyond the expiry cut and is
+     * transitioned to `verlopen`. No-op when the task has no assignee.
+     * Notification failures are logged and swallowed so they never abort the
+     * batch run.
+     *
+     * @param array<string,mixed> $task The task being expired.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/task-background-jobs/spec.md#requirement-deadline-escalation-notifications
+     */
+    private function notifyTaskExpired(array $task): void
+    {
+        $assignee = $task['assigneeUserId'] ?? '';
+        if ($assignee === '') {
+            return;
+        }
+
+        try {
+            $this->notificationService->notifyTaskExpired(
+                title: (string) ($task['subject'] ?? 'Scheduled task'),
+                userId: (string) $assignee,
+                objectId: (string) ($task['id'] ?? ''),
+                deadline: (string) ($task['deadline'] ?? '')
+            );
+        } catch (Throwable $e) {
+            $this->logger->error(
+                'ScheduledTaskService: expiry notification dispatch failed',
+                ['exception' => $e]
+            );
+        }
+    }//end notifyTaskExpired()
 
     /**
      * Authorise a mutation on a task.

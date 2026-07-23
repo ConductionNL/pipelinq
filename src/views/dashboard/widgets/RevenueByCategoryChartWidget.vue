@@ -29,7 +29,7 @@ import dashboardRefreshMixin from './dashboardRefreshMixin.js'
  * Donut: POS revenue by product category for the selected period.
  * Title comes from the widget chrome.
  *
- * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export default {
 	name: 'RevenueByCategoryChartWidget',
@@ -66,7 +66,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		async load() {
 			this.error = null

@@ -41,7 +41,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+ * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  */
 
 declare(strict_types=1);
@@ -58,7 +58,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Idempotent demo-data seeding + removal against OpenRegister.
  *
- * @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+ * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class DemoSeedService
@@ -155,7 +155,7 @@ class DemoSeedService
      *
      * @return array{success: bool, message?: string, created: array<string, int>, skipped: array<string, int>}
      *
-     * @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
      */
     public function seed(): array
     {
@@ -264,7 +264,7 @@ class DemoSeedService
      *
      * @return array{success: bool, message?: string, removed: array<string, int>, retained: array<string, int>}
      *
-     * @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
+     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
      */
     public function remove(): array
     {

@@ -20,7 +20,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-007
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
 /**
  * ReminderDispatchJob — 5-minute reminder dispatcher.
  *
- * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-007
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 class ReminderDispatchJob extends TimedJob
 {
@@ -93,7 +93,7 @@ class ReminderDispatchJob extends TimedJob
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
      *
-     * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-007
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     protected function run(mixed $argument): void
     {
@@ -171,7 +171,7 @@ class ReminderDispatchJob extends TimedJob
      *
      * @return bool
      *
-     * @spec openspec/changes/appointment-booking-07-email-confirmation-reminder/specs/appointment-booking/spec.md#req-apt-007
+     * @spec openspec/specs/appointment-booking/spec.md
      */
     public function isDueForReminder(array $booking, string $windowStartIso, string $windowEndIso): bool
     {

@@ -108,7 +108,7 @@ class AnalyticsController extends Controller
      *
      * @return JSONResponse The commercial overview payload, or an error envelope.
      *
-     * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+     * @spec openspec/specs/commercial-dashboard/spec.md
      */
     #[NoAdminRequired]
     public function commercial(): JSONResponse

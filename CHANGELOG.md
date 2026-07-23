@@ -7,8 +7,137 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **MCP provider surgery** (`plq-mcp-provider-surgery`): completes Migration Plan
+  steps 3–6 of `mcp-provider-declarative-migration` now that OpenRegister's ADR-063
+  chain (#355 dialect, #360 schema-derived tool provider, #363 `#[McpTool]` attribute
+  + `AttributeToolScanner`/`IMcpScannableServices`) is fully merged. Deletes the 8
+  hand-written CRUD tools from `PipelinqToolProvider` (`listRequests`, `getRequest`,
+  `listClients`, `searchClients`, `getClient`, `listLeads`, `searchLeads`, `getLead`) —
+  now served exclusively by OpenRegister's schema-derived `pipelinq.{client,lead,ticket}.
+  {search,get}` tools. Migrates the three curated tools to `#[McpTool]`-attributed
+  service methods: `LeadService::createLead()` (new service) and
+  `LeadService::pipelineForecast()`, `TicketService::logContactmoment()` (new method on
+  the existing service). Adds `PipelinqScannableServices` implementing OpenRegister's
+  `IMcpScannableServices`, registered under the `IMcpScannableServices::pipelinq` DI
+  alias. **Deletes `PipelinqToolProvider` entirely** (and its `IMcpToolProvider::pipelinq`
+  alias) — after the migration it carried zero tools, so the scannable-services opt-in
+  is Pipelinq's sole MCP tool-provider seam. Fully resolves pipelinq #381: the
+  `decorateLead()` `winProbability = probability` alias, and every hand-written read
+  tool that called it, are deleted — nothing shadows the lead schema's declarative
+  `x-openregister-calculations` `winProbability` any more. Zero behaviour change to the
+  three retained tools' RBAC/validation contract; zero new test failures (1601 → 1579
+  tests: -37 from the deleted `PipelinqToolProviderTest`, +15 ported/new across
+  `LeadServiceTest`, `TicketServiceTest`, `PipelinqScannableServicesTest`).
+- **Customer 360 English naming** (`customer-360-english-naming`): renames the
+  `klantbeeld-360-activation` code surface to English-canonical naming, per
+  the project's international/English-canonical-naming rule (Dutch stays in
+  i18n/l10n). `KlantbeeldSummaryService` -> `Customer360SummaryService`,
+  `KlantbeeldController` -> `Customer360Controller`,
+  `GET /api/klantbeeld/summary` -> `GET /api/customer-360/summary`, and the
+  `openspec/specs/klantbeeld-360/` capability -> `openspec/specs/customer-360/`.
+  Pure rename — no behavior, RBAC, or aggregation-logic change.
+
 ### Added
 
+- **MCP provider declarative migration** (`mcp-provider-declarative-migration`): declares
+  the `x-openregister-mcp` dialect (ADR-063) on the `client`, `lead`, and `ticket` schemas
+  (`lib/Settings/pipelinq_register.json`, `lib/Settings/register.d/99-unify-ticket-supertype.json`),
+  config-only, no PHP. Each schema gets `enabled:true` `search`/`get` verbs with
+  agent-facing descriptions and `readOnlyHint:true`; `lead` and `ticket` search filters
+  cover `status`/`stage`/`client` and `ticketType`/`status`/`client` respectively; no
+  write verb is declared anywhere (curated `createLead`/`logContactmoment` service tools
+  stay the write path). Inert until OpenRegister's derived-tool engine ships — the
+  hand-written `PipelinqToolProvider` keeps serving unchanged in the meantime
+  (`hand-written > derived` precedence guarantees a zero-downtime, schema-by-schema
+  cutover). Also resolves pipelinq #381: the `crm-mcp-tool-surface` spec now documents
+  `winProbability` as the lead schema's declarative recency-decayed
+  `x-openregister-calculations` field, not a tool-side alias of raw `probability` — the
+  actual `decorateLead()` alias removal is deferred to the blocked follow-up code spec
+  `plq-mcp-provider-surgery` (gated on OpenRegister's `or-mcp-derived-tool-provider` +
+  `or-mcp-tool-attribute`).
+- **VNG Klantinteracties leaf** (`vng-klantinteracties-leaf`): the pipelinq-side
+  binding for VNG Klantinteracties / OpenKlant 2.x interop, config-only
+  (`lib/Settings/register.d/82-vng-klantinteracties.json`, no PHP). Adds the
+  `vngActor` schema — a declarative bridge mapping a VNG `actor` UUID +
+  `actorType` (medewerker/geautomatiseerdeActor/organisatorischeEenheid) to a
+  Nextcloud `userId`, seeded with one row per actor type — and the
+  `vngKlantinteractieBinding` schema wiring pipelinq to the OpenConnector
+  `vng-klantinteracties-adapter`'s Endpoint/Rule slugs. Documents the VNG ↔
+  canonical mapping contract (`klantcontact`↔`ticket` ticketType=contactmoment,
+  `partij`↔`client`, `betrokkene`↔`contact`, `digitaalAdres`↔`contact.email`/
+  `.phone`, `internetaak`↔`task`, `onderwerpobject`↔`ticket.caseReference`/
+  `.parentTicket`) over pipelinq's existing international schemas (ADR-001 —
+  Dutch government standards are a mapping layer, not storage), and mandates
+  the AVG BSN policy: inbound `partijIdentificator` BSNs are 11-proef-validated
+  and SHA-256-hashed via the existing BRP flow, never stored or reconstructed
+  raw. Corrected slug drift against the adapter's real as-built config (one
+  Endpoint per HTTP method, a second AVG Rule for the outbound guard) —
+  see the archived change's tasks.md for the full correction list.
+- **Klantbeeld-360 activation** (`klantbeeld-360-activation`): activates the
+  klantbeeld-360 draft to an MVP unified customer view over the existing
+  declarative `ClientDetail` page. New `KlantbeeldSummaryService` +
+  `GET /api/klantbeeld/summary` endpoint aggregate a client's open tickets
+  across all `ticketType`s (request/complaint/contactmoment), SLA
+  breached/at-risk counts (24h at-risk window), distinct open-ticket queues,
+  open-lead count + pipeline value, and last-activity time — the
+  cross-type/cross-status aggregation the declarative `summaryAggregates`
+  primitives can't express (ADR-031 exception 2). Per-object read guard on
+  the client (no IDOR) plus a doelbinding access log entry (user, client,
+  time) on every summary read. Surfaced on `ClientDetail` as five
+  endpoint-bound `stat` widgets and a `notes` integration widget; "Nieuw
+  verzoek" and "Contactpersoon toevoegen" quick actions ship as
+  `allowCreate` object-list widgets (client FK pre-linked automatically;
+  ticketType still needs one manual pick pending an nc-vue
+  `initialData`/`lockedFields` wiring follow-up). Seed data tops up the
+  municipality/consultancy/travel-agency archetype clients with linked
+  leads and open tickets (one breached, one at-risk) so the summary is
+  verifiable on a fresh install. BRP/KVK enrichment, ZGW/Procest case
+  fetch, documents overview, and pinned notes remain explicit follow-ups.
+- **Shillinq time-intake billing handoff** (`time-billing-handoff-emit`): the
+  real emit side of the delegated time-approval-workflow. A manager-facing
+  "Send to billing" action (`POST /api/billing/handoff/{clientId}`) batches a
+  client's approved, un-billed time entries for a period and posts them
+  same-instance, in the acting user's session, to shillinq's
+  `POST /apps/shillinq/api/billing/time-intake` (`TimeBillingHandoffService`).
+  Idempotent via a deterministic UUIDv5 `batchId` (client + period + sorted
+  entry ids) so a re-send replays to the same draft invoice
+  (`duplicated:true`) instead of double-billing. Outcome is traceable on every
+  entry (`billingSyncStatus`/`billingBatchId`/`billingInvoiceId`, new
+  `timeEntry` overlay fields); a transient failure notifies administrators and
+  `BillingHandoffRetryJob` (TimedJob, 15-min poll) re-notifies outstanding
+  failures — the guaranteed re-send is the manual action, re-triggered in
+  session context. A 422 (unresolvable `organisationRef`) surfaces the
+  unmapped client by name and is never blind-retried. New `client` overlay
+  field `shillinqOrganisationRef` maps a client to its shillinq
+  customer/organisation. Gated behind an off-by-default
+  `shillinq_time_intake_enabled` admin flag; the existing Shillinq deep-link
+  remains the fallback when shillinq is absent/disabled or the flag is off.
+  Seed archetypes (municipality, consultancy, travel agency) demonstrate the
+  un-billed batch, already-billed exclusion, and unmapped-client cases.
+- **CRM MCP tool surface** (`crm-mcp-tool-surface`): agent-addressable CRM
+  tools for the Nextcloud Hub Assistant / AI Chat Companion, extending
+  `PipelinqToolProvider` from 2 to 11 tools. New read tools: `listClients`,
+  `searchClients`, `getClient` (with a live 360 summary — open-ticket count,
+  open-lead count/value, recent contactmomenten), `listLeads`, `searchLeads`,
+  `getLead` (with `qualificationScore`, `weightedValue`, `winProbability`,
+  and its activity timeline), and `pipelineForecast` (per-stage totals over
+  open leads). New write tools: `createLead` and `logContactmoment`, both
+  RBAC-guarded through the existing `ObjectService`/`TicketService` write
+  path with `create` authorization enforced. Sovereign, no-per-seat-premium
+  alternative to Salesforce/HubSpot/Zoho AI copilots (ConductionNL/pipelinq#342).
+- **First-party marketing-email open/click tracking** (`marketing-email-open-click-tracking`):
+  a pipelinq-hosted open pixel (`GET /api/blast/track/open/{token}`) and
+  click-redirect (`GET /api/blast/track/click/{token}`) so open/click rates
+  populate on the base tier even without a webhook-capable ESP. Tokens are
+  HMAC-SHA256 signed and PII-free (`TrackingLinkService`, mirroring
+  `PortalController::signLink()`); the click endpoint trusts its redirect
+  target only after signature verification, so it cannot be used as an open
+  redirector. Recorded opens/clicks reuse the existing `blastDelivery`
+  fields and `BlastService::updateBlastTotals()` roll-up — no new schema.
+  Feature-flagged via `blast.first_party_tracking` (default off; flag off
+  preserves today's provider-webhook-only render path byte-for-byte).
 - **Lead scoring — win probability** (`lead-scoring-win-probability`): declarative
   `winProbability` calculation on the `lead` schema (`x-openregister-calculations`,
   `materialise: false`) — the lead's stage-denormalised `probability` decayed by
