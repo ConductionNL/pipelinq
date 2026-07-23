@@ -56,11 +56,19 @@ if (class_exists(ObjectService::class) === false) {
          * `findAll(config: ['filters' => ...])` (the documented form used by
          * pipelinq services) do not blow up with "Unknown named parameter".
          *
-         * @param array<string, mixed> $config Configuration with `filters`, `sort`, etc.
+         * `$_rbac` / `$_multitenancy` are the system-context escape hatches used
+         * by repair steps, CLI commands and cron: those run with no user session,
+         * so an RBAC-scoped read resolves the actor to 'Anonymous' and returns
+         * nothing. They are part of the real signature and must be declared here,
+         * or a caller passing them by name throws "Unknown named parameter".
+         *
+         * @param array<string, mixed> $config        Configuration with `filters`, `sort`, etc.
+         * @param bool                 $_rbac         Whether to enforce RBAC scoping.
+         * @param bool                 $_multitenancy Whether to enforce tenant scoping.
          *
          * @return array<int, mixed>
          */
-        public function findAll(array $config=[]): array
+        public function findAll(array $config=[], bool $_rbac=true, bool $_multitenancy=true): array
         {
             return [];
         }//end findAll()
@@ -89,11 +97,16 @@ if (class_exists(ObjectService::class) === false) {
          * (`saveObject(object: ..., register: ..., schema: ..., uuid: ...)`)
          * do not blow up with "Unknown named parameter".
          *
-         * @param array<string, mixed>|object $object   The data to persist.
-         * @param array<string, mixed>|null   $extend   Additional field values.
-         * @param string|int|null             $register Register slug or ID.
-         * @param string|int|null             $schema   Schema slug or ID.
-         * @param string|null                 $uuid     UUID for update; null for create.
+         * @param array<string, mixed>|object $object        The data to persist.
+         * @param array<string, mixed>|null   $extend        Additional field values.
+         * @param string|int|null             $register      Register slug or ID.
+         * @param string|int|null             $schema        Schema slug or ID.
+         * @param string|null                 $uuid          UUID for update; null for create.
+         * @param bool                        $_rbac         Whether to enforce RBAC checks.
+         * @param bool                        $_multitenancy Whether to enforce tenant scoping.
+         * @param bool                        $silent        Whether to suppress side-effects.
+         * @param array<string, mixed>|null   $uploadedFiles Files to attach.
+         * @param object|null                 $currentUser   Acting user for folder access.
          *
          * @return array<string, mixed>|object
          */
@@ -103,6 +116,11 @@ if (class_exists(ObjectService::class) === false) {
             string|int|null $register=null,
             string|int|null $schema=null,
             ?string $uuid=null,
+            bool $_rbac=true,
+            bool $_multitenancy=true,
+            bool $silent=false,
+            ?array $uploadedFiles=null,
+            ?object $currentUser=null,
         ): array|object {
             return [];
         }//end saveObject()
