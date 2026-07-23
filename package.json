@@ -52,7 +52,7 @@
 		"@babel/core": "^7.29.0",
 		"@babel/eslint-parser": "^7.28.6",
 		"@babel/preset-env": "^7.29.5",
-		"@cyclonedx/cyclonedx-npm": "^4.2.1",
+		"@cyclonedx/cyclonedx-npm": "^5.0.0",
 		"@eslint/config-helpers": "^0.4.2",
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.39.1",
