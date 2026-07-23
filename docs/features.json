@@ -1,0 +1,9 @@
+[
+  {
+    "slug": "product-service-catalog",
+    "title": "Product & Service Catalog (PDC)",
+    "summary": "Implement a government product and service catalog (PDC - Producten- en Dienstencatalogus) as a core Pipelinq capability for CRM-driven citizen service delivery, conforming to the Uniforme Productnamenlijst (UPL) and Single Digital Gateway (SDG) standards.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/product-service-catalog/spec.md"
+  }
+]
