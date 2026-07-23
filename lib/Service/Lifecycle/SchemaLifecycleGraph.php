@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-lifecycle-batch-a/specs/openregister-integration/spec.md
+ * @spec openspec/specs/openregister-integration/spec.md
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ namespace OCA\Pipelinq\Service\Lifecycle;
  * in unit tests without a container. On any read/parse failure it returns an empty
  * map and the caller falls back to its prior hardcoded graph (never regresses).
  *
- * @spec openspec/changes/pipelinq-lifecycle-batch-a/specs/openregister-integration/spec.md
+ * @spec openspec/specs/openregister-integration/spec.md
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) four independent
  *  file-scan entry points (states/configuration/lifecycle/adjacency) sharing

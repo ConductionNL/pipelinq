@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/klantbeeld-360/tasks.md#task-6.1 -->
+<!-- @spec openspec/changes/customer-360/tasks.md#task-6.1 -->
 <template>
 	<span
 		class="lead-close-cell"
@@ -26,7 +26,7 @@ import AlertOctagram from 'vue-material-design-icons/AlertOctagram.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 
 /**
- * Lead expected-close-date cell renderer (Klantbeeld 360 / REQ-KB360-014).
+ * Lead expected-close-date cell renderer (Customer 360 / REQ-KB360-014).
  *
  * Displays the date with a warning icon when:
  *   - the lead is overdue (`expectedCloseDate` is in the past), OR
@@ -36,7 +36,7 @@ import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
  * never colour alone. Hidden visually-hidden label adds screen-reader
  * context.
  *
- * @spec openspec/changes/klantbeeld-360/specs/klantbeeld-360/spec.md#REQ-KB360-014
+ * @spec openspec/specs/customer-360/spec.md
  */
 export default {
 	name: 'LeadCloseDateCell',

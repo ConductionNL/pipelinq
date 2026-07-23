@@ -19,7 +19,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+ * @spec openspec/specs/email-calendar-sync/spec.md
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Throwable;
  * `email` leaf. Per-user errors are caught + logged so a single bad
  * inbox never stops the next user from being processed.
  *
- * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+ * @spec openspec/specs/email-calendar-sync/spec.md
  */
 class EmailMatchJob extends TimedJob
 {
@@ -84,7 +84,7 @@ class EmailMatchJob extends TimedJob
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by
      *  TimedJob::run().
      *
-     * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-crm-email-matching
+     * @spec openspec/specs/email-calendar-sync/spec.md
      */
     protected function run(mixed $argument): void
     {

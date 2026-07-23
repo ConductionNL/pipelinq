@@ -48,7 +48,7 @@ use Psr\Log\LoggerInterface;
  *  and a logger.
  *
  * @spec openspec/changes/pipelinq-avg-adopt-or-gdpr/design.md
- * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014--openregister-compliance-subsystem-consumption-boundary
+ * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014-openregister-compliance-subsystem-consumption-boundary
  */
 class DataDeletionService
 {
@@ -106,7 +106,7 @@ class DataDeletionService
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
      *
-     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014--openregister-compliance-subsystem-consumption-boundary
+     * @spec openspec/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-014-openregister-compliance-subsystem-consumption-boundary
      */
     public function pseudonymizeCustomerBookings(string $customerId, bool $dryRun=false): array
     {

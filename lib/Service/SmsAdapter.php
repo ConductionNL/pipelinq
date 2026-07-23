@@ -151,7 +151,7 @@ class SmsAdapter
      * } Outcome envelope.
      *
      * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-006--outbound-sends-audited-as-contactmomenten
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-006-outbound-sends-audited-as-contactmomenten
      */
     public function send(array $contact, string $body, ?string $providerHint=null, array $context=[]): array
     {
@@ -327,7 +327,7 @@ class SmsAdapter
      *
      * @return void
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
+     * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-outbound-messages-registered-as-contactmomenten
      */
     private function auditOutbound(
         string $contactId,
@@ -656,14 +656,16 @@ class SmsAdapter
 
         try {
             $rows = $objectService->findAll(
-                filters: [
-                    'contactId'  => $contactId,
-                    'providerId' => $providerId,
-                    'channel'    => $channel,
-                    'status'     => 'open',
-                ],
-                register: $this->getRegisterSlug(),
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'contactId'  => $contactId,
+                        'providerId' => $providerId,
+                        'channel'    => $channel,
+                        'status'     => 'open',
+                        'register'   => $this->getRegisterSlug(),
+                        'schema'     => $schema,
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(
@@ -720,9 +722,13 @@ class SmsAdapter
 
         try {
             $rows = $objectService->findAll(
-                filters: ['phoneNumber' => $phone],
-                register: $this->getRegisterSlug(),
-                schema: $schema,
+                config: [
+                    'filters' => [
+                        'phoneNumber' => $phone,
+                        'register'    => $this->getRegisterSlug(),
+                        'schema'      => $schema,
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $rows = [];

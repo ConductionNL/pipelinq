@@ -16,10 +16,10 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-5
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/skill-routing/spec.md
  */
 
 declare(strict_types=1);
@@ -203,6 +203,12 @@ class SettingsService
         // "Timesheet approval" billing entry point through the registry instead of
         // the hard-coded /index.php/apps/shillinq/ path (REQ-PBTS-003).
         'shillinq_app_url'                         => '',
+        // Gates the real shillinq time-intake emit (time-billing-handoff-emit).
+        // Default off: an unconfigured install keeps today's deep-link-only
+        // handoff (shillinq_app_url) unchanged. The manager group allowed to
+        // trigger "Send to billing" (empty = NC admins only).
+        'shillinq_time_intake_enabled'             => 'false',
+        'billing_handoff_manager_group'            => '',
         // Lead-management: number of inactivity days before a lead is flagged stale.
         // Default mirrors REQ-LM-002 (14 days). Tenant-tunable through admin settings.
         // spec: openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002.
@@ -226,7 +232,7 @@ class SettingsService
         'xwiki_cache_ttl'                          => '300',
         'xwiki_direct_url'                         => '',
         // SLA engine (sla-engine-and-escalation) — admin settings.
-        // @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-008 .
+        // @spec openspec/specs/sla-engine-and-escalation/spec.md .
         'sla_sweep_interval_seconds'               => '300',
         'sla_business_hours_start'                 => '09:00',
         'sla_business_hours_end'                   => '17:00',
@@ -249,6 +255,15 @@ class SettingsService
         'avg_handler_group'                        => '',
         'avg_teamlead_group'                       => '',
         'avg_dpo_group'                            => '',
+        // First-party marketing-email open/click tracking
+        // (marketing-email-open-click-tracking) — off by default so today's
+        // provider-webhook-only render path is unchanged until an admin
+        // opts in. `_ttl_days` is the admin-overridable token TTL (90-day
+        // fixed default per design.md's Open Questions ruling).
+        // spec ref: marketing-email-open-click-tracking Requirement "Render-time
+        // injection is feature-flagged with a provider fallback".
+        'blast.first_party_tracking'               => 'false',
+        'blast.tracking_token_ttl_days'            => '90',
     ];
 
     /**
@@ -276,7 +291,7 @@ class SettingsService
      *
      * @return array The settings as key-value pairs.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getSettings(): array
     {
@@ -299,7 +314,7 @@ class SettingsService
      *
      * @return array The updated settings.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-3
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function updateSettings(array $data): array
     {
@@ -342,7 +357,7 @@ class SettingsService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-4
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function createDefaultPipelines(): void
     {
@@ -355,7 +370,7 @@ class SettingsService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-5
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function createDefaultQueues(): void
     {
@@ -368,7 +383,7 @@ class SettingsService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
+     * @spec openspec/specs/skill-routing/spec.md
      */
     public function createDefaultSkills(): void
     {
@@ -471,7 +486,7 @@ class SettingsService
      *
      * @return int The configured value, or the default if unset.
      *
-     * @spec openspec/changes/pipelinq-admin-config-magic-numbers/specs/pipelinq-or-adoption/spec.md
+     * @spec openspec/specs/pipelinq-or-adoption/spec.md
      */
     public function getIntValue(string $key, int $default): int
     {
@@ -491,7 +506,7 @@ class SettingsService
      *
      * @return string The configured value, or the default if unset.
      *
-     * @spec openspec/changes/pipelinq-admin-config-magic-numbers/specs/pipelinq-or-adoption/spec.md
+     * @spec openspec/specs/pipelinq-or-adoption/spec.md
      */
     public function getStringValue(string $key, string $default): string
     {

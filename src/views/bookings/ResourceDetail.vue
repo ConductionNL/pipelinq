@@ -145,7 +145,8 @@
 <script>
 import { NcButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
+import { computed } from 'vue'
+import { CnDetailPage, CnDetailCard, useObjectSubscription } from '@conduction/nextcloud-vue'
 import ResourceForm from './ResourceForm.vue'
 import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -161,6 +162,25 @@ export default {
 	},
 	props: {
 		id: { type: String, default: null },
+	},
+	/**
+	 * Live updates for the viewed resource (or-object-{uuid} via the
+	 * nc-vue liveUpdatesPlugin, default-on since beta.212). Events are
+	 * refetch hints — the plugin re-runs fetchObject('resource', id)
+	 * into the same store cache resourceData renders from. Re-scopes on
+	 * id change, releases on unmount, skips the create archetype.
+	 *
+	 * @param {object} props Component props
+	 * @return {object} Empty — the subscription is side-effect only
+	 * @spec openspec/specs/realtime-updates-ui/spec.md
+	 */
+	setup(props) {
+		const objectStore = useObjectStore()
+		const liveObjectId = computed(() => (props.id && props.id !== 'new' ? props.id : null))
+		useObjectSubscription(objectStore, 'resource', liveObjectId, {
+			enabled: computed(() => Boolean(liveObjectId.value && objectStore.objectTypeRegistry?.resource)),
+		})
+		return {}
 	},
 	data() {
 		return {

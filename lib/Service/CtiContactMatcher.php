@@ -359,18 +359,21 @@ class CtiContactMatcher
                 }
 
                 try {
-                    $objectService->saveObject(
-                        ['phoneE164' => $normalised['e164']],
-                        [],
-                        $register,
-                        $schema,
-                        $id
+                    $this->execAsSystem(
+                        objectService: $objectService,
+                        operation: static fn () => $objectService->saveObject(
+                            ['phoneE164' => $normalised['e164']],
+                            [],
+                            $register,
+                            $schema,
+                            $id
+                        )
                     );
                     $updated++;
                 } catch (\Throwable $e) {
                     $this->logger->warning(
                         'CTI contact matcher: updateObject failed',
-                        ['exception' => $e->getMessage(), 'id' => $id]
+                        ['exceptionClass' => get_class($e), 'exception' => $e->getMessage(), 'id' => $id]
                     );
                     $skipped++;
                 }
@@ -379,4 +382,30 @@ class CtiContactMatcher
 
         return ['updated' => $updated, 'skipped' => $skipped];
     }//end normaliseStoredPhoneNumbers()
+
+    /**
+     * Execute an OpenRegister write under the scoped system-operation context.
+     *
+     * The normaliseStoredPhoneNumbers() walk is invoked from the
+     * NormaliseCtiPhoneNumbers repair step, which runs without a user session
+     * (web-triggered upgrades, webcron), so OpenRegister RBAC denies every write as 'Anonymous'
+     * (NotAuthorizedException). ObjectService::runAsSystem scopes trusted-system
+     * elevation to the callable; older OpenRegister versions without it fall
+     * back to the direct call.
+     *
+     * @param object   $objectService The OR ObjectService.
+     * @param callable $operation     The write operation to execute.
+     *
+     * @return mixed Whatever the operation returns.
+     *
+     * @spec exclude system-context adoption — back-compat elevation shim around OR writes, no behavioural spec surface.
+     */
+    private function execAsSystem(object $objectService, callable $operation): mixed
+    {
+        if (method_exists($objectService, 'runAsSystem') === true) {
+            return $objectService->runAsSystem($operation);
+        }
+
+        return $operation();
+    }//end execAsSystem()
 }//end class

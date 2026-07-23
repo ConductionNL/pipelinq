@@ -203,7 +203,7 @@ class PosTransactionController extends Controller
      *
      * @return JSONResponse The aggregated report.
      *
-     * @spec openspec/changes/pos-nl-btw-engine/specs/pos-nl-btw-engine/spec.md#REQ-BTW-003
+     * @spec openspec/specs/pos-nl-btw-engine/spec.md
      */
     #[NoAdminRequired]
     public function taxReport(): JSONResponse

@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-006
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -70,7 +70,7 @@ class SlaAttainmentController extends Controller
      *
      * @return JSONResponse The attainment payload, or an error envelope.
      *
-     * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-006
+     * @spec openspec/specs/sla-engine-and-escalation/spec.md
      */
     #[NoAdminRequired]
     public function attainment(): JSONResponse

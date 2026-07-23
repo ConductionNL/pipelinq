@@ -61,16 +61,49 @@ class PortalRequestGuard
     /**
      * Resolve the tenant id for a request from server-trusted signals only.
      *
+     * In widget mode (tenant asserted via the X-Portal-Tenant header) the
+     * request's Origin MUST be in the tenant's widget-origin allow-list, or a
+     * 403 PortalException is thrown — the single cross-origin embedding gate.
+     *
      * @param IRequest $request The incoming request.
      *
      * @return string The resolved tenant id.
+     *
+     * @throws PortalException When a widget-mode request's Origin is not allow-listed for the tenant.
+     *
+     * @spec openspec/specs/customer-portal/spec.md#requirement-widget-mode-requests-are-gated-by-the-tenant-s-origin-allow-list-req-portal-origin
      */
     public function resolveTenant(IRequest $request): string
     {
-        return $this->tenant->resolveTenantId(
+        $widgetTenant = $this->headerOrNull(request: $request, name: 'X-Portal-Tenant');
+
+        $tenantId = $this->tenant->resolveTenantId(
             $request->getServerHost(),
-            $this->headerOrNull(request: $request, name: 'X-Portal-Tenant')
+            $widgetTenant
         );
+
+        // Widget mode (the tenant is asserted by an embedded widget via the
+        // X-Portal-Tenant header) is the only cross-origin entry point into the
+        // portal. Enforce the tenant's widget-origin allow-list here, at the
+        // single tenant-resolution gate every portal endpoint passes through,
+        // so no portal action (login, data read, request create) can be driven
+        // from a site the tenant has not allow-listed. Host/subdomain mode (no
+        // X-Portal-Tenant header) is first-party and unaffected — fail-closed
+        // only for the widget path. isWidgetOriginAllowed() itself returns
+        // false when widgetEmbedAllowed is off, so a tenant that never enabled
+        // embedding rejects every widget-mode request.
+        if ($widgetTenant !== null && trim($widgetTenant) !== '') {
+            $origin = $this->headerOrNull(request: $request, name: 'Origin');
+            if ($this->tenant->isWidgetOriginAllowed(tenantId: $tenantId, origin: $origin) === false) {
+                throw new PortalException(
+                    Http::STATUS_FORBIDDEN,
+                    'originNotAllowed',
+                    'Deze widget mag niet vanaf deze locatie worden gebruikt.'
+                );
+            }
+        }
+
+        return $tenantId;
     }//end resolveTenant()
 
     /**

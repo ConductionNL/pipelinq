@@ -11,7 +11,7 @@
  * @param {number|null|undefined} value - Amount in euros.
  * @param {number} maximumFractionDigits - Decimal places (default 0).
  * @return {string} Formatted currency string.
- * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function formatEur(value, maximumFractionDigits = 0) {
 	if (value === null || value === undefined || Number.isNaN(Number(value))) {
@@ -29,7 +29,7 @@ export function formatEur(value, maximumFractionDigits = 0) {
  *
  * @param {number|null|undefined} value - Amount in euros.
  * @return {string} Compact currency string.
- * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function formatEurCompact(value) {
 	if (value === null || value === undefined || Number.isNaN(Number(value))) {

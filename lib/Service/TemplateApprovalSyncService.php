@@ -227,9 +227,13 @@ class TemplateApprovalSyncService
 
         try {
             $rows = $objectService->findAll(
-                filters: ['providerId' => $providerId],
-                register: $this->getRegisterSlug(),
-                schema: $this->getSchemaSlug(),
+                config: [
+                    'filters' => [
+                        'providerId' => $providerId,
+                        'register'   => $this->getRegisterSlug(),
+                        'schema'     => $this->getSchemaSlug(),
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(

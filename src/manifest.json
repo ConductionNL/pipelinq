@@ -418,7 +418,7 @@
 		},
 		{
 			"id": "ClientDetail",
-			"_note": "Client 360 record as a declarative type:detail page (pipelinq-client-contact-detail-declarative). Identity + account/relationship fields auto-render in the body (CnObjectDataWidget; name/email/phone/address/website are sourced from the linked NC contact and stay read-only via the index fieldOverrides). KPI chips come from summaryAggregates; related lists (contacts/leads/requests/projecten/contactmomenten/complaints, FK 'client') from relatedCollections; the rich sub-features (Relationships / Activity / Communication / Bookings / contactmoment quick-log) stay in the page body via bodyWidgets registered as kind:'section'. KEPT-AS-NOTE: (1) the 'Edit in Contacts' deep-link and the delete-with-linked-entity warning have no declarative primitive — the page Delete uses CnDetailPage's standard delete and 'Edit in Contacts' is reachable from the linked NC contact; (2) summaryAggregates filters are equality-only, so 'Open leads'=status:open (the lead enum is open|won|lost) and 'Open requests' counts status:new (in_progress not expressible as one equality chip); (3) the contactmoment quick-log no longer auto-refreshes the related list on save — use the page Refresh action.",
+			"_note": "Client 360 record as a declarative type:detail page (pipelinq-client-contact-detail-declarative). Identity + account/relationship fields auto-render in the body (CnObjectDataWidget; name/email/phone/address/website are sourced from the linked NC contact and stay read-only via the index fieldOverrides). KPI chips come from summaryAggregates; related lists (leads/projecten/contactmomenten/complaints/contracts, FK 'client') from relatedCollections; the rich sub-features (Relationships / Activity / Communication / Bookings / contactmoment quick-log) stay in the page body via bodyWidgets registered as kind:'section'. KEPT-AS-NOTE: (1) the 'Edit in Contacts' deep-link and the delete-with-linked-entity warning have no declarative primitive — the page Delete uses CnDetailPage's standard delete and 'Edit in Contacts' is reachable from the linked NC contact; (2) summaryAggregates filters are equality-only, so 'Open leads'=status:open (the lead enum is open|won|lost) and 'Open requests' counts status:new (in_progress not expressible as one equality chip); (3) the contactmoment quick-log no longer auto-refreshes the related list on save — use the page Refresh action. klantbeeld-360-activation: (4) Contacts and Requests moved from relatedCollections into object-list widgets (client-quick-contacts / client-quick-requests) with allowCreate:true so 'Contactpersoon toevoegen' / 'Nieuw verzoek' are one-click, pre-linked-to-this-client quick actions (CnObjectListWidget merges its resolved filter into the create payload as defaults — the FK is silently pre-filled); (5) 'Nieuw verzoek's ticketType is NOT silently defaulted — CnObjectListWidget's create dialog does not yet forward its content.filter into CnFormDialog's initialData/lockedFields (only into the post-submit payload merge), so the required ticketType enum still needs one manual pick in the dialog. Filed as an nc-vue follow-up (wire resolvedFilter into initialData+lockedFields); the client FK prefill itself IS fully automatic since 'client' is not required. (6) 'Notitie toevoegen' reuses the existing 'notes' integration widget (same primitive as LeadDetail's lead-notes) — no bespoke component. (7) The consolidated summary (open-ticket count across all ticketTypes, SLA breached/at-risk, distinct queue count, last activity) is the one piece the declarative layer can't express (ADR-031 exception 2) — five endpoint-bound `stat` widgets read `Customer360SummaryService` via `GET /api/customer-360/summary?clientId=@objectId`, the same source.kind:'endpoint' binding the rapportage KPI tiles already use.",
 			"route": "/clients/:id",
 			"type": "detail",
 			"title": "Client",
@@ -446,7 +446,44 @@
 						{ "title": "New requests", "register": "pipelinq", "schema": "ticket", "metric": "count", "filter": { "ticketType": "request", "client": "@objectId", "status": "new" } }
 					] } },
 					{ "id": "client-email", "type": "integration", "integrationId": "email", "title": "Emails", "icon": "Email" },
-					{ "id": "client-files", "type": "integration", "integrationId": "files", "title": "Files", "icon": "FolderOutline" }
+					{ "id": "client-files", "type": "integration", "integrationId": "files", "title": "Files", "icon": "FolderOutline" },
+					{ "id": "client-summary-open-tickets", "type": "stat", "title": "Open matters", "content": { "label": "Open matters", "caption": "requests + complaints + contactmomenten", "icon": "TicketOutline", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "openTicketCount", "params": { "clientId": "@objectId" } } } },
+					{ "id": "client-summary-sla-breached", "type": "stat", "title": "SLA breached", "content": { "label": "SLA breached", "caption": "open tickets past their deadline", "icon": "AlertOutline", "valueColor": "var(--color-error)", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "sla.breached", "params": { "clientId": "@objectId" } } } },
+					{ "id": "client-summary-sla-at-risk", "type": "stat", "title": "SLA at risk", "content": { "label": "SLA at risk", "caption": "deadline within 24h", "icon": "ClockAlertOutline", "valueColor": "var(--color-warning)", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "sla.atRisk", "params": { "clientId": "@objectId" } } } },
+					{ "id": "client-summary-queues", "type": "stat", "title": "Active queues", "content": { "label": "Active queues", "caption": "on open tickets", "icon": "FormatListBulletedSquare", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "queueCount", "params": { "clientId": "@objectId" } } } },
+					{ "id": "client-summary-last-activity", "type": "stat", "title": "Last activity", "content": { "label": "Last activity", "caption": "most recent interaction", "icon": "History", "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "lastActivityAt", "params": { "clientId": "@objectId" } } } },
+					{ "id": "client-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" },
+					{ "id": "client-quick-requests", "type": "object-list", "title": "Requests", "icon": "TicketOutline", "content": {
+						"register": "pipelinq", "schema": "ticket",
+						"filter": { "client": "@objectId", "ticketType": "request" },
+						"sort": { "field": "occurredAt", "dir": "desc" },
+						"columns": [
+							{ "key": "title", "label": "Title" },
+							{ "key": "status", "label": "Status" },
+							{ "key": "priority", "label": "Priority" },
+							{ "key": "occurredAt", "label": "Requested" }
+						],
+						"limit": 10,
+						"rowRoute": "TicketDetail",
+						"allowCreate": true,
+						"addLabel": "Nieuw verzoek",
+						"emptyText": "No open requests yet — add one to get started."
+					} },
+					{ "id": "client-quick-contacts", "type": "object-list", "title": "Contacts", "icon": "AccountGroup", "content": {
+						"register": "pipelinq", "schema": "contact",
+						"filter": { "client": "@objectId" },
+						"columns": [
+							{ "key": "name", "label": "Name" },
+							{ "key": "role", "label": "Role" },
+							{ "key": "email", "label": "Email" },
+							{ "key": "phone", "label": "Phone" }
+						],
+						"limit": 50,
+						"rowRoute": "ContactDetail",
+						"allowCreate": true,
+						"addLabel": "Contactpersoon toevoegen",
+						"emptyText": "No contact persons yet — add one to get started."
+					} }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "client-identity",   "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 3 },
@@ -457,23 +494,17 @@
 					{ "id": "2-5", "widgetId": "client-kpis-new-requests",      "gridX": 8, "gridY": 8, "gridWidth": 4, "gridHeight": 2 },
 					{ "id": "3", "widgetId": "client-commercial", "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 2 },
 					{ "id": "4", "widgetId": "client-email",      "gridX": 0, "gridY": 5, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "5", "widgetId": "client-files",      "gridX": 8, "gridY": 10, "gridWidth": 4, "gridHeight": 5 }
+					{ "id": "5", "widgetId": "client-files",      "gridX": 8, "gridY": 10, "gridWidth": 4, "gridHeight": 5 },
+					{ "id": "6-1", "widgetId": "client-summary-open-tickets",  "gridX": 0, "gridY": 15, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "6-2", "widgetId": "client-summary-sla-breached",  "gridX": 4, "gridY": 15, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "6-3", "widgetId": "client-summary-sla-at-risk",   "gridX": 8, "gridY": 15, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "6-4", "widgetId": "client-summary-queues",       "gridX": 0, "gridY": 17, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "6-5", "widgetId": "client-summary-last-activity", "gridX": 4, "gridY": 17, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "7", "widgetId": "client-quick-requests", "gridX": 0, "gridY": 19, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "8", "widgetId": "client-quick-contacts", "gridX": 6, "gridY": 19, "gridWidth": 6, "gridHeight": 4 },
+					{ "id": "9", "widgetId": "client-notes", "gridX": 0, "gridY": 23, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"relatedCollections": [
-					{
-						"title": "Contacts",
-						"register": "pipelinq",
-						"schema": "contact",
-						"filter": { "client": "@objectId" },
-						"columns": [
-							{ "key": "name", "label": "Name" },
-							{ "key": "role", "label": "Role" },
-							{ "key": "email", "label": "Email" },
-							{ "key": "phone", "label": "Phone" }
-						],
-						"limit": 50,
-						"rowRoute": "ContactDetail"
-					},
 					{
 						"title": "Leads",
 						"register": "pipelinq",
@@ -489,21 +520,6 @@
 						],
 						"limit": 10,
 						"rowRoute": "LeadDetail"
-					},
-					{
-						"title": "Requests",
-						"register": "pipelinq",
-						"schema": "ticket",
-						"filter": { "ticketType": "request", "client": "@objectId" },
-						"sort": { "field": "occurredAt", "dir": "desc" },
-						"columns": [
-							{ "key": "title", "label": "Title" },
-							{ "key": "status", "label": "Status" },
-							{ "key": "priority", "label": "Priority" },
-							{ "key": "occurredAt", "label": "Requested" }
-						],
-						"limit": 10,
-						"rowRoute": "TicketDetail"
 					},
 					{
 						"title": "Projecten",
@@ -603,6 +619,13 @@
 						"title": "Log contactmoment",
 						"placement": "end",
 						"props": { "clientId": "@objectId", "inline": true }
+					},
+					{
+						"id": "billing-handoff",
+						"component": "ClientBillingHandoffSection",
+						"title": "Billing",
+						"placement": "after-related",
+						"props": { "clientId": "@objectId" }
 					}
 				],
 				"sidebar": {

@@ -62,7 +62,7 @@ export default {
 		 * resolved contactsUid + the denormalised name/email/phone mirror.
 		 *
 		 * @param formData
-		 * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
+		 * @spec openspec/specs/unify-client-contact/spec.md
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-2
 		 */
 		async onSave(formData) {

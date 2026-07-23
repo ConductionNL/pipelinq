@@ -22,7 +22,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+ * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
  */
 
 declare(strict_types=1);
@@ -60,7 +60,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Thin HTTP facade over the
  *  handoff service + the OR object surface.
  *
- * @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+ * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class SemanticHandoffController extends Controller
@@ -112,7 +112,7 @@ class SemanticHandoffController extends Controller
      *
      * @return JSONResponse {available, status, canConvert, caseReference}.
      *
-     * @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+     * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
      */
     #[NoAdminRequired]
     public function requestAvailability(string $id=''): JSONResponse
@@ -146,7 +146,7 @@ class SemanticHandoffController extends Controller
      *
      * @return JSONResponse The conversion outcome.
      *
-     * @spec openspec/changes/semantic-handoff-emit/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+     * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
      * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
      */
     #[NoAdminRequired]
@@ -217,7 +217,7 @@ class SemanticHandoffController extends Controller
      *
      * @return JSONResponse {available, status, canSend}.
      *
-     * @spec openspec/changes/semantic-handoff-emit/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
      */
     #[NoAdminRequired]
     public function contractAvailability(string $id=''): JSONResponse
@@ -250,7 +250,7 @@ class SemanticHandoffController extends Controller
      *
      * @return JSONResponse The handoff outcome.
      *
-     * @spec openspec/changes/semantic-handoff-emit/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
      */
     #[NoAdminRequired]
     public function sendContractToInvoicing(string $id=''): JSONResponse

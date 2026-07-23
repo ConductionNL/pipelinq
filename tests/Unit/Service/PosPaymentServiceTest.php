@@ -32,6 +32,8 @@ use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IUser;
+use OCP\IUserSession;
 use OCP\Security\ICrypto;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -117,11 +119,18 @@ class PosPaymentServiceTest extends TestCase
 
         $logger = $this->createMock(originalClassName: LoggerInterface::class);
 
+        // The broker's ownership guard needs an identity to check the credential against.
+        $user = $this->createMock(originalClassName: IUser::class);
+        $user->method('getUID')->willReturn('alice');
+        $userSession = $this->createMock(originalClassName: IUserSession::class);
+        $userSession->method('getUser')->willReturn($user);
+
         return new PosPaymentService(
             container: $container,
             appConfig: $appConfig,
             crypto: $crypto,
             groupMgr: $groupMgr,
+            userSession: $userSession,
             logger: $logger,
         );
     }//end buildService()
@@ -140,12 +149,30 @@ class PosPaymentServiceTest extends TestCase
         $this->assertContains('stripe', $names);
 
         foreach ($providers as $p) {
-            // No credentials set yet, masked field is empty.
-            $this->assertSame('', $p['apiKey']);
+            // The apiKey field is GONE from the config surface — Pipelinq does not hold
+            // one. What a provider carries now is a `credentialId`: a broker credential
+            // UUID, unset until an admin picks one.
+            $this->assertArrayNotHasKey('apiKey', $p);
+            $this->assertArrayNotHasKey('apiSecret', $p);
+            $this->assertSame('', $p['credentialId']);
         }
     }//end testListProvidersReturnsFourMaskedProviders()
 
-    public function testUpdateProviderEncryptsCredentialsAndMasksResponse(): void
+    /**
+     * The PSP key is not stored, even when a client insists on sending one.
+     *
+     * This test used to assert the OPPOSITE — that `apiKey` was encrypted to
+     * `ENC:sk_live_secret` and masked in the response. Encrypting it was good hygiene, but
+     * it was still Pipelinq's secret to decrypt, which made Pipelinq the trust boundary
+     * for a key that moves money. The key now lives in OpenRegister's credential broker;
+     * a submitted `apiKey` must be ignored outright, not quietly persisted.
+     *
+     * `webhookSecret` still IS stored, and still encrypted: it verifies an HMAC on an
+     * inbound webhook, which a constrained outbound proxy cannot do.
+     *
+     * @return void
+     */
+    public function testUpdateProviderRefusesTheRetiredApiKeyAndStoresTheCredentialReference(): void
     {
         $service = $this->buildService();
 
@@ -155,6 +182,7 @@ class PosPaymentServiceTest extends TestCase
                 'isActive'      => true,
                 'environment'   => 'live',
                 'apiKey'        => 'sk_live_secret',
+                'credentialId'  => 'cred-uuid-1234',
                 'webhookSecret' => 'whsec_xyz',
                 'testMode'      => false,
             ]
@@ -162,13 +190,21 @@ class PosPaymentServiceTest extends TestCase
 
         $this->assertTrue($result['isActive']);
         $this->assertSame('live', $result['environment']);
-        $this->assertSame(PosPaymentService::MASK, $result['apiKey']);
-        $this->assertSame(PosPaymentService::MASK, $result['webhookSecret']);
 
-        // Stored value is encrypted (the stub prepends ENC:).
-        $this->assertSame('ENC:sk_live_secret', $this->configStore['payment_provider.mollie.apiKey']);
+        // The credential REFERENCE is stored and returned unmasked — it is not a secret.
+        $this->assertSame('cred-uuid-1234', $result['credentialId']);
+        $this->assertSame('cred-uuid-1234', $this->configStore['payment_provider.mollie.credentialId']);
+
+        // The submitted key is nowhere: not in the response, not in config, not encrypted
+        // "for safety". Not stored at all.
+        $this->assertArrayNotHasKey('apiKey', $result);
+        $this->assertArrayNotHasKey('payment_provider.mollie.apiKey', $this->configStore);
+        $this->assertStringNotContainsString('sk_live_secret', json_encode($this->configStore));
+
+        // The webhook secret is still app-held, still encrypted (the stub prepends ENC:).
+        $this->assertSame(PosPaymentService::MASK, $result['webhookSecret']);
         $this->assertSame('ENC:whsec_xyz', $this->configStore['payment_provider.mollie.webhookSecret']);
-    }//end testUpdateProviderEncryptsCredentialsAndMasksResponse()
+    }//end testUpdateProviderRefusesTheRetiredApiKeyAndStoresTheCredentialReference()
 
     public function testUpdateProviderKeepsStoredSecretWhenMaskOrEmpty(): void
     {

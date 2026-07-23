@@ -103,6 +103,9 @@ return [
         ['name' => 'reporting#exportCsv',   'url' => '/api/rapportage/export',   'verb' => 'GET'],
         // Lead-management analytics endpoint (REQ-LM-006). Non-admin accessible.
         ['name' => 'rapportage#getPipelineStats', 'url' => '/api/rapportage/pipeline-stats', 'verb' => 'GET'],
+        // Customer 360 consolidated summary (klantbeeld-360-activation) — cross-ticketType/status
+        // aggregation the declarative layer can't express; per-object read guard on the client in the body.
+        ['name' => 'customer360#summary', 'url' => '/api/customer-360/summary', 'verb' => 'GET'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
         // see openspec/changes/migrate-forms-to-forms-leaf.
 
@@ -392,6 +395,7 @@ return [
         ['name' => 'loyalty#initiateRedemption',      'url' => '/api/loyalty/redemption/initiate/{accountId}/{optionId}',   'verb' => 'POST'],
         ['name' => 'loyalty#lookupRedemptionCode',    'url' => '/api/loyalty/redemption/{code}/validate',                   'verb' => 'POST'],
         ['name' => 'loyalty#useRedemptionCode',       'url' => '/api/loyalty/redemption/{code}/use',                        'verb' => 'POST'],
+        ['name' => 'loyalty#issueGiftCard',     'url' => '/api/loyalty/gift-card/issue',                 'verb' => 'POST'],
         ['name' => 'loyalty#lookupGiftCard',    'url' => '/api/loyalty/gift-card/validate',              'verb' => 'POST'],
         ['name' => 'loyalty#redeemGiftCard',    'url' => '/api/loyalty/gift-card/redeem',                'verb' => 'POST'],
         ['name' => 'loyalty#activateGiftCard',  'url' => '/api/loyalty/gift-card/activate/{giftCardId}', 'verb' => 'POST'],
@@ -413,6 +417,12 @@ return [
         ['name' => 'blastWebhook#sendgrid', 'url' => '/api/blast-webhooks/sendgrid', 'verb' => 'POST'],
         ['name' => 'blastWebhook#ses',      'url' => '/api/blast-webhooks/ses',      'verb' => 'POST'],
         ['name' => 'blastWebhook#twilio',   'url' => '/api/blast-webhooks/twilio',   'verb' => 'POST'],
+
+        // First-party marketing-email open/click tracking (HMAC-signed
+        // tokens, PublicPage, fail-closed) — marketing-email-open-click-tracking.
+        // camelCase slug matches BlastTrackingController class name.
+        ['name' => 'blastTracking#open',  'url' => '/api/blast/track/open/{token}',  'verb' => 'GET'],
+        ['name' => 'blastTracking#click', 'url' => '/api/blast/track/click/{token}', 'verb' => 'GET'],
 
         // Appointment booking — deposit payment webhook (signature-verified, PublicPage)
         // appointment-booking-08-deposit-payment / REQ-APT-010.
@@ -443,6 +453,13 @@ return [
         ['name' => 'semanticHandoff#convertRequestToCase',   'url' => '/api/handoff/request/{id}/convert-to-case',    'verb' => 'POST'],
         ['name' => 'semanticHandoff#contractAvailability',   'url' => '/api/handoff/contract/{id}/availability',      'verb' => 'GET'],
         ['name' => 'semanticHandoff#sendContractToInvoicing','url' => '/api/handoff/contract/{id}/send-to-invoicing', 'verb' => 'POST'],
+
+        // Shillinq time-intake billing handoff — real emit side of the
+        // time-approval-workflow delegation (time-billing-handoff-emit).
+        // Manager-gated; the deep-link (shillinq_app_url) stays the fallback
+        // when unavailable.
+        ['name' => 'billingHandoff#availability', 'url' => '/api/billing/handoff/{clientId}/availability', 'verb' => 'GET'],
+        ['name' => 'billingHandoff#trigger',      'url' => '/api/billing/handoff/{clientId}',              'verb' => 'POST'],
         // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
         // Logius webhooks for read-receipt + inbound replies — HMAC-SHA256
         // signature-verified (REQ-RECEIPT-005 / REQ-INBOUND-006).

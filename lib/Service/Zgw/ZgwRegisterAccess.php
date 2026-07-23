@@ -130,11 +130,26 @@ class ZgwRegisterAccess
         }
 
         try {
-            $rows = $objectService->findAll(filters: $filters, register: self::REGISTER, schema: $schema);
+            // OpenRegister's ObjectService::findAll() takes a single $config array;
+            // register/schema travel INSIDE $config['filters'] (see prepareFindAllConfig()).
+            // The old findAll(register:, schema:, filters:) named-argument form no longer
+            // exists and threw "Unknown named parameter $register" at runtime. The caller's
+            // data-property $filters are merged with the register/schema context here.
+            $rows = $objectService->findAll(
+                config: [
+                    'filters' => array_merge(
+                        $filters,
+                        [
+                            'register' => self::REGISTER,
+                            'schema'   => $schema,
+                        ]
+                    ),
+                ]
+            );
         } catch (Throwable $e) {
             $this->logger->info('ZGW: findAll failed', ['schema' => $schema, 'err' => $e->getMessage()]);
             return [];
-        }
+        }//end try
 
         $out     = [];
         $rowList = [];

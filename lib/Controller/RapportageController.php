@@ -21,8 +21,8 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-009
+ * @spec openspec/specs/lead-management/spec.md
+ * @spec openspec/specs/lead-management/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use OCP\IUserSession;
 /**
  * Pipeline analytics endpoint controller.
  *
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
+ * @spec openspec/specs/lead-management/spec.md
  */
 class RapportageController extends Controller
 {
@@ -70,8 +70,8 @@ class RapportageController extends Controller
      *
      * @return JSONResponse The analytics payload.
      *
-     * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
-     * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-009
+     * @spec openspec/specs/lead-management/spec.md
+     * @spec openspec/specs/lead-management/spec.md
      */
     #[NoAdminRequired]
     public function getPipelineStats(): JSONResponse

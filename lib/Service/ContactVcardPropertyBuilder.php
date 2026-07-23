@@ -16,7 +16,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-28
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ class ContactVcardPropertyBuilder
      *
      * @return array The vCard properties.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-28
+     * @spec openspec/specs/contacts-sync/spec.md
      */
     public function buildProperties(array $objData, string $objectType): array
     {

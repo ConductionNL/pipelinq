@@ -141,7 +141,7 @@ class ConsentService
      *
      * @return bool True only when the latest record is `opted-in`.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
      */
     public function canSendBusinessInitiated(string $contactId, string $channel): bool
     {
@@ -170,7 +170,7 @@ class ConsentService
      *
      * @return string `opted-in` / `opted-out` / `unknown`.
      *
-     * @spec openspec/changes/outbound-messaging-provider-wiring/specs/outbound-messaging/spec.md#requirement-req-om-005--consent-gating-and-recording
+     * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
      */
     public function latestState(string $contactId, string $channel): string
     {
@@ -429,9 +429,13 @@ class ConsentService
 
         try {
             $rows = $objectService->findAll(
-                filters: ['contactId' => $contactId],
-                register: $this->getRegisterSlug(),
-                schema: $this->getSchemaSlug(),
+                config: [
+                    'filters' => [
+                        'contactId' => $contactId,
+                        'register'  => $this->getRegisterSlug(),
+                        'schema'    => $this->getSchemaSlug(),
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(

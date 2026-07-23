@@ -202,9 +202,9 @@ class NormaliseTicketTitle implements IRepairStep
                         'NormaliseTicketTitle: failed to save ticket',
                         ['uuid' => ($data['id'] ?? ''), 'exception' => $e->getMessage()]
                     );
-                }
-            }
-        }
+                }//end try
+            }//end foreach
+        }//end foreach
 
         $output->info(
             sprintf('Ticket titles normalised: %d rewritten, %d already plain.', $repaired, $skipped)

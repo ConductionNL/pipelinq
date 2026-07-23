@@ -95,9 +95,13 @@ class CostReconciliationService
 
         try {
             $rows = $objectService->findAll(
-                filters: ['metadata.costCurrencyPending' => true],
-                register: $this->getRegisterSlug(),
-                schema: $this->getSchemaSlug(),
+                config: [
+                    'filters' => [
+                        'metadata.costCurrencyPending' => true,
+                        'register'                     => $this->getRegisterSlug(),
+                        'schema'                       => $this->getSchemaSlug(),
+                    ],
+                ]
             );
         } catch (Throwable $e) {
             $this->logger->warning(
@@ -107,9 +111,12 @@ class CostReconciliationService
 
             try {
                 $rows = $objectService->findAll(
-                    filters: [],
-                    register: $this->getRegisterSlug(),
-                    schema: $this->getSchemaSlug(),
+                    config: [
+                        'filters' => [
+                            'register' => $this->getRegisterSlug(),
+                            'schema'   => $this->getSchemaSlug(),
+                        ],
+                    ]
                 );
             } catch (Throwable $e2) {
                 return ['scanned' => 0, 'reconciled' => 0];

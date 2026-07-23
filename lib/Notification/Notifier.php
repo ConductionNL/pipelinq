@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-18
+ * @spec openspec/specs/notifications-activity/spec.md
  */
 
 declare(strict_types=1);
@@ -32,6 +32,8 @@ use OCP\Notification\UnknownNotificationException;
 
 /**
  * Notifier for Pipelinq notifications.
+ *
+ * @spec openspec/specs/notifications-activity/spec.md
  */
 class Notifier implements INotifier
 {
@@ -51,6 +53,8 @@ class Notifier implements INotifier
      * Get the notifier ID.
      *
      * @return string The notifier ID.
+     *
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function getID(): string
     {
@@ -61,6 +65,8 @@ class Notifier implements INotifier
      * Get the notifier name.
      *
      * @return string The notifier name.
+     *
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function getName(): string
     {
@@ -75,7 +81,7 @@ class Notifier implements INotifier
      *
      * @return INotification The prepared notification.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-18
+     * @spec openspec/specs/notifications-activity/spec.md
      */
     public function prepare(INotification $notification, string $languageCode): INotification
     {
@@ -254,6 +260,20 @@ class Notifier implements INotifier
                 $notification->setRichSubject(
                     $l->t('WIP sync failed for time entry {title}'),
                     $this->buildRichParams(notification: $notification, title: $title)
+                );
+                break;
+
+            case 'billing_handoff_failed':
+                $batchId = (string) ($params['batchId'] ?? '');
+                $notification->setParsedSubject(
+                    $l->t('Billing handoff failed for %1$s', [$title])
+                );
+                $notification->setParsedMessage(
+                    $l->t('The shillinq time-intake batch %1$s could not be delivered. Re-send it from the client\'s billing section.', [$batchId])
+                );
+                $notification->setRichSubject(
+                    $l->t('Billing handoff failed for {title}'),
+                    $richParams
                 );
                 break;
 

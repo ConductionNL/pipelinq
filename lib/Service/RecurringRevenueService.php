@@ -43,7 +43,7 @@ use Throwable;
 /**
  * Recurring-revenue roll-up over contract objects.
  *
- * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  */
 class RecurringRevenueService
 {
@@ -76,7 +76,7 @@ class RecurringRevenueService
      *
      * @return float The normalized monthly recurring revenue (0 for one-off).
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     public function normalizeToMonthly(string $billingInterval, float $valuePerInterval): float
     {
@@ -100,7 +100,7 @@ class RecurringRevenueService
      *
      * @return float The monthly recurring revenue.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     public function computeMrr(array $contracts): float
     {
@@ -127,7 +127,7 @@ class RecurringRevenueService
      *
      * @return float The annual recurring revenue.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     public function computeArr(array $contracts): float
     {
@@ -142,7 +142,7 @@ class RecurringRevenueService
      *
      * @return float The client's monthly recurring value.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     public function computeClientMrr(array $contracts, string $clientRef): float
     {
@@ -167,7 +167,7 @@ class RecurringRevenueService
      *
      * @return array{renewed:int, churned:int, renewalRate:float, churnedMrr:float}
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     public function computeRenewalMetrics(array $contracts, string $periodFrom, string $periodTo): array
     {
@@ -213,7 +213,7 @@ class RecurringRevenueService
      *
      * @return array<int, array<string,mixed>> The contract objects.
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     public function loadContracts(): array
     {
@@ -259,7 +259,7 @@ class RecurringRevenueService
      *
      * @return array{mrr:float, arr:float, activeCount:int, expiringCount:int}
      *
-     * @spec openspec/changes/contract-renewal-tracking/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
      */
     public function getSummary(): array
     {

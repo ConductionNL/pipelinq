@@ -126,7 +126,7 @@ class HaalCentraalClient
      *
      * @throws HaalCentraalException
      *
-     * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
+     * @spec openspec/specs/brp-lookup/spec.md
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-01
      * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003-03
      *
@@ -271,7 +271,7 @@ class HaalCentraalClient
      *
      * @return array<string,mixed>|null The normalised+stamped person, OR_EMPTY_RESULT, or null to fall back.
      *
-     * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
+     * @spec openspec/specs/brp-lookup/spec.md
      *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential payload-shape guard clauses; extraction adds no clarity.
      * @SuppressWarnings(PHPMD.NPathComplexity)      Sequential payload-shape guard clauses; extraction adds no clarity.
