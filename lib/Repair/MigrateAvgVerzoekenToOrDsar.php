@@ -10,10 +10,14 @@
  * has a field; NL-specific extras land in a structured JSON migration block in
  * `notes` so nothing is silently dropped.
  *
- * Idempotent: a source object already carrying a `migratedTo` marker is
- * skipped, so a re-run migrates only the remainder. A source/target count
- * verification summary is logged; the change removes the `avgVerzoek` register
- * fragment in the same release, gated on this migration having run.
+ * Idempotent on the TARGET: each case records the uuid of the verzoek it came
+ * from (`notes.migratedFromId`), and a re-run skips any source that already has
+ * one. The `migratedTo` marker on the source is a best-effort back-reference and
+ * is NOT what makes this safe — it cannot be written from a repair step at all,
+ * because an avgVerzoek is owned by `__system__` and carries a folder no acting
+ * user can reach. Keying idempotency on the source marker (the original design)
+ * meant the marker write failed after the case was created, so every re-run
+ * produced a duplicate case.
  *
  * @category Repair
  * @package  OCA\Pipelinq\Repair
@@ -40,6 +44,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
+use OCP\IUser;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Container\ContainerInterface;
@@ -70,15 +76,24 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
     /**
      * Maps avgVerzoek `artikel` to dataSubjectRequest `type`.
      *
+     * The keys are the avgVerzoek `artikel` enum verbatim. They were previously
+     * the bare article numbers ('art-15'), which match nothing — so every lookup
+     * missed and fell through to a default of 'access', silently recording an
+     * erasure request as an access request. Keys must stay in step with the
+     * source enum, which is why the (now-retired) fragment's values are spelled
+     * out here rather than abbreviated.
+     *
+     * `geen-avg` ("not a GDPR request") has no dataSubjectRequest equivalent and
+     * is deliberately absent: such a verzoek is skipped rather than mistyped.
+     *
      * @var array<string, string>
      */
     private const ARTICLE_TYPE = [
-        'art-15' => 'access',
-        'art-16' => 'rectification',
-        'art-17' => 'erasure',
-        'art-18' => 'restriction',
-        'art-20' => 'portability',
-        'art-21' => 'objection',
+        'art-15-inzage'        => 'access',
+        'art-16-rectificatie'  => 'rectification',
+        'art-17-wissing'       => 'erasure',
+        'art-18-beperking'     => 'restriction',
+        'art-20-portabiliteit' => 'portability',
     ];
 
     /**
@@ -111,36 +126,142 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
     ];
 
     /**
-     * Maps pipelinq weigering `grond` to OR `denialGround` (nearest Art-23 enum).
+     * Maps pipelinq weigering `grond` to OR `denialGround`.
+     *
+     * The source enum is the GDPR Article 23 sub-paragraph the restriction rests
+     * on ('art-23-lid-1-sub-a' …), not a descriptive slug. The previous keys
+     * ('kennelijk-ongegrond' …) matched none of them, so every denial ground
+     * collapsed to 'not-applicable' — erasing the legal basis for the refusal.
+     *
+     * Art 23(1)(a)–(e) and (h) are all restrictions in the general public
+     * interest (national security, defence, public security, criminal
+     * enforcement, other public-interest objectives, and the regulatory
+     * monitoring attached to them), so they share the 'public-interest' target.
+     * (f) judicial independence/proceedings maps to the statutory exemption,
+     * (g) breaches of professional ethics to professional secrecy, (i) the
+     * rights and freedoms of others to third-party rights, and (j) enforcement
+     * of civil-law claims to legal claims. Art 23(3) governs the *content* of a
+     * restriction rather than supplying a ground, hence 'not-applicable'.
      *
      * @var array<string, string>
      */
     private const DENIAL_GROUND = [
-        'kennelijk-ongegrond'     => 'manifestly-unfounded',
-        'buitensporig'            => 'excessive-request',
-        'identiteit-onbevestigd'  => 'identity-unverified',
-        'wettelijke-uitzondering' => 'legal-exemption',
-        'rechten-van-derden'      => 'third-party-rights',
+        'art-23-lid-1-sub-a' => 'public-interest',
+        'art-23-lid-1-sub-b' => 'public-interest',
+        'art-23-lid-1-sub-c' => 'public-interest',
+        'art-23-lid-1-sub-d' => 'public-interest',
+        'art-23-lid-1-sub-e' => 'public-interest',
+        'art-23-lid-1-sub-f' => 'legal-exemption',
+        'art-23-lid-1-sub-g' => 'professional-secrecy',
+        'art-23-lid-1-sub-h' => 'public-interest',
+        'art-23-lid-1-sub-i' => 'third-party-rights',
+        'art-23-lid-1-sub-j' => 'legal-claims',
+        'art-23-lid-3'       => 'not-applicable',
     ];
 
     /**
      * Constructor.
      *
-     * @param IAppConfig         $appConfig App config (register/schema ids).
-     * @param ContainerInterface $container Container for the OpenRegister ObjectService.
-     * @param LoggerInterface    $logger    Logger.
+     * @param IAppConfig         $appConfig    App config (register/schema ids).
+     * @param ContainerInterface $container    Container for the OpenRegister ObjectService.
+     * @param LoggerInterface    $logger       Logger.
+     * @param IGroupManager|null $groupManager Resolves the acting user for folder access.
      */
     public function __construct(
         private readonly IAppConfig $appConfig,
         private readonly ContainerInterface $container,
         private readonly LoggerInterface $logger,
+        private readonly ?IGroupManager $groupManager=null,
     ) {
     }//end __construct()
+
+    /**
+     * The set of source verzoek uuids that already have a dataSubjectRequest.
+     *
+     * Idempotency is keyed on the TARGET, not on a marker written back to the
+     * source. The source cannot be relied on: an avgVerzoek is owned by
+     * `__system__` and carries a folder that no acting user can reach, and
+     * OpenRegister's folder guard is a documented default-deny that must not be
+     * weakened — so a repair step cannot update it at all. Marking the source was
+     * therefore permanently failing AFTER the case had been created, and each
+     * re-run produced another duplicate case.
+     *
+     * @param object $objectService The OpenRegister ObjectService.
+     *
+     * @return array<string, bool> Source uuids that are already migrated.
+     */
+    private function alreadyMigrated(object $objectService): array
+    {
+        $migrated = [];
+
+        try {
+            $cases = $objectService->findAll(
+                ['filters' => ['register' => self::OR_REGISTER, 'schema' => self::OR_SCHEMA], 'limit' => 5000],
+                _rbac: false,
+                _multitenancy: false
+            );
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq AVG→DSAR migration: could not read existing dataSubjectRequest cases — '.$e->getMessage()
+            );
+            return [];
+        }
+
+        foreach ((array) $cases as $case) {
+            $row   = $this->rowToArray(row: $case);
+            $notes = ($row['notes'] ?? null);
+
+            // OpenRegister may hand `notes` back as the raw JSON string OR as an
+            // already-decoded array (it hydrates JSON-shaped values), so accept
+            // both. Casting an array to string and json_decode()-ing it yields
+            // null, which silently emptied this map and duplicated every case.
+            if (is_string($notes) === true) {
+                $notes = json_decode($notes, true);
+            }
+
+            if (is_array($notes) === false) {
+                continue;
+            }
+
+            $sourceId = (string) ($notes['migratedFromId'] ?? '');
+            if ($sourceId !== '') {
+                $migrated[$sourceId] = true;
+            }
+        }//end foreach
+
+        return $migrated;
+    }//end alreadyMigrated()
+
+    /**
+     * Resolve the user OpenRegister should act as when touching an object's folder.
+     *
+     * @return IUser|null The acting user, or null when none is resolvable.
+     */
+    private function resolveActingUser(): ?IUser
+    {
+        try {
+            $adminGroup = $this->groupManager?->get('admin');
+            if ($adminGroup !== null) {
+                $admins = $adminGroup->getUsers();
+                if (count($admins) > 0) {
+                    return reset($admins);
+                }
+            }
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq AVG→DSAR migration: could not resolve an acting user — '.$e->getMessage()
+            );
+        }
+
+        return null;
+    }//end resolveActingUser()
 
     /**
      * Repair step name.
      *
      * @return string The name.
+     *
+     * @spec openspec/changes/consume-or-dsar/specs/avg-verzoeken-workflow/spec.md#requirement-req-avg-017--migration-of-existing-avgverzoek-data-to-or
      */
     public function getName(): string
     {
@@ -173,8 +294,13 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
         }
 
         try {
+            // System read: an RBAC-filtered read as 'Anonymous' sees nothing, so
+            // the migration would silently report "no avgVerzoek objects present"
+            // instead of migrating them.
             $verzoeken = $objectService->findAll(
-                ['filters' => ['register' => $registerId, 'schema' => $verzoekSchema], 'limit' => 5000]
+                ['filters' => ['register' => $registerId, 'schema' => $verzoekSchema], 'limit' => 5000],
+                _rbac: false,
+                _multitenancy: false
             );
         } catch (\Throwable $e) {
             $output->warning('Pipelinq AVG→DSAR migration: could not read avgVerzoek objects — '.$e->getMessage());
@@ -187,8 +313,9 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
         }
 
         $satellites = $this->loadSatellites(objectService: $objectService, registerId: $registerId);
+        $migrated   = $this->alreadyMigrated(objectService: $objectService);
 
-        $counts = ['migrated' => 0, 'skipped' => 0, 'failed' => 0];
+        $counts = ['migrated' => 0, 'skipped' => 0, 'unmappable' => 0, 'failed' => 0];
         foreach ($verzoeken as $row) {
             $verzoek = $this->rowToArray(row: $row);
             if ($verzoek === null) {
@@ -200,20 +327,48 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
                 registerId: $registerId,
                 verzoekSchema: $verzoekSchema,
                 verzoek: $verzoek,
-                satellites: $satellites
+                satellites: $satellites,
+                migrated: $migrated
             );
             $counts[$outcome]++;
         }//end foreach
 
+        $this->report(output: $output, counts: $counts, total: count($verzoeken));
+    }//end run()
+
+    /**
+     * Emit the run summary plus the two conditional warnings.
+     *
+     * Split out of run() to keep that method inside the complexity budget.
+     *
+     * @param IOutput            $output The repair output channel.
+     * @param array<string, int> $counts Outcome buckets.
+     * @param int                $total  Source objects seen.
+     *
+     * @return void
+     */
+    private function report(IOutput $output, array $counts, int $total): void
+    {
         $summary = sprintf(
-            'Pipelinq AVG→DSAR migration: %d migrated, %d already-migrated (skipped), %d failed (of %d source objects).',
+            'Pipelinq AVG→DSAR migration: %d migrated, %d skipped (already migrated or trashed),'
+            .' %d unmappable, %d failed (of %d source objects).',
             $counts['migrated'],
             $counts['skipped'],
+            $counts['unmappable'],
             $counts['failed'],
-            count($verzoeken),
+            $total,
         );
         $output->info($summary);
         $this->logger->info($summary);
+
+        if ($counts['unmappable'] > 0) {
+            $output->warning(
+                'Pipelinq AVG→DSAR migration: '.$counts['unmappable']
+                .' verzoek(en) have no dataSubjectRequest equivalent (e.g. artikel "geen-avg") and were left'
+                .' in place. They are not failures — but they will not disappear on a re-run either, so decide'
+                .' what should happen to them before retiring the avgVerzoek fragment.'
+            );
+        }
 
         if ($counts['failed'] > 0) {
             $output->warning(
@@ -221,7 +376,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
                 .' object(s) failed — the avgVerzoek fragment must not be removed until a clean run.'
             );
         }
-    }//end run()
+    }//end report()
 
     /**
      * Migrate one avgVerzoek object; return the outcome bucket.
@@ -231,8 +386,9 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
      * @param string               $verzoekSchema The avgVerzoek schema id.
      * @param array<string, mixed> $verzoek       The source object.
      * @param array<string, mixed> $satellites    The indexed satellite store.
+     * @param array<string, bool>  $migrated      Source uuids that already have a case.
      *
-     * @return string One of `migrated` | `skipped` | `failed`.
+     * @return string One of `migrated` | `skipped` | `unmappable` | `failed`.
      */
     private function migrateOne(
         object $objectService,
@@ -240,31 +396,108 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
         string $verzoekSchema,
         array $verzoek,
         array $satellites,
+        array $migrated=[],
     ): string {
+        $verzoekId = (string) ($verzoek['id'] ?? ($verzoek['uuid'] ?? ''));
+
+        // Already has a dataSubjectRequest: the authoritative idempotency check,
+        // since the marker on the source may never have been writable.
+        if ($verzoekId !== '' && isset($migrated[$verzoekId]) === true) {
+            return 'skipped';
+        }
+
         if (($verzoek['migratedTo'] ?? '') !== '') {
             return 'skipped';
         }
 
-        try {
-            $case  = $this->mapVerzoek(verzoek: $verzoek, satellites: $satellites);
-            $saved = $objectService->saveObject($case, [], self::OR_REGISTER, self::OR_SCHEMA, null);
+        // A trashed verzoek has no business being resurrected into the compliance
+        // register. Test emptiness rather than `!== null`: a live object carries
+        // an EMPTY `deleted` block, not a null one, so a null-check skips every
+        // object — including the ones we are here to migrate.
+        if (empty($verzoek['deleted']) === false || empty($verzoek['@self']['deleted']) === false) {
+            return 'skipped';
+        }
 
-            // Mark the source migrated (idempotency marker) on its own schema.
-            $verzoek['migratedTo'] = (string) $saved->getUuid();
-            $objectService->saveObject(
-                $verzoek,
-                [],
-                $registerId,
-                $verzoekSchema,
-                (string) ($verzoek['id'] ?? ($verzoek['uuid'] ?? ''))
+        // An article with no dataSubjectRequest equivalent (notably 'geen-avg',
+        // i.e. "not a GDPR request") is surfaced, never coerced into a type. The
+        // old code defaulted it — and every other article — to 'access'.
+        $article = (string) ($verzoek['artikel'] ?? '');
+        if (isset(self::ARTICLE_TYPE[$article]) === false) {
+            $this->logger->warning(
+                'Pipelinq AVG→DSAR migration: no dataSubjectRequest type for artikel — verzoek left in place',
+                ['id' => (string) ($verzoek['id'] ?? ''), 'artikel' => $article]
             );
-            return 'migrated';
+            return 'unmappable';
+        }
+
+        try {
+            $case = $this->mapVerzoek(verzoek: $verzoek, satellites: $satellites);
+
+            // A repair step runs from `occ` with no user session, so RBAC
+            // resolves the actor to 'Anonymous' and refuses the write — which is
+            // what made every migration attempt fail. Both writes are system
+            // writes, as in the other repair/CLI object writers.
+            $saved = $objectService->saveObject(
+                $case,
+                [],
+                self::OR_REGISTER,
+                self::OR_SCHEMA,
+                null,
+                _rbac: false,
+                _multitenancy: false,
+                currentUser: $this->resolveActingUser()
+            );
         } catch (\Throwable $e) {
             $this->logger->error(
                 'Pipelinq AVG→DSAR migration: failed to migrate an avgVerzoek',
                 ['id' => (string) ($verzoek['id'] ?? ''), 'exception' => $e->getMessage()]
             );
             return 'failed';
+        }//end try
+
+        // The case now EXISTS, and it records the source uuid in its notes — so a
+        // re-run will skip this verzoek via alreadyMigrated() whether or not the
+        // marker below ever lands. Writing the marker back is a nicety (it makes
+        // the link visible from the source side too) and is therefore best-effort:
+        // an avgVerzoek is owned by `__system__` and carries a folder no acting
+        // user can reach, and OpenRegister's folder guard is a documented
+        // default-deny, so this write CANNOT succeed from a repair step today.
+        try {
+            $verzoek['migratedTo'] = (string) $saved->getUuid();
+
+            // Drop nulls before writing the source back. An object read out of
+            // OpenRegister carries its unset properties as null, and the schema
+            // types them (`uitkomst` is a string) — so saving the row back
+            // unchanged fails validation on a field we never touched, leaving the
+            // marker unwritten and the case duplicated on every re-run.
+            $payload = array_filter($verzoek, static fn ($value): bool => $value !== null);
+
+            $objectService->saveObject(
+                $payload,
+                [],
+                $registerId,
+                $verzoekSchema,
+                (string) ($verzoek['id'] ?? ($verzoek['uuid'] ?? '')),
+                _rbac: false,
+                _multitenancy: false,
+                currentUser: $this->resolveActingUser()
+            );
+            return 'migrated';
+        } catch (\Throwable $e) {
+            // Not a failure: the case exists and carries the source uuid, so the
+            // migration is complete and a re-run will not duplicate it. Only the
+            // back-reference on the source is missing.
+            $this->logger->info(
+                'Pipelinq AVG→DSAR migration: case created; back-reference on the source could not be written'
+                .' (the verzoek is system-owned and its folder is unreachable from a repair step). The case'
+                .' records the source uuid, so this is not a failure and will not duplicate on a re-run.',
+                [
+                    'verzoek'   => (string) ($verzoek['id'] ?? ''),
+                    'case'      => (string) $saved->getUuid(),
+                    'exception' => $e->getMessage(),
+                ]
+            );
+            return 'migrated';
         }//end try
     }//end migrateOne()
 
@@ -287,8 +520,21 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
         }
 
         $bewijs    = (array) (($satellites['bewijs'][$verzoekId] ?? []));
-        $redactie  = (array) (($satellites['redactie'][$verzoekId] ?? []));
         $weigering = (array) (($satellites['weigering'][$verzoekId] ?? []));
+
+        // Redactions reach the verzoek only through its bewijsItems — they are
+        // indexed by `bewijsItemId`, the field they actually carry.
+        $redactie = [];
+        foreach ($bewijs as $item) {
+            $bewijsId = (string) (($item['id'] ?? ($item['uuid'] ?? '')));
+            if ($bewijsId === '') {
+                continue;
+            }
+
+            foreach ((array) ($satellites['redactie'][$bewijsId] ?? []) as $actie) {
+                $redactie[] = $actie;
+            }
+        }
 
         $dueAt = (string) ($verzoek['wettelijkeTermijnVerloopt'] ?? '');
 
@@ -297,10 +543,10 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
             $subjectType = 'contact';
         }
 
-        $type = self::ARTICLE_TYPE[$article] ?? 'access';
-        if ($article === 'geen-avg') {
-            $type = 'access';
-        }
+        // Guaranteed present: migrateOne() refuses an unmappable article before
+        // we get here, rather than defaulting it to 'access' and filing an
+        // erasure request as an access request.
+        $type = self::ARTICLE_TYPE[$article];
 
         $case = [
             'subjectId'    => $subjectId,
@@ -501,6 +747,10 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
     {
         $block = [
             'migratedFrom'             => 'pipelinq/avgVerzoek',
+            // The source's uuid, so the CASE records which verzoek it came from.
+            // This is what makes the migration idempotent: the marker on the
+            // source cannot be relied on (see alreadyMigrated()).
+            'migratedFromId'           => ($verzoek['id'] ?? ($verzoek['uuid'] ?? null)),
             'kenmerk'                  => ($verzoek['kenmerk'] ?? null),
             'ingediendVia'             => ($verzoek['ingediendVia'] ?? null),
             'specifiekeVraag'          => ($verzoek['specifiekeVraag'] ?? null),
@@ -537,11 +787,17 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep
                 schemaKey: 'bewijsItem_schema',
                 parentField: 'verzoekId'
             ),
+            // A redactieActie hangs off a bewijsItem, NOT off the verzoek: its
+            // required parent is `bewijsItemId` and it has no `verzoekId` at all.
+            // Indexing it by `verzoekId` matched nothing, so `redactions[]` came
+            // out empty for every migrated request — a silent, total loss of the
+            // redaction record. Index by the real parent and resolve through the
+            // verzoek's bewijsItems (see mapVerzoek).
             'redactie'  => $this->indexByVerzoek(
                 objectService: $objectService,
                 registerId: $registerId,
                 schemaKey: 'redactieActie_schema',
-                parentField: 'verzoekId'
+                parentField: 'bewijsItemId'
             ),
             'weigering' => $this->indexFirstByVerzoek(
                 objectService: $objectService,
