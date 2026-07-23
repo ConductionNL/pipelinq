@@ -1,110 +1,205 @@
 [
   {
     "slug": "activity-timeline",
-    "title": "activity-timeline",
-    "summary": "Provide a chronological activity feed per contact, organization, and pipeline item in Pipelinq. All interactions -- status changes, notes, emails, calls, document uploads, field changes, and linked case events -- appear in one unified timeline. This gives the complete \"klantbeeld\" (customer view) that relationship managers need to understand the full history of any entity at a glance.",
+    "title": "Activity Timeline",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/activity-timeline/spec.md"
   },
   {
     "slug": "admin-settings",
     "title": "Admin Settings",
-    "summary": "The admin settings page provides a Nextcloud admin panel for configuring Pipelinq. Administrators can manage pipelines and their stages, set a default pipeline, and configure lead source and request channel values. Only Nextcloud admin users can access this page. The design follows the wireframe in DESIGN-REFERENCES.md section 3.7.",
+    "summary": "The admin settings page provides a Nextcloud admin panel for configuring Pipelinq.",
+    "status": "stable",
     "docsUrl": "openspec/specs/admin-settings/spec.md"
   },
   {
     "slug": "client-management",
     "title": "Client Management",
-    "summary": "Client management is the core capability of Pipelinq. A client represents a person or organization that the team has a relationship with. Contact persons are individuals linked to organization clients, qualified by role. This specification covers client and contact person CRUD, list views with search/sort/filter, the client detail view (info panel, summary stats, contact persons, leads, requests, activity timeline), validation rules, Nextcloud Contacts sync, and future capabilities such as duplicate detection and import/export.",
+    "summary": "Client management is the core capability of Pipelinq.",
+    "status": "stable",
     "docsUrl": "openspec/specs/client-management/spec.md"
+  },
+  {
+    "slug": "contact-relationship-mapping",
+    "title": "Contact Relationship Mapping",
+    "summary": "",
+    "status": "beta",
+    "docsUrl": "openspec/specs/contact-relationship-mapping/spec.md"
+  },
+  {
+    "slug": "contactmomenten-rapportage",
+    "title": "Contactmomenten Rapportage",
+    "summary": "",
+    "status": "soon",
+    "docsUrl": "openspec/specs/contactmomenten-rapportage/spec.md"
   },
   {
     "slug": "contacts-sync",
     "title": "Contacts Sync",
-    "summary": "Sync Pipelinq clients and contacts with Nextcloud Contacts via IManager to eliminate duplicate data entry and keep address books current.",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/contacts-sync/spec.md"
+  },
+  {
+    "slug": "crm-workflow-automation",
+    "title": "CRM Workflow Automation",
+    "summary": "",
+    "status": "soon",
+    "docsUrl": "openspec/specs/crm-workflow-automation/spec.md"
   },
   {
     "slug": "dashboard",
     "title": "Dashboard",
-    "summary": "The Pipelinq CRM dashboard provides an at-a-glance overview of key performance indicators, pipeline health, assigned work, and client activity. It uses the `CnDashboardPage` component from `@conduction/nextcloud-vue` for a configurable grid layout and integrates with the Nextcloud Dashboard Widget API (`OCP\\Dashboard\\IWidget`) for platform-level widget exposure.",
+    "summary": "The Pipelinq CRM dashboard provides an at-a-glance overview of key performance indicators, pipeline health, assigned work, and client activity.",
+    "status": "stable",
     "docsUrl": "openspec/specs/dashboard/spec.md"
+  },
+  {
+    "slug": "email-calendar-sync",
+    "title": "Email Calendar Sync",
+    "summary": "",
+    "status": "soon",
+    "docsUrl": "openspec/specs/email-calendar-sync/spec.md"
   },
   {
     "slug": "entity-notes",
     "title": "Entity Notes",
-    "summary": "Add internal notes/comments to all Pipelinq entities (clients, contacts, leads, requests) using Nextcloud's ICommentsManager, enabling team collaboration and context tracking. Notes serve as the primary collaboration mechanism for CRM users, supporting categorized note types, rich text, @mentions, attachments, and privacy controls to match the workflows of government KCC and commercial sales teams.",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/entity-notes/spec.md"
+  },
+  {
+    "slug": "kcc-werkplek",
+    "title": "KCC Werkplek",
+    "summary": "",
+    "status": "soon",
+    "docsUrl": "openspec/specs/kcc-werkplek/spec.md"
+  },
+  {
+    "slug": "kennisbank",
+    "title": "Kennisbank",
+    "summary": "The kennisbank (knowledge base) provides KCC agents with a searchable repository of articles, FAQs, and procedures to answer citizen questions quickly and consistently.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/kennisbank/spec.md"
+  },
+  {
+    "slug": "klantbeeld-360",
+    "title": "Klantbeeld 360",
+    "summary": "",
+    "status": "soon",
+    "docsUrl": "openspec/specs/klantbeeld-360/spec.md"
   },
   {
     "slug": "lead-management",
     "title": "Lead Management",
-    "summary": "Lead management handles sales opportunities -- from first contact through to won or lost. A lead is a unified entity (no separate Opportunity split) that flows through configurable pipeline stages. Pipeline stages encode qualification level, making a separate conversion step unnecessary.",
+    "summary": "Lead management handles sales opportunities, from first contact through to won or lost.",
+    "status": "stable",
     "docsUrl": "openspec/specs/lead-management/spec.md"
   },
   {
     "slug": "lead-product-link",
     "title": "Lead-Product Link",
-    "summary": "The lead-product link enables sales reps to attach specific products (with quantities and pricing) to leads, replacing or supplementing manual value entry. This creates an accurate, auditable breakdown of what a lead is worth based on actual product line items. It follows the standard CRM pattern where Products are the master catalog and Line Items are deal-specific instances.",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/lead-product-link/spec.md"
   },
   {
     "slug": "my-work",
     "title": "My Work (Werkvoorraad)",
-    "summary": "My Work provides a personal workload view aggregating all items assigned to the current user -- leads, requests, and optionally tasks from Procest. This is the user's daily productivity hub, showing what needs immediate attention, what is due soon, and what is upcoming. Items are organized into temporal groups (Overdue, Due This Week, Upcoming, No Due Date) and sorted by priority within each group.",
+    "summary": "My Work provides a personal workload view aggregating all items assigned to the current user, leads, requests, and optionally tasks from Procest.",
+    "status": "stable",
     "docsUrl": "openspec/specs/my-work/spec.md"
   },
   {
     "slug": "notifications-activity",
     "title": "Notifications & Activity Stream",
-    "summary": "Deliver real-time notifications and a team-visible activity timeline for CRM events so users stay informed about leads, requests, and collaboration actions. This spec covers the notification dispatch logic, activity stream integration, per-category user preferences, notification rendering, and CRM-specific event types including SLA breach warnings, deal won celebrations, and quote lifecycle events.",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/notifications-activity/spec.md"
+  },
+  {
+    "slug": "omnichannel-registratie",
+    "title": "Omnichannel Registratie",
+    "summary": "",
+    "status": "beta",
+    "docsUrl": "openspec/specs/omnichannel-registratie/spec.md"
   },
   {
     "slug": "openregister-integration",
     "title": "OpenRegister Integration",
-    "summary": "Pipelinq stores all data as OpenRegister objects -- it owns no database tables. This specification defines how the register and schemas are initialized, how the frontend and backend interact with the OpenRegister API for CRUD operations, how Pinia stores manage state, how schema validation works, how errors are handled, and how cross-entity references, audit trails, RBAC, pagination, and performance concerns are addressed. OpenRegister is the foundational layer for every Pipelinq feature.",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/openregister-integration/spec.md"
   },
   {
     "slug": "pipeline",
     "title": "Pipeline & Kanban",
-    "summary": "Pipelines provide configurable kanban-style boards where leads and requests flow through ordered stages. A pipeline is comparable to Trello boards or Nextcloud Deck -- each pipeline has columns (stages) and cards (leads/requests). Both entity types can appear on the same pipeline, distinguished by visual badges. Pipelines are the primary visual workflow tool in Pipelinq.",
+    "summary": "Pipelines provide configurable kanban-style boards where leads and requests flow through ordered stages.",
+    "status": "stable",
     "docsUrl": "openspec/specs/pipeline/spec.md"
+  },
+  {
+    "slug": "pipeline-insights",
+    "title": "Pipeline Insights",
+    "summary": "Add temporal, financial, and analytical context to pipeline views so users can spot bottlenecks, prioritize overdue items, forecast revenue, and see conversion metrics at a glance.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/pipeline-insights/spec.md"
   },
   {
     "slug": "product-catalog",
     "title": "Product Catalog",
-    "summary": "The product catalog allows Pipelinq users to manage the products and services their organization sells. Products are central to accurate pipeline valuation — instead of manually estimating lead values, sales reps attach specific products (with quantities and prices) to leads. Product categories provide hierarchical grouping for organization and reporting.",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/product-catalog/spec.md"
+  },
+  {
+    "slug": "product-catalog-quoting",
+    "title": "Product Catalog Quoting",
+    "summary": "",
+    "status": "soon",
+    "docsUrl": "openspec/specs/product-catalog-quoting/spec.md"
   },
   {
     "slug": "product-service-catalog",
     "title": "Product & Service Catalog (PDC)",
-    "summary": "Implement a government product and service catalog (PDC - Producten- en Dienstencatalogus) as a core Pipelinq capability for CRM-driven citizen service delivery, conforming to the Uniforme Productnamenlijst (UPL) and Single Digital Gateway (SDG) standards. The PDC integrates with Pipelinq's existing product entities and CRM workflows, enabling KCC (Klant Contact Centrum) agents to look up products during citizen interactions, link products to contact moments, and initiate service requests. Products MUST support structured content blocks, publication lifecycle, target audience classification, pricing, multilingual content for cross-border EU access, zaaktype linking, versioning, bundling, and analytics. The catalog MUST expose a public read-only API for integration with municipal websites, citizen portals, and the SDG Your Europe portal.",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/product-service-catalog/spec.md"
   },
   {
     "slug": "prometheus-metrics",
     "title": "Prometheus Metrics Endpoint",
-    "summary": "Expose application metrics in Prometheus text exposition format at `GET /api/metrics` for monitoring, alerting, and operational dashboards. Provide a complementary health check endpoint for container orchestration. Enable CRM-specific observability covering pipeline value, client counts, conversion rates, and OpenRegister integration health.",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/prometheus-metrics/spec.md"
   },
   {
     "slug": "prospect-discovery",
     "title": "Prospect Discovery",
-    "summary": "The prospect discovery capability enables sales teams to find new potential clients by searching public company registries (KVK Handelsregister, OpenCorporates) against a configurable Ideal Customer Profile (ICP). Results are displayed in a dashboard widget, scored by fit, with existing clients excluded. This transforms prospecting from a manual external research task into an integrated, data-driven workflow within the CRM.",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/prospect-discovery/spec.md"
+  },
+  {
+    "slug": "public-intake-forms",
+    "title": "Public Intake Forms",
+    "summary": "",
+    "status": "soon",
+    "docsUrl": "openspec/specs/public-intake-forms/spec.md"
   },
   {
     "slug": "register-i18n",
     "title": "Register Content Internationalization",
-    "summary": "Enable multi-language support for Pipelinq's register objects, allowing users to view and manage CRM and pipeline content in their preferred language. Built on OpenRegister's register-i18n foundation (see `openregister/openspec/specs/register-i18n/spec.md`). This spec covers both data-level i18n for translatable register content (pipeline names, product descriptions) and app UI string translations via Nextcloud's `IL10N` / `t()` system per ADR-005.",
+    "summary": "",
+    "status": "stable",
     "docsUrl": "openspec/specs/register-i18n/spec.md"
   },
   {
     "slug": "request-management",
     "title": "Request Management",
-    "summary": "Request management handles the intake and tracking of requests (verzoeken) — service inquiries that come in before they become formal cases. Requests are the bridge between Pipelinq (CRM) and Procest (case management). A request flows through a status lifecycle from intake to resolution or conversion, can optionally be placed on a pipeline alongside leads, and can be converted into a Procest case.",
+    "summary": "Request management handles the intake and tracking of requests (verzoeken).",
+    "status": "stable",
     "docsUrl": "openspec/specs/request-management/spec.md"
   }
 ]
