@@ -40,6 +40,7 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showAdd": false,
 				"showFormDialog": false,
+				"showViewAction": false,
 				"showEditAction": false,
 				"showCopyAction": false,
 				"showDeleteAction": false,
@@ -58,7 +59,7 @@
 					{ "id": "create", "label": "New service", "icon": "Plus", "handler": "navigate", "route": "ServiceDetail", "params": { "id": "new" } }
 				],
 				"actions": [
-					{ "id": "view", "label": "Open", "icon": "Eye", "handler": "navigate", "route": "ServiceDetail" }
+					{ "id": "view", "label": "View", "icon": "Eye", "handler": "navigate", "route": "ServiceDetail" }
 				]
 			}
 		},
