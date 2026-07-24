@@ -75,7 +75,7 @@ webpackConfig.entry = {
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
-const useLocalLib = false // build against the published node_modules dist (nc-vue beta.151+)
+const useLocalLib = fs.existsSync(localLib)
 
 webpackConfig.resolve = {
 	extensions: ['.vue', '.js'],
