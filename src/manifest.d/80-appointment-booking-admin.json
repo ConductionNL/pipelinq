@@ -137,6 +137,7 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
+				"rowClickToView": false,
 				"columns": [
 					"customerId",
 					"serviceId",

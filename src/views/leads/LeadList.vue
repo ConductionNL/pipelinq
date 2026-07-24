@@ -25,7 +25,7 @@
 		:sidebar="sidebarConfig"
 		:row-class="rowClassFor"
 		:items-filter="itemsFilter"
-		:row-click-to-view="true"
+		:row-click-to-view="false"
 		@row-click="openLead"
 		@view="openLead">
 		<template #header-extra>
