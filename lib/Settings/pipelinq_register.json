@@ -3,7 +3,8 @@
   "info": {
     "title": "Pipelinq CRM Register",
     "description": "Client Relationship Management register for the Pipelinq Nextcloud app. Manages clients, contacts, leads, requests, and pipelines.",
-    "version": "1.2.0"
+    "version": "1.2.1",
+    "x-changelog": "1.2.1: Re-authored 38 Dutch schema property titles to English (contact.geheimhouding plus the bsnValidatie, brpLookupVerzoek, brpPersoon, bsnAuditRecord, and optOutVlag schemas); Dutch labels now live in l10n/nl.json + nl.js. No property keys, enums, or other fields changed."
   },
   "x-openregister": {
     "type": "application",
@@ -268,7 +269,7 @@
             "type": "boolean",
             "description": "Afgeleid uit OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). Wanneer true: adresgegevens worden afgeschermd in standaard-views — alleen via expliciete \"toon adres onder verantwoording\" zichtbaar (met extra audit-entry).",
             "default": false,
-            "title": "Geheimhouding",
+            "title": "Confidentiality",
             "facetable": true
           }
         }
@@ -2931,7 +2932,7 @@
       },
       "bsnValidatie": {
         "slug": "bsnValidatie",
-        "title": "BSN-validatie",
+        "title": "BSN Validation",
         "icon": "ShieldCheck",
         "version": "1.0.0",
         "summary": "Resultaat van een 11-proef BSN-validatie",
@@ -2947,30 +2948,30 @@
             "type": "string",
             "description": "Gemaskeerd BSN — pattern ***XXXX* (eerste 3 + laatste 1 vervangen door ***). Raw 9-cijferig BSN wordt NIET opgeslagen.",
             "maxLength": 16,
-            "title": "BSN (gemaskeerd)"
+            "title": "BSN (masked)"
           },
           "isFormeelGeldig": {
             "type": "boolean",
             "description": "Resultaat van 11-proef (true = pass, false = fail)",
-            "title": "Formeel geldig",
+            "title": "Formally valid",
             "facetable": true
           },
           "elfproefScore": {
             "type": "integer",
             "description": "Intermediaire score (sum mod 11) voor debugging. 0 = geldig.",
-            "title": "11-proef score"
+            "title": "Eleven-test score"
           },
           "validatieTijdstip": {
             "type": "string",
             "description": "ISO 8601 timestamp van validatie (UTC)",
             "format": "date-time",
-            "title": "Validatietijdstip"
+            "title": "Validation timestamp"
           },
           "geinitieerdDoor": {
             "type": "string",
             "description": "Nextcloud user UID die de validatie initieerde",
             "maxLength": 128,
-            "title": "Geinitieerd door"
+            "title": "Initiated by"
           },
           "context": {
             "type": "string",
@@ -2990,13 +2991,13 @@
             "description": "UUID van gekoppeld Pipelinq verzoek (request, complaint) indien van toepassing",
             "format": "uuid",
             "visible": false,
-            "title": "Verzoek ID"
+            "title": "Request ID"
           }
         }
       },
       "brpLookupVerzoek": {
         "slug": "brpLookupVerzoek",
-        "title": "BRP Lookup Verzoek",
+        "title": "BRP Lookup Request",
         "icon": "AccountSearch",
         "version": "1.0.0",
         "summary": "Een aangevraagde BRP-lookup met doelbinding (persistent voor audit)",
@@ -3021,53 +3022,53 @@
             "type": "string",
             "description": "Standaard- of vrij tekstveld: AVG-artikel, VOG, overig",
             "maxLength": 500,
-            "title": "Verzoekreden",
+            "title": "Request reason",
             "facetable": true
           },
           "doelbinding": {
             "type": "string",
             "description": "Wettelijke grondslag (AVG art. 6, Wet BRP art. 3.3 lid 1, etc.)",
             "maxLength": 500,
-            "title": "Doelbinding"
+            "title": "Purpose binding"
           },
           "grondslag": {
             "type": "string",
             "description": "Publieke taak, rechtsplicht, gerechtvaardigd belang, etc.",
             "maxLength": 200,
-            "title": "Grondslag",
+            "title": "Legal basis",
             "facetable": true
           },
           "aangevraagdDoor": {
             "type": "string",
             "description": "Nextcloud user UID van behandelaar",
             "maxLength": 128,
-            "title": "Aangevraagd door"
+            "title": "Requested by"
           },
           "aangevraagdNamens": {
             "type": "string",
             "description": "Afdeling / rol (behandelaar-burgerzaken, behandelaar-avg)",
             "maxLength": 200,
-            "title": "Aangevraagd namens"
+            "title": "Requested on behalf of"
           },
           "verzoekTijdstip": {
             "type": "string",
             "description": "ISO 8601 wanneer lookup werd aangevraagd",
             "format": "date-time",
-            "title": "Verzoektijdstip"
+            "title": "Request timestamp"
           },
           "gekoppeldVerzoek": {
             "type": "string",
             "description": "UUID-referentie naar Pipelinq verzoek (request, complaint, etc.)",
             "format": "uuid",
             "visible": false,
-            "title": "Gekoppeld Verzoek"
+            "title": "Linked Request"
           },
           "gekoppeldContact": {
             "type": "string",
             "description": "UUID-referentie naar Pipelinq Contact",
             "format": "uuid",
             "visible": false,
-            "title": "Gekoppeld Contact"
+            "title": "Linked Contact"
           },
           "responseStatus": {
             "type": "string",
@@ -3087,13 +3088,13 @@
             "description": "ISO 8601 wanneer HaalCentraal antwoordde",
             "format": "date-time",
             "visible": false,
-            "title": "Response Tijdstip"
+            "title": "Response Timestamp"
           },
           "responseDuurMs": {
             "type": "integer",
             "description": "Response time in milliseconds",
             "visible": false,
-            "title": "Response Duur Ms"
+            "title": "Response Duration Ms"
           },
           "haalcentraalCorrelationId": {
             "type": "string",
@@ -3107,7 +3108,7 @@
             "description": "Indicatie dat response indicatieGeheim=1 bevatte",
             "default": false,
             "visible": false,
-            "title": "Response Bevat Geheimhouding"
+            "title": "Response Contains Confidentiality Flag"
           },
           "responseInCache": {
             "type": "boolean",
@@ -3121,13 +3122,13 @@
             "description": "ISO 8601 wanneer gecachte response verloopt",
             "format": "date-time",
             "visible": false,
-            "title": "Cache Verloopt Op"
+            "title": "Cache Expires At"
           }
         }
       },
       "brpPersoon": {
         "slug": "brpPersoon",
-        "title": "BRP Persoon",
+        "title": "BRP Person",
         "icon": "AccountBox",
         "version": "1.0.0",
         "summary": "Genormaliseerde response uit HaalCentraal — versleuteld at-rest met TTL",
@@ -3157,7 +3158,7 @@
             "type": "string",
             "description": "Voornamen (schema:givenName)",
             "maxLength": 200,
-            "title": "Voornamen"
+            "title": "Given Names"
           },
           "voorletters": {
             "type": "string",
@@ -3175,7 +3176,7 @@
             "type": "string",
             "description": "Achternaam (schema:familyName)",
             "maxLength": 200,
-            "title": "Geslachtsnaam"
+            "title": "Family Name"
           },
           "adellijkeTitel": {
             "type": "string",
@@ -3187,7 +3188,7 @@
             "type": "string",
             "description": "Geboortedatum (YYYY-MM-DD)",
             "format": "date",
-            "title": "Geboortedatum"
+            "title": "Date of Birth"
           },
           "geboorteplaats": {
             "type": "string",
@@ -3209,7 +3210,7 @@
               "vrouw",
               "onbekend"
             ],
-            "title": "Geslacht",
+            "title": "Gender",
             "facetable": true
           },
           "verblijfplaats": {
@@ -3225,21 +3226,21 @@
               "1"
             ],
             "default": "0",
-            "title": "Indicatie geheim",
+            "title": "Confidentiality Indicator",
             "facetable": true
           },
           "opgehaaldOp": {
             "type": "string",
             "description": "ISO 8601 wanneer dit Persoon-record van HaalCentraal kwam",
             "format": "date-time",
-            "title": "Opgehaald op"
+            "title": "Retrieved At"
           },
           "bronsysteem": {
             "type": "string",
             "description": "Bronsysteem-aanduiding (HaalCentraal-BRP-v2.0)",
             "maxLength": 64,
             "default": "HaalCentraal-BRP-v2.0",
-            "title": "Bronsysteem"
+            "title": "Source System"
           },
           "lookupVerzoekId": {
             "type": "string",
@@ -3257,13 +3258,13 @@
             "type": "string",
             "description": "ISO 8601 datum/tijd tot hoelang dit record mag bestaan. BrpRetentionJob verwijdert records waar retentieTot < now.",
             "format": "date-time",
-            "title": "Retentie tot"
+            "title": "Retention Until"
           }
         }
       },
       "bsnAuditRecord": {
         "slug": "bsnAuditRecord",
-        "title": "BSN Audit-record",
+        "title": "BSN Audit Record",
         "icon": "FileDocumentMultiple",
         "version": "1.0.0",
         "summary": "Onveranderlijke audit-regel voor BSN-bevragingen (5 jaar bewaard per RvIG)",
@@ -3292,7 +3293,7 @@
               "brp-retentie-uitgevoerd",
               "brp-rtbf-gepseudonimiseerd"
             ],
-            "title": "Actie",
+            "title": "Action",
             "facetable": true
           },
           "bsnHash": {
@@ -3319,7 +3320,7 @@
             "type": "string",
             "description": "ISO 8601 timestamp van actie",
             "format": "date-time",
-            "title": "Tijdstip"
+            "title": "Timestamp"
           },
           "verzoekreden": {
             "type": "string",
@@ -3345,7 +3346,7 @@
               "adres-onthuld",
               "gepseudonimiseerd"
             ],
-            "title": "Uitkomst",
+            "title": "Outcome",
             "facetable": true
           },
           "responseCode": {
@@ -3391,13 +3392,13 @@
             "type": "string",
             "description": "ISO 8601 tot hoelang dit record bewaard moet blijven (default now + 5 jaar)",
             "format": "date-time",
-            "title": "Bewaartot"
+            "title": "Retention Until"
           }
         }
       },
       "optOutVlag": {
         "slug": "optOutVlag",
-        "title": "Opt-out / Geheimhouding-vlag",
+        "title": "Opt-out / Confidentiality Flag",
         "icon": "EyeOff",
         "version": "1.0.0",
         "summary": "Per BSN bekende opt-out of geheimhouding (BRP of lokaal)",
@@ -3433,14 +3434,14 @@
               "BRP",
               "lokaal"
             ],
-            "title": "Bron",
+            "title": "Source",
             "facetable": true
           },
           "ingangsdatum": {
             "type": "string",
             "description": "ISO 8601 date wanneer opt-out van kracht werd",
             "format": "date",
-            "title": "Ingangsdatum"
+            "title": "Effective Date"
           },
           "einddatum": {
             "type": "string",
