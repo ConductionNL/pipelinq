@@ -3049,7 +3049,22 @@
         "{name} — Creditcard": "{name} — Creditcard",
         "{name} — iDEAL": "{name} — iDEAL",
         "{n} min": "{n} min",
-        "{n}h": "{n}h"
+        "{n}h": "{n}h",
+        "Failed to create loyalty account": "Failed to create loyalty account",
+        "Failed to load KPIs": "Failed to load KPIs",
+        "Failed to load SLA attainment. Please try again.": "Failed to load SLA attainment. Please try again.",
+        "Failed to load activities": "Failed to load activities",
+        "Failed to load programmes": "Failed to load programmes",
+        "Failed to load suggestions": "Failed to load suggestions",
+        "Group": "Group",
+        "OK": "OK",
+        "Open value": "Open value",
+        "Policy": "Policy",
+        "Revenue": "Revenue",
+        "Save the job before running a test": "Save the job before running a test",
+        "Target kind": "Target kind",
+        "Worklog": "Worklog",
+        "{n} of {max} items": "{n} of {max} items"
     },
     "plurals": null
 }
