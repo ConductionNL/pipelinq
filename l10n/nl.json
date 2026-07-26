@@ -2459,7 +2459,9 @@
                 "Action": "Actie",
                 "Timestamp": "Tijdstip",
                 "Opt-out / Confidentiality Flag": "Opt-out / Geheimhouding-vlag",
-                "Effective Date": "Ingangsdatum"
+                "Effective Date": "Ingangsdatum",
+                "Customer Loyalty Account": "Klant Loyalty Account",
+                "NRC Subscription": "NRC Abonnement"
         },
         "plurals": null
 }
