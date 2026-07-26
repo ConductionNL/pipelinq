@@ -182,7 +182,7 @@
       },
       "nrcAbonnement": {
         "slug": "nrcAbonnement",
-        "title": "NRC Abonnement",
+        "title": "NRC Subscription",
         "icon": "BellRing",
         "version": "1.0.0",
         "summary": "Subscription state for one NRC endpoint per ZgwEndpoint (callback URL, bearer secret ref, active kanalen).",

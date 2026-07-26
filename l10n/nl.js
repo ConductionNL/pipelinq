@@ -2460,7 +2460,9 @@ OC.L10N.register(
     "Action" : "Actie",
     "Timestamp" : "Tijdstip",
     "Opt-out / Confidentiality Flag" : "Opt-out / Geheimhouding-vlag",
-    "Effective Date" : "Ingangsdatum"
+    "Effective Date" : "Ingangsdatum",
+    "Customer Loyalty Account" : "Klant Loyalty Account",
+    "NRC Subscription" : "NRC Abonnement"
 },
 "nplurals=2; plural=(n != 1);"
 );

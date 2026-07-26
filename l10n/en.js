@@ -2384,7 +2384,9 @@ OC.L10N.register(
     "Action" : "Action",
     "Timestamp" : "Timestamp",
     "Opt-out / Confidentiality Flag" : "Opt-out / Confidentiality Flag",
-    "Effective Date" : "Effective Date"
+    "Effective Date" : "Effective Date",
+    "Customer Loyalty Account" : "Customer Loyalty Account",
+    "NRC Subscription" : "NRC Subscription"
 },
 "nplurals=2; plural=(n != 1);"
 );
