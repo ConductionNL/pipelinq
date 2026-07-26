@@ -3043,7 +3043,23 @@
         "{name} — Creditcard": "{name} — Creditcard",
         "{name} — iDEAL": "{name} — iDEAL",
         "{n} min": "{n} min",
-        "{n}h": "{n}u"
+        "{n}h": "{n}u",
+        "Calendar": "Agenda",
+        "Contact moments": "Contactmomenten",
+        "Failed to create loyalty account": "Aanmaken van loyaliteitsaccount mislukt",
+        "Failed to load KPIs": "Laden van KPI’s mislukt",
+        "Failed to load SLA attainment. Please try again.": "Laden van SLA-realisatie mislukt. Probeer het opnieuw.",
+        "Failed to load activities": "Laden van activiteiten mislukt",
+        "Failed to load programmes": "Laden van programma’s mislukt",
+        "Failed to load suggestions": "Laden van suggesties mislukt",
+        "Group": "Groep",
+        "OK": "OK",
+        "Open value": "Open waarde",
+        "Policy": "Beleid",
+        "Revenue": "Omzet",
+        "Target kind": "Doelsoort",
+        "Worklog": "Urenregistratie",
+        "{n} of {max} items": "{n} van {max} items"
     },
     "plurals": null
 }
