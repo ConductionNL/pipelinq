@@ -12,6 +12,7 @@
 		"watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
 		"lint": "eslint src",
 		"lint-fix": "npm run lint -- --fix",
+		"test:l10n": "node tests/l10n/check-l10n.js",
 		"test:unit": "vitest run",
 		"test:unit:watch": "vitest",
 		"stylelint": "stylelint src/**/*.vue src/**/*.scss src/**/*.css",
