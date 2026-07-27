@@ -3059,7 +3059,31 @@
         "Revenue": "Omzet",
         "Target kind": "Doelsoort",
         "Worklog": "Urenregistratie",
-        "{n} of {max} items": "{n} van {max} items"
+        "{n} of {max} items": "{n} van {max} items",
+        "%n stage": [
+            "%n fase",
+            "%n fasen"
+        ],
+        "%n minute": [
+            "%n minuut",
+            "%n minuten"
+        ],
+        "%n more contact not shown": [
+            "Nog %n contact niet getoond",
+            "Nog %n contacten niet getoond"
+        ],
+        "%n contact in this segment is missing {channel} consent. Choose how to proceed.": [
+            "%n contact in dit segment mist toestemming voor {channel}. Kies hoe u verdergaat.",
+            "%n contacten in dit segment missen toestemming voor {channel}. Kies hoe u verdergaat."
+        ],
+        "%n minute ago": [
+            "%n minuut geleden",
+            "%n minuten geleden"
+        ],
+        "%n hour ago": [
+            "%n uur geleden",
+            "%n uur geleden"
+        ]
     },
     "plurals": null
 }
