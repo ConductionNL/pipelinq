@@ -341,7 +341,7 @@
       },
       "klantLoyaltyAccount": {
         "slug": "klantLoyaltyAccount",
-        "title": "Klant Loyalty Account",
+        "title": "Customer Loyalty Account",
         "version": "1.0.0",
         "summary": "A customer's enrollment in a loyalty programme; tracks balances, tier, and opt-in.",
         "description": "KlantLoyaltyAccount links one customer (klantId, references a Nextcloud contact UID) to one LoyaltyProgramme. currentBalance and lifetimePoints are denormalised for query performance; the immutable PointsLedgerEntry collection is the source of truth (REQ-LOY-002, REQ-LOY-005). Composite uniqueness on (klantId, programmeId).",
