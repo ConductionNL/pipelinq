@@ -3064,7 +3064,37 @@
         "Save the job before running a test": "Save the job before running a test",
         "Target kind": "Target kind",
         "Worklog": "Worklog",
-        "{n} of {max} items": "{n} of {max} items"
+        "{n} of {max} items": "{n} of {max} items",
+        "%n stage": [
+            "%n stage",
+            "%n stages"
+        ],
+        "%n stages": "%n stages",
+        "%n minute": [
+            "%n minute",
+            "%n minutes"
+        ],
+        "%n minutes": "%n minutes",
+        "%n more contact not shown": [
+            "%n more contact not shown",
+            "%n more contacts not shown"
+        ],
+        "%n more contacts not shown": "%n more contacts not shown",
+        "%n contact in this segment is missing {channel} consent. Choose how to proceed.": [
+            "%n contact in this segment is missing {channel} consent. Choose how to proceed.",
+            "%n contacts in this segment are missing {channel} consent. Choose how to proceed."
+        ],
+        "%n contacts in this segment are missing {channel} consent. Choose how to proceed.": "%n contacts in this segment are missing {channel} consent. Choose how to proceed.",
+        "%n minute ago": [
+            "%n minute ago",
+            "%n minutes ago"
+        ],
+        "%n minutes ago": "%n minutes ago",
+        "%n hour ago": [
+            "%n hour ago",
+            "%n hours ago"
+        ],
+        "%n hours ago": "%n hours ago"
     },
     "plurals": null
 }
