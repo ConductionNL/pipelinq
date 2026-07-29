@@ -188,10 +188,10 @@ import BelastingdienstExportDialog from '../../dialogs/BelastingdienstExportDial
 const PAGE_SIZE = 25
 
 const ACTION_LABELS = {
-	sale: 'Verkoop',
-	void: 'Annulering',
-	refund: 'Retour',
-	'no-sale': 'Geen verkoop',
+	sale: 'Sale',
+	void: 'Void',
+	refund: 'Refund',
+	'no-sale': 'No sale',
 }
 
 const ACTION_CLASSES = {

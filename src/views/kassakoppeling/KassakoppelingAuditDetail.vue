@@ -150,10 +150,10 @@ import { generateUrl } from '@nextcloud/router'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 
 const ACTION_LABELS = {
-	sale: 'Verkoop',
-	void: 'Annulering',
-	refund: 'Retour',
-	'no-sale': 'Geen verkoop',
+	sale: 'Sale',
+	void: 'Void',
+	refund: 'Refund',
+	'no-sale': 'No sale',
 }
 
 const ACTION_CLASSES = {
