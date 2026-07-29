@@ -118,9 +118,9 @@ import CashShiftCountDialog from '../../modals/CashShiftCountDialog.vue'
 import CashShiftRejectDialog from '../../modals/CashShiftRejectDialog.vue'
 
 const DIFF_STATUS_LABELS = {
-	pending: 'In behandeling',
-	approved: 'Goedgekeurd',
-	rejected: 'Afgewezen',
+	pending: 'Pending',
+	approved: 'Approved',
+	rejected: 'Rejected',
 }
 
 export default {

@@ -112,9 +112,9 @@ import { formatEur } from '../../services/posTotals.js'
 import { raiseJournalEntry } from '../../services/posBookkeepingApi.js'
 
 const BOOKKEEPING_STATUS_LABELS = {
-	pending: 'In wachtrij',
-	raised: 'Geraised in shillinq',
-	failed: 'Raise gefaald',
+	pending: 'Queued',
+	raised: 'Raised in shillinq',
+	failed: 'Raise failed',
 }
 
 export default {
