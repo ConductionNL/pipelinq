@@ -14,14 +14,14 @@
 				:value.sync="reason"
 				:label="t('pipelinq', 'Rejection reason')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Vul een reden in voor de afwijzing') : ''" />
+				:helper-text="showError ? t('pipelinq', 'Enter a reason for the rejection') : ''" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton type="error" :disabled="submitting" @click="submit">
-				{{ t('pipelinq', 'Afwijzen') }}
+				{{ t('pipelinq', 'Reject') }}
 			</NcButton>
 		</template>
 	</NcDialog>

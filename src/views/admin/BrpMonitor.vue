@@ -22,24 +22,24 @@
 		</div>
 		<div v-else class="brp-monitor__grid">
 			<section class="brp-monitor__card">
-				<h3>{{ t('pipelinq', 'Laatste 24 uur') }}</h3>
+				<h3>{{ t('pipelinq', 'Last 24 hours') }}</h3>
 				<dl>
 					<dt>{{ t('pipelinq', 'Lookups') }}</dt>
 					<dd>{{ report?.totalLookups ?? 0 }}</dd>
 					<dt>{{ t('pipelinq', 'Cache hits') }}</dt>
 					<dd>{{ report?.cacheHits ?? 0 }} ({{ cacheHitPct }}%)</dd>
-					<dt>{{ t('pipelinq', 'Fouten') }}</dt>
+					<dt>{{ t('pipelinq', 'Errors') }}</dt>
 					<dd>{{ report?.errorCount ?? 0 }} ({{ errorPct }}%)</dd>
-					<dt>{{ t('pipelinq', 'Gem. responsetijd') }}</dt>
+					<dt>{{ t('pipelinq', 'Avg. response time') }}</dt>
 					<dd>{{ report?.avgResponseMs ?? 0 }} ms</dd>
 				</dl>
 			</section>
 
 			<section class="brp-monitor__card">
-				<h3>{{ t('pipelinq', 'mTLS Certificaat') }}</h3>
+				<h3>{{ t('pipelinq', 'mTLS Certificate') }}</h3>
 				<div v-if="!cert" class="brp-monitor__cert">
 					<span class="brp-monitor__badge brp-monitor__badge--unconfigured">
-						{{ t('pipelinq', 'Niet geconfigureerd') }}
+						{{ t('pipelinq', 'Not configured') }}
 					</span>
 				</div>
 				<div v-else class="brp-monitor__cert">
@@ -49,22 +49,22 @@
 						</span>
 					</div>
 					<div v-if="cert.expiry">
-						<strong>{{ t('pipelinq', 'Verloopt op') }}:</strong> {{ cert.expiry }}
+						<strong>{{ t('pipelinq', 'Expires on') }}:</strong> {{ cert.expiry }}
 					</div>
 					<div v-if="cert.daysLeft !== undefined">
-						<strong>{{ t('pipelinq', 'Dagen resterend') }}:</strong> {{ cert.daysLeft }}
+						<strong>{{ t('pipelinq', 'Days remaining') }}:</strong> {{ cert.daysLeft }}
 					</div>
 				</div>
 			</section>
 
 			<section v-if="report" class="brp-monitor__card brp-monitor__card--wide">
-				<h3>{{ t('pipelinq', 'Rapportperiode') }}</h3>
+				<h3>{{ t('pipelinq', 'Reporting period') }}</h3>
 				<dl>
-					<dt>{{ t('pipelinq', 'Van') }}</dt>
+					<dt>{{ t('pipelinq', 'From') }}</dt>
 					<dd>{{ report.windowStart }}</dd>
-					<dt>{{ t('pipelinq', 'Tot') }}</dt>
+					<dt>{{ t('pipelinq', 'To') }}</dt>
 					<dd>{{ report.windowEnd }}</dd>
-					<dt>{{ t('pipelinq', 'Gegenereerd op') }}</dt>
+					<dt>{{ t('pipelinq', 'Generated on') }}</dt>
 					<dd>{{ report.generatedAt }}</dd>
 				</dl>
 			</section>
@@ -72,7 +72,7 @@
 
 		<div class="brp-monitor__actions">
 			<NcButton type="secondary" :disabled="loading" @click="load">
-				{{ t('pipelinq', 'Vernieuwen') }}
+				{{ t('pipelinq', 'Refresh') }}
 			</NcButton>
 		</div>
 	</div>
@@ -109,8 +109,8 @@ export default {
 		certStatusLabel() {
 			if (!this.cert) return ''
 			if (this.cert.status === 'ok') return this.t('pipelinq', 'OK')
-			if (this.cert.status === 'warning') return this.t('pipelinq', 'Verloopt binnenkort')
-			if (this.cert.status === 'critical') return this.t('pipelinq', 'Kritiek — vervang nu')
+			if (this.cert.status === 'warning') return this.t('pipelinq', 'Expires soon')
+			if (this.cert.status === 'critical') return this.t('pipelinq', 'Critical — replace now')
 			return this.cert.status
 		},
 	},
@@ -128,7 +128,7 @@ export default {
 				this.cert = response.data?.cert || null
 			} catch (err) {
 				const data = err?.response?.data || {}
-				this.loadError = data.error || this.t('pipelinq', 'Kon BRP Monitor niet laden.')
+				this.loadError = data.error || this.t('pipelinq', 'Could not load BRP Monitor.')
 			} finally {
 				this.loading = false
 			}

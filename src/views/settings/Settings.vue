@@ -160,13 +160,13 @@
 
 		<!-- Integraties — Shillinq AP webhook (REQ-AP-004) -->
 		<NcSettingsSection v-if="isAdmin"
-			:name="t('pipelinq', 'Integraties')"
-			:description="t('pipelinq', 'Voer de webhook URL in voor de Shillinq AP integratie. Laat leeg om uitgeschakeld te laten.')">
+			:name="t('pipelinq', 'Integrations')"
+			:description="t('pipelinq', 'Enter the webhook URL for the Shillinq AP integration. Leave empty to keep it disabled.')">
 			<NcTextField v-model="config.shillinq_ap_webhook_url"
 				:label="t('pipelinq', 'Shillinq AP webhook URL')"
 				placeholder="https://shillinq.example.com/ap-webhook"
 				:error="shillinqApUrlInvalid"
-				:helper-text="shillinqApUrlInvalid ? t('pipelinq', 'Voer een geldige HTTPS URL in, bijv. https://shillinq.example.com/webhook') : ''" />
+				:helper-text="shillinqApUrlInvalid ? t('pipelinq', 'Enter a valid HTTPS URL, e.g. https://shillinq.example.com/webhook') : ''" />
 			<NcButton type="primary"
 				:disabled="savingShillinqAp || shillinqApUrlInvalid"
 				@click="saveShillinqAp">

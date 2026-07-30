@@ -14,14 +14,14 @@
 				:value.sync="reason"
 				:label="t('pipelinq', 'Reason')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Vul een reden in voor de terugboeking') : ''" />
+				:helper-text="showError ? t('pipelinq', 'Enter a reason for the reversal') : ''" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton type="error" :disabled="submitting" @click="submit">
-				{{ t('pipelinq', 'Terugboeken') }}
+				{{ t('pipelinq', 'Reverse') }}
 			</NcButton>
 		</template>
 	</NcDialog>

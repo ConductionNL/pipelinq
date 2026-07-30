@@ -288,8 +288,8 @@ export default {
 		 */
 		priceModeOptions() {
 			return [
-				{ id: 'excl', label: t('pipelinq', 'Excl. BTW') },
-				{ id: 'incl', label: t('pipelinq', 'Incl. BTW') },
+				{ id: 'excl', label: t('pipelinq', 'Excl. VAT') },
+				{ id: 'incl', label: t('pipelinq', 'Incl. VAT') },
 			]
 		},
 		/**
