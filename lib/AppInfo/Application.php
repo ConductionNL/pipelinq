@@ -615,6 +615,16 @@ class Application extends App implements IBootstrap
         // (cached per app version; see loadRoadmapFeatures). Pull IInitialState
         // from the per-app container so the serialized key is correctly
         // namespaced as `initial-state-pipelinq-<key>`.
+        // Initial state exists for PAGE loads. An API request — an object
+        // create, a webhook, a DAV call — serialises it into a response nobody
+        // reads, and `resolveDependencyStatuses()` below walks the appstore
+        // catalogue to build it. Skip the whole block when nothing will render.
+        // See ADR-076 and openregister/openspec/changes/object-write-at-instance-floor.
+        if ($this->requestRendersPage(server: $server) === false) {
+            $this->bootNonPageSurfaces(server: $server, context: $context);
+            return;
+        }
+
         try {
             $initialState = $this->getContainer()->get(IInitialState::class);
             $initialState->provideInitialState(
@@ -640,52 +650,7 @@ class Application extends App implements IBootstrap
             // Initial state unavailable — Features tab will fall back to [].
         }//end try
 
-        try {
-            $commentsManager = $server->get(ICommentsManager::class);
-            $commentsManager->registerDisplayNameResolver(
-                type: 'pipelinq_client',
-                closure: function (string $_id): string {
-                    return 'Client';
-                }
-            );
-            $commentsManager->registerDisplayNameResolver(
-                type: 'pipelinq_contact',
-                closure: function (string $_id): string {
-                    return 'Contact';
-                }
-            );
-            $commentsManager->registerDisplayNameResolver(
-                type: 'pipelinq_lead',
-                closure: function (string $_id): string {
-                    return 'Lead';
-                }
-            );
-            $commentsManager->registerDisplayNameResolver(
-                type: 'pipelinq_request',
-                closure: function (string $_id): string {
-                    return 'Request';
-                }
-            );
-        } catch (\Exception $e) {
-            // Comments manager not available — skip registration.
-        }//end try
-
-        $this->wireAppointmentEmailSeam();
-
-        // Wire the walk-in queue rebalance seam (member 09) into the booking
-        // lifecycle so a Booking completion fires WalkInQueueService::rebalance.
-        try {
-            $bookingService     = $this->getContainer()->get(BookingService::class);
-            $walkInQueueService = $this->getContainer()->get(WalkInQueueService::class);
-            $bookingService->setWalkInQueueRebalance(service: $walkInQueueService);
-        } catch (\Exception $e) {
-            // Booking / walk-in surfaces not available — leave rebalance seam unset.
-        }
-
-        $this->wireAppointmentCalendarSeam();
-        $this->wireAppointmentPaymentSeam();
-        $this->wireGdprSeamProviders();
-        $this->registerDsarEvidenceSource();
+        $this->bootNonPageSurfaces(server: $server, context: $context);
     }//end boot()
 
     /**
@@ -751,6 +716,124 @@ class Application extends App implements IBootstrap
     }//end registerDsarEvidenceSource()
 
     /**
+     * Whether this request will render a page that can read initial state.
+     *
+     * `provideInitialState()` only reaches a browser through a rendered
+     * template. On an API request — an object create, a webhook, a DAV call —
+     * it is computed, serialised and discarded, and the computation walks the
+     * appstore catalogue to do it.
+     *
+     * Judged from the request path rather than the response type, because the
+     * decision has to be made in boot(), before a controller is selected. Errs
+     * toward TRUE: a misjudged page request loses an optimisation, a misjudged
+     * API request would lose functionality.
+     *
+     * @param mixed $server The server container.
+     *
+     * @return boolean True when initial state is worth computing.
+     *
+     * @spec openspec/changes/object-write-at-instance-floor/specs/object-write-performance/spec.md
+     */
+    private function requestRendersPage($server): bool
+    {
+        try {
+            $request = $server->get(\OCP\IRequest::class);
+            $path    = (string) $request->getPathInfo();
+        } catch (\Throwable) {
+            // Cannot tell — assume it renders, so we never remove state a page
+            // needs on the strength of a failed guess.
+            return true;
+        }
+
+        if ($path === '') {
+            return true;
+        }
+
+        // Anything under an API, DAV, OCS or asset route renders no template.
+        foreach (['/api/', '/apps/pipelinq/api', '/ocs/', '/remote.php', '/dav', '/webhook', '/css/', '/js/'] as $needle) {
+            if (str_contains($path, $needle) === true) {
+                return false;
+            }
+        }
+
+        return true;
+
+    }//end requestRendersPage()
+
+    /**
+     * Boot the parts that must run regardless of whether a page renders.
+     *
+     * Comment resolvers, seams and provider registrations are wiring: something
+     * later in the request may depend on them, so they cannot be skipped for API
+     * requests the way initial state can.
+     *
+     * @param mixed        $server  The server container.
+     * @param IBootContext $context The boot context.
+     *
+     * @return void
+     */
+    private function bootNonPageSurfaces($server, IBootContext $context): void
+    {
+        $this->registerCommentResolvers(server: $server);
+        $this->wireAppointmentEmailSeam();
+        $this->wireBookingWalkInRebalance();
+        $this->wireAppointmentCalendarSeam();
+        $this->wireAppointmentPaymentSeam();
+        $this->wireGdprSeamProviders();
+        $this->registerDsarEvidenceSource();
+
+    }//end bootNonPageSurfaces()
+
+    /**
+     * Register comment display-name resolvers for pipelinq's comment types.
+     *
+     * @param mixed $server The server container.
+     *
+     * @return void
+     */
+    private function registerCommentResolvers($server): void
+    {
+        try {
+            $commentsManager = $server->get(ICommentsManager::class);
+            foreach ([
+                'pipelinq_client'  => 'Client',
+                'pipelinq_contact' => 'Contact',
+                'pipelinq_lead'    => 'Lead',
+                'pipelinq_request' => 'Request',
+            ] as $type => $label
+            ) {
+                $commentsManager->registerDisplayNameResolver(
+                    type: $type,
+                    closure: static function (string $_id) use ($label): string {
+                        return $label;
+                    }
+                );
+            }
+        } catch (\Exception $e) {
+            // Comments manager not available — skip registration.
+        }//end try
+
+    }//end registerCommentResolvers()
+
+    /**
+     * Wire the walk-in queue rebalance seam into the booking lifecycle, so a
+     * Booking completion fires WalkInQueueService::rebalance.
+     *
+     * @return void
+     */
+    private function wireBookingWalkInRebalance(): void
+    {
+        try {
+            $bookingService     = $this->getContainer()->get(BookingService::class);
+            $walkInQueueService = $this->getContainer()->get(WalkInQueueService::class);
+            $bookingService->setWalkInQueueRebalance(service: $walkInQueueService);
+        } catch (\Exception $e) {
+            // Booking / walk-in surfaces not available — leave rebalance seam unset.
+        }
+
+    }//end wireBookingWalkInRebalance()
+
+    /**
      * Read the SPA manifest's declared app dependencies.
      *
      * @return array<int, string> Dependency app IDs (empty when absent/malformed).
@@ -808,7 +891,23 @@ class Application extends App implements IBootstrap
      */
     private function resolveDependencyStatuses(IBootContext $context, array $dependencies): array
     {
-        $appManager     = $this->getContainer()->get(IAppManager::class);
+        // Cached per app version, exactly as loadRoadmapFeatures() is. Without
+        // this, buildAppStoreLookup() below iterates the whole Nextcloud
+        // appstore catalogue (3.4 MB of apps.json on the 2026-07-30 dev
+        // instance) every time this runs. It is free there only because
+        // `has_internet_connection=false` makes AppFetcher return an empty set
+        // — a latent cost, not an absent one.
+        $container = $this->getContainer();
+        $cache     = $container->get(ICacheFactory::class)->createLocal('pipelinq_deps');
+        $cacheKey  = 'v'.((string) $container->get(IAppManager::class)->getAppVersion(self::APP_ID))
+            .':'.md5(implode(',', $dependencies));
+
+        $cached = $cache->get($cacheKey);
+        if (is_array($cached) === true) {
+            return $cached;
+        }
+
+        $appManager     = $container->get(IAppManager::class);
         $appStoreLookup = $this->buildAppStoreLookup(context: $context);
 
         $dependencyStatus = [];
@@ -834,6 +933,11 @@ class Application extends App implements IBootstrap
                 'category'  => $category,
             ];
         }//end foreach
+
+        // 5 minutes: an app being installed or enabled is a rare, operator-driven
+        // event, and the page shows install hints — a stale hint for a few
+        // minutes is harmless, walking the appstore per request is not.
+        $cache->set($cacheKey, $dependencyStatus, 300);
 
         return $dependencyStatus;
     }//end resolveDependencyStatuses()
