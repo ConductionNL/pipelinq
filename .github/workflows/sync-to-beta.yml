@@ -4,14 +4,6 @@ on:
   push:
     branches: [development]
 
-# The shared `create-pr` job requests `contents: write` + `pull-requests: write`
-# (it pushes a beta branch and opens the release PR). A called workflow's
-# permissions must be a subset of the caller's, so granting less here — `{}`
-# included — makes the run fail at startup. These are the minimum that work.
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   sync:
     uses: ConductionNL/.github/.github/workflows/sync-to-beta.yml@main

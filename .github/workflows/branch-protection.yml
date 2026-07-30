@@ -2,31 +2,8 @@ name: Branch Protection
 
 on:
   pull_request:
-    branches: [main, beta, development]
-
-permissions: {}
+    branches: [main, beta]
 
 jobs:
   check:
     uses: ConductionNL/.github/.github/workflows/branch-protection.yml@main
-
-  # Branch protection requires a status check named exactly "Branch Policy
-  # Check". A job that calls a reusable workflow does not report under its own
-  # name — it reports one context per inner job, named
-  # "<caller-job-id> / <inner-job-name>", i.e. "check / check-branch". That
-  # never matches the required context, so the PR waits forever for a status
-  # that nothing will ever post. This plain job runs in this repo, so it reports
-  # under its own `name` and satisfies the requirement.
-  branch-policy-check:
-    name: Branch Policy Check
-    needs: check
-    # `always()` so a failed policy check reports a red "Branch Policy Check"
-    # instead of a skipped one — a skip would leave the required check unsatisfied.
-    if: always()
-    runs-on: ubuntu-latest
-    permissions: {}
-    steps:
-      - name: Report branch policy result
-        run: |
-          echo "Shared branch-protection result: ${{ needs.check.result }}"
-          [ "${{ needs.check.result }}" = "success" ] || exit 1
