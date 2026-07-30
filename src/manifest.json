@@ -99,125 +99,125 @@
 		{
 			"id": "Dashboard",
 			"label": "Sales",
-			"icon": "icon-category-dashboard",
+			"icon": "CartOutline",
 			"route": "Dashboard",
 			"order": 10
 		},
 		{
 			"id": "OperationalDashboard",
 			"label": "Operational",
-			"icon": "icon-category-dashboard",
+			"icon": "ViewDashboard",
 			"route": "OperationalDashboard",
 			"order": 15
 		},
 		{
 			"id": "Clients",
 			"label": "Clients",
-			"icon": "icon-group",
+			"icon": "AccountStarOutline",
 			"route": "Clients",
 			"order": 20
 		},
 		{
 			"id": "Contacts",
 			"label": "Contacts",
-			"icon": "icon-user",
+			"icon": "AccountMultipleOutline",
 			"route": "Contacts",
 			"order": 30
 		},
 		{
 			"id": "Leads",
 			"label": "Leads",
-			"icon": "icon-checkmark",
+			"icon": "AccountArrowRightOutline",
 			"route": "Leads",
 			"order": 40
 		},
 		{
 			"id": "Tickets",
 			"label": "Tickets",
-			"icon": "icon-file",
+			"icon": "FileOutline",
 			"route": "Tickets",
 			"order": 50
 		},
 		{
 			"id": "Tasks",
 			"label": "Tasks",
-			"icon": "icon-checkmark",
+			"icon": "FormatListChecks",
 			"route": "Tasks",
 			"order": 60
 		},
 		{
 			"id": "Products",
 			"label": "Products",
-			"icon": "icon-category-app-bundles",
+			"icon": "PackageVariantClosed",
 			"route": "Products",
 			"order": 90
 		},
 		{
 			"id": "PosTransactions",
 			"label": "Kassabon",
-			"icon": "icon-category-monitoring",
+			"icon": "ChartLine",
 			"route": "PosTransactions",
 			"order": 95
 		},
 		{
 			"id": "PosRefunds",
 			"label": "Retouren",
-			"icon": "icon-history",
+			"icon": "ClockCheckOutline",
 			"route": "PosRefunds",
 			"order": 96
 		},
 		{
 			"id": "CashShifts",
 			"label": "Kassalade",
-			"icon": "icon-toggle-filelist",
+			"icon": "FormatListBulleted",
 			"route": "CashShifts",
 			"order": 97
 		},
 		{
 			"id": "KassakoppelingAuditList",
 			"label": "Kassakoppeling audit",
-			"icon": "icon-checkmark",
+			"icon": "Check",
 			"route": "KassakoppelingAuditList",
 			"order": 99
 		},
 		{
 			"id": "PointOfSale",
 			"label": "Point of Sale",
-			"icon": "icon-category-monitoring",
+			"icon": "ChartLine",
 			"order": 90
 		},
 		{
 			"id": "Pipeline",
 			"label": "Pipeline",
-			"icon": "icon-category-organization",
+			"icon": "Domain",
 			"route": "Pipeline",
 			"order": 100
 		},
 		{
 			"id": "Queues",
 			"label": "Queues",
-			"icon": "icon-category-workflow",
+			"icon": "TrayFull",
 			"route": "Queues",
 			"order": 120
 		},
 		{
 			"id": "MyWork",
 			"label": "My Work",
-			"icon": "icon-user",
+			"icon": "ClipboardAccountOutline",
 			"route": "MyWork",
 			"order": 140
 		},
 		{
 			"id": "Rapportage",
 			"label": "Reporting",
-			"icon": "icon-category-monitoring",
+			"icon": "ChartBoxOutline",
 			"route": "Rapportage",
 			"order": 150
 		},
 		{
 			"id": "Documentation",
 			"label": "Documentation",
-			"icon": "icon-info",
+			"icon": "BookOpenVariantOutline",
 			"href": "https://pipelinq.conduction.nl/",
 			"section": "footer",
 			"order": 160
@@ -225,7 +225,7 @@
 		{
 			"id": "Pipelines",
 			"label": "Pipelines",
-			"icon": "icon-category-organization",
+			"icon": "Domain",
 			"route": "Pipelines",
 			"order": 200
 		},
@@ -238,14 +238,14 @@
 		{
 			"id": "ExportJobs",
 			"label": "BI export",
-			"icon": "icon-category-integration",
+			"icon": "DatabaseExportOutline",
 			"route": "ExportJobs",
 			"order": 215
 		},
 		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
-			"icon": "icon-toggle",
+			"icon": "MapMarkerPath",
 			"route": "FeaturesRoadmap",
 			"section": "footer",
 			"order": 230
