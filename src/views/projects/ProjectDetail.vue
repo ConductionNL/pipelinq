@@ -13,10 +13,10 @@
 	<div v-if="editing || isNew">
 		<div class="project-detail__header">
 			<NcButton @click="cancelEdit">
-				{{ t('pipelinq', 'Terug naar lijst') }}
+				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2 v-if="isNew">
-				{{ t('pipelinq', 'Nieuw project') }}
+				{{ t('pipelinq', 'New project') }}
 			</h2>
 			<h2 v-else>
 				{{ projectData.name || t('pipelinq', 'Project') }}
@@ -25,11 +25,11 @@
 		<CnFormDialog
 			v-if="showProjectForm"
 			ref="projectForm"
-			:dialog-title="isNew ? t('pipelinq', 'Nieuw project') : t('pipelinq', 'Project bewerken')"
+			:dialog-title="isNew ? t('pipelinq', 'New project') : t('pipelinq', 'Edit project')"
 			:fields="projectFields"
 			:initial-data="projectFormInitial"
-			:confirm-label="t('pipelinq', 'Opslaan')"
-			:cancel-label="t('pipelinq', 'Annuleren')"
+			:confirm-label="t('pipelinq', 'Save')"
+			:cancel-label="t('pipelinq', 'Cancel')"
 			name-field="name"
 			@confirm="onProjectSaved"
 			@close="cancelEdit" />
@@ -40,7 +40,7 @@
 		:title="projectData.name || t('pipelinq', 'Project')"
 		:subtitle="t('pipelinq', 'Project')"
 		:back-route="{ name: 'Projects' }"
-		:back-label="t('pipelinq', 'Terug naar lijst')"
+		:back-label="t('pipelinq', 'Back to list')"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
 		object-type="pipelinq_project"
@@ -48,17 +48,17 @@
 		:sidebar-props="sidebarProps">
 		<template #actions>
 			<NcButton type="primary" @click="startEdit">
-				{{ t('pipelinq', 'Bewerken') }}
+				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
 			<NcButton @click="goToActivities">
-				{{ t('pipelinq', 'Tijdregistraties') }}
+				{{ t('pipelinq', 'Time entries') }}
 			</NcButton>
 			<NcButton type="error" @click="confirmDelete">
-				{{ t('pipelinq', 'Verwijderen') }}
+				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>
 
-		<CnDetailCard :title="t('pipelinq', 'Projectgegevens')">
+		<CnDetailCard :title="t('pipelinq', 'Project details')">
 			<div class="info-grid">
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Client') }}</label>
@@ -77,27 +77,27 @@
 					</span>
 				</div>
 				<div class="info-field">
-					<label>{{ t('pipelinq', 'Factureerbaar') }}</label>
+					<label>{{ t('pipelinq', 'Billable') }}</label>
 					<span>
 						<span :class="['billable-dot', projectData.billable === false ? 'billable-dot--off' : 'billable-dot--on']" />
-						{{ projectData.billable === false ? t('pipelinq', 'Niet-factureerbaar') : t('pipelinq', 'Factureerbaar') }}
+						{{ projectData.billable === false ? t('pipelinq', 'Non-billable') : t('pipelinq', 'Billable') }}
 					</span>
 				</div>
 				<div v-if="projectData.color" class="info-field">
-					<label>{{ t('pipelinq', 'Kleur') }}</label>
+					<label>{{ t('pipelinq', 'Color') }}</label>
 					<span class="color-swatch" :style="{ backgroundColor: projectData.color }" />
 					<span>{{ projectData.color }}</span>
 				</div>
 				<div class="info-field">
-					<label>{{ t('pipelinq', 'Startdatum') }}</label>
+					<label>{{ t('pipelinq', 'Start date') }}</label>
 					<span>{{ formatDate(projectData.startDate) }}</span>
 				</div>
 				<div class="info-field">
-					<label>{{ t('pipelinq', 'Einddatum') }}</label>
+					<label>{{ t('pipelinq', 'End date') }}</label>
 					<span>{{ formatDate(projectData.endDate) }}</span>
 				</div>
 				<div class="info-field info-field--wide">
-					<label>{{ t('pipelinq', 'Omschrijving') }}</label>
+					<label>{{ t('pipelinq', 'Description') }}</label>
 					<p>{{ projectData.description || '-' }}</p>
 				</div>
 			</div>
@@ -107,7 +107,7 @@
 			<div class="kpi-grid">
 				<div class="kpi-card">
 					<div class="kpi-card__label">
-						{{ t('pipelinq', 'Geplande uren') }}
+						{{ t('pipelinq', 'Planned hours') }}
 					</div>
 					<div class="kpi-card__value">
 						{{ formatHours(plannedHours) }}
@@ -115,19 +115,19 @@
 				</div>
 				<div class="kpi-card">
 					<div class="kpi-card__label">
-						{{ t('pipelinq', 'Gelogde uren') }}
+						{{ t('pipelinq', 'Logged hours') }}
 					</div>
 					<div class="kpi-card__value" :class="{ 'kpi-card__value--warn': overBudget }">
 						{{ formatHours(loggedHours) }}
 						<small v-if="overBudget">
 							/ {{ formatHours(plannedHours) }}
-							({{ Math.round(loggedHours - plannedHours) }} {{ t('pipelinq', 'uur over budget') }})
+							({{ Math.round(loggedHours - plannedHours) }} {{ t('pipelinq', 'hours over budget') }})
 						</small>
 					</div>
 				</div>
 				<div class="kpi-card">
 					<div class="kpi-card__label">
-						{{ t('pipelinq', 'Factureerbaar') }}
+						{{ t('pipelinq', 'Billable') }}
 					</div>
 					<div class="kpi-card__value">
 						{{ formatHours(billableHours) }}
@@ -135,7 +135,7 @@
 				</div>
 				<div class="kpi-card">
 					<div class="kpi-card__label">
-						{{ t('pipelinq', 'Niet-factureerbaar') }}
+						{{ t('pipelinq', 'Non-billable') }}
 					</div>
 					<div class="kpi-card__value">
 						{{ formatHours(nonBillableHours) }}
@@ -143,7 +143,7 @@
 				</div>
 				<div class="kpi-card">
 					<div class="kpi-card__label">
-						{{ t('pipelinq', 'Resterende uren') }}
+						{{ t('pipelinq', 'Remaining hours') }}
 					</div>
 					<div class="kpi-card__value">
 						{{ formatHours(Math.max(plannedHours - loggedHours, 0)) }}
@@ -151,7 +151,7 @@
 				</div>
 				<div v-if="projectData.budgetAmount" class="kpi-card">
 					<div class="kpi-card__label">
-						{{ t('pipelinq', 'Budget bedrag') }}
+						{{ t('pipelinq', 'Budget amount') }}
 					</div>
 					<div class="kpi-card__value">
 						{{ formatEur(projectData.budgetAmount) }}
@@ -196,7 +196,7 @@
 			</div>
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Werkverdeling')">
+		<CnDetailCard :title="t('pipelinq', 'Workload distribution')">
 			<ProjectWbsTree
 				:project="projectData"
 				:phases="phases"
@@ -211,11 +211,11 @@
 		<CnFormDialog
 			v-if="showPhaseDialog"
 			ref="phaseDialog"
-			:dialog-title="t('pipelinq', 'Fase toevoegen')"
+			:dialog-title="t('pipelinq', 'Add phase')"
 			:fields="phaseFields"
 			:initial-data="phaseInitial"
-			:confirm-label="t('pipelinq', 'Opslaan')"
-			:cancel-label="t('pipelinq', 'Annuleren')"
+			:confirm-label="t('pipelinq', 'Save')"
+			:cancel-label="t('pipelinq', 'Cancel')"
 			name-field="name"
 			@confirm="onPhaseSaved"
 			@close="showPhaseDialog = false" />
@@ -224,11 +224,11 @@
 		<CnFormDialog
 			v-if="showTaskDialog"
 			ref="taskDialog"
-			:dialog-title="t('pipelinq', 'Taak toevoegen')"
+			:dialog-title="t('pipelinq', 'Add task')"
 			:fields="taskFields"
 			:initial-data="taskInitial"
-			:confirm-label="t('pipelinq', 'Opslaan')"
-			:cancel-label="t('pipelinq', 'Annuleren')"
+			:confirm-label="t('pipelinq', 'Save')"
+			:cancel-label="t('pipelinq', 'Cancel')"
 			name-field="name"
 			@confirm="onTaskSaved"
 			@close="showTaskDialog = false" />
@@ -237,11 +237,11 @@
 		<CnFormDialog
 			v-if="showActivityDialog"
 			ref="activityDialog"
-			:dialog-title="t('pipelinq', 'Tijdregistratie')"
+			:dialog-title="t('pipelinq', 'Time entry')"
 			:fields="activityFields"
 			:initial-data="activityInitial"
-			:confirm-label="t('pipelinq', 'Opslaan')"
-			:cancel-label="t('pipelinq', 'Annuleren')"
+			:confirm-label="t('pipelinq', 'Save')"
+			:cancel-label="t('pipelinq', 'Cancel')"
 			name-field="description"
 			@confirm="onActivitySaved"
 			@close="showActivityDialog = false" />
@@ -367,60 +367,60 @@ export default {
 		 */
 		projectFields() {
 			return [
-				{ key: 'name', label: t('pipelinq', 'Naam'), widget: 'text', required: true },
+				{ key: 'name', label: t('pipelinq', 'Name'), widget: 'text', required: true },
 				{ key: 'client', label: t('pipelinq', 'Client'), widget: 'select', enum: this.loadClientOptions },
-				{ key: 'description', label: t('pipelinq', 'Omschrijving'), widget: 'textarea' },
+				{ key: 'description', label: t('pipelinq', 'Description'), widget: 'textarea' },
 				{ key: 'status', label: t('pipelinq', 'Status'), widget: 'select', options: this.statusOptions },
-				{ key: 'billable', label: t('pipelinq', 'Factureerbaar'), widget: 'checkbox' },
-				{ key: 'budgetHours', label: t('pipelinq', 'Budget uren'), widget: 'number' },
-				{ key: 'budgetAmount', label: t('pipelinq', 'Budget bedrag (EUR)'), widget: 'number' },
-				{ key: 'hourlyRate', label: t('pipelinq', 'Uurtarief'), widget: 'number' },
-				{ key: 'startDate', label: t('pipelinq', 'Startdatum'), widget: 'date' },
-				{ key: 'endDate', label: t('pipelinq', 'Einddatum'), widget: 'date' },
-				{ key: 'color', label: t('pipelinq', 'Kleur (hex)'), widget: 'text' },
+				{ key: 'billable', label: t('pipelinq', 'Billable'), widget: 'checkbox' },
+				{ key: 'budgetHours', label: t('pipelinq', 'Budget hours'), widget: 'number' },
+				{ key: 'budgetAmount', label: t('pipelinq', 'Budget amount (EUR)'), widget: 'number' },
+				{ key: 'hourlyRate', label: t('pipelinq', 'Hourly rate'), widget: 'number' },
+				{ key: 'startDate', label: t('pipelinq', 'Start date'), widget: 'date' },
+				{ key: 'endDate', label: t('pipelinq', 'End date'), widget: 'date' },
+				{ key: 'color', label: t('pipelinq', 'Color (hex)'), widget: 'text' },
 			]
 		},
 		phaseFields() {
 			return [
-				{ key: 'name', label: t('pipelinq', 'Naam'), widget: 'text', required: true },
-				{ key: 'description', label: t('pipelinq', 'Omschrijving'), widget: 'textarea' },
+				{ key: 'name', label: t('pipelinq', 'Name'), widget: 'text', required: true },
+				{ key: 'description', label: t('pipelinq', 'Description'), widget: 'textarea' },
 				{ key: 'status', label: t('pipelinq', 'Status'), widget: 'select', options: this.statusOptions },
-				{ key: 'billable', label: t('pipelinq', 'Factureerbaar (laat leeg om over te erven)'), widget: 'checkbox' },
-				{ key: 'budgetHours', label: t('pipelinq', 'Budget uren'), widget: 'number' },
-				{ key: 'sequence', label: t('pipelinq', 'Volgorde'), widget: 'number' },
-				{ key: 'startDate', label: t('pipelinq', 'Startdatum'), widget: 'date' },
-				{ key: 'endDate', label: t('pipelinq', 'Einddatum'), widget: 'date' },
+				{ key: 'billable', label: t('pipelinq', 'Billable (leave empty to inherit)'), widget: 'checkbox' },
+				{ key: 'budgetHours', label: t('pipelinq', 'Budget hours'), widget: 'number' },
+				{ key: 'sequence', label: t('pipelinq', 'Order'), widget: 'number' },
+				{ key: 'startDate', label: t('pipelinq', 'Start date'), widget: 'date' },
+				{ key: 'endDate', label: t('pipelinq', 'End date'), widget: 'date' },
 			]
 		},
 		taskFields() {
 			return [
-				{ key: 'name', label: t('pipelinq', 'Naam'), widget: 'text', required: true },
-				{ key: 'description', label: t('pipelinq', 'Omschrijving'), widget: 'textarea' },
+				{ key: 'name', label: t('pipelinq', 'Name'), widget: 'text', required: true },
+				{ key: 'description', label: t('pipelinq', 'Description'), widget: 'textarea' },
 				{ key: 'status', label: t('pipelinq', 'Status'), widget: 'select', options: this.statusOptions },
-				{ key: 'billable', label: t('pipelinq', 'Factureerbaar (laat leeg om over te erven)'), widget: 'checkbox' },
-				{ key: 'estimatedHours', label: t('pipelinq', 'Geschatte uren'), widget: 'number' },
-				{ key: 'assignee', label: t('pipelinq', 'Toegewezen aan (gebruikers-UID)'), widget: 'text' },
+				{ key: 'billable', label: t('pipelinq', 'Billable (leave empty to inherit)'), widget: 'checkbox' },
+				{ key: 'estimatedHours', label: t('pipelinq', 'Estimated hours'), widget: 'number' },
+				{ key: 'assignee', label: t('pipelinq', 'Assigned to (user UID)'), widget: 'text' },
 				{ key: 'deadline', label: t('pipelinq', 'Deadline'), widget: 'date' },
-				{ key: 'sequence', label: t('pipelinq', 'Volgorde'), widget: 'number' },
+				{ key: 'sequence', label: t('pipelinq', 'Order'), widget: 'number' },
 			]
 		},
 		activityFields() {
 			return [
-				{ key: 'date', label: t('pipelinq', 'Datum'), widget: 'date', required: true },
-				{ key: 'durationMinutes', label: t('pipelinq', 'Duur (minuten)'), widget: 'number', required: true },
-				{ key: 'description', label: t('pipelinq', 'Omschrijving'), widget: 'textarea' },
-				{ key: 'user', label: t('pipelinq', 'Gebruiker (UID)'), widget: 'text', required: true },
-				{ key: 'billable', label: t('pipelinq', 'Factureerbaar (laat leeg om over te erven)'), widget: 'checkbox' },
-				{ key: 'hourlyRate', label: t('pipelinq', 'Uurtarief override'), widget: 'number' },
+				{ key: 'date', label: t('pipelinq', 'Date'), widget: 'date', required: true },
+				{ key: 'durationMinutes', label: t('pipelinq', 'Duration (minutes)'), widget: 'number', required: true },
+				{ key: 'description', label: t('pipelinq', 'Description'), widget: 'textarea' },
+				{ key: 'user', label: t('pipelinq', 'User (UID)'), widget: 'text', required: true },
+				{ key: 'billable', label: t('pipelinq', 'Billable (leave empty to inherit)'), widget: 'checkbox' },
+				{ key: 'hourlyRate', label: t('pipelinq', 'Hourly rate override'), widget: 'number' },
 			]
 		},
 		statusOptions() {
 			return [
 				{ value: 'open', label: t('pipelinq', 'Open') },
-				{ value: 'in_progress', label: t('pipelinq', 'Loopt') },
-				{ value: 'on_hold', label: t('pipelinq', 'Gepauzeerd') },
-				{ value: 'completed', label: t('pipelinq', 'Afgerond') },
-				{ value: 'cancelled', label: t('pipelinq', 'Geannuleerd') },
+				{ value: 'in_progress', label: t('pipelinq', 'Running') },
+				{ value: 'on_hold', label: t('pipelinq', 'Paused') },
+				{ value: 'completed', label: t('pipelinq', 'Completed') },
+				{ value: 'cancelled', label: t('pipelinq', 'Cancelled') },
 			]
 		},
 		/**
@@ -571,7 +571,7 @@ export default {
 				: { ...this.projectData, ...formData }
 			const result = await this.objectStore.saveObject('project', payload)
 			if (result) {
-				showSuccess(t('pipelinq', 'Project opgeslagen.'))
+				showSuccess(t('pipelinq', 'Project saved.'))
 				this.showProjectForm = false
 				this.editing = false
 				if (this.isNew) {
@@ -581,12 +581,12 @@ export default {
 				}
 			} else {
 				const error = this.objectStore.getError('project')
-				showError(error?.message || t('pipelinq', 'Kon project niet opslaan. Probeer het opnieuw.'))
+				showError(error?.message || t('pipelinq', 'Could not save project. Please try again.'))
 			}
 		},
 		async confirmDelete() {
 			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('pipelinq', 'Weet je zeker dat je dit project wilt verwijderen?'))) {
+			if (!window.confirm(t('pipelinq', 'Are you sure you want to delete this project?'))) {
 				return
 			}
 			const success = await this.objectStore.deleteObject('project', this.projectId)
@@ -594,7 +594,7 @@ export default {
 				this.$router.push({ name: 'Projects' })
 			} else {
 				const error = this.objectStore.getError('project')
-				showError(error?.message || t('pipelinq', 'Kon project niet verwijderen.'))
+				showError(error?.message || t('pipelinq', 'Could not delete project.'))
 			}
 		},
 		goToActivities() {
@@ -613,11 +613,11 @@ export default {
 			const payload = { ...formData, project: this.projectId }
 			const result = await this.objectStore.saveObject('projectPhase', payload)
 			if (result) {
-				showSuccess(t('pipelinq', 'Fase opgeslagen.'))
+				showSuccess(t('pipelinq', 'Phase saved.'))
 				this.showPhaseDialog = false
 				await this.fetchRelations()
 			} else {
-				showError(t('pipelinq', 'Kon fase niet opslaan. Probeer het opnieuw.'))
+				showError(t('pipelinq', 'Could not save phase. Please try again.'))
 			}
 		},
 		openTaskDialog(phase) {
@@ -638,11 +638,11 @@ export default {
 			}
 			const result = await this.objectStore.saveObject('projectTask', payload)
 			if (result) {
-				showSuccess(t('pipelinq', 'Taak opgeslagen.'))
+				showSuccess(t('pipelinq', 'Task saved.'))
 				this.showTaskDialog = false
 				await this.fetchRelations()
 			} else {
-				showError(t('pipelinq', 'Kon taak niet opslaan. Probeer het opnieuw.'))
+				showError(t('pipelinq', 'Could not save task. Please try again.'))
 			}
 		},
 		openActivityDialog(task) {
@@ -665,11 +665,11 @@ export default {
 			}
 			const result = await this.objectStore.saveObject('projectActivity', payload)
 			if (result) {
-				showSuccess(t('pipelinq', 'Tijdregistratie opgeslagen.'))
+				showSuccess(t('pipelinq', 'Time entry saved.'))
 				this.showActivityDialog = false
 				await this.fetchRelations()
 			} else {
-				showError(t('pipelinq', 'Kon tijdregistratie niet opslaan. Probeer het opnieuw.'))
+				showError(t('pipelinq', 'Could not save time entry. Please try again.'))
 			}
 		},
 		/**
@@ -696,10 +696,10 @@ export default {
 		statusLabel(status) {
 			const map = {
 				open: t('pipelinq', 'Open'),
-				in_progress: t('pipelinq', 'Loopt'),
-				on_hold: t('pipelinq', 'Gepauzeerd'),
-				completed: t('pipelinq', 'Afgerond'),
-				cancelled: t('pipelinq', 'Geannuleerd'),
+				in_progress: t('pipelinq', 'Running'),
+				on_hold: t('pipelinq', 'Paused'),
+				completed: t('pipelinq', 'Completed'),
+				cancelled: t('pipelinq', 'Cancelled'),
 			}
 			return map[status] || (status || '-')
 		},

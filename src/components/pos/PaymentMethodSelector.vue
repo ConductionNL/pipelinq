@@ -15,16 +15,16 @@
 		<NcSelect
 			:value="selection"
 			:options="combinedOptions"
-			:input-label="t('pipelinq', 'Betaalmethode')"
+			:input-label="t('pipelinq', 'Payment method')"
 			label="label"
 			:reduce="(o) => o.value"
 			:loading="loading"
 			@input="onSelect" />
 		<p v-if="selection && providerOf(selection) === 'mollie'" class="payment-method-selector__hint">
-			{{ t('pipelinq', 'Klant wordt doorgestuurd naar Mollie om de iDEAL/Bancontact betaling af te ronden.') }}
+			{{ t('pipelinq', 'Customer is redirected to Mollie to complete the iDEAL/Bancontact payment.') }}
 		</p>
 		<p v-if="selection && providerOf(selection) === 'ccv'" class="payment-method-selector__hint">
-			{{ t('pipelinq', 'Klant betaalt op de CCV PIN-terminal.') }}
+			{{ t('pipelinq', 'Customer pays at the CCV PIN terminal.') }}
 		</p>
 	</div>
 </template>
@@ -84,7 +84,7 @@ export default {
 					})
 					opts.push({
 						value: 'mollie:creditcard',
-						label: t('pipelinq', '{name} — Creditcard', { name: p.displayName }),
+						label: t('pipelinq', '{name} — Credit card', { name: p.displayName }),
 						provider: 'mollie',
 						method: 'creditcard',
 					})

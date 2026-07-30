@@ -9,7 +9,7 @@
 		</div>
 
 		<section class="tax-breakdown__section">
-			<h4>{{ t('pipelinq', 'Belastingaangifte') }}</h4>
+			<h4>{{ t('pipelinq', 'Tax return') }}</h4>
 			<table class="tax-breakdown__table">
 				<thead>
 					<tr>
@@ -34,7 +34,7 @@
 					</tr>
 					<tr v-if="taxBreakdown.length === 0">
 						<td colspan="3" class="empty">
-							{{ t('pipelinq', 'Geen artikelen') }}
+							{{ t('pipelinq', 'No items') }}
 						</td>
 					</tr>
 				</tbody>
@@ -42,7 +42,7 @@
 		</section>
 
 		<section v-if="invoiceBreakdown.length > 0" class="tax-breakdown__section">
-			<h4>{{ t('pipelinq', 'Factuurverdeling') }}</h4>
+			<h4>{{ t('pipelinq', 'Invoice split') }}</h4>
 			<table class="tax-breakdown__table">
 				<thead>
 					<tr>
@@ -124,8 +124,8 @@ export default {
 		 */
 		priceModeLabel() {
 			return this.isInclusive
-				? t('pipelinq', 'Prijzen incl. BTW')
-				: t('pipelinq', 'Prijzen excl. BTW')
+				? t('pipelinq', 'Prices incl. VAT')
+				: t('pipelinq', 'Prices excl. VAT')
 		},
 	},
 	methods: {

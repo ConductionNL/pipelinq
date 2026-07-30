@@ -29,28 +29,28 @@
 				<NcButton v-if="canDrop"
 					:disabled="busy"
 					@click="showDrop = true">
-					{{ t('pipelinq', 'Geld verwijderen') }}
+					{{ t('pipelinq', 'Remove cash') }}
 				</NcButton>
 				<NcButton v-if="canCount"
 					type="primary"
 					:disabled="busy"
 					@click="showCount = true">
-					{{ t('pipelinq', 'Shift afsluiten en tellen') }}
+					{{ t('pipelinq', 'Close and count shift') }}
 				</NcButton>
 			</section>
 
-			<CnDetailCard v-if="diff" :title="t('pipelinq', 'Kasverschil')">
+			<CnDetailCard v-if="diff" :title="t('pipelinq', 'Cash difference')">
 				<div class="info-grid">
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Verwacht bedrag') }}</label>
+						<label>{{ t('pipelinq', 'Expected amount') }}</label>
 						<span>{{ formatEur(diff.expectedAmount) }}</span>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Geteld bedrag') }}</label>
+						<label>{{ t('pipelinq', 'Counted amount') }}</label>
 						<span>{{ formatEur(diff.actualAmount) }}</span>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Verschil') }}</label>
+						<label>{{ t('pipelinq', 'Difference') }}</label>
 						<span>{{ formatEur(diff.diffAmount) }}</span>
 					</div>
 					<div class="info-field">
@@ -63,24 +63,24 @@
 						</span>
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Reconciliatie') }}</label>
+						<label>{{ t('pipelinq', 'Reconciliation') }}</label>
 						<CnStatusBadge :status="diff.status" :label="diffStatusLabel" />
 					</div>
 					<div v-if="diff.approvedBy" class="info-field">
-						<label>{{ t('pipelinq', 'Beoordeeld door') }}</label>
+						<label>{{ t('pipelinq', 'Reviewed by') }}</label>
 						<span>{{ diff.approvedBy }}</span>
 					</div>
 					<div v-if="diff.rejectionReason" class="info-field info-field--wide">
-						<label>{{ t('pipelinq', 'Reden afwijzing') }}</label>
+						<label>{{ t('pipelinq', 'Rejection reason') }}</label>
 						<span>{{ diff.rejectionReason }}</span>
 					</div>
 				</div>
 				<div v-if="canReconcile" class="cash-shift-section__diff-actions">
 					<NcButton type="primary" :disabled="busy" @click="approve">
-						{{ t('pipelinq', 'Goedkeuren') }}
+						{{ t('pipelinq', 'Approve') }}
 					</NcButton>
 					<NcButton type="error" :disabled="busy" @click="showReject = true">
-						{{ t('pipelinq', 'Afwijzen') }}
+						{{ t('pipelinq', 'Reject') }}
 					</NcButton>
 				</div>
 			</CnDetailCard>
@@ -201,7 +201,7 @@ export default {
 		 */
 		percentageLabel() {
 			if (this.diff?.diffPercentage === null || this.diff?.diffPercentage === undefined) {
-				return t('pipelinq', 'N/A (verwacht bedrag is €0)')
+				return t('pipelinq', 'N/A (expected amount is €0)')
 			}
 			return `${this.diff.diffPercentage}%`
 		},
@@ -212,8 +212,8 @@ export default {
 		},
 		toleranceLabel() {
 			return this.diff?.withinTolerance
-				? t('pipelinq', 'Binnen tolerantie')
-				: t('pipelinq', 'Buiten tolerantie')
+				? t('pipelinq', 'Within tolerance')
+				: t('pipelinq', 'Outside tolerance')
 		},
 	},
 	watch: {
@@ -242,7 +242,7 @@ export default {
 					.filter(d => d.shift === this.resolvedId)
 				this.diff = this.latestDiff(diffs)
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Kassashift niet kunnen laden.'))
+				showError(err?.response?.data?.error || t('pipelinq', 'Could not load cash shift.'))
 			} finally {
 				this.loading = false
 			}
@@ -288,14 +288,14 @@ export default {
 				)
 				const data = await response.json().catch(() => ({}))
 				if (!response.ok) {
-					showError(data.error || t('pipelinq', 'Actie mislukt.'))
+					showError(data.error || t('pipelinq', 'Action failed.'))
 					return false
 				}
 				showSuccess(successMessage)
 				await this.load()
 				return true
 			} catch (e) {
-				showError(t('pipelinq', 'Actie mislukt.'))
+				showError(t('pipelinq', 'Action failed.'))
 				return false
 			} finally {
 				this.busy = false
@@ -307,7 +307,7 @@ export default {
 		 * @param {object} payload The drop payload (amount, reason).
 		 */
 		async recordDrop(payload) {
-			const ok = await this.lifecycle('drop', payload, t('pipelinq', 'Drop vastgelegd.'))
+			const ok = await this.lifecycle('drop', payload, t('pipelinq', 'Drop recorded.'))
 			if (ok) {
 				this.showDrop = false
 			}
@@ -318,7 +318,7 @@ export default {
 		 * @param {object} payload The count payload (amount, notes).
 		 */
 		async recordCount(payload) {
-			const ok = await this.lifecycle('count', payload, t('pipelinq', 'Telling vastgelegd.'))
+			const ok = await this.lifecycle('count', payload, t('pipelinq', 'Count recorded.'))
 			if (ok) {
 				this.showCount = false
 			}
@@ -327,7 +327,7 @@ export default {
 		 * Approve the pending variance (manager only).
 		 */
 		approve() {
-			this.lifecycle('diff/approve', { diffId: this.diff?.id }, t('pipelinq', 'Kasverschil goedgekeurd.'))
+			this.lifecycle('diff/approve', { diffId: this.diff?.id }, t('pipelinq', 'Cash difference approved.'))
 		},
 		/**
 		 * Reject the pending variance with a reason (manager only).
@@ -335,7 +335,7 @@ export default {
 		 * @param {string} reason The rejection reason.
 		 */
 		async reject(reason) {
-			const ok = await this.lifecycle('diff/reject', { diffId: this.diff?.id, reason }, t('pipelinq', 'Kasverschil afgewezen.'))
+			const ok = await this.lifecycle('diff/reject', { diffId: this.diff?.id, reason }, t('pipelinq', 'Cash difference rejected.'))
 			if (ok) {
 				this.showReject = false
 			}

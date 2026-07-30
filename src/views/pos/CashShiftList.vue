@@ -5,8 +5,8 @@
 <template>
 	<div>
 		<CnIndexPage
-			:title="t('pipelinq', 'Kassalade')"
-			:description="t('pipelinq', 'Beheer kassashifts: openingsfloat, drops, blind tellen en reconciliatie')"
+			:title="t('pipelinq', 'Cash drawer')"
+			:description="t('pipelinq', 'Manage cash shifts: opening float, drops, blind counting and reconciliation')"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
@@ -16,8 +16,8 @@
 			:sort-order="sortOrder"
 			:selectable="true"
 			:include-columns="visibleColumns"
-			:empty-title="t('pipelinq', 'Geen shifts gevonden')"
-			:empty-action-label="t('pipelinq', 'Shift openen')"
+			:empty-title="t('pipelinq', 'No shifts found')"
+			:empty-action-label="t('pipelinq', 'Open shift')"
 			@add="openShift"
 			@empty-action="openShift"
 			@refresh="onRefresh"
@@ -123,10 +123,10 @@ export default {
 				)
 				const data = await response.json().catch(() => ({}))
 				if (!response.ok) {
-					showError(data.error || t('pipelinq', 'Shift openen mislukt.'))
+					showError(data.error || t('pipelinq', 'Failed to open shift.'))
 					return
 				}
-				showSuccess(t('pipelinq', 'Shift geopend.'))
+				showSuccess(t('pipelinq', 'Shift opened.'))
 				this.showOpen = false
 				const id = data.shift?.id
 				if (id) {
@@ -135,7 +135,7 @@ export default {
 					await this.refresh()
 				}
 			} catch (e) {
-				showError(t('pipelinq', 'Shift openen mislukt.'))
+				showError(t('pipelinq', 'Failed to open shift.'))
 			} finally {
 				this.opening = false
 			}

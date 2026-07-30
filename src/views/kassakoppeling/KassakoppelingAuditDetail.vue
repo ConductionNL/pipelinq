@@ -13,9 +13,9 @@
 <template>
 	<CnDetailPage
 		:title="title"
-		:subtitle="t('pipelinq', 'Kassakoppeling audit log')"
+		:subtitle="t('pipelinq', 'Cash register audit log')"
 		:back-route="{ name: 'KassakoppelingAuditList' }"
-		:back-label="t('pipelinq', 'Terug naar audit log')"
+		:back-label="t('pipelinq', 'Back to audit log')"
 		:loading="loading"
 		:sidebar="{ enabled: false }">
 		<template #actions>
@@ -25,11 +25,11 @@
 				:disabled="busy"
 				data-testid="kassakoppeling-audit-verify"
 				@click="verify">
-				{{ t('pipelinq', 'Handtekening verifiëren') }}
+				{{ t('pipelinq', 'Verify signature') }}
 			</NcButton>
 		</template>
 
-		<CnDetailCard :title="t('pipelinq', 'Verificatiestatus')">
+		<CnDetailCard :title="t('pipelinq', 'Verification status')">
 			<div class="kk-audit-detail__status">
 				<span
 					:class="['verify-pill', `verify-pill--${verifyClass}`]"
@@ -42,10 +42,10 @@
 			</div>
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Samenvatting')">
+		<CnDetailCard :title="t('pipelinq', 'Summary')">
 			<div class="info-grid">
 				<div class="info-field">
-					<label>{{ t('pipelinq', 'Actie') }}</label>
+					<label>{{ t('pipelinq', 'Action') }}</label>
 					<span :class="['action-badge', `action-badge--${actionClass}`]">{{ actionLabel }}</span>
 				</div>
 				<div class="info-field">
@@ -53,20 +53,20 @@
 					<span>{{ entry.operatorId || '—' }}</span>
 				</div>
 				<div class="info-field">
-					<label>{{ t('pipelinq', 'Bedrag') }}</label>
+					<label>{{ t('pipelinq', 'Amount') }}</label>
 					<strong>{{ formatEur(entry.amount) }}</strong>
 				</div>
 				<div class="info-field">
-					<label>{{ t('pipelinq', 'Tijdstip') }}</label>
+					<label>{{ t('pipelinq', 'Time') }}</label>
 					<span>{{ formatTimestamp(entry.timestamp) }}</span>
 				</div>
 				<div class="info-field">
-					<label>{{ t('pipelinq', 'Kassanummer') }}</label>
+					<label>{{ t('pipelinq', 'Register number') }}</label>
 					<span>{{ entry.registerNumber || '—' }}</span>
 				</div>
 				<div class="info-field">
-					<label>{{ t('pipelinq', 'Exporteerd op') }}</label>
-					<span>{{ entry.exportedAt ? formatTimestamp(entry.exportedAt) : t('pipelinq', 'Nog niet geëxporteerd') }}</span>
+					<label>{{ t('pipelinq', 'Exported on') }}</label>
+					<span>{{ entry.exportedAt ? formatTimestamp(entry.exportedAt) : t('pipelinq', 'Not yet exported') }}</span>
 				</div>
 			</div>
 		</CnDetailCard>
@@ -74,21 +74,21 @@
 		<CnDetailCard :title="t('pipelinq', 'Entry details')">
 			<div class="info-grid">
 				<div class="info-field">
-					<label>{{ t('pipelinq', 'Aantal items') }}</label>
+					<label>{{ t('pipelinq', 'Number of items') }}</label>
 					<span>{{ entry.itemCount !== undefined && entry.itemCount !== null ? entry.itemCount : '—' }}</span>
 				</div>
 				<div class="info-field">
-					<label>{{ t('pipelinq', 'BTW bedrag') }}</label>
+					<label>{{ t('pipelinq', 'VAT amount') }}</label>
 					<span>{{ formatEur(entry.taxAmount) }}</span>
 				</div>
 				<div class="info-field info-field--wide">
-					<label>{{ t('pipelinq', 'Omschrijving') }}</label>
+					<label>{{ t('pipelinq', 'Description') }}</label>
 					<span>{{ entry.description || '—' }}</span>
 				</div>
 			</div>
 		</CnDetailCard>
 
-		<CnDetailCard v-if="entry.transactionUuid" :title="t('pipelinq', 'Gekoppelde transactie')">
+		<CnDetailCard v-if="entry.transactionUuid" :title="t('pipelinq', 'Linked transaction')">
 			<p>
 				<router-link
 					data-testid="kassakoppeling-audit-transaction-link"
@@ -97,46 +97,46 @@
 				</router-link>
 			</p>
 			<p class="kk-audit-detail__hint">
-				{{ t('pipelinq', 'Klik om de gekoppelde POS-transactie te openen. Wanneer de transactie verwijderd is, blijft alleen de UUID-verwijzing zichtbaar.') }}
+				{{ t('pipelinq', 'Click to open the linked POS transaction. When the transaction has been deleted, only the UUID reference remains visible.') }}
 			</p>
 		</CnDetailCard>
 
-		<CnDetailCard :title="t('pipelinq', 'Cryptografische gegevens')">
+		<CnDetailCard :title="t('pipelinq', 'Cryptographic data')">
 			<div class="info-grid">
 				<div class="info-field info-field--wide">
-					<label>{{ t('pipelinq', 'Algoritme') }}</label>
-					<span><code>HMAC-SHA256</code> ({{ t('pipelinq', 'sleutel op de server') }})</span>
+					<label>{{ t('pipelinq', 'Algorithm') }}</label>
+					<span><code>HMAC-SHA256</code> ({{ t('pipelinq', 'key on the server') }})</span>
 				</div>
 				<div class="info-field info-field--wide">
-					<label>{{ t('pipelinq', 'Handtekening') }}</label>
+					<label>{{ t('pipelinq', 'Signature') }}</label>
 					<div class="hash-row">
 						<code data-testid="kassakoppeling-audit-signature">{{ truncate(entry.signature) }}</code>
 						<NcButton @click="copy(entry.signature, 'signature')">
-							{{ t('pipelinq', 'Kopiëren') }}
+							{{ t('pipelinq', 'Copy') }}
 						</NcButton>
 					</div>
 				</div>
 				<div class="info-field info-field--wide">
-					<label>{{ t('pipelinq', 'Huidige hash') }}</label>
+					<label>{{ t('pipelinq', 'Current hash') }}</label>
 					<div class="hash-row">
 						<code data-testid="kassakoppeling-audit-current-hash">{{ truncate(entry.currentHash) }}</code>
 						<NcButton @click="copy(entry.currentHash, 'currentHash')">
-							{{ t('pipelinq', 'Kopiëren') }}
+							{{ t('pipelinq', 'Copy') }}
 						</NcButton>
 					</div>
 				</div>
 				<div class="info-field info-field--wide">
-					<label>{{ t('pipelinq', 'Vorige hash') }}</label>
+					<label>{{ t('pipelinq', 'Previous hash') }}</label>
 					<div class="hash-row">
 						<code data-testid="kassakoppeling-audit-previous-hash">{{ truncate(entry.previousHash) }}</code>
 						<NcButton @click="copy(entry.previousHash, 'previousHash')">
-							{{ t('pipelinq', 'Kopiëren') }}
+							{{ t('pipelinq', 'Copy') }}
 						</NcButton>
 					</div>
 				</div>
 			</div>
 			<p v-if="chainResult" class="kk-audit-detail__chain">
-				<strong>{{ t('pipelinq', 'Keten controle:') }}</strong>
+				<strong>{{ t('pipelinq', 'Chain check:') }}</strong>
 				{{ chainResultText }}
 			</p>
 		</CnDetailCard>
@@ -241,12 +241,12 @@ export default {
 		 */
 		verifyHeadline() {
 			if (this.entry.verified === true) {
-				return t('pipelinq', 'Cryptografisch geverifieerd')
+				return t('pipelinq', 'Cryptographically verified')
 			}
 			if (this.entry.verified === false) {
-				return t('pipelinq', 'Handtekening ongeldig — mogelijke manipulatie')
+				return t('pipelinq', 'Signature invalid — possible tampering')
 			}
-			return t('pipelinq', 'Verificatie nog niet uitgevoerd')
+			return t('pipelinq', 'Verification not yet performed')
 		},
 		/**
 		 * Body text for the verification status card.
@@ -255,12 +255,12 @@ export default {
 		 */
 		verifyDescription() {
 			if (this.entry.verified === true) {
-				return t('pipelinq', 'De HMAC-SHA256 handtekening en de SHA-256 keten-hash komen overeen met de opgeslagen waarden. De entry is sinds creatie niet gewijzigd.')
+				return t('pipelinq', 'The HMAC-SHA256 signature and the SHA-256 chain hash match the stored values. The entry has not been modified since creation.')
 			}
 			if (this.entry.verified === false) {
-				return t('pipelinq', 'De handtekening of de keten-hash komt niet overeen. Dit kan duiden op handmatige wijziging van de entry of een rotatie van de geheime sleutel zonder hertekenen.')
+				return t('pipelinq', 'The signature or the chain hash does not match. This may indicate manual modification of the entry or a rotation of the secret key without re-signing.')
 			}
-			return t('pipelinq', 'De entry is nog niet geverifieerd. Klik op "Handtekening verifiëren" om de HMAC en keten-hash live opnieuw te berekenen.')
+			return t('pipelinq', 'The entry has not been verified yet. Click "Verify signature" to recompute the HMAC and chain hash live.')
 		},
 		/**
 		 * Human readable result of the verify action.
@@ -271,8 +271,8 @@ export default {
 			if (!this.chainResult) {
 				return ''
 			}
-			const sig = this.chainResult.signatureValid ? t('pipelinq', 'handtekening geldig') : t('pipelinq', 'handtekening ongeldig')
-			const hash = this.chainResult.hashValid ? t('pipelinq', 'keten-hash geldig') : t('pipelinq', 'keten-hash ongeldig')
+			const sig = this.chainResult.signatureValid ? t('pipelinq', 'signature valid') : t('pipelinq', 'signature invalid')
+			const hash = this.chainResult.hashValid ? t('pipelinq', 'chain hash valid') : t('pipelinq', 'chain hash invalid')
 			return `${sig}, ${hash}`
 		},
 	},
@@ -295,14 +295,14 @@ export default {
 					headers: { Accept: 'application/json', requesttoken: OC.requestToken },
 				})
 				if (!response.ok) {
-					showError(t('pipelinq', 'Audit entry niet gevonden.'))
+					showError(t('pipelinq', 'Audit entry not found.'))
 					this.entry = {}
 					return
 				}
 				const data = await response.json()
 				this.entry = data.entry || {}
 			} catch (e) {
-				showError(t('pipelinq', 'Audit entry kon niet worden geladen.'))
+				showError(t('pipelinq', 'Could not load audit entry.'))
 				this.entry = {}
 			} finally {
 				this.loading = false
@@ -328,7 +328,7 @@ export default {
 					body: '{}',
 				})
 				if (!response.ok) {
-					showError(t('pipelinq', 'Verificatie mislukt.'))
+					showError(t('pipelinq', 'Verification failed.'))
 					return
 				}
 				const data = await response.json()
@@ -341,12 +341,12 @@ export default {
 					this.entry = data.entry
 				}
 				if (data.verified === true) {
-					showSuccess(t('pipelinq', 'Handtekening geverifieerd.'))
+					showSuccess(t('pipelinq', 'Signature verified.'))
 				} else {
-					showError(t('pipelinq', 'Verificatie mislukt — entry is mogelijk gemanipuleerd.'))
+					showError(t('pipelinq', 'Verification failed — entry may have been tampered with.'))
 				}
 			} catch (e) {
-				showError(t('pipelinq', 'Verificatie mislukt.'))
+				showError(t('pipelinq', 'Verification failed.'))
 			} finally {
 				this.busy = false
 			}
@@ -415,9 +415,9 @@ export default {
 			}
 			try {
 				await navigator.clipboard.writeText(value)
-				showSuccess(t('pipelinq', '{label} gekopieerd.', { label }))
+				showSuccess(t('pipelinq', '{label} copied.', { label }))
 			} catch (e) {
-				showError(t('pipelinq', 'Kopiëren mislukt.'))
+				showError(t('pipelinq', 'Copy failed.'))
 			}
 		},
 	},
