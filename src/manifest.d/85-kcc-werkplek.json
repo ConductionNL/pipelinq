@@ -3,7 +3,7 @@
 		{
 			"id": "KccWerkplek",
 			"label": "Customer Support",
-			"icon": "Heart",
+			"icon": "AccountStarOutline",
 			"route": "KccWerkplek",
 			"order": 1
 		}

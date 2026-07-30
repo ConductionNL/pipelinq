@@ -3,7 +3,7 @@
 		{
 			"id": "SlaAttainment",
 			"label": "SLA attainment",
-			"icon": "icon-category-monitoring",
+			"icon": "ChartLine",
 			"route": "SlaAttainment",
 			"order": 98
 		}
