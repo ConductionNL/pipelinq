@@ -55,3 +55,46 @@ jobs:
       # fails with "Call to undefined function React\Async\await()" during seed.
       additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
       playwright-seed-command: 'php occ app:disable pipelinq && php occ app:enable pipelinq'
+
+  # ── Required status check contexts ──────────────────────────────────────────
+  #
+  # Branch protection requires contexts named exactly "PHP Quality" and
+  # "Frontend Quality". The shared workflow's jobs never report under those
+  # names: a reusable-workflow call reports one context per inner job, named
+  # "<caller-job-id> / <inner-job-name>", and the inner jobs are matrices — so
+  # what actually gets posted is "quality / PHP Quality (phpcs)",
+  # "quality / Vue Quality (eslint)", and so on. None of those strings equals a
+  # required context, so the PR waits forever for statuses nothing will post.
+  #
+  # These two plain jobs run in this repo, so they report under their own `name`
+  # and satisfy the requirement. Adding a tool to the shared matrix changes the
+  # inner context names but not these, so the required checks stay stable.
+  #
+  # Both gate on the same signal — the aggregate result of the whole reusable
+  # run. The shared workflow declares no `workflow_call` outputs, so a caller
+  # cannot see per-job results; `needs.quality.result` is success only if every
+  # non-skipped inner job succeeded. A stylelint failure therefore reds both
+  # contexts. Split them once the shared workflow exposes per-area outputs.
+  php-quality-gate:
+    name: PHP Quality
+    needs: quality
+    if: always()
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Report quality suite result
+        run: |
+          echo "Shared quality result: ${{ needs.quality.result }}"
+          [ "${{ needs.quality.result }}" = "success" ] || exit 1
+
+  frontend-quality-gate:
+    name: Frontend Quality
+    needs: quality
+    if: always()
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Report quality suite result
+        run: |
+          echo "Shared quality result: ${{ needs.quality.result }}"
+          [ "${{ needs.quality.result }}" = "success" ] || exit 1
