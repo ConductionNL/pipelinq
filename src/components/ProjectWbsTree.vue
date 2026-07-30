@@ -18,9 +18,9 @@
 <template>
 	<div class="wbs-tree">
 		<div v-if="phases.length === 0" class="wbs-empty">
-			<p>{{ t('pipelinq', 'Er zijn nog geen fasen voor dit project.') }}</p>
+			<p>{{ t('pipelinq', 'There are no phases for this project yet.') }}</p>
 			<NcButton @click="$emit('add-phase')">
-				{{ t('pipelinq', 'Fase toevoegen') }}
+				{{ t('pipelinq', 'Add phase') }}
 			</NcButton>
 		</div>
 
@@ -29,7 +29,7 @@
 				<span class="wbs-phase__chevron" :class="{ 'wbs-phase__chevron--open': isOpen(phase.id) }">
 					›
 				</span>
-				<span class="wbs-phase__name">{{ phase.name || t('pipelinq', '(naamloze fase)') }}</span>
+				<span class="wbs-phase__name">{{ phase.name || t('pipelinq', '(unnamed phase)') }}</span>
 				<span class="status-pill" :class="'status-pill--' + (phase.status || 'open')">
 					{{ statusLabel(phase.status) }}
 				</span>
@@ -44,15 +44,15 @@
 
 			<div v-if="isOpen(phase.id)" class="wbs-phase__body">
 				<div v-if="tasksFor(phase).length === 0" class="wbs-task-empty">
-					{{ t('pipelinq', 'Nog geen taken in deze fase.') }}
+					{{ t('pipelinq', 'No tasks in this phase yet.') }}
 				</div>
 				<div v-for="task in tasksFor(phase)" :key="task.id" class="wbs-task">
-					<span class="wbs-task__name">{{ task.name || t('pipelinq', '(naamloze taak)') }}</span>
+					<span class="wbs-task__name">{{ task.name || t('pipelinq', '(unnamed task)') }}</span>
 					<span v-if="task.assignee" class="wbs-task__assignee">@{{ task.assignee }}</span>
 					<span class="wbs-task__hours">
-						{{ task.estimatedHours || 0 }}u {{ t('pipelinq', 'gepland') }}
+						{{ task.estimatedHours || 0 }}u {{ t('pipelinq', 'planned') }}
 						·
-						{{ loggedHoursForTask(task.id) }}u {{ t('pipelinq', 'gelogd') }}
+						{{ loggedHoursForTask(task.id) }}u {{ t('pipelinq', 'logged') }}
 					</span>
 					<span class="status-pill" :class="'status-pill--' + (task.status || 'open')">
 						{{ statusLabel(task.status) }}
@@ -62,12 +62,12 @@
 						{{ billableLabel('task', task, { phase }) }}
 					</span>
 					<NcButton type="tertiary" @click="$emit('add-activity', { phase, task })">
-						{{ t('pipelinq', 'Tijdregistratie') }}
+						{{ t('pipelinq', 'Time entry') }}
 					</NcButton>
 				</div>
 				<div class="wbs-phase__actions">
 					<NcButton @click="$emit('add-task', { phase })">
-						{{ t('pipelinq', 'Taak toevoegen') }}
+						{{ t('pipelinq', 'Add task') }}
 					</NcButton>
 				</div>
 			</div>
@@ -75,7 +75,7 @@
 
 		<div v-if="phases.length > 0" class="wbs-tree__actions">
 			<NcButton @click="$emit('add-phase')">
-				{{ t('pipelinq', 'Fase toevoegen') }}
+				{{ t('pipelinq', 'Add phase') }}
 			</NcButton>
 		</div>
 	</div>
@@ -238,16 +238,16 @@ export default {
 		billableLabel(level, obj, ctx) {
 			const value = this.resolvedBillable(level, obj, ctx)
 			const set = obj && typeof obj.billable === 'boolean'
-			const base = value ? t('pipelinq', 'Factureerbaar') : t('pipelinq', 'Niet-factureerbaar')
+			const base = value ? t('pipelinq', 'Billable') : t('pipelinq', 'Non-billable')
 			if (set) return base
 			if (level === 'phase') {
-				return base + ' ' + t('pipelinq', '(geërfd van project)')
+				return base + ' ' + t('pipelinq', '(inherited from project)')
 			}
 			if (level === 'task') {
-				return base + ' ' + t('pipelinq', '(geërfd van fase)')
+				return base + ' ' + t('pipelinq', '(inherited from phase)')
 			}
 			if (level === 'activity') {
-				return base + ' ' + t('pipelinq', '(geërfd van taak)')
+				return base + ' ' + t('pipelinq', '(inherited from task)')
 			}
 			return base
 		},
@@ -260,10 +260,10 @@ export default {
 		statusLabel(status) {
 			const map = {
 				open: t('pipelinq', 'Open'),
-				in_progress: t('pipelinq', 'Loopt'),
-				on_hold: t('pipelinq', 'Gepauzeerd'),
-				completed: t('pipelinq', 'Afgerond'),
-				cancelled: t('pipelinq', 'Geannuleerd'),
+				in_progress: t('pipelinq', 'Running'),
+				on_hold: t('pipelinq', 'Paused'),
+				completed: t('pipelinq', 'Completed'),
+				cancelled: t('pipelinq', 'Cancelled'),
 			}
 			return map[status] || (status || '-')
 		},

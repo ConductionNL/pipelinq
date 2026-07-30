@@ -11,7 +11,7 @@
   -->
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'Doelbinding Verzoeken')"
+		:name="t('pipelinq', 'Request purpose limitation')"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">
@@ -19,23 +19,23 @@
 			<NcSelect
 				v-model="form.verzoekreden"
 				:options="reasonOptions"
-				:input-label="t('pipelinq', 'Verzoekreden')"
-				:placeholder="t('pipelinq', 'Kies een verzoekreden')"
+				:input-label="t('pipelinq', 'Request reason')"
+				:placeholder="t('pipelinq', 'Choose a request reason')"
 				:reduce="(o) => o.value"
 				label="label"
 				required />
 			<NcSelect
 				v-model="form.doelbinding"
 				:options="bindingOptions"
-				:input-label="t('pipelinq', 'Doelbinding / wettelijke grondslag')"
-				:placeholder="t('pipelinq', 'Kies een wettelijke grondslag')"
+				:input-label="t('pipelinq', 'Purpose limitation / legal basis')"
+				:placeholder="t('pipelinq', 'Choose a legal basis')"
 				:reduce="(o) => o.value"
 				label="label"
 				required />
 			<NcTextArea
 				v-model="form.toelichting"
-				:label="t('pipelinq', 'Aanvullende toelichting')"
-				:placeholder="t('pipelinq', 'Optioneel — minstens 20 tekens aanbevolen')"
+				:label="t('pipelinq', 'Additional notes')"
+				:placeholder="t('pipelinq', 'Optional — at least 20 characters recommended')"
 				rows="3" />
 			<NcCheckboxRadioSwitch
 				v-model="form.vogScreening"
@@ -45,10 +45,10 @@
 		</form>
 		<template #actions>
 			<NcButton @click="$emit('close')">
-				{{ t('pipelinq', 'Annuleren') }}
+				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton type="primary" :disabled="!valid" @click="submit">
-				{{ t('pipelinq', 'Ophalen') }}
+				{{ t('pipelinq', 'Retrieve') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -89,8 +89,8 @@ export default {
 				{ value: 'Behandeling AVG-inzageverzoek art. 15', label: this.t('pipelinq', 'Behandeling AVG-inzageverzoek art. 15') },
 				{ value: 'Behandeling AVG-verwijderverzoek art. 17', label: this.t('pipelinq', 'Behandeling AVG-verwijderverzoek art. 17') },
 				{ value: 'VOG-screening', label: this.t('pipelinq', 'VOG-screening') },
-				{ value: 'Reguliere verzoekbehandeling', label: this.t('pipelinq', 'Reguliere verzoekbehandeling') },
-				{ value: 'Overig', label: this.t('pipelinq', 'Overig') },
+				{ value: 'Reguliere verzoekbehandeling', label: this.t('pipelinq', 'Regular request handling') },
+				{ value: 'Overig', label: this.t('pipelinq', 'Other') },
 			]
 		},
 		bindingOptions() {
@@ -98,7 +98,7 @@ export default {
 				{ value: 'Publieke taak — Wet BRP art. 3.3', label: this.t('pipelinq', 'Publieke taak — Wet BRP art. 3.3') },
 				{ value: 'AVG art. 6 lid 1 sub e', label: this.t('pipelinq', 'AVG art. 6 lid 1 sub e (publieke taak)') },
 				{ value: 'Rechtmatig belang', label: this.t('pipelinq', 'Rechtmatig belang') },
-				{ value: 'Overig', label: this.t('pipelinq', 'Overig') },
+				{ value: 'Overig', label: this.t('pipelinq', 'Other') },
 			]
 		},
 		valid() {

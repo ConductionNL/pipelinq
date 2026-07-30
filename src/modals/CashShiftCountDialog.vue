@@ -4,29 +4,29 @@
 -->
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'Shift afsluiten en tellen')"
+		:name="t('pipelinq', 'Close and count shift')"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-count">
-			<p>{{ t('pipelinq', 'Tel het contante geld in de lade en voer het totaal in. Er worden geen verwachte bedragen getoond (blind tellen).') }}</p>
+			<p>{{ t('pipelinq', 'Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).') }}</p>
 			<NcTextField
 				:value.sync="amount"
 				type="number"
-				:label="t('pipelinq', 'Geteld bedrag')"
+				:label="t('pipelinq', 'Counted amount')"
 				placeholder="€ 0.00"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Voer een geldig bedrag in') : ''" />
+				:helper-text="showError ? t('pipelinq', 'Enter a valid amount') : ''" />
 			<NcTextArea
 				:value.sync="notes"
-				:label="t('pipelinq', 'Notities (optioneel)')" />
+				:label="t('pipelinq', 'Notes (optional)')" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
-				{{ t('pipelinq', 'Annuleren') }}
+				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton type="primary" :disabled="submitting" @click="submit">
-				{{ t('pipelinq', 'Afsluiten en tellen') }}
+				{{ t('pipelinq', 'Close and count') }}
 			</NcButton>
 		</template>
 	</NcDialog>

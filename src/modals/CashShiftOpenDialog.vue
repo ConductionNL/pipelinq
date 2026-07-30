@@ -4,33 +4,33 @@
 -->
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'Shift openen')"
+		:name="t('pipelinq', 'Open shift')"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-open">
 			<NcTextField
 				:value.sync="drawer"
-				:label="t('pipelinq', 'Lade')" />
+				:label="t('pipelinq', 'Drawer')" />
 			<NcTextField
 				:value.sync="floatAmount"
 				type="number"
-				:label="t('pipelinq', 'Openingsbedrag (€)')"
+				:label="t('pipelinq', 'Opening amount (€)')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Openingsbedrag verplicht') : ''" />
+				:helper-text="showError ? t('pipelinq', 'Opening amount required') : ''" />
 			<NcTextField
 				:value.sync="reference"
-				:label="t('pipelinq', 'Referentie (optioneel)')" />
+				:label="t('pipelinq', 'Reference (optional)')" />
 			<NcTextArea
 				:value.sync="notes"
-				:label="t('pipelinq', 'Notities (optioneel)')" />
+				:label="t('pipelinq', 'Notes (optional)')" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
-				{{ t('pipelinq', 'Annuleren') }}
+				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton type="primary" :disabled="submitting" @click="submit">
-				{{ t('pipelinq', 'Shift openen') }}
+				{{ t('pipelinq', 'Open shift') }}
 			</NcButton>
 		</template>
 	</NcDialog>

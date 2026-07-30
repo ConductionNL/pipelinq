@@ -28,13 +28,13 @@
 					type="primary"
 					:disabled="busy"
 					@click="confirm">
-					{{ t('pipelinq', 'Bevestigen') }}
+					{{ t('pipelinq', 'Confirm') }}
 				</NcButton>
 				<NcButton v-if="canReject"
 					type="error"
 					:disabled="busy"
 					@click="showReject = true">
-					{{ t('pipelinq', 'Afwijzen') }}
+					{{ t('pipelinq', 'Reject') }}
 				</NcButton>
 			</section>
 

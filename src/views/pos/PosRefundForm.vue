@@ -39,7 +39,7 @@
 
 			<div v-if="originalLines.length" class="pos-refund-form__select-all">
 				<NcButton type="secondary" @click="selectAll">
-					{{ t('pipelinq', 'Alle items teruggeven') }}
+					{{ t('pipelinq', 'Return all items') }}
 				</NcButton>
 			</div>
 
@@ -386,15 +386,15 @@ export default {
 		async save() {
 			const selected = this.candidates.filter(c => c.selected)
 			if (selected.length === 0) {
-				showError(t('pipelinq', 'Selecteer ten minste één artikel om terug te geven'))
+				showError(t('pipelinq', 'Select at least one item to return'))
 				return
 			}
 			if (!this.refund.originalTransaction) {
-				showError(t('pipelinq', 'Originele kassabon is verplicht'))
+				showError(t('pipelinq', 'Original receipt is required'))
 				return
 			}
 			if (selected.some(c => c.valid === false)) {
-				showError(t('pipelinq', 'Geretourneerd aantal mag niet groter zijn dan het originele aantal'))
+				showError(t('pipelinq', 'Returned quantity may not exceed the original quantity'))
 				return
 			}
 

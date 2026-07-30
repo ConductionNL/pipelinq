@@ -19,14 +19,14 @@
   - @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006
   -->
 <template>
-	<CnDetailCard :title="t('pipelinq', 'BSN en BRP')">
+	<CnDetailCard :title="t('pipelinq', 'BSN and BRP')">
 		<div class="brp-panel">
 			<div class="brp-panel__bsn-row">
 				<NcTextField
 					v-model="rawBsn"
 					data-testid="brp-bsn-input"
 					:label="t('pipelinq', 'BSN')"
-					:placeholder="t('pipelinq', 'Bijv. 123456782')"
+					:placeholder="t('pipelinq', 'E.g. 123456782')"
 					autocomplete="off"
 					inputmode="numeric"
 					maxlength="9"
@@ -38,13 +38,13 @@
 					data-testid="brp-lookup-button"
 					:disabled="!canLookup"
 					@click="openDoelbinding">
-					{{ t('pipelinq', 'Ophalen uit BRP') }}
+					{{ t('pipelinq', 'Retrieve from BRP') }}
 				</NcButton>
 			</div>
 
 			<div v-if="lookupState === 'loading'" class="brp-panel__status">
 				<NcLoadingIcon />
-				<span>{{ t('pipelinq', 'Ophalen uit BRP...') }}</span>
+				<span>{{ t('pipelinq', 'Retrieve from BRP...') }}</span>
 			</div>
 			<div v-else-if="lookupState === 'error'" class="brp-panel__status brp-panel__status--error">
 				{{ errorMessage }}
@@ -52,26 +52,26 @@
 
 			<div v-if="persoon" class="brp-panel__persoon" data-testid="brp-persoon">
 				<div class="brp-panel__persoon-header">
-					<span v-if="persoon.indicatieGeheim === '1'" class="brp-panel__geheim-icon" :title="t('pipelinq', 'Geheimhouding actief')">
+					<span v-if="persoon.indicatieGeheim === '1'" class="brp-panel__geheim-icon" :title="t('pipelinq', 'Confidentiality active')">
 						🔒
 					</span>
 					<strong>{{ fullName }}</strong>
-					<span v-if="cacheHit" class="brp-panel__cache-badge" :title="t('pipelinq', 'Uit cache geserveerd')">
-						⚡ {{ t('pipelinq', 'van cache') }}
+					<span v-if="cacheHit" class="brp-panel__cache-badge" :title="t('pipelinq', 'Served from cache')">
+						⚡ {{ t('pipelinq', 'from cache') }}
 					</span>
 				</div>
 				<dl class="brp-panel__persoon-fields">
-					<dt>{{ t('pipelinq', 'Geboortedatum') }}</dt>
+					<dt>{{ t('pipelinq', 'Date of birth') }}</dt>
 					<dd>{{ persoon.geboortedatum || '-' }}</dd>
-					<dt>{{ t('pipelinq', 'Geboorteplaats') }}</dt>
+					<dt>{{ t('pipelinq', 'Place of birth') }}</dt>
 					<dd>{{ persoon.geboorteplaats || '-' }}</dd>
-					<dt>{{ t('pipelinq', 'Geslacht') }}</dt>
+					<dt>{{ t('pipelinq', 'Gender') }}</dt>
 					<dd>{{ persoon.geslacht || '-' }}</dd>
 				</dl>
 				<div v-if="persoon.indicatieGeheim === '1' && !revealedAddress" class="brp-panel__secret">
-					<span>[{{ t('pipelinq', 'GEHEIM') }}]</span>
+					<span>[{{ t('pipelinq', 'SECRET') }}]</span>
 					<NcButton type="tertiary" @click="revealAddress">
-						{{ t('pipelinq', 'Toon adres onder verantwoording') }}
+						{{ t('pipelinq', 'Show address under accountability') }}
 					</NcButton>
 				</div>
 				<div v-else-if="address" class="brp-panel__address">
@@ -138,7 +138,7 @@ export default {
 		},
 		bsnFeedback() {
 			if (!this.rawBsn) return ''
-			return this.validation.errorMessage || this.t('pipelinq', 'BSN voldoet aan de 11-proef')
+			return this.validation.errorMessage || this.t('pipelinq', 'BSN passes the 11-check')
 		},
 		canLookup() {
 			return this.validation.isFormeelGeldig && this.lookupState !== 'loading'
@@ -184,14 +184,14 @@ export default {
 				this.cacheHit = Boolean(data.responseInCache)
 				this.lookupState = this.persoon ? 'success' : 'error'
 				if (this.persoon) {
-					showSuccess(this.t('pipelinq', 'BRP-gegevens opgehaald'))
+					showSuccess(this.t('pipelinq', 'BRP data retrieved'))
 					this.$emit('contact-updated')
 				}
 			} catch (err) {
 				this.lookupState = 'error'
 				const data = err?.response?.data || {}
 				this.errorMessage = data.errorMessage
-					|| this.t('pipelinq', 'BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.')
+					|| this.t('pipelinq', 'BRP is currently unavailable — please try again in a few minutes.')
 				showError(this.errorMessage)
 			}
 		},
@@ -201,10 +201,10 @@ export default {
 				const response = await axios.post(url)
 				this.revealedAddress = true
 				this.revealedVerblijfplaats = response.data?.verblijfplaats || null
-				showSuccess(this.t('pipelinq', 'Adres onthuld — audit-record aangemaakt.'))
+				showSuccess(this.t('pipelinq', 'Address revealed — audit record created.'))
 			} catch (err) {
 				const data = err?.response?.data || {}
-				showError(data.errorMessage || this.t('pipelinq', 'Kon adres niet onthullen.'))
+				showError(data.errorMessage || this.t('pipelinq', 'Could not reveal address.'))
 			}
 		},
 	},

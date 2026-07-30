@@ -15,9 +15,9 @@
 	<div class="kassakoppeling-audit-list">
 		<div class="kassakoppeling-audit-list__header">
 			<div>
-				<h2>{{ t('pipelinq', 'Kassakoppeling audit log') }}</h2>
+				<h2>{{ t('pipelinq', 'Cash register audit log') }}</h2>
 				<p class="kassakoppeling-audit-list__subtitle">
-					{{ t('pipelinq', 'Onveranderlijke, cryptografisch ondertekende registratie van elke kassa-actie voor Belastingdienst controles.') }}
+					{{ t('pipelinq', 'Immutable, cryptographically signed record of every register action for Belastingdienst audits.') }}
 				</p>
 			</div>
 			<div class="kassakoppeling-audit-list__actions">
@@ -26,7 +26,7 @@
 						<NcLoadingIcon v-if="loading" :size="20" />
 						<Refresh v-else :size="20" />
 					</template>
-					{{ t('pipelinq', 'Vernieuwen') }}
+					{{ t('pipelinq', 'Refresh') }}
 				</NcButton>
 				<NcButton
 					v-if="isAdmin"
@@ -36,36 +36,36 @@
 					<template #icon>
 						<Download :size="20" />
 					</template>
-					{{ t('pipelinq', 'Exporteren naar Belastingdienst') }}
+					{{ t('pipelinq', 'Export to Belastingdienst') }}
 				</NcButton>
 			</div>
 		</div>
 
 		<div class="kassakoppeling-audit-list__filters" data-testid="kassakoppeling-audit-filters">
 			<div class="filter-cell">
-				<label for="kk-filter-from">{{ t('pipelinq', 'Vanaf') }}</label>
+				<label for="kk-filter-from">{{ t('pipelinq', 'From') }}</label>
 				<input
 					id="kk-filter-from"
 					v-model="filters.from"
 					type="date"
-					:aria-label="t('pipelinq', 'Filter vanaf datum')">
+					:aria-label="t('pipelinq', 'Filter from date')">
 			</div>
 			<div class="filter-cell">
-				<label for="kk-filter-to">{{ t('pipelinq', 'Tot en met') }}</label>
+				<label for="kk-filter-to">{{ t('pipelinq', 'Up to and including') }}</label>
 				<input
 					id="kk-filter-to"
 					v-model="filters.to"
 					type="date"
-					:aria-label="t('pipelinq', 'Filter tot en met datum')">
+					:aria-label="t('pipelinq', 'Filter to date')">
 			</div>
 			<div class="filter-cell">
-				<label for="kk-filter-register">{{ t('pipelinq', 'Kassa') }}</label>
+				<label for="kk-filter-register">{{ t('pipelinq', 'Register') }}</label>
 				<input
 					id="kk-filter-register"
 					v-model="filters.registerNumber"
 					type="text"
-					:placeholder="t('pipelinq', 'bijv. REG-001')"
-					:aria-label="t('pipelinq', 'Filter op kassanummer')">
+					:placeholder="t('pipelinq', 'e.g. REG-001')"
+					:aria-label="t('pipelinq', 'Filter by register number')">
 			</div>
 			<div class="filter-cell">
 				<label for="kk-filter-operator">{{ t('pipelinq', 'Operator') }}</label>
@@ -73,61 +73,61 @@
 					id="kk-filter-operator"
 					v-model="filters.operatorId"
 					type="text"
-					:placeholder="t('pipelinq', 'bijv. user_john')"
-					:aria-label="t('pipelinq', 'Filter op operator')">
+					:placeholder="t('pipelinq', 'e.g. user_john')"
+					:aria-label="t('pipelinq', 'Filter by operator')">
 			</div>
 			<div class="filter-cell">
-				<label for="kk-filter-action">{{ t('pipelinq', 'Actie') }}</label>
+				<label for="kk-filter-action">{{ t('pipelinq', 'Action') }}</label>
 				<select
 					id="kk-filter-action"
 					v-model="filters.action"
-					:aria-label="t('pipelinq', 'Filter op actie')">
+					:aria-label="t('pipelinq', 'Filter by action')">
 					<option value="">
-						{{ t('pipelinq', 'Alle acties') }}
+						{{ t('pipelinq', 'All actions') }}
 					</option>
 					<option value="sale">
-						{{ t('pipelinq', 'Verkoop') }}
+						{{ t('pipelinq', 'Sale') }}
 					</option>
 					<option value="void">
-						{{ t('pipelinq', 'Annulering') }}
+						{{ t('pipelinq', 'Cancellation') }}
 					</option>
 					<option value="refund">
-						{{ t('pipelinq', 'Retour') }}
+						{{ t('pipelinq', 'Refund') }}
 					</option>
 					<option value="no-sale">
-						{{ t('pipelinq', 'Geen verkoop') }}
+						{{ t('pipelinq', 'No sale') }}
 					</option>
 				</select>
 			</div>
 			<div class="filter-cell filter-cell--actions">
 				<NcButton @click="applyFilters">
-					{{ t('pipelinq', 'Filter toepassen') }}
+					{{ t('pipelinq', 'Apply filter') }}
 				</NcButton>
 				<NcButton @click="clearFilters">
-					{{ t('pipelinq', 'Wissen') }}
+					{{ t('pipelinq', 'Clear') }}
 				</NcButton>
 			</div>
 		</div>
 
 		<div v-if="loading" class="kassakoppeling-audit-list__loading">
-			<NcLoadingIcon :size="32" :title="t('pipelinq', 'Audit log laden')" />
+			<NcLoadingIcon :size="32" :title="t('pipelinq', 'Load audit log')" />
 		</div>
 
 		<div v-else-if="entries.length === 0" class="kassakoppeling-audit-list__empty">
-			<p>{{ t('pipelinq', 'Geen audit entries gevonden voor de gekozen filters.') }}</p>
+			<p>{{ t('pipelinq', 'No audit entries found for the selected filters.') }}</p>
 		</div>
 
 		<table v-else class="kassakoppeling-audit-list__table" data-testid="kassakoppeling-audit-table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Tijdstip') }}</th>
+					<th>{{ t('pipelinq', 'Time') }}</th>
 					<th>{{ t('pipelinq', 'Operator') }}</th>
-					<th>{{ t('pipelinq', 'Kassa') }}</th>
-					<th>{{ t('pipelinq', 'Actie') }}</th>
+					<th>{{ t('pipelinq', 'Register') }}</th>
+					<th>{{ t('pipelinq', 'Action') }}</th>
 					<th class="num">
-						{{ t('pipelinq', 'Bedrag') }}
+						{{ t('pipelinq', 'Amount') }}
 					</th>
-					<th>{{ t('pipelinq', 'Verificatie') }}</th>
+					<th>{{ t('pipelinq', 'Verification') }}</th>
 					<th class="chevron-col" />
 				</tr>
 			</thead>
@@ -163,13 +163,13 @@
 
 		<div v-if="totalPages > 1" class="kassakoppeling-audit-list__pagination">
 			<NcButton :disabled="page === 1" @click="page = Math.max(1, page - 1)">
-				{{ t('pipelinq', 'Vorige') }}
+				{{ t('pipelinq', 'Previous') }}
 			</NcButton>
 			<span class="page-info">
-				{{ t('pipelinq', 'Pagina {current} van {total}', { current: page, total: totalPages }) }}
+				{{ t('pipelinq', 'Page {current} of {total}', { current: page, total: totalPages }) }}
 			</span>
 			<NcButton :disabled="page === totalPages" @click="page = Math.min(totalPages, page + 1)">
-				{{ t('pipelinq', 'Volgende') }}
+				{{ t('pipelinq', 'Next') }}
 			</NcButton>
 		</div>
 
@@ -193,10 +193,10 @@ import BelastingdienstExportDialog from '../../dialogs/BelastingdienstExportDial
 const PAGE_SIZE = 25
 
 const ACTION_LABELS = {
-	sale: 'Verkoop',
-	void: 'Annulering',
-	refund: 'Retour',
-	'no-sale': 'Geen verkoop',
+	sale: 'Sale',
+	void: 'Void',
+	refund: 'Refund',
+	'no-sale': 'No sale',
 }
 
 const ACTION_CLASSES = {
@@ -304,7 +304,7 @@ export default {
 					},
 				})
 				if (!response.ok) {
-					showError(t('pipelinq', 'Audit log kon niet worden geladen.'))
+					showError(t('pipelinq', 'Could not load audit log.'))
 					this.entries = []
 					return
 				}
@@ -312,7 +312,7 @@ export default {
 				this.entries = Array.isArray(data.entries) ? data.entries : []
 				this.page = 1
 			} catch (e) {
-				showError(t('pipelinq', 'Audit log kon niet worden geladen.'))
+				showError(t('pipelinq', 'Could not load audit log.'))
 				this.entries = []
 			} finally {
 				this.loading = false
@@ -412,12 +412,12 @@ export default {
 		 */
 		verifyLabel(verified) {
 			if (verified === true) {
-				return t('pipelinq', 'Geverifieerd')
+				return t('pipelinq', 'Verified')
 			}
 			if (verified === false) {
-				return t('pipelinq', 'Manipulatie gedetecteerd')
+				return t('pipelinq', 'Tampering detected')
 			}
-			return t('pipelinq', 'Nog te verifiëren')
+			return t('pipelinq', 'Yet to verify')
 		},
 		/**
 		 * Get the CSS modifier suffix for a verification badge.
@@ -454,9 +454,9 @@ export default {
 				})
 				if (!response.ok) {
 					if (response.status === 403) {
-						showError(t('pipelinq', 'Alleen administrators mogen exporteren naar de Belastingdienst.'))
+						showError(t('pipelinq', 'Only administrators may export to the Belastingdienst.'))
 					} else {
-						showError(t('pipelinq', 'Belastingdienst export mislukt.'))
+						showError(t('pipelinq', 'Belastingdienst export failed.'))
 					}
 					return
 				}
@@ -472,11 +472,11 @@ export default {
 				link.click()
 				link.remove()
 				window.URL.revokeObjectURL(objectUrl)
-				showSuccess(t('pipelinq', 'Belastingdienst export gedownload.'))
+				showSuccess(t('pipelinq', 'Belastingdienst export downloaded.'))
 				this.showExport = false
 				await this.refresh()
 			} catch (e) {
-				showError(t('pipelinq', 'Belastingdienst export mislukt.'))
+				showError(t('pipelinq', 'Belastingdienst export failed.'))
 			} finally {
 				this.exporting = false
 			}

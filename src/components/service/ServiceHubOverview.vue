@@ -67,7 +67,7 @@ export default {
 			cards: [
 				{ id: 'Requests', label: t('pipelinq', 'Requests'), route: 'Tickets', query: { ticketType: 'request' } },
 				{ id: 'Tasks', label: t('pipelinq', 'Tasks'), route: 'Tasks' },
-				{ id: 'Contactmomenten', label: t('pipelinq', 'Contactmomenten'), route: 'Tickets', query: { ticketType: 'contactmoment' } },
+				{ id: 'Contactmomenten', label: t('pipelinq', 'Contact moments'), route: 'Tickets', query: { ticketType: 'contactmoment' } },
 				{ id: 'Complaints', label: t('pipelinq', 'Complaints'), route: 'Tickets', query: { ticketType: 'complaint' } },
 				{ id: 'Projects', label: t('pipelinq', 'Projects'), route: 'Projects' },
 				{ id: 'MyWork', label: t('pipelinq', 'My Work'), route: 'MyWork' },

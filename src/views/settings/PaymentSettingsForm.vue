@@ -75,7 +75,7 @@
 					<NcTextField
 						:value="provider.webhookSecret === MASK ? '' : provider.webhookSecret"
 						:label="t('pipelinq', 'Webhook secret')"
-						:placeholder="provider.webhookSecret === MASK ? t('pipelinq', '(opgeslagen — laat leeg om te behouden)') : ''"
+						:placeholder="provider.webhookSecret === MASK ? t('pipelinq', '(saved — leave empty to keep)') : ''"
 						type="password"
 						@update:value="(v) => onSecretChange(provider, 'webhookSecret', v)" />
 
@@ -83,7 +83,7 @@
 						v-if="provider.name === 'ccv'"
 						v-model="provider.config.terminalId"
 						:label="t('pipelinq', 'Terminal ID')"
-						:placeholder="t('pipelinq', 'kassa-01')" />
+						:placeholder="t('pipelinq', 'register-01')" />
 
 					<NcTextField
 						v-if="provider.name === 'adyen'"
@@ -102,13 +102,13 @@
 							type="secondary"
 							:disabled="testingProvider === provider.name"
 							@click="onTest(provider)">
-							{{ testingProvider === provider.name ? t('pipelinq', 'Testen…') : t('pipelinq', 'Verbinding testen') }}
+							{{ testingProvider === provider.name ? t('pipelinq', 'Testing…') : t('pipelinq', 'Test connection') }}
 						</NcButton>
 						<NcButton
 							type="primary"
 							:disabled="savingProvider === provider.name"
 							@click="onSave(provider)">
-							{{ savingProvider === provider.name ? t('pipelinq', 'Opslaan…') : t('pipelinq', 'Opslaan') }}
+							{{ savingProvider === provider.name ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 						</NcButton>
 					</div>
 
@@ -117,7 +117,7 @@
 						:class="{ 'payment-settings__test-result--ok': provider.testResult.status === 'ok', 'payment-settings__test-result--error': provider.testResult.status === 'error' }">
 						{{ provider.testResult.message }}
 						<span v-if="provider.lastTestedAt" class="payment-settings__timestamp">
-							{{ t('pipelinq', 'Laatst getest op {time}', { time: provider.lastTestedAt }) }}
+							{{ t('pipelinq', 'Last tested at {time}', { time: provider.lastTestedAt }) }}
 						</span>
 					</p>
 				</div>
@@ -180,7 +180,7 @@ export default {
 		environmentOptions() {
 			return [
 				{ value: 'sandbox', label: t('pipelinq', 'Sandbox') },
-				{ value: 'live', label: t('pipelinq', 'Productie') },
+				{ value: 'live', label: t('pipelinq', 'Production') },
 			]
 		},
 	},
@@ -202,7 +202,7 @@ export default {
 						.find((o) => o.value === provider.credentialId) || null
 				}
 			} catch (e) {
-				showError(t('pipelinq', 'Kon providers niet laden: {error}', { error: e.message || 'netwerkfout' }))
+				showError(t('pipelinq', 'Could not load providers: {error}', { error: e.message || 'netwerkfout' }))
 			} finally {
 				this.loading = false
 			}
@@ -303,9 +303,9 @@ export default {
 				if (saved) {
 					Object.assign(provider, this.normalizeProvider(saved))
 				}
-				showSuccess(t('pipelinq', 'Provider {name} opgeslagen', { name: provider.displayName }))
+				showSuccess(t('pipelinq', 'Provider {name} saved', { name: provider.displayName }))
 			} catch (e) {
-				showError(t('pipelinq', 'Opslaan mislukt: {error}', { error: e.message || 'onbekend' }))
+				showError(t('pipelinq', 'Save failed: {error}', { error: e.message || 'onbekend' }))
 			} finally {
 				this.savingProvider = null
 			}
@@ -317,13 +317,13 @@ export default {
 				provider.testResult = result
 				provider.lastTestedAt = new Date().toISOString()
 				if (result.status === 'ok') {
-					showSuccess(t('pipelinq', 'Verbinding met {name} succesvol', { name: provider.displayName }))
+					showSuccess(t('pipelinq', 'Connection to {name} successful', { name: provider.displayName }))
 				} else {
-					showError(t('pipelinq', 'Test mislukt: {message}', { message: result.message }))
+					showError(t('pipelinq', 'Test failed: {message}', { message: result.message }))
 				}
 			} catch (e) {
 				provider.testResult = { status: 'error', message: e.message || 'unknown' }
-				showError(t('pipelinq', 'Test mislukt: {error}', { error: e.message || 'netwerkfout' }))
+				showError(t('pipelinq', 'Test failed: {error}', { error: e.message || 'netwerkfout' }))
 			} finally {
 				this.testingProvider = null
 			}
