@@ -4,7 +4,7 @@
 -->
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'Geld verwijderen')"
+		:name="t('pipelinq', 'Remove cash')"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">
@@ -12,22 +12,22 @@
 			<NcTextField
 				:value.sync="amount"
 				type="number"
-				:label="t('pipelinq', 'Bedrag (€)')"
+				:label="t('pipelinq', 'Amount (€)')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Voer een bedrag groter dan nul in') : ''" />
+				:helper-text="showError ? t('pipelinq', 'Enter an amount greater than zero') : ''" />
 			<NcSelect
 				v-model="reason"
 				:options="reasonOptions"
-				:input-label="t('pipelinq', 'Reden')"
+				:input-label="t('pipelinq', 'Reason')"
 				label="label"
 				track-by="id" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
-				{{ t('pipelinq', 'Annuleren') }}
+				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton type="primary" :disabled="submitting" @click="submit">
-				{{ t('pipelinq', 'Vastleggen') }}
+				{{ t('pipelinq', 'Record') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -66,10 +66,10 @@ export default {
 		 */
 		reasonOptions() {
 			return [
-				{ id: 'manager-deposit', label: t('pipelinq', 'Afstorting bij manager') },
-				{ id: 'bank-run', label: t('pipelinq', 'Bankrit') },
-				{ id: 'security-removal', label: t('pipelinq', 'Veiligheidsafvoer') },
-				{ id: 'other', label: t('pipelinq', 'Overig') },
+				{ id: 'manager-deposit', label: t('pipelinq', 'Cash drop to manager') },
+				{ id: 'bank-run', label: t('pipelinq', 'Bank run') },
+				{ id: 'security-removal', label: t('pipelinq', 'Security removal') },
+				{ id: 'other', label: t('pipelinq', 'Other') },
 			]
 		},
 	},

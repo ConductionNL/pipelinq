@@ -59,8 +59,8 @@ export default {
 		 */
 		priceModeSuffix() {
 			return this.priceMode === 'incl'
-				? t('pipelinq', 'incl. BTW')
-				: t('pipelinq', 'excl. BTW')
+				? t('pipelinq', 'incl. VAT')
+				: t('pipelinq', 'excl. VAT')
 		},
 	},
 	methods: {

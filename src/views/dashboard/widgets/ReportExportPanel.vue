@@ -111,9 +111,9 @@ export default {
 		entityOptions() {
 			return [
 				{ value: 'leads', label: this.t('pipelinq', 'Leads') },
-				{ value: 'requests', label: this.t('pipelinq', 'Verzoeken') },
-				{ value: 'contactmomenten', label: this.t('pipelinq', 'Contactmomenten') },
-				{ value: 'satisfaction', label: this.t('pipelinq', 'Tevredenheidsscores') },
+				{ value: 'requests', label: this.t('pipelinq', 'Requests') },
+				{ value: 'contactmomenten', label: this.t('pipelinq', 'Contact moments') },
+				{ value: 'satisfaction', label: this.t('pipelinq', 'Satisfaction scores') },
 			]
 		},
 		periodOptions() {

@@ -24,23 +24,23 @@
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
 			<section class="z-report-section__block">
-				<h4>{{ t('pipelinq', 'Boekhoudkundige status') }}</h4>
+				<h4>{{ t('pipelinq', 'Accounting status') }}</h4>
 				<div class="info-grid">
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Inboekstatus shillinq') }}</label>
+						<label>{{ t('pipelinq', 'shillinq posting status') }}</label>
 						<CnStatusBadge
 							data-testid="pos-eod-bookkeeping-status"
 							:value="zReport.bookkeepingStatus || 'pending'"
 							:label="bookkeepingStatusLabel" />
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Shillinq journaalpost-id') }}</label>
+						<label>{{ t('pipelinq', 'Shillinq journal entry id') }}</label>
 						<code v-if="zReport.shillinqJournalEntryId" data-testid="pos-eod-journal-id">{{ zReport.shillinqJournalEntryId }}</code>
 						<span v-else>—</span>
 					</div>
 				</div>
 				<p class="z-report-section__hint">
-					{{ t('pipelinq', 'Het grootboek, de BTW-boeking en de journaalpost worden beheerd in shillinq. Pipelinq raise alleen de bedrijfsfeiten van deze POS-dag via de integratie-registry.') }}
+					{{ t('pipelinq', 'The general ledger, the VAT posting and the journal entry are managed in shillinq. Pipelinq only raises the business facts of this POS day via the integration registry.') }}
 				</p>
 				<NcButton
 					v-if="canRetry"
@@ -48,18 +48,18 @@
 					:disabled="busy"
 					data-testid="pos-eod-retry"
 					@click="confirmAndRetry">
-					{{ t('pipelinq', 'Opnieuw raisen bij shillinq') }}
+					{{ t('pipelinq', 'Re-raise at shillinq') }}
 				</NcButton>
 			</section>
 
 			<section class="z-report-section__block">
-				<h4>{{ t('pipelinq', 'BTW uitsplitsing') }}</h4>
+				<h4>{{ t('pipelinq', 'VAT breakdown') }}</h4>
 				<table class="z-report-section__table" data-testid="z-report-tax-table">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Tarief') }}</th>
-							<th>{{ t('pipelinq', 'Basis') }}</th>
-							<th>{{ t('pipelinq', 'BTW') }}</th>
+							<th>{{ t('pipelinq', 'Rate') }}</th>
+							<th>{{ t('pipelinq', 'Base') }}</th>
+							<th>{{ t('pipelinq', 'VAT') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -70,7 +70,7 @@
 						</tr>
 						<tr v-if="!taxBreakdown.length">
 							<td colspan="3">
-								{{ t('pipelinq', 'Geen BTW uitsplitsing — leeg report.') }}
+								{{ t('pipelinq', 'No VAT breakdown — empty report.') }}
 							</td>
 						</tr>
 					</tbody>
@@ -78,12 +78,12 @@
 			</section>
 
 			<section class="z-report-section__block">
-				<h4>{{ t('pipelinq', 'Betaalmethoden') }}</h4>
+				<h4>{{ t('pipelinq', 'Payment methods') }}</h4>
 				<table class="z-report-section__table" data-testid="z-report-payment-table">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Methode') }}</th>
-							<th>{{ t('pipelinq', 'Bedrag') }}</th>
+							<th>{{ t('pipelinq', 'Method') }}</th>
+							<th>{{ t('pipelinq', 'Amount') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -93,7 +93,7 @@
 						</tr>
 						<tr v-if="!paymentBreakdown.length">
 							<td colspan="2">
-								{{ t('pipelinq', 'Geen betaalmethode data.') }}
+								{{ t('pipelinq', 'No payment method data.') }}
 							</td>
 						</tr>
 					</tbody>
@@ -112,9 +112,9 @@ import { formatEur } from '../../services/posTotals.js'
 import { raiseJournalEntry } from '../../services/posBookkeepingApi.js'
 
 const BOOKKEEPING_STATUS_LABELS = {
-	pending: 'In wachtrij',
-	raised: 'Geraised in shillinq',
-	failed: 'Raise gefaald',
+	pending: 'Queued',
+	raised: 'Raised in shillinq',
+	failed: 'Raise failed',
 }
 
 export default {
@@ -200,7 +200,7 @@ export default {
 			try {
 				this.zReport = await this.objectStore.fetchObject('posZReport', this.resolvedId) || {}
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Z-report niet kunnen laden.'))
+				showError(err?.response?.data?.error || t('pipelinq', 'Could not load Z-report.'))
 			} finally {
 				this.loading = false
 			}
@@ -212,7 +212,7 @@ export default {
 			if (!this.resolvedId) {
 				return
 			}
-			if (!window.confirm(t('pipelinq', 'Journaalpost opnieuw raisen bij shillinq? Dit gebruikt dezelfde idempotency key, dus shillinq voorkomt dubbele boekingen.'))) {
+			if (!window.confirm(t('pipelinq', 'Re-raise journal entry at shillinq? This uses the same idempotency key, so shillinq prevents duplicate postings.'))) {
 				return
 			}
 			this.busy = true
@@ -221,10 +221,10 @@ export default {
 				if (updated) {
 					this.zReport = updated
 				}
-				showSuccess(t('pipelinq', 'Journaalpost geraised bij shillinq.'))
+				showSuccess(t('pipelinq', 'Journal entry raised at shillinq.'))
 				await this.load()
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Raise mislukt.'))
+				showError(err?.response?.data?.error || t('pipelinq', 'Raise failed.'))
 			} finally {
 				this.busy = false
 			}

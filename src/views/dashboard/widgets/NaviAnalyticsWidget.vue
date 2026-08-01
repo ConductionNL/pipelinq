@@ -77,7 +77,7 @@
 			<NcTextField
 				:value.sync="query"
 				:label="t('pipelinq', 'Ask Navi a question')"
-				:placeholder="t('pipelinq', 'e.g. Hoeveel leads zijn er deze maand gewonnen?')"
+				:placeholder="t('pipelinq', 'e.g. How many leads were won this month?')"
 				class="navi-widget__input" />
 			<NcButton
 				type="primary"

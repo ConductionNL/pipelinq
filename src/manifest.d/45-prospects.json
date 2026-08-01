@@ -3,7 +3,7 @@
 		{
 			"id": "Prospects",
 			"label": "Prospects",
-			"icon": "icon-search",
+			"icon": "AccountSearchOutline",
 			"route": "Prospects",
 			"order": 45
 		}

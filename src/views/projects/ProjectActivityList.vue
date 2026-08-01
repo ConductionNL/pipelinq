@@ -14,32 +14,32 @@
 	<div class="project-activity-list">
 		<div class="project-activity-list__header">
 			<NcButton @click="$router.push({ name: 'ProjectDetail', params: { id: projectId } })">
-				{{ t('pipelinq', 'Terug naar project') }}
+				{{ t('pipelinq', 'Back to project') }}
 			</NcButton>
 			<h2>
-				{{ t('pipelinq', 'Tijdregistraties') }}
+				{{ t('pipelinq', 'Time entries') }}
 				<small v-if="projectData.name">— {{ projectData.name }}</small>
 			</h2>
 		</div>
 
 		<div class="filters">
 			<label>
-				{{ t('pipelinq', 'Vanaf') }}
+				{{ t('pipelinq', 'From') }}
 				<input v-model="filters.from" type="date">
 			</label>
 			<label>
-				{{ t('pipelinq', 'Tot') }}
+				{{ t('pipelinq', 'To') }}
 				<input v-model="filters.to" type="date">
 			</label>
 			<label>
-				{{ t('pipelinq', 'Gebruiker') }}
+				{{ t('pipelinq', 'User') }}
 				<input v-model="filters.user" type="text" :placeholder="t('pipelinq', 'UID')">
 			</label>
 			<label>
-				{{ t('pipelinq', 'Taak') }}
+				{{ t('pipelinq', 'Task') }}
 				<select v-model="filters.task">
 					<option value="">
-						{{ t('pipelinq', 'Alle taken') }}
+						{{ t('pipelinq', 'All tasks') }}
 					</option>
 					<option v-for="task in tasks" :key="task.id" :value="task.id">
 						{{ task.name || task.id }}
@@ -47,39 +47,39 @@
 				</select>
 			</label>
 			<label>
-				{{ t('pipelinq', 'Factureerbaar') }}
+				{{ t('pipelinq', 'Billable') }}
 				<select v-model="filters.billable">
 					<option value="">
-						{{ t('pipelinq', 'Alle') }}
+						{{ t('pipelinq', 'All') }}
 					</option>
 					<option value="yes">
-						{{ t('pipelinq', 'Alleen factureerbaar') }}
+						{{ t('pipelinq', 'Billable only') }}
 					</option>
 					<option value="no">
-						{{ t('pipelinq', 'Alleen niet-factureerbaar') }}
+						{{ t('pipelinq', 'Non-billable only') }}
 					</option>
 				</select>
 			</label>
 		</div>
 
 		<div v-if="loading" class="loading-state">
-			{{ t('pipelinq', 'Laden…') }}
+			{{ t('pipelinq', 'Loading…') }}
 		</div>
 		<div v-else-if="filteredActivities.length === 0" class="empty-state">
-			{{ t('pipelinq', 'Geen tijdregistraties gevonden.') }}
+			{{ t('pipelinq', 'No time entries found.') }}
 		</div>
 		<div v-else class="table-wrap">
 			<table class="activity-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Datum') }}</th>
-						<th>{{ t('pipelinq', 'Gebruiker') }}</th>
-						<th>{{ t('pipelinq', 'Taak') }}</th>
-						<th>{{ t('pipelinq', 'Omschrijving') }}</th>
+						<th>{{ t('pipelinq', 'Date') }}</th>
+						<th>{{ t('pipelinq', 'User') }}</th>
+						<th>{{ t('pipelinq', 'Task') }}</th>
+						<th>{{ t('pipelinq', 'Description') }}</th>
 						<th class="numeric">
-							{{ t('pipelinq', 'Duur') }}
+							{{ t('pipelinq', 'Duration') }}
 						</th>
-						<th>{{ t('pipelinq', 'Factureerbaar') }}</th>
+						<th>{{ t('pipelinq', 'Billable') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -93,22 +93,22 @@
 						</td>
 						<td>
 							<span :class="['billable-dot', resolveBillable(row) ? 'billable-dot--on' : 'billable-dot--off']" />
-							{{ resolveBillable(row) ? t('pipelinq', 'Factureerbaar') : t('pipelinq', 'Niet-factureerbaar') }}
+							{{ resolveBillable(row) ? t('pipelinq', 'Billable') : t('pipelinq', 'Non-billable') }}
 						</td>
 					</tr>
 				</tbody>
 				<tfoot>
 					<tr>
 						<td colspan="4" class="totals-label">
-							{{ t('pipelinq', 'Totaal') }}
+							{{ t('pipelinq', 'Total') }}
 						</td>
 						<td class="numeric">
 							{{ formatHours(totals.total) }}
 						</td>
 						<td>
-							{{ t('pipelinq', 'Factureerbaar') }}: {{ formatHours(totals.billable) }}
+							{{ t('pipelinq', 'Billable') }}: {{ formatHours(totals.billable) }}
 							·
-							{{ t('pipelinq', 'Niet-factureerbaar') }}: {{ formatHours(totals.nonBillable) }}
+							{{ t('pipelinq', 'Non-billable') }}: {{ formatHours(totals.nonBillable) }}
 						</td>
 					</tr>
 				</tfoot>

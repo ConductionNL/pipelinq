@@ -3,7 +3,7 @@
 		{
 			"id": "Contracts",
 			"label": "Contracts",
-			"icon": "icon-category-organization",
+			"icon": "FileSign",
 			"route": "Contracts",
 			"order": 52
 		}

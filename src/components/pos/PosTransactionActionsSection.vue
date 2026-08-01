@@ -36,36 +36,36 @@
 					type="primary"
 					:disabled="busy || lineCount === 0"
 					@click="confirm">
-					{{ t('pipelinq', 'Bevestigen') }}
+					{{ t('pipelinq', 'Confirm') }}
 				</NcButton>
 				<NcButton v-if="canPark"
 					type="secondary"
 					:disabled="busy"
 					@click="park">
-					{{ t('pipelinq', 'Parkeren') }}
+					{{ t('pipelinq', 'Park') }}
 				</NcButton>
 				<NcButton v-if="canResume"
 					type="primary"
 					:disabled="busy"
 					@click="resume">
-					{{ t('pipelinq', 'Hervatten') }}
+					{{ t('pipelinq', 'Resume') }}
 				</NcButton>
 				<NcButton v-if="canSettle"
 					type="primary"
 					:disabled="busy"
 					@click="settle">
-					{{ t('pipelinq', 'Afrekenen') }}
+					{{ t('pipelinq', 'Check out') }}
 				</NcButton>
 				<NcButton v-if="canRegisterReturn"
 					type="secondary"
 					@click="registerReturn">
-					{{ t('pipelinq', 'Retour registreren') }}
+					{{ t('pipelinq', 'Register refund') }}
 				</NcButton>
 				<NcButton v-if="canRefund"
 					type="error"
 					:disabled="busy"
 					@click="showRefund = true">
-					{{ t('pipelinq', 'Terugboeken') }}
+					{{ t('pipelinq', 'Reverse') }}
 				</NcButton>
 				<NcButton v-if="canIssueReceipt"
 					type="secondary"
@@ -95,7 +95,7 @@
 
 			<CnDetailCard
 				v-if="hasPaymentInfo"
-				:title="t('pipelinq', 'Betaling')">
+				:title="t('pipelinq', 'Payment')">
 				<PaymentStatusCard
 					:transaction="transaction"
 					:is-manager="canRefund"

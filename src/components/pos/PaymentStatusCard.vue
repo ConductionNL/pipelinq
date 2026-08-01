@@ -12,7 +12,7 @@
 <template>
 	<div class="payment-status-card">
 		<header class="payment-status-card__header">
-			<h3>{{ t('pipelinq', 'Betaling') }}</h3>
+			<h3>{{ t('pipelinq', 'Payment') }}</h3>
 			<span :class="statusClass" class="payment-status-card__badge">{{ statusLabel }}</span>
 		</header>
 		<dl class="payment-status-card__grid">
@@ -21,11 +21,11 @@
 				<dd>{{ providerLabel }}</dd>
 			</template>
 			<template v-if="method">
-				<dt>{{ t('pipelinq', 'Methode') }}</dt>
+				<dt>{{ t('pipelinq', 'Method') }}</dt>
 				<dd>{{ methodLabel }}</dd>
 			</template>
 			<template v-if="sessionId">
-				<dt>{{ t('pipelinq', 'Sessie') }}</dt>
+				<dt>{{ t('pipelinq', 'Session') }}</dt>
 				<dd class="payment-status-card__session">
 					{{ sessionId }}
 				</dd>
@@ -38,21 +38,21 @@
 				type="primary"
 				:disabled="busy"
 				@click="onCapture">
-				{{ t('pipelinq', 'Afronden') }}
+				{{ t('pipelinq', 'Complete') }}
 			</NcButton>
 			<NcButton
 				v-if="canRefund"
 				type="warning"
 				:disabled="busy"
 				@click="onRefund">
-				{{ t('pipelinq', 'Terugboeken') }}
+				{{ t('pipelinq', 'Reverse') }}
 			</NcButton>
 			<NcButton
 				v-if="status === 'failed'"
 				type="secondary"
 				:disabled="busy"
 				@click="onRetry">
-				{{ t('pipelinq', 'Opnieuw proberen') }}
+				{{ t('pipelinq', 'Try again') }}
 			</NcButton>
 		</div>
 	</div>
@@ -103,9 +103,9 @@ export default {
 				ccv: 'CCV',
 				adyen: 'Adyen',
 				stripe: 'Stripe',
-				cash: t('pipelinq', 'Contant'),
-				voucher: t('pipelinq', 'Cadeaubon'),
-				account: t('pipelinq', 'Rekening'),
+				cash: t('pipelinq', 'Cash'),
+				voucher: t('pipelinq', 'Gift voucher'),
+				account: t('pipelinq', 'Account'),
 			}
 			return map[this.provider] || this.provider
 		},
@@ -113,21 +113,21 @@ export default {
 			const map = {
 				ideal: 'iDEAL',
 				bancontact: 'Bancontact',
-				card: t('pipelinq', 'Kaart'),
-				creditcard: t('pipelinq', 'Creditcard'),
-				cash: t('pipelinq', 'Contant'),
+				card: t('pipelinq', 'Card'),
+				creditcard: t('pipelinq', 'Credit card'),
+				cash: t('pipelinq', 'Cash'),
 			}
 			return map[this.method] || this.method
 		},
 		statusLabel() {
 			const map = {
-				pending: t('pipelinq', 'In behandeling'),
-				captured: t('pipelinq', 'Geautoriseerd'),
-				settled: t('pipelinq', 'Afgerekend'),
-				failed: t('pipelinq', 'Mislukt'),
-				refunded: t('pipelinq', 'Teruggeboekt'),
+				pending: t('pipelinq', 'In progress'),
+				captured: t('pipelinq', 'Authorized'),
+				settled: t('pipelinq', 'Settled'),
+				failed: t('pipelinq', 'Failed'),
+				refunded: t('pipelinq', 'Reversed'),
 			}
-			return map[this.status] || this.status || t('pipelinq', 'Onbekend')
+			return map[this.status] || this.status || t('pipelinq', 'Unknown')
 		},
 		statusClass() {
 			return {
@@ -151,23 +151,23 @@ export default {
 			try {
 				const result = await capturePayment(this.transaction.id || this.transaction['@self']?.id)
 				this.$emit('updated', result.transaction || result)
-				showSuccess(t('pipelinq', 'Betaling afgerond.'))
+				showSuccess(t('pipelinq', 'Payment completed.'))
 			} catch (e) {
-				showError(t('pipelinq', 'Afronden mislukt: {error}', { error: e.message || 'onbekend' }))
+				showError(t('pipelinq', 'Completion failed: {error}', { error: e.message || 'onbekend' }))
 			} finally {
 				this.busy = false
 			}
 		},
 		async onRefund() {
-			const reason = window.prompt(t('pipelinq', 'Reden voor terugboeking?'))
+			const reason = window.prompt(t('pipelinq', 'Reason for reversal?'))
 			if (!reason) return
 			this.busy = true
 			try {
 				const result = await refundPayment(this.transaction.id || this.transaction['@self']?.id, reason)
 				this.$emit('updated', result.transaction || result)
-				showSuccess(t('pipelinq', 'Betaling teruggeboekt.'))
+				showSuccess(t('pipelinq', 'Payment reversed.'))
 			} catch (e) {
-				showError(t('pipelinq', 'Terugboeken mislukt: {error}', { error: e.message || 'onbekend' }))
+				showError(t('pipelinq', 'Reversal failed: {error}', { error: e.message || 'onbekend' }))
 			} finally {
 				this.busy = false
 			}
