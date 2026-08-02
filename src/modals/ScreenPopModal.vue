@@ -81,16 +81,19 @@ export default {
 	margin-bottom: 12px;
 	color: var(--color-text-maxcontrast);
 }
+
 .screen-pop__table {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .screen-pop__table th,
 .screen-pop__table td {
 	padding: 8px 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .screen-pop__actions {
 	text-align: right;
 }

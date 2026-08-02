@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Service\Integration\Providers\MessageDispatchProvider;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -271,7 +272,11 @@ class MessagingService
             return ['reachable' => false, 'cause' => 'leaf-unavailable'];
         }
 
-        if (is_object($leaf) === false || method_exists($leaf, 'dispatch') === false) {
+        // Narrow with instanceof against the stubbed contract rather than method_exists:
+        // the same runtime guard for a soft dependency (false, not a fatal, when
+        // OpenRegister is absent) but one phpstan can narrow from, so the dispatch
+        // call below is genuinely type-checked instead of resolving to stdClass.
+        if (($leaf instanceof MessageDispatchProvider) === false) {
             return ['reachable' => false, 'cause' => 'leaf-unavailable'];
         }
 
@@ -283,10 +288,6 @@ class MessagingService
         } catch (Throwable $e) {
             $this->logger->warning('MessagingService.runProviderTest: dispatch threw', ['source' => $source, 'error' => $e->getMessage()]);
             return ['reachable' => false, 'cause' => 'dispatch-error'];
-        }
-
-        if (is_array($result) === false) {
-            return ['reachable' => false, 'cause' => 'unknown'];
         }
 
         if (($result['unavailable'] ?? false) === true) {

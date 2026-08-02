@@ -76,6 +76,7 @@ export default {
 	align-items: center;
 	gap: 4px;
 }
+
 .cti-click-to-dial__btn {
 	min-width: 24px;
 }

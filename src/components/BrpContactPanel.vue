@@ -217,49 +217,59 @@ export default {
 	flex-direction: column;
 	gap: var(--default-grid-baseline, 8px);
 }
+
 .brp-panel__bsn-row {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--default-grid-baseline, 8px);
 	align-items: flex-end;
 }
+
 .brp-panel__status {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	padding: 6px 0;
 }
+
 .brp-panel__status--error {
 	color: var(--color-error, #c2392a);
 }
+
 .brp-panel__persoon {
 	border-top: 1px solid var(--color-border, #e8e8e8);
 	margin-top: 8px;
 	padding-top: 8px;
 }
+
 .brp-panel__persoon-header {
 	display: flex;
 	gap: 8px;
 	align-items: center;
 	font-size: 1.05em;
 }
+
 .brp-panel__geheim-icon {
 	color: var(--color-error, #c2392a);
 	font-size: 1.2em;
 }
+
 .brp-panel__cache-badge {
 	font-size: 0.8em;
 	color: var(--color-text-maxcontrast, #767676);
 }
+
 .brp-panel__persoon-fields {
 	display: grid;
 	grid-template-columns: auto 1fr;
 	gap: 4px 12px;
 	margin: 8px 0;
 }
+
 .brp-panel__persoon-fields dt {
 	color: var(--color-text-maxcontrast, #767676);
 }
+
 .brp-panel__secret {
 	display: flex;
 	flex-direction: column;
@@ -268,6 +278,7 @@ export default {
 	background: var(--color-background-hover, #f5f5f5);
 	border-radius: 4px;
 }
+
 .brp-panel__address {
 	padding-top: 4px;
 }

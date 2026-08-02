@@ -342,7 +342,7 @@ class SmsAdapter
             return;
         }
 
-        if (is_object($auditor) === false || method_exists($auditor, 'recordOutboundMessage') === false) {
+        if (($auditor instanceof ContactmomentService) === false) {
             return;
         }
 
