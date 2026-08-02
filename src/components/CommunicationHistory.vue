@@ -301,11 +301,11 @@ export default {
 	font-size: var(--default-font-size, 14px);
 }
 
-::v-deep(.communication-history__row) {
+:deep(.communication-history__row) {
 	cursor: pointer;
 }
 
-::v-deep(.communication-history__row:hover) {
+:deep(.communication-history__row:hover) {
 	background-color: var(--color-background-hover);
 }
 </style>

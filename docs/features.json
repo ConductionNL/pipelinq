@@ -1,380 +1,247 @@
 [
   {
-    "slug": "activity-timeline",
-    "title": "activity-timeline",
-    "summary": "@e2e exclude backend service — activity entries are created by PHP event listeners and stored as OR objects; covered by PHPUnit",
-    "docsUrl": "openspec/specs/activity-timeline/spec.md"
+    "slug": "dutch-government-interop",
+    "title": "Dutch government interop",
+    "summary": "Connect to StUF, ZGW, BRP and KVK out of the box.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/brp-lookup/spec.md",
+    "title_nl": "Koppelen aan de overheid",
+    "summary_nl": "Koppel direct aan StUF, ZGW, BRP en KVK."
   },
   {
-    "slug": "admin-settings",
-    "title": "Admin Settings",
-    "summary": "The admin settings page provides a Nextcloud admin panel for configuring Pipelinq. Administrators can manage pipelines and their stages, set a default pipeline, configure lead source and request channel values, manage product categories, and configure prospect discovery (ICP) settings. Only Nextcloud admin users can access the admin settings page; regular users access per-user notification preferences via an in-app settings dialog. The design follows the wireframe in DESIGN-REFERENCES.md section 3.7.",
-    "docsUrl": "openspec/specs/admin-settings/spec.md"
-  },
-  {
-    "slug": "admin-settings-duplicate-prevention",
-    "title": "Spec: Admin Settings — Duplicate Prevention",
-    "summary": "Prevent administrators from creating duplicate tag values in the `TagManager` component used on the admin settings page (lead sources and request channels). Duplicate detection is case-insensitive and runs client-side before any emit. A clear error message is displayed when a duplicate is detected; no data is submitted.",
-    "docsUrl": "openspec/specs/admin-settings-duplicate-prevention/spec.md"
-  },
-  {
-    "slug": "appointment-booking",
-    "title": "appointment-booking",
-    "summary": "Provides end-to-end appointment booking with services, resources, and availability computation, plus a public self-service portal where customers book, reschedule, and cancel without logging in. Handles deposits, reminders, no-show tracking, walk-in queues, and bi-directional calendar sync, with confirmation emails, AVG-compliant retention, and admin management of services and bookings.",
-    "docsUrl": "openspec/specs/appointment-booking/spec.md"
-  },
-  {
-    "slug": "avg-verzoeken-workflow",
-    "title": "avg-verzoeken-workflow",
-    "summary": "Defines the handling of AVG (GDPR) data-subject requests — classification, 30-day deadline tracking, extensions, federated evidence collection, redaction, signed export bundles, denials, AP escalation, and retention. Every requirement is a handoff: pipelinq itself does not implement these workflows but delegates them to the canonical owners (docudesk, the AVG dossier capability, and rekenkamer-audit-pack), documenting the integration contracts those owners must satisfy.",
-    "docsUrl": "openspec/specs/avg-verzoeken-workflow/spec.md"
-  },
-  {
-    "slug": "callback-management",
-    "title": "Delta Spec: callback-management",
-    "summary": "Manage callback requests (terugbelverzoeken), follow-up tasks (opvolgtaken), and information requests (informatievragen) in Pipelinq via a `task` schema mapped to VNG `InterneTaak` and Schema.org `Action`. The capability lets agents register, assign, schedule, and track these tasks through to completion.",
-    "docsUrl": "openspec/specs/callback-management/spec.md"
+    "slug": "self-hosted-open-source",
+    "title": "Self-hosted and open-source",
+    "summary": "Own your customer data, with no per-seat licence.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/self-hosted-open-source/spec.md",
+    "title_nl": "Zelf gehost en open source",
+    "summary_nl": "Je houdt je klantdata zelf in beheer, zonder licentie per gebruiker."
   },
   {
     "slug": "client-management",
-    "title": "Client Management",
-    "summary": "Client management is the core capability of Pipelinq. A client represents a person or organization that the team has a relationship with. Contact persons are individuals linked to organization clients, qualified by role. This specification covers client and contact person CRUD, list views with search/sort/filter, the client detail view (info panel, summary stats, contact persons, leads, requests, activity timeline), validation rules, Nextcloud Contacts sync, and future capabilities such as duplicate detection and import/export.",
-    "docsUrl": "openspec/specs/client-management/spec.md"
-  },
-  {
-    "slug": "commercial-dashboard",
-    "title": "commercial-dashboard",
-    "summary": "Provides a commercial overview dashboard as the default landing page, showing revenue, won value, win rate, average deal size, weighted forecast, and open pipeline value alongside trend charts and closing-soon/recently-won deal tables. Backed by an authenticated analytics endpoint and a seeded demo dataset, it splits commercial KPIs from the operational widgets, which move to a dedicated Operational overview.",
-    "docsUrl": "openspec/specs/commercial-dashboard/spec.md"
-  },
-  {
-    "slug": "contact-relationship-mapping",
-    "title": "Contact Relationship Mapping",
-    "summary": "@e2e exclude backend data model — contact relationship entity and inverse-link logic are OR-object CRUD; covered by PHPUnit",
-    "docsUrl": "openspec/specs/contact-relationship-mapping/spec.md"
-  },
-  {
-    "slug": "contactmomenten-rapportage",
-    "title": "Contactmomenten Rapportage",
-    "summary": "Contactmoment analytics dashboard at /rapportage/contactmomenten with volume and channel reporting; covered by Playwright (tests/e2e/rapportage.spec.ts)",
-    "docsUrl": "openspec/specs/contactmomenten-rapportage/spec.md"
-  },
-  {
-    "slug": "contacts-sync",
-    "title": "Contacts Sync",
-    "summary": "@e2e exclude backend integration — vCard sync via Nextcloud IManager is a PHP service; covered by PHPUnit",
-    "docsUrl": "openspec/specs/contacts-sync/spec.md"
-  },
-  {
-    "slug": "crm-workflow-automation",
-    "title": "crm-workflow-automation",
-    "summary": "@e2e exclude draft/unbuilt spec — n8n workflow automation UI bridge not yet implemented; no UI surface to test",
-    "docsUrl": "openspec/specs/crm-workflow-automation/spec.md"
-  },
-  {
-    "slug": "cti-screenpop-adapter",
-    "title": "cti-screenpop-adapter",
-    "summary": "Integrates pipelinq with telephony platforms so inbound calls screen-pop the caller's CRM record and phone fields offer one-click click-to-dial. Every call creates a contactmoment with disposition workflow, recording metadata, and agent presence sync, via a pluggable per-platform adapter (CallVoip, RingCentral, Asterisk) with verified webhooks, plus admin configuration and an event log.",
-    "docsUrl": "openspec/specs/cti-screenpop-adapter/spec.md"
-  },
-  {
-    "slug": "dashboard",
-    "title": "Dashboard",
-    "summary": "The Pipelinq CRM dashboard provides an at-a-glance overview of key performance indicators, pipeline health, assigned work, and client activity. It uses the `CnDashboardPage` component from `@conduction/nextcloud-vue` for a configurable grid layout and integrates with the Nextcloud Dashboard Widget API (`OCP\\Dashboard\\IWidget`) for platform-level widget exposure.",
-    "docsUrl": "openspec/specs/dashboard/spec.md"
-  },
-  {
-    "slug": "docs-product-pages-conformance",
-    "title": "docs-product-pages-conformance",
-    "summary": "Bring the Pipelinq documentation site into conformance with the `@conduction/docusaurus-preset` product-pages standard: a canonical folder taxonomy, an installation guide, a Redocusaurus `/api` mount, an `nl` locale, and consistent typography. Conformance is a docs-site structure concern verified by CI file-tree checks, not a Nextcloud app UI.",
-    "docsUrl": "openspec/specs/docs-product-pages-conformance/spec.md"
-  },
-  {
-    "slug": "email-calendar-sync",
-    "title": "email-calendar-sync",
-    "summary": "@e2e exclude backend integration — email and calendar sync run as PHP services (EmailSyncService, CalendarSyncService, EmailMatchJob) with a SyncSettings surface; covered by PHPUnit",
-    "docsUrl": "openspec/specs/email-calendar-sync/spec.md"
-  },
-  {
-    "slug": "entity-notes",
-    "title": "Entity Notes",
-    "summary": "@e2e exclude backend integration — notes use Nextcloud ICommentsManager; entity detail tabs unbuilt as standalone UI surface; covered by PHPUnit",
-    "docsUrl": "openspec/specs/entity-notes/spec.md"
-  },
-  {
-    "slug": "kcc-werkplek",
-    "title": "KCC Werkplek",
-    "summary": "Shipped as the Customer Support workspace: the KccWerkplek nav host groups tickets, tasks, contactmomenten, complaints, projects, my-work and queues into one agent surface (IA revision 2026-07, src/menu-layout.json + src/views/werkplek)",
-    "docsUrl": "openspec/specs/kcc-werkplek/spec.md"
-  },
-  {
-    "slug": "klachtenregistratie",
-    "title": "Klachtenregistratie (Complaint Registration) — Delta Spec",
-    "summary": "@e2e exclude backend delta spec — complaint schema and SLA logic are OR-object CRUD and PHP service; covered by PHPUnit",
-    "docsUrl": "openspec/specs/klachtenregistratie/spec.md"
-  },
-  {
-    "slug": "lead-management",
-    "title": "Lead Management",
-    "summary": "Lead management handles sales opportunities -- from first contact through to won or lost. A lead is a unified entity (no separate Opportunity split) that flows through configurable pipeline stages. Pipeline stages encode qualification level, making a separate conversion step unnecessary.",
-    "docsUrl": "openspec/specs/lead-management/spec.md"
-  },
-  {
-    "slug": "lead-product-link",
-    "title": "Lead-Product Link",
-    "summary": "@e2e exclude backend data model — lead-product line items are OR-object CRUD; product-attachment UI not yet exposed as a testable standalone surface; covered by PHPUnit",
-    "docsUrl": "openspec/specs/lead-product-link/spec.md"
-  },
-  {
-    "slug": "marketing-analytics",
-    "title": "marketing-analytics",
-    "summary": "Provides a marketing performance dashboard that reports per-blast delivery metrics, A/B click-rate significance via a chi-square test, and revenue attribution. It surfaces an overview table of recent blasts (open/click rates, unsubscribes), an A/B testing tab with statistical significance once each arm reaches sufficient volume, and an attribution tab summing attributed deal value per blast.",
-    "docsUrl": "openspec/specs/marketing-analytics/spec.md"
-  },
-  {
-    "slug": "marketing-api",
-    "title": "marketing-api",
-    "summary": "Exposes the REST API for marketing blasts, segments, and campaign templates with standard CRUD, pagination, and filtering. It derives user identity from the server session rather than trusting the request body, validates segment rule trees and template compliance before saving, and returns generic error messages that do not leak internal details.",
-    "docsUrl": "openspec/specs/marketing-api/spec.md"
-  },
-  {
-    "slug": "marketing-blast",
-    "title": "marketing-blast",
-    "summary": "Sends marketing email blasts to contact segments, dispatching through openconnector's per-tenant send-mail provider so provider credentials never live in pipelinq code. It supports deterministic A/B splitting (each contact always gets the same variant), respects per-source rate limits, and creates revenue attribution links that join blasts to closed deals with first-click timestamps and attributed value.",
-    "docsUrl": "openspec/specs/marketing-blast/spec.md"
-  },
-  {
-    "slug": "marketing-blast-delivery",
-    "title": "marketing-blast-delivery",
-    "summary": "Drives blast delivery via a background job that dispatches queued sends every few minutes and processes provider webhooks without one blast's failure aborting the others. It propagates unsubscribes to consent records within a minute, handles hard and soft bounces to protect sender reputation, and records click events (first-click time, clicked URLs, UTM campaign) for attribution.",
-    "docsUrl": "openspec/specs/marketing-blast-delivery/spec.md"
-  },
-  {
-    "slug": "marketing-compliance",
-    "title": "marketing-compliance",
-    "summary": "Enforces lawful-basis consent and anti-spam rules before a marketing blast can be sent. Blocks sends to contacts that lack a consent record for the target channel, requires an unsubscribe token and physical-address block on email templates, and propagates consent withdrawals from unsubscribes and hard bounces so queued deliveries are skipped.",
-    "docsUrl": "openspec/specs/marketing-compliance/spec.md"
-  },
-  {
-    "slug": "marketing-docs",
-    "title": "marketing-docs",
-    "summary": "Documents the marketing blast feature in the CHANGELOG and a user guide. The user guide covers creating segments and compliant templates, scheduling and sending blasts, A/B testing, and monitoring delivery and revenue attribution, and is available in Dutch and English.",
-    "docsUrl": "openspec/specs/marketing-docs/spec.md"
-  },
-  {
-    "slug": "marketing-segmentation",
-    "title": "marketing-segmentation",
-    "summary": "Provides rule-based audience segments for marketing blasts, composed from AND/OR rule trees whose leaf predicates are validated against the entity schema before save. Segments are evaluated dynamically at send time rather than frozen as static lists, so newly matching contacts are auto-included and deleted contacts drop out, and the register seeds realistic Dutch example data across the six marketing schemas.",
-    "docsUrl": "openspec/specs/marketing-segmentation/spec.md"
-  },
-  {
-    "slug": "marketing-testing",
-    "title": "marketing-testing",
-    "summary": "Defines the test coverage for the marketing blast services. PHPUnit unit tests cover rule validation and evaluation, consent gating, template validation and withdrawal, and send, dispatch, A/B, and throttle behaviour, and an end-to-end integration test exercises segment creation through blast send using the real ObjectService.",
-    "docsUrl": "openspec/specs/marketing-testing/spec.md"
-  },
-  {
-    "slug": "marketing-ui",
-    "title": "marketing-ui",
-    "summary": "Provides the marketing blast user interface: a SegmentBuilder for visually composing AND/OR rule trees with live validation and member-size estimates, a BlastForm wizard that walks the marketer through name, segment, template, channel, schedule, and A/B and gates sending on compliance, and a BlastMonitor that polls for real-time send progress, totals, and events and can cancel a sending blast.",
-    "docsUrl": "openspec/specs/marketing-ui/spec.md"
-  },
-  {
-    "slug": "marketing-verification",
-    "title": "marketing-verification",
-    "summary": "Defines the end-to-end verification and pre-merge checklist for the marketing blast feature. Requires the unit and integration suites to pass with at least 80% service coverage, the full draft-to-sent send workflow, compliance blocking, A/B, and unsubscribe behaviour to be verified, and a security checklist confirming pattern invariants such as ObjectService-only CRUD, consent gating on every send, and template enforcement.",
-    "docsUrl": "openspec/specs/marketing-verification/spec.md"
-  },
-  {
-    "slug": "master-data-management",
-    "title": "master-data-management",
-    "summary": "Maintains a single authoritative golden record per master entity by resolving conflicting attribute values through configurable per-source trust tiers, detecting deterministic and probabilistic duplicates, and providing reversible merge tooling with preview. Computes a data-quality score, records an audit trail of merges and gold-record mutations, executes AVG right-of-deletion, and publishes golden records to downstream apps via a read API and a retrying sync queue.",
-    "docsUrl": "openspec/specs/master-data-management/spec.md"
-  },
-  {
-    "slug": "my-work",
-    "title": "My Work (Werkvoorraad)",
-    "summary": "My Work provides a personal workload view aggregating all items assigned to the current user -- leads, requests, and optionally tasks from Procest. This is the user's daily productivity hub, showing what needs immediate attention, what is due soon, and what is upcoming. Items are organized into temporal groups (Overdue, Due This Week, Upcoming, No Due Date) and sorted by priority within each group.",
-    "docsUrl": "openspec/specs/my-work/spec.md"
-  },
-  {
-    "slug": "notifications-activity",
-    "title": "Notifications & Activity Stream",
-    "summary": "@e2e exclude backend notification engine — dispatch logic and OR activity stream events are PHP services; covered by PHPUnit",
-    "docsUrl": "openspec/specs/notifications-activity/spec.md"
-  },
-  {
-    "slug": "omnichannel-registratie",
-    "title": "Omnichannel Registratie",
-    "summary": "@e2e exclude draft/partial spec — channel-specific metadata form adaptations not yet built as separate UI surface; covered by contactmomenten UI tests",
-    "docsUrl": "openspec/specs/omnichannel-registratie/spec.md"
-  },
-  {
-    "slug": "openregister-integration",
-    "title": "OpenRegister Integration",
-    "summary": "@e2e exclude backend integration foundation — register schema init, Pinia store wiring, and OR API CRUD are PHP/JS infrastructure; covered by PHPUnit and unit tests",
-    "docsUrl": "openspec/specs/openregister-integration/spec.md"
+    "title": "Client and contact management",
+    "summary": "Keep every client and contact in one clean record.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/client-management/spec.md",
+    "providedBy": "openregister",
+    "title_nl": "Klant- en contactbeheer",
+    "summary_nl": "Je houdt elke klant en elk contact in een net dossier."
   },
   {
     "slug": "pipeline",
-    "title": "Pipeline & Kanban",
-    "summary": "Pipelines provide configurable kanban-style boards where leads and requests flow through ordered stages. A pipeline is comparable to Trello boards or Nextcloud Deck -- each pipeline has columns (stages) and cards (leads/requests). Both entity types can appear on the same pipeline, distinguished by visual badges. Pipelines are the primary visual workflow tool in Pipelinq.",
-    "docsUrl": "openspec/specs/pipeline/spec.md"
+    "title": "Sales pipeline",
+    "summary": "Drag deals across stages and see the value at every step.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/pipeline/spec.md",
+    "title_nl": "Verkooppijplijn",
+    "summary_nl": "Sleep deals door de fases en zie bij elke stap de waarde."
   },
   {
-    "slug": "pipeline-insights",
-    "title": "Pipeline Insights",
-    "summary": "Add temporal, financial, and analytical context to pipeline views so users can spot bottlenecks, prioritize overdue items, forecast revenue, and see conversion metrics at a glance. This spec covers both the real-time visual indicators on pipeline views and the analytical dashboard components for pipeline performance tracking.",
-    "docsUrl": "openspec/specs/pipeline-insights/spec.md"
-  },
-  {
-    "slug": "pipelinq-or-adoption",
-    "title": "Pipelinq OpenRegister-Adoption",
-    "summary": "Track the cross-cutting work that aligns pipelinq with the shared OpenRegister abstractions and multi-tenant deployment model. This slice covers Phase 7 (admin-config) and Phase 8 (manifest adoption). Phase 7 moves hardcoded constants (background-job timing, business hours, third-party API base URLs, cache TTL, default review intervals) into admin-config so they are tunable per deployment without code changes, while preserving current behavior for any install that leaves them unconfigured. Phase 8 ships the OpenSpec coordination manifest (`openspec/manifest.yaml`) declaring pipelinq's tier, OpenRegister dependency, the shared specs it consumes, the minimum OR version, and its object-store-exemplar role. The Phase 9 multi-tenancy + i18n runtime-adoption consumes are declared in the manifest; their runtime adoption is deferred until the nc-vue / OpenRegister prerequisites ship.",
-    "docsUrl": "openspec/specs/pipelinq-or-adoption/spec.md"
-  },
-  {
-    "slug": "pipelinq-pos-grouping",
-    "title": "pipelinq-pos-grouping",
-    "summary": "Organizes the point-of-sale and product navigation into coherent groups without changing any routes. Groups the till runtime leaves under a single \"Point of Sale\" entry, places product master data under a separate \"Catalog\" group, moves POS staff and role configuration into the Settings foldout, and keeps the pages array unchanged so every affected deep link still resolves.",
-    "docsUrl": "openspec/specs/pipelinq-pos-grouping/spec.md"
-  },
-  {
-    "slug": "pos-barcode-scan",
-    "title": "POS Barcode Scan (HID + camera)",
-    "summary": "Define the requirements for barcode input capture and product lookup in the pipelinq POS context. This spec covers HID keyboard-wedge detection, BarcodeDetector API camera scanning, product resolution (including variant-level), and error handling. The implementation provides a composable scanning layer (`useBarcodeScanner`, `useBarcodeProductLookup`) and a unified `BarcodeScanner.vue` component.",
-    "docsUrl": "openspec/specs/pos-barcode-scan/spec.md"
-  },
-  {
-    "slug": "pos-lifecycle-guard-adoption",
-    "title": "POS Lifecycle Guard Adoption",
-    "summary": "Move the POS transaction and refund lifecycles onto OpenRegister's declarative `x-openregister-lifecycle` machinery: route every state transition through `TransitionEngine`, enforce per-object authorization in `LifecycleGuardInterface` guards (closing the confirmed IDOR), and recompute totals server-side — removing the bespoke PHP state machines and the hand-rolled `isManager` check.",
-    "docsUrl": "openspec/specs/pos-lifecycle-guard-adoption/spec.md"
-  },
-  {
-    "slug": "pos-nl-btw-engine",
-    "title": "POS NL BTW Engine",
-    "summary": "Provide a server-side Dutch BTW (VAT) computation engine on top of pos-transaction-core: per-rate `taxBreakdown`/`invoiceBreakdown` (GL split with Dutch descriptions) for shillinq, end-to-end tax-inclusive vs tax-exclusive computation (`priceMode`, not display-only), a `GET /api/pos-transactions/tax-report` compliance endpoint, and a CloudEvent payload shillinq consumes for its general ledger.",
-    "docsUrl": "openspec/specs/pos-nl-btw-engine/spec.md"
-  },
-  {
-    "slug": "pos-product-catalogue",
-    "title": "POS Product Catalogue",
-    "summary": "Extend the existing `product` schema into a POS-grade product master (variants matrix, modifier groups, quantity price tiers, explicit Dutch BTW class, barcode/EAN, service duration) backed by a server-authoritative ProductCatalogService and Controller. These additions make the catalog usable as a POS product master for Shillinq and retail/salon POS integrations while preserving backward compatibility with the existing flat CRM product fields.",
-    "docsUrl": "openspec/specs/pos-product-catalogue/spec.md"
-  },
-  {
-    "slug": "pos-receipt-engine",
-    "title": "Spec: POS Receipt Engine",
-    "summary": "Enable printing and emailing of receipts from POS transactions to thermal printers and customer email addresses. Receipts are generated from customizable templates with optional legal invoice mode for Dutch VAT compliance on high-value transactions (≥ EUR 100).",
-    "docsUrl": "openspec/specs/pos-receipt-engine/spec.md"
-  },
-  {
-    "slug": "pos-transaction-core",
-    "title": "POS Transaction Core",
-    "summary": "Provide the core POS transaction model for Pipelinq: two OpenRegister schemas (`posTransaction` with the draft→parked→confirmed→settled→refunded lifecycle, per-rate tax breakdown and grand total; `posTransactionLine` with qty/discount/computed tax), a server-authoritative PosTransactionService (totals, lifecycle, CloudEvent to shillinq) and PosTransactionController, plus Vue list/detail/cart views.",
-    "docsUrl": "openspec/specs/pos-transaction-core/spec.md"
-  },
-  {
-    "slug": "product-catalog",
-    "title": "Product Catalog",
-    "summary": "@e2e exclude backend data model — product and category CRUD are OR-object operations; product CRUD UI is a future V1 surface not yet built; covered by PHPUnit",
-    "docsUrl": "openspec/specs/product-catalog/spec.md"
-  },
-  {
-    "slug": "product-catalog-quoting",
-    "title": "product-catalog-quoting",
-    "summary": "@e2e exclude draft/unbuilt spec — quote generation and PDF export not yet implemented; no UI surface to test",
-    "docsUrl": "openspec/specs/product-catalog-quoting/spec.md"
-  },
-  {
-    "slug": "product-service-catalog",
-    "title": "Product & Service Catalog (PDC)",
-    "summary": "@e2e exclude backend API spec — PDC public read-only API, UPL conformance, and zaaktype linking are backend/API concerns; covered by Newman and PHPUnit",
-    "docsUrl": "openspec/specs/product-service-catalog/spec.md"
-  },
-  {
-    "slug": "prometheus-metrics",
-    "title": "Prometheus Metrics Endpoint",
-    "summary": "@e2e exclude backend API endpoint — Prometheus metrics and health check are HTTP API concerns; no UI surface; covered by Newman",
-    "docsUrl": "openspec/specs/prometheus-metrics/spec.md"
-  },
-  {
-    "slug": "prospect-discovery",
-    "title": "Prospect Discovery",
-    "summary": "@e2e exclude backend API integration — KVK/OpenCorporates registry search and ICP scoring are PHP service calls; covered by PHPUnit and Newman",
-    "docsUrl": "openspec/specs/prospect-discovery/spec.md"
-  },
-  {
-    "slug": "public-intake-forms",
-    "title": "public-intake-forms",
-    "summary": "@e2e exclude draft/unbuilt spec — embeddable intake forms not yet implemented; no UI surface to test",
-    "docsUrl": "openspec/specs/public-intake-forms/spec.md"
-  },
-  {
-    "slug": "queue-management",
-    "title": "Queue Management",
-    "summary": "@e2e exclude backend data model — queue entity CRUD and routing logic are OR-object/PHP service; covered by PHPUnit",
-    "docsUrl": "openspec/specs/queue-management/spec.md"
-  },
-  {
-    "slug": "register-i18n",
-    "title": "Register Content Internationalization",
-    "summary": "@e2e exclude backend i18n infrastructure — translatable field storage, language fallback chain, and IL10N wiring are PHP/OR-object concerns; covered by PHPUnit",
-    "docsUrl": "openspec/specs/register-i18n/spec.md"
-  },
-  {
-    "slug": "register-i18n-locale-formatting",
-    "title": "Spec: Locale-Aware Formatting",
-    "summary": "Replace all hardcoded `nl-NL` locale formatting calls across Vue components with a shared `localeUtils.js` utility that respects the active Nextcloud user locale. Monetary values and dates must render correctly for any locale configured in the user's Nextcloud profile.",
-    "docsUrl": "openspec/specs/register-i18n-locale-formatting/spec.md"
+    "slug": "commercial-dashboard",
+    "title": "Commercial dashboard and forecast",
+    "summary": "See your weighted forecast and win rate at a glance.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/commercial-dashboard/spec.md",
+    "title_nl": "Commercieel dashboard en forecast",
+    "summary_nl": "Je ziet in een oogopslag je gewogen forecast en winkans."
   },
   {
     "slug": "request-management",
-    "title": "Request Management",
-    "summary": "Request management handles the intake and tracking of requests (verzoeken) — service inquiries that come in before they become formal cases. Requests are the bridge between Pipelinq (CRM) and Procest (case management). A request flows through a status lifecycle from intake to resolution or conversion, can optionally be placed on a pipeline alongside leads, and can be converted into a Procest case.",
-    "docsUrl": "openspec/specs/request-management/spec.md"
+    "title": "Verzoek and klacht intake",
+    "summary": "Take in requests and complaints and hand them to Procest.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/request-management/spec.md",
+    "title_nl": "Verzoek- en klachtafhandeling",
+    "summary_nl": "Je neemt verzoeken en klachten aan en geeft ze door aan Procest."
   },
   {
-    "slug": "skill-routing",
-    "title": "Skill-Based Routing",
-    "summary": "@e2e exclude backend routing engine — skill matching and advisory routing logic are PHP service operations; covered by PHPUnit",
-    "docsUrl": "openspec/specs/skill-routing/spec.md"
+    "slug": "kcc-werkplek",
+    "title": "KCC werkplek",
+    "summary": "Handle every klantcontact from one agent screen.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/kcc-werkplek/spec.md",
+    "title_nl": "KCC-werkplek",
+    "summary_nl": "Je handelt elk klantcontact af vanaf een agentscherm."
+  },
+  {
+    "slug": "contactmomenten-rapportage",
+    "title": "Contactmomenten and reporting",
+    "summary": "Log every interaction and report on contact volume.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/contactmomenten-rapportage/spec.md",
+    "title_nl": "Contactmomenten en rapportage",
+    "summary_nl": "Je legt elk contactmoment vast en rapporteert over het volume."
+  },
+  {
+    "slug": "omnichannel-registratie",
+    "title": "Omnichannel messaging",
+    "summary": "Register inbound and outbound WhatsApp and SMS messages, with consent logged automatically.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/omnichannel-registratie/spec.md",
+    "title_nl": "Omnichannel berichten",
+    "summary_nl": "Je registreert inkomende en uitgaande WhatsApp- en sms-berichten, met toestemming automatisch vastgelegd."
   },
   {
     "slug": "sla-engine-and-escalation",
-    "title": "sla-engine-and-escalation",
-    "summary": "Resolves an immutable SLA policy per tracked object at creation, computes holiday-aware and business-hours deadlines, and pauses and resumes timers on status changes. Drives an idempotent escalation chain across email, notification, WhatsApp, and webhook channels as deadlines are consumed, reconciles silent deadline crossings through a scheduled sweep job, exposes attainment reporting, and records an audited, justification-gated history of policy changes, integrating with OpenRegister object events rather than polling.",
-    "docsUrl": "openspec/specs/sla-engine-and-escalation/spec.md"
+    "title": "SLA and escalation",
+    "summary": "Meet deadlines with automatic timers and escalation.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/sla-engine-and-escalation/spec.md",
+    "title_nl": "SLA en escalatie",
+    "summary_nl": "Je haalt deadlines met automatische timers en escalatie."
   },
   {
-    "slug": "task-background-jobs",
-    "title": "task-background-jobs",
-    "summary": "Run the periodic background jobs that keep task state current without user interaction: a TimedJob that expires tasks past their deadline (status → \"verlopen\") and deadline-escalation notifications. These run in PHP cron with no UI surface and are covered by PHPUnit.",
-    "docsUrl": "openspec/specs/task-background-jobs/spec.md"
+    "slug": "contacts-sync",
+    "title": "Nextcloud Contacts sync",
+    "summary": "Sync clients two-way with your address book, no second silo.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/contacts-sync/spec.md",
+    "title_nl": "Synchroniseren met Contacten",
+    "summary_nl": "Je synchroniseert klanten beide kanten op met je adresboek, zonder tweede silo."
   },
   {
-    "slug": "time-approval-workflow",
-    "title": "Time Approval Workflow",
-    "summary": "The timesheet submit → approve → reject → lock → edit-request → invoice lifecycle is **delegated to shillinq**, not built in Pipelinq. The time-tracker leaf (`integration-time-tracker`) explicitly excludes approval + invoicing, and **hydra ADR-022** forbids an app building a parallel mechanism for a capability owned elsewhere in the fleet. Approval is the gate before billing, so it lives with billing in shillinq (see shillinq `invoice-from-time-and-expense`, `rate-card-management`, `wbso-uren-tagging-and-export`). Pipelinq captures hours via the leaf, links them to its objects via OpenRegister integration link tables. The handoff has a real emit (`time-billing-handoff-emit`): a manager-triggered, idempotent \"Send to billing\" batches a client's approved, un-billed entries per period and posts them same-instance to shillinq's `time-expense-invoice-intake` endpoint, behind an off-by-default flag (`shillinq_time_intake_enabled`); the deep-link to shillinq's billing/approval surface remains the fallback when shillinq is absent/disabled or the flag is off.",
-    "docsUrl": "openspec/specs/time-approval-workflow/spec.md"
+    "slug": "marketing-campaigns",
+    "title": "Marketing campaigns",
+    "summary": "Segment your audience and send measurable email blasts.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/marketing-blast/spec.md",
+    "title_nl": "Marketingcampagnes",
+    "summary_nl": "Je segmenteert je publiek en verstuurt meetbare e-mailcampagnes."
+  },
+  {
+    "slug": "loyalty-programme",
+    "title": "Loyalty programme",
+    "summary": "Reward returning customers with points, tiers and redemptions.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/loyalty-programme/spec.md",
+    "title_nl": "Loyaliteitsprogramma",
+    "summary_nl": "Je beloont terugkerende klanten met punten, niveaus en inwisselacties."
+  },
+  {
+    "slug": "point-of-sale",
+    "title": "Point of sale",
+    "summary": "Sell at the counter with a Dutch-BTW-correct kassa.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/pos-transaction-core/spec.md",
+    "title_nl": "Kassa",
+    "summary_nl": "Je verkoopt aan de balie met een BTW-correcte kassa."
+  },
+  {
+    "slug": "product-service-catalog",
+    "title": "Product and service catalogue",
+    "summary": "Manage your products and services in one catalogue.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/product-service-catalog/spec.md",
+    "title_nl": "Product- en dienstencatalogus",
+    "summary_nl": "Je beheert je producten en diensten in een catalogus."
+  },
+  {
+    "slug": "prospect-discovery",
+    "title": "Prospect discovery",
+    "summary": "Find new prospects from KVK and score them against your profile.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/prospect-discovery/spec.md",
+    "title_nl": "Prospects ontdekken",
+    "summary_nl": "Je vindt nieuwe prospects uit KVK en scoort ze tegen je profiel."
+  },
+  {
+    "slug": "contract-renewal-tracking",
+    "title": "Contract and renewal tracking",
+    "summary": "Never miss a renewal with automatic reminders.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/contract-renewal-tracking/spec.md",
+    "title_nl": "Contract- en verlengingsbeheer",
+    "summary_nl": "Je mist geen verlenging meer dankzij automatische herinneringen."
+  },
+  {
+    "slug": "master-data-management",
+    "title": "Master data management",
+    "summary": "Keep one golden customer record across your apps.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/master-data-management/spec.md",
+    "title_nl": "Masterdatabeheer",
+    "summary_nl": "Je houdt een gouden klantrecord over al je apps."
   },
   {
     "slug": "time-entry-core",
-    "title": "Time Entry Core",
-    "summary": "Pipelinq needs hour capture against clients, leads, projects and requests so that downstream billing (shillinq) and profitability analysis are possible. Per **hydra ADR-022** (apps consume OpenRegister abstractions over local duplication), Pipelinq **consumes** the OpenRegister **time-tracker leaf** (`integration-time-tracker`) for capture rather than building a bespoke time subsystem. The leaf provides hour capture as a reusable integration: `TimeProvider` + `TimeTrackerLinks{Controller,Service,Mapper}` (PHP, in OpenRegister) and `CnTimeTrackerTab` (quick-log form, entries grouped by user/date, total hours) + `CnTimeTrackerCard` widget (nextcloud-vue). The leaf is gated on the NC `timemanager` app and stores entries in an OR link table (`time entries linked to object/user`).",
-    "docsUrl": "openspec/specs/time-entry-core/spec.md"
+    "title": "Time capture",
+    "summary": "Log hours on clients and leads, billed in Shillinq.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/time-entry-core/spec.md",
+    "title_nl": "Urenregistratie",
+    "summary_nl": "Je schrijft uren op klanten en leads, gefactureerd in Shillinq."
   },
   {
-    "slug": "time-entry-mobile",
-    "title": "time-entry-mobile",
-    "summary": "Provides a mobile, installable PWA timer that captures hours offline and submits them to the OpenRegister time-tracker leaf rather than a Pipelinq schema. The mobile-specific layer is limited to a PWA shell, an IndexedDB offline buffer, and a sync queue that idempotently flushes buffered captures to the leaf on reconnect, renders responsively with touch-sized controls, and attaches optional GPS as leaf capture metadata.",
-    "docsUrl": "openspec/specs/time-entry-mobile/spec.md"
+    "slug": "warehouse-export",
+    "title": "Warehouse export",
+    "summary": "Send your CRM data to your own data warehouse.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/warehouse-export/spec.md",
+    "title_nl": "Datawarehouse-export",
+    "summary_nl": "Je stuurt je CRM-data naar je eigen datawarehouse."
   },
   {
-    "slug": "unify-client-contact",
-    "title": "unify-client-contact",
-    "summary": "Keys the `client` and `contact` records to a Nextcloud Contact via a required `contactsUid`, demoting their identity fields to denormalised read-only mirrors while keeping CRM and governance fields authoritative, and links `contactmoment` interactions to the party by `contactsUid`. Refreshes the mirrors through the existing contact-sync flow with the Nextcloud Contact as the source of truth, and provides an idempotent, non-destructive repair that resolves or creates contacts and re-keys existing objects while preserving all three people-surface nav entries and routes.",
-    "docsUrl": "openspec/specs/unify-client-contact/spec.md"
+    "slug": "avg-verzoeken-workflow",
+    "title": "AVG request tracking",
+    "summary": "Track AVG requests and deadlines; redaction runs in Docudesk.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/avg-verzoeken-workflow/spec.md",
+    "providedBy": "openregister",
+    "title_nl": "AVG-verzoeken volgen",
+    "summary_nl": "Je volgt AVG-verzoeken en deadlines; het lakken gebeurt in Docudesk."
+  },
+  {
+    "slug": "email-calendar-sync",
+    "title": "Email and calendar sync",
+    "summary": "Link your mailbox and calendar to contacts (early access).",
+    "status": "beta",
+    "docsUrl": "openspec/specs/email-calendar-sync/spec.md",
+    "title_nl": "E-mail- en agendakoppeling",
+    "summary_nl": "Je koppelt je mailbox en agenda aan contacten (vroege toegang)."
+  },
+  {
+    "slug": "appointment-booking",
+    "title": "Appointment booking",
+    "summary": "Book appointments with availability and reminders.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/appointment-booking/spec.md",
+    "title_nl": "Afspraken inplannen",
+    "summary_nl": "Je plant afspraken met beschikbaarheid en herinneringen."
+  },
+  {
+    "slug": "public-booking-portal",
+    "title": "Public booking portal",
+    "summary": "Let customers book and reschedule online themselves.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/public-booking-portal/spec.md",
+    "title_nl": "Publiek afsprakenportaal",
+    "summary_nl": "Je laat klanten zelf online boeken en verzetten."
+  },
+  {
+    "slug": "product-catalog-quoting",
+    "title": "Quoting",
+    "summary": "Turn a catalogue selection into a quote and PDF.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/product-catalog-quoting/spec.md",
+    "title_nl": "Offertes maken",
+    "summary_nl": "Je maakt van een catalogusselectie een offerte en pdf."
+  },
+  {
+    "slug": "public-intake-forms",
+    "title": "Self-service intake forms",
+    "summary": "Embed intake forms on your own website.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/public-intake-forms/spec.md",
+    "title_nl": "Zelfservice-intakeformulieren",
+    "summary_nl": "Je plaatst intakeformulieren op je eigen website."
+  },
+  {
+    "slug": "crm-workflow-automation",
+    "title": "Workflow automation",
+    "summary": "Trigger flows from CRM events.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/crm-workflow-automation/spec.md",
+    "title_nl": "Workflowautomatisering",
+    "summary_nl": "Je start flows vanuit CRM-gebeurtenissen."
   }
 ]
