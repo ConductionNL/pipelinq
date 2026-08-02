@@ -851,10 +851,13 @@
         "slug": "pipeline",
         "title": "Pipeline",
         "icon": "Pipe",
-        "version": "3.0.0",
+        "version": "3.1.0",
         "summary": "A thin CRM pipeline config mapping stage rules onto a Deck board",
         "description": "Represents a CRM pipeline configuration — maps pipeline stages to a Deck board and its stacks, preserving CRM-specific semantics (probability, won/closed/default flags) that Deck itself does not model. Board mechanics (columns, cards, drag-and-drop) are provided by the OpenRegister deck leaf. Mapped to Schema.org ItemList.",
         "x-schema-org": "schema:ItemList",
+        "configuration": {
+          "x-openregister-shareable": true
+        },
         "required": [
           "title",
           "stages"
