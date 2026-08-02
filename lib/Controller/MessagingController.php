@@ -39,7 +39,6 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
 
 /**
  * Outbound messaging controller.
@@ -65,7 +64,6 @@ class MessagingController extends Controller
      * @param ChannelProviderRepository $providerRepo     Provider read-side.
      * @param ConsentService            $consentService   Consent records.
      * @param IUserSession              $userSession      User session.
-     * @param LoggerInterface           $logger           Logger.
      */
     public function __construct(
         IRequest $request,
@@ -73,7 +71,6 @@ class MessagingController extends Controller
         private ChannelProviderRepository $providerRepo,
         private ConsentService $consentService,
         private IUserSession $userSession,
-        private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
@@ -130,7 +127,7 @@ class MessagingController extends Controller
             clientId: $clientId
         );
 
-        return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string) ($outcome['status'] ?? '')));
+        return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string) $outcome['status']));
     }//end send()
 
     /**
