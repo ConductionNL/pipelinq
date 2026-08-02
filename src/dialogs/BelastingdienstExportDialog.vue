@@ -159,7 +159,7 @@ export default {
 	font-size: 13px;
 }
 
-.form-row input[type="date"] {
+.form-row input[type='date'] {
 	padding: 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);

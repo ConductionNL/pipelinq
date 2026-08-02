@@ -72,7 +72,7 @@
 	margin-bottom: 1rem;
 }
 
-.portal-tabs [role="tab"] {
+.portal-tabs [role='tab'] {
 	background: none;
 	border: none;
 	padding: .5rem 1rem;
@@ -81,7 +81,7 @@
 	border-bottom: 3px solid transparent;
 }
 
-.portal-tabs [role="tab"][aria-selected="true"],
+.portal-tabs [role='tab'][aria-selected='true'],
 .portal-tabs .portal-tab-active {
 	border-bottom-color: var(--portal-brand-primary, #21468B);
 	font-weight: 600;
@@ -90,7 +90,7 @@
 /* Always-visible focus indicator on portal interactive elements. The
  * portal-app focus-visible rule in PortalApp.vue only reaches the parent
  * shell; this rule covers the router-view children. */
-.portal-tabs [role="tab"]:focus-visible,
+.portal-tabs [role='tab']:focus-visible,
 .portal-button-primary:focus-visible,
 .portal-button-danger:focus-visible,
 .portal-button-link:focus-visible {

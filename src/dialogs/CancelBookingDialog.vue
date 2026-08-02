@@ -49,14 +49,17 @@ export default {
 .cancel-form {
 	padding: 8px 0;
 }
+
 .form-group {
 	margin-top: 12px;
 }
+
 .form-group label {
 	display: block;
 	font-weight: bold;
 	margin-bottom: 4px;
 }
+
 .form-group textarea {
 	width: 100%;
 	padding: 8px;
