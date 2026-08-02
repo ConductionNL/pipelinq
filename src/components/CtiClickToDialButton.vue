@@ -12,7 +12,7 @@
 		<a :href="'tel:' + targetNumber" class="cti-click-to-dial__number">{{ targetNumber }}</a>
 		<NcButton
 			v-if="enabled"
-			type="tertiary-no-background"
+			variant="tertiary-no-background"
 			:aria-label="t('pipelinq', 'Call {number}', { number: targetNumber })"
 			:disabled="dialing"
 			class="cti-click-to-dial__btn"

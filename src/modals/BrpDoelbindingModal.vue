@@ -47,7 +47,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!valid" @click="submit">
+			<NcButton variant="primary" :disabled="!valid" @click="submit">
 				{{ t('pipelinq', 'Retrieve') }}
 			</NcButton>
 		</template>

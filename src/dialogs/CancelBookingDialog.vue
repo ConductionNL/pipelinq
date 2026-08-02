@@ -25,7 +25,7 @@
 			<NcButton @click="$emit('cancel')">
 				{{ t('pipelinq', 'Back') }}
 			</NcButton>
-			<NcButton type="error" @click="$emit('confirm', reason)">
+			<NcButton variant="error" @click="$emit('confirm', reason)">
 				{{ t('pipelinq', 'Cancel booking') }}
 			</NcButton>
 		</template>

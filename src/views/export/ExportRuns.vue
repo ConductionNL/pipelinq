@@ -24,7 +24,7 @@
 			<template #row-actions="{ row }">
 				<NcButton
 					v-if="canRetry(row)"
-					type="tertiary"
+					variant="tertiary"
 					:disabled="busyId === row.id"
 					@click.stop="retry(row)">
 					{{ t('pipelinq', 'Retry') }}

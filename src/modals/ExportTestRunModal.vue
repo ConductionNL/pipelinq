@@ -48,10 +48,10 @@
 			</NcNoteCard>
 		</div>
 		<template #actions>
-			<NcButton :disabled="busy" type="tertiary" @click="rerun">
+			<NcButton :disabled="busy" variant="tertiary" @click="rerun">
 				{{ t('pipelinq', 'Run again') }}
 			</NcButton>
-			<NcButton type="primary" @click="$emit('close')">
+			<NcButton variant="primary" @click="$emit('close')">
 				{{ t('pipelinq', 'Close') }}
 			</NcButton>
 		</template>

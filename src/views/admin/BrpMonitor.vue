@@ -71,7 +71,7 @@
 		</div>
 
 		<div class="brp-monitor__actions">
-			<NcButton type="secondary" :disabled="loading" @click="load">
+			<NcButton variant="secondary" :disabled="loading" @click="load">
 				{{ t('pipelinq', 'Refresh') }}
 			</NcButton>
 		</div>

@@ -1,7 +1,7 @@
 <template>
 	<div class="create-lead-widget">
 		<div v-if="!success" class="widget-form">
-			<NcTextField :value.sync="form.title"
+			<NcTextField v-model="form.title"
 				:label="t('pipelinq', 'Title')"
 				:placeholder="t('pipelinq', 'Lead title (required) — press Enter for quick add')"
 				:error="submitted && !form.title"
@@ -20,7 +20,7 @@
 				track-by="id"
 				input-id="lead-pipeline" />
 
-			<NcTextField :value.sync="form.value"
+			<NcTextField v-model="form.value"
 				:label="t('pipelinq', 'Value')"
 				:placeholder="t('pipelinq', 'Estimated value (EUR)')"
 				type="number" />
@@ -31,7 +31,7 @@
 				:placeholder="t('pipelinq', 'Source')"
 				input-id="lead-source" />
 
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="submitting"
 				@click="onSubmit">
 				{{ submitting ? t('pipelinq', 'Creating...') : t('pipelinq', 'Create lead') }}
@@ -43,7 +43,7 @@
 				{{ t('pipelinq', 'Lead created!') }}
 				<a :href="successLink">{{ t('pipelinq', 'View lead') }}</a>
 			</NcNoteCard>
-			<NcButton type="secondary" @click="resetForm">
+			<NcButton variant="secondary" @click="resetForm">
 				{{ t('pipelinq', 'Create another') }}
 			</NcButton>
 		</div>

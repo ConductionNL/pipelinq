@@ -13,14 +13,14 @@
 					:options="programmeOptions"
 					label="label"
 					:clearable="false"
-					@input="loadKpis" />
+					@update:model-value="loadKpis" />
 				<NcSelect
 					v-model="selectedPeriod"
 					:input-label="t('pipelinq', 'Period')"
 					:options="periodOptions"
 					label="label"
 					:clearable="false"
-					@input="loadKpis" />
+					@update:model-value="loadKpis" />
 			</div>
 		</div>
 
@@ -81,7 +81,7 @@
 				{{ t('pipelinq', 'No tier data yet.') }}
 			</p>
 
-			<NcButton type="secondary" @click="exportCsv">
+			<NcButton variant="secondary" @click="exportCsv">
 				{{ t('pipelinq', 'Export CSV') }}
 			</NcButton>
 		</template>

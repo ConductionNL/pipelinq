@@ -17,7 +17,7 @@
 			<NcButton
 				v-for="option in filterOptions"
 				:key="option.value"
-				:type="activeFilter === option.value ? 'primary' : 'secondary'"
+				:variant="activeFilter === option.value ? 'primary' : 'secondary'"
 				:aria-pressed="activeFilter === option.value ? 'true' : 'false'"
 				class="activity-timeline__filter-btn"
 				@click="setFilter(option.value)">
@@ -62,7 +62,7 @@
 		</ul>
 
 		<div v-if="page < pages && !loading" class="activity-timeline__load-more">
-			<NcButton type="secondary" @click="loadMore">
+			<NcButton variant="secondary" @click="loadMore">
 				{{ t('pipelinq', 'Load more') }}
 			</NcButton>
 		</div>

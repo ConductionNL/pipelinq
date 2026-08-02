@@ -5,12 +5,12 @@
 			<NcTextField
 				id="client-name"
 				label-outside
-				:value="form.name"
+				:model-value="form.name"
 				:error="!!errors.name"
 				:helper-text="errors.name"
 				:maxlength="255"
 				data-testid="client-name-input"
-				@update:value="v => { form.name = v; validateField('name') }" />
+				@update:model-value="v => { form.name = v; validateField('name') }" />
 		</div>
 
 		<div class="form-row">
@@ -24,7 +24,7 @@
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
 					data-testid="client-type-select"
-					@input="validateField('type')" />
+					@update:model-value="validateField('type')" />
 				<p v-if="errors.type" class="field-error">
 					{{ errors.type }}
 				</p>
@@ -34,12 +34,12 @@
 				<NcTextField
 					id="client-email"
 					label-outside
-					:value="form.email"
+					:model-value="form.email"
 					:error="!!errors.email"
 					:helper-text="errors.email"
 					type="email"
 					data-testid="client-email-input"
-					@update:value="v => { form.email = v; validateField('email') }" />
+					@update:model-value="v => { form.email = v; validateField('email') }" />
 			</div>
 		</div>
 
@@ -49,22 +49,22 @@
 				<NcTextField
 					id="client-phone"
 					label-outside
-					:value="form.phone"
+					:model-value="form.phone"
 					:error="!!errors.phone"
 					:helper-text="errors.phone"
 					data-testid="client-phone-input"
-					@update:value="v => { form.phone = v; validateField('phone') }" />
+					@update:model-value="v => { form.phone = v; validateField('phone') }" />
 			</div>
 			<div class="form-group">
 				<label for="client-website">{{ t('pipelinq', 'Website') }}</label>
 				<NcTextField
 					id="client-website"
 					label-outside
-					:value="form.website"
+					:model-value="form.website"
 					:error="!!errors.website"
 					:helper-text="errors.website"
 					data-testid="client-website-input"
-					@update:value="v => { form.website = v; validateField('website') }" />
+					@update:model-value="v => { form.website = v; validateField('website') }" />
 			</div>
 		</div>
 
@@ -73,9 +73,9 @@
 			<NcTextField
 				id="client-address"
 				label-outside
-				:value="form.address"
+				:model-value="form.address"
 				data-testid="client-address-input"
-				@update:value="v => form.address = v" />
+				@update:model-value="v => form.address = v" />
 		</div>
 
 		<div class="form-group">
@@ -87,7 +87,7 @@
 		</div>
 
 		<div v-if="showActions" class="client-form__actions">
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="!isValid"
 				data-testid="client-form-save"
 				@click="onSave">

@@ -16,7 +16,7 @@
 	<section class="channel-distribution">
 		<div class="channel-distribution__head">
 			<h3>{{ t('pipelinq', 'Channel Distribution') }}</h3>
-			<NcButton type="secondary" @click="exportCsv">
+			<NcButton variant="secondary" @click="exportCsv">
 				{{ t('pipelinq', 'Export CSV') }}
 			</NcButton>
 		</div>

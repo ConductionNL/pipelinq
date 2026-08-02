@@ -25,7 +25,7 @@
 	</div>
 	<div v-else-if="hasContent" class="request-conversion-section">
 		<NcButton v-if="showConvertButton"
-			type="primary"
+			variant="primary"
 			:disabled="busy"
 			@click="convertToCase">
 			{{ t('pipelinq', 'Convert to case') }}
@@ -40,7 +40,7 @@
 					{{ t('pipelinq', 'Case reference') }}
 				</span>
 				<code class="request-conversion-section__reference-value">{{ caseReference }}</code>
-				<NcButton type="tertiary" @click="copyReference">
+				<NcButton variant="tertiary" @click="copyReference">
 					{{ t('pipelinq', 'Copy') }}
 				</NcButton>
 			</div>

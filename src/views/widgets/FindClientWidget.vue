@@ -1,17 +1,17 @@
 <template>
 	<div class="find-client-widget">
 		<div class="search-bar">
-			<NcTextField :value.sync="searchQuery"
+			<NcTextField v-model="searchQuery"
 				:placeholder="t('pipelinq', 'Search clients...')"
 				:label="t('pipelinq', 'Search')" />
-			<NcButton type="secondary" @click="showNewClientForm = !showNewClientForm">
+			<NcButton variant="secondary" @click="showNewClientForm = !showNewClientForm">
 				{{ t('pipelinq', 'New client') }}
 			</NcButton>
 		</div>
 
 		<!-- New client mini-form -->
 		<div v-if="showNewClientForm" class="new-client-form">
-			<NcTextField :value.sync="newClient.name"
+			<NcTextField v-model="newClient.name"
 				:label="t('pipelinq', 'Name')"
 				:placeholder="t('pipelinq', 'Client name (required)')"
 				:error="newClientSubmitted && !newClient.name" />
@@ -20,11 +20,11 @@
 				:input-label="t('pipelinq', 'Type')"
 				:placeholder="t('pipelinq', 'Type')"
 				input-id="new-client-type" />
-			<NcTextField :value.sync="newClient.email"
+			<NcTextField v-model="newClient.email"
 				:label="t('pipelinq', 'Email')"
 				:placeholder="t('pipelinq', 'Email address')"
 				type="email" />
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="creatingClient"
 				@click="createClient">
 				{{ creatingClient ? t('pipelinq', 'Creating...') : t('pipelinq', 'Add client') }}
@@ -54,21 +54,21 @@
 					</div>
 				</div>
 				<div class="client-actions">
-					<NcButton type="tertiary"
+					<NcButton variant="tertiary"
 						:aria-label="t('pipelinq', 'View client')"
 						@click="viewClient(client)">
 						<template #icon>
 							<Eye :size="18" />
 						</template>
 					</NcButton>
-					<NcButton type="tertiary"
+					<NcButton variant="tertiary"
 						:aria-label="t('pipelinq', 'Create request for this client')"
 						@click="createRequestForClient(client)">
 						<template #icon>
 							<FileDocumentOutline :size="18" />
 						</template>
 					</NcButton>
-					<NcButton type="tertiary"
+					<NcButton variant="tertiary"
 						:aria-label="t('pipelinq', 'Create lead for this client')"
 						@click="createLeadForClient(client)">
 						<template #icon>
@@ -76,7 +76,7 @@
 						</template>
 					</NcButton>
 					<NcButton v-if="client.email"
-						type="tertiary"
+						variant="tertiary"
 						:aria-label="t('pipelinq', 'Copy email')"
 						@click="copyEmail(client)">
 						<template #icon>
@@ -105,19 +105,19 @@
 					: t('pipelinq', 'Creating lead for {name}', { name: toText(actionClient.name) })
 				}}
 			</NcNoteCard>
-			<NcTextField :value.sync="actionTitle"
+			<NcTextField v-model="actionTitle"
 				:label="t('pipelinq', 'Title')"
 				:placeholder="actionType === 'request'
 					? t('pipelinq', 'Request title')
 					: t('pipelinq', 'Lead title')"
 				@keyup.enter="submitAction" />
 			<div class="action-buttons">
-				<NcButton type="primary"
+				<NcButton variant="primary"
 					:disabled="!actionTitle || actionSubmitting"
 					@click="submitAction">
 					{{ t('pipelinq', 'Create') }}
 				</NcButton>
-				<NcButton type="secondary" @click="cancelAction">
+				<NcButton variant="secondary" @click="cancelAction">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
 			</div>

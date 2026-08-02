@@ -20,7 +20,7 @@
 					</template>
 					{{ t('pipelinq', 'Refresh') }}
 				</NcButton>
-				<NcButton type="primary" @click="createNew">
+				<NcButton variant="primary" @click="createNew">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
@@ -73,7 +73,7 @@
 							</template>
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton type="error" @click="deleteType(type)">
+						<NcButton variant="error" @click="deleteType(type)">
 							<template #icon>
 								<Delete :size="20" />
 							</template>

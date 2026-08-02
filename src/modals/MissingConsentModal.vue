@@ -25,13 +25,13 @@
 			</p>
 
 			<div class="missing-consent__actions">
-				<NcButton type="tertiary" @click="$emit('cancel')">
+				<NcButton variant="tertiary" @click="$emit('cancel')">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
-				<NcButton type="secondary" @click="$emit('request-consent')">
+				<NcButton variant="secondary" @click="$emit('request-consent')">
 					{{ t('pipelinq', 'Request consent') }}
 				</NcButton>
-				<NcButton type="primary" @click="$emit('skip-and-send')">
+				<NcButton variant="primary" @click="$emit('skip-and-send')">
 					{{ t('pipelinq', 'Skip and send') }}
 				</NcButton>
 			</div>

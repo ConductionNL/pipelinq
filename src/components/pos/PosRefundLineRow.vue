@@ -21,8 +21,8 @@
 		</td>
 		<td class="pos-refund-row__num">
 			<NcInputField
+				v-model="local.returnedQuantity"
 				type="number"
-				:value.sync="local.returnedQuantity"
 				:label="t('pipelinq', 'Returned quantity')"
 				:label-visible="false"
 				:disabled="!local.selected"
@@ -31,18 +31,18 @@
 				min="0.001"
 				:max="String(originalLine.quantity)"
 				step="0.001"
-				@update:value="emitUpdate" />
+				@update:model-value="emitUpdate" />
 		</td>
 		<td class="pos-refund-row__reason">
 			<NcSelect
-				:value="selectedReason"
+				:model-value="selectedReason"
 				:options="reasonOptions"
 				:input-label="t('pipelinq', 'Return reason')"
 				:placeholder="t('pipelinq', 'Choose a reason…')"
 				label="label"
 				:clearable="false"
 				:disabled="!local.selected"
-				@input="onReasonSelect" />
+				@update:model-value="onReasonSelect" />
 		</td>
 		<td class="pos-refund-row__restock">
 			<NcCheckboxRadioSwitch
@@ -57,7 +57,7 @@
 		</td>
 		<td class="pos-refund-row__actions">
 			<NcButton
-				type="tertiary"
+				variant="tertiary"
 				:aria-label="t('pipelinq', 'Remove line')"
 				@click="$emit('remove')">
 				<template #icon>

@@ -11,17 +11,17 @@
 			<div class="my-work__controls">
 				<div class="filter-buttons">
 					<NcButton
-						:type="filter === 'all' ? 'primary' : 'secondary'"
+						:variant="filter === 'all' ? 'primary' : 'secondary'"
 						@click="filter = 'all'">
 						{{ t('pipelinq', 'All') }}
 					</NcButton>
 					<NcButton
-						:type="filter === 'lead' ? 'primary' : 'secondary'"
+						:variant="filter === 'lead' ? 'primary' : 'secondary'"
 						@click="filter = 'lead'">
 						{{ t('pipelinq', 'Leads') }}
 					</NcButton>
 					<NcButton
-						:type="filter === 'request' ? 'primary' : 'secondary'"
+						:variant="filter === 'request' ? 'primary' : 'secondary'"
 						@click="filter = 'request'">
 						{{ t('pipelinq', 'Requests') }}
 					</NcButton>

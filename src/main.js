@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Conduction B.V.
 
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import { PiniaVuePlugin, setActivePinia } from 'pinia'
+import { createApp, h, markRaw } from 'vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
+import { setActivePinia } from 'pinia'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { loadState } from '@nextcloud/initial-state'
@@ -13,6 +13,7 @@ import {
 	CnPageRenderer,
 	defaultPageTypes,
 	mergeManifestDelta,
+	registerBuiltinDashboardWidgets,
 	registerIcons,
 	registerTranslations,
 } from '@conduction/nextcloud-vue'
@@ -38,16 +39,31 @@ import { initializeStores, registerObjectTypes } from './store/store.js'
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 // eslint-disable-next-line import/no-unresolved -- CSS subpath resolved by webpack alias, not ESLint's resolver
 import '@conduction/nextcloud-vue/css/index.css'
-import './assets/app.css'
 
-Vue.mixin({ methods: { t, n } })
-Vue.use(PiniaVuePlugin)
-Vue.use(VueRouter)
+// gridstack is a REQUIRED peer of @conduction/nextcloud-vue that no consumer
+// declares, and the stylesheet is the silent half of it. Pipelinq ships
+// `type: "dashboard"` manifest pages, and gridstack v12 sizes every grid item
+// with `width: var(--gs-column-width)` — a custom property that only this
+// stylesheet defines. Without it every dashboard item renders 0 px wide with
+// NO console error: heights still look correct (those come from JS) while the
+// widths silently collapse. nc-vue's own `css/index.css` does not bundle it.
+import 'gridstack/dist/gridstack.min.css'
+
+import './assets/app.css'
 
 // Register the app's schema icons + lib translations once at bootstrap.
 // Without this every schema `icon` name fails the CnIcon registry lookup
 // and falls back to a help-circle (page headers, empty states).
 registerIcons(appIcons)
+
+// Register the library's built-in dashboard widgets (`stat`, `object-table`).
+// nc-vue declares `sideEffects: ["**/*.css"]`, which lets webpack drop the
+// library's own bare side-effect imports that perform this registration — so
+// without this explicit call the manifest's 26 `stat` and 3 `object-table`
+// widgets render "Widget not available". (`chart` survives regardless because
+// it is registered inline; that asymmetry is exactly how this was identified
+// on larpingapp.) Idempotent.
+registerBuiltinDashboardWidgets()
 
 // Pluggable integration registry (ADR-019 / Phase 7). Install the registry +
 // register the built-in core/leaf integrations (xwiki / calendar / files /
@@ -86,12 +102,12 @@ function tryLoadTranslations() {
 }
 
 // Shallow-clone CnPageRenderer because the lib's barrel exports are
-// non-extensible (webpack ESM module records). Vue 2's `Vue.extend()`
-// adds an internal `_Ctor` cache to the component definition; mutating
-// a non-extensible export throws "Cannot add property _Ctor, object is
-// not extensible". Cloning gives Vue Router an extensible
-// component-options object without altering the lib's internals.
-const RoutePageRenderer = { ...CnPageRenderer }
+// non-extensible (webpack ESM module records), and `markRaw` writes a
+// `__v_skip` marker through `Object.defineProperty`, which throws against a
+// frozen object. Cloning gives vue-router an extensible component-options
+// object without altering the lib's internals; `markRaw` then keeps Vue 3 from
+// making the component definition itself reactive inside the route record.
+const RoutePageRenderer = markRaw({ ...CnPageRenderer })
 
 /**
  * Seed the page-level app config onto every `type: "dashboard"` page's
@@ -149,7 +165,12 @@ function routesFromManifest(manifest) {
 	const paramCount = (path) => (path.match(/:/g) || []).length
 	routes.sort((a, b) => paramCount(a.path) - paramCount(b.path))
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
-	routes.push({ path: '*', redirect: '/' })
+	//
+	// vue-router 4 REMOVED the bare `path: '*'` wildcard. It does not error —
+	// it simply matches nothing, so every unmatched route would render the app
+	// shell with an empty <main> and no console output. `/:pathMatch(.*)*` is
+	// its v4 replacement.
+	routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
 	return routes
 }
 
@@ -215,22 +236,32 @@ registerObjectTypes()
  * @param {object} manifest The final manifest (overrides applied).
  */
 function mountApp(manifest) {
-	const router = new VueRouter({
-		mode: 'hash',
-		base: generateUrl('/apps/pipelinq'),
+	const router = createRouter({
+		// vue-router 4 replaces `mode: 'hash'` + `base` with a history object.
+		history: createWebHashHistory(generateUrl('/apps/pipelinq')),
 		routes: routesFromManifest(manifest),
 	})
-	new Vue({
-		pinia,
-		router,
-		render: (h) => h(App, {
-			props: {
-				manifest,
-				registry: registryProp,
-				pageTypes: pageTypesProp,
-			},
+	// Vue 3: `createApp(...).mount()` replaces `new Vue(...).$mount()`, and
+	// `h()` takes props as a FLAT second argument — the Vue 2 `{ props: { … } }`
+	// nesting is silently ignored, which would leave CnAppRoot with no manifest
+	// at all (blank shell, no error).
+	const app = createApp({
+		render: () => h(App, {
+			manifest,
+			registry: registryProp,
+			pageTypes: pageTypesProp,
 		}),
-	}).$mount('#content')
+	})
+	// Vue 3 has no global `Vue.mixin` / `Vue.use`; both are per-app-instance.
+	// Pinia is a normal plugin now — `PiniaVuePlugin` was Vue-2 only.
+	app.mixin({ methods: { t, n } })
+	app.use(pinia)
+	app.use(router)
+	// Mount on the app's OWN host element (templates/index.php), never
+	// `#content`: Nextcloud core's layout.user.php already owns a
+	// `<div id="content">` that this template renders inside, and Vue 3
+	// `mount()` renders INSIDE the match (Vue 2 `$mount()` REPLACED it).
+	app.mount('#pipelinq-app')
 }
 
 // Gate the mount on initializeStores() (types registered and settings loaded

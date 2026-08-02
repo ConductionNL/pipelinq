@@ -26,7 +26,7 @@
 	</div>
 	<div v-else-if="hasContent" class="contract-invoicing-section">
 		<NcButton v-if="showSendButton"
-			type="primary"
+			variant="primary"
 			:disabled="busy"
 			@click="sendToInvoicing">
 			{{ t('pipelinq', 'Send to invoicing') }}
@@ -41,7 +41,7 @@
 					{{ t('pipelinq', 'Invoice reference') }}
 				</span>
 				<code class="contract-invoicing-section__reference-value">{{ lastInvoiceReference }}</code>
-				<NcButton type="tertiary" @click="copyReference">
+				<NcButton variant="tertiary" @click="copyReference">
 					{{ t('pipelinq', 'Copy') }}
 				</NcButton>
 			</div>

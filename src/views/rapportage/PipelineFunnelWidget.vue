@@ -15,7 +15,7 @@
 				:input-label="t('pipelinq', 'Pipeline')"
 				label="label"
 				track-by="value"
-				@input="$emit('pipeline-change', selectedPipeline ? selectedPipeline.value : null)" />
+				@update:model-value="$emit('pipeline-change', selectedPipeline ? selectedPipeline.value : null)" />
 		</div>
 
 		<NcEmptyContent

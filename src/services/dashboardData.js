@@ -12,7 +12,7 @@
 // (5 min). Call `invalidateDashboardData()` to force a refetch (used
 // by the "Refresh" header action).
 
-import Vue from 'vue'
+import { reactive } from 'vue'
 import { generateUrl } from '@nextcloud/router'
 import { initializeStores } from '../store/store.js'
 
@@ -23,7 +23,8 @@ const cache = new Map()
 // (via dashboardRefreshMixin) and refetch when it bumps. This replaces the
 // old route-query-bump remount trick, which never fired because CnAppRoot's
 // <router-view> is not path-keyed so the widgets never remounted.
-const refreshSignal = Vue.observable({ token: 0 })
+// `reactive()` is Vue 3's replacement for `Vue.observable`.
+const refreshSignal = reactive({ token: 0 })
 
 /**
  * The reactive refresh signal. Read `.token` inside a computed to make a

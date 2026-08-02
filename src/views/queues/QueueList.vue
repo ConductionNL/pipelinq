@@ -2,7 +2,7 @@
 	<div class="queue-list">
 		<div class="queue-list__header">
 			<h2>{{ t('pipelinq', 'Queues') }}</h2>
-			<NcButton type="primary" @click="showCreateDialog = true">
+			<NcButton variant="primary" @click="showCreateDialog = true">
 				{{ t('pipelinq', 'Add queue') }}
 			</NcButton>
 		</div>
@@ -74,7 +74,7 @@
 				<NcButton @click="resetCreateForm">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="!newQueue.title" @click="createQueue">
+				<NcButton variant="primary" :disabled="!newQueue.title" @click="createQueue">
 					{{ t('pipelinq', 'Create') }}
 				</NcButton>
 			</template>

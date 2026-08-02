@@ -8,31 +8,31 @@
 		:description="t('pipelinq', 'Defaults for the BI export and data-warehouse sink: retention, compression and failure alerts.')">
 		<div class="export-config">
 			<NcTextField
-				:value.sync="form.retention_days"
+				v-model="form.retention_days"
 				type="number"
 				:label="t('pipelinq', 'Retention (days to keep runs)')"
 				:helper-text="t('pipelinq', 'How long export-run audit records are kept. Default 365 days.')" />
 			<NcSelect
-				:value="selectedCompression"
+				:model-value="selectedCompression"
 				:options="compressionOptions"
 				:input-label="t('pipelinq', 'Default compression')"
 				label="label"
 				:clearable="false"
 				:helper-text="t('pipelinq', 'Used when a destination does not specify its own compression.')"
-				@input="(o) => form.default_compression = o ? o.value : 'none'" />
+				@update:model-value="(o) => form.default_compression = o ? o.value : 'none'" />
 			<NcTextField
-				:value.sync="form.failure_notification_email"
+				v-model="form.failure_notification_email"
 				:label="t('pipelinq', 'Failure notification email')"
 				:helper-text="t('pipelinq', 'Address to notify when an export run fails. Leave empty to disable.')"
 				placeholder="alerts@example.com" />
 			<NcTextField
-				:value.sync="form.at_risk_warning_hours"
+				v-model="form.at_risk_warning_hours"
 				type="number"
 				:label="t('pipelinq', 'At-risk warning (hours without a successful run)')"
 				:helper-text="t('pipelinq', 'Triggers an at-risk warning if no run has succeeded in this many hours.')" />
 		</div>
 		<NcButton
-			type="primary"
+			variant="primary"
 			:disabled="busy || invalid"
 			class="export-config__save"
 			@click="save">

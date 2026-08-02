@@ -11,7 +11,7 @@
 			<CnStatusBadge :status="badgeStatus" :label="statusLabel" />
 			<NcButton
 				v-if="canRetry"
-				type="primary"
+				variant="primary"
 				:disabled="busy"
 				@click="retry">
 				{{ t('pipelinq', 'Retry') }}

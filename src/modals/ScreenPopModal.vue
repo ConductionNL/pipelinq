@@ -32,7 +32,7 @@
 						<td>{{ match.clientName || match.organisation || '—' }}</td>
 						<td>{{ match._matchType || 'contact' }}</td>
 						<td class="screen-pop__actions">
-							<NcButton type="primary" @click="$emit('select', match)">
+							<NcButton variant="primary" @click="$emit('select', match)">
 								{{ t('pipelinq', 'Select') }}
 							</NcButton>
 						</td>
@@ -44,7 +44,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="secondary" @click="$emit('intake')">
+			<NcButton variant="secondary" @click="$emit('intake')">
 				{{ t('pipelinq', 'New contact') }}
 			</NcButton>
 		</template>

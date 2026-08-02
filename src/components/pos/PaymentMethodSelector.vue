@@ -13,13 +13,13 @@
 <template>
 	<div class="payment-method-selector">
 		<NcSelect
-			:value="selection"
+			:model-value="selection"
 			:options="combinedOptions"
 			:input-label="t('pipelinq', 'Payment method')"
 			label="label"
 			:reduce="(o) => o.value"
 			:loading="loading"
-			@input="onSelect" />
+			@update:model-value="onSelect" />
 		<p v-if="selection && providerOf(selection) === 'mollie'" class="payment-method-selector__hint">
 			{{ t('pipelinq', 'Customer is redirected to Mollie to complete the iDEAL/Bancontact payment.') }}
 		</p>
@@ -44,7 +44,15 @@ export default {
 	components: { NcSelect },
 	props: {
 		// Selected value, format: provider:method (e.g. "mollie:ideal", "cash").
-		value: {
+		//
+		// ⚠️ This was `value` + `$emit('input')` — the Vue 2 v-model contract.
+		// Its only consumer (PosTransactionForm) binds it with `v-model`, and in
+		// Vue 3 `v-model` means `modelValue` + `update:modelValue`, so BOTH
+		// halves went dead: the prop stayed at its `''` default (the dropdown
+		// never showed the chosen method) and the parent's `paymentSelection`
+		// never updated. Neither half errors — and the separate `change` emit
+		// still fired, so checkout would limp along looking almost right.
+		modelValue: {
 			type: String,
 			default: '',
 		},
@@ -54,6 +62,9 @@ export default {
 			default: false,
 		},
 	},
+	// Declared explicitly so Vue 3 does not also fall these through onto the
+	// root element as attributes, and so the v-model contract is self-evident.
+	emits: ['update:modelValue', 'change'],
 	data() {
 		return {
 			providers: [],
@@ -62,7 +73,7 @@ export default {
 	},
 	computed: {
 		selection() {
-			return this.value || null
+			return this.modelValue || null
 		},
 		combinedOptions() {
 			const opts = STATIC_OPTIONS
@@ -142,7 +153,7 @@ export default {
 			const combined = (value && typeof value === 'object') ? value.value : value
 			const providerName = this.providerOf(combined)
 			const paymentMethod = this.methodOf(combined)
-			this.$emit('input', combined)
+			this.$emit('update:modelValue', combined)
 			this.$emit('change', { providerName, paymentMethod, combined })
 		},
 	},

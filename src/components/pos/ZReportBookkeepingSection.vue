@@ -44,7 +44,7 @@
 				</p>
 				<NcButton
 					v-if="canRetry"
-					type="primary"
+					variant="primary"
 					:disabled="busy"
 					data-testid="pos-eod-retry"
 					@click="confirmAndRetry">

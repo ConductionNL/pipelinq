@@ -19,7 +19,7 @@
 						<NcButton @click="startEdit(skill)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton type="error" @click="deleteSkill(skill)">
+						<NcButton variant="error" @click="deleteSkill(skill)">
 							{{ t('pipelinq', 'Delete') }}
 						</NcButton>
 					</div>
@@ -48,7 +48,7 @@
 						<NcButton @click="cancelEdit">
 							{{ t('pipelinq', 'Cancel') }}
 						</NcButton>
-						<NcButton type="primary" @click="saveEdit">
+						<NcButton variant="primary" @click="saveEdit">
 							{{ t('pipelinq', 'Save') }}
 						</NcButton>
 					</div>

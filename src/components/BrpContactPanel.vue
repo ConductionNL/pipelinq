@@ -34,7 +34,7 @@
 					:success="validation.isFormeelGeldig"
 					:error="rawBsn.length > 0 && !validation.isFormeelGeldig" />
 				<NcButton
-					type="primary"
+					variant="primary"
 					data-testid="brp-lookup-button"
 					:disabled="!canLookup"
 					@click="openDoelbinding">
@@ -70,7 +70,7 @@
 				</dl>
 				<div v-if="persoon.indicatieGeheim === '1' && !revealedAddress" class="brp-panel__secret">
 					<span>[{{ t('pipelinq', 'SECRET') }}]</span>
-					<NcButton type="tertiary" @click="revealAddress">
+					<NcButton variant="tertiary" @click="revealAddress">
 						{{ t('pipelinq', 'Show address under accountability') }}
 					</NcButton>
 				</div>

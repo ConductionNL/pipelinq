@@ -15,7 +15,7 @@
 					:placeholder="t('pipelinq', 'Select pipeline')"
 					:reduce="o => o.value"
 					class="pipeline-selector"
-					@input="onPipelineChange" />
+					@update:model-value="onPipelineChange" />
 				<NcSelect
 					v-if="hasMultipleSchemas"
 					v-model="showFilter"
@@ -24,16 +24,16 @@
 					:input-label="t('pipelinq', 'Filter by type')"
 					class="show-filter" />
 				<NcTextField
-					:value="searchQuery"
+					:model-value="searchQuery"
 					type="search"
 					label-outside
 					:placeholder="t('pipelinq', 'Search pipeline...')"
 					:aria-label="t('pipelinq', 'Search pipeline...')"
 					class="pipeline-search"
-					@update:value="v => searchQuery = v" />
+					@update:model-value="v => searchQuery = v" />
 				<div class="view-toggle">
 					<NcButton
-						:type="viewMode === 'kanban' ? 'primary' : 'tertiary'"
+						:variant="viewMode === 'kanban' ? 'primary' : 'tertiary'"
 						:aria-label="t('pipelinq', 'Kanban view')"
 						@click="viewMode = 'kanban'">
 						<template #icon>
@@ -41,7 +41,7 @@
 						</template>
 					</NcButton>
 					<NcButton
-						:type="viewMode === 'list' ? 'primary' : 'tertiary'"
+						:variant="viewMode === 'list' ? 'primary' : 'tertiary'"
 						:aria-label="t('pipelinq', 'List view')"
 						@click="viewMode = 'list'">
 						<template #icon>
@@ -50,7 +50,7 @@
 					</NcButton>
 				</div>
 				<NcButton
-					type="tertiary"
+					variant="tertiary"
 					:aria-label="t('pipelinq', 'Pipeline settings')"
 					@click="toggleSidebar">
 					<template #icon>
@@ -570,7 +570,7 @@ export default {
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-2
 	 */
-	beforeDestroy() {
+	beforeUnmount() {
 		clearTimeout(this.liveRefetchTimer)
 		this.releaseLiveSubscriptions()
 		if (this.pipelineSidebarState) {

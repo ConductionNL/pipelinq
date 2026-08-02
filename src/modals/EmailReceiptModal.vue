@@ -16,7 +16,7 @@
 				:placeholder="t('pipelinq', 'Select template')"
 				label="label"
 				:clearable="false"
-				@input="loadPreview" />
+				@update:model-value="loadPreview" />
 
 			<p class="receipt-modal__recipient">
 				{{ t('pipelinq', 'The receipt is sent to the linked customer:') }}
@@ -33,7 +33,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="sending || !recipient"
 				@click="send">
 				{{ t('pipelinq', 'Send') }}

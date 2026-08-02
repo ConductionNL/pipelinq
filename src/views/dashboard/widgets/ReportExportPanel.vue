@@ -57,7 +57,7 @@
 				:clearable="false"
 				class="report-export__field" />
 			<NcButton
-				type="primary"
+				variant="primary"
 				class="report-export__download"
 				@click="downloadReport">
 				{{ t('pipelinq', 'Download Report') }}

@@ -2,37 +2,37 @@
 	<div class="lead-form">
 		<!-- Title -->
 		<div class="form-group">
-			<NcTextField :value="form.title"
+			<NcTextField :model-value="form.title"
 				:label="t('pipelinq', 'Title')"
 				:error="!!errors.title"
 				:helper-text="errors.title"
-				@update:value="v => form.title = v" />
+				@update:model-value="v => form.title = v" />
 		</div>
 
 		<!-- Description -->
 		<div class="form-group">
-			<NcTextField :value="form.description"
+			<NcTextField :model-value="form.description"
 				:label="t('pipelinq', 'Description')"
-				@update:value="v => form.description = v" />
+				@update:model-value="v => form.description = v" />
 		</div>
 
 		<!-- Value + Probability row -->
 		<div class="form-row">
 			<div class="form-group">
-				<NcTextField :value="form.value === null ? '' : String(form.value)"
+				<NcTextField :model-value="form.value === null ? '' : String(form.value)"
 					:label="t('pipelinq', 'Value (EUR)')"
 					type="number"
 					:error="!!errors.value"
 					:helper-text="errors.value"
-					@update:value="v => form.value = v === '' ? null : Number(v)" />
+					@update:model-value="v => form.value = v === '' ? null : Number(v)" />
 			</div>
 			<div class="form-group">
-				<NcTextField :value="form.probability === null ? '' : String(form.probability)"
+				<NcTextField :model-value="form.probability === null ? '' : String(form.probability)"
 					:label="t('pipelinq', 'Probability %')"
 					type="number"
 					:error="!!errors.probability"
 					:helper-text="errors.probability"
-					@update:value="v => form.probability = v === '' ? null : Number(v)" />
+					@update:model-value="v => form.probability = v === '' ? null : Number(v)" />
 			</div>
 		</div>
 
@@ -59,10 +59,10 @@
 		<!-- Expected Close Date -->
 		<div class="form-group">
 			<NcDateTimePickerNative
-				:value="expectedCloseDateObj"
+				:model-value="expectedCloseDateObj"
 				:label="t('pipelinq', 'Expected close date')"
 				type="date"
-				@input="expectedCloseDateObj = $event" />
+				@update:model-value="expectedCloseDateObj = $event" />
 		</div>
 
 		<!-- Client -->
@@ -88,7 +88,7 @@
 					label="label"
 					:reduce="o => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
-					@input="onPipelineChange" />
+					@update:model-value="onPipelineChange" />
 			</div>
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
@@ -103,10 +103,10 @@
 
 		<!-- Actions -->
 		<div v-if="showActions" class="form-actions">
-			<NcButton type="tertiary" @click="$emit('cancel')">
+			<NcButton variant="tertiary" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+			<NcButton variant="primary" :disabled="!isValid" @click="onSave">
 				{{ isEdit ? t('pipelinq', 'Save') : t('pipelinq', 'Create') }}
 			</NcButton>
 		</div>
