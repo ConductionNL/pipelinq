@@ -56,7 +56,7 @@
 						:loading="loadingCredentials"
 						:placeholder="t('pipelinq', 'Select a credential')"
 						label="label"
-						@input="(v) => onCredentialChange(provider, v)" />
+						@update:model-value="(v) => onCredentialChange(provider, v)" />
 
 					<p class="payment-settings__hint">
 						<template v-if="!loadingCredentials && !credentialsFor(provider.name).length">
@@ -73,11 +73,11 @@
 						a constrained HTTP proxy cannot carry it.
 					-->
 					<NcTextField
-						:value="provider.webhookSecret === MASK ? '' : provider.webhookSecret"
+						:model-value="provider.webhookSecret === MASK ? '' : provider.webhookSecret"
 						:label="t('pipelinq', 'Webhook secret')"
 						:placeholder="provider.webhookSecret === MASK ? t('pipelinq', '(saved — leave empty to keep)') : ''"
 						type="password"
-						@update:value="(v) => onSecretChange(provider, 'webhookSecret', v)" />
+						@update:model-value="(v) => onSecretChange(provider, 'webhookSecret', v)" />
 
 					<NcTextField
 						v-if="provider.name === 'ccv'"
@@ -99,13 +99,13 @@
 
 					<div class="payment-settings__actions">
 						<NcButton
-							type="secondary"
+							variant="secondary"
 							:disabled="testingProvider === provider.name"
 							@click="onTest(provider)">
 							{{ testingProvider === provider.name ? t('pipelinq', 'Testing…') : t('pipelinq', 'Test connection') }}
 						</NcButton>
 						<NcButton
-							type="primary"
+							variant="primary"
 							:disabled="savingProvider === provider.name"
 							@click="onSave(provider)">
 							{{ savingProvider === provider.name ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}

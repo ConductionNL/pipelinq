@@ -1,7 +1,7 @@
 <template>
 	<CnSettingsSection :name="t('pipelinq', 'Product Categories')">
 		<template #actions>
-			<NcButton type="secondary" @click="startAdding">
+			<NcButton variant="secondary" @click="startAdding">
 				{{ t('pipelinq', '+ Add Category') }}
 			</NcButton>
 		</template>
@@ -32,7 +32,7 @@
 							class="category-item__input category-item__input--desc"
 							:placeholder="t('pipelinq', 'Description (optional)')">
 						<div class="category-item__actions">
-							<NcButton type="primary" :disabled="!editForm.name.trim()" @click="saveEdit(cat.id)">
+							<NcButton variant="primary" :disabled="!editForm.name.trim()" @click="saveEdit(cat.id)">
 								{{ t('pipelinq', 'Save') }}
 							</NcButton>
 							<NcButton @click="cancelEdit">
@@ -47,10 +47,10 @@
 						<span v-if="cat.description" class="category-item__desc">{{ cat.description }}</span>
 					</div>
 					<div class="category-item__buttons">
-						<NcButton type="tertiary" @click="startEditing(cat)">
+						<NcButton variant="tertiary" @click="startEditing(cat)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton type="tertiary" @click="confirmRemove(cat)">
+						<NcButton variant="tertiary" @click="confirmRemove(cat)">
 							{{ t('pipelinq', 'Remove') }}
 						</NcButton>
 					</div>
@@ -72,7 +72,7 @@
 						class="category-item__input category-item__input--desc"
 						:placeholder="t('pipelinq', 'Description (optional)')">
 					<div class="category-item__actions">
-						<NcButton type="primary" :disabled="!addForm.name.trim()" @click="saveNew">
+						<NcButton variant="primary" :disabled="!addForm.name.trim()" @click="saveNew">
 							{{ t('pipelinq', 'Add') }}
 						</NcButton>
 						<NcButton @click="cancelAdding">

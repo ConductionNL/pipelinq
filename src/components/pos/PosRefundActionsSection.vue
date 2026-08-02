@@ -25,13 +25,13 @@
 		<template v-else>
 			<section v-if="hasActions" class="pos-refund-section__actions">
 				<NcButton v-if="canConfirm"
-					type="primary"
+					variant="primary"
 					:disabled="busy"
 					@click="confirm">
 					{{ t('pipelinq', 'Confirm') }}
 				</NcButton>
 				<NcButton v-if="canReject"
-					type="error"
+					variant="error"
 					:disabled="busy"
 					@click="showReject = true">
 					{{ t('pipelinq', 'Reject') }}

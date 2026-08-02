@@ -58,7 +58,7 @@
 							<NcButton
 								v-for="(s, sIdx) in msg.suggestedFollowUps.slice(0, 3)"
 								:key="sIdx"
-								type="secondary"
+								variant="secondary"
 								@click="selectSuggestion(s)">
 								{{ s }}
 							</NcButton>
@@ -75,12 +75,12 @@
 		</div>
 		<form class="navi-widget__form" @submit.prevent="submitQuery">
 			<NcTextField
-				:value.sync="query"
+				v-model="query"
 				:label="t('pipelinq', 'Ask Navi a question')"
 				:placeholder="t('pipelinq', 'e.g. How many leads were won this month?')"
 				class="navi-widget__input" />
 			<NcButton
-				type="primary"
+				variant="primary"
 				native-type="submit"
 				:disabled="loading || !query.trim()">
 				{{ t('pipelinq', 'Send') }}

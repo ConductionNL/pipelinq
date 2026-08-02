@@ -7,17 +7,17 @@
 			<!-- Pipeline properties -->
 			<div class="form-section">
 				<div class="form-group">
-					<NcTextField :value="form.title"
+					<NcTextField :model-value="form.title"
 						:label="t('pipelinq', 'Title')"
 						:error="!!errors.title"
 						:helper-text="errors.title"
-						@update:value="v => form.title = v" />
+						@update:model-value="v => form.title = v" />
 				</div>
 
 				<div class="form-group">
-					<NcTextField :value="form.description"
+					<NcTextField :model-value="form.description"
 						:label="t('pipelinq', 'Description')"
-						@update:value="v => form.description = v" />
+						@update:model-value="v => form.description = v" />
 				</div>
 
 				<div class="form-row">
@@ -35,17 +35,17 @@
 					</div>
 
 					<div class="form-group">
-						<NcCheckboxRadioSwitch :checked.sync="form.isDefault" type="switch">
+						<NcCheckboxRadioSwitch v-model="form.isDefault" type="switch">
 							{{ t('pipelinq', 'Default pipeline') }}
 						</NcCheckboxRadioSwitch>
 					</div>
 				</div>
 
 				<div class="form-group">
-					<NcTextField :value="form.totalsLabel"
+					<NcTextField :model-value="form.totalsLabel"
 						:label="t('pipelinq', 'Totals label')"
 						:placeholder="t('pipelinq', 'e.g. EUR, hours, items')"
-						@update:value="v => form.totalsLabel = v" />
+						@update:model-value="v => form.totalsLabel = v" />
 					<span class="help-text">{{ t('pipelinq', 'Label shown next to column totals. Leave empty to hide totals.') }}</span>
 				</div>
 			</div>
@@ -54,7 +54,7 @@
 			<div class="form-section">
 				<div class="mappings-header">
 					<h4>{{ t('pipelinq', 'Property mappings') }}</h4>
-					<NcButton type="secondary" @click="addMapping">
+					<NcButton variant="secondary" @click="addMapping">
 						<template #icon>
 							<Plus :size="20" />
 						</template>
@@ -76,25 +76,25 @@
 						class="mapping-row">
 						<div class="mapping-fields">
 							<div class="mapping-field">
-								<NcTextField :value="mapping.schemaSlug"
+								<NcTextField :model-value="mapping.schemaSlug"
 									:label="t('pipelinq', 'Schema slug')"
 									:placeholder="t('pipelinq', 'e.g. lead, request')"
-									@update:value="v => mapping.schemaSlug = v" />
+									@update:model-value="v => mapping.schemaSlug = v" />
 							</div>
 							<div class="mapping-field">
-								<NcTextField :value="mapping.columnProperty"
+								<NcTextField :model-value="mapping.columnProperty"
 									:label="t('pipelinq', 'Column property')"
 									:placeholder="t('pipelinq', 'e.g. stage, status')"
-									@update:value="v => mapping.columnProperty = v" />
+									@update:model-value="v => mapping.columnProperty = v" />
 							</div>
 							<div class="mapping-field">
-								<NcTextField :value="mapping.totalsProperty || ''"
+								<NcTextField :model-value="mapping.totalsProperty || ''"
 									:label="t('pipelinq', 'Totals property')"
 									:placeholder="t('pipelinq', 'e.g. value (optional)')"
-									@update:value="v => mapping.totalsProperty = v || null" />
+									@update:model-value="v => mapping.totalsProperty = v || null" />
 							</div>
 						</div>
-						<NcButton type="tertiary"
+						<NcButton variant="tertiary"
 							class="mapping-delete"
 							:aria-label="t('pipelinq', 'Remove this property mapping')"
 							@click="removeMapping(index)">
@@ -110,7 +110,7 @@
 			<div class="form-section">
 				<div class="stages-header">
 					<h4>{{ t('pipelinq', 'Stages') }}</h4>
-					<NcButton type="secondary" @click="addStage">
+					<NcButton variant="secondary" @click="addStage">
 						<template #icon>
 							<Plus :size="20" />
 						</template>
@@ -124,91 +124,106 @@
 					{{ t('pipelinq', 'No stages yet. Add at least one stage.') }}
 				</div>
 
+				<!--
+					vuedraggable v4 (Vue 3) REQUIRES an `#item` slot: `computeNodes()`
+					throws `draggable element must have an item slot` when only a
+					default slot is present, which would blank this whole dialog. The
+					v2 default-slot + inner `v-for` form is gone.
+
+					The item slot iterates the BOUND list, so `form.stages` is now
+					kept in display order (recomputeOrders sorts it in place) instead
+					of being re-sorted into a separate `sortedStages` copy at render
+					time. That also removes a latent index mismatch: `stageErrors` was
+					always indexed by `form.stages` position while the template indexed
+					it by `sortedStages` position, so validation messages attached to
+					the wrong row whenever the two orders differed.
+				-->
 				<draggable v-else
 					v-model="form.stages"
+					item-key="order"
 					class="stages-list"
 					handle=".drag-handle"
 					@end="recomputeOrders">
-					<div v-for="(stage, index) in sortedStages"
-						:key="index"
-						class="stage-row">
-						<div class="stage-order">
-							<span class="drag-handle" :title="t('pipelinq', 'Drag to reorder')">&#x2630;</span>
-							<div class="stage-reorder-buttons">
-								<NcButton type="tertiary"
-									:disabled="index === 0"
-									:aria-label="t('pipelinq', 'Move stage {name} up', { name: stage.name })"
-									@click="moveStage(stage, -1)">
-									<template #icon>
-										<ChevronUp :size="16" />
-									</template>
-								</NcButton>
-								<NcButton type="tertiary"
-									:disabled="index === sortedStages.length - 1"
-									:aria-label="t('pipelinq', 'Move stage {name} down', { name: stage.name })"
-									@click="moveStage(stage, 1)">
-									<template #icon>
-										<ChevronDown :size="16" />
-									</template>
-								</NcButton>
+					<template #item="{ element: stage, index }">
+						<div class="stage-row">
+							<div class="stage-order">
+								<span class="drag-handle" :title="t('pipelinq', 'Drag to reorder')">&#x2630;</span>
+								<div class="stage-reorder-buttons">
+									<NcButton variant="tertiary"
+										:disabled="index === 0"
+										:aria-label="t('pipelinq', 'Move stage {name} up', { name: stage.name })"
+										@click="moveStage(stage, -1)">
+										<template #icon>
+											<ChevronUp :size="16" />
+										</template>
+									</NcButton>
+									<NcButton variant="tertiary"
+										:disabled="index === form.stages.length - 1"
+										:aria-label="t('pipelinq', 'Move stage {name} down', { name: stage.name })"
+										@click="moveStage(stage, 1)">
+										<template #icon>
+											<ChevronDown :size="16" />
+										</template>
+									</NcButton>
+								</div>
+								<span class="order-number">{{ stage.order }}</span>
 							</div>
-							<span class="order-number">{{ stage.order }}</span>
-						</div>
 
-						<div class="stage-fields">
-							<NcTextField :value="stage.name"
-								:label="t('pipelinq', 'Stage name')"
-								:error="!!stageErrors[index]?.name"
-								:helper-text="stageErrors[index]?.name"
-								class="stage-name-field"
-								@update:value="v => stage.name = v" />
+							<div class="stage-fields">
+								<NcTextField :model-value="stage.name"
+									:label="t('pipelinq', 'Stage name')"
+									:error="!!stageErrors[index]?.name"
+									:helper-text="stageErrors[index]?.name"
+									class="stage-name-field"
+									@update:model-value="v => stage.name = v" />
 
-							<NcTextField :value="String(stage.probability ?? '')"
-								:label="t('pipelinq', 'Probability %')"
-								type="number"
-								:error="!!stageErrors[index]?.probability"
-								:helper-text="stageErrors[index]?.probability || ''"
-								class="stage-probability-field"
-								@update:value="v => stage.probability = v === '' ? null : Number(v)" />
+								<NcTextField :model-value="String(stage.probability ?? '')"
+									:label="t('pipelinq', 'Probability %')"
+									type="number"
+									:error="!!stageErrors[index]?.probability"
+									:helper-text="stageErrors[index]?.probability || ''"
+									class="stage-probability-field"
+									@update:model-value="v => stage.probability = v === '' ? null : Number(v)" />
 
-							<div class="stage-color-field">
-								<label>{{ t('pipelinq', 'Color') }}</label>
-								<input type="color"
-									:value="stage.color || '#6b7280'"
-									@input="e => stage.color = e.target.value">
+								<div class="stage-color-field">
+									<label>{{ t('pipelinq', 'Color') }}</label>
+									<input type="color"
+										:value="stage.color || '#6b7280'"
+										@input="e => stage.color = e.target.value">
+								</div>
 							</div>
-						</div>
 
-						<div class="stage-flags">
-							<NcCheckboxRadioSwitch :checked.sync="stage.isClosed" type="switch">
-								{{ t('pipelinq', 'Closed') }}
-							</NcCheckboxRadioSwitch>
-							<NcCheckboxRadioSwitch :checked.sync="stage.isWon"
-								:disabled="!stage.isClosed"
-								type="switch">
-								{{ t('pipelinq', 'Won') }}
-							</NcCheckboxRadioSwitch>
-							<span v-if="stageErrors[index]?.isWon" class="error-text">{{ stageErrors[index].isWon }}</span>
-						</div>
+							<div class="stage-flags">
+								<NcCheckboxRadioSwitch v-model="stage.isClosed" type="switch">
+									{{ t('pipelinq', 'Closed') }}
+								</NcCheckboxRadioSwitch>
+								<NcCheckboxRadioSwitch v-model="stage.isWon"
+									:disabled="!stage.isClosed"
+									type="switch">
+									{{ t('pipelinq', 'Won') }}
+								</NcCheckboxRadioSwitch>
+								<span v-if="stageErrors[index]?.isWon" class="error-text">{{ stageErrors[index].isWon }}</span>
+							</div>
 
-						<NcButton type="tertiary"
-							class="stage-delete"
-							:aria-label="t('pipelinq', 'Remove stage {name}', { name: stage.name })"
-							@click="removeStage(index)">
-							<template #icon>
-								<Delete :size="20" />
-							</template>
-						</NcButton>
-					</div>
+							<NcButton variant="tertiary"
+								class="stage-delete"
+								:aria-label="t('pipelinq', 'Remove stage {name}', { name: stage.name })"
+								@click="removeStage(index)">
+								<template #icon>
+									<Delete :size="20" />
+								</template>
+							</NcButton>
+						</div>
+					</template>
 				</draggable>
 			</div>
 		</div>
 
 		<template #actions>
-			<NcButton type="tertiary" @click="$emit('cancel')">
+			<NcButton variant="tertiary" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+			<NcButton variant="primary" :disabled="!isValid" @click="onSave">
 				{{ isEdit ? t('pipelinq', 'Save') : t('pipelinq', 'Create') }}
 			</NcButton>
 		</template>
@@ -273,12 +288,6 @@ export default {
 			}))
 		},
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-41
-		 */
-		sortedStages() {
-			return [...this.form.stages].sort((a, b) => a.order - b.order)
-		},
-		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-33
 		 */
 		errors() {
@@ -336,6 +345,11 @@ export default {
 				propertyMappings: (this.pipeline.propertyMappings || []).map(m => ({ ...m })),
 				stages: (this.pipeline.stages || []).map(s => ({ ...s })),
 			}
+			// `form.stages` is now the display order (see recomputeOrders): the
+			// vuedraggable v4 item slot iterates the bound list rather than a
+			// sorted render-time copy, so the incoming array has to be ordered
+			// before first paint.
+			this.recomputeOrders()
 		}
 		await this.loadViews()
 	},
@@ -391,11 +405,10 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
 		 */
 		removeStage(index) {
-			const sorted = this.sortedStages
-			const stage = sorted[index]
-			const stageIndex = this.form.stages.indexOf(stage)
-			if (stageIndex !== -1) {
-				this.form.stages.splice(stageIndex, 1)
+			// `index` is now the position in `form.stages`, which recomputeOrders()
+			// keeps in display order — no separate sorted-copy lookup needed.
+			if (index >= 0 && index < this.form.stages.length) {
+				this.form.stages.splice(index, 1)
 			}
 			this.recomputeOrders()
 		},
@@ -405,23 +418,29 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-36
 		 */
 		moveStage(stage, direction) {
-			const sorted = this.sortedStages
-			const currentIndex = sorted.indexOf(stage)
+			const stages = this.form.stages
+			const currentIndex = stages.indexOf(stage)
 			const targetIndex = currentIndex + direction
 
-			if (targetIndex < 0 || targetIndex >= sorted.length) return
+			if (currentIndex === -1 || targetIndex < 0 || targetIndex >= stages.length) return
 
-			const otherStage = sorted[targetIndex]
-			const tempOrder = stage.order
-			stage.order = otherStage.order
-			otherStage.order = tempOrder
+			// Move the element itself, then renumber. Previously this swapped only
+			// the `order` fields and relied on a sorted render-time copy; now that
+			// the item slot iterates `form.stages` directly, the array position IS
+			// the display position.
+			stages.splice(targetIndex, 0, stages.splice(currentIndex, 1)[0])
+			this.recomputeOrders()
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-38
 		 */
 		recomputeOrders() {
-			const sorted = [...this.form.stages].sort((a, b) => a.order - b.order)
-			sorted.forEach((stage, i) => {
+			// Sort IN PLACE so `form.stages` is itself the display order. The item
+			// slot of vuedraggable v4 iterates the bound list, so the array order
+			// and the `order` field must agree — and keeping them in one array is
+			// what lets `stageErrors[index]` line up with the row it is shown on.
+			this.form.stages.sort((a, b) => a.order - b.order)
+			this.form.stages.forEach((stage, i) => {
 				stage.order = i
 			})
 		},

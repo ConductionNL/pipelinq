@@ -21,7 +21,7 @@
 		<template #actions>
 			<NcButton
 				v-if="entry.verified !== true"
-				type="primary"
+				variant="primary"
 				:disabled="busy"
 				data-testid="kassakoppeling-audit-verify"
 				@click="verify">

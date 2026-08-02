@@ -10,7 +10,7 @@
 		@closing="$emit('close')">
 		<div class="cash-shift-drop">
 			<NcTextField
-				:value.sync="amount"
+				v-model="amount"
 				type="number"
 				:label="t('pipelinq', 'Amount (€)')"
 				:error="showError"
@@ -26,7 +26,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="submitting" @click="submit">
+			<NcButton variant="primary" :disabled="submitting" @click="submit">
 				{{ t('pipelinq', 'Record') }}
 			</NcButton>
 		</template>

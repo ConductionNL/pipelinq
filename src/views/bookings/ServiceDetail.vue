@@ -46,10 +46,10 @@
 		:object-id="serviceId"
 		:sidebar-props="sidebarProps">
 		<template #actions>
-			<NcButton type="primary" @click="editing = true">
+			<NcButton variant="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
-			<NcButton type="error" @click="showDelete = true">
+			<NcButton variant="error" @click="showDelete = true">
 				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>

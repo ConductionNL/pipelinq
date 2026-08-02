@@ -13,8 +13,8 @@
 					:options="levelOptions"
 					label="label"
 					:clearable="false"
-					@input="loadSnapshots" />
-				<NcButton type="secondary" @click="exportCsv">
+					@update:model-value="loadSnapshots" />
+				<NcButton variant="secondary" @click="exportCsv">
 					{{ t('pipelinq', 'Export CSV') }}
 				</NcButton>
 			</div>
@@ -86,7 +86,7 @@
 						<td>{{ formatMoney(row.closed_won) }}</td>
 						<td>{{ row.quota === null ? '—' : formatMoney(row.quota) }}</td>
 						<td>
-							<NcButton type="tertiary" @click="openOverride(row)">
+							<NcButton variant="tertiary" @click="openOverride(row)">
 								{{ t('pipelinq', 'Override') }}
 							</NcButton>
 						</td>

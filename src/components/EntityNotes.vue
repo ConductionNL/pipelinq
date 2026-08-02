@@ -9,7 +9,7 @@
 				class="entity-notes__textarea"
 				rows="3" />
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="submitting || newMessage.trim() === ''"
 				@click="addNote">
 				{{ submitting ? t('pipelinq', 'Saving...') : t('pipelinq', 'Add note') }}
@@ -32,7 +32,7 @@
 					<span class="entity-notes__time">{{ formatTime(note.timestamp) }}</span>
 					<NcButton
 						v-if="note.isOwn"
-						type="tertiary"
+						variant="tertiary"
 						class="entity-notes__delete"
 						@click="deleteNote(note.id)">
 						{{ t('pipelinq', 'Delete') }}

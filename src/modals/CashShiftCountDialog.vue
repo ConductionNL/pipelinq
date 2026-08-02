@@ -11,21 +11,21 @@
 		<div class="cash-shift-count">
 			<p>{{ t('pipelinq', 'Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).') }}</p>
 			<NcTextField
-				:value.sync="amount"
+				v-model="amount"
 				type="number"
 				:label="t('pipelinq', 'Counted amount')"
 				placeholder="€ 0.00"
 				:error="showError"
 				:helper-text="showError ? t('pipelinq', 'Enter a valid amount') : ''" />
 			<NcTextArea
-				:value.sync="notes"
+				v-model="notes"
 				:label="t('pipelinq', 'Notes (optional)')" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="submitting" @click="submit">
+			<NcButton variant="primary" :disabled="submitting" @click="submit">
 				{{ t('pipelinq', 'Close and count') }}
 			</NcButton>
 		</template>

@@ -3,7 +3,7 @@
 <template>
 	<div class="blast-monitor">
 		<header class="blast-monitor__header">
-			<NcButton type="tertiary" @click="$router.push({ name: 'Blasts' })">
+			<NcButton variant="tertiary" @click="$router.push({ name: 'Blasts' })">
 				{{ t('pipelinq', 'Back to blasts') }}
 			</NcButton>
 			<h2>{{ blast?.name || t('pipelinq', 'Blast') }}</h2>
@@ -61,7 +61,7 @@
 			</section>
 
 			<footer v-if="canCancel" class="blast-monitor__footer">
-				<NcButton type="error" :disabled="cancelling" @click="cancel">
+				<NcButton variant="error" :disabled="cancelling" @click="cancel">
 					{{ cancelling ? t('pipelinq', 'Cancelling…') : t('pipelinq', 'Cancel send') }}
 				</NcButton>
 			</footer>

@@ -4,11 +4,11 @@
 			<label for="contact-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
 				id="contact-name"
-				:value="form.name"
+				:model-value="form.name"
 				:error="!!errors.name"
 				:helper-text="errors.name"
 				:maxlength="255"
-				@update:value="v => { form.name = v; validateField('name') }" />
+				@update:model-value="v => { form.name = v; validateField('name') }" />
 		</div>
 
 		<div class="form-group">
@@ -22,7 +22,7 @@
 				label="name"
 				:reduce="c => c.id"
 				@search="searchClients"
-				@input="validateField('client')" />
+				@update:model-value="validateField('client')" />
 			<p v-if="errors.client" class="field-error">
 				{{ errors.client }}
 			</p>
@@ -33,18 +33,18 @@
 				<label for="contact-role">{{ t('pipelinq', 'Role') }}</label>
 				<NcTextField
 					id="contact-role"
-					:value="form.role"
-					@update:value="v => form.role = v" />
+					:model-value="form.role"
+					@update:model-value="v => form.role = v" />
 			</div>
 			<div class="form-group">
 				<label for="contact-email">{{ t('pipelinq', 'Email') }}</label>
 				<NcTextField
 					id="contact-email"
-					:value="form.email"
+					:model-value="form.email"
 					:error="!!errors.email"
 					:helper-text="errors.email"
 					type="email"
-					@update:value="v => { form.email = v; validateField('email') }" />
+					@update:model-value="v => { form.email = v; validateField('email') }" />
 			</div>
 		</div>
 
@@ -52,14 +52,14 @@
 			<label for="contact-phone">{{ t('pipelinq', 'Phone') }}</label>
 			<NcTextField
 				id="contact-phone"
-				:value="form.phone"
+				:model-value="form.phone"
 				:error="!!errors.phone"
 				:helper-text="errors.phone"
-				@update:value="v => { form.phone = v; validateField('phone') }" />
+				@update:model-value="v => { form.phone = v; validateField('phone') }" />
 		</div>
 
 		<div class="contact-form__actions">
-			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+			<NcButton variant="primary" :disabled="!isValid" @click="onSave">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 			<NcButton @click="$emit('cancel')">

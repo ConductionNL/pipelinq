@@ -61,7 +61,7 @@
 						<span :class="['billable-dot', resolvedBillable('task', task, { phase }) ? 'billable-dot--on' : 'billable-dot--off']" />
 						{{ billableLabel('task', task, { phase }) }}
 					</span>
-					<NcButton type="tertiary" @click="$emit('add-activity', { phase, task })">
+					<NcButton variant="tertiary" @click="$emit('add-activity', { phase, task })">
 						{{ t('pipelinq', 'Time entry') }}
 					</NcButton>
 				</div>

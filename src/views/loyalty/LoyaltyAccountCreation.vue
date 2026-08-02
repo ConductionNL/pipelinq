@@ -25,7 +25,7 @@
 				:label="t('pipelinq', 'Terms version accepted')" />
 
 			<label class="loyalty-enrollment__opt-in">
-				<NcCheckboxRadioSwitch :checked.sync="optInAccepted">
+				<NcCheckboxRadioSwitch v-model="optInAccepted">
 					{{ t('pipelinq', 'I agree to store my loyalty data and contact me with offers') }}
 				</NcCheckboxRadioSwitch>
 			</label>
@@ -39,7 +39,7 @@
 				</a>
 			</p>
 
-			<NcButton type="primary" native-type="submit" :disabled="!canSubmit">
+			<NcButton variant="primary" native-type="submit" :disabled="!canSubmit">
 				{{ t('pipelinq', 'Create loyalty account') }}
 			</NcButton>
 		</form>

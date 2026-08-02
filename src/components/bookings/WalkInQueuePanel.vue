@@ -14,7 +14,7 @@ a Booking completes (member 04 -> member 09).
 	<div class="walkin-queue-panel">
 		<header class="walkin-queue-panel__header">
 			<h2>{{ t('pipelinq', 'Walk-in queue') }}</h2>
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="!canCallNext"
 				@click="onCallNext">
 				{{ t('pipelinq', 'Call next') }}
@@ -76,12 +76,12 @@ a Booking completes (member 04 -> member 09).
 						{{ t('pipelinq', 'Call') }}
 					</NcButton>
 					<NcButton v-if="ticket.status === 'called'"
-						type="primary"
+						variant="primary"
 						:disabled="busyTicketId === ticketKey(ticket)"
 						@click="onServe(ticket)">
 						{{ t('pipelinq', 'Serve') }}
 					</NcButton>
-					<NcButton type="tertiary"
+					<NcButton variant="tertiary"
 						:disabled="busyTicketId === ticketKey(ticket)"
 						@click="onAbandon(ticket)">
 						{{ t('pipelinq', 'Abandon') }}
@@ -167,7 +167,7 @@ export default {
 		this.fetchTickets()
 		this.refreshTimer = window.setInterval(this.fetchTickets, this.refreshInterval)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.refreshTimer) {
 			window.clearInterval(this.refreshTimer)
 			this.refreshTimer = null

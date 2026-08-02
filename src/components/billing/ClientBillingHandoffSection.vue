@@ -44,7 +44,7 @@
 						:aria-label="t('pipelinq', 'Billing period end date')">
 				</div>
 			</div>
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="busy || !periodStart || !periodEnd"
 				data-testid="billing-handoff-send"
 				@click="send">
@@ -55,7 +55,7 @@
 			</NcButton>
 		</template>
 		<NcButton v-else-if="deepLinkUrl"
-			type="secondary"
+			variant="secondary"
 			:href="deepLinkUrl"
 			target="_blank"
 			rel="noopener">

@@ -9,7 +9,7 @@
 <template>
 	<div class="xwiki-article-viewer">
 		<div class="xwiki-article-viewer__bar">
-			<NcButton type="tertiary" @click="$emit('back')">
+			<NcButton variant="tertiary" @click="$emit('back')">
 				{{ t('pipelinq', 'Back') }}
 			</NcButton>
 			<a v-if="store.currentArticle && store.currentArticle.url"

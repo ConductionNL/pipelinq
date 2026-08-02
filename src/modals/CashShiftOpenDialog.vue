@@ -10,26 +10,26 @@
 		@closing="$emit('close')">
 		<div class="cash-shift-open">
 			<NcTextField
-				:value.sync="drawer"
+				v-model="drawer"
 				:label="t('pipelinq', 'Drawer')" />
 			<NcTextField
-				:value.sync="floatAmount"
+				v-model="floatAmount"
 				type="number"
 				:label="t('pipelinq', 'Opening amount (€)')"
 				:error="showError"
 				:helper-text="showError ? t('pipelinq', 'Opening amount required') : ''" />
 			<NcTextField
-				:value.sync="reference"
+				v-model="reference"
 				:label="t('pipelinq', 'Reference (optional)')" />
 			<NcTextArea
-				:value.sync="notes"
+				v-model="notes"
 				:label="t('pipelinq', 'Notes (optional)')" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="submitting" @click="submit">
+			<NcButton variant="primary" :disabled="submitting" @click="submit">
 				{{ t('pipelinq', 'Open shift') }}
 			</NcButton>
 		</template>

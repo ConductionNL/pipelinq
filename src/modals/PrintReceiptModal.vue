@@ -16,7 +16,7 @@
 				:placeholder="t('pipelinq', 'Select template')"
 				label="label"
 				:clearable="false"
-				@input="loadPreview" />
+				@update:model-value="loadPreview" />
 
 			<p v-if="printerDevice" class="receipt-modal__device">
 				{{ t('pipelinq', 'Configured printer:') }} <strong>{{ printerDevice }}</strong>
@@ -32,7 +32,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="printing"
 				@click="print">
 				{{ t('pipelinq', 'Print') }}

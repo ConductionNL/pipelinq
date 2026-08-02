@@ -24,10 +24,10 @@
 			@view="openJob"
 			@page-changed="onPageChange">
 			<template #row-actions="{ row }">
-				<NcButton type="tertiary" :disabled="busyId === row.id" @click.stop="testRun(row)">
+				<NcButton variant="tertiary" :disabled="busyId === row.id" @click.stop="testRun(row)">
 					{{ t('pipelinq', 'Test run') }}
 				</NcButton>
-				<NcButton type="tertiary" :disabled="busyId === row.id" @click.stop="toggleEnabled(row)">
+				<NcButton variant="tertiary" :disabled="busyId === row.id" @click.stop="toggleEnabled(row)">
 					{{ row.enabled ? t('pipelinq', 'Disable') : t('pipelinq', 'Enable') }}
 				</NcButton>
 			</template>

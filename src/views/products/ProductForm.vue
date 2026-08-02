@@ -5,19 +5,19 @@
 				<label for="product-name">{{ t('pipelinq', 'Name') }} *</label>
 				<NcTextField
 					id="product-name"
-					:value="form.name"
+					:model-value="form.name"
 					:error="!!errors.name"
 					:helper-text="errors.name"
 					:maxlength="255"
-					@update:value="v => { form.name = v; validateField('name') }" />
+					@update:model-value="v => { form.name = v; validateField('name') }" />
 			</div>
 			<div class="form-group">
 				<label for="product-sku">{{ t('pipelinq', 'SKU') }}</label>
 				<NcTextField
 					id="product-sku"
-					:value="form.sku"
+					:model-value="form.sku"
 					:maxlength="100"
-					@update:value="v => form.sku = v" />
+					@update:model-value="v => form.sku = v" />
 			</div>
 		</div>
 
@@ -30,7 +30,7 @@
 					:aria-label-combobox="t('pipelinq', 'Type')"
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
-					@input="validateField('type')" />
+					@update:model-value="validateField('type')" />
 				<p v-if="errors.type" class="field-error">
 					{{ errors.type }}
 				</p>
@@ -51,19 +51,19 @@
 				<label for="product-unitPrice">{{ t('pipelinq', 'Unit Price') }} *</label>
 				<NcTextField
 					id="product-unitPrice"
-					:value="form.unitPrice"
+					:model-value="form.unitPrice"
 					:error="!!errors.unitPrice"
 					:helper-text="errors.unitPrice"
 					type="number"
-					@update:value="v => { form.unitPrice = v; validateField('unitPrice') }" />
+					@update:model-value="v => { form.unitPrice = v; validateField('unitPrice') }" />
 			</div>
 			<div class="form-group">
 				<label for="product-cost">{{ t('pipelinq', 'Cost') }}</label>
 				<NcTextField
 					id="product-cost"
-					:value="form.cost"
+					:model-value="form.cost"
 					type="number"
-					@update:value="v => form.cost = v" />
+					@update:model-value="v => form.cost = v" />
 			</div>
 		</div>
 
@@ -72,19 +72,19 @@
 				<label for="product-unit">{{ t('pipelinq', 'Unit') }}</label>
 				<NcTextField
 					id="product-unit"
-					:value="form.unit"
+					:model-value="form.unit"
 					:placeholder="t('pipelinq', 'e.g. piece, hour, license')"
-					@update:value="v => form.unit = v" />
+					@update:model-value="v => form.unit = v" />
 			</div>
 			<div class="form-group">
 				<label for="product-taxRate">{{ t('pipelinq', 'Tax Rate (%)') }}</label>
 				<NcTextField
 					id="product-taxRate"
-					:value="form.taxRate"
+					:model-value="form.taxRate"
 					:disabled="!!form.btwClass"
 					:helper-text="form.btwClass ? t('pipelinq', 'Derived from the selected BTW class') : ''"
 					type="number"
-					@update:value="v => form.taxRate = v" />
+					@update:model-value="v => form.taxRate = v" />
 			</div>
 		</div>
 
@@ -100,15 +100,15 @@
 					:placeholder="t('pipelinq', 'Select BTW class')"
 					label="label"
 					:reduce="opt => opt.id"
-					@input="onBtwClassChange" />
+					@update:model-value="onBtwClassChange" />
 			</div>
 			<div class="form-group">
 				<label for="product-barcode">{{ t('pipelinq', 'Barcode (EAN/UPC)') }}</label>
 				<NcTextField
 					id="product-barcode"
-					:value="form.barcode"
+					:model-value="form.barcode"
 					:maxlength="64"
-					@update:value="v => form.barcode = v" />
+					@update:model-value="v => form.barcode = v" />
 			</div>
 		</div>
 
@@ -116,9 +116,9 @@
 			<label for="product-duration">{{ t('pipelinq', 'Duration (minutes)') }}</label>
 			<NcTextField
 				id="product-duration"
-				:value="form.duration"
+				:model-value="form.duration"
 				type="number"
-				@update:value="v => form.duration = v" />
+				@update:model-value="v => form.duration = v" />
 		</div>
 
 		<div class="form-group">
@@ -139,7 +139,7 @@
 		</div>
 
 		<div class="product-form__actions">
-			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+			<NcButton variant="primary" :disabled="!isValid" @click="onSave">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 			<NcButton @click="$emit('cancel')">

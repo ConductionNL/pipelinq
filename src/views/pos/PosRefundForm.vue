@@ -16,29 +16,29 @@
 		<template v-else>
 			<div class="pos-refund-form__fields">
 				<NcSelect
-					:value="selectedTransaction"
+					:model-value="selectedTransaction"
 					:options="transactionOptions"
 					:input-label="t('pipelinq', 'Original transaction')"
 					:placeholder="t('pipelinq', 'Choose a transaction…')"
 					label="label"
 					:clearable="false"
 					:disabled="lockedTransaction"
-					@input="onTransactionSelect" />
+					@update:model-value="onTransactionSelect" />
 				<NcSelect
-					:value="selectedReason"
+					:model-value="selectedReason"
 					:options="reasonOptions"
 					:input-label="t('pipelinq', 'Refund reason')"
 					:placeholder="t('pipelinq', 'Choose a reason…')"
 					label="label"
 					:clearable="false"
-					@input="onReasonSelect" />
+					@update:model-value="onReasonSelect" />
 				<NcTextField
-					:value.sync="refund.notes"
+					v-model="refund.notes"
 					:label="t('pipelinq', 'Notes')" />
 			</div>
 
 			<div v-if="originalLines.length" class="pos-refund-form__select-all">
-				<NcButton type="secondary" @click="selectAll">
+				<NcButton variant="secondary" @click="selectAll">
 					{{ t('pipelinq', 'Return all items') }}
 				</NcButton>
 			</div>
@@ -76,7 +76,7 @@
 			<PosRefundTotalsPanel :lines="selectedLines" />
 
 			<div class="pos-refund-form__actions">
-				<NcButton type="primary" :disabled="saving" @click="save">
+				<NcButton variant="primary" :disabled="saving" @click="save">
 					{{ t('pipelinq', 'Save') }}
 				</NcButton>
 			</div>
@@ -326,7 +326,7 @@ export default {
 		 */
 		updateCandidate(index, line) {
 			const current = this.candidates[index]
-			this.$set(this.candidates, index, { ...current, ...line })
+			this.candidates[index] = { ...current, ...line }
 		},
 		/**
 		 * Remove (deselect) a candidate.
@@ -335,7 +335,7 @@ export default {
 		 */
 		removeCandidate(index) {
 			const current = this.candidates[index]
-			this.$set(this.candidates, index, { ...current, selected: false })
+			this.candidates[index] = { ...current, selected: false }
 		},
 		/**
 		 * Select all lines with full original quantity.
@@ -375,7 +375,7 @@ export default {
 		 * @param {object|null} option The chosen reason.
 		 */
 		onReasonSelect(option) {
-			this.$set(this.refund, 'refundReason', option ? option.id : null)
+			this.refund.refundReason = option ? option.id : null
 		},
 		/**
 		 * Persist the refund header and its selected lines.

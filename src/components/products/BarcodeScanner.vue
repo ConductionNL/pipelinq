@@ -5,9 +5,9 @@
 				ref="field"
 				class="barcode-scanner__field"
 				:label="t('pipelinq', 'Scan barcode')"
-				:value="value"
+				:model-value="value"
 				:disabled="status === 'loading'"
-				@update:value="onInput"
+				@update:model-value="onInput"
 				@keydown.enter="emitManual" />
 
 			<div class="barcode-scanner__status" aria-live="polite">
@@ -16,7 +16,7 @@
 			</div>
 
 			<NcButton
-				type="tertiary"
+				variant="tertiary"
 				:aria-label="t('pipelinq', 'Submit barcode')"
 				:disabled="status === 'loading'"
 				@click="emitManual">
@@ -27,7 +27,7 @@
 
 			<NcButton
 				v-if="supported"
-				type="tertiary"
+				variant="tertiary"
 				:aria-label="t('pipelinq', 'Open camera')"
 				:disabled="status === 'loading'"
 				@click="onOpenCamera">
@@ -69,7 +69,7 @@
 				{{ t('pipelinq', 'Aim at barcode…') }}
 			</p>
 			<NcButton
-				type="primary"
+				variant="primary"
 				class="barcode-scanner__close"
 				@click="onCloseCamera">
 				<template #icon>

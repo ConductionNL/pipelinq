@@ -57,7 +57,7 @@
 
 			<div class="pos-customer-settings__actions">
 				<NcButton
-					type="primary"
+					variant="primary"
 					:disabled="saving"
 					data-testid="customer-settings-save"
 					@click="save">

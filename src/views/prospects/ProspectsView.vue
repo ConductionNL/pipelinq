@@ -3,7 +3,7 @@
 		<div class="prospects-view__header">
 			<h2>{{ t('pipelinq', 'Prospects') }}</h2>
 			<NcButton
-				type="tertiary"
+				variant="tertiary"
 				:disabled="prospectStore.loading"
 				:aria-label="t('pipelinq', 'Refresh prospects')"
 				@click="refresh">
@@ -75,7 +75,7 @@
 					<td>{{ p.address && p.address.city ? p.address.city : '—' }}</td>
 					<td>
 						<NcButton
-							type="tertiary"
+							variant="tertiary"
 							:disabled="convertingKvk === p.kvkNumber"
 							@click="convertToLead(p)">
 							{{ t('pipelinq', 'Convert to lead') }}

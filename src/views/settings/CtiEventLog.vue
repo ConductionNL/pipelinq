@@ -26,7 +26,7 @@
 				label="label"
 				:reduce="(o) => o.value"
 				clearable />
-			<NcButton type="primary" :disabled="loading" @click="reload">
+			<NcButton variant="primary" :disabled="loading" @click="reload">
 				<template v-if="loading" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
@@ -54,7 +54,7 @@
 					<td>{{ row.signature_valid ? '✓' : '✗' }}</td>
 					<td>{{ row.processing_error || '' }}</td>
 					<td class="cti-event-log__actions">
-						<NcButton type="tertiary" @click="viewPayload(row)">
+						<NcButton variant="tertiary" @click="viewPayload(row)">
 							{{ t('pipelinq', 'View payload') }}
 						</NcButton>
 					</td>

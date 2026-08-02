@@ -9,9 +9,9 @@
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'SBI Codes') }}</label>
 				<NcTextField
-					:value="sbiCodesText"
+					:model-value="sbiCodesText"
 					:placeholder="t('pipelinq', 'e.g. 62, 72 (comma-separated)')"
-					@update:value="v => sbiCodesText = v" />
+					@update:model-value="v => sbiCodesText = v" />
 				<p class="form-help">
 					{{ t('pipelinq', 'Dutch Standard Industrial Classification codes. Separate multiple codes with commas.') }}
 				</p>
@@ -22,16 +22,16 @@
 				<div class="form-group">
 					<label>{{ t('pipelinq', 'Min Employees') }}</label>
 					<NcTextField
-						:value="String(form.employeeCountMin)"
+						:model-value="String(form.employeeCountMin)"
 						type="number"
-						@update:value="v => form.employeeCountMin = Number(v)" />
+						@update:model-value="v => form.employeeCountMin = Number(v)" />
 				</div>
 				<div class="form-group">
 					<label>{{ t('pipelinq', 'Max Employees') }}</label>
 					<NcTextField
-						:value="String(form.employeeCountMax)"
+						:model-value="String(form.employeeCountMax)"
 						type="number"
-						@update:value="v => form.employeeCountMax = Number(v)" />
+						@update:model-value="v => form.employeeCountMax = Number(v)" />
 				</div>
 			</div>
 
@@ -72,9 +72,9 @@
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Keywords') }}</label>
 				<NcTextField
-					:value="keywordsText"
+					:model-value="keywordsText"
 					:placeholder="t('pipelinq', 'e.g. software, IT (comma-separated)')"
-					@update:value="v => keywordsText = v" />
+					@update:model-value="v => keywordsText = v" />
 				<p class="form-help">
 					{{ t('pipelinq', 'Used for OpenCorporates search. Separate with commas.') }}
 				</p>
@@ -84,10 +84,10 @@
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'KVK API Key') }}</label>
 				<NcTextField
-					:value="form.kvkApiKey"
+					:model-value="form.kvkApiKey"
 					type="password"
 					:placeholder="t('pipelinq', 'Enter your KVK API key')"
-					@update:value="v => form.kvkApiKey = v" />
+					@update:model-value="v => form.kvkApiKey = v" />
 				<p class="form-help">
 					{{ t('pipelinq', 'Required for prospect discovery. Get one at developers.kvk.nl.') }}
 				</p>
@@ -104,7 +104,7 @@
 
 			<!-- Save -->
 			<div class="prospect-settings__actions">
-				<NcButton type="primary" :disabled="saving" @click="save">
+				<NcButton variant="primary" :disabled="saving" @click="save">
 					{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save ICP Settings') }}
 				</NcButton>
 			</div>

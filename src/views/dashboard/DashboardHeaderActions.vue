@@ -1,6 +1,6 @@
 <template>
 	<div class="dashboard-header-actions">
-		<NcButton type="primary" @click="showLeadDialog = true">
+		<NcButton variant="primary" @click="showLeadDialog = true">
 			<template #icon>
 				<Plus :size="20" />
 			</template>

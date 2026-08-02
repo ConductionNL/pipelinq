@@ -6,7 +6,7 @@
 			</NcButton>
 			<h2>{{ queue ? queue.title : t('pipelinq', 'Queue') }}</h2>
 			<div v-if="queue" class="queue-detail__actions">
-				<NcButton type="primary" :disabled="!nextItem" @click="pickNext">
+				<NcButton variant="primary" :disabled="!nextItem" @click="pickNext">
 					{{ t('pipelinq', 'Pick next') }}
 				</NcButton>
 			</div>

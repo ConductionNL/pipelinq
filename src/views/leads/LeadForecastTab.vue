@@ -16,7 +16,7 @@
 				label="label"
 				:disabled="locked"
 				:clearable="false"
-				@input="onChange" />
+				@update:model-value="onChange" />
 			<span v-if="locked"
 				class="lead-forecast-tab__lock"
 				:title="t('pipelinq', 'Reopen the deal to change the forecast category')">

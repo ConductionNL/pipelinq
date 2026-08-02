@@ -32,7 +32,7 @@
 					{{ t('pipelinq', 'Remove cash') }}
 				</NcButton>
 				<NcButton v-if="canCount"
-					type="primary"
+					variant="primary"
 					:disabled="busy"
 					@click="showCount = true">
 					{{ t('pipelinq', 'Close and count shift') }}
@@ -76,10 +76,10 @@
 					</div>
 				</div>
 				<div v-if="canReconcile" class="cash-shift-section__diff-actions">
-					<NcButton type="primary" :disabled="busy" @click="approve">
+					<NcButton variant="primary" :disabled="busy" @click="approve">
 						{{ t('pipelinq', 'Approve') }}
 					</NcButton>
-					<NcButton type="error" :disabled="busy" @click="showReject = true">
+					<NcButton variant="error" :disabled="busy" @click="showReject = true">
 						{{ t('pipelinq', 'Reject') }}
 					</NcButton>
 				</div>

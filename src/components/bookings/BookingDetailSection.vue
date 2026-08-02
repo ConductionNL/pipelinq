@@ -31,42 +31,42 @@
 			<section class="booking-section__actions">
 				<NcButton
 					v-if="canConfirmDeposit"
-					type="primary"
+					variant="primary"
 					:disabled="busy"
 					@click="confirmDeposit">
 					{{ t('pipelinq', 'Confirm deposit') }}
 				</NcButton>
 				<NcButton
 					v-if="canMarkCompleted"
-					type="primary"
+					variant="primary"
 					:disabled="busy"
 					@click="markCompleted">
 					{{ t('pipelinq', 'Mark completed') }}
 				</NcButton>
 				<NcButton
 					v-if="canMarkNoShow"
-					type="error"
+					variant="error"
 					:disabled="busy"
 					@click="markNoShow">
 					{{ t('pipelinq', 'Mark no-show') }}
 				</NcButton>
 				<NcButton
 					v-if="canReschedule"
-					type="secondary"
+					variant="secondary"
 					:disabled="busy"
 					@click="showReschedule = true">
 					{{ t('pipelinq', 'Reschedule') }}
 				</NcButton>
 				<NcButton
 					v-if="canSendReminder"
-					type="secondary"
+					variant="secondary"
 					:disabled="busy"
 					@click="sendReminder">
 					{{ t('pipelinq', 'Send reminder') }}
 				</NcButton>
 				<NcButton
 					v-if="canCancel"
-					type="error"
+					variant="error"
 					:disabled="busy"
 					@click="showCancel = true">
 					{{ t('pipelinq', 'Cancel') }}
@@ -117,7 +117,7 @@
 				</div>
 				<div class="notes-actions">
 					<NcButton
-						type="primary"
+						variant="primary"
 						:disabled="busy || !notesDirty"
 						@click="saveNotes">
 						{{ t('pipelinq', 'Save notes') }}

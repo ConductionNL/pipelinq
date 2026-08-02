@@ -35,21 +35,21 @@
 		<div v-if="hasActions" class="payment-status-card__actions">
 			<NcButton
 				v-if="status === 'pending'"
-				type="primary"
+				variant="primary"
 				:disabled="busy"
 				@click="onCapture">
 				{{ t('pipelinq', 'Complete') }}
 			</NcButton>
 			<NcButton
 				v-if="canRefund"
-				type="warning"
+				variant="warning"
 				:disabled="busy"
 				@click="onRefund">
 				{{ t('pipelinq', 'Reverse') }}
 			</NcButton>
 			<NcButton
 				v-if="status === 'failed'"
-				type="secondary"
+				variant="secondary"
 				:disabled="busy"
 				@click="onRetry">
 				{{ t('pipelinq', 'Try again') }}

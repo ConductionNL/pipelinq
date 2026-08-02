@@ -23,11 +23,11 @@
 			<label for="service-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
 				id="service-name"
-				:value="form.name"
+				:model-value="form.name"
 				:error="!!errors.name"
 				:helper-text="errors.name"
 				:maxlength="255"
-				@update:value="v => { form.name = v; validateField('name') }" />
+				@update:model-value="v => { form.name = v; validateField('name') }" />
 		</div>
 
 		<div class="form-group">
@@ -44,26 +44,26 @@
 				<NcTextField
 					id="service-duration"
 					type="number"
-					:value="String(form.durationMinutes ?? '')"
+					:model-value="String(form.durationMinutes ?? '')"
 					:error="!!errors.durationMinutes"
 					:helper-text="errors.durationMinutes"
-					@update:value="v => { form.durationMinutes = v === '' ? null : Number(v); validateField('durationMinutes') }" />
+					@update:model-value="v => { form.durationMinutes = v === '' ? null : Number(v); validateField('durationMinutes') }" />
 			</div>
 			<div class="form-group">
 				<label for="service-buffer-before">{{ t('pipelinq', 'Buffer before (min)') }}</label>
 				<NcTextField
 					id="service-buffer-before"
 					type="number"
-					:value="String(form.bufferBeforeMinutes ?? 0)"
-					@update:value="v => form.bufferBeforeMinutes = v === '' ? 0 : Number(v)" />
+					:model-value="String(form.bufferBeforeMinutes ?? 0)"
+					@update:model-value="v => form.bufferBeforeMinutes = v === '' ? 0 : Number(v)" />
 			</div>
 			<div class="form-group">
 				<label for="service-buffer-after">{{ t('pipelinq', 'Buffer after (min)') }}</label>
 				<NcTextField
 					id="service-buffer-after"
 					type="number"
-					:value="String(form.bufferAfterMinutes ?? 0)"
-					@update:value="v => form.bufferAfterMinutes = v === '' ? 0 : Number(v)" />
+					:model-value="String(form.bufferAfterMinutes ?? 0)"
+					@update:model-value="v => form.bufferAfterMinutes = v === '' ? 0 : Number(v)" />
 			</div>
 		</div>
 
@@ -73,16 +73,16 @@
 				<NcTextField
 					id="service-price"
 					type="number"
-					:value="String(form.price ?? 0)"
-					@update:value="v => form.price = v === '' ? 0 : Number(v)" />
+					:model-value="String(form.price ?? 0)"
+					@update:model-value="v => form.price = v === '' ? 0 : Number(v)" />
 			</div>
 			<div class="form-group">
 				<label for="service-currency">{{ t('pipelinq', 'Currency') }}</label>
 				<NcTextField
 					id="service-currency"
-					:value="form.currency || 'EUR'"
+					:model-value="form.currency || 'EUR'"
 					:maxlength="3"
-					@update:value="v => form.currency = (v || '').toUpperCase()" />
+					@update:model-value="v => form.currency = (v || '').toUpperCase()" />
 			</div>
 		</div>
 
@@ -90,8 +90,8 @@
 			<label for="service-skills">{{ t('pipelinq', 'Required skills (comma-separated)') }}</label>
 			<NcTextField
 				id="service-skills"
-				:value="skillsCsv"
-				@update:value="onSkillsInput" />
+				:model-value="skillsCsv"
+				@update:model-value="onSkillsInput" />
 		</div>
 
 		<div class="form-group">
@@ -142,24 +142,24 @@
 								:aria-label="t('pipelinq', 'Allow gap')">
 						</td>
 						<td>
-							<NcButton type="tertiary"
+							<NcButton variant="tertiary"
 								:disabled="idx === 0"
 								@click="moveStep(idx, -1)">
 								&#9650;
 							</NcButton>
-							<NcButton type="tertiary"
+							<NcButton variant="tertiary"
 								:disabled="idx === form.multiStep.length - 1"
 								@click="moveStep(idx, 1)">
 								&#9660;
 							</NcButton>
-							<NcButton type="tertiary" @click="removeStep(idx)">
+							<NcButton variant="tertiary" @click="removeStep(idx)">
 								&times;
 							</NcButton>
 						</td>
 					</tr>
 				</tbody>
 			</table>
-			<NcButton type="secondary" class="add-step" @click="addStep">
+			<NcButton variant="secondary" class="add-step" @click="addStep">
 				{{ t('pipelinq', 'Add step') }}
 			</NcButton>
 			<p v-if="multiStepWarning" class="warning-text">
@@ -184,17 +184,17 @@
 				<NcTextField
 					id="service-deposit-amount"
 					type="number"
-					:value="String(form.depositAmount ?? 0)"
+					:model-value="String(form.depositAmount ?? 0)"
 					:disabled="!form.requiresDeposit"
-					@update:value="v => form.depositAmount = v === '' ? 0 : Number(v)" />
+					@update:model-value="v => form.depositAmount = v === '' ? 0 : Number(v)" />
 			</div>
 			<div class="form-group">
 				<label for="service-no-show-fee">{{ t('pipelinq', 'No-show fee') }}</label>
 				<NcTextField
 					id="service-no-show-fee"
 					type="number"
-					:value="String(form.noShowFee ?? 0)"
-					@update:value="v => form.noShowFee = v === '' ? 0 : Number(v)" />
+					:model-value="String(form.noShowFee ?? 0)"
+					@update:model-value="v => form.noShowFee = v === '' ? 0 : Number(v)" />
 			</div>
 		</div>
 
@@ -214,8 +214,8 @@
 				<NcTextField
 					id="service-cancellation-hours"
 					type="number"
-					:value="String(form.cancellationHoursBefore ?? 24)"
-					@update:value="v => form.cancellationHoursBefore = v === '' ? 24 : Number(v)" />
+					:model-value="String(form.cancellationHoursBefore ?? 24)"
+					@update:model-value="v => form.cancellationHoursBefore = v === '' ? 24 : Number(v)" />
 			</div>
 		</div>
 
@@ -231,7 +231,7 @@
 		</div>
 
 		<div class="service-form__actions">
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="!isValid"
 				data-testid="service-form-save"
 				@click="onSave">

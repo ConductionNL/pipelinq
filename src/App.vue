@@ -49,7 +49,7 @@
 </template>
 
 <script>
-import Vue from 'vue'
+import { reactive } from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
@@ -71,7 +71,8 @@ export default {
 	provide() {
 		return {
 			// Channel for CnDetailPage → host-rendered CnObjectSidebar.
-			// Vue.observable makes the plain object reactive for Vue 2.
+			// `reactive()` (Vue 3's replacement for `Vue.observable`) makes the
+			// plain object reactive, so injected consumers track its mutations.
 			objectSidebarState: this.objectSidebarState,
 			// Legacy channel — kept so bespoke index views (CnIndexPage
 			// wrappers) continue to inject it.
@@ -113,7 +114,7 @@ export default {
 
 	data() {
 		return {
-			objectSidebarState: Vue.observable({
+			objectSidebarState: reactive({
 				active: false,
 				open: true,
 				objectType: '',
@@ -126,7 +127,7 @@ export default {
 				tabs: undefined,
 			}),
 			// Legacy channel for bespoke index views.
-			sidebarState: Vue.observable({
+			sidebarState: reactive({
 				active: false,
 				open: true,
 				schema: null,

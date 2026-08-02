@@ -10,57 +10,57 @@
 		<CnDetailCard :title="t('pipelinq', 'Export job')">
 			<div class="export-form">
 				<NcTextField
-					:value.sync="model.name"
+					v-model="model.name"
 					:label="t('pipelinq', 'Name')" />
 				<NcTextField
-					:value.sync="model.description"
+					v-model="model.description"
 					:label="t('pipelinq', 'Description')" />
 				<NcSelect
-					:value="selectedSchemas"
+					:model-value="selectedSchemas"
 					:options="schemaOptions"
 					:input-label="t('pipelinq', 'Source schemas')"
 					:placeholder="t('pipelinq', 'Choose schemas to export…')"
 					label="label"
 					:multiple="true"
 					:keep-open="true"
-					@input="onSchemasSelect" />
+					@update:model-value="onSchemasSelect" />
 				<NcSelect
-					:value="selectedDestination"
+					:model-value="selectedDestination"
 					:options="destinationOptions"
 					:input-label="t('pipelinq', 'Destination')"
 					:placeholder="t('pipelinq', 'Choose a destination…')"
 					label="label"
 					:clearable="false"
-					@input="(o) => model.destinationId = o ? o.id : ''" />
+					@update:model-value="(o) => model.destinationId = o ? o.id : ''" />
 				<NcSelect
-					:value="selectedFormat"
+					:model-value="selectedFormat"
 					:options="formatOptions"
 					:input-label="t('pipelinq', 'Format')"
 					label="label"
 					:clearable="false"
-					@input="(o) => model.format = o ? o.id : 'csv'" />
+					@update:model-value="(o) => model.format = o ? o.id : 'csv'" />
 				<NcSelect
-					:value="selectedMode"
+					:model-value="selectedMode"
 					:options="modeOptions"
 					:input-label="t('pipelinq', 'Mode')"
 					label="label"
 					:clearable="false"
-					@input="(o) => model.mode = o ? o.id : 'full'" />
+					@update:model-value="(o) => model.mode = o ? o.id : 'full'" />
 				<NcTextField
 					v-if="model.mode === 'incremental'"
-					:value.sync="model.incrementalWatermarkColumn"
+					v-model="model.incrementalWatermarkColumn"
 					:label="t('pipelinq', 'Watermark column')"
 					:helper-text="t('pipelinq', 'Column used to detect changed rows (e.g. updatedAt)')" />
 				<NcTextField
-					:value.sync="model.scheduleCron"
+					v-model="model.scheduleCron"
 					:label="t('pipelinq', 'Schedule (cron)')"
 					:placeholder="'0 2 * * *'" />
 				<NcTextField
-					:value.sync="model.rowFilterExpression"
+					v-model="model.rowFilterExpression"
 					:label="t('pipelinq', 'Row filter (optional)')"
 					placeholder="status = 'open'" />
 				<NcTextField
-					:value.sync="allowlistText"
+					v-model="allowlistText"
 					:label="t('pipelinq', 'Column allowlist (optional, comma-separated)')"
 					:helper-text="t('pipelinq', 'Limit exported columns to minimise PII; leave empty to export all columns')" />
 			</div>
@@ -68,15 +68,15 @@
 			<template #actions>
 				<NcButton
 					v-if="isEdit"
-					type="tertiary"
+					variant="tertiary"
 					:disabled="busy"
 					@click="openTestRunModal">
 					{{ t('pipelinq', 'Test run') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="busy || !model.name" @click="save">
+				<NcButton variant="primary" :disabled="busy || !model.name" @click="save">
 					{{ t('pipelinq', 'Save') }}
 				</NcButton>
-				<NcButton type="secondary" @click="goBack">
+				<NcButton variant="secondary" @click="goBack">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
 			</template>

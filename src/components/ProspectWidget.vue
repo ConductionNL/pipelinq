@@ -10,7 +10,7 @@
 			<div class="prospect-widget__actions">
 				<NcButton
 					v-if="expanded"
-					type="tertiary"
+					variant="tertiary"
 					:disabled="prospectStore.loading"
 					:aria-label="t('pipelinq', 'Refresh prospects')"
 					@click.stop="refresh">

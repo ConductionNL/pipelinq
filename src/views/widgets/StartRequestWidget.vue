@@ -1,7 +1,7 @@
 <template>
 	<div class="start-request-widget">
 		<div v-if="!success" class="widget-form">
-			<NcTextField :value.sync="form.title"
+			<NcTextField v-model="form.title"
 				:label="t('pipelinq', 'Title')"
 				:placeholder="t('pipelinq', 'Request title (required)')"
 				:error="submitted && !form.title"
@@ -30,7 +30,7 @@
 				:placeholder="t('pipelinq', 'Channel')"
 				input-id="request-channel" />
 
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="submitting"
 				@click="onSubmit">
 				{{ submitting ? t('pipelinq', 'Creating...') : t('pipelinq', 'Create request') }}
@@ -42,7 +42,7 @@
 				{{ t('pipelinq', 'Request created!') }}
 				<a :href="successLink">{{ t('pipelinq', 'View request') }}</a>
 			</NcNoteCard>
-			<NcButton type="secondary" @click="resetForm">
+			<NcButton variant="secondary" @click="resetForm">
 				{{ t('pipelinq', 'Create another') }}
 			</NcButton>
 		</div>

@@ -5,11 +5,11 @@
 		@closing="$emit('close')">
 		<div class="import-dialog">
 			<NcTextField
-				:value="query"
+				:model-value="query"
 				:label="t('pipelinq', 'Search contacts...')"
 				:show-trailing-button="query !== ''"
 				class="import-dialog__search"
-				@update:value="onSearch"
+				@update:model-value="onSearch"
 				@trailing-button-click="query = ''; results = []" />
 
 			<NcLoadingIcon v-if="searching" />
@@ -31,7 +31,7 @@
 						<NcButton
 							v-else
 							:disabled="importing === contact.uid"
-							type="primary"
+							variant="primary"
 							@click="importContact(contact)">
 							{{ importing === contact.uid ? t('pipelinq', 'Importing...') : t('pipelinq', 'Import') }}
 						</NcButton>

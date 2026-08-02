@@ -7,10 +7,10 @@
 		<div class="forecast-trend__header">
 			<h2>{{ t('pipelinq', 'Forecast trend & accuracy') }}</h2>
 			<NcTextField
-				:value.sync="ownerId"
+				v-model="ownerId"
 				:label="t('pipelinq', 'Rep')"
 				:placeholder="t('pipelinq', 'Rep user id')"
-				@update:value="loadTrend" />
+				@update:model-value="loadTrend" />
 		</div>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
