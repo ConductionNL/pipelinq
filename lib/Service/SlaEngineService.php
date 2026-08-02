@@ -1048,7 +1048,10 @@ class SlaEngineService
         $template   = $templateId;
         if ($templateId === '') {
             $withinWindow = false;
-            if (method_exists($adapter, 'isWithinSessionWindow') === true) {
+            // Narrow with instanceof rather than method_exists: resolveMessagingAdapter()
+            // bare ?object, so method_exists leaves phpstan with stdClass and the named
+            // argument below unchecked. Same guard, but the call is type-checked.
+            if ($adapter instanceof WhatsAppAdapter) {
                 $withinWindow = (bool) $adapter->isWithinSessionWindow(contactId: $contactId);
             }
 
