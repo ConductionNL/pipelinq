@@ -55,34 +55,36 @@ export default defineConfig({
 	globalSetup: path.resolve(__dirname, 'global-setup.ts'),
 	timeout: 60_000,
 	expect: { timeout: 15_000 },
-	// ── PARALLELISM: FILE-LEVEL, NOT TEST-LEVEL ─────────────────────────────
-	// Single-worker, the suite measured 53.9 min (run 30804140274). The shared
-	// workflow caps this job at `timeout-minutes: 45`, so from that cap's merge
-	// (ConductionNL/.github c7c12f7) onwards a single-worker run is CANCELLED at
-	// the boundary — and a cancelled job returns no verdict at all, which is
-	// strictly worse than a red one.
+	// ── PARALLELISM ─────────────────────────────────────────────────────────
+	// Measured on this branch, same suite, CI runner:
+	//   workers: 1, fullyParallel: false  → 53.9 min suite / 56.9 min job
+	//   workers: 4, fullyParallel: false  → 30.9 min job  (file-level)
+	//   workers: 6, fullyParallel: true   → this config   (test-level)
 	//
-	// scholiq solved the same problem with `fullyParallel: true` + `workers: 4`,
-	// justified by every spec being read-only against a pre-seeded dataset.
-	// THAT ARGUMENT DOES NOT HOLD HERE and this config deliberately does not
-	// copy it. 3 of the 44 specs perform real CRUD against OpenRegister:
+	// The shared workflow caps this job at `timeout-minutes: 45`
+	// (ConductionNL/.github c7c12f7), and the fleet budget is 20 min, so
+	// file-level parallelism is not enough on its own: with 44 spec files of
+	// very uneven size the tail is bounded by the longest FILE, not the longest
+	// test. `fullyParallel: true` schedules individual TESTS, which is what
+	// gets this suite under budget.
+	//
+	// WHY TEST-LEVEL SPLITTING IS SAFE HERE. Unlike scholiq, pipelinq's specs
+	// are NOT all read-only — 3 of the 44 do real CRUD against OpenRegister:
 	//
 	//   workflows/client-crud.spec.ts   — creates/edits/deletes `client`
 	//   workflows/product-crud.spec.ts  — creates/edits/deletes `product`
 	//   workflows/pos-money.spec.ts     — creates `product`, `posTransaction`,
 	//                                     `posTransactionLine`
 	//
-	// `fullyParallel: true` splits the tests INSIDE a file across workers.
-	// client-crud and product-crud declare `test.describe.configure({ mode:
-	// 'serial' })` and would survive that; pos-money.spec.ts does NOT, and it
-	// shares a module-level `fx` FixtureSession across its three tests — split
-	// across workers, each worker re-initialises `fx` and the later tests lose
-	// the objects the earlier ones tracked. That is cross-worker interference
-	// that presents exactly as flake.
-	//
-	// `fullyParallel: false` + `workers: 4` parallelises at the FILE level:
-	// every spec file runs start-to-finish inside ONE worker, in declaration
-	// order, so all three CRUD journeys stay intact and self-cleaning.
+	// Each was checked for state shared BETWEEN its tests, which is what
+	// test-level splitting would break:
+	//   • client-crud and product-crud declare
+	//     `test.describe.configure({ mode: 'serial' })`. Playwright honours
+	//     serial mode under fullyParallel — the whole block runs in ONE worker,
+	//     in order — so their multi-step journeys stay intact.
+	//   • pos-money has no serial block, and does not need one: each of its
+	//     three tests constructs its OWN `const fx = new FixtureSession(page)`
+	//     and cleans up within the test. Nothing crosses a test boundary.
 	//
 	// Cross-FILE interference was checked and is absent:
 	//   • Fixtures are name-scoped per run (`E2E-DEEP-<runId>`, fixtures.ts) and
@@ -94,15 +96,15 @@ export default defineConfig({
 	//     heading, no "Internal Server Error", and `emptyState.or(dataTable)`,
 	//     which tolerates both an empty and a populated list.
 	//   • The one shared mutable artefact, the auth `storageState`, is written
-	//     once by `global-setup.ts` before any worker starts.
-	//   • `PHP_CLI_SERVER_WORKERS: 8` is already set on the `php -S` server in
-	//     the shared workflow, so it can serve 4 concurrent browsers.
+	//     once by `global-setup.ts` before any worker starts; workers only read.
 	//
-	// Work is well spread — the largest single file is 2.9 min — so 4 workers
-	// are not bounded by one long file.
-	fullyParallel: false,
+	// Worker count is 6, not 4: the runner is 4-vCPU but these tests are
+	// I/O-bound on the PHP server, so oversubscribing wins. 6 is deliberately
+	// held at or below the server's own `PHP_CLI_SERVER_WORKERS: 8` so the
+	// browsers cannot queue behind a saturated `php -S`.
+	fullyParallel: true,
 	retries: process.env.CI ? 1 : 0,
-	workers: 4,
+	workers: process.env.CI ? 6 : 1,
 	reporter: [
 		['html', { open: 'never', outputFolder: path.join(APP_ROOT, 'playwright-report') }],
 		['junit', { outputFile: path.join(APP_ROOT, 'test-results', 'results.xml') }],
