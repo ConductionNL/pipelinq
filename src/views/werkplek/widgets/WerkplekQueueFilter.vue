@@ -107,9 +107,9 @@ export default {
 		 * Write the chosen queue into the workspace context so the list widgets
 		 * react. Empty string clears the filter.
 		 *
-		 * Vue 2.7's Options-API `inject` auto-unwraps the page's provided `ref({})`,
+		 * The Options-API `inject` auto-unwraps the page's provided `ref({})`,
 		 * so `cnWorkspaceContext` is the plain reactive object here; write the key
-		 * in place with `$set`. The `.value` branch supports a raw-ref holder.
+		 * in place. The `.value` branch supports a raw-ref holder.
 		 *
 		 * @param {string} value Queue slug/id, or '' for all.
 		 */
@@ -120,7 +120,7 @@ export default {
 				holder.value = { ...(holder.value || {}), selectedQueue: value || '' }
 				return
 			}
-			this.$set(holder, 'selectedQueue', value || '')
+			holder.selectedQueue = value || ''
 		},
 	},
 }

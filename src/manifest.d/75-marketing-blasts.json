@@ -8,13 +8,13 @@
 				{
 					"id": "Blasts",
 					"label": "Blasts",
-					"icon": "icon-mail",
+					"icon": "Email",
 					"route": "Blasts"
 				},
 				{
 					"id": "BlastPerformance",
 					"label": "Blast performance",
-					"icon": "icon-category-monitoring",
+					"icon": "ChartLine",
 					"route": "BlastPerformance"
 				}
 			]

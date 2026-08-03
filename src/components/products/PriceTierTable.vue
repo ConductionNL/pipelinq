@@ -19,27 +19,27 @@
 							<NcTextField
 								:label="t('pipelinq', 'From quantity')"
 								:label-visible="false"
-								:value="String(tier.minQuantity)"
+								:model-value="String(tier.minQuantity)"
 								type="number"
-								@update:value="v => updateTier(index, 'minQuantity', v)" />
+								@update:model-value="v => updateTier(index, 'minQuantity', v)" />
 						</td>
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'Unit price')"
 								:label-visible="false"
-								:value="String(tier.unitPrice)"
+								:model-value="String(tier.unitPrice)"
 								type="number"
-								@update:value="v => updateTier(index, 'unitPrice', v)" />
+								@update:model-value="v => updateTier(index, 'unitPrice', v)" />
 						</td>
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'Label')"
 								:label-visible="false"
-								:value="tier.label || ''"
-								@update:value="v => updateTier(index, 'label', v)" />
+								:model-value="tier.label || ''"
+								@update:model-value="v => updateTier(index, 'label', v)" />
 						</td>
 						<td class="price-tier-table__actions-col">
-							<NcButton type="tertiary" :aria-label="t('pipelinq', 'Remove tier')" @click="removeTier(index)">
+							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove tier')" @click="removeTier(index)">
 								<template #icon>
 									<Delete :size="20" />
 								</template>
@@ -57,7 +57,7 @@
 				</template>
 				{{ t('pipelinq', 'Add tier') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="saving" @click="save">
+			<NcButton variant="primary" :disabled="saving" @click="save">
 				{{ t('pipelinq', 'Save tiers') }}
 			</NcButton>
 		</div>

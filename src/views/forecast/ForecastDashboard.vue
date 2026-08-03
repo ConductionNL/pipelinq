@@ -13,8 +13,8 @@
 					:options="levelOptions"
 					label="label"
 					:clearable="false"
-					@input="loadSnapshots" />
-				<NcButton type="secondary" @click="exportCsv">
+					@update:model-value="loadSnapshots" />
+				<NcButton variant="secondary" @click="exportCsv">
 					{{ t('pipelinq', 'Export CSV') }}
 				</NcButton>
 			</div>
@@ -86,7 +86,7 @@
 						<td>{{ formatMoney(row.closed_won) }}</td>
 						<td>{{ row.quota === null ? '—' : formatMoney(row.quota) }}</td>
 						<td>
-							<NcButton type="tertiary" @click="openOverride(row)">
+							<NcButton variant="tertiary" @click="openOverride(row)">
 								{{ t('pipelinq', 'Override') }}
 							</NcButton>
 						</td>
@@ -224,20 +224,36 @@ export default {
 
 <style scoped>
 .forecast-dashboard { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
 .forecast-dashboard__header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+
 .forecast-dashboard__controls { display: flex; gap: 12px; align-items: flex-end; }
+
 .forecast-dashboard__atrisk { margin: 16px 0; }
+
 .forecast-summary { display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0; }
+
 .forecast-summary__metric { display: flex; flex-direction: column; }
+
 .forecast-summary__label { color: var(--color-text-maxcontrast); font-size: 0.85em; }
+
 .forecast-summary__value { font-size: 1.4em; font-weight: 600; }
+
 .forecast-progress { margin: 16px 0 24px; }
+
 .forecast-progress__bar { display: flex; height: 20px; border-radius: 10px; overflow: hidden; background: var(--color-background-dark); }
+
 .forecast-progress__seg--closed { background: var(--color-success); }
+
 .forecast-progress__seg--commit { background: var(--color-primary-element); opacity: 0.7; background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.25) 4px, rgba(255,255,255,0.25) 8px); }
+
 .forecast-progress__label { display: block; margin-top: 6px; color: var(--color-text-maxcontrast); }
+
 .forecast-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+
 .forecast-table th, .forecast-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--color-border); }
+
 .forecast-table__overridden { color: var(--color-error); font-weight: 600; }
+
 .forecast-table__badge { margin-left: 6px; font-size: 0.8em; color: var(--color-error); cursor: help; }
 </style>

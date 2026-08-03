@@ -16,7 +16,7 @@ on:
 
 jobs:
   quality:
-    uses: Conduction/.github/.github/workflows/quality.yml@main
+    uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
       # Strict static-analysis gate suite (composer check:strict equivalent).
@@ -45,5 +45,11 @@ jobs:
       # Pin openregister to development: main lacks the react/async composer dep
       # that lib/Service/ObjectService.php (Async\await call) requires, so app:enable
       # fails with "Call to undefined function React\Async\await()" during seed.
-      additional-apps: '[{"repo":"Conduction/openregister","app":"openregister","ref":"development"}]'
+      # ⚠️ The org here is `ConductionNL`, not `Conduction` — the latter does not
+      # exist. With the wrong org the checkout prompts for credentials and exits
+      # 128, which took out all four PHPUnit legs AND the Playwright job: they
+      # had never executed a single test. A `uses:`-grep for the wrong org does
+      # NOT find this line, because the org name is embedded in a JSON input
+      # rather than a `uses:`. (Fixed concurrently in #671; same value.)
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
       playwright-seed-command: 'php occ app:disable pipelinq && php occ app:enable pipelinq'

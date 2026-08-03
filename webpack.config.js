@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: EUPL-1.2
+// Copyright (C) 2026 Conduction B.V.
 const path = require('path')
 const fs = require('fs')
 const webpack = require('webpack')
@@ -5,6 +7,13 @@ const TerserPlugin = require('terser-webpack-plugin')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
 const { VueLoaderPlugin } = require('vue-loader')
 
+// ⚠️ `node-polyfill-webpack-plugin` and `terser-webpack-plugin` are BUILD-TIME
+// requirements of `@nextcloud/webpack-vue-config@7` that this app must declare
+// itself. The first is only a `peerDependency` of that package (and `.npmrc`
+// sets `legacy-peer-deps=true`, so peers are not auto-installed); the second is
+// `require()`d without being declared at all. Neither is referenced anywhere in
+// `src/`, so both look like dead dependencies — dropping either fails the build
+// immediately with `Cannot find module …` from inside node_modules.
 const buildMode = process.env.NODE_ENV
 const isDev = buildMode === 'development'
 // Production builds disable source maps entirely. The full `source-map` devtool
@@ -17,12 +26,19 @@ webpackConfig.devtool = isDev ? 'cheap-source-map' : false
 // The base @nextcloud/webpack-vue-config hardcodes
 //   output.publicPath = '/apps/<appName>/js/'
 // which is wrong when the app lives in `apps-extra/`. The entry scripts are
-// injected by PHP (Util::addScript) with the correct `/apps-extra/pipelinq/js/`
+// injected by PHP (Util::addScript) with the correct `/custom_apps/pipelinq/js/`
 // webroot, but webpack's runtime loader uses output.publicPath for dynamically
-// imported chunks (gridstack, apexcharts inside @conduction/nextcloud-vue), so
-// those 404 against `/apps/pipelinq/js/`. 'auto' makes webpack derive the public
-// path from the URL of the executing entry script at runtime, so lazy chunks
-// load from wherever the app is actually mounted.
+// imported chunks, so those resolve against `/apps/pipelinq/js/`.
+//
+// ⚠️ That wrong path does NOT 404 — Nextcloud's PHP router answers 200 with
+// `text/html` (the SPA shell), so the browser reports a MIME refusal and a
+// ChunkLoadError rather than a missing file. Vue 2 never surfaced this because
+// it emitted no async chunks; the Vue 3 dependency set splits @nextcloud/dialogs,
+// @nextcloud/files, @nextcloud/paths and @mdi/js into dozens.
+//
+// 'auto' makes webpack derive the public path from the URL of the executing
+// entry script at runtime, so lazy chunks load from wherever the app is
+// actually mounted.
 webpackConfig.output = {
 	...webpackConfig.output,
 	publicPath: 'auto',
@@ -73,12 +89,29 @@ webpackConfig.entry = {
 	},
 }
 
-// Use local source when available (monorepo dev), otherwise fall back to npm package
+// Use local source when available (monorepo dev), otherwise fall back to the
+// published npm package.
+//
+// ⚠️ `USE_LOCAL_LIB` is opt-OUT across the fleet and the shared
+// `apps-extra/nextcloud-vue` checkout sits on the Vue 2 (beta.*) line, so a
+// default-on local build would silently compile Vue 2 library sources into this
+// Vue 3 app. Opt IN explicitly (USE_LOCAL_LIB=true) and hard-fail if the local
+// tree is not on the Vue 3 major.
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
-const useLocalLib = fs.existsSync(localLib)
+const useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
+if (useLocalLib) {
+	const localPkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../nextcloud-vue/package.json'), 'utf8'))
+	const localVue = (localPkg.peerDependencies && localPkg.peerDependencies.vue) || ''
+	if (!/\^?3\./.test(localVue)) {
+		throw new Error(
+			`USE_LOCAL_LIB=true but ../nextcloud-vue declares peer vue "${localVue}" — that is the Vue 2 line. `
+			+ 'Building against it would silently compile Vue 2 sources into this Vue 3 app. Refusing.',
+		)
+	}
+}
 
 webpackConfig.resolve = {
-	extensions: ['.vue', '.js'],
+	extensions: ['.vue', '.js', '.mjs'],
 	alias: {
 		'@': path.resolve(__dirname, 'src'),
 		...(useLocalLib
@@ -93,25 +126,25 @@ webpackConfig.resolve = {
 			// `window.OCA.OpenRegister.integrations` global, so resolving these from
 			// src/ shares the same singleton as the dist components (no dual instance).
 			: { '@conduction/nextcloud-vue/integrations': path.resolve(__dirname, 'node_modules/@conduction/nextcloud-vue/src/integrations') }),
-		// Deduplicate shared packages so the aliased library source uses
-		// the same instances as the app (prevents dual-Pinia / dual-Vue bugs).
-		// Pin the CONCRETE CommonJS runtime build, NOT the package dir nor the
-		// `vue.runtime.common.js` switcher. webpack would otherwise pick vue's
-		// `module` field (vue.runtime.esm.js), whose ESM namespace omits Vue's
-		// static methods (`util`, `observable`, `defineComponent`, …). nc-vue's
-		// dist + its inlined vue-demi (via vue-codemirror6/@vueuse) and the
-		// consumer's pinia do `import Vue from 'vue'; Vue.<static>()`, compiled to
-		// `require('vue').<static>` — undefined on the ESM namespace, BLANKING the
-		// whole app at mount ("reading 'warn'" / "observable is not a function").
-		// Point straight at the dev/prod build file (each ends `module.exports =
-		// Vue`, the full constructor): the 173-byte `vue.runtime.common.js` switcher
-		// (`module.exports = require('./prod')`) hides the constructor behind an
-		// indirection webpack's default-import interop can't see through.
-		'vue$': isDev
-			? path.resolve(__dirname, 'node_modules/vue/dist/vue.runtime.common.dev.js')
-			: path.resolve(__dirname, 'node_modules/vue/dist/vue.runtime.common.prod.js'),
-		'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
-		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
+		// Deduplicate shared packages so the aliased library source uses the same
+		// instances as the app (prevents dual-Pinia / dual-Vue / dual-router bugs).
+		//
+		// ⚠️ An alias that resolves to a package DIRECTORY makes webpack fall back
+		// to `main`/`mainFields` and skip the package's `exports` map entirely.
+		// `@nextcloud/vue@9`, `@nextcloud/dialogs@7` and `vue-router@5` ship NO
+		// `main` and NO `module` — they are reachable only through their exports
+		// map — so a directory alias for those resolves to NOTHING and produces one
+		// `Can't resolve '<pkg>'` error per importing module (234 on petstore).
+		// Point singleton aliases at a concrete entry FILE. (`vue` and `pinia`
+		// still declare `main`, so a directory alias resolves for them.)
+		vue$: path.resolve(__dirname, 'node_modules/vue'),
+		pinia$: path.resolve(__dirname, 'node_modules/pinia'),
+		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue/dist/index.mjs'),
+		// @nextcloud/vue@9 hard-depends on vue-router ^5.1.0 while the app is on
+		// vue-router 4, so a DUAL COPY is inevitable and the router injection keys
+		// (module-local Symbols) would not match across it — `useRoute()` inside
+		// library components would return undefined. Force one copy.
+		'vue-router$': path.resolve(__dirname, 'node_modules/vue-router/dist/vue-router.mjs'),
 	},
 }
 
@@ -123,50 +156,41 @@ webpackConfig.plugins = [
 	new webpack.DefinePlugin({ appVersion: JSON.stringify(process.env.npm_package_version) }),
 ]
 
-// Force all shared packages to resolve from pipelinq's own node_modules,
-// preventing the nextcloud-vue submodule's nested deps (Vue 3) from leaking in.
-// Register the exact-match style.css alias BEFORE the bare package alias:
-// enhanced-resolve applies the first matching entry, and the bare alias maps the
-// package to its DIRECTORY, so '@nextcloud/dialogs/style.css' (imported by
-// nextcloud-vue's useAppInstaller) would resolve to a non-existent root style.css.
-// dialogs v6 ships the stylesheet at dist/style.css behind its "exports" map.
-webpackConfig.resolve.alias['@nextcloud/dialogs/style.css$'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs/dist/style.css')
-webpackConfig.resolve.alias['@nextcloud/dialogs'] = path.resolve(__dirname, 'node_modules/@nextcloud/dialogs')
+// The former `@nextcloud/dialogs` + `@nextcloud/dialogs/style.css` directory
+// aliases are GONE.
+//
+// They existed to stop "the nextcloud-vue submodule's nested deps (Vue 3)"
+// leaking into a Vue 2 app — a rationale this migration inverts. Worse, they
+// were the same landmine as the `@nextcloud/vue` alias above: dialogs v7 ships
+// NO `main`, only `exports`, so aliasing the bare specifier to the package
+// DIRECTORY makes every `import … from '@nextcloud/dialogs'` unresolvable. The
+// companion `style.css$` alias is likewise unnecessary — v7's exports map
+// publishes `./style.css` directly.
 
-// Bypass @nextcloud/axios's `exports` field which only declares the `import`
-// condition. @nextcloud/vue's CJS bundle still uses require('@nextcloud/axios')
-// and webpack 5's CommonJS resolver fails the exports check with:
-//   "." is not exported under the conditions ["require","module","webpack",...]
-// Aliasing the bare specifier directly at the dist entry sidesteps the
-// exports field gate. Use the $-suffixed exact-match form so subpath imports
-// (e.g. @nextcloud/axios/dist/foo) keep their normal resolution. Mirrors
-// decidesk's `ed34703c`.
-// Shim re-exports @nextcloud/axios's `default` so `require('@nextcloud/axios')`
-// yields the axios instance (with `.interceptors`) — see build/nextcloud-axios-default.cjs.
-// A plain alias to dist/index.cjs handed over the ESM namespace `{ default, … }`,
-// which nc-vue's interop double-wrapped so `.interceptors` was undefined →
-// password-confirmation blanked the app at mount.
-webpackConfig.resolve.alias['@nextcloud/axios$'] = path.resolve(__dirname, 'build/nextcloud-axios-default.cjs')
+// The former `@nextcloud/axios$` shim (build/nextcloud-axios-default.cjs) is
+// GONE. It existed because @nextcloud/vue@8's CJS bundle did
+// `require('@nextcloud/axios')`, which failed webpack 5's exports check, and
+// then double-wrapped the ESM namespace so `.interceptors` came back undefined.
+// @nextcloud/vue@9 is ESM-only, so the bare `import` condition resolves
+// normally and no shim is needed.
 
-// nc-vue ≥165 (CnRelatedObjectsWidget → @nextcloud/files → @nextcloud/paths;
-// notify_push) pulls these ESM-only packages that declare only the `import`
-// export condition, so nc-vue's CJS bundle's require() fails webpack 5's
-// CommonJS exports check ("." is not exported…). Alias to the ESM entry.
+// The former `vue-demi$` pin to `lib/v2.7/index.mjs` is GONE — that variant is
+// the Vue 2 shim by construction. vue-demi picks its shim in a `postinstall`,
+// which npm does NOT re-run for an already-present version, so the switch is
+// verified explicitly in CI/locally rather than pinned here (see the check in
+// the migration notes: node_modules/vue-demi/lib/index.mjs must contain
+// `import * as Vue` and `isVue2 = false`).
+
+// nc-vue pulls ESM-only @nextcloud packages that declare only the `import`
+// export condition; alias to the ESM entry so a CJS `require()` inside a
+// transitive dependency still resolves.
 webpackConfig.resolve.alias['@nextcloud/paths$'] = path.resolve(__dirname, 'node_modules/@nextcloud/paths/dist/index.mjs')
 webpackConfig.resolve.alias['@nextcloud/notify_push$'] = path.resolve(__dirname, 'node_modules/@nextcloud/notify_push/dist/index.js')
-
-// Pin vue-demi to its Vue-2.7 variant. pinia + @vueuse (bundled by webpack from
-// our own node_modules) import `vue-demi`, whose default `lib/index.mjs` does an
-// unguarded `import Vue from 'vue'; Vue.util.warn` (+ observable/defineComponent)
-// that blanks the app at mount. nc-vue fixes its OWN bundled copy the same way in
-// rollup; mirror it for the consumer's copies. `lib/v2.7/index.mjs` is a static
-// `import Vue from 'vue'; export * from 'vue'`, so every Vue-2.7 static resolves.
-webpackConfig.resolve.alias['vue-demi$'] = path.resolve(__dirname, 'node_modules/vue-demi/lib/v2.7/index.mjs')
 
 // @nextcloud/files (pulled transitively via @nextcloud/axios → @nextcloud/auth)
 // references the Node core `stream` module, which webpack 5 does not polyfill for
 // the browser. It is on a code path the app never hits, so provide an empty module.
-// Same story for `path`: @nextcloud/dialogs v6 drags in a FilePicker chunk that
+// Same story for `path`: @nextcloud/dialogs v7 drags in a FilePicker chunk that
 // imports it, and the app only uses the toast APIs (showError/showSuccess/
 // showWarning), so the FilePicker code path never executes.
 webpackConfig.resolve.fallback = {

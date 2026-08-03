@@ -179,9 +179,9 @@ class SemanticHandoffController extends Controller
             handoffId: self::HANDOFF_CONVERT_TO_CASE
         );
 
-        if (($result['ok'] ?? false) !== true) {
+        if ($result['ok'] !== true) {
             return new JSONResponse(
-                ['status' => 'handoff-failed', 'reason' => (string) ($result['reason'] ?? '')],
+                ['status' => 'handoff-failed', 'reason' => (string) $result['reason']],
                 Http::STATUS_BAD_GATEWAY
             );
         }
@@ -190,13 +190,13 @@ class SemanticHandoffController extends Controller
         // write can never silently untype the ticket.
         $request['ticketType']    = TicketService::TYPE_REQUEST;
         $request['status']        = 'converted';
-        $request['caseReference'] = (string) ($result['targetUuid'] ?? '');
+        $request['caseReference'] = (string) $result['targetUuid'];
         $saved = $this->saveObject(schema: $this->ticketSchema(), id: $id, payload: $request);
         if ($saved === false) {
             // The case was created + linked by the engine; only the local
             // status write failed. Surface it honestly without a 5xx.
             return new JSONResponse(
-                ['status' => 'converted-unsynced', 'caseReference' => (string) ($result['targetUuid'] ?? '')],
+                ['status' => 'converted-unsynced', 'caseReference' => (string) $result['targetUuid']],
                 Http::STATUS_OK
             );
         }
@@ -204,8 +204,8 @@ class SemanticHandoffController extends Controller
         return new JSONResponse(
                 [
                     'status'        => 'converted',
-                    'caseReference' => (string) ($result['targetUuid'] ?? ''),
-                    'correlationId' => (string) ($result['correlationId'] ?? ''),
+                    'caseReference' => (string) $result['targetUuid'],
+                    'correlationId' => (string) $result['correlationId'],
                 ]
                 );
     }//end convertRequestToCase()
@@ -282,14 +282,14 @@ class SemanticHandoffController extends Controller
             handoffId: self::HANDOFF_SEND_TO_INVOICING
         );
 
-        if (($result['ok'] ?? false) !== true) {
+        if ($result['ok'] !== true) {
             return new JSONResponse(
-                ['status' => 'handoff-failed', 'reason' => (string) ($result['reason'] ?? '')],
+                ['status' => 'handoff-failed', 'reason' => (string) $result['reason']],
                 Http::STATUS_BAD_GATEWAY
             );
         }
 
-        $contract['invoiceReference'] = (string) ($result['targetUuid'] ?? '');
+        $contract['invoiceReference'] = (string) $result['targetUuid'];
         $this->saveObject(
             schema: $this->schemaSlug(key: 'contract_schema', default: 'contract'),
             id: $id,
@@ -299,8 +299,8 @@ class SemanticHandoffController extends Controller
         return new JSONResponse(
                 [
                     'status'           => 'sent',
-                    'invoiceReference' => (string) ($result['targetUuid'] ?? ''),
-                    'correlationId'    => (string) ($result['correlationId'] ?? ''),
+                    'invoiceReference' => (string) $result['targetUuid'],
+                    'correlationId'    => (string) $result['correlationId'],
                 ]
                 );
     }//end sendContractToInvoicing()

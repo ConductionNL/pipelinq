@@ -34,7 +34,7 @@
 		<template #footer>
 			<NcButton
 				v-if="total > items.length"
-				type="tertiary"
+				variant="tertiary"
 				class="view-all-link"
 				@click="$router.push({ name: 'MyWork' })">
 				{{ t('pipelinq', 'View all ({count})', { count: total }) }}

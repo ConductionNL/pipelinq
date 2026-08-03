@@ -301,11 +301,15 @@ export default {
 	font-size: var(--default-font-size, 14px);
 }
 
-::v-deep(.communication-history__row) {
+/* These used the Vue-2 spelling of the deep selector. Vue 3's SFC compiler
+   expects the `:deep(…)` form below; stylelint rejected the old one as an
+   unknown pseudo-element (`selector-pseudo-element-no-unknown`), which is what
+   surfaced it. */
+:deep(.communication-history__row) {
 	cursor: pointer;
 }
 
-::v-deep(.communication-history__row:hover) {
+:deep(.communication-history__row:hover) {
 	background-color: var(--color-background-hover);
 }
 </style>

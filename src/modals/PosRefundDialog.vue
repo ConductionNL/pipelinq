@@ -11,7 +11,7 @@
 		<div class="pos-refund">
 			<p>{{ t('pipelinq', 'This will reverse the transaction. Enter a reason for the refund.') }}</p>
 			<NcTextArea
-				:value.sync="reason"
+				v-model="reason"
 				:label="t('pipelinq', 'Reason')"
 				:error="showError"
 				:helper-text="showError ? t('pipelinq', 'Enter a reason for the reversal') : ''" />
@@ -20,7 +20,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="error" :disabled="submitting" @click="submit">
+			<NcButton variant="error" :disabled="submitting" @click="submit">
 				{{ t('pipelinq', 'Reverse') }}
 			</NcButton>
 		</template>

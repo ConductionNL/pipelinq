@@ -3,19 +3,19 @@
 		{
 			"id": "BookingsGroup",
 			"label": "Appointments",
-			"icon": "Calendar",
+			"icon": "CalendarClockOutline",
 			"order": 150,
 			"children": [
 				{
 					"id": "Services",
 					"label": "Services",
-					"icon": "icon-toggle-pictures",
+					"icon": "ViewGridOutline",
 					"route": "Services"
 				},
 				{
 					"id": "Resources",
 					"label": "Resources",
-					"icon": "icon-user",
+					"icon": "SourceBranch",
 					"route": "Resources"
 				},
 				{

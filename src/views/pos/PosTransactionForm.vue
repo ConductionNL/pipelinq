@@ -16,39 +16,39 @@
 		<template v-else>
 			<div class="pos-form__fields">
 				<NcTextField
-					:value.sync="transaction.terminalId"
+					v-model="transaction.terminalId"
 					:label="t('pipelinq', 'Terminal')" />
 				<NcSelect
-					:value="selectedClient"
+					:model-value="selectedClient"
 					:options="clientOptions"
 					:input-label="t('pipelinq', 'Client (optional)')"
 					label="label"
 					:clearable="true"
-					@input="onClientSelect" />
+					@update:model-value="onClientSelect" />
 				<NcSelect
-					:value="selectedPriceMode"
+					:model-value="selectedPriceMode"
 					:options="priceModeOptions"
 					:input-label="t('pipelinq', 'Price mode')"
 					label="label"
 					:clearable="false"
-					@input="onPriceModeSelect" />
+					@update:model-value="onPriceModeSelect" />
 				<NcSelect
-					:value="selectedTender"
+					:model-value="selectedTender"
 					:options="tenderOptions"
 					:input-label="t('pipelinq', 'Tender type')"
 					label="label"
 					:clearable="false"
 					data-testid="tender-type"
-					@input="onTenderSelect" />
+					@update:model-value="onTenderSelect" />
 				<NcTextField
-					:value.sync="transaction.notes"
+					v-model="transaction.notes"
 					:label="t('pipelinq', 'Notes')" />
 			</div>
 
 			<div class="pos-form__customer">
 				<div v-if="!selectedCustomer" class="pos-form__customer-empty">
 					<NcButton
-						type="secondary"
+						variant="secondary"
 						data-testid="add-customer"
 						:disabled="saving"
 						@click="openCustomerLookup">
@@ -70,7 +70,7 @@
 						</span>
 					</span>
 					<NcButton
-						type="tertiary"
+						variant="tertiary"
 						:aria-label="t('pipelinq', 'Remove customer')"
 						data-testid="clear-customer"
 						:disabled="saving"
@@ -133,7 +133,7 @@
 
 			<div class="pos-form__actions">
 				<NcButton
-					type="primary"
+					variant="primary"
 					:disabled="saving || !checkoutAllowed"
 					data-testid="checkout"
 					@click="save">
@@ -461,7 +461,7 @@ export default {
 		 * @param {object} line The updated line.
 		 */
 		updateLine(index, line) {
-			this.$set(this.lines, index, { ...line, _key: this.lines[index]._key })
+			this.lines[index] = { ...line, _key: this.lines[index]._key }
 		},
 		/**
 		 * Remove a line, queueing a delete if it was persisted.
@@ -605,7 +605,7 @@ export default {
 		 * @param {object|null} option The chosen price mode.
 		 */
 		onPriceModeSelect(option) {
-			this.$set(this.transaction, 'priceMode', option ? option.id : 'excl')
+			this.transaction.priceMode = option ? option.id : 'excl'
 		},
 		/**
 		 * Apply a tender type selection.
@@ -613,7 +613,7 @@ export default {
 		 * @param {object|null} option The chosen tender.
 		 */
 		onTenderSelect(option) {
-			this.$set(this.transaction, 'tenderType', option ? option.id : 'cash')
+			this.transaction.tenderType = option ? option.id : 'cash'
 		},
 		/**
 		 * Apply a marketing-consent toggle.
@@ -621,7 +621,7 @@ export default {
 		 * @param {Event} event The change event.
 		 */
 		onConsentChange(event) {
-			this.$set(this.transaction, 'marketingConsent', !!event.target.checked)
+			this.transaction.marketingConsent = !!event.target.checked
 		},
 		/**
 		 * Open the customer lookup modal.
@@ -642,9 +642,9 @@ export default {
 		 */
 		async onCustomerSelected(row) {
 			this.selectedCustomer = row
-			this.$set(this.transaction, 'customer', row.id)
+			this.transaction.customer = row.id
 			if (row.doNotContact) {
-				this.$set(this.transaction, 'marketingConsent', false)
+				this.transaction.marketingConsent = false
 				showWarning(t('pipelinq', 'This customer does not wish to be contacted.'))
 			}
 			this.showCustomerModal = false
@@ -655,8 +655,8 @@ export default {
 		 */
 		async clearCustomer() {
 			this.selectedCustomer = null
-			this.$set(this.transaction, 'customer', null)
-			this.$set(this.transaction, 'marketingConsent', false)
+			this.transaction.customer = null
+			this.transaction.marketingConsent = false
 			this.history = []
 			if (!this.isNew) {
 				try {

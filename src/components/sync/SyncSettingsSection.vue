@@ -33,7 +33,7 @@
 
 			<div class="sync-settings__field">
 				<NcCheckboxRadioSwitch
-					:checked.sync="form.enabled"
+					v-model="form.enabled"
 					type="switch"
 					data-testid="sync-email-enabled">
 					{{ t('pipelinq', 'Enable email matching for this account') }}
@@ -56,14 +56,14 @@
 
 			<div class="sync-settings__actions">
 				<NcButton
-					type="primary"
+					variant="primary"
 					:disabled="saving"
 					data-testid="sync-email-save"
 					@click="save">
 					{{ t('pipelinq', 'Save settings') }}
 				</NcButton>
 				<NcButton
-					type="secondary"
+					variant="secondary"
 					:disabled="triggering"
 					data-testid="sync-email-trigger"
 					@click="trigger">

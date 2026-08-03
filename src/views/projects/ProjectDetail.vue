@@ -47,13 +47,13 @@
 		:object-id="projectId"
 		:sidebar-props="sidebarProps">
 		<template #actions>
-			<NcButton type="primary" @click="startEdit">
+			<NcButton variant="primary" @click="startEdit">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
 			<NcButton @click="goToActivities">
 				{{ t('pipelinq', 'Time entries') }}
 			</NcButton>
-			<NcButton type="error" @click="confirmDelete">
+			<NcButton variant="error" @click="confirmDelete">
 				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>
@@ -187,7 +187,7 @@
 				</div>
 				<div v-if="ledgerSyncStatus === 'failed'" class="ledger-card__row ledger-card__row--actions">
 					<NcButton
-						type="primary"
+						variant="primary"
 						:disabled="ledgerRetrying"
 						@click="retryLedgerSync">
 						{{ ledgerRetrying ? t('pipelinq', 'Retrying...') : t('pipelinq', 'Retry Sync') }}

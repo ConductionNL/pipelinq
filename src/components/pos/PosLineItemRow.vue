@@ -6,66 +6,66 @@
 	<tr class="pos-line-row">
 		<td class="pos-line-row__product">
 			<NcSelect
-				:value="selectedProduct"
+				:model-value="selectedProduct"
 				:options="productOptions"
 				:input-label="t('pipelinq', 'Product')"
 				:placeholder="t('pipelinq', 'Search product…')"
 				label="label"
 				:clearable="true"
-				@input="onProductSelect" />
+				@update:model-value="onProductSelect" />
 		</td>
 		<td class="pos-line-row__description">
 			<NcTextField
-				:value.sync="local.description"
+				v-model="local.description"
 				:label="t('pipelinq', 'Description')"
 				:label-visible="false"
-				@update:value="emitUpdate" />
+				@update:model-value="emitUpdate" />
 		</td>
 		<td class="pos-line-row__num">
 			<NcInputField
+				v-model="local.quantity"
 				type="number"
-				:value.sync="local.quantity"
 				:label="t('pipelinq', 'Quantity')"
 				:label-visible="false"
 				min="0.001"
 				step="0.001"
-				@update:value="emitUpdate" />
+				@update:model-value="emitUpdate" />
 		</td>
 		<td class="pos-line-row__num">
 			<NcInputField
+				v-model="local.unitPrice"
 				type="number"
-				:value.sync="local.unitPrice"
 				:label="t('pipelinq', 'Unit price')"
 				:label-visible="false"
 				min="0"
 				step="0.01"
-				@update:value="emitUpdate" />
+				@update:model-value="emitUpdate" />
 		</td>
 		<td class="pos-line-row__num">
 			<NcInputField
+				v-model="local.discount"
 				type="number"
-				:value.sync="local.discount"
 				:label="t('pipelinq', 'Discount %')"
 				:label-visible="false"
 				min="0"
 				max="100"
 				step="1"
-				@update:value="emitUpdate" />
+				@update:model-value="emitUpdate" />
 		</td>
 		<td class="pos-line-row__num">
 			<NcSelect
-				:value="selectedTaxRate"
+				:model-value="selectedTaxRate"
 				:options="taxRateOptions"
 				:input-label="t('pipelinq', 'VAT rate')"
 				:clearable="false"
-				@input="onTaxRateSelect" />
+				@update:model-value="onTaxRateSelect" />
 		</td>
 		<td class="pos-line-row__total">
 			{{ formatEur(computed.lineTotal) }}
 		</td>
 		<td class="pos-line-row__actions">
 			<NcButton
-				type="tertiary"
+				variant="tertiary"
 				:aria-label="t('pipelinq', 'Remove line')"
 				@click="$emit('remove')">
 				<template #icon>

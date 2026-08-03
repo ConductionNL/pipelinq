@@ -23,11 +23,11 @@
 				<label for="resource-name">{{ t('pipelinq', 'Name') }} *</label>
 				<NcTextField
 					id="resource-name"
-					:value="form.name"
+					:model-value="form.name"
 					:error="!!errors.name"
 					:helper-text="errors.name"
 					:maxlength="255"
-					@update:value="v => { form.name = v; validateField('name') }" />
+					@update:model-value="v => { form.name = v; validateField('name') }" />
 			</div>
 			<div class="form-group">
 				<label for="resource-type">{{ t('pipelinq', 'Type') }} *</label>
@@ -57,8 +57,8 @@
 				<NcTextField
 					id="resource-max-concurrent"
 					type="number"
-					:value="String(form.maxConcurrent ?? 1)"
-					@update:value="v => form.maxConcurrent = v === '' ? 1 : Math.max(1, Number(v))" />
+					:model-value="String(form.maxConcurrent ?? 1)"
+					@update:model-value="v => form.maxConcurrent = v === '' ? 1 : Math.max(1, Number(v))" />
 			</div>
 			<div class="form-group toggle-group">
 				<input id="resource-bookable" v-model="form.bookable" type="checkbox">
@@ -70,8 +70,8 @@
 			<label for="resource-skills">{{ t('pipelinq', 'Skills (comma-separated)') }}</label>
 			<NcTextField
 				id="resource-skills"
-				:value="skillsCsv"
-				@update:value="onSkillsInput" />
+				:model-value="skillsCsv"
+				@update:model-value="onSkillsInput" />
 		</div>
 
 		<div class="form-row">
@@ -79,15 +79,15 @@
 				<label for="resource-user-id">{{ t('pipelinq', 'Nextcloud user ID (staff only)') }}</label>
 				<NcTextField
 					id="resource-user-id"
-					:value="form.userId || ''"
-					@update:value="v => form.userId = v" />
+					:model-value="form.userId || ''"
+					@update:model-value="v => form.userId = v" />
 			</div>
 			<div class="form-group">
 				<label for="resource-calendar-sync">{{ t('pipelinq', 'Calendar sync link (UUID)') }}</label>
 				<NcTextField
 					id="resource-calendar-sync"
-					:value="form.calendarSyncId || ''"
-					@update:value="v => form.calendarSyncId = v" />
+					:model-value="form.calendarSyncId || ''"
+					@update:model-value="v => form.calendarSyncId = v" />
 			</div>
 		</div>
 
@@ -126,14 +126,14 @@
 								:aria-label="t('pipelinq', 'Close time')">
 						</td>
 						<td>
-							<NcButton type="tertiary" @click="removeHours(idx)">
+							<NcButton variant="tertiary" @click="removeHours(idx)">
 								&times;
 							</NcButton>
 						</td>
 					</tr>
 				</tbody>
 			</table>
-			<NcButton type="secondary" class="add-btn" @click="addHours">
+			<NcButton variant="secondary" class="add-btn" @click="addHours">
 				{{ t('pipelinq', 'Add working hours row') }}
 			</NcButton>
 			<p v-if="hoursError" class="error-text">
@@ -173,14 +173,14 @@
 								:aria-label="t('pipelinq', 'Vacation label')">
 						</td>
 						<td>
-							<NcButton type="tertiary" @click="removeVacation(idx)">
+							<NcButton variant="tertiary" @click="removeVacation(idx)">
 								&times;
 							</NcButton>
 						</td>
 					</tr>
 				</tbody>
 			</table>
-			<NcButton type="secondary" class="add-btn" @click="addVacation">
+			<NcButton variant="secondary" class="add-btn" @click="addVacation">
 				{{ t('pipelinq', 'Add vacation') }}
 			</NcButton>
 			<p v-if="vacationError" class="error-text">
@@ -189,7 +189,7 @@
 		</div>
 
 		<div class="resource-form__actions">
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="!isValid"
 				data-testid="resource-form-save"
 				@click="onSave">
@@ -374,53 +374,65 @@ export default {
 	max-width: 960px;
 	padding: 0 4px;
 }
+
 .form-group {
 	margin-bottom: 16px;
 }
+
 .form-group label {
 	display: block;
 	margin-bottom: 4px;
 	font-weight: bold;
 }
+
 .form-row {
 	display: flex;
 	gap: 16px;
 	flex-wrap: wrap;
 }
+
 .form-row .form-group {
 	flex: 1 1 200px;
 }
+
 .toggle-group {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
+
 .toggle-group label {
 	margin: 0;
 	font-weight: normal;
 }
+
 .hours-table {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .hours-table th, .hours-table td {
 	padding: 6px;
 	border-bottom: 1px solid var(--color-border);
 }
-.hours-table input[type="time"], .hours-table input[type="date"], .hours-table input[type="text"] {
+
+.hours-table input[type='time'], .hours-table input[type='date'], .hours-table input[type='text'] {
 	width: 100%;
 	padding: 4px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 }
+
 .add-btn {
 	margin-top: 8px;
 }
+
 .error-text {
 	color: var(--color-error);
 	margin-top: 6px;
 	font-size: 13px;
 }
+
 .resource-form__actions {
 	display: flex;
 	gap: 12px;

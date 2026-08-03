@@ -2,7 +2,7 @@
 	<div class="lead-products">
 		<div class="lead-products__header">
 			<h3>{{ t('pipelinq', 'Products') }}</h3>
-			<NcButton type="secondary" @click="showAddDialog = true">
+			<NcButton variant="secondary" @click="showAddDialog = true">
 				{{ t('pipelinq', 'Add Product') }}
 			</NcButton>
 		</div>
@@ -68,7 +68,7 @@
 									@change="updateNotes(item)">
 							</td>
 							<td>
-								<NcButton type="tertiary" @click="removeLineItem(item)">
+								<NcButton variant="tertiary" @click="removeLineItem(item)">
 									{{ t('pipelinq', 'Remove') }}
 								</NcButton>
 							</td>
@@ -95,7 +95,7 @@
 					manual: formatCurrency(leadValue),
 					calculated: formatCurrency(grandTotal),
 				}) }}
-				<NcButton type="tertiary" @click="$emit('sync-value', grandTotal)">
+				<NcButton variant="tertiary" @click="$emit('sync-value', grandTotal)">
 					{{ t('pipelinq', 'Use calculated value') }}
 				</NcButton>
 			</div>
@@ -106,7 +106,7 @@
 			<div class="create-dialog">
 				<div class="create-dialog__header">
 					<h3>{{ t('pipelinq', 'Add Product') }}</h3>
-					<NcButton type="tertiary" @click="showAddDialog = false">
+					<NcButton variant="tertiary" @click="showAddDialog = false">
 						✕
 					</NcButton>
 				</div>
@@ -120,29 +120,29 @@
 							:placeholder="t('pipelinq', 'Search products...')"
 							label="name"
 							:reduce="opt => opt.id"
-							@input="onProductSelect" />
+							@update:model-value="onProductSelect" />
 					</div>
 					<div class="form-row">
 						<div class="form-group">
 							<label>{{ t('pipelinq', 'Quantity') }}</label>
 							<NcTextField
-								:value="String(addForm.quantity)"
+								:model-value="String(addForm.quantity)"
 								type="number"
-								@update:value="v => addForm.quantity = Number(v)" />
+								@update:model-value="v => addForm.quantity = Number(v)" />
 						</div>
 						<div class="form-group">
 							<label>{{ t('pipelinq', 'Unit Price') }}</label>
 							<NcTextField
-								:value="String(addForm.unitPrice)"
+								:model-value="String(addForm.unitPrice)"
 								type="number"
-								@update:value="v => addForm.unitPrice = Number(v)" />
+								@update:model-value="v => addForm.unitPrice = Number(v)" />
 						</div>
 						<div class="form-group">
 							<label>{{ t('pipelinq', 'Discount') }}</label>
 							<NcTextField
-								:value="String(addForm.discount)"
+								:model-value="String(addForm.discount)"
 								type="number"
-								@update:value="v => addForm.discount = Number(v)" />
+								@update:model-value="v => addForm.discount = Number(v)" />
 						</div>
 					</div>
 					<div class="form-group">
@@ -150,7 +150,7 @@
 						<textarea v-model="addForm.notes" rows="2" />
 					</div>
 					<div class="form-actions">
-						<NcButton type="primary" :disabled="!addForm.product" @click="addLineItem">
+						<NcButton variant="primary" :disabled="!addForm.product" @click="addLineItem">
 							{{ t('pipelinq', 'Add') }}
 						</NcButton>
 						<NcButton @click="showAddDialog = false">

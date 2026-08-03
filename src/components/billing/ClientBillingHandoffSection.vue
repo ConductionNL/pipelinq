@@ -44,7 +44,7 @@
 						:aria-label="t('pipelinq', 'Billing period end date')">
 				</div>
 			</div>
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="busy || !periodStart || !periodEnd"
 				data-testid="billing-handoff-send"
 				@click="send">
@@ -55,7 +55,7 @@
 			</NcButton>
 		</template>
 		<NcButton v-else-if="deepLinkUrl"
-			type="secondary"
+			variant="secondary"
 			:href="deepLinkUrl"
 			target="_blank"
 			rel="noopener">
@@ -226,21 +226,25 @@ export default {
 	flex-direction: column;
 	gap: 12px;
 }
+
 .client-billing-handoff-section__period {
 	display: flex;
 	gap: 16px;
 	flex-wrap: wrap;
 }
+
 .client-billing-handoff-section__field {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
 }
+
 .client-billing-handoff-section__field label {
 	font-weight: 600;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
+
 .client-billing-handoff-section__result {
 	max-width: 480px;
 }

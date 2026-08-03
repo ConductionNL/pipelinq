@@ -19,7 +19,7 @@
 			<h3>{{ t('pipelinq', 'Tenders') }}</h3>
 			<NcButton
 				v-if="canEdit"
-				type="primary"
+				variant="primary"
 				:disabled="loading"
 				@click="openAddDialog">
 				{{ t('pipelinq', 'Add tender') }}
@@ -61,7 +61,7 @@
 						<td class="actions">
 							<NcButton
 								v-if="canEdit"
-								type="error"
+								variant="error"
 								@click="removeTender(tender)">
 								{{ t('pipelinq', 'Remove') }}
 							</NcButton>

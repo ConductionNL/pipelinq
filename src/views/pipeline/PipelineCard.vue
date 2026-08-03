@@ -72,7 +72,7 @@
 				<NcButton
 					v-for="stage in stages"
 					:key="stage.name"
-					type="secondary"
+					variant="secondary"
 					class="dialog-list__item"
 					@click="onPickStage(stage)">
 					{{ stage.name }}
@@ -89,7 +89,7 @@
 				:options="userOptions"
 				:clearable="true"
 				:input-label="t('pipelinq', 'Assignee')"
-				@input="onPickAssignee" />
+				@update:model-value="onPickAssignee" />
 		</NcDialog>
 
 		<NcDialog
@@ -100,7 +100,7 @@
 				<NcButton
 					v-for="p in priorityOptions"
 					:key="p.value"
-					:type="item.priority === p.value ? 'primary' : 'secondary'"
+					:variant="item.priority === p.value ? 'primary' : 'secondary'"
 					class="dialog-list__item"
 					@click="onPickPriority(p.value)">
 					{{ p.label }}
@@ -499,6 +499,7 @@ export default {
 
 <style scoped>
 .pipeline-card {
+	position: relative;
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
 	padding: 8px;
@@ -508,10 +509,6 @@ export default {
 
 .pipeline-card:hover {
 	background: var(--color-background-hover);
-}
-
-.pipeline-card {
-	position: relative;
 }
 
 .pipeline-card--overdue {

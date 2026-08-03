@@ -32,7 +32,7 @@
 
 		<div class="prospect-card__footer">
 			<span class="prospect-card__source">{{ prospect.source }}</span>
-			<NcButton type="primary" data-testid="prospect-create-lead" @click="$emit('create-lead', prospect)">
+			<NcButton variant="primary" data-testid="prospect-create-lead" @click="$emit('create-lead', prospect)">
 				{{ t('pipelinq', 'Create Lead') }}
 			</NcButton>
 		</div>

@@ -38,10 +38,10 @@
 									</span>
 								</td>
 								<td class="relationship-actions" @click.stop>
-									<NcButton type="tertiary" @click="editRelationship(rel)">
+									<NcButton variant="tertiary" @click="editRelationship(rel)">
 										{{ t('pipelinq', 'Edit') }}
 									</NcButton>
-									<NcButton type="tertiary" @click="removeRelationship(rel)">
+									<NcButton variant="tertiary" @click="removeRelationship(rel)">
 										{{ t('pipelinq', 'Remove') }}
 									</NcButton>
 								</td>
@@ -53,7 +53,7 @@
 		</div>
 
 		<div class="contact-relationships__footer">
-			<NcButton type="secondary" @click="showAddDialog = true">
+			<NcButton variant="secondary" @click="showAddDialog = true">
 				{{ t('pipelinq', 'Add relationship') }}
 			</NcButton>
 		</div>
@@ -63,7 +63,7 @@
 			<div class="create-dialog">
 				<div class="create-dialog__header">
 					<h3>{{ editingRelationship ? t('pipelinq', 'Edit relationship') : t('pipelinq', 'Add relationship') }}</h3>
-					<NcButton type="tertiary" @click="closeDialog">
+					<NcButton variant="tertiary" @click="closeDialog">
 						&times;
 					</NcButton>
 				</div>
@@ -88,7 +88,7 @@
 							:placeholder="t('pipelinq', 'Select type...')"
 							label="label"
 							:reduce="opt => opt.value"
-							@input="onTypeSelect" />
+							@update:model-value="onTypeSelect" />
 					</div>
 					<div class="form-group">
 						<label>{{ t('pipelinq', 'Notes') }}</label>
@@ -116,7 +116,7 @@
 					</div>
 					<div class="form-actions">
 						<NcButton
-							type="primary"
+							variant="primary"
 							:disabled="!addForm.toContact || !addForm.type"
 							@click="saveRelationship">
 							{{ editingRelationship ? t('pipelinq', 'Save') : t('pipelinq', 'Add') }}
@@ -144,7 +144,7 @@
 				<NcButton @click="showDeleteDialog = false">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
-				<NcButton type="error" @click="confirmRemove">
+				<NcButton variant="error" @click="confirmRemove">
 					{{ t('pipelinq', 'Remove') }}
 				</NcButton>
 			</template>
@@ -307,12 +307,12 @@ export default {
 				const type = entityType === 'client' ? 'client' : 'contact'
 				const entity = await this.objectStore.fetchObject(type, entityId)
 				if (entity) {
-					this.$set(this.entityNameCache, entityId, entity.name || entityId)
+					this.entityNameCache[entityId] = entity.name || entityId
 				} else {
-					this.$set(this.entityNameCache, entityId, t('pipelinq', '[Deleted]'))
+					this.entityNameCache[entityId] = t('pipelinq', '[Deleted]')
 				}
 			} catch {
-				this.$set(this.entityNameCache, entityId, entityId)
+				this.entityNameCache[entityId] = entityId
 			}
 		},
 		getEntityName(entityId) {

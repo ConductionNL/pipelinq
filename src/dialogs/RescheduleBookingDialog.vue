@@ -27,7 +27,7 @@
 			<NcButton @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!isValid" @click="onConfirm">
+			<NcButton variant="primary" :disabled="!isValid" @click="onConfirm">
 				{{ t('pipelinq', 'Reschedule') }}
 			</NcButton>
 		</template>
@@ -90,20 +90,24 @@ export default {
 .reschedule-form {
 	padding: 8px 0;
 }
+
 .form-group {
 	margin-bottom: 12px;
 }
+
 .form-group label {
 	display: block;
 	font-weight: bold;
 	margin-bottom: 4px;
 }
+
 .form-group input {
 	width: 100%;
 	padding: 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 }
+
 .error-text {
 	color: var(--color-error);
 	margin-top: 8px;

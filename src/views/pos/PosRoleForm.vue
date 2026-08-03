@@ -58,12 +58,12 @@
 			</div>
 
 			<div class="pos-role-form__actions">
-				<NcButton type="primary" :disabled="saving || !canSave" @click="save">
+				<NcButton variant="primary" :disabled="saving || !canSave" @click="save">
 					{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 				</NcButton>
 				<NcButton v-if="!isNew"
 					:disabled="saving"
-					type="error"
+					variant="error"
 					@click="confirmDelete">
 					{{ t('pipelinq', 'Delete') }}
 				</NcButton>

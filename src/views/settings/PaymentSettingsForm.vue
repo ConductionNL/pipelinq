@@ -56,7 +56,7 @@
 						:loading="loadingCredentials"
 						:placeholder="t('pipelinq', 'Select a credential')"
 						label="label"
-						@input="(v) => onCredentialChange(provider, v)" />
+						@update:model-value="(v) => onCredentialChange(provider, v)" />
 
 					<p class="payment-settings__hint">
 						<template v-if="!loadingCredentials && !credentialsFor(provider.name).length">
@@ -73,11 +73,11 @@
 						a constrained HTTP proxy cannot carry it.
 					-->
 					<NcTextField
-						:value="provider.webhookSecret === MASK ? '' : provider.webhookSecret"
+						:model-value="provider.webhookSecret === MASK ? '' : provider.webhookSecret"
 						:label="t('pipelinq', 'Webhook secret')"
 						:placeholder="provider.webhookSecret === MASK ? t('pipelinq', '(saved — leave empty to keep)') : ''"
 						type="password"
-						@update:value="(v) => onSecretChange(provider, 'webhookSecret', v)" />
+						@update:model-value="(v) => onSecretChange(provider, 'webhookSecret', v)" />
 
 					<NcTextField
 						v-if="provider.name === 'ccv'"
@@ -99,13 +99,13 @@
 
 					<div class="payment-settings__actions">
 						<NcButton
-							type="secondary"
+							variant="secondary"
 							:disabled="testingProvider === provider.name"
 							@click="onTest(provider)">
 							{{ testingProvider === provider.name ? t('pipelinq', 'Testing…') : t('pipelinq', 'Test connection') }}
 						</NcButton>
 						<NcButton
-							type="primary"
+							variant="primary"
 							:disabled="savingProvider === provider.name"
 							@click="onSave(provider)">
 							{{ savingProvider === provider.name ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
@@ -336,17 +336,20 @@ export default {
 .payment-settings {
 	max-width: 1080px;
 }
+
 .payment-settings__loading {
 	display: flex;
 	align-items: center;
 	gap: 12px;
 	padding: 24px;
 }
+
 .payment-settings__cards {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
 	gap: 16px;
 }
+
 .payment-settings__card {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large);
@@ -356,15 +359,18 @@ export default {
 	gap: 12px;
 	background-color: var(--color-main-background);
 }
+
 .payment-settings__card-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 }
+
 .payment-settings__card-header h3 {
 	margin: 0;
 	font-size: 1.1em;
 }
+
 .payment-settings__type {
 	font-size: 0.85em;
 	color: var(--color-text-maxcontrast);
@@ -372,25 +378,30 @@ export default {
 	padding: 2px 8px;
 	border-radius: var(--border-radius);
 }
+
 .payment-settings__actions {
 	display: flex;
 	gap: 8px;
 	justify-content: flex-end;
 }
+
 .payment-settings__test-result {
 	font-size: 0.9em;
 	margin: 0;
 	padding: 8px;
 	border-radius: var(--border-radius);
 }
+
 .payment-settings__test-result--ok {
 	background-color: var(--color-success);
 	color: var(--color-main-background);
 }
+
 .payment-settings__test-result--error {
 	background-color: var(--color-error);
 	color: var(--color-main-background);
 }
+
 .payment-settings__timestamp {
 	display: block;
 	font-size: 0.8em;

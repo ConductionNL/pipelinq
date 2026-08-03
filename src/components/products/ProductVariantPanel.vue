@@ -33,12 +33,12 @@
 							</span>
 						</td>
 						<td class="product-variant-panel__actions-col">
-							<NcButton type="tertiary" :aria-label="t('pipelinq', 'Edit variant')" @click="openEdit(index)">
+							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Edit variant')" @click="openEdit(index)">
 								<template #icon>
 									<Pencil :size="20" />
 								</template>
 							</NcButton>
-							<NcButton type="tertiary" :aria-label="t('pipelinq', 'Remove variant')" @click="removeVariant(index)">
+							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove variant')" @click="removeVariant(index)">
 								<template #icon>
 									<Delete :size="20" />
 								</template>
@@ -56,7 +56,7 @@
 				</template>
 				{{ t('pipelinq', 'Add variant') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="saving" @click="save">
+			<NcButton variant="primary" :disabled="saving" @click="save">
 				{{ t('pipelinq', 'Save variants') }}
 			</NcButton>
 		</div>

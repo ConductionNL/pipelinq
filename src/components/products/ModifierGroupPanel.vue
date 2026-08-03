@@ -12,9 +12,9 @@
 				<NcTextField
 					class="modifier-group-panel__name"
 					:label="t('pipelinq', 'Group name')"
-					:value="group.name || ''"
-					@update:value="v => group.name = v" />
-				<NcButton type="tertiary" :aria-label="t('pipelinq', 'Remove group')" @click="removeGroup(gIndex)">
+					:model-value="group.name || ''"
+					@update:model-value="v => group.name = v" />
+				<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove group')" @click="removeGroup(gIndex)">
 					<template #icon>
 						<Delete :size="20" />
 					</template>
@@ -23,28 +23,28 @@
 
 			<div class="modifier-group-panel__flags">
 				<NcCheckboxRadioSwitch
-					:checked="!!group.required"
-					@update:checked="v => group.required = v">
+					:model-value="!!group.required"
+					@update:model-value="v => group.required = v">
 					{{ t('pipelinq', 'Required') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
-					:checked="!!group.multiSelect"
-					@update:checked="v => group.multiSelect = v">
+					:model-value="!!group.multiSelect"
+					@update:model-value="v => group.multiSelect = v">
 					{{ t('pipelinq', 'Multiple selection') }}
 				</NcCheckboxRadioSwitch>
 				<div class="modifier-group-panel__minmax">
 					<NcTextField
 						class="modifier-group-panel__minmax-field"
 						:label="t('pipelinq', 'Min')"
-						:value="String(group.min ?? 0)"
+						:model-value="String(group.min ?? 0)"
 						type="number"
-						@update:value="v => group.min = Number(v)" />
+						@update:model-value="v => group.min = Number(v)" />
 					<NcTextField
 						class="modifier-group-panel__minmax-field"
 						:label="t('pipelinq', 'Max')"
-						:value="String(group.max ?? 1)"
+						:model-value="String(group.max ?? 1)"
 						type="number"
-						@update:value="v => group.max = Number(v)" />
+						@update:model-value="v => group.max = Number(v)" />
 				</div>
 			</div>
 
@@ -62,20 +62,20 @@
 							<NcTextField
 								:label="t('pipelinq', 'Option name')"
 								:label-visible="false"
-								:value="option.name || ''"
-								@update:value="v => option.name = v" />
+								:model-value="option.name || ''"
+								@update:model-value="v => option.name = v" />
 						</td>
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'Price adjustment')"
 								:label-visible="false"
-								:value="String(option.priceAdjustment ?? 0)"
+								:model-value="String(option.priceAdjustment ?? 0)"
 								type="number"
-								@update:value="v => option.priceAdjustment = Number(v)" />
+								@update:model-value="v => option.priceAdjustment = Number(v)" />
 							<span class="modifier-group-panel__hint">{{ adjustmentLabel(option.priceAdjustment) }}</span>
 						</td>
 						<td class="modifier-group-panel__actions-col">
-							<NcButton type="tertiary" :aria-label="t('pipelinq', 'Remove option')" @click="removeOption(group, oIndex)">
+							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove option')" @click="removeOption(group, oIndex)">
 								<template #icon>
 									<Delete :size="20" />
 								</template>
@@ -85,7 +85,7 @@
 				</tbody>
 			</table>
 
-			<NcButton type="tertiary" @click="addOption(group)">
+			<NcButton variant="tertiary" @click="addOption(group)">
 				<template #icon>
 					<Plus :size="20" />
 				</template>
@@ -100,7 +100,7 @@
 				</template>
 				{{ t('pipelinq', 'Add group') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="saving" @click="save">
+			<NcButton variant="primary" :disabled="saving" @click="save">
 				{{ t('pipelinq', 'Save modifier groups') }}
 			</NcButton>
 		</div>

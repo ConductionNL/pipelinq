@@ -1,7 +1,7 @@
 <template>
 	<CnSettingsSection :name="t('pipelinq', 'Pipelines')">
 		<template #actions>
-			<NcButton type="primary" @click="showForm = true; editingPipeline = null">
+			<NcButton variant="primary" @click="showForm = true; editingPipeline = null">
 				<template #icon>
 					<Plus :size="20" />
 				</template>
@@ -18,7 +18,7 @@
 				<ViewColumn :size="20" />
 			</template>
 			<template #action>
-				<NcButton type="primary" @click="showForm = true; editingPipeline = null">
+				<NcButton variant="primary" @click="showForm = true; editingPipeline = null">
 					{{ t('pipelinq', 'Create first pipeline') }}
 				</NcButton>
 			</template>
@@ -39,14 +39,14 @@
 					</div>
 				</div>
 				<div class="pipeline-actions">
-					<NcButton type="tertiary"
+					<NcButton variant="tertiary"
 						:aria-label="t('pipelinq', 'Edit pipeline {title}', { title: pipeline.title })"
 						@click="onEdit(pipeline)">
 						<template #icon>
 							<Pencil :size="20" />
 						</template>
 					</NcButton>
-					<NcButton type="tertiary"
+					<NcButton variant="tertiary"
 						:aria-label="t('pipelinq', 'Delete pipeline {title}', { title: pipeline.title })"
 						@click="onDeleteClick(pipeline)">
 						<template #icon>

@@ -3,7 +3,7 @@
 		{
 			"id": "Loyalty",
 			"label": "Loyalty",
-			"icon": "icon-star",
+			"icon": "Star",
 			"route": "LoyaltyReporting",
 			"order": 96
 		}

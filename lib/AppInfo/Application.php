@@ -621,7 +621,7 @@ class Application extends App implements IBootstrap
         // catalogue to build it. Skip the whole block when nothing will render.
         // See ADR-076 and openregister/openspec/changes/object-write-at-instance-floor.
         if ($this->requestRendersPage(server: $server) === false) {
-            $this->bootNonPageSurfaces(server: $server, context: $context);
+            $this->bootNonPageSurfaces(server: $server);
             return;
         }
 
@@ -650,7 +650,7 @@ class Application extends App implements IBootstrap
             // Initial state unavailable — Features tab will fall back to [].
         }//end try
 
-        $this->bootNonPageSurfaces(server: $server, context: $context);
+        $this->bootNonPageSurfaces(server: $server);
     }//end boot()
 
     /**
@@ -767,12 +767,11 @@ class Application extends App implements IBootstrap
      * later in the request may depend on them, so they cannot be skipped for API
      * requests the way initial state can.
      *
-     * @param mixed        $server  The server container.
-     * @param IBootContext $context The boot context.
+     * @param mixed $server The server container.
      *
      * @return void
      */
-    private function bootNonPageSurfaces($server, IBootContext $context): void
+    private function bootNonPageSurfaces($server): void
     {
         $this->registerCommentResolvers(server: $server);
         $this->wireAppointmentEmailSeam();

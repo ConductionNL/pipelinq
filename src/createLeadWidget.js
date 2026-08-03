@@ -1,15 +1,4 @@
-import Vue from 'vue'
-import { PiniaVuePlugin } from 'pinia'
-import pinia from './pinia.js'
 import CreateLeadWidget from './views/widgets/CreateLeadWidget.vue'
+import { registerDashboardWidget } from './mountDashboardWidget.js'
 
-Vue.use(PiniaVuePlugin)
-
-OCA.Dashboard.register('pipelinq_create_lead_widget', async (el, { widget }) => {
-	Vue.mixin({ methods: { t, n } })
-	const View = Vue.extend(CreateLeadWidget)
-	new View({
-		pinia,
-		propsData: { title: widget.title },
-	}).$mount(el)
-})
+registerDashboardWidget('pipelinq_create_lead_widget', CreateLeadWidget)

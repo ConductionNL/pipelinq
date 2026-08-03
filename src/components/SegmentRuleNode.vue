@@ -4,14 +4,14 @@
 	<div class="rule-node" :style="indentStyle">
 		<div v-if="isGroup" class="rule-node__group">
 			<div class="rule-node__group-header">
-				<NcSelect :value="groupOperatorOption"
+				<NcSelect :model-value="groupOperatorOption"
 					:options="groupOperators"
 					:input-label="t('pipelinq', 'Combine with')"
 					label="label"
 					:clearable="false"
 					class="rule-node__op-select"
-					@input="onGroupOperatorChange" />
-				<NcButton type="tertiary" @click="$emit('remove')">
+					@update:model-value="onGroupOperatorChange" />
+				<NcButton variant="tertiary" @click="$emit('remove')">
 					<template #icon>
 						<Delete :size="18" />
 					</template>
@@ -32,13 +32,13 @@
 				@validate-leaf="$emit('validate-leaf')" />
 
 			<div class="rule-node__group-actions">
-				<NcButton type="secondary" @click="addCondition">
+				<NcButton variant="secondary" @click="addCondition">
 					<template #icon>
 						<Plus :size="18" />
 					</template>
 					{{ t('pipelinq', 'Add condition') }}
 				</NcButton>
-				<NcButton type="tertiary" @click="addGroup">
+				<NcButton variant="tertiary" @click="addGroup">
 					<template #icon>
 						<Plus :size="18" />
 					</template>
@@ -48,20 +48,20 @@
 		</div>
 
 		<div v-else class="rule-node__leaf">
-			<NcSelect :value="fieldOption"
+			<NcSelect :model-value="fieldOption"
 				:options="fieldOptions"
 				:input-label="t('pipelinq', 'Field')"
 				label="label"
 				:clearable="false"
 				class="rule-node__field"
-				@input="onFieldChange" />
-			<NcSelect :value="operatorOption"
+				@update:model-value="onFieldChange" />
+			<NcSelect :model-value="operatorOption"
 				:options="operatorOptions"
 				:input-label="t('pipelinq', 'Operator')"
 				label="label"
 				:clearable="false"
 				class="rule-node__operator"
-				@input="onOperatorChange" />
+				@update:model-value="onOperatorChange" />
 			<div class="rule-node__value-wrap">
 				<label class="rule-node__value-label">
 					{{ t('pipelinq', 'Value') }}
@@ -85,7 +85,7 @@
 					@input="onValueInput($event.target.value)"
 					@blur="$emit('validate-leaf')">
 			</div>
-			<NcButton type="tertiary" @click="$emit('remove')">
+			<NcButton variant="tertiary" @click="$emit('remove')">
 				<template #icon>
 					<Delete :size="18" />
 				</template>

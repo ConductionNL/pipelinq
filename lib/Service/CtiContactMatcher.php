@@ -396,16 +396,19 @@ class CtiContactMatcher
      * @param object   $objectService The OR ObjectService.
      * @param callable $operation     The write operation to execute.
      *
-     * @return mixed Whatever the operation returns.
+     * @return void The operation's result is deliberately not propagated: the sole
+     *              caller writes via saveObject and only needs success or failure,
+     *              which exceptions already signal.
      *
      * @spec exclude system-context adoption — back-compat elevation shim around OR writes, no behavioural spec surface.
      */
-    private function execAsSystem(object $objectService, callable $operation): mixed
+    private function execAsSystem(object $objectService, callable $operation): void
     {
         if (method_exists($objectService, 'runAsSystem') === true) {
-            return $objectService->runAsSystem($operation);
+            $objectService->runAsSystem($operation);
+            return;
         }
 
-        return $operation();
+        $operation();
     }//end execAsSystem()
 }//end class

@@ -30,7 +30,7 @@
 				</NcButton>
 				<NcButton
 					v-if="isAdmin"
-					type="primary"
+					variant="primary"
 					data-testid="kassakoppeling-audit-export"
 					@click="showExport = true">
 					<template #icon>

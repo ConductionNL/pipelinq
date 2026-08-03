@@ -11,27 +11,27 @@
 		<div class="product-variant-dialog">
 			<NcTextField
 				:label="t('pipelinq', 'SKU')"
-				:value="form.sku"
+				:model-value="form.sku"
 				:error="!!skuError"
 				:helper-text="skuError"
-				@update:value="v => { form.sku = v; skuError = '' }" />
+				@update:model-value="v => { form.sku = v; skuError = '' }" />
 			<NcTextField
 				:label="t('pipelinq', 'Variant name')"
-				:value="form.name"
-				@update:value="v => form.name = v" />
+				:model-value="form.name"
+				@update:model-value="v => form.name = v" />
 			<NcTextField
 				:label="t('pipelinq', 'Attributes (e.g. maat=S, kleur=Wit)')"
-				:value="form.attributesText"
-				@update:value="v => form.attributesText = v" />
+				:model-value="form.attributesText"
+				@update:model-value="v => form.attributesText = v" />
 			<NcTextField
 				:label="t('pipelinq', 'Unit price')"
-				:value="form.unitPrice"
+				:model-value="form.unitPrice"
 				type="number"
-				@update:value="v => form.unitPrice = v" />
+				@update:model-value="v => form.unitPrice = v" />
 			<NcTextField
 				:label="t('pipelinq', 'Barcode (EAN/UPC)')"
-				:value="form.barcode"
-				@update:value="v => form.barcode = v" />
+				:model-value="form.barcode"
+				@update:model-value="v => form.barcode = v" />
 			<NcSelect
 				v-model="form.status"
 				input-id="variant-status"
@@ -43,7 +43,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" @click="submit">
+			<NcButton variant="primary" @click="submit">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>

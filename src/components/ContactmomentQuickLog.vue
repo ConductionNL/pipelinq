@@ -20,11 +20,11 @@
 		<!-- Subject → ticket.title -->
 		<div class="form-group">
 			<NcTextField
-				:value="form.title"
+				:model-value="form.title"
 				:label="t('pipelinq', 'Subject')"
 				:error="!!errors.title"
 				:helper-text="errors.title"
-				@update:value="v => form.title = v" />
+				@update:model-value="v => form.title = v" />
 		</div>
 
 		<!-- Channel + Outcome row -->
@@ -78,33 +78,33 @@
 		<!-- Summary → ticket.description -->
 		<div class="form-group">
 			<NcTextField
-				:value="form.description"
+				:model-value="form.description"
 				:label="t('pipelinq', 'Summary')"
-				@update:value="v => form.description = v" />
+				@update:model-value="v => form.description = v" />
 		</div>
 
 		<!-- Duration -->
 		<div class="form-group">
 			<NcTextField
-				:value="form.duration"
+				:model-value="form.duration"
 				:label="t('pipelinq', 'Duration (e.g. PT5M, PT1H30M)')"
-				@update:value="v => form.duration = v" />
+				@update:model-value="v => form.duration = v" />
 		</div>
 
 		<!-- Notes -->
 		<div class="form-group">
 			<NcTextField
-				:value="form.notes"
+				:model-value="form.notes"
 				:label="t('pipelinq', 'Notes')"
-				@update:value="v => form.notes = v" />
+				@update:model-value="v => form.notes = v" />
 		</div>
 
 		<!-- Actions -->
 		<div class="form-actions">
-			<NcButton type="tertiary" @click="$emit('cancel')">
+			<NcButton variant="tertiary" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!isValid || saving" @click="onSave">
+			<NcButton variant="primary" :disabled="!isValid || saving" @click="onSave">
 				{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</div>

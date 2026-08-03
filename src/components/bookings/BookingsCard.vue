@@ -210,9 +210,11 @@ export default {
 	text-align: center;
 	color: var(--color-text-maxcontrast);
 }
+
 .bookings-card__state--error {
 	color: var(--color-error);
 }
+
 .viewTableContainer {
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
@@ -220,27 +222,33 @@ export default {
 	box-shadow: 0 2px 4px var(--color-box-shadow);
 	border: 1px solid var(--color-border);
 }
+
 .viewTable {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .viewTable th, .viewTable td {
 	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .viewTable th {
 	background-color: var(--color-background-dark);
 	font-weight: 500;
 	color: var(--color-text-maxcontrast);
 }
+
 .viewTableRow {
 	cursor: pointer;
 	transition: background-color 0.2s ease;
 }
+
 .viewTableRow:hover {
 	background: var(--color-background-hover);
 }
+
 .status-badge {
 	display: inline-block;
 	padding: 2px 8px;
@@ -249,22 +257,27 @@ export default {
 	font-weight: 600;
 	white-space: nowrap;
 }
+
 .status-badge--confirmed {
 	background: var(--color-success);
 	color: white;
 }
+
 .status-badge--completed {
 	background: var(--color-primary-element-light);
 	color: var(--color-primary-element-text);
 }
+
 .status-badge--no-show {
 	background: var(--color-error);
 	color: white;
 }
+
 .status-badge--pending-deposit {
 	background: var(--color-warning);
 	color: black;
 }
+
 .status-badge--cancelled-by-customer,
 .status-badge--cancelled-by-business,
 .status-badge--rescheduled {
