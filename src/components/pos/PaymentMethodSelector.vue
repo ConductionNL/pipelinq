@@ -167,6 +167,7 @@ export default {
 	gap: 8px;
 	margin-bottom: 12px;
 }
+
 .payment-method-selector__hint {
 	font-size: 0.9em;
 	color: var(--color-text-maxcontrast);

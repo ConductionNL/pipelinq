@@ -141,59 +141,72 @@ export default {
 .brp-monitor {
 	padding: 16px;
 }
+
 .brp-monitor__grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 	gap: 16px;
 	margin-top: 16px;
 }
+
 .brp-monitor__card {
 	padding: 16px;
 	background: var(--color-main-background, #fff);
 	border: 1px solid var(--color-border, #e8e8e8);
 	border-radius: var(--border-radius-large, 12px);
 }
+
 .brp-monitor__card--wide {
 	grid-column: span 2;
 }
+
 .brp-monitor__card dl {
 	display: grid;
 	grid-template-columns: auto 1fr;
 	gap: 4px 12px;
 }
+
 .brp-monitor__card dt {
 	color: var(--color-text-maxcontrast, #767676);
 }
+
 .brp-monitor__badge {
 	display: inline-block;
 	padding: 2px 8px;
 	border-radius: 999px;
 	font-size: 0.85em;
 }
+
 .brp-monitor__badge--ok {
 	background: var(--color-success, #46ba61);
 	color: #fff;
 }
+
 .brp-monitor__badge--warning {
 	background: var(--color-warning, #e9b94d);
 	color: #000;
 }
+
 .brp-monitor__badge--critical {
 	background: var(--color-error, #c2392a);
 	color: #fff;
 }
+
 .brp-monitor__badge--unconfigured {
 	background: var(--color-background-dark, #f0f0f0);
 	color: var(--color-text-maxcontrast, #767676);
 }
+
 .brp-monitor__actions {
 	margin-top: 16px;
 }
+
 .brp-monitor__loading,
 .brp-monitor__error {
 	padding: 24px;
 	text-align: center;
 }
+
 .brp-monitor__error {
 	color: var(--color-error, #c2392a);
 }

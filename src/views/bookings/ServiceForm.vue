@@ -443,14 +443,17 @@ export default {
 	max-width: 960px;
 	padding: 0 4px;
 }
+
 .form-group {
 	margin-bottom: 16px;
 }
+
 .form-group label {
 	display: block;
 	margin-bottom: 4px;
 	font-weight: bold;
 }
+
 .form-group textarea {
 	width: 100%;
 	padding: 8px;
@@ -458,53 +461,65 @@ export default {
 	border-radius: var(--border-radius);
 	resize: vertical;
 }
+
 .form-row {
 	display: flex;
 	gap: 16px;
 	flex-wrap: wrap;
 }
+
 .form-row .form-group {
 	flex: 1 1 200px;
 }
+
 .toggle-group {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
+
 .toggle-group label {
 	margin: 0;
 	font-weight: normal;
 }
+
 .step-table {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .step-table th, .step-table td {
 	padding: 6px;
 	border-bottom: 1px solid var(--color-border);
 	vertical-align: middle;
 }
-.step-table input[type="number"], .step-table input[type="text"] {
+
+.step-table input[type='number'], .step-table input[type='text'] {
 	width: 100%;
 	padding: 4px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 }
+
 .step-table .center {
 	text-align: center;
 }
+
 .add-step {
 	margin-top: 8px;
 }
+
 .form-empty {
 	color: var(--color-text-maxcontrast);
 	font-style: italic;
 }
+
 .warning-text {
 	color: var(--color-warning);
 	margin-top: 6px;
 	font-size: 13px;
 }
+
 .service-form__actions {
 	display: flex;
 	gap: 12px;

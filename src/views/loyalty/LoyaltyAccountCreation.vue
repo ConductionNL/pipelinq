@@ -146,10 +146,12 @@ export default {
 	padding: 1rem;
 	max-width: 640px;
 }
+
 .loyalty-enrollment__opt-in {
 	display: block;
 	margin: 1rem 0;
 }
+
 .loyalty-enrollment__terms {
 	font-size: 0.85rem;
 }

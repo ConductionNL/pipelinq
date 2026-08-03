@@ -374,53 +374,65 @@ export default {
 	max-width: 960px;
 	padding: 0 4px;
 }
+
 .form-group {
 	margin-bottom: 16px;
 }
+
 .form-group label {
 	display: block;
 	margin-bottom: 4px;
 	font-weight: bold;
 }
+
 .form-row {
 	display: flex;
 	gap: 16px;
 	flex-wrap: wrap;
 }
+
 .form-row .form-group {
 	flex: 1 1 200px;
 }
+
 .toggle-group {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
+
 .toggle-group label {
 	margin: 0;
 	font-weight: normal;
 }
+
 .hours-table {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .hours-table th, .hours-table td {
 	padding: 6px;
 	border-bottom: 1px solid var(--color-border);
 }
-.hours-table input[type="time"], .hours-table input[type="date"], .hours-table input[type="text"] {
+
+.hours-table input[type='time'], .hours-table input[type='date'], .hours-table input[type='text'] {
 	width: 100%;
 	padding: 4px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 }
+
 .add-btn {
 	margin-top: 8px;
 }
+
 .error-text {
 	color: var(--color-error);
 	margin-top: 6px;
 	font-size: 13px;
 }
+
 .resource-form__actions {
 	display: flex;
 	gap: 12px;

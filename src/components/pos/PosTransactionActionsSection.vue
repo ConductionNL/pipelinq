@@ -394,6 +394,7 @@ export default {
 	flex-direction: column;
 	gap: 16px;
 }
+
 .pos-tx-section__actions {
 	display: flex;
 	flex-wrap: wrap;
