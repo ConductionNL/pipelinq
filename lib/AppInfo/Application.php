@@ -833,7 +833,18 @@ class Application extends App implements IBootstrap
     }//end wireBookingWalkInRebalance()
 
     /**
-     * Read the SPA manifest's declared app dependencies.
+     * Read the SPA manifest's declared app dependencies, as a flat id list.
+     *
+     * The manifest schema (`app-manifest-v2.schema.json`) allows each entry to
+     * be EITHER a bare string (a HARD dependency) OR an object
+     * `{ id, required?, name? }`, where `required: false` marks a SOFT one.
+     *
+     * Everything downstream of here — `resolveDependencyStatuses()` — only
+     * needs the app id: it reports installed/enabled/category per app, and the
+     * HARD-vs-SOFT distinction is a frontend concern that `CnAppRoot` reads
+     * from the manifest itself. So normalise to ids here, and let a malformed
+     * entry drop out rather than reach `implode()` / an array array-key, both
+     * of which would take the whole page down from inside `boot()`.
      *
      * @return array<int, string> Dependency app IDs (empty when absent/malformed).
      */
@@ -845,11 +856,23 @@ class Application extends App implements IBootstrap
         }
 
         $manifest = json_decode((string) file_get_contents($manifestPath), associative: true);
-        if (is_array($manifest['dependencies'] ?? null) === true) {
-            return $manifest['dependencies'];
+        if (is_array($manifest['dependencies'] ?? null) === false) {
+            return [];
         }
 
-        return [];
+        $ids = [];
+        foreach ($manifest['dependencies'] as $entry) {
+            $id = $entry;
+            if (is_array($entry) === true) {
+                $id = ($entry['id'] ?? null);
+            }
+
+            if (is_string($id) === true && $id !== '') {
+                $ids[] = $id;
+            }
+        }
+
+        return $ids;
     }//end readManifestDependencies()
 
     /**

@@ -3,11 +3,11 @@
 	"version": "1.0.0",
 	"dependencies": [
 		"openregister",
-		"openconnector",
-		"deck",
-		"workflowengine",
-		"timemanager",
-		"forms"
+		{ "id": "openconnector", "required": false, "name": "OpenConnector" },
+		{ "id": "deck", "required": false, "name": "Deck" },
+		{ "id": "workflowengine", "required": false, "name": "Workflow engine" },
+		{ "id": "timemanager", "required": false, "name": "Time manager" },
+		{ "id": "forms", "required": false, "name": "Forms" }
 	],
 	"setup": {
 		"enabled": true,
