@@ -29,7 +29,25 @@
  * Read-only: this inspects, it never writes.
  */
 
-require_once '/var/www/html/lib/base.php';
+// Find the Nextcloud root by walking up from this file rather than hardcoding it.
+// The container puts it at /var/www/html; CI checks it out under
+// /home/runner/work/<repo>/<repo>/server. Hardcoding the container path made this
+// script fatal in CI, which is the one place it needed to run.
+$ncRoot = null;
+for ($dir = __DIR__, $i = 0; $i < 8; $i++) {
+    $dir = dirname($dir);
+    if (is_file($dir.'/lib/base.php') === true) {
+        $ncRoot = $dir;
+        break;
+    }
+}
+
+if ($ncRoot === null) {
+    fwrite(STDERR, 'dump-seed-state: could not locate lib/base.php above '.__DIR__.PHP_EOL);
+    exit(1);
+}
+
+require_once $ncRoot.'/lib/base.php';
 
 \OC_App::loadApp('openregister');
 \OC_App::loadApp('pipelinq');
