@@ -71,7 +71,7 @@
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="!canSubmit"
 				@click="submit">
 				{{ submitting ? t('pipelinq', 'Signing in…') : t('pipelinq', 'Sign in') }}

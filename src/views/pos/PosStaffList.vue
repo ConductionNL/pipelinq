@@ -12,7 +12,7 @@
 		     the admin page) already names this surface, and a second "POS staff"
 		     title would just repeat it. -->
 		<div class="pos-staff-list__header">
-			<NcButton type="primary" @click="createNew">
+			<NcButton variant="primary" @click="createNew">
 				{{ t('pipelinq', 'New staff member') }}
 			</NcButton>
 		</div>

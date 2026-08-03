@@ -26,7 +26,7 @@
 				<NcButton :disabled="loadingProviders" @click="fetchProviders">
 					{{ t('pipelinq', 'Refresh') }}
 				</NcButton>
-				<NcButton type="primary" @click="startNewProvider">
+				<NcButton variant="primary" @click="startNewProvider">
 					{{ t('pipelinq', 'Add provider') }}
 				</NcButton>
 			</div>
@@ -75,7 +75,7 @@
 							<td class="messaging-settings__webhook-cell">
 								<code class="messaging-settings__webhook-url">{{ webhookUrl(provider) }}</code>
 								<NcButton
-									type="tertiary"
+									variant="tertiary"
 									:aria-label="t('pipelinq', 'Copy webhook URL')"
 									@click="copyWebhookUrl(provider)">
 									<template #icon>
@@ -92,7 +92,7 @@
 								<NcButton @click="editProvider(provider)">
 									{{ t('pipelinq', 'Edit') }}
 								</NcButton>
-								<NcButton type="error" @click="deleteProvider(provider)">
+								<NcButton variant="error" @click="deleteProvider(provider)">
 									{{ t('pipelinq', 'Delete') }}
 								</NcButton>
 								<div v-if="testResults[provider.id]" class="messaging-settings__test-result">
@@ -141,10 +141,10 @@
 					:label="t('pipelinq', 'Phone number / account ID')"
 					placeholder="+31600000000" />
 				<NcTextField
-					:value="providerForm.webhookSecret"
+					:model-value="providerForm.webhookSecret"
 					:label="t('pipelinq', 'Webhook secret')"
 					type="password"
-					@update:value="(v) => (providerForm.webhookSecret = v)" />
+					@update:model-value="(v) => (providerForm.webhookSecret = v)" />
 				<NcTextField
 					v-model.number="providerForm.priority"
 					:label="t('pipelinq', 'Priority (lower wins failover)')"
@@ -161,7 +161,7 @@
 						{{ t('pipelinq', 'Cancel') }}
 					</NcButton>
 					<NcButton
-						type="primary"
+						variant="primary"
 						:disabled="!providerForm.displayName || !providerForm.kind || !providerForm.vendor || savingProvider"
 						@click="saveProvider">
 						{{ savingProvider ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
@@ -177,7 +177,7 @@
 				<NcButton :disabled="loadingBudgets" @click="fetchBudgets">
 					{{ t('pipelinq', 'Refresh') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="providers.length === 0" @click="startNewBudget">
+				<NcButton variant="primary" :disabled="providers.length === 0" @click="startNewBudget">
 					{{ t('pipelinq', 'Add budget') }}
 				</NcButton>
 			</div>
@@ -250,12 +250,12 @@
 							</td>
 							<td class="messaging-settings__col-actions">
 								<NcButton
-									type="primary"
+									variant="primary"
 									:disabled="savingBudgetId === budget.id"
 									@click="saveBudget(budget)">
 									{{ savingBudgetId === budget.id ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 								</NcButton>
-								<NcButton type="error" @click="deleteBudget(budget)">
+								<NcButton variant="error" @click="deleteBudget(budget)">
 									{{ t('pipelinq', 'Delete') }}
 								</NcButton>
 							</td>
@@ -301,7 +301,7 @@
 						{{ t('pipelinq', 'Cancel') }}
 					</NcButton>
 					<NcButton
-						type="primary"
+						variant="primary"
 						:disabled="!budgetForm.providerId || creatingBudget"
 						@click="createBudget">
 						{{ creatingBudget ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
@@ -591,10 +591,10 @@ export default {
 				const { data } = await axios.post(
 					generateUrl('/apps/pipelinq/api/messaging/providers/{id}/test', { id: provider.id }),
 				)
-				this.$set(this.testResults, provider.id, data)
+				this.testResults[provider.id] = data
 			} catch (e) {
 				const data = (e.response && e.response.data) || { reachable: false, cause: 'request-failed' }
-				this.$set(this.testResults, provider.id, data)
+				this.testResults[provider.id] = data
 			} finally {
 				this.testingProviderId = null
 			}

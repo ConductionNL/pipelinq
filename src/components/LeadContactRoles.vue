@@ -32,7 +32,7 @@
 						</td>
 						<td>{{ role.notes || '-' }}</td>
 						<td class="role-actions" @click.stop>
-							<NcButton type="tertiary" @click="removeRole(role)">
+							<NcButton variant="tertiary" @click="removeRole(role)">
 								{{ t('pipelinq', 'Remove') }}
 							</NcButton>
 						</td>
@@ -42,7 +42,7 @@
 		</div>
 
 		<div class="lead-contact-roles__footer">
-			<NcButton type="secondary" @click="showAddDialog = true">
+			<NcButton variant="secondary" @click="showAddDialog = true">
 				{{ t('pipelinq', 'Add contact role') }}
 			</NcButton>
 		</div>
@@ -52,7 +52,7 @@
 			<div class="create-dialog">
 				<div class="create-dialog__header">
 					<h3>{{ t('pipelinq', 'Add contact role') }}</h3>
-					<NcButton type="tertiary" @click="showAddDialog = false">
+					<NcButton variant="tertiary" @click="showAddDialog = false">
 						&times;
 					</NcButton>
 				</div>
@@ -84,7 +84,7 @@
 					</div>
 					<div class="form-actions">
 						<NcButton
-							type="primary"
+							variant="primary"
 							:disabled="!addForm.toContact || !addForm.type"
 							@click="addRole">
 							{{ t('pipelinq', 'Add') }}
@@ -200,12 +200,12 @@ export default {
 			try {
 				const entity = await this.objectStore.fetchObject('contact', entityId)
 				if (entity) {
-					this.$set(this.entityNameCache, entityId, entity.name || entityId)
+					this.entityNameCache[entityId] = entity.name || entityId
 				} else {
-					this.$set(this.entityNameCache, entityId, t('pipelinq', '[Deleted]'))
+					this.entityNameCache[entityId] = t('pipelinq', '[Deleted]')
 				}
 			} catch {
-				this.$set(this.entityNameCache, entityId, entityId)
+				this.entityNameCache[entityId] = entityId
 			}
 		},
 		getEntityName(entityId) {

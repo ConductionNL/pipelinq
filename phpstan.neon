@@ -17,6 +17,18 @@ parameters:
         - lib/Resources/template
     scanDirectories:
         - vendor/nextcloud/ocp
+        # Declaration-only stubs for OpenRegister/Talk contracts (soft runtime
+        # dependencies, resolved only when those apps are installed). Scanned —
+        # never analysed, never autoloaded at runtime (PSR-4 maps only
+        # OCA\Pipelinq\ -> lib/); the real classes win whenever OpenRegister is
+        # enabled.
+        #
+        # These 34 stub files were already in the repo and already covered every
+        # unresolved class, but this line was missing, so phpstan never read them.
+        # phpstan REFUSES to ignoreErrors the "extends/implements unknown class"
+        # category ("cannot be ignored, use excludePaths instead"), so the contract
+        # has to be resolvable — there is no suppression route for these.
+        - tests/Stubs
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         # Nextcloud server internals (\OC, OC_App, OC\) not stubbed in nextcloud/ocp

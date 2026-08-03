@@ -1,7 +1,7 @@
 <template>
 	<CnSettingsSection :name="title">
 		<template #actions>
-			<NcButton type="secondary" @click="startAdding">
+			<NcButton variant="secondary" @click="startAdding">
 				{{ addLabel }}
 			</NcButton>
 		</template>
@@ -168,7 +168,7 @@ export default {
 			try {
 				// $emit returns the vm, not the handler's promise, so we invoke the
 				// listener directly to await the action and catch any rejection.
-				await this.$listeners.add?.(name)
+				await this.$attrs.onAdd?.(name)
 				this.adding = false
 				this.newName = ''
 			} catch (e) {
@@ -216,7 +216,7 @@ export default {
 			try {
 				// $emit returns the vm, not the handler's promise, so we invoke the
 				// listener directly to await the action and catch any rejection.
-				await this.$listeners.rename?.(id, name)
+				await this.$attrs.onRename?.(id, name)
 				this.editingId = null
 				this.editName = ''
 			} catch (e) {

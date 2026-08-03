@@ -29,51 +29,51 @@
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
 			<section v-if="hasActions" class="pos-tx-section__actions">
-				<NcButton v-if="canEdit" type="secondary" @click="edit">
+				<NcButton v-if="canEdit" variant="secondary" @click="edit">
 					{{ t('pipelinq', 'Edit') }}
 				</NcButton>
 				<NcButton v-if="canConfirm"
-					type="primary"
+					variant="primary"
 					:disabled="busy || lineCount === 0"
 					@click="confirm">
 					{{ t('pipelinq', 'Confirm') }}
 				</NcButton>
 				<NcButton v-if="canPark"
-					type="secondary"
+					variant="secondary"
 					:disabled="busy"
 					@click="park">
 					{{ t('pipelinq', 'Park') }}
 				</NcButton>
 				<NcButton v-if="canResume"
-					type="primary"
+					variant="primary"
 					:disabled="busy"
 					@click="resume">
 					{{ t('pipelinq', 'Resume') }}
 				</NcButton>
 				<NcButton v-if="canSettle"
-					type="primary"
+					variant="primary"
 					:disabled="busy"
 					@click="settle">
 					{{ t('pipelinq', 'Check out') }}
 				</NcButton>
 				<NcButton v-if="canRegisterReturn"
-					type="secondary"
+					variant="secondary"
 					@click="registerReturn">
 					{{ t('pipelinq', 'Register refund') }}
 				</NcButton>
 				<NcButton v-if="canRefund"
-					type="error"
+					variant="error"
 					:disabled="busy"
 					@click="showRefund = true">
 					{{ t('pipelinq', 'Reverse') }}
 				</NcButton>
 				<NcButton v-if="canIssueReceipt"
-					type="secondary"
+					variant="secondary"
 					@click="showPrint = true">
 					{{ t('pipelinq', 'Print Receipt') }}
 				</NcButton>
 				<NcButton v-if="canIssueReceipt"
-					type="secondary"
+					variant="secondary"
 					@click="showEmail = true">
 					{{ t('pipelinq', 'Email Receipt') }}
 				</NcButton>
@@ -394,6 +394,7 @@ export default {
 	flex-direction: column;
 	gap: 16px;
 }
+
 .pos-tx-section__actions {
 	display: flex;
 	flex-wrap: wrap;

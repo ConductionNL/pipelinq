@@ -118,7 +118,7 @@
 			</NcNoteCard>
 
 			<div class="forecast-actions">
-				<NcButton type="primary" :disabled="saving" @click="save">
+				<NcButton variant="primary" :disabled="saving" @click="save">
 					<template #icon>
 						<NcLoadingIcon v-if="saving" :size="20" />
 					</template>

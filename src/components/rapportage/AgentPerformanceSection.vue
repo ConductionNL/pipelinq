@@ -153,16 +153,28 @@ export default {
 
 <style scoped>
 .agent-performance__table { width: 100%; border-collapse: collapse; }
+
 .agent-performance__table th, .agent-performance__table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--color-border); }
+
 .agent-performance__table th { font-weight: 600; font-size: 0.85em; color: var(--color-text-lighter); }
+
 .agent-performance__table th.sortable { cursor: pointer; user-select: none; }
+
 .agent-performance__table th.sortable:hover { color: var(--color-text-maxcontrast); }
+
 .agent-performance__table th.sort-active { color: var(--color-primary); }
+
 .agent-performance__summary { margin-top: 24px; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--border-radius-large); }
+
 .agent-performance__summary h3 { margin: 0; font-weight: 600; }
+
 .agent-performance__summary-grid { display: flex; gap: 32px; margin-top: 12px; }
+
 .agent-performance__summary-item { text-align: center; }
+
 .agent-performance__summary-value { display: block; font-size: 1.5em; font-weight: 700; }
+
 .agent-performance__summary-label { font-size: 0.85em; color: var(--color-text-lighter); }
+
 .agent-performance__empty { padding: 40px; text-align: center; color: var(--color-text-lighter); }
 </style>

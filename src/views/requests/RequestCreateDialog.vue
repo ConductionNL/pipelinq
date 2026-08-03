@@ -15,7 +15,7 @@
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="!valid || saving"
 				data-testid="request-create-save"
 				@click="submit">

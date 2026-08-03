@@ -11,7 +11,7 @@
 			<CnStatusBadge :status="badgeStatus" :label="statusLabel" />
 			<NcButton
 				v-if="canRetry"
-				type="primary"
+				variant="primary"
 				:disabled="busy"
 				@click="retry">
 				{{ t('pipelinq', 'Retry') }}
@@ -230,38 +230,47 @@ export default {
 	grid-template-columns: max-content 1fr;
 	gap: 4px 16px;
 }
+
 .run-summary dt {
 	font-weight: bold;
 	color: var(--color-text-maxcontrast);
 }
+
 .run-error {
 	margin-top: 12px;
 	color: var(--color-error);
 }
+
 .run-table {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .run-table th,
 .run-table td {
 	text-align: left;
 	padding: 6px 8px;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .run-hash {
 	font-family: monospace;
 	font-size: 0.85em;
 	word-break: break-all;
 }
+
 .run-snapshot {
 	margin-bottom: 12px;
 }
+
 .run-drift {
 	margin: 4px 0 0 16px;
 }
+
 .run-nodrift {
 	color: var(--color-text-maxcontrast);
 }
+
 .run-empty {
 	color: var(--color-text-maxcontrast);
 }

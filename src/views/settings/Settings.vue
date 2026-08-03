@@ -15,7 +15,7 @@
 			:title="t('pipelinq', 'Version Information')"
 			:description="t('pipelinq', 'Information about the current Pipelinq installation')">
 			<template #actions>
-				<NcButton type="primary"
+				<NcButton variant="primary"
 					:disabled="reimporting"
 					@click="reimport">
 					<template #icon>
@@ -109,7 +109,7 @@
 				:label="t('pipelinq', 'Stale after (days)')"
 				placeholder="14"
 				:helper-text="t('pipelinq', 'Number of days a lead can stay untouched before it is flagged as stale. Default: 14.')" />
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="savingStale"
 				@click="saveStaleThreshold">
 				<template #icon>
@@ -138,14 +138,14 @@
 				:helper-text="wipUrlInvalid ? t('pipelinq', 'Please enter a valid HTTPS URL') : ''" />
 			<!-- Real time-intake emit (time-billing-handoff-emit). Default off — an
 			     unconfigured install keeps the deep-link-only handoff unchanged. -->
-			<NcCheckboxRadioSwitch :checked.sync="shillinqTimeIntakeEnabled" type="switch">
+			<NcCheckboxRadioSwitch v-model="shillinqTimeIntakeEnabled" type="switch">
 				{{ t('pipelinq', 'Send approved hours to Shillinq as draft invoices') }}
 			</NcCheckboxRadioSwitch>
 			<NcTextField v-model="config.billing_handoff_manager_group"
 				:label="t('pipelinq', 'Billing handoff manager group')"
 				placeholder="billing-managers"
 				:helper-text="t('pipelinq', 'Nextcloud group allowed to trigger \'Send to billing\'. Leave empty to restrict it to Nextcloud administrators.')" />
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="savingShillinq || shillinqUrlInvalid || wipUrlInvalid"
 				@click="saveShillinq">
 				<template #icon>
@@ -167,7 +167,7 @@
 				placeholder="https://shillinq.example.com/ap-webhook"
 				:error="shillinqApUrlInvalid"
 				:helper-text="shillinqApUrlInvalid ? t('pipelinq', 'Enter a valid HTTPS URL, e.g. https://shillinq.example.com/webhook') : ''" />
-			<NcButton type="primary"
+			<NcButton variant="primary"
 				:disabled="savingShillinqAp || shillinqApUrlInvalid"
 				@click="saveShillinqAp">
 				<template #icon>
@@ -212,7 +212,7 @@
 				placeholder="http://xwiki:8080/xwiki"
 				:helper-text="t('pipelinq', 'Used only when the xWiki Nextcloud app is unavailable. Should point at the xWiki base URL without trailing slash.')" />
 			<div class="xwiki-actions">
-				<NcButton type="primary"
+				<NcButton variant="primary"
 					:disabled="savingXwiki"
 					@click="saveXwiki">
 					<template #icon>
@@ -220,7 +220,7 @@
 					</template>
 					{{ t('pipelinq', 'Save xWiki settings') }}
 				</NcButton>
-				<NcButton type="secondary"
+				<NcButton variant="secondary"
 					:disabled="testingXwiki"
 					@click="testXwiki">
 					<template #icon>

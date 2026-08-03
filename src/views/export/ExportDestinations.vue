@@ -24,7 +24,7 @@
 			@view="openDestination"
 			@page-changed="onPageChange">
 			<template #row-actions="{ row }">
-				<NcButton type="tertiary" :disabled="busyId === row.id" @click.stop="testConnection(row)">
+				<NcButton variant="tertiary" :disabled="busyId === row.id" @click.stop="testConnection(row)">
 					{{ t('pipelinq', 'Test connection') }}
 				</NcButton>
 			</template>

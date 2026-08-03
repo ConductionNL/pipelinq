@@ -107,22 +107,22 @@
 		</p>
 
 		<footer class="blast-form__footer">
-			<NcButton type="tertiary" @click="$router.push({ name: 'Blasts' })">
+			<NcButton variant="tertiary" @click="$router.push({ name: 'Blasts' })">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton v-if="currentStep > 0"
-				type="secondary"
+				variant="secondary"
 				@click="prev">
 				{{ t('pipelinq', 'Back') }}
 			</NcButton>
 			<NcButton v-if="!isLastStep"
-				type="primary"
+				variant="primary"
 				:disabled="!canAdvance"
 				@click="next">
 				{{ t('pipelinq', 'Next') }}
 			</NcButton>
 			<NcButton v-else
-				type="primary"
+				variant="primary"
 				:disabled="!canSubmit || submitting"
 				@click="submit">
 				{{ submitting ? t('pipelinq', 'Saving...') : t('pipelinq', 'Create blast') }}

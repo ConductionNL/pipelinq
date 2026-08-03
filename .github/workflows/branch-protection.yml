@@ -7,5 +7,8 @@ on:
 permissions: {}
 
 jobs:
+  # Job id must stay `branch-protection` so the check reports as
+  # `branch-protection / check-branch`, which is the context name the org
+  # ruleset requires.
   branch-protection:
     uses: ConductionNL/.github/.github/workflows/branch-protection.yml@main

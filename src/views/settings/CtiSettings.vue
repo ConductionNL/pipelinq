@@ -57,10 +57,10 @@
 				{{ t('pipelinq', 'Enable outbound click-to-dial') }}
 			</NcCheckboxRadioSwitch>
 			<div class="cti-settings__actions">
-				<NcButton type="secondary" :disabled="testing" @click="test">
+				<NcButton variant="secondary" :disabled="testing" @click="test">
 					{{ testing ? t('pipelinq', 'Testing…') : t('pipelinq', 'Test connection') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="saving" @click="save">
+				<NcButton variant="primary" :disabled="saving" @click="save">
 					{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 				</NcButton>
 			</div>
@@ -163,11 +163,13 @@ export default {
 	gap: 12px;
 	max-width: 720px;
 }
+
 .cti-settings__actions {
 	display: flex;
 	gap: 12px;
 	justify-content: flex-end;
 }
+
 .cti-settings__status {
 	margin-top: 8px;
 	font-style: italic;

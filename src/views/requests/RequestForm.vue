@@ -3,19 +3,19 @@
 		<!-- Title -->
 		<div class="form-group">
 			<NcTextField
-				:value="form.title"
+				:model-value="form.title"
 				:label="t('pipelinq', 'Title')"
 				:error="!!errors.title"
 				:helper-text="errors.title"
-				@update:value="v => form.title = v" />
+				@update:model-value="v => form.title = v" />
 		</div>
 
 		<!-- Description -->
 		<div class="form-group">
 			<NcTextField
-				:value="form.description"
+				:model-value="form.description"
 				:label="t('pipelinq', 'Description')"
-				@update:value="v => form.description = v" />
+				@update:model-value="v => form.description = v" />
 		</div>
 
 		<!-- Status + Priority row -->
@@ -53,19 +53,19 @@
 			</div>
 			<div class="form-group">
 				<NcTextField
-					:value="form.category"
+					:model-value="form.category"
 					:label="t('pipelinq', 'Category')"
-					@update:value="v => form.category = v" />
+					@update:model-value="v => form.category = v" />
 			</div>
 		</div>
 
 		<!-- Requested at -->
 		<div class="form-group">
 			<NcDateTimePickerNative
-				:value="occurredAtDate"
+				:model-value="occurredAtDate"
 				:label="t('pipelinq', 'Requested at')"
 				type="date"
-				@input="occurredAtDate = $event" />
+				@update:model-value="occurredAtDate = $event" />
 		</div>
 
 		<!-- Client -->
@@ -93,7 +93,7 @@
 					label="label"
 					:reduce="o => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
-					@input="onPipelineChange" />
+					@update:model-value="onPipelineChange" />
 			</div>
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
@@ -109,10 +109,10 @@
 
 		<!-- Actions -->
 		<div v-if="showActions" class="form-actions">
-			<NcButton type="tertiary" @click="$emit('cancel')">
+			<NcButton variant="tertiary" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+			<NcButton variant="primary" :disabled="!isValid" @click="onSave">
 				{{ isEdit ? t('pipelinq', 'Save') : t('pipelinq', 'Create') }}
 			</NcButton>
 		</div>

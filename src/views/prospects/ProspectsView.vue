@@ -3,7 +3,7 @@
 		<div class="prospects-view__header">
 			<h2>{{ t('pipelinq', 'Prospects') }}</h2>
 			<NcButton
-				type="tertiary"
+				variant="tertiary"
 				:disabled="prospectStore.loading"
 				:aria-label="t('pipelinq', 'Refresh prospects')"
 				@click="refresh">
@@ -75,7 +75,7 @@
 					<td>{{ p.address && p.address.city ? p.address.city : '—' }}</td>
 					<td>
 						<NcButton
-							type="tertiary"
+							variant="tertiary"
 							:disabled="convertingKvk === p.kvkNumber"
 							@click="convertToLead(p)">
 							{{ t('pipelinq', 'Convert to lead') }}
@@ -217,34 +217,43 @@ export default {
 .prospects-view {
 	padding: 16px;
 }
+
 .prospects-view__header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	margin-bottom: 16px;
 }
+
 .prospects-view__table {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .prospects-view__table th,
 .prospects-view__table td {
 	padding: 8px 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .prospects-view__table th.sortable {
 	cursor: pointer;
 	user-select: none;
 }
+
 .prospects-view__score {
 	font-weight: bold;
 	padding: 2px 8px;
 	border-radius: var(--border-radius-pill);
 }
+
 .score--high { color: var(--color-success); }
+
 .score--medium { color: var(--color-warning); }
+
 .score--low { color: var(--color-text-maxcontrast); }
+
 .icon-spinning { animation: rotate 1s linear infinite; }
 @keyframes rotate { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 </style>

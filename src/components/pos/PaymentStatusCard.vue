@@ -35,21 +35,21 @@
 		<div v-if="hasActions" class="payment-status-card__actions">
 			<NcButton
 				v-if="status === 'pending'"
-				type="primary"
+				variant="primary"
 				:disabled="busy"
 				@click="onCapture">
 				{{ t('pipelinq', 'Complete') }}
 			</NcButton>
 			<NcButton
 				v-if="canRefund"
-				type="warning"
+				variant="warning"
 				:disabled="busy"
 				@click="onRefund">
 				{{ t('pipelinq', 'Reverse') }}
 			</NcButton>
 			<NcButton
 				v-if="status === 'failed'"
-				type="secondary"
+				variant="secondary"
 				:disabled="busy"
 				@click="onRetry">
 				{{ t('pipelinq', 'Try again') }}
@@ -189,58 +189,71 @@ export default {
 	flex-direction: column;
 	gap: 12px;
 }
+
 .payment-status-card__header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 }
+
 .payment-status-card__header h3 {
 	margin: 0;
 	font-size: 1.05em;
 }
+
 .payment-status-card__badge {
 	font-size: 0.85em;
 	padding: 4px 10px;
 	border-radius: var(--border-radius);
 	background-color: var(--color-background-hover);
 }
+
 .payment-status-card__badge--settled {
 	background-color: var(--color-success);
 	color: var(--color-main-background);
 }
+
 .payment-status-card__badge--captured {
 	background-color: var(--color-primary-element-light);
 	color: var(--color-main-text);
 }
+
 .payment-status-card__badge--pending {
 	background-color: var(--color-warning);
 	color: var(--color-main-background);
 }
+
 .payment-status-card__badge--failed {
 	background-color: var(--color-error);
 	color: var(--color-main-background);
 }
+
 .payment-status-card__badge--refunded {
 	background-color: var(--color-background-darker);
 	color: var(--color-main-text);
 }
+
 .payment-status-card__grid {
 	display: grid;
 	grid-template-columns: max-content 1fr;
 	gap: 4px 12px;
 	margin: 0;
 }
+
 .payment-status-card__grid dt {
 	font-weight: 600;
 }
+
 .payment-status-card__grid dd {
 	margin: 0;
 }
+
 .payment-status-card__session {
 	font-family: monospace;
 	font-size: 0.9em;
 	word-break: break-all;
 }
+
 .payment-status-card__actions {
 	display: flex;
 	gap: 8px;

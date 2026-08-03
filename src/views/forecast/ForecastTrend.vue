@@ -7,10 +7,10 @@
 		<div class="forecast-trend__header">
 			<h2>{{ t('pipelinq', 'Forecast trend & accuracy') }}</h2>
 			<NcTextField
-				:value.sync="ownerId"
+				v-model="ownerId"
 				:label="t('pipelinq', 'Rep')"
 				:placeholder="t('pipelinq', 'Rep user id')"
-				@update:value="loadTrend" />
+				@update:model-value="loadTrend" />
 		</div>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
@@ -162,21 +162,38 @@ export default {
 
 <style scoped>
 .forecast-trend { padding: 20px; max-width: 1000px; margin: 0 auto; }
+
 .forecast-trend__header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+
 .forecast-trend__svg { width: 100%; height: 200px; background: var(--color-background-hover); border-radius: 8px; }
+
 .line { fill: none; stroke-width: 2; }
+
 .line--commit { stroke: var(--color-primary-element); }
+
 .line--bestcase { stroke: #f59e0b; }
+
 .line--pipeline { stroke: var(--color-text-maxcontrast); }
+
 .forecast-trend__legend { display: flex; gap: 16px; margin-top: 8px; }
+
 .legend::before { content: '■ '; }
+
 .legend--commit::before { color: var(--color-primary-element); }
+
 .legend--bestcase::before { color: #f59e0b; }
+
 .legend--pipeline::before { color: var(--color-text-maxcontrast); }
+
 .forecast-trend__delta, .forecast-trend__accuracy { margin-top: 24px; }
+
 .accuracy-table { width: 100%; border-collapse: collapse; }
+
 .accuracy-table th, .accuracy-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--color-border); }
+
 .accuracy--green { color: var(--color-success); font-weight: 600; }
+
 .accuracy--amber { color: #f59e0b; font-weight: 600; }
+
 .accuracy--red { color: var(--color-error); font-weight: 600; }
 </style>

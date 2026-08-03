@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 import path from 'path'
+import { resolveBaseUrl } from './tests/e2e/base-url'
 
 const STORAGE_STATE = path.join(__dirname, 'tests/e2e/.auth/user.json')
 
@@ -18,7 +19,10 @@ export default defineConfig({
 	globalSetup: './tests/e2e/global-setup.ts',
 
 	use: {
-		baseURL: process.env.NEXTCLOUD_URL || 'http://localhost:8080',
+		// Centralised and STRICT — see tests/e2e/base-url.ts. Never reintroduce a
+		// `|| 'http://localhost:8080'` fallback here: that silently retargets the
+		// whole suite at the SHARED dev container.
+		baseURL: resolveBaseUrl(),
 		storageState: STORAGE_STATE,
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure',

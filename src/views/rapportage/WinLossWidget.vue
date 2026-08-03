@@ -18,7 +18,7 @@
 				:input-label="t('pipelinq', 'Date range')"
 				label="label"
 				track-by="value"
-				@input="onRangeChange" />
+				@update:model-value="onRangeChange" />
 		</div>
 
 		<NcEmptyContent

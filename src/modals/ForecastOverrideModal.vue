@@ -13,7 +13,7 @@
 				{{ t('pipelinq', 'Overriding {category} for {owner}', { category: categoryLabel, owner: ownerId }) }}
 			</p>
 			<NcTextField
-				:value.sync="amount"
+				v-model="amount"
 				type="number"
 				:label="t('pipelinq', 'Override amount')"
 				:placeholder="t('pipelinq', 'Override amount')" />
@@ -32,7 +32,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!valid || saving" @click="save">
+			<NcButton variant="primary" :disabled="!valid || saving" @click="save">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>

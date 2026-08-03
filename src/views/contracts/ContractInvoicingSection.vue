@@ -26,7 +26,7 @@
 	</div>
 	<div v-else-if="hasContent" class="contract-invoicing-section">
 		<NcButton v-if="showSendButton"
-			type="primary"
+			variant="primary"
 			:disabled="busy"
 			@click="sendToInvoicing">
 			{{ t('pipelinq', 'Send to invoicing') }}
@@ -41,7 +41,7 @@
 					{{ t('pipelinq', 'Invoice reference') }}
 				</span>
 				<code class="contract-invoicing-section__reference-value">{{ lastInvoiceReference }}</code>
-				<NcButton type="tertiary" @click="copyReference">
+				<NcButton variant="tertiary" @click="copyReference">
 					{{ t('pipelinq', 'Copy') }}
 				</NcButton>
 			</div>
@@ -190,16 +190,19 @@ export default {
 	flex-direction: column;
 	gap: 12px;
 }
+
 .contract-invoicing-section__reference {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	flex-wrap: wrap;
 }
+
 .contract-invoicing-section__reference-label {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
+
 .contract-invoicing-section__reference-value {
 	padding: 2px 8px;
 	border-radius: var(--border-radius, 4px);

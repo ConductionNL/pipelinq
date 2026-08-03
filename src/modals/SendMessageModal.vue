@@ -42,7 +42,7 @@
 							label="label"
 							:reduce="(o) => o.value" />
 						<NcButton
-							type="secondary"
+							variant="secondary"
 							:disabled="!consentEvidence || recordingConsent"
 							@click="recordConsent">
 							{{ recordingConsent ? t('pipelinq', 'Recording…') : t('pipelinq', 'Record opt-in') }}
@@ -85,7 +85,7 @@
 				<NcButton @click="$emit('close')">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="!canSend" @click="send">
+				<NcButton variant="primary" :disabled="!canSend" @click="send">
 					{{ sending ? t('pipelinq', 'Sending…') : t('pipelinq', 'Send') }}
 				</NcButton>
 			</div>

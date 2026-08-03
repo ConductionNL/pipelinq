@@ -41,14 +41,14 @@
 			<div class="form-row format-row">
 				<span class="format-label">{{ t('pipelinq', 'Format') }}</span>
 				<NcCheckboxRadioSwitch
-					:checked.sync="format"
+					v-model="format"
 					value="xml"
 					name="bd-format"
 					type="radio">
 					{{ t('pipelinq', 'XML (canonical Belastingdienst format)') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
-					:checked.sync="format"
+					v-model="format"
 					value="json"
 					name="bd-format"
 					type="radio">
@@ -66,7 +66,7 @@
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="submitting"
 				@click="submit">
 				{{ t('pipelinq', 'Download export package') }}
@@ -159,7 +159,7 @@ export default {
 	font-size: 13px;
 }
 
-.form-row input[type="date"] {
+.form-row input[type='date'] {
 	padding: 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);

@@ -14,4 +14,17 @@ Util::addScript($appId, $appId . '-shared-vendor');
 Util::addScript($appId, $appId . '-shared-nc-vue');
 Util::addScript($appId, $appId . '-main');
 ?>
-<div id="content"></div>
+<?php
+// The mount host is DELIBERATELY NOT `#content`.
+//
+// Nextcloud core's `layout.user.php` already renders a `<div id="content">`
+// that this template's output is placed inside, so this element used to be a
+// DUPLICATE of core's. Under Vue 2, `new Vue(...).$mount('#content')` matched
+// core's outer div and REPLACED it, so the duplication never showed. Vue 3's
+// `app.mount()` renders INSIDE the matched element instead of replacing it —
+// selecting `#content` would resolve to core's wrapper and render the app in
+// the wrong place (and leave this empty div orphaned below it).
+//
+// Use an app-owned id so the selector can only ever match this element.
+?>
+<div id="pipelinq-app"></div>

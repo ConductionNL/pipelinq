@@ -137,13 +137,22 @@ export default {
 
 <style scoped>
 .channel-comparison h3 { margin: 0 0 12px; font-weight: 600; }
+
 .channel-comparison__table { width: 100%; border-collapse: collapse; }
+
 .channel-comparison__table th, .channel-comparison__table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--color-border); }
+
 .channel-comparison__table th { font-weight: 600; font-size: 0.85em; color: var(--color-text-lighter); text-transform: uppercase; }
+
 .channel-comparison__name { display: flex; align-items: center; gap: 8px; }
+
 .channel-comparison__dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
 .channel-comparison__sla--green { color: var(--color-success); }
+
 .channel-comparison__sla--orange { color: var(--color-warning); }
+
 .channel-comparison__sla--red { color: #e53e3e; }
+
 .channel-comparison__empty { padding: 40px; text-align: center; color: var(--color-text-lighter); }
 </style>

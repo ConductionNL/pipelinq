@@ -1,9 +1,9 @@
 <template>
 	<div class="client-autocomplete">
-		<NcTextField :value.sync="query"
+		<NcTextField v-model="query"
 			:label="label"
 			:placeholder="placeholder"
-			@input="onInput" />
+			@update:model-value="onInput" />
 		<div v-if="showDropdown && results.length > 0" class="autocomplete-dropdown">
 			<button v-for="client in results"
 				:key="client.id"
@@ -15,7 +15,7 @@
 		</div>
 		<div v-if="selectedClient" class="selected-client">
 			<span class="selected-name">{{ selectedClient.name }}</span>
-			<NcButton type="tertiary"
+			<NcButton variant="tertiary"
 				:aria-label="t('pipelinq', 'Clear selection')"
 				@click="clearSelection">
 				<template #icon>

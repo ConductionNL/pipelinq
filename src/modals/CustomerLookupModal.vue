@@ -17,11 +17,11 @@
 		<div class="customer-lookup">
 			<NcTextField
 				ref="searchInput"
-				:value.sync="query"
+				v-model="query"
 				:label="t('pipelinq', 'Search')"
 				:placeholder="t('pipelinq', 'Name, e-mail or phone')"
 				data-testid="customer-lookup-input"
-				@input="onSearchInput" />
+				@update:model-value="onSearchInput" />
 
 			<div
 				v-if="loading"
@@ -38,7 +38,7 @@
 				role="alert"
 				aria-live="assertive">
 				{{ error }}
-				<NcButton type="tertiary" @click="runSearch">
+				<NcButton variant="tertiary" @click="runSearch">
 					{{ t('pipelinq', 'Retry') }}
 				</NcButton>
 			</p>
@@ -89,7 +89,7 @@
 			</ul>
 		</div>
 		<template #actions>
-			<NcButton type="secondary" @click="onCancel">
+			<NcButton variant="secondary" @click="onCancel">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 		</template>
@@ -130,7 +130,7 @@ export default {
 			}
 		})
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.debounceHandle) {
 			clearTimeout(this.debounceHandle)
 		}

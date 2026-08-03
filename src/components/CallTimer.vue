@@ -6,18 +6,18 @@
 		<div class="call-timer__controls">
 			<NcButton
 				v-if="!running"
-				type="primary"
+				variant="primary"
 				@click="start">
 				{{ t('pipelinq', 'Start') }}
 			</NcButton>
 			<NcButton
 				v-if="running"
-				type="error"
+				variant="error"
 				@click="stop">
 				{{ t('pipelinq', 'Stop') }}
 			</NcButton>
 			<NcButton
-				type="tertiary"
+				variant="tertiary"
 				@click="reset">
 				{{ t('pipelinq', 'Reset') }}
 			</NcButton>
@@ -56,7 +56,7 @@ export default {
 			return `PT${m}M${s}S`
 		},
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		clearInterval(this.interval)
 	},
 	methods: {
