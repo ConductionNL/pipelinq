@@ -57,6 +57,15 @@ class SetupController extends Controller
     private const SETUP_VERSION = 1;
 
     /**
+     * App-config key recording that the optional demo-data step has been dealt
+     * with — either seeded or explicitly skipped. See `status()` for why an
+     * optional step MUST be satisfiable.
+     *
+     * @var string
+     */
+    private const DEMO_DATA_DECIDED_KEY = 'demo_data_decided';
+
+    /**
      * Constructor.
      *
      * @param string          $appName         The app id.
@@ -82,6 +91,32 @@ class SetupController extends Controller
     /**
      * Report per-step setup status for the wizard.
      *
+     * ⚠️ THE RESPONSE MUST CARRY AN ENTRY FOR EVERY `manifest.setup.steps[].id`.
+     *
+     * `useSetupStatus` (nextcloud-vue) builds its unmet lists by walking the
+     * MANIFEST's step list and looking each id up in the `steps` map returned
+     * here. A manifest step this endpoint does not mention resolves to
+     * `{}` → `done: false` → it counts as unmet FOREVER, because no action any
+     * operator can take will ever make this endpoint report it.
+     *
+     * `CnAppRoot` then auto-opens `CnSetupWizard` as a full `modal-mask` over
+     * the shell whenever `requiredUnmet` is empty but `optionalUnmet` is not,
+     * and its dismissal is persisted in **localStorage** only. So a permanently
+     * unmet optional step means: every operator, on every fresh browser
+     * profile, in perpetuity, gets the app covered by the setup wizard —
+     * including every Playwright test, each of which runs in a fresh context.
+     *
+     * This endpoint used to report 4 ids while the manifest declared 7. The
+     * three it omitted (`welcome`, `demo-data`, `done`) were unmet forever, and
+     * that is what covered the app: verified in a real browser against a fully
+     * provisioned instance that was, at the same moment, returning
+     * `completed: true` from this very method.
+     *
+     * `welcome` and `done` are prose (`info` / `summary`); there is nothing for
+     * a server to complete, so they are reported done unconditionally. Newer
+     * nextcloud-vue also filters non-actionable steps out of the unmet lists,
+     * but reporting them keeps this contract true for any consumer version.
+     *
      * @return DataResponse `{ version, completed, steps: { <id>: { done } } }`.
      *
      * @spec openspec/changes/first-time-setup/specs/first-time-setup/spec.md
@@ -96,6 +131,12 @@ class SetupController extends Controller
         // on install (loadSettings). A non-empty `register` key means provisioning
         // has run; we surface it so the optional "Provision data" step shows done.
         $registerDone = $this->config(key: 'register') !== '';
+
+        // Demo data is an optional run-action, so "done" means the operator has
+        // DEALT WITH it — not that demo objects exist. `seedDemoData()` records
+        // the marker when it runs, and `occ pipelinq:demo:seed --remove` leaving
+        // the marker in place is correct: the decision was still made.
+        $demoDataDone = $this->config(key: self::DEMO_DATA_DECIDED_KEY) !== '';
 
         // Organisation step done once the operator has named the organisation.
         $organisationDone = $this->config(key: 'receipt_company_name') !== '';
@@ -117,14 +158,39 @@ class SetupController extends Controller
                 'version'   => self::SETUP_VERSION,
                 'completed' => $currencyDone,
                 'steps'     => [
+                    'welcome'      => ['done' => true],
                     'currency'     => ['done' => $currencyDone],
                     'provision'    => ['done' => $registerDone],
+                    'demo-data'    => ['done' => $demoDataDone],
                     'organisation' => ['done' => $organisationDone],
                     'integrations' => ['done' => $integrationsDone],
+                    'done'         => ['done' => true],
                 ],
             ]
         );
     }//end status()
+
+    /**
+     * Record that the operator has dealt with the optional demo-data step.
+     *
+     * Exposed as its own action (`skip-demo-data`) so "no thanks" is a decision
+     * the server can remember. Without it the only way to satisfy the step
+     * would be to actually seed demo data, which is wrong on a production
+     * install — and an unsatisfiable optional step covers the app with the
+     * setup wizard on every fresh browser profile, forever.
+     *
+     * @return DataResponse `{ success, message }`.
+     *
+     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+     */
+    private function skipDemoData(): DataResponse
+    {
+        $this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
+
+        return new DataResponse(
+            ['success' => true, 'message' => 'Demo data skipped. You can seed it later with `occ pipelinq:demo:seed`.']
+        );
+    }//end skipDemoData()
 
     /**
      * Persist app-config values from a `choice` / `config-fields` step.
@@ -170,6 +236,10 @@ class SetupController extends Controller
 
         if ($actionId === 'seed-demo-data') {
             return $this->seedDemoData();
+        }
+
+        if ($actionId === 'skip-demo-data') {
+            return $this->skipDemoData();
         }
 
         return new DataResponse(
@@ -252,6 +322,11 @@ class SetupController extends Controller
                     Http::STATUS_PRECONDITION_FAILED,
                 );
             }
+
+            // Record the decision so `status()` can report the step done. See
+            // DEMO_DATA_DECIDED_KEY — an optional step the server can never
+            // report done covers the whole app with the setup wizard.
+            $this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
 
             $created = array_sum($result['created']);
             $skipped = array_sum($result['skipped']);

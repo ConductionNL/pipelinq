@@ -1,0 +1,306 @@
+#!/usr/bin/env bash
+#
+# SPDX-FileCopyrightText: 2026 Conduction B.V.
+# SPDX-License-Identifier: EUPL-1.2
+#
+# Provision Pipelinq on a freshly installed Nextcloud for the shared
+# `E2E Tests (Playwright)` CI job.
+#
+# Wired up as the workflow's `playwright-seed-command`. That step runs AFTER
+# `php -S` is up and with cwd set to the Nextcloud server root, so this is
+# invoked as:
+#
+#     playwright-seed-command: 'bash apps/pipelinq/tests/e2e/ci-seed.sh'
+#
+# WHAT THIS REPLACES, AND WHY
+# ---------------------------
+# The previous seed command was:
+#
+#     php occ app:disable pipelinq && php occ app:enable pipelinq
+#
+# It reported success on every run and provisioned nothing reliable. Three
+# separate reasons, all silent:
+#
+#   1. `app:enable` runs the `InitializeSettings` post-migration repair step,
+#      which has NO user session. OpenRegister's RBAC can refuse the writes,
+#      and `run()` catches the exception and downgrades it to a warning marked
+#      "Non-fatal". `occ app:enable` still exits 0.
+#   2. That path calls `loadSettings(force: false)`. The non-forced branch is
+#      version-guarded and can advance the recorded configuration version
+#      WITHOUT applying the register, so the next run sees "already current"
+#      and also does nothing. (Note that truncating the openregister tables is
+#      NOT enough to reset this — the guard also reads the NC appconfig keys
+#      `imported_config_<app>_version` / `_hash`.)
+#   3. Even with the register present, the app's SHELL does not render. See
+#      "The setup gate" below — this is what actually produced the wall of red.
+#
+# So this script drives the real admin HTTP API (a genuine session, which
+# passes RBAC), forces the import, completes first-time setup, and then
+# VERIFIES each of those things separately. A failed provision becomes one loud
+# step failure here instead of ~111 misleading selector timeouts later.
+#
+# THE SETUP GATE — the thing that actually broke the suite
+# --------------------------------------------------------
+# `CnAppRoot` renders the app in phases. Two of them replace or cover the whole
+# shell, and pipelinq hit BOTH on a fresh install:
+#
+#   * `phase === 'setup'` — a REQUIRED `manifest.setup` step is unmet. The
+#     shell is REPLACED by `CnSetupWizard`: there is no `<main>`, no nav, no
+#     router-view. Pipelinq's one required step is the reporting currency, and
+#     a fresh install has no currency set. Every UI spec then fails on a
+#     selector timeout whose message points at the selector, not at the cause.
+#
+#   * the non-gating optional wizard — every required step is met but some
+#     OPTIONAL step is not. `CnAppRoot` then AUTO-OPENS `CnSetupWizard` as a
+#     full `dialog__modal modal-mask` over the shell. Its dismissal is stored
+#     in localStorage, and every Playwright test runs in a fresh context, so it
+#     reopens in every single test. Verified in a real browser:
+#     `document.elementsFromPoint(centre)` resolved inside
+#     `.cn-wizard-dialog__step-body` while `main` existed underneath.
+#
+# Steps 2 and 3 below clear the first; step 3 also clears the second, because
+# `seed-demo-data` records the demo-data decision. Step 5 then ASSERTS the
+# result rather than assuming it.
+#
+# It is idempotent: the import and the demo seed are both idempotent
+# server-side, and re-running only re-verifies.
+
+set -euo pipefail
+
+# ── Target resolution ────────────────────────────────────────────────────────
+# The shared workflow's "Seed test data" step exports BASE_URL / ADMIN_USER /
+# ADMIN_PASSWORD (ConductionNL/.github#124). Accept every name the fleet uses,
+# and fall back to the CI runner's own `php -S 0.0.0.0:8080` only when we can
+# prove we are on CI.
+#
+# On a developer box `localhost:8080` is the SHARED dev container, and this
+# script performs ADMIN WRITES — it must never silently provision into someone
+# else's environment. Off CI, an unset target is a hard error.
+BASE="${PLAYWRIGHT_BASE_URL:-${BASE_URL:-${NEXTCLOUD_URL:-${NC_BASE_URL:-}}}}"
+if [ -z "$BASE" ]; then
+	if [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
+		BASE="http://localhost:8080"
+	else
+		echo "ERROR: no base URL set. Export PLAYWRIGHT_BASE_URL or BASE_URL." >&2
+		echo "       Refusing to default to http://localhost:8080 outside CI —" >&2
+		echo "       that is the SHARED dev container and this script writes to it." >&2
+		exit 1
+	fi
+fi
+BASE="${BASE%/}"
+
+USER_NAME="${ADMIN_USER:-${NC_ADMIN_USER:-admin}}"
+USER_PASS="${ADMIN_PASSWORD:-${NC_ADMIN_PASS:-admin}}"
+APP_BASE="${BASE}/index.php/apps/pipelinq"
+
+echo "[ci-seed] target: ${BASE}"
+
+# Small helper: POST JSON as the admin, echo the status, dump the body.
+# Basic auth without a session cookie skips Nextcloud's CSRF check, which is
+# why these admin-only endpoints are reachable from curl at all.
+post_json() {
+	local url="$1" data="${2:-}" body code
+	body="$(mktemp)"
+	if [ -n "$data" ]; then
+		code="$(curl -sS -o "$body" -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+			-X POST -H 'Content-Type: application/json' -H 'OCS-APIRequest: true' \
+			--data "$data" "$url" || echo 000)"
+	else
+		code="$(curl -sS -o "$body" -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+			-X POST -H 'Content-Type: application/json' -H 'OCS-APIRequest: true' \
+			"$url" || echo 000)"
+	fi
+	echo "[ci-seed] POST ${url} -> HTTP ${code}"
+	head -c 1200 "$body"; echo
+	POST_CODE="$code"
+	POST_BODY="$body"
+}
+
+# ── 1. Force-import the Pipelinq register + schemas ──────────────────────────
+# `settings#reimport` calls `loadSettings(force: true)`, which is the whole
+# point: it defeats the version guard that makes the repair-step path a no-op.
+post_json "${APP_BASE}/api/settings/reimport"
+if [ "$POST_CODE" != "200" ]; then
+	echo "::error::Pipelinq configuration import failed (HTTP ${POST_CODE}). The e2e suite has no registers or schemas to read."
+	exit 1
+fi
+
+# ── 2. Complete the REQUIRED setup step (reporting currency) ─────────────────
+# Without this, CnAppRoot's phase is 'setup' and the ENTIRE shell is replaced
+# by the wizard — no <main>, no nav — so every UI spec fails on a selector
+# timeout for a reason that has nothing to do with the assertion.
+post_json "${APP_BASE}/api/setup/config" '{"currency":"EUR"}'
+if [ "$POST_CODE" != "200" ]; then
+	echo "::error::Could not set the required reporting currency (HTTP ${POST_CODE}). CnAppRoot will gate the whole shell behind the setup wizard."
+	exit 1
+fi
+
+# ── 3. Seed the demo dataset ─────────────────────────────────────────────────
+# Two jobs at once. It gives the list/dashboard specs real objects to assert
+# on, AND it records the demo-data decision, which is what stops the optional
+# setup wizard auto-opening as a modal mask over every single test.
+post_json "${APP_BASE}/api/setup/action/seed-demo-data"
+if [ "$POST_CODE" != "200" ]; then
+	echo "::error::Demo-data seeding failed (HTTP ${POST_CODE}). Lists and dashboards would be empty, and the optional setup wizard would cover the app in every test."
+	exit 1
+fi
+
+# ── 4. Verify the register and schemas actually exist ────────────────────────
+# The import reporting success is not the same as the register existing —
+# verify against OpenRegister directly.
+verify_registers() {
+	python3 - "$1" <<'PY'
+import json, sys
+path = sys.argv[1]
+with open(path) as fh:
+    raw = fh.read()
+try:
+    body = json.loads(raw)
+except json.JSONDecodeError:
+    print('::error::OpenRegister registers endpoint did not return JSON. First 500 bytes:')
+    print(raw[:500])
+    sys.exit(1)
+items = body if isinstance(body, list) else body.get('results', [])
+slugs = {i.get('slug') for i in items if isinstance(i, dict)}
+print(f'[ci-seed] registers present: {sorted(s for s in slugs if s)}')
+if 'pipelinq' not in slugs:
+    print("::error::The 'pipelinq' register is missing after a forced import.")
+    sys.exit(1)
+print('[ci-seed] registers OK')
+PY
+}
+
+REG_BODY="$(mktemp)"
+curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${BASE}/index.php/apps/openregister/api/registers?_limit=300" -o "$REG_BODY"
+verify_registers "$REG_BODY"
+
+# ── 5. Verify first-time setup is genuinely complete ─────────────────────────
+# This is the check that would have caught the original failure immediately.
+#
+# `useSetupStatus` walks the MANIFEST's step list and looks each id up in this
+# response. Any manifest step id the endpoint does not report resolves to
+# `done: false` and counts as unmet FOREVER — and an unmet optional step makes
+# CnAppRoot cover the shell with the wizard in every fresh browser context.
+# So compare the two lists directly instead of trusting `completed`.
+verify_setup() {
+	python3 - "$1" "$2" <<'PY'
+import json, sys
+status_path, manifest_path = sys.argv[1], sys.argv[2]
+with open(status_path) as fh:
+    raw = fh.read()
+try:
+    status = json.loads(raw)
+except json.JSONDecodeError:
+    print('::error::setup/status did not return JSON. First 500 bytes:')
+    print(raw[:500])
+    sys.exit(1)
+
+with open(manifest_path) as fh:
+    manifest = json.load(fh)
+
+steps = (manifest.get('setup') or {}).get('steps') or []
+reported = status.get('steps') or {}
+
+missing = [s['id'] for s in steps if s['id'] not in reported]
+unmet = [s['id'] for s in steps if reported.get(s['id'], {}).get('done') is not True]
+
+print(f"[ci-seed] setup completed flag : {status.get('completed')}")
+print(f"[ci-seed] manifest step ids    : {[s['id'] for s in steps]}")
+print(f"[ci-seed] reported step ids    : {sorted(reported)}")
+
+ok = True
+if missing:
+    print(f'::error::setup/status does not report these manifest steps at all: {missing}.')
+    print('::error::A step the server never reports is unmet forever, and CnAppRoot will')
+    print('::error::auto-open CnSetupWizard as a modal mask over the app in EVERY test.')
+    ok = False
+if unmet:
+    print(f'::error::These setup steps are still unmet: {unmet}.')
+    ok = False
+if status.get('completed') is not True:
+    print('::error::setup/status reports completed=false; CnAppRoot will replace the shell with the wizard.')
+    ok = False
+if not ok:
+    sys.exit(1)
+print('[ci-seed] first-time setup OK — the shell will render and no wizard will cover it')
+PY
+}
+
+SETUP_BODY="$(mktemp)"
+curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${APP_BASE}/api/setup/status" -o "$SETUP_BODY"
+verify_setup "$SETUP_BODY" "$(dirname "$0")/../../src/manifest.json"
+
+# ── 6. Warm the SPA, and GATE on the bundle actually being JavaScript ────────
+# The shared workflow serves Nextcloud with `php -S`. Warm the routes the first
+# spec will hit so it is not measuring server start-up. Failures here are
+# ignored on purpose — this part is a warm-up, not a gate. The real checks are
+# above and below.
+for path in \
+	"/index.php/apps/pipelinq/" \
+	"/index.php/apps/pipelinq/api/setup/status" \
+	"/index.php/apps/openregister/api/registers?_limit=1"
+do
+	code="$(curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+		-H 'OCS-APIRequest: true' "${BASE}${path}" || echo 000)"
+	echo "[ci-seed] warm ${path} -> ${code}"
+done
+
+# Do NOT hardcode the bundle URL. Nextcloud serves an app's assets from
+# whichever apps directory it was installed into — `/apps/<app>/js/…` on the CI
+# runner, `/custom_apps/<app>/js/…` in the docker dev images — and asking for
+# the wrong one does NOT 404. It returns **HTTP 200 with `text/html`**: the NC
+# error page, served through index.php. A status-code check therefore reports
+# success while fetching an HTML page instead of a multi-megabyte bundle.
+#
+# Read the real src out of the rendered app page instead, and verify the
+# response is actually JavaScript.
+APP_HTML="$(mktemp)"
+curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${APP_BASE}/" -o "$APP_HTML" || true
+
+# `|| true` is load-bearing: grep exits 1 when it matches nothing, and under
+# `set -euo pipefail` that aborts the script right here — so the case the gate
+# below exists to explain (no bundle) would die with a bare non-zero exit and
+# none of the diagnosis. Let it fall through to the gate instead.
+BUNDLE_SRC="$(grep -oE 'src="[^"]*pipelinq-main[^"]*"' "$APP_HTML" \
+	| head -1 | sed 's/^src="//; s/"$//' || true)"
+
+if [ -n "$BUNDLE_SRC" ]; then
+	BUNDLE_INFO="$(curl -sS -o /dev/null \
+		-w '%{http_code} %{content_type} %{size_download}' \
+		-u "${USER_NAME}:${USER_PASS}" "${BASE}${BUNDLE_SRC}" || echo '000 - 0')"
+	echo "[ci-seed] warm bundle ${BUNDLE_SRC} -> ${BUNDLE_INFO}"
+else
+	echo "[ci-seed] could not locate the bundle src in the rendered app page."
+	BUNDLE_INFO=""
+fi
+
+# On CI this is a GATE, not a warm-up.
+#
+# The single most likely way this job "succeeds" dishonestly is by passing
+# without ever loading the app, and the environment hides it well: when the
+# bundle is absent Nextcloud does not 404, it serves its HTML error page with
+# HTTP 200 and Content-Type text/html. So `npm run build` producing nothing
+# looks, to every status-code check in the pipeline, exactly like success.
+#
+# ⚠️ Note for anyone testing this control: DELETING the bundle does not
+# reproduce that state, because `tests/e2e/global-setup.ts`'s
+# `ensureBundleBuilt()` does an `fs.existsSync()` check and silently rebuilds
+# it. TRUNCATE the file instead.
+if [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
+	case "$BUNDLE_INFO" in
+		*javascript*)
+			echo "[ci-seed] bundle verified as JavaScript."
+			;;
+		*)
+			echo "::error::The Pipelinq frontend bundle did not serve as JavaScript (got: ${BUNDLE_INFO:-<not found>})."
+			echo "::error::The SPA cannot mount, so every UI spec would fail on a selector timeout with a misleading cause."
+			echo "::error::Check the 'Build app frontend' step — a missing bundle returns HTTP 200 text/html, not 404."
+			exit 1
+			;;
+	esac
+fi
+
+echo "[ci-seed] done."
