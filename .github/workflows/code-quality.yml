@@ -52,4 +52,10 @@ jobs:
       # NOT find this line, because the org name is embedded in a JSON input
       # rather than a `uses:`. (Fixed concurrently in #671; same value.)
       additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
-      playwright-seed-command: 'php occ app:disable pipelinq && php occ app:enable pipelinq'
+      # TEMPORARY diagnostic for openregister#2291 — remove once settled.
+      # The E2E job reports 150 "relation oc_openregister_table_15_<schema>
+      # does not exist" errors, but a faithful local replication (same
+      # openregister commit, fresh NC + postgres) provisions every table and
+      # cannot reproduce it. This dumps the seed's actual outcome so the next
+      # run says which of the three cases holds instead of us guessing.
+      playwright-seed-command: 'php occ app:disable pipelinq && php occ app:enable pipelinq && php tests/ci/dump-seed-state.php'
