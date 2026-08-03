@@ -163,10 +163,16 @@ export default {
 
 <style scoped>
 .lead-forecast-tab { padding: 12px 0; }
+
 .lead-forecast-tab__row { display: flex; align-items: center; gap: 8px; }
+
 .lead-forecast-tab__lock { font-size: 1.2em; cursor: help; }
+
 .lead-forecast-tab__justification { margin-top: 12px; }
+
 .lead-forecast-tab__history { margin-top: 16px; }
+
 .lead-forecast-tab__history table { width: 100%; border-collapse: collapse; }
+
 .lead-forecast-tab__history th, .lead-forecast-tab__history td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--color-border); }
 </style>

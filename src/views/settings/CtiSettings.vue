@@ -163,11 +163,13 @@ export default {
 	gap: 12px;
 	max-width: 720px;
 }
+
 .cti-settings__actions {
 	display: flex;
 	gap: 12px;
 	justify-content: flex-end;
 }
+
 .cti-settings__status {
 	margin-top: 8px;
 	font-style: italic;

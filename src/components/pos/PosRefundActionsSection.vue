@@ -302,16 +302,19 @@ export default {
 	flex-direction: column;
 	gap: 16px;
 }
+
 .pos-refund-section__actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
 }
+
 .pos-refund-section__lines {
 	width: 100%;
 	border-collapse: collapse;
 	margin-bottom: 12px;
 }
+
 .pos-refund-section__lines th {
 	text-align: left;
 	font-size: 12px;
@@ -319,13 +322,16 @@ export default {
 	padding: 6px 8px;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .pos-refund-section__lines td {
 	padding: 6px 8px;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .num {
 	text-align: right;
 }
+
 .empty {
 	text-align: center;
 	color: var(--color-text-maxcontrast);

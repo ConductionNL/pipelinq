@@ -156,19 +156,23 @@ export default {
 	align-items: flex-end;
 	margin-bottom: 12px;
 }
+
 .cti-event-log__table {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .cti-event-log__table th,
 .cti-event-log__table td {
 	padding: 6px 12px;
 	border-bottom: 1px solid var(--color-border);
 	text-align: left;
 }
+
 .cti-event-log__actions {
 	text-align: right;
 }
+
 .cti-event-log__pre {
 	max-height: 480px;
 	overflow: auto;
@@ -176,11 +180,13 @@ export default {
 	padding: 12px;
 	border-radius: 4px;
 }
+
 .cti-event-log__empty {
 	text-align: center;
 	color: var(--color-text-maxcontrast);
 	padding: 12px;
 }
+
 .cti-event-log__note {
 	margin-top: 8px;
 	font-style: italic;
