@@ -202,27 +202,51 @@ with open(manifest_path) as fh:
 steps = (manifest.get('setup') or {}).get('steps') or []
 reported = status.get('steps') or {}
 
+
+def done(step_id):
+    return reported.get(step_id, {}).get('done') is True
+
+
+# A step the server never MENTIONS can never be completed by anyone — that is
+# the structural defect this check exists for. A step that is merely NOT DONE
+# is a different thing entirely, and for an optional step it is the normal
+# state of a fresh install.
 missing = [s['id'] for s in steps if s['id'] not in reported]
-unmet = [s['id'] for s in steps if reported.get(s['id'], {}).get('done') is not True]
+required_unmet = [s['id'] for s in steps if s.get('required') is True and not done(s['id'])]
+optional_unmet = [s['id'] for s in steps if s.get('required') is not True and not done(s['id'])]
 
 print(f"[ci-seed] setup completed flag : {status.get('completed')}")
 print(f"[ci-seed] manifest step ids    : {[s['id'] for s in steps]}")
 print(f"[ci-seed] reported step ids    : {sorted(reported)}")
+if optional_unmet:
+    print(f"[ci-seed] optional not-yet-done : {optional_unmet}  (fine — see below)")
 
 ok = True
 if missing:
     print(f'::error::setup/status does not report these manifest steps at all: {missing}.')
-    print('::error::A step the server never reports is unmet forever, and CnAppRoot will')
-    print('::error::auto-open CnSetupWizard as a modal mask over the app in EVERY test.')
+    print('::error::useSetupStatus looks every MANIFEST step id up in this response, so a step')
+    print('::error::the server never reports resolves to done:false and is unmet FOREVER —')
+    print('::error::no operator action can clear it. CnAppRoot then auto-opens CnSetupWizard')
+    print('::error::as a modal mask over the app, in every fresh browser context, in every test.')
     ok = False
-if unmet:
-    print(f'::error::These setup steps are still unmet: {unmet}.')
+if required_unmet:
+    print(f'::error::REQUIRED setup steps are unmet: {required_unmet}.')
+    print('::error::CnAppRoot REPLACES the whole shell with the wizard while that is true —')
+    print('::error::no <main>, no nav — so every UI spec fails on a selector timeout.')
     ok = False
 if status.get('completed') is not True:
-    print('::error::setup/status reports completed=false; CnAppRoot will replace the shell with the wizard.')
+    print('::error::setup/status reports completed != true.')
+    print('::error::nextcloud-vue >= 2.1.0-vue3.17 uses that flag to suppress the optional')
+    print('::error::setup wizard; without it the wizard auto-opens over the shell.')
     ok = False
 if not ok:
     sys.exit(1)
+
+# Deliberately NOT an error: an unmet OPTIONAL step is the normal state of a
+# fresh install (nobody has typed an organisation name), and since
+# nextcloud-vue 2.1.0-vue3.17 the server's `completed` flag suppresses the
+# optional wizard regardless. Failing on it would have meant seeding cosmetic
+# data purely to satisfy this gate, which tests nothing.
 print('[ci-seed] first-time setup OK — the shell will render and no wizard will cover it')
 PY
 }
