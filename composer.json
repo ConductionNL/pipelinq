@@ -38,7 +38,7 @@
 		"phpcs": "./vendor/bin/phpcs --standard=phpcs.xml",
 		"phpcs:fix": "./vendor/bin/phpcbf --standard=phpcs.xml",
 		"phpcs:output": "./vendor/bin/phpcs --standard=phpcs.xml --report=json lib/ 2>/dev/null | tail -1 > phpcs-output.json",
-		"phpmd": "if [ -f vendor/bin/phpmd ]; then ./vendor/bin/phpmd lib text phpmd.xml --baseline-file phpmd.baseline.xml; else echo 'PHPMD not installed, skipping...'; fi",
+		"phpmd": "./vendor/bin/phpmd lib text phpmd.xml --baseline-file phpmd.baseline.xml",
 		"phpmetrics": "./vendor/bin/phpmetrics --report-html=phpmetrics lib/",
 		"phpmetrics:violations": "./vendor/bin/phpmetrics --violations-xml=phpmetrics/violations.xml lib/",
 		"psalm": "if [ -f vendor/bin/psalm ]; then ./vendor/bin/psalm --threads=1 --no-cache; else echo 'Psalm not installed, skipping...'; fi",
