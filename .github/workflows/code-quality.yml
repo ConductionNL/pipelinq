@@ -58,4 +58,4 @@ jobs:
       # openregister commit, fresh NC + postgres) provisions every table and
       # cannot reproduce it. This dumps the seed's actual outcome so the next
       # run says which of the three cases holds instead of us guessing.
-      playwright-seed-command: 'php occ app:disable pipelinq && php occ app:enable pipelinq && php tests/ci/dump-seed-state.php'
+      playwright-seed-command: 'php occ app:disable pipelinq && php occ app:enable pipelinq && php apps/pipelinq/tests/ci/dump-seed-state.php || php custom_apps/pipelinq/tests/ci/dump-seed-state.php || php tests/ci/dump-seed-state.php'
