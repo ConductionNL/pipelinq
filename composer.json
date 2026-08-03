@@ -71,6 +71,9 @@
 			"@quality:phpmd-score",
 			"@quality:psalm-score",
 			"@quality:phpstan-score"
+		],
+		"post-install-cmd": [
+			"git config core.hooksPath .githooks || true"
 		]
 	},
 	"config": {
