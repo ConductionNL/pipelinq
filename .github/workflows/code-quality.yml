@@ -105,4 +105,19 @@ jobs:
       # thing. The script forces the import, completes setup over the real admin
       # API, and then verifies each of those separately.
       # cwd for this step is the Nextcloud server root.
-      playwright-seed-command: 'bash apps/pipelinq/tests/e2e/ci-seed.sh'
+      # ⚠️ THROWAWAY BRANCH — DO NOT MERGE. ⚠️
+      #
+      # This is the bundle-truncation CONTROL. It answers one question: is the
+      # e2e suite actually coupled to the app, or would it pass without it?
+      #
+      # A DELETE-based control does not work. `tests/e2e/global-setup.ts`'s
+      # `ensureBundleBuilt()` does `fs.existsSync()` and silently runs
+      # `npm run build` when the bundle is missing — so deleting it just
+      # rebuilds it and the suite goes green, "proving" nothing. (On
+      # opencatalogi that produced a bogus 82/82.)
+      #
+      # So: run the real seed FIRST — it passes its own bundle gate against the
+      # intact bundle, which rules the gate out as the cause — and only then
+      # truncate. `existsSync` is satisfied by a 65-byte file, so nothing
+      # rebuilds it and the specs run against a dead bundle.
+      playwright-seed-command: 'bash apps/pipelinq/tests/e2e/ci-seed.sh && echo "[control] bundle before: $(stat -c%s apps/pipelinq/js/pipelinq-main.js) bytes" && truncate -s 65 apps/pipelinq/js/pipelinq-main.js && echo "[control] bundle after:  $(stat -c%s apps/pipelinq/js/pipelinq-main.js) bytes"'
