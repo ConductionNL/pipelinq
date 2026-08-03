@@ -211,6 +211,7 @@ export default {
 .loyalty-reporting {
 	padding: 1rem;
 }
+
 .loyalty-reporting__header {
 	display: flex;
 	justify-content: space-between;
@@ -219,16 +220,19 @@ export default {
 	gap: 1rem;
 	flex-wrap: wrap;
 }
+
 .loyalty-reporting__controls {
 	display: flex;
 	gap: 0.5rem;
 }
+
 .loyalty-kpis {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 	gap: 1rem;
 	margin-bottom: 1.5rem;
 }
+
 .loyalty-kpi {
 	display: flex;
 	flex-direction: column;
@@ -236,18 +240,22 @@ export default {
 	background: var(--color-background-hover);
 	border-radius: var(--border-radius-large);
 }
+
 .loyalty-kpi__label {
 	font-size: 0.85rem;
 	color: var(--color-text-maxcontrast);
 }
+
 .loyalty-kpi__value {
 	font-size: 1.4rem;
 	font-weight: bold;
 }
+
 .loyalty-reporting__table {
 	width: 100%;
 	margin-bottom: 1rem;
 }
+
 .loyalty-reporting__table th,
 .loyalty-reporting__table td {
 	text-align: left;

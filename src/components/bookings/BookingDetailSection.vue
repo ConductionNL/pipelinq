@@ -554,23 +554,28 @@ export default {
 	flex-direction: column;
 	gap: 20px;
 }
+
 .booking-section__actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
 }
+
 .booking-section__block h4 {
 	margin: 0 0 8px;
 	font-weight: 600;
 }
+
 .info-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 16px;
 }
+
 .info-field {
 	margin-bottom: 8px;
 }
+
 .info-field label {
 	display: block;
 	font-weight: bold;
@@ -578,14 +583,17 @@ export default {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
+
 .form-group {
 	margin-bottom: 12px;
 }
+
 .form-group label {
 	display: block;
 	font-weight: bold;
 	margin-bottom: 4px;
 }
+
 .form-group textarea {
 	width: 100%;
 	padding: 8px;
@@ -593,10 +601,12 @@ export default {
 	border-radius: var(--border-radius);
 	resize: vertical;
 }
+
 .notes-actions {
 	display: flex;
 	justify-content: flex-end;
 }
+
 .viewTableContainer {
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
@@ -604,38 +614,46 @@ export default {
 	box-shadow: 0 2px 4px var(--color-box-shadow);
 	border: 1px solid var(--color-border);
 }
+
 .viewTable {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .viewTable th, .viewTable td {
 	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .viewTable th {
 	background-color: var(--color-background-dark);
 	font-weight: 500;
 	color: var(--color-text-maxcontrast);
 }
+
 .section-empty {
 	text-align: center;
 	color: var(--color-text-maxcontrast);
 	padding: 20px;
 }
+
 .timeline {
 	margin: 0;
 	padding-left: 20px;
 }
+
 .timeline li {
 	margin-bottom: 8px;
 }
+
 .timeline-when {
 	display: inline-block;
 	min-width: 180px;
 	color: var(--color-text-maxcontrast);
 	font-size: 12px;
 }
+
 .timeline-text {
 	font-weight: 500;
 }

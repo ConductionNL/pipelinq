@@ -350,19 +350,23 @@ export default {
 	flex-direction: column;
 	gap: 16px;
 }
+
 .cash-shift-section__actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
 }
+
 .info-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 16px;
 }
+
 .info-field--wide {
 	grid-column: 1 / -1;
 }
+
 .info-field label {
 	display: block;
 	font-weight: bold;
@@ -370,20 +374,24 @@ export default {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
+
 .cash-shift-section__tolerance {
 	display: inline-block;
 	padding: 2px 10px;
 	border-radius: var(--border-radius-pill);
 	font-weight: bold;
 }
+
 .cash-shift-section__tolerance--ok {
 	background-color: var(--color-success);
 	color: var(--color-primary-text);
 }
+
 .cash-shift-section__tolerance--warn {
 	background-color: var(--color-warning);
 	color: var(--color-primary-text);
 }
+
 .cash-shift-section__diff-actions {
 	display: flex;
 	gap: 8px;

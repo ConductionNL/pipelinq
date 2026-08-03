@@ -336,17 +336,20 @@ export default {
 .payment-settings {
 	max-width: 1080px;
 }
+
 .payment-settings__loading {
 	display: flex;
 	align-items: center;
 	gap: 12px;
 	padding: 24px;
 }
+
 .payment-settings__cards {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
 	gap: 16px;
 }
+
 .payment-settings__card {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large);
@@ -356,15 +359,18 @@ export default {
 	gap: 12px;
 	background-color: var(--color-main-background);
 }
+
 .payment-settings__card-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 }
+
 .payment-settings__card-header h3 {
 	margin: 0;
 	font-size: 1.1em;
 }
+
 .payment-settings__type {
 	font-size: 0.85em;
 	color: var(--color-text-maxcontrast);
@@ -372,25 +378,30 @@ export default {
 	padding: 2px 8px;
 	border-radius: var(--border-radius);
 }
+
 .payment-settings__actions {
 	display: flex;
 	gap: 8px;
 	justify-content: flex-end;
 }
+
 .payment-settings__test-result {
 	font-size: 0.9em;
 	margin: 0;
 	padding: 8px;
 	border-radius: var(--border-radius);
 }
+
 .payment-settings__test-result--ok {
 	background-color: var(--color-success);
 	color: var(--color-main-background);
 }
+
 .payment-settings__test-result--error {
 	background-color: var(--color-error);
 	color: var(--color-main-background);
 }
+
 .payment-settings__timestamp {
 	display: block;
 	font-size: 0.8em;

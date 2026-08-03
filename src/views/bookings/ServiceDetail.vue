@@ -353,14 +353,17 @@ export default {
 	margin-bottom: 20px;
 	padding: 20px 20px 0;
 }
+
 .info-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 16px;
 }
+
 .info-field {
 	margin-bottom: 8px;
 }
+
 .info-field label {
 	display: block;
 	font-weight: bold;
@@ -368,10 +371,12 @@ export default {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
+
 .info-field--full {
 	grid-column: 1 / -1;
 	margin-top: 16px;
 }
+
 .viewTableContainer {
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
@@ -379,20 +384,24 @@ export default {
 	box-shadow: 0 2px 4px var(--color-box-shadow);
 	border: 1px solid var(--color-border);
 }
+
 .viewTable {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .viewTable th, .viewTable td {
 	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .viewTable th {
 	background-color: var(--color-background-dark);
 	font-weight: 500;
 	color: var(--color-text-maxcontrast);
 }
+
 .section-empty {
 	text-align: center;
 	color: var(--color-text-maxcontrast);

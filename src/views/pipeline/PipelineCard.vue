@@ -499,6 +499,7 @@ export default {
 
 <style scoped>
 .pipeline-card {
+	position: relative;
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
 	padding: 8px;
@@ -508,10 +509,6 @@ export default {
 
 .pipeline-card:hover {
 	background: var(--color-background-hover);
-}
-
-.pipeline-card {
-	position: relative;
 }
 
 .pipeline-card--overdue {

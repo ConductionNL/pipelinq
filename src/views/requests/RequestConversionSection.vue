@@ -201,16 +201,19 @@ export default {
 	flex-direction: column;
 	gap: 12px;
 }
+
 .request-conversion-section__reference {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	flex-wrap: wrap;
 }
+
 .request-conversion-section__reference-label {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
+
 .request-conversion-section__reference-value {
 	padding: 2px 8px;
 	border-radius: var(--border-radius, 4px);

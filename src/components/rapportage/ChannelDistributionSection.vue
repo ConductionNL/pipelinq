@@ -121,13 +121,22 @@ export default {
 
 <style scoped>
 .channel-distribution { margin-bottom: 8px; }
+
 .channel-distribution__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
 .channel-distribution h3 { margin: 0; font-weight: 600; }
+
 .channel-distribution__bars { display: flex; flex-direction: column; gap: 8px; }
+
 .channel-distribution__bar { display: flex; align-items: center; gap: 12px; }
+
 .channel-distribution__label { width: 100px; font-weight: 600; font-size: 0.9em; }
+
 .channel-distribution__track { flex: 1; height: 24px; background: var(--color-background-dark); border-radius: 12px; overflow: hidden; }
+
 .channel-distribution__fill { height: 100%; border-radius: 12px; transition: width 0.3s; }
+
 .channel-distribution__count { width: 120px; text-align: right; font-size: 0.85em; color: var(--color-text-lighter); }
+
 .channel-distribution__empty { padding: 20px; text-align: center; color: var(--color-text-lighter); }
 </style>
