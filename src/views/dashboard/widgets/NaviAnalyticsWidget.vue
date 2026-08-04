@@ -81,7 +81,7 @@
 				class="navi-widget__input" />
 			<NcButton
 				variant="primary"
-				native-type="submit"
+				type="submit"
 				:disabled="loading || !query.trim()">
 				{{ t('pipelinq', 'Send') }}
 			</NcButton>
