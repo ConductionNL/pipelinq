@@ -346,12 +346,17 @@ class Application extends App implements IBootstrap
     {
         $appId = self::APP_ID;
 
-        // /api/health + /api/metrics are served by thin subclasses of the
-        // engine's GenericHealth/GenericMetricsController (see
-        // lib/Controller/HealthController.php + MetricsController.php). They
-        // autowire their OR collaborators and the parent class is only
-        // autoloaded on route dispatch, so a disabled OpenRegister never fatals
-        // bootstrap. No explicit registration is needed here for them.
+        // /api/health + /api/metrics are served by lib/Controller/
+        // HealthController.php + MetricsController.php, which adopt the engine
+        // by COMPOSITION: they resolve ManifestLoader / HealthCheckExecutor /
+        // MetricsEngine out of the DI container by FQCN string at dispatch
+        // time and never name an OpenRegister class in a position the
+        // autoloader must resolve. They must NOT go back to `extends
+        // Generic*Controller`: NC's router ReflectionClass()es every file in
+        // lib/Controller/ while MATCHING any route, so one unresolvable parent
+        // 500s EVERY pipelinq route, not just its own (decidesk#377). With
+        // OpenRegister absent they degrade — health 200 `degraded`, metrics
+        // 503 — instead of fatalling. No explicit registration is needed here.
         // Replace the bespoke DeepLinkRegistrationListener with the engine's
         // manifest-driven GenericDeepLinkRegistrationListener (reads the
         // `deepLinks` block from src/manifest.json).
