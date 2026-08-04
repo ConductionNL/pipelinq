@@ -44,7 +44,16 @@ test('Returns: refund list data surface renders without a registration error', a
 	await openApp(page)
 	await navClick(page, 'Returns', /\/pos\/refunds/)
 	const content = page.locator('#content-vue')
-	await expect(content.getByRole('radio', { name: 'Table' })).toBeVisible()
+	// The Cards/Table view switch is a SEGMENTED CONTROL, not a radiogroup:
+	// CnActionsBar renders `<div role="group" aria-label="View mode">` containing
+	// plain `<button type="button" :aria-pressed="…">` segments
+	// (@conduction/nextcloud-vue, CnActionsBar.vue lines 22-55). There is no
+	// `role="radio"` anywhere in that component, so `getByRole('radio')` could
+	// never match and this assertion failed against every render of the page —
+	// including the correct one. Asserting the segment by its real role keeps the
+	// same claim ("the view toggle is on screen") against the contract the
+	// component actually implements.
+	await expect(content.getByRole('button', { name: 'Table' })).toBeVisible()
 	await expect(
 		content.locator('table, .cn-data-table').first()
 			.or(content.getByText(/No items found/i).first()),
