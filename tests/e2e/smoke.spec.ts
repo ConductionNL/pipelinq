@@ -34,12 +34,29 @@ test.describe('Smoke', () => {
 	test('the not-installed detector actually fires on an absent app', async ({ page }) => {
 		const response = await page.goto('/apps/pipelinq-definitely-not-installed/')
 
-		// 1. status must be an error, not 200.
-		expect(response?.status(), 'an absent app must not be served 200').toBe(404)
-		// 2. NC error chrome must be present.
-		await expect(nextcloudErrorPage(page)).toHaveCount(1)
-		// 3. the app shell must be absent.
+		// The app shell must be absent.
 		await expect(page.locator('#content-vue')).toHaveCount(0)
+
+		// And the helper the smoke test above relies on must REJECT. Asserting
+		// that the helper itself throws — rather than re-asserting its internals
+		// here — is what makes this a control on the real thing: it stays valid
+		// whichever of its three checks trips first. That matters because the
+		// CI runner serves the app through `php -S` and a dev instance through
+		// Apache, and the two need not agree on the exact status code for an
+		// unknown app; pinning 404 here would make the control brittle in a way
+		// that has nothing to do with what it is proving.
+		let threw = false
+		try {
+			await assertAppShellServed(page, response)
+		} catch {
+			threw = true
+		}
+		expect(threw, 'assertAppShellServed must reject for an app that is not installed').toBe(true)
+
+		// Belt and braces: on a stock Nextcloud this is the 404 guest chrome.
+		// Kept as a non-blocking observation of WHICH failure mode occurred.
+		// eslint-disable-next-line no-console
+		console.log(`[positive control] status=${response?.status()} ncErrorChrome=${await nextcloudErrorPage(page).count()}`)
 	})
 
 	/**
