@@ -9,6 +9,8 @@
 
 import { test, expect } from '@playwright/test'
 
+import { revealNavEntry } from '../helpers/pipelinq'
+
 // @e2e openspec/specs/client-management/spec.md#display-client-list-with-default-settings
 test('client list page renders with controls', async ({ page }) => {
 	await page.goto('/apps/pipelinq/clients')
@@ -53,9 +55,12 @@ test('client form shows validation when name empty', async ({ page }) => {
 // @e2e openspec/specs/client-management/spec.md#navigate-from-contact-person-to-client
 test('clients navigation item visible in sidebar', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	const nav = page.locator('#app-navigation-vue')
-	await expect(nav.getByText('Clients')).toBeVisible({ timeout: 10000 })
-	await nav.getByText('Clients').click()
+	// `Clients` is relocated under the "Sales" group (src/menu-layout.json
+	// #relocations), so it is reachable via that group rather than painted at
+	// the top level. revealNavEntry expands the owning group first.
+	const link = await revealNavEntry(page, 'Clients')
+	await expect(link).toBeVisible({ timeout: 10000 })
+	await link.click()
 	await expect(page).toHaveURL(/clients/)
 })
 
@@ -77,8 +82,8 @@ test('client list has search capability', async ({ page }) => {
 // @e2e openspec/specs/client-management/spec.md#list-all-contact-persons
 test('contacts navigation item visible in sidebar', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	const nav = page.locator('#app-navigation-vue')
-	await expect(nav.getByText('Contacts')).toBeVisible({ timeout: 10000 })
+	// Relocated under the "Sales" group — see src/menu-layout.json#relocations.
+	await expect(await revealNavEntry(page, 'Contacts')).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/client-management/spec.md#create-a-contact-person-for-an-organization

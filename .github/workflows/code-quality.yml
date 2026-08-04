@@ -4,6 +4,12 @@ on:
   push:
     branches: [main, development, feature/**, bugfix/**, hotfix/**]
   pull_request:
+    # `synchronize` — a push to an open PR — was missing. Without it the quality
+    # suite runs ONCE, when the PR is opened, and every commit after that merges
+    # unchecked while the PR still shows the first run's green tick. A green
+    # check here described code that no longer existed. opencatalogi and
+    # openregister fixed the identical defect on their copies of this workflow.
+    types: [opened, reopened, synchronize]
     branches: [main, beta, development]
   workflow_dispatch:
   # Weekly smoke-test cron (pipelinq-quality-phpstan-burndown, Phase 5). A
@@ -14,8 +20,26 @@ on:
   schedule:
     - cron: "0 6 * * 1"
 
+concurrency:
+  group: quality-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+# The called workflow contains jobs that declare `contents: write` and
+# `actions: write` (coverage-baseline update, journeydoc capture, SBOM). A
+# caller cannot grant a reusable workflow more than it holds itself, so capping
+# this at `read` makes the whole call fail to START — zero jobs, no
+# annotations, indistinguishable from "nothing to run".
+permissions:
+  contents: write
+  actions: write
+  packages: read
+
 jobs:
   quality:
+    # A branch's FIRST push carries `github.event.created == true` and is
+    # skipped entirely by this guard — without it, that push looks like CI ran
+    # when it ran nothing at all.
+    if: github.event_name != 'push' || github.event.created != true
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
@@ -39,7 +63,22 @@ jobs:
       # path. PHPUnit (the unit suite) runs and is green.
       enable-newman: false
       newman-collection-path: "tests/newman"
+      # ── E2E browser tests ────────────────────────────────────────────────
+      # `playwright-test-path` does double duty in the shared workflow:
+      #   1. it is the directory the "Validate Playwright tests exist" step
+      #      counts *.spec.ts in;
+      #   2. it is the FIRST place the run step looks for a config —
+      #      `${playwright-test-path}/playwright.config.ts`, falling back to
+      #      the repo root only if that file is absent.
+      # We ship tests/e2e/playwright.config.ts precisely so lookup (2) hits it.
+      # The run step passes no `--project`, so the root config would run all
+      # THREE of its projects — including `visual` (pixel baselines whose own
+      # header says a CI Linux runner cannot byte-match them) and `docs-capture`
+      # (screenshot re-shoots, which have their own dedicated job). The
+      # tests/e2e config declares only the regression project, and writes its
+      # report to the app root where the upload step actually looks.
       enable-playwright: true
+      playwright-test-path: tests/e2e
       enable-playwright-coverage: true
       playwright-coverage-threshold: 75
       # Pin openregister to development: main lacks the react/async composer dep
@@ -52,4 +91,18 @@ jobs:
       # NOT find this line, because the org name is embedded in a JSON input
       # rather than a `uses:`. (Fixed concurrently in #671; same value.)
       additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
-      playwright-seed-command: 'php occ app:disable pipelinq && php occ app:enable pipelinq'
+      # The old seed was `php occ app:disable pipelinq && php occ app:enable
+      # pipelinq`. It reported success on every run and provisioned nothing
+      # reliable: the repair step it triggers runs with NO user session (OR RBAC
+      # can refuse it), swallows its own exception as "Non-fatal", and imports
+      # with `force: false` — which can advance the recorded version WITHOUT
+      # applying the register. `occ` still exits 0 either way.
+      #
+      # It also did nothing at all about the real blocker: pipelinq declares a
+      # REQUIRED first-time-setup step (reporting currency), and until it is met
+      # CnAppRoot REPLACES the entire shell with CnSetupWizard — no <main>, no
+      # nav — so all 111 failures were selector timeouts pointing at the wrong
+      # thing. The script forces the import, completes setup over the real admin
+      # API, and then verifies each of those separately.
+      # cwd for this step is the Nextcloud server root.
+      playwright-seed-command: 'bash apps/pipelinq/tests/e2e/ci-seed.sh'
