@@ -57,8 +57,8 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader && is_dir(__DIR__ . '/
 // array, ObjectEntity::getSchema() / getUuid() as real DECLARED methods,
 // saveObject() returning an array) supplied by the stubs under tests/Stubs/ and
 // mapped via the autoload-dev PSR-4 prefix "OCA\OpenRegister\" => "tests/Stubs/".
-// The deep INTEGRATION tier (tests/e2e/workflows + Newman, run by
-// .forgejo/workflows/tests-live.yml against a live, OR-loaded Nextcloud) is where
+// The deep INTEGRATION tier (tests/e2e/workflows + Newman, run against a live,
+// OR-loaded Nextcloud — see .github/workflows/code-quality.yml) is where
 // the suite exercises the REAL OpenRegister classes.
 //
 // When phpunit happens to run INSIDE a Nextcloud that has OpenRegister enabled,
