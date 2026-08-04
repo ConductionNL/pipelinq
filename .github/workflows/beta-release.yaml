@@ -9,6 +9,9 @@ on:
 jobs:
   release-management:
     runs-on: ubuntu-latest
+    # Observed: n=26 runs, max 0.7 min. Bounded well above that because this job
+    # builds and uploads a release artifact — a slow upload must not be killed.
+    timeout-minutes: 45
     steps:
     
       # Stap 1: Code ophalen
