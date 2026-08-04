@@ -5,5 +5,10 @@ on:
     branches: [main, beta]
 
 jobs:
-  check:
+  # Job id must stay `branch-protection` so the check reports as
+  # `branch-protection / check-branch`, which is the context name the org
+  # ruleset requires. GitHub names a reusable-workflow context
+  # `<caller-job-id> / <called-job-name>`, so renaming this job silently
+  # detaches the required status check and leaves PRs permanently pending.
+  branch-protection:
     uses: ConductionNL/.github/.github/workflows/branch-protection.yml@main
