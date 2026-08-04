@@ -57,6 +57,36 @@ jobs:
       enable-frontend: true
       enable-eslint: true
       enable-sbom: true
+      # Run the Hydra mechanical quality gates against this PR's diff.
+      #
+      # This tier has never executed in this repository. `enable-hydra-gates`
+      # defaults to false, so `quality / Hydra Gates` has been SKIPPED on every
+      # run here — and a skipped job is neither a pass nor a failure in the
+      # Quality Report rollup, so its absence has been indistinguishable from
+      # its success.
+      #
+      # Measured before switching on, not assumed. Running the v1.0.1 package
+      # locally against this repo's most recent merged PR diff reported ALL
+      # GATES PASSED (58 of 61 reporting; 4, 24 and 33 have no prerequisite
+      # here). The whole-tree audit does show 8 gate-61 (listener-work-placement)
+      # registrations carrying inherited debt — that is a real work-list, but
+      # gate-61 is diff-scoped in both full and scoped runs, so it reports zero
+      # on untouched trees and will not block unrelated PRs.
+      #
+      # No count is written here on purpose: the number of gates depends on the
+      # pin below and the number that run depends on this repo's diff and
+      # toolchain. The package prints both (`COVERAGE: N of M`) in the job log.
+      # See https://github.com/ConductionNL/.github/tree/main/hydra-gates
+      #
+      # Pinned to a tag, not `main`, so a change to the gate package cannot
+      # alter this repository's verdict without a commit here to move the pin.
+      # v1.0.1 is the pin openbuild and openregister already run.
+      enable-hydra-gates: true
+      hydra-gates-ref: v1.0.1
+      # `enable-axe` deliberately NOT set: it produces the report gate-33
+      # consumes, and a vanilla Nextcloud already carries serious/critical axe
+      # violations, so enabling it here would mix "this repo has a defect" with
+      # "core does". Separate change. gate-33 reports SKIPPED meanwhile.
       enable-phpunit: true
       # Newman: tests/newman/pipelinq-api.postman_collection.json doesn't pass
       # against a freshly-installed NC yet — the CRM endpoints need the
