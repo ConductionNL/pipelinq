@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [main, beta]
 
+permissions: {}
+
 jobs:
   # Job id must stay `branch-protection` so the check reports as
   # `branch-protection / check-branch`, which is the context name the org
