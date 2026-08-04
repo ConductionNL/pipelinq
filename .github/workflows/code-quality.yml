@@ -138,3 +138,43 @@ jobs:
       # API, and then verifies each of those separately.
       # cwd for this step is the Nextcloud server root.
       playwright-seed-command: 'bash apps/pipelinq/tests/e2e/ci-seed.sh'
+
+      # ── Integration tests ────────────────────────────────────────────────
+      # Was explicitly `false`. `newman-collection-path` already points at
+      # tests/newman, which ships three collections (outbound-messaging,
+      # pipelinq-api, semantic-handoff) that had never executed in CI. The path
+      # is correct as configured — the run step `cd`s there and globs
+      # `*.postman_collection.json` flat, and all three sit at that level.
+      enable-newman: true
+
+      # ── Frontend Check legs ──────────────────────────────────────────────
+      # `frontend-checks` defaults to `[]`, and an empty list means the shared
+      # workflow emits NO "Frontend Check" job at all — so these three
+      # validators ran nowhere while the run still looked complete. All three
+      # are self-contained `node` scripts, which is what a leg has to be.
+      # Measured on this tree before enabling: ALL THREE PASS. They are enabled
+      # to keep them passing, not because they are currently broken —
+      # `check:vue-demi` in particular guards a dual-package hazard that fails
+      # silently at runtime rather than at build time.
+      # `test:unit` is NOT listed: "Frontend Tests (unit)" already runs it.
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n"]'
+
+      # ── Coverage ratchet ─────────────────────────────────────────────────
+      # `enable-coverage-guard` defaults to FALSE, which is why both
+      # "Coverage Baseline Protection" and "Coverage Baseline Check" have only
+      # ever reported `skipped`. It needs two inputs this repo did not have,
+      # both added in this commit: `scripts/coverage-guard.php` (byte-identical
+      # to openregister's) and `.coverage-baseline` = 45.36, this repo's own
+      # measured coverage (18708 of 41247 statements) read from clover.xml in
+      # the `coverage-report` artifact of run 30912733766.
+      enable-coverage-guard: true
+
+      # ── Hydra mechanical gates ───────────────────────────────────────────
+      # `enable-hydra-gates` defaults to FALSE, so this tier has never executed
+      # here — the job reported `skipped`, which the Quality Report renders
+      # identically to a pass. Pinned to v1.0.1 so a change to the gate package
+      # cannot move this repo's verdict without a commit here.
+      # `enable-axe` deliberately NOT set: a vanilla Nextcloud 34 already carries
+      # serious/critical violations from core's own UI.
+      enable-hydra-gates: true
+      hydra-gates-ref: v1.0.1
