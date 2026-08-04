@@ -139,13 +139,18 @@ jobs:
       # cwd for this step is the Nextcloud server root.
       playwright-seed-command: 'bash apps/pipelinq/tests/e2e/ci-seed.sh'
 
-      # ── Integration tests ────────────────────────────────────────────────
-      # Was explicitly `false`. `newman-collection-path` already points at
-      # tests/newman, which ships three collections (outbound-messaging,
-      # pipelinq-api, semantic-handoff) that had never executed in CI. The path
-      # is correct as configured — the run step `cd`s there and globs
-      # `*.postman_collection.json` flat, and all three sit at that level.
-      enable-newman: true
+      # Integration Tests (Newman) stays OFF here, deliberately. The
+      # `enable-newman: false` further up is not a default nobody chose: it
+      # records that tests/newman/pipelinq-api.postman_collection.json does not
+      # pass against a freshly-installed Nextcloud because the CRM endpoints
+      # need the OpenRegister registers/schemas seeded, and the disable/enable
+      # repair cycle alone is not enough. Turning it on would produce a
+      # guaranteed red whose cause is already written down.
+      #
+      # Hydra Gates is likewise NOT touched here — it was switched on in this
+      # repo concurrently with this change, already pinned to v1.0.1, and the
+      # comment there records that the v1.0.1 package was run locally against
+      # the last merged diff first (ALL GATES PASSED, 58 of 61 reporting).
 
       # ── Frontend Check legs ──────────────────────────────────────────────
       # `frontend-checks` defaults to `[]`, and an empty list means the shared
@@ -169,12 +174,8 @@ jobs:
       # the `coverage-report` artifact of run 30912733766.
       enable-coverage-guard: true
 
-      # ── Hydra mechanical gates ───────────────────────────────────────────
-      # `enable-hydra-gates` defaults to FALSE, so this tier has never executed
-      # here — the job reported `skipped`, which the Quality Report renders
-      # identically to a pass. Pinned to v1.0.1 so a change to the gate package
-      # cannot move this repo's verdict without a commit here.
-      # `enable-axe` deliberately NOT set: a vanilla Nextcloud 34 already carries
-      # serious/critical violations from core's own UI.
-      enable-hydra-gates: true
-      hydra-gates-ref: v1.0.1
+      # (Hydra Gates is already declared above, pinned to v1.0.1, by the change
+      # that enabled it concurrently with this one. Not re-declared here — a
+      # duplicate key in a `with:` block is accepted by every YAML parser
+      # involved, last-one-wins, and is precisely the kind of thing that reads
+      # as configured while being decided somewhere else in the file.)
