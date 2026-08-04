@@ -31,6 +31,12 @@
 /quality-reports/
 /phpqa/
 
+# Playwright — the CI config (tests/e2e/playwright.config.ts) writes its HTML
+# report and per-test output to the APP ROOT, because that is where the shared
+# workflow's upload step looks. Neither belongs in the repo.
+/playwright-report/
+/test-results/
+
 # Nextcloud
 /custom_apps/
 /config/

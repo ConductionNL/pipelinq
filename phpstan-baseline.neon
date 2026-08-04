@@ -225,8 +225,10 @@ parameters:
 
 		# SetupController: DataResponse generic type mismatch — the OCP stub uses a strict
 		# generic T constraint (DataResponseType) that doesn't match plain arrays. Runtime works.
-		# 6 pre-existing + 3 from the seed-demo-data action (align-claims-and-first-hour).
+		# 6 pre-existing + 3 from the seed-demo-data action (align-claims-and-first-hour)
+		# + 1 from the skip-demo-data action (the optional demo-data step has to be
+		# satisfiable without seeding, or it covers the app with the setup wizard).
 		-
 			message: "#^Parameter \\#1 \\$data of class OCP\\\\AppFramework\\\\Http\\\\DataResponse constructor expects T of OCP\\\\AppFramework\\\\Http\\\\DataResponseType, array<string, .*> given\\.$#"
-			count: 9
+			count: 10
 			path: lib/Controller/SetupController.php

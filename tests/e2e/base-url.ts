@@ -32,10 +32,26 @@
  * @return {string} The base URL, without a trailing slash.
  */
 export function resolveBaseUrl(): string {
-	const url = process.env.PLAYWRIGHT_BASE_URL
-		?? process.env.BASE_URL
-		?? process.env.NEXTCLOUD_URL
-		?? process.env.NC_BASE_URL
+	// Walk the list rather than chaining `??`. `??` only falls through on
+	// null/undefined, so an EMPTY `PLAYWRIGHT_BASE_URL` would short-circuit the
+	// chain and throw even though `BASE_URL` — the name CI actually exports —
+	// was set correctly.
+	const candidates = [
+		'PLAYWRIGHT_BASE_URL',
+		'BASE_URL',
+		'NEXTCLOUD_URL',
+		'NC_BASE_URL',
+	] as const
+
+	let url: string | undefined
+	for (const name of candidates) {
+		const value = process.env[name]
+		if (value && value.trim() !== '') {
+			url = value.trim()
+			break
+		}
+	}
+
 	if (!url) {
 		throw new Error(
 			'No target instance configured. Set PLAYWRIGHT_BASE_URL (or BASE_URL, '

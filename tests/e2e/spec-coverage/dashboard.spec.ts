@@ -32,8 +32,10 @@ async function gotoOperational(page) {
 test('dashboard page title and empty state', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	await expect(page).toHaveURL(/pipelinq/)
-	// Landing page is the Commercial overview after the dashboard split.
-	await expect(page.getByRole('heading', { name: 'Commercial overview' }).first()).toBeVisible({ timeout: 15000 })
+	// Landing page is the Sales overview after the dashboard split. The IA
+	// revision in src/menu-layout.json relabelled the commercial dashboard to
+	// "Sales"; src/manifest.json now titles the page "Sales overview".
+	await expect(page.getByRole('heading', { name: 'Sales overview' }).first()).toBeVisible({ timeout: 15000 })
 	// No server error
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 })
@@ -68,8 +70,8 @@ test('KPI cards show empty state when no data', async ({ page }) => {
 // @e2e openspec/specs/dashboard/spec.md#manual-refresh-button
 test('dashboard has refresh button', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	// Header renders without error (landing = Commercial overview).
-	await expect(page.getByRole('heading', { name: 'Commercial overview' }).first()).toBeVisible({ timeout: 15000 })
+	// Header renders without error (landing = Sales overview).
+	await expect(page.getByRole('heading', { name: 'Sales overview' }).first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/dashboard/spec.md#widget-placement-in-dashboard-layout
@@ -135,11 +137,13 @@ test('dashboard navigation items visible', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	const nav = page.locator('#app-navigation-vue')
 	await expect(nav).toBeVisible({ timeout: 15000 })
-	// After the IA restructure the landing dashboards are split into the
-	// "Commercial" and "Operational" top-level entries (the generic "Dashboard"
-	// entry was removed). Assert both are present as nav entries.
+	// After the IA restructure the landing dashboards are split into two
+	// top-level entries (the generic "Dashboard" entry was removed). The
+	// commercial one is labelled "Sales" — see the relabel recorded in
+	// src/menu-layout.json#_removalsNote. Assert both are present as nav
+	// entries.
 	await expect(
-		nav.locator('a.app-navigation-entry-link[href$="#/"]').filter({ hasText: /^\s*Commercial\s*$/ }),
+		nav.locator('a.app-navigation-entry-link[href$="#/"]').filter({ hasText: /^\s*Sales\s*$/ }),
 	).toHaveCount(1, { timeout: 10000 })
 	await expect(
 		nav.locator('a.app-navigation-entry-link[href$="#/operational"]').filter({ hasText: /^\s*Operational\s*$/ }),

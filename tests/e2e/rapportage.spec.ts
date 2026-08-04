@@ -29,24 +29,41 @@ test.describe('Rapportage (Reporting)', () => {
 	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
 	 */
 	test('REQ-CR-001: rapportage dashboard loads with KPI cards', async ({ page }) => {
-		// Page heading should be visible.
+		// Retargeted onto the declarative dashboard that replaced the bespoke
+		// RapportageDashboard.vue (change `pipelinq-dashboards-declarative`).
+		// The old assertions named that component's private CSS — `.kpi-grid`,
+		// `.kpi-card`, `.date-range-selector` — none of which exist anywhere in
+		// src/ any more, so they could only ever fail. The page is now
+		// `type: "dashboard"` in src/manifest.json (id RapportageContactmomenten)
+		// and that manifest entry is the contract asserted here.
+
+		// Manifest `title` renders as the page heading.
 		await expect(
-			page.getByRole('heading', { name: /Reporting Dashboard|Rapportagedashboard/i }),
+			page.getByRole('heading', { name: 'Contact reporting' }).first(),
 		).toBeVisible({ timeout: 15000 })
 
-		// Date range selector buttons.
-		const dateButtons = page.locator('.date-range-selector .button-vue, .date-range-selector button')
-		await expect(dateButtons.first()).toBeVisible({ timeout: 10000 })
+		// The `period` pageFilter replaced the hand-rolled date-range selector.
+		await expect(page.getByText('Period').first()).toBeVisible({ timeout: 10000 })
 
-		// KPI grid container should be in the DOM.
-		const kpiGrid = page.locator('.kpi-grid')
-		await expect(kpiGrid).toBeVisible({ timeout: 10000 })
-
-		// Four KPI cards present.
-		const kpiCards = kpiGrid.locator('.kpi-card')
-		await expect(kpiCards).toHaveCount(4)
+		// The four headline KPIs, by the labels the manifest declares for them.
+		const content = page.locator('#content-vue')
+		for (const kpi of ['Total Contacts', 'FCR %', 'Avg Handling Time', 'SLA Compliance']) {
+			await expect(content.getByText(kpi).first()).toBeVisible({ timeout: 10000 })
+		}
 	})
 
+	/*
+	 * KNOWN-FAILING — pipelinq#687, and deliberately NOT patched.
+	 *
+	 * `/rapportage/channels` (ChannelAnalyticsView) has no menu entry, no
+	 * in-page link and no deepLinks registration, so it is unreachable except
+	 * by typing the hash by hand. This assertion is CORRECT: it asserts a user
+	 * can navigate there. Deep-linking the hash to force it green would hide a
+	 * live UX defect, so it stays red until #687 is decided.
+	 *
+	 * (The sibling `channel analytics page loads` below deep-links the route
+	 * and passes — the page itself works; only the way in is missing.)
+	 */
 	test('rapportage page navigates to channel analytics', async ({ page }) => {
 		// Wait for the dashboard to render.
 		await expect(page.locator('.rapportage-links')).toBeVisible({ timeout: 15000 })
@@ -63,6 +80,11 @@ test.describe('Rapportage (Reporting)', () => {
 		).toBeVisible({ timeout: 10000 })
 	})
 
+	/*
+	 * KNOWN-FAILING — pipelinq#687, same cause as the test above:
+	 * `/rapportage/agents` (AgentPerformanceView) is unreachable from the UI.
+	 * Left red on purpose rather than rewritten to deep-link the hash.
+	 */
 	test('rapportage page navigates to agent performance', async ({ page }) => {
 		// Wait for the dashboard to render.
 		await expect(page.locator('.rapportage-links')).toBeVisible({ timeout: 15000 })

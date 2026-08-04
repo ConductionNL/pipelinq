@@ -9,12 +9,15 @@
 
 import { test, expect } from '@playwright/test'
 
+import { revealNavEntry } from '../helpers/pipelinq'
+
 // @e2e openspec/specs/lead-management/spec.md#add-tags-to-a-lead
 test('leads page accessible from navigation', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	const nav = page.locator('#app-navigation-vue')
-	await expect(nav.getByText('Leads')).toBeVisible({ timeout: 10000 })
-	await nav.getByText('Leads').click()
+	// Relocated under the "Sales" group — see src/menu-layout.json#relocations.
+	const link = await revealNavEntry(page, 'Leads')
+	await expect(link).toBeVisible({ timeout: 10000 })
+	await link.click()
 	await expect(page).toHaveURL(/leads/)
 })
 
