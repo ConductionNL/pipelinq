@@ -23,9 +23,19 @@
         This replaces three opaque phpmd.baseline.xml entries (CallbackOverdueJob,
         EmailSyncJob, TaskEscalationJob) with one scoped, documented exclusion that
         states its own reason.
+
+        The pattern is */lib/BackgroundJob/* and deliberately NOT */BackgroundJob/*.
+        The broader form also excludes any ordinary class that merely sits under a
+        path segment of that name - e.g. lib/Service/BackgroundJob/ - which has no
+        mandated signature and must stay analysed. Measured with a positive control
+        (PHPMD 2.15, PHP 8.4, absolute paths): with */lib/X/* a probe in
+        lib/Service/X/ IS reported, while with */X/* it is silently swallowed. Both
+        forms correctly exclude the app's own lib/BackgroundJob/. This matches the
+        fleet-canonical */lib/Migration/* shape used in nextcloud-app-template #125,
+        doriath #157, larpingapp #263 and planix #315.
     </description>
 
-    <exclude-pattern>*/BackgroundJob/*</exclude-pattern>
+    <exclude-pattern>*/lib/BackgroundJob/*</exclude-pattern>
 
     <rule ref="rulesets/unusedcode.xml/UnusedFormalParameter"/>
 </ruleset>
