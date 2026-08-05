@@ -3,15 +3,39 @@
 /**
  * Pipelinq ZgwCoexistenceValidator.
  *
- * Enforces the REQ-ZGW-008 rule that exactly one of (StUF endpoint,
- * ZgwEndpoint) is allowed to be the active write path per gemeente at any
- * time. Called before any createZaak flow; raises DoubleWritePathException
- * when both backends are configured to write on the same gemeente so the
- * pipeline blocks before either external call is issued.
+ * Encodes the REQ-ZGW-008 rule that exactly one of (StUF endpoint,
+ * ZgwEndpoint) may be the active write path per gemeente at any time:
+ * `validateWritePath()` raises DoubleWritePathException when both backends
+ * are configured to write on the same gemeente.
  *
- * The check is intentionally tolerant: a missing StUF schema (stuf-zkn-bg-adapter
- * not yet merged) reduces to "ZGW only", and a ZgwEndpoint with
- * `actief=false` or `readOnly=true` is excluded from the write-path count.
+ * NOT CURRENTLY ENFORCED ANYWHERE, and the previous wording of this docblock
+ * ("Called before any createZaak flow ... so the pipeline blocks before
+ * either external call is issued") described enforcement that does not
+ * exist. Two independent reasons, both true at HEAD:
+ *
+ *   1. `validateWritePath()` has zero callers (hydra gate-6, orphan-auth).
+ *      So does `ZrcClient::createZaak()` — the "createZaak flow" this class
+ *      claimed to protect is itself unwired, so there is no call site to
+ *      insert the check into.
+ *   2. Even if it were called it could not fire. The `stufEndpoint` schema
+ *      was relocated to procest by the archived
+ *      `2026-06-23-pipelinq-stuf-zkn-removal` change, so
+ *      `activeStufWriters()` can only ever return `[]` and the
+ *      both-backends-active branch is unreachable.
+ *
+ * The class is retained deliberately (that removal change kept it on
+ * purpose), but it must not be read as a live guard. Wiring it as-is would
+ * install a check that is structurally incapable of rejecting anything —
+ * a green gate protecting nothing. Restoring real enforcement requires the
+ * StUF schema to be reachable from pipelinq again AND a write path to guard;
+ * the natural hook at that point is OpenRegister's pre-persist, stoppable
+ * `ObjectCreatingEvent`/`ObjectUpdatingEvent` on the endpoint schemas, since
+ * ZGW endpoints are OpenRegister-object-managed (ADR-022) rather than
+ * written through a pipelinq route. Tracked in pipelinq#401.
+ *
+ * The check is otherwise intentionally tolerant: a missing StUF schema
+ * reduces to "ZGW only", and a ZgwEndpoint with `actief=false` or
+ * `readOnly=true` is excluded from the write-path count.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Zgw
