@@ -97,7 +97,27 @@
     <rule ref="rulesets/unusedcode.xml/UnusedPrivateField"/>
     <rule ref="rulesets/unusedcode.xml/UnusedLocalVariable"/>
     <rule ref="rulesets/unusedcode.xml/UnusedPrivateMethod"/>
-    <rule ref="rulesets/unusedcode.xml/UnusedFormalParameter">
-        <exclude-pattern>*Migration*</exclude-pattern>
-    </rule>
+    <!-- UnusedFormalParameter is NOT declared here. It lives alone in
+         phpmd-unusedparams.xml, which is run as a second leg by the "phpmd"
+         composer script.
+
+         Why: this rule used to carry a NESTED
+             <exclude-pattern>*Migration*</exclude-pattern>
+         meant to spare lib/Migration, whose changeSchema/preSchemaChange/
+         postSchemaChange signatures are mandated by OCP\Migration\IMigrationStep
+         and cannot drop their unused parameters. That pattern was INERT: PHPMD
+         2.15 reads exclude-patterns in RuleSetFactory::getIgnorePattern(), which
+         walks $xml->children() - i.e. only elements DIRECTLY under <ruleset>. A
+         nested one parses without error and does nothing, so lib/Migration was
+         always scanned by this rule (ConductionNL/.github#155).
+
+         Moving the pattern up to the top level of THIS file would make it
+         effective, but it is applied by PDepend's ExcludePathFilter at
+         file-collection time, so it drops lib/Migration from EVERY rule in the
+         ruleset - real complexity, StaticAccess and method-length findings in
+         migrations would silently vanish.
+
+         Isolating the rule in its own ruleset gives the exclusion a top-level
+         home that scopes it to this one rule, while the main leg above keeps
+         analysing lib/Migration with everything else. -->
 </ruleset>
