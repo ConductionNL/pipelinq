@@ -3,11 +3,11 @@
 	"version": "1.0.0",
 	"dependencies": [
 		"openregister",
-		"openconnector",
-		"deck",
-		"workflowengine",
-		"timemanager",
-		"forms"
+		{ "id": "openconnector", "required": false, "name": "OpenConnector" },
+		{ "id": "deck", "required": false, "name": "Deck" },
+		{ "id": "workflowengine", "required": false, "name": "Workflow engine" },
+		{ "id": "timemanager", "required": false, "name": "Time manager" },
+		{ "id": "forms", "required": false, "name": "Forms" }
 	],
 	"setup": {
 		"enabled": true,
@@ -279,6 +279,7 @@
 					{ "id": "revenue",            "type": "stat", "title": "Revenue", "content": { "label": "Revenue", "route": { "name": "Leads" }, "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/commercial", "params": { "period": "@workspace.datePreset?" } }, "valueField": "revenue", "previousField": "previousPeriod.revenue", "goodDirection": "up" } },
 					{ "id": "won-value",          "type": "stat", "title": "Won Value", "content": { "label": "Won Value", "route": { "name": "Leads" }, "icon": "Trophy", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/commercial", "params": { "period": "@workspace.datePreset?" } }, "valueField": "wonValue", "previousField": "previousPeriod.wonValue", "goodDirection": "up" } },
 					{ "id": "win-rate",           "type": "stat", "title": "Win Rate", "content": { "label": "Win Rate", "route": { "name": "Leads" }, "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/commercial", "params": { "period": "@workspace.datePreset?" } }, "valueField": "winRate", "previousField": "previousPeriod.winRate", "goodDirection": "up" } },
+					{ "id": "avg-deal-size",      "type": "stat", "title": "Avg Deal Size", "content": { "label": "Avg Deal Size", "route": { "name": "Leads" }, "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/commercial", "params": { "period": "@workspace.datePreset?" } }, "valueField": "avgDealSize", "previousField": "previousPeriod.avgDealSize", "goodDirection": "up" } },
 					{ "id": "weighted-forecast",  "type": "stat", "title": "Weighted Forecast", "content": { "label": "Weighted Forecast", "route": { "name": "Leads" }, "icon": "ChartLine", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/commercial", "params": { "period": "@workspace.datePreset?" } }, "valueField": "weightedForecast", "goodDirection": "up" } },
 					{ "id": "mrr",                "type": "stat", "title": "Recurring revenue", "requiresApp": "shillinq", "content": { "label": "Recurring revenue (run-rate)", "route": { "name": "Contracts" }, "icon": "Repeat", "valueColor": "#46ba61", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "shillinq", "schema": "SalesOrderLine", "metric": "sum", "field": "maandWaarde", "filter": { "nature": "RECURRING" } } } },
 					{ "id": "revenue-over-time", "type": "chart", "title": "Revenue over time", "content": { "chartKind": "area", "dataSource": { "register": "pipelinq", "schema": "lead", "filter": {}, "bucket": { "field": "expectedCloseDate", "interval": "month", "metric": "sum", "metricField": "value" } } } },
@@ -295,9 +296,10 @@
 					{ "id": "c5",  "widgetId": "weighted-forecast",  "gridX": 3,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
 					{ "id": "c1",  "widgetId": "revenue",            "gridX": 6,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
 					{ "id": "c13", "widgetId": "mrr",                "gridX": 9,  "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
-					{ "id": "c17", "widgetId": "won-vs-open",        "gridX": 0,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
-					{ "id": "c2",  "widgetId": "won-value",          "gridX": 4,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
-					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 8,  "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c17", "widgetId": "won-vs-open",        "gridX": 0,  "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c2",  "widgetId": "won-value",          "gridX": 3,  "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c3",  "widgetId": "win-rate",           "gridX": 6,  "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
+					{ "id": "c18", "widgetId": "avg-deal-size",      "gridX": 9,  "gridY": 2,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false, "dateChip": true },
 					{ "id": "c7",  "widgetId": "revenue-over-time",   "gridX": 0,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c8",  "widgetId": "pipeline-by-stage",   "gridX": 6,  "gridY": 4,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
 					{ "id": "c9",  "widgetId": "revenue-by-category",  "gridX": 0, "gridY": 8,  "gridWidth": 6,  "gridHeight": 4, "dateChip": true },
@@ -333,7 +335,7 @@
 				},
 				"widgets": [
 					{ "id": "open-leads",            "type": "stat", "title": "Open Leads", "content": { "label": "Open Leads", "icon": "FilterVariant", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open" } } } },
-					{ "id": "open-requests",         "type": "stat", "title": "Requests", "content": { "label": "Requests", "icon": "ClipboardList", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "ticket", "metric": "count", "filter": { "ticketType": "request" } } } },
+					{ "id": "open-requests",         "type": "stat", "title": "Open Requests", "content": { "label": "Open Requests", "icon": "ClipboardList", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "ticket", "metric": "count", "filter": { "ticketType": "request" } } } },
 					{ "id": "pipeline-value",        "type": "stat", "title": "Pipeline Value", "content": { "label": "Pipeline Value", "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": {} } } },
 					{ "id": "overdue",               "type": "stat", "title": "Overdue", "content": { "label": "Overdue", "icon": "ScaleBalance", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open", "expectedCloseDate": { "lt": "@today" } } } } },
 					{ "id": "lead-conversion",       "type": "stat", "title": "Lead Conversion Rate", "content": { "label": "Lead Conversion Rate", "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "leadConversionRate", "previousField": "previousPeriod.leadConversionRate", "goodDirection": "up" } },

@@ -22,13 +22,14 @@
 		"test:e2e": "playwright test",
 		"test:e2e:docs": "playwright test --project docs-capture",
 		"test:e2e:install": "playwright install chromium",
-		"check:manifest": "node scripts/check-manifest.js"
+		"check:manifest": "node scripts/check-manifest.js",
+		"prepare": "git config core.hooksPath .githooks || true"
 	},
 	"browserslist": [
 		"extends @nextcloud/browserslist-config"
 	],
 	"dependencies": {
-		"@conduction/nextcloud-vue": "2.1.0-vue3.17",
+		"@conduction/nextcloud-vue": "2.2.0-vue3.3",
 		"@nextcloud/axios": "~2.5.2",
 		"@nextcloud/capabilities": "^1.2.1",
 		"@nextcloud/dialogs": "^7.4.1",

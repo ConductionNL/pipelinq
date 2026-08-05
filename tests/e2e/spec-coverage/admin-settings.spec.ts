@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e coverage for openspec/specs/admin-settings/spec.md
  * UI-observable scenarios: admin settings page loads, navigation, structure.
@@ -8,6 +8,8 @@
  */
 
 import { test, expect } from '@playwright/test'
+
+import { nextcloudErrorPage } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/admin-settings/spec.md#admin-user-accesses-settings
 test('admin user accesses pipelinq settings', async ({ page }) => {
@@ -55,8 +57,20 @@ test('admin settings accessible via settings navigation', async ({ page }) => {
 
 // @e2e openspec/specs/admin-settings/spec.md#form-inputs-have-labels
 test('admin settings page does not throw server errors', async ({ page }) => {
-	await page.goto('/settings/admin/pipelinq')
-	await expect(page.locator('body')).not.toContainText('not installed', { timeout: 10000 })
+	const response = await page.goto('/settings/admin/pipelinq')
+	// Was `not.toContainText('not installed')`. That string never appears in
+	// Nextcloud's app-error chrome (in core it only occurs in PHP-module
+	// messages), so the assertion could not detect the failure it names — it
+	// passed on this page purely because the NC settings shell does not render
+	// pipelinq's optional-dependency banners. Assert the real contract: the
+	// page is served, is not NC error chrome, and mounts the pipelinq section.
+	expect(response?.status(), 'admin settings page must be served').toBe(200)
+	await expect(nextcloudErrorPage(page)).toHaveCount(0)
+	// templates/settings/admin.php renders `<div id="pipelinq-settings">` and
+	// src/settings.js does `app.mount('#pipelinq-settings')`, which renders
+	// INSIDE that element and keeps the id. An unmounted shell stays empty and
+	// therefore fails toBeVisible, so this is a real positive signal.
+	await expect(page.locator('#pipelinq-settings')).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/admin-settings/spec.md#stage-color-picker

@@ -3,18 +3,23 @@
 /**
  * Pipelinq Health Controller
  *
- * Thin adopter of the OpenRegister AppHost engine's GenericHealthController
- * (ADR-040). The health checks + the `{status, app, version, checks}` shape
- * are now declared in `src/manifest.json` (`observability.health`) and executed
- * by the engine; this subclass exists only because Nextcloud resolves the
- * `health#index` route to this app-namespaced class by name. The auth posture
- * (`#[PublicPage]`) is re-declared here so it is visible to NC's middleware and
- * to the route-auth gate, then delegates to the engine.
+ * AppHost adopter by COMPOSITION, not inheritance: the OpenRegister AppHost
+ * observability engine is resolved lazily out of the DI container by FQCN
+ * string, and its result is rendered as the ADR-006
+ * `{status, app, version, checks}` envelope. Health-check execution, the
+ * status-code policy and the CORS decision come from the engine (declared in
+ * the `observability.health` block of `src/manifest.json`); the envelope and
+ * the OpenRegister-absent fallback are owned here.
  *
- * The parent class is only autoloaded when NC instantiates this controller on a
- * request to `/api/health` — never at `Application::register()` — so a disabled
- * or absent OpenRegister does not fatal Nextcloud bootstrap; the first health
- * request degrades to a 5xx instead.
+ * ⚠️ This class MUST NOT `extends` — nor name in any resolved position — a
+ * class from another app. Nextcloud's router `ReflectionClass()`es every file
+ * in `lib/Controller/` while MATCHING a route, so an unresolvable parent makes
+ * EVERY route in pipelinq return HTTP 500, not just this one. `extends` is
+ * resolved by the autoloader, not the container, so no amount of lazy DI
+ * registration can rescue it. pipelinq does not declare
+ * `<app>openregister</app>` in appinfo/info.xml, so the parent was
+ * unresolvable on any instance without OpenRegister. See decidesk#377 /
+ * decidesk#388.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -34,49 +39,79 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use OCA\OpenRegister\AppHost\Controller\GenericHealthController;
-use OCA\OpenRegister\AppHost\Observability\HealthCheckExecutor;
-use OCA\OpenRegister\AppHost\Observability\ManifestLoader;
 use OCA\Pipelinq\AppInfo\Application;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IConfig;
 use OCP\IRequest;
+use Psr\Container\ContainerInterface;
 
 /**
  * Public, declarative health endpoint backed by the AppHost engine.
+ *
+ * The engine collaborators are pulled from the container by FQCN string at
+ * dispatch time, so pipelinq never binds an OpenRegister class at
+ * class-declaration time.
  *
  * @psalm-suppress UnusedClass
  *
  * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
  */
-class HealthController extends GenericHealthController
+class HealthController extends Controller
 {
+
+    /**
+     * FQCN of the AppHost observability manifest loader.
+     *
+     * Referenced as a string, never imported: the class only exists when
+     * openregister is installed.
+     *
+     * @var string
+     */
+    private const MANIFEST_LOADER = 'OCA\\OpenRegister\\AppHost\\Observability\\ManifestLoader';
+
+    /**
+     * FQCN of the AppHost declarative health-check executor.
+     *
+     * Referenced as a string, never imported: the class only exists when
+     * openregister is installed.
+     *
+     * @var string
+     */
+    private const HEALTH_EXECUTOR = 'OCA\\OpenRegister\\AppHost\\Observability\\HealthCheckExecutor';
+
     /**
      * Constructor.
      *
-     * Pins the engine's `$appName` to pipelinq so the engine reads pipelinq's
-     * manifest + resolves pipelinq's version.
+     * @param IRequest           $request   The HTTP request.
+     * @param IConfig            $config    The Nextcloud config service (fallback version).
+     * @param ContainerInterface $container DI container — resolves the AppHost engine lazily.
      *
-     * @param IRequest            $request        The HTTP request.
-     * @param ManifestLoader      $manifestLoader Loads pipelinq's observability config.
-     * @param HealthCheckExecutor $executor       Runs the declarative checks.
+     * @return void
      */
     public function __construct(
         IRequest $request,
-        ManifestLoader $manifestLoader,
-        HealthCheckExecutor $executor
+        private readonly IConfig $config,
+        private readonly ContainerInterface $container
     ) {
-        parent::__construct(
-            appName: Application::APP_ID,
-            request: $request,
-            manifestLoader: $manifestLoader,
-            executor: $executor
-        );
+        parent::__construct(appName: Application::APP_ID, request: $request);
+
     }//end __construct()
 
     /**
      * GET /api/health — declarative health check (ADR-006), public probe.
+     *
+     * Runs the manifest-declared checks through the AppHost engine and renders
+     * the `{status, app, version, checks}` envelope with the status code the
+     * engine's policy resolved. CORS headers are emitted only when the
+     * manifest opts in, exactly as the engine does.
+     *
+     * When the AppHost engine cannot be resolved — openregister absent or
+     * disabled — the endpoint still answers (the whole point of a health
+     * probe): `status: degraded`, `checks.openregister: unavailable`, HTTP 200.
      *
      * @return JSONResponse `{status, app, version, checks}` with HTTP code per policy.
      *
@@ -86,6 +121,64 @@ class HealthController extends GenericHealthController
     #[NoCSRFRequired]
     public function index(): JSONResponse
     {
-        return parent::index();
+        $engine = $this->engineResult();
+        if ($engine === null) {
+            return new JSONResponse(
+                [
+                    'status'  => 'degraded',
+                    'app'     => $this->appName,
+                    'version' => $this->config->getAppValue(Application::APP_ID, 'installed_version', ''),
+                    'checks'  => ['openregister' => 'unavailable'],
+                ],
+                Http::STATUS_OK
+            );
+        }
+
+        $response = new JSONResponse(
+            [
+                'status'  => $engine['status'],
+                'app'     => $this->appName,
+                'version' => $engine['version'],
+                'checks'  => $engine['checks'],
+            ],
+            $engine['httpStatus']
+        );
+
+        if ($engine['cors'] === true) {
+            $response->addHeader('Access-Control-Allow-Origin', '*');
+            $response->addHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        }
+
+        return $response;
+
     }//end index()
+
+    /**
+     * Run the AppHost observability engine for this app.
+     *
+     * @return array{status: string, version: string, checks: array<string, string>, httpStatus: int, cors: bool}|null
+     *         Null when the engine is unavailable (openregister absent/disabled).
+     */
+    private function engineResult(): ?array
+    {
+        try {
+            $manifestLoader = $this->container->get(self::MANIFEST_LOADER);
+            $executor       = $this->container->get(self::HEALTH_EXECUTOR);
+
+            $appId    = $this->appName;
+            $manifest = $manifestLoader->load(appId: $appId);
+            $result   = $executor->execute(manifest: $manifest);
+
+            return [
+                'status'     => (string) $result->status,
+                'version'    => (string) $manifestLoader->appVersion(appId: $appId),
+                'checks'     => (array) $result->checks,
+                'httpStatus' => (int) $result->httpStatusCode,
+                'cors'       => ($manifest->cors === true),
+            ];
+        } catch (\Throwable $e) {
+            return null;
+        }//end try
+
+    }//end engineResult()
 }//end class

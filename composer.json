@@ -41,10 +41,10 @@
 		"phpmd": "./vendor/bin/phpmd lib text phpmd.xml --baseline-file phpmd.baseline.xml",
 		"phpmetrics": "./vendor/bin/phpmetrics --report-html=phpmetrics lib/",
 		"phpmetrics:violations": "./vendor/bin/phpmetrics --violations-xml=phpmetrics/violations.xml lib/",
-		"psalm": "if [ -f vendor/bin/psalm ]; then ./vendor/bin/psalm --threads=1 --no-cache; else echo 'Psalm not installed, skipping...'; fi",
-		"phpstan": "if [ -f vendor/bin/phpstan ]; then ./vendor/bin/phpstan analyse --memory-limit=1G; else echo 'PHPStan not installed, skipping...'; fi",
-		"test:unit": "if [ -f vendor/bin/phpunit ]; then ./vendor/bin/phpunit --colors=always --no-coverage; else echo 'phpunit not installed, skipping...'; fi",
-		"test:all": "if [ -f vendor/bin/phpunit ]; then ./vendor/bin/phpunit --colors=always --no-coverage; else echo 'phpunit not installed, skipping...'; fi",
+		"psalm": "./vendor/bin/psalm --threads=1 --no-cache",
+		"phpstan": "./vendor/bin/phpstan analyse --memory-limit=1G",
+		"test:unit": "./vendor/bin/phpunit --colors=always --no-coverage",
+		"test:all": "./vendor/bin/phpunit --colors=always --no-coverage",
 		"check": "E=0; for CMD in lint phpcs psalm test:unit; do echo; echo \"=== $CMD ===\"; composer $CMD || E=1; done; echo; if [ $E -eq 0 ]; then echo \"ALL CHECKS PASSED\"; else echo \"SOME CHECKS FAILED (see above)\"; fi; exit $E",
 		"check:full": "E=0; for CMD in lint phpcs psalm phpstan test:all; do echo; echo \"=== $CMD ===\"; composer $CMD || E=1; done; echo; if [ $E -eq 0 ]; then echo \"ALL CHECKS PASSED\"; else echo \"SOME CHECKS FAILED (see above)\"; fi; exit $E",
 		"check:strict": "E=0; for CMD in lint phpcs phpmd psalm phpstan test:all; do echo; echo \"=== $CMD ===\"; composer $CMD || E=1; done; echo; if [ $E -eq 0 ]; then echo \"ALL CHECKS PASSED\"; else echo \"SOME CHECKS FAILED (see above)\"; fi; exit $E",
@@ -71,6 +71,9 @@
 			"@quality:phpmd-score",
 			"@quality:psalm-score",
 			"@quality:phpstan-score"
+		],
+		"post-install-cmd": [
+			"git config core.hooksPath .githooks || true"
 		]
 	},
 	"config": {

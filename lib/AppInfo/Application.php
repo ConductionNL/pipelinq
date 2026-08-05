@@ -346,12 +346,17 @@ class Application extends App implements IBootstrap
     {
         $appId = self::APP_ID;
 
-        // /api/health + /api/metrics are served by thin subclasses of the
-        // engine's GenericHealth/GenericMetricsController (see
-        // lib/Controller/HealthController.php + MetricsController.php). They
-        // autowire their OR collaborators and the parent class is only
-        // autoloaded on route dispatch, so a disabled OpenRegister never fatals
-        // bootstrap. No explicit registration is needed here for them.
+        // /api/health + /api/metrics are served by lib/Controller/
+        // HealthController.php + MetricsController.php, which adopt the engine
+        // by COMPOSITION: they resolve ManifestLoader / HealthCheckExecutor /
+        // MetricsEngine out of the DI container by FQCN string at dispatch
+        // time and never name an OpenRegister class in a position the
+        // autoloader must resolve. They must NOT go back to `extends
+        // Generic*Controller`: NC's router ReflectionClass()es every file in
+        // lib/Controller/ while MATCHING any route, so one unresolvable parent
+        // 500s EVERY pipelinq route, not just its own (decidesk#377). With
+        // OpenRegister absent they degrade — health 200 `degraded`, metrics
+        // 503 — instead of fatalling. No explicit registration is needed here.
         // Replace the bespoke DeepLinkRegistrationListener with the engine's
         // manifest-driven GenericDeepLinkRegistrationListener (reads the
         // `deepLinks` block from src/manifest.json).
@@ -833,7 +838,18 @@ class Application extends App implements IBootstrap
     }//end wireBookingWalkInRebalance()
 
     /**
-     * Read the SPA manifest's declared app dependencies.
+     * Read the SPA manifest's declared app dependencies, as a flat id list.
+     *
+     * The manifest schema (`app-manifest-v2.schema.json`) allows each entry to
+     * be EITHER a bare string (a HARD dependency) OR an object
+     * `{ id, required?, name? }`, where `required: false` marks a SOFT one.
+     *
+     * Everything downstream of here — `resolveDependencyStatuses()` — only
+     * needs the app id: it reports installed/enabled/category per app, and the
+     * HARD-vs-SOFT distinction is a frontend concern that `CnAppRoot` reads
+     * from the manifest itself. So normalise to ids here, and let a malformed
+     * entry drop out rather than reach `implode()` / an array array-key, both
+     * of which would take the whole page down from inside `boot()`.
      *
      * @return array<int, string> Dependency app IDs (empty when absent/malformed).
      */
@@ -845,11 +861,23 @@ class Application extends App implements IBootstrap
         }
 
         $manifest = json_decode((string) file_get_contents($manifestPath), associative: true);
-        if (is_array($manifest['dependencies'] ?? null) === true) {
-            return $manifest['dependencies'];
+        if (is_array($manifest['dependencies'] ?? null) === false) {
+            return [];
         }
 
-        return [];
+        $ids = [];
+        foreach ($manifest['dependencies'] as $entry) {
+            $id = $entry;
+            if (is_array($entry) === true) {
+                $id = ($entry['id'] ?? null);
+            }
+
+            if (is_string($id) === true && $id !== '') {
+                $ids[] = $id;
+            }
+        }
+
+        return $ids;
     }//end readManifestDependencies()
 
     /**
