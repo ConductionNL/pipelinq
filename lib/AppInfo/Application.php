@@ -119,6 +119,23 @@ class Application extends App implements IBootstrap
      */
     public function register(IRegistrationContext $context): void
     {
+        // LOAD-ORDER HAZARD: OC_App::getEnabledApps() sort()s the app list and
+        // Coordinator::registerApps() calls registerAutoloading() then register()
+        // one app at a time, so an app's register() runs before the PSR-4 prefix
+        // of every alphabetically-LATER app exists. This app happens to sort AFTER
+        // `openregister`, so the AppHost class_exists() probes below answer TRUE
+        // today — by alphabet alone. Registering OpenRegister's prefix ourselves
+        // makes that independent of the app id: registerAutoloading() touches only
+        // the autoloader and is idempotent ($alreadyRegistered key guard).
+        // Deliberately NOT IAppManager::loadApp(), which would mark OpenRegister
+        // loaded and boot it before its own register() had run.
+        try {
+            $openRegisterPath = \OCP\Server::get(\OCP\App\IAppManager::class)->getAppPath('openregister');
+            \OC_App::registerAutoloading('openregister', $openRegisterPath);
+        } catch (\Throwable) {
+            // OpenRegister absent/disabled — fall through to the degraded path.
+        }
+
         // AppHost (ADR-040): offload the mechanical observability + deep-link
         // ceremony to OpenRegister's shared engine. Scoped to the parity-safe,
         // fully-built halves — see registerAppHost() for why the Settings /
