@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e coverage for openspec/specs/client-management/spec.md
  * UI-observable scenarios: list view, create form, form validation, navigation.
