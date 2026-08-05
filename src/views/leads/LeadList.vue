@@ -32,11 +32,13 @@
 			<div class="lead-list__filters">
 				<NcCheckboxRadioSwitch
 					v-model="showStaleOnly"
+					:aria-label="t('pipelinq', 'Stale only (>{days}d)', { days: staleThreshold })"
 					type="checkbox">
 					{{ t('pipelinq', 'Stale only (>{days}d)', { days: staleThreshold }) }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
 					v-model="hideClosed"
+					:aria-label="t('pipelinq', 'Hide closed')"
 					type="checkbox">
 					{{ t('pipelinq', 'Hide closed') }}
 				</NcCheckboxRadioSwitch>

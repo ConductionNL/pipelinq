@@ -120,15 +120,18 @@
 		<table v-else class="kassakoppeling-audit-list__table" data-testid="kassakoppeling-audit-table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Time') }}</th>
-					<th>{{ t('pipelinq', 'Operator') }}</th>
-					<th>{{ t('pipelinq', 'Register') }}</th>
-					<th>{{ t('pipelinq', 'Action') }}</th>
-					<th class="num">
+					<th scope="col">{{ t('pipelinq', 'Time') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Operator') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Register') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Action') }}</th>
+					<th scope="col" class="num">
 						{{ t('pipelinq', 'Amount') }}
 					</th>
-					<th>{{ t('pipelinq', 'Verification') }}</th>
-					<th class="chevron-col" />
+					<th scope="col">{{ t('pipelinq', 'Verification') }}</th>
+					<!-- Chevron affordance column: presentational only, so it stays
+					     empty and carries no accessible name. `scope="col"` still
+					     declares the association direction — WCAG 2.2 AA SC 1.3.1. -->
+					<th scope="col" class="chevron-col" />
 				</tr>
 			</thead>
 			<tbody>
