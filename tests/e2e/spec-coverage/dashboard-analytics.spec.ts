@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 behavioral e2e coverage for the decomposed analytics dashboard
  * widgets (openspec/changes/decompose-unified-analytics, REQ-DASH-010).

@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Behavioral regression marker for the BI export jobs page (/export/jobs).
  * Complements the existing bi-export.spec.ts (which only asserts no hard 500)

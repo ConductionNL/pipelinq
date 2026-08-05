@@ -80,9 +80,17 @@ jobs:
       #
       # Pinned to a tag, not `main`, so a change to the gate package cannot
       # alter this repository's verdict without a commit here to move the pin.
-      # v1.0.1 is the pin openbuild and openregister already run.
+      # v1.0.1 was the pin openbuild and openregister ran when this was written.
       enable-hydra-gates: true
-      hydra-gates-ref: v1.0.1
+      # PIN MOVED v1.0.1 -> v1.3.0. `hydra-gates-require-full-coverage`
+      # (default ON) fails a run when a gate whose subject matter EXISTS did
+      # not report; its contract is that a not-applicable gate must DECLARE
+      # itself. v1.0.1 contains ZERO `_skip` calls — no na/structural/wiring
+      # vocabulary at all — so such a gate emits NOTHING and is counted as
+      # "DID NOT RUN". v1.3.0 ships 36 such declarations. Measured on doriath
+      # (PR #160): gates 4/24/33 went from unexplained "DID NOT RUN" to
+      # explicit NOT APPLICABLE, and Hydra Gates went failure -> success.
+      hydra-gates-ref: v1.3.0
       # `enable-axe` deliberately NOT set: it produces the report gate-33
       # consumes, and a vanilla Nextcloud already carries serious/critical axe
       # violations, so enabling it here would mix "this repo has a defect" with
