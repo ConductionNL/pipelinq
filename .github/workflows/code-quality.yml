@@ -90,7 +90,13 @@ jobs:
       # "DID NOT RUN". v1.3.0 ships 36 such declarations. Measured on doriath
       # (PR #160): gates 4/24/33 went from unexplained "DID NOT RUN" to
       # explicit NOT APPLICABLE, and Hydra Gates went failure -> success.
-      hydra-gates-ref: v1.3.0
+      hydra-gates-ref: v1.4.0
+      # PIN MOVED v1.3.0 -> v1.4.0 (fleet consumer-ref sweep, 2026-08-05).
+      # A pinned ref is a silent expiry date on every upstream fix: this repo
+      # cannot receive a gate-package fix until this line moves. v1.4.0 is the
+      # latest tag and the FIRST one carrying `hydra-gates/scripts/axe-run.cjs`
+      # (verified absent at v1.3.0), so it is also the first that has #168's
+      # axe DOM scoping and #165's gate-46 fix.
       # `enable-axe` deliberately NOT set: it produces the report gate-33
       # consumes, and a vanilla Nextcloud already carries serious/critical axe
       # violations, so enabling it here would mix "this repo has a defect" with
