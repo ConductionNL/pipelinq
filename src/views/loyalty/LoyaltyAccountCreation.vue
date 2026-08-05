@@ -39,7 +39,7 @@
 				</a>
 			</p>
 
-			<NcButton variant="primary" native-type="submit" :disabled="!canSubmit">
+			<NcButton variant="primary" type="submit" :disabled="!canSubmit">
 				{{ t('pipelinq', 'Create loyalty account') }}
 			</NcButton>
 		</form>

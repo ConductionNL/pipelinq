@@ -24,15 +24,17 @@ concurrency:
   group: quality-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
-# The called workflow contains jobs that declare `contents: write` and
-# `actions: write` (coverage-baseline update, journeydoc capture, SBOM). A
-# caller cannot grant a reusable workflow more than it holds itself, so capping
-# this at `read` makes the whole call fail to START — zero jobs, no
-# annotations, indistinguishable from "nothing to run".
+# Permission CEILING for the called quality pipeline. GitHub statically
+# validates the called workflow's declared job permissions against this
+# grant — even for jobs that are disabled — so it must cover the maximum
+# any nested job declares: journeydoc-capture (contents+actions write),
+# update-baseline / features-extract (contents write), and the Quality
+# Report PR comment (issues / pull-requests write).
 permissions:
   contents: write
   actions: write
-  packages: read
+  issues: write
+  pull-requests: write
 
 jobs:
   quality:
@@ -55,6 +57,36 @@ jobs:
       enable-frontend: true
       enable-eslint: true
       enable-sbom: true
+      # Run the Hydra mechanical quality gates against this PR's diff.
+      #
+      # This tier has never executed in this repository. `enable-hydra-gates`
+      # defaults to false, so `quality / Hydra Gates` has been SKIPPED on every
+      # run here — and a skipped job is neither a pass nor a failure in the
+      # Quality Report rollup, so its absence has been indistinguishable from
+      # its success.
+      #
+      # Measured before switching on, not assumed. Running the v1.0.1 package
+      # locally against this repo's most recent merged PR diff reported ALL
+      # GATES PASSED (58 of 61 reporting; 4, 24 and 33 have no prerequisite
+      # here). The whole-tree audit does show 8 gate-61 (listener-work-placement)
+      # registrations carrying inherited debt — that is a real work-list, but
+      # gate-61 is diff-scoped in both full and scoped runs, so it reports zero
+      # on untouched trees and will not block unrelated PRs.
+      #
+      # No count is written here on purpose: the number of gates depends on the
+      # pin below and the number that run depends on this repo's diff and
+      # toolchain. The package prints both (`COVERAGE: N of M`) in the job log.
+      # See https://github.com/ConductionNL/.github/tree/main/hydra-gates
+      #
+      # Pinned to a tag, not `main`, so a change to the gate package cannot
+      # alter this repository's verdict without a commit here to move the pin.
+      # v1.0.1 is the pin openbuild and openregister already run.
+      enable-hydra-gates: true
+      hydra-gates-ref: v1.0.1
+      # `enable-axe` deliberately NOT set: it produces the report gate-33
+      # consumes, and a vanilla Nextcloud already carries serious/critical axe
+      # violations, so enabling it here would mix "this repo has a defect" with
+      # "core does". Separate change. gate-33 reports SKIPPED meanwhile.
       enable-phpunit: true
       # Newman: tests/newman/pipelinq-api.postman_collection.json doesn't pass
       # against a freshly-installed NC yet — the CRM endpoints need the
@@ -106,3 +138,44 @@ jobs:
       # API, and then verifies each of those separately.
       # cwd for this step is the Nextcloud server root.
       playwright-seed-command: 'bash apps/pipelinq/tests/e2e/ci-seed.sh'
+
+      # Integration Tests (Newman) stays OFF here, deliberately. The
+      # `enable-newman: false` further up is not a default nobody chose: it
+      # records that tests/newman/pipelinq-api.postman_collection.json does not
+      # pass against a freshly-installed Nextcloud because the CRM endpoints
+      # need the OpenRegister registers/schemas seeded, and the disable/enable
+      # repair cycle alone is not enough. Turning it on would produce a
+      # guaranteed red whose cause is already written down.
+      #
+      # Hydra Gates is likewise NOT touched here — it was switched on in this
+      # repo concurrently with this change, already pinned to v1.0.1, and the
+      # comment there records that the v1.0.1 package was run locally against
+      # the last merged diff first (ALL GATES PASSED, 58 of 61 reporting).
+
+      # ── Frontend Check legs ──────────────────────────────────────────────
+      # `frontend-checks` defaults to `[]`, and an empty list means the shared
+      # workflow emits NO "Frontend Check" job at all — so these three
+      # validators ran nowhere while the run still looked complete. All three
+      # are self-contained `node` scripts, which is what a leg has to be.
+      # Measured on this tree before enabling: ALL THREE PASS. They are enabled
+      # to keep them passing, not because they are currently broken —
+      # `check:vue-demi` in particular guards a dual-package hazard that fails
+      # silently at runtime rather than at build time.
+      # `test:unit` is NOT listed: "Frontend Tests (unit)" already runs it.
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n"]'
+
+      # ── Coverage ratchet ─────────────────────────────────────────────────
+      # `enable-coverage-guard` defaults to FALSE, which is why both
+      # "Coverage Baseline Protection" and "Coverage Baseline Check" have only
+      # ever reported `skipped`. It needs two inputs this repo did not have,
+      # both added in this commit: `scripts/coverage-guard.php` (byte-identical
+      # to openregister's) and `.coverage-baseline` = 45.36, this repo's own
+      # measured coverage (18708 of 41247 statements) read from clover.xml in
+      # the `coverage-report` artifact of run 30912733766.
+      enable-coverage-guard: true
+
+      # (Hydra Gates is already declared above, pinned to v1.0.1, by the change
+      # that enabled it concurrently with this one. Not re-declared here — a
+      # duplicate key in a `with:` block is accepted by every YAML parser
+      # involved, last-one-wins, and is precisely the kind of thing that reads
+      # as configured while being decided somewhere else in the file.)
