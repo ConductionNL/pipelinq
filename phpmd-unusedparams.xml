@@ -20,12 +20,21 @@
         and preSchemaChange/postSchemaChange with the same three parameters. A step
         that needs none of them still cannot drop them. The signature cannot change.
 
+        The pattern is */lib/Migration/* and deliberately NOT */Migration/* or
+        *Migration*. Those broader forms silently swallow ORDINARY CLASSES that merely
+        have "Migration" in their path - measured on openconnector, */Migration/* hides
+        a genuine finding in lib/Service/Migration/, and *Migration* additionally hides
+        every lib/Service/MigrationService.php, lib/Controller/MigrationController.php
+        and lib/Db/*Migration*.php. Those have no mandated signature and must stay
+        analysed. Only the app's own lib/Migration/ directory holds IMigrationStep
+        implementations, so only that directory is exempted.
+
         Both legs must always run - see the "phpmd" script in composer.json, which
         keeps the worst exit code rather than letting the first leg short-circuit
         the second.
     </description>
 
-    <exclude-pattern>*/Migration/*</exclude-pattern>
+    <exclude-pattern>*/lib/Migration/*</exclude-pattern>
 
     <rule ref="rulesets/unusedcode.xml/UnusedFormalParameter"/>
 </ruleset>
