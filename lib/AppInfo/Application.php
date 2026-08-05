@@ -673,12 +673,12 @@ class Application extends App implements IBootstrap
      */
     private function wireGdprSeamProviders(): void
     {
-        $identityRegistryClass  = 'OCA\\OpenRegister\\Service\\Gdpr\\Identity\\IdentityVerifyRegistry';
-        $regulatorRegistryClass = 'OCA\\OpenRegister\\Service\\Gdpr\\Regulator\\RegulatorEscalateRegistry';
-        $container = $this->getContainer();
+        $identityClass  = 'OCA\\OpenRegister\\Service\\Gdpr\\Identity\\IdentityVerifyRegistry';
+        $regulatorClass = 'OCA\\OpenRegister\\Service\\Gdpr\\Regulator\\RegulatorEscalateRegistry';
+        $container      = $this->getContainer();
 
         try {
-            $identityRegistry = $container->get($identityRegistryClass);
+            $identityRegistry = $container->get($identityClass);
             $identityRegistry->addProvider($container->get(PipelinqBsnIdentityVerifyProvider::class));
         } catch (Throwable $e) {
             // OpenRegister absent or the identity-verify seam not present — the
@@ -686,7 +686,7 @@ class Application extends App implements IBootstrap
         }
 
         try {
-            $regulatorRegistry = $container->get($regulatorRegistryClass);
+            $regulatorRegistry = $container->get($regulatorClass);
             $regulatorRegistry->addProvider($container->get(PipelinqApRegulatorEscalateProvider::class));
         } catch (Throwable $e) {
             // OpenRegister absent or the regulator-escalate seam not present — the

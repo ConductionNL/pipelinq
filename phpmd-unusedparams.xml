@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<ruleset name="Unused formal parameters"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_xml_schema.xsd">
+
+    <description>
+        Second PHPMD leg: UnusedFormalParameter only.
+
+        This rule lives in its own ruleset because PHPMD honours &lt;exclude-pattern&gt;
+        ONLY as a direct child of &lt;ruleset&gt;; nested inside a &lt;rule&gt; it is parsed and
+        discarded (ConductionNL/.github#155). A direct child, however, is applied by
+        PDepend at file-collection time and drops the file from EVERY rule in the
+        ruleset. Isolating UnusedFormalParameter here means the lib/BackgroundJob
+        exclusion applies to this rule and this rule ALONE - every other rule still
+        analyses lib/BackgroundJob in the main leg.
+
+        Why lib/BackgroundJob is excluded from THIS rule: OCP\BackgroundJob\TimedJob
+        (and QueuedJob) declare `abstract protected function run($argument)`. A job
+        that needs no argument still cannot drop the parameter - PHP would reject the
+        narrower signature. The signature cannot change.
+
+        This replaces three opaque phpmd.baseline.xml entries (CallbackOverdueJob,
+        EmailSyncJob, TaskEscalationJob) with one scoped, documented exclusion that
+        states its own reason.
+    </description>
+
+    <exclude-pattern>*/BackgroundJob/*</exclude-pattern>
+
+    <rule ref="rulesets/unusedcode.xml/UnusedFormalParameter"/>
+</ruleset>

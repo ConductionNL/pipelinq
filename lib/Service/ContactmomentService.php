@@ -29,6 +29,7 @@ use OCP\Files\NotPermittedException;
 use OCP\IGroupManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Service for contactmoment business operations.
@@ -75,7 +76,7 @@ class ContactmomentService
         try {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (\Exception $e) {
-            throw new \RuntimeException('OpenRegister service is not available.');
+            throw new RuntimeException('OpenRegister service is not available.');
         }
     }//end getObjectService()
 
@@ -95,7 +96,7 @@ class ContactmomentService
     public function getConfig(): array
     {
         if ($this->ticketService->isConfigured() === false) {
-            throw new \RuntimeException('Contactmoment register or schema not configured.');
+            throw new RuntimeException('Contactmoment register or schema not configured.');
         }
 
         return [
