@@ -105,23 +105,38 @@ jobs:
       # on untouched trees and will not block unrelated PRs.
       #
       # No count is written here on purpose: the number of gates depends on the
-      # pin below and the number that run depends on this repo's diff and
-      # toolchain. The package prints both (`COVERAGE: N of M`) in the job log.
-      # See https://github.com/ConductionNL/.github/tree/main/hydra-gates
-      #
-      # Pinned to a tag, not `main`, so a change to the gate package cannot
-      # alter this repository's verdict without a commit here to move the pin.
-      # v1.0.1 was the pin openbuild and openregister ran when this was written.
+      # package version in use and the number that run depends on this repo's
+      # diff and toolchain. The package prints both (`COVERAGE: N of M`) in the
+      # job log. See https://github.com/ConductionNL/.github/tree/main/hydra-gates
       enable-hydra-gates: true
-      # PIN MOVED v1.0.1 -> v1.3.0. `hydra-gates-require-full-coverage`
-      # (default ON) fails a run when a gate whose subject matter EXISTS did
-      # not report; its contract is that a not-applicable gate must DECLARE
-      # itself. v1.0.1 contains ZERO `_skip` calls — no na/structural/wiring
-      # vocabulary at all — so such a gate emits NOTHING and is counted as
-      # "DID NOT RUN". v1.3.0 ships 36 such declarations. Measured on doriath
-      # (PR #160): gates 4/24/33 went from unexplained "DID NOT RUN" to
-      # explicit NOT APPLICABLE, and Hydra Gates went failure -> success.
-      hydra-gates-ref: v1.5.0
+      # No `hydra-gates-ref` here on purpose. The shared workflow defaults it
+      # to @main, and this workflow is itself consumed at @main, so the two
+      # sides move together and a gate fix reaches this repo without a commit
+      # in this repo. A pin is a silent expiry date: 22 repos sat on v1.0.1 and
+      # 16 gates were dead fleet-wide while every one reported PASS (.github#159),
+      # and a default flipped at @main later reached those old runners and made
+      # them red on gates they had no subject matter for (.github#173).
+      # To hold this repo still for a specific reason, set the input explicitly
+      # and say why — it is still honoured. To roll back for everyone, revert on
+      # ConductionNL/.github main.
+      #
+      # THIRD CAUSE, and the one that is failing this repo RIGHT NOW
+      # (.github#177): quality.yml@main began executing three gate helpers BY
+      # NAME — check_spec_anchors.py, check_form_labels.py and
+      # check_license_triangle.py — which exist in NO tag before v1.5.0.
+      # Verified by DIRECTORY LISTING of each tag, not by per-file lookups:
+      # those answered "present" uniformly across v1.0.0..v1.5.0, and the
+      # uniformity across independent inputs was the tell that the instrument
+      # was wrong. So the Hydra Gates job here fails at "Verify the pinned gates
+      # package satisfies this workflow", before a single gate runs, with the
+      # workflow's own words: "This is NOT a code-quality finding about your
+      # repository." Removing the pin is the repair.
+      #
+      # Unpinning also picks up v1.5.1's push scoping (.github#179): on a push to
+      # `development`, `origin/development` IS `HEAD`, so the diff was empty by
+      # construction — <= v1.4.0 passed over it (permanently green) and v1.5.0
+      # refused with exit 99 (permanently red). The scope is now
+      # `github.event.before...HEAD`, what the push actually changed.
       # `enable-axe` deliberately NOT set: it produces the report gate-33
       # consumes, and a vanilla Nextcloud already carries serious/critical axe
       # violations, so enabling it here would mix "this repo has a defect" with
