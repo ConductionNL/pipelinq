@@ -961,7 +961,7 @@
             "description": "Product or service name (schema:name)",
             "maxLength": 255,
             "minLength": 1,
-            "title": "Product Name"
+            "title": "MUT Artikelnaam"
           },
           "description": {
             "type": "string",
@@ -1075,7 +1075,7 @@
                   "type": "string",
                   "description": "Human-readable variant label",
                   "maxLength": 255,
-                  "title": "Product Name"
+                  "title": "MUT Artikelnaam"
                 },
                 "attributes": {
                   "type": "object",
@@ -1119,7 +1119,7 @@
                   "type": "string",
                   "description": "Modifier group name",
                   "maxLength": 255,
-                  "title": "Product Name"
+                  "title": "MUT Artikelnaam"
                 },
                 "required": {
                   "type": "boolean",
@@ -1157,7 +1157,7 @@
                         "type": "string",
                         "description": "Option name",
                         "maxLength": 255,
-                        "title": "Product Name"
+                        "title": "MUT Artikelnaam"
                       },
                       "priceAdjustment": {
                         "type": "number",

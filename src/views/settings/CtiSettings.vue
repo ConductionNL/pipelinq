@@ -9,7 +9,7 @@
   -->
 <template>
 	<NcSettingsSection
-		:name="t('pipelinq', 'CTI integration')"
+		:name="t('pipelinq', 'MUT Telefonie')"
 		:description="t('pipelinq', 'Configure the telephony platform that powers screen-pop and click-to-dial.')">
 		<form class="cti-settings" @submit.prevent="save">
 			<NcSelect

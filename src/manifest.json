@@ -222,13 +222,6 @@
 			"order": 151
 		},
 		{
-			"id": "ChannelAnalyticsView",
-			"label": "Channel Analytics",
-			"icon": "ChartLine",
-			"route": "ChannelAnalyticsView",
-			"order": 152
-		},
-		{
 			"id": "AgentPerformanceView",
 			"label": "Agent Performance",
 			"icon": "AccountGroup",
@@ -359,6 +352,7 @@
 					{ "id": "open-requests",         "type": "stat", "title": "Open Requests", "content": { "label": "Open Requests", "icon": "ClipboardList", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "ticket", "metric": "count", "filter": { "ticketType": "request" } } } },
 					{ "id": "pipeline-value",        "type": "stat", "title": "Pipeline Value", "content": { "label": "Pipeline Value", "icon": "Cash", "valueColor": "#0082c9", "format": { "style": "currency", "currency": "@config.currency", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": {} } } },
 					{ "id": "overdue",               "type": "stat", "title": "Overdue", "content": { "label": "Overdue", "icon": "ScaleBalance", "valueColor": "#e9322d", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": { "status": "open", "expectedCloseDate": { "lt": "@today" } } } } },
+					{ "id": "mut-satisfaction", "type": "stat", "title": "Customer Satisfaction", "content": { "label": "Customer Satisfaction", "icon": "Account", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "source": { "register": "pipelinq", "schema": "lead", "metric": "count", "filter": {} } } },
 					{ "id": "lead-conversion",       "type": "stat", "title": "Lead Conversion Rate", "content": { "label": "Lead Conversion Rate", "icon": "TrendingUp", "valueColor": "#46ba61", "format": { "style": "percent", "decimals": 1 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "leadConversionRate", "previousField": "previousPeriod.leadConversionRate", "goodDirection": "up" } },
 					{ "id": "avg-resolution",        "type": "stat", "title": "Avg Request Resolution", "content": { "label": "Avg Request Resolution", "icon": "ClockOutline", "valueColor": "#0082c9", "format": { "style": "duration-hours", "decimals": 1 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "avgRequestResolutionTime", "previousField": "previousPeriod.avgRequestResolutionTime", "goodDirection": "down" } },
 					{ "id": "contact-volume",        "type": "stat", "title": "Contact Moment Volume", "content": { "label": "Contacts", "icon": "Account", "valueColor": "#0082c9", "format": { "style": "number", "decimals": 0 }, "endpointSource": { "url": "/apps/pipelinq/api/analytics/overview", "params": { "period": "@workspace.datePreset?" } }, "valueField": "contactMomentVolume", "previousField": "previousPeriod.contactMomentVolume", "goodDirection": "up" } },
@@ -368,7 +362,7 @@
 					{ "id": "complaints",            "type": "object-list", "title": "Complaints", "content": { "register": "pipelinq", "schema": "ticket", "filter": { "ticketType": "complaint" }, "sort": { "field": "priority", "dir": "desc" }, "limit": 6, "columns": [{ "key": "title", "label": "Complaint" }, { "key": "status", "label": "Status" }, { "key": "priority", "label": "Priority" }] } },
 					{ "id": "my-work",               "type": "custom", "title": "My Work" },
 					{ "id": "client-overview",       "type": "object-table", "title": "Client Overview", "content": { "register": "pipelinq", "schema": "client", "filter": {}, "sort": { "field": "name", "dir": "asc" }, "limit": 5, "hideHeader": true, "borderless": true, "rowRoute": "ClientDetail", "viewAllRoute": { "name": "Clients" }, "viewAllLabel": "View all clients", "emptyText": "No clients yet", "columns": [{ "key": "name", "label": "Client", "cellClass": "cn-cell--strong" }, { "key": "email", "label": "Email", "cellClass": "cn-cell--muted cn-cell--end" }] } },
-					{ "id": "billing-categories",    "type": "custom", "title": "Hours by billing category" },
+					{ "id": "billing-categories",    "type": "custom", "title": "MUT Uren per categorie" },
 					{ "id": "navi-analytics",        "type": "custom", "title": "Ask Navi" },
 					{ "id": "report-export",         "type": "custom", "title": "Report Export" },
 					{ "id": "xwiki-knowledge",       "type": "integration", "integrationId": "xwiki", "title": "Knowledge base" }
@@ -378,6 +372,7 @@
 					{ "id": "2",  "widgetId": "open-requests",         "gridX": 3, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
 					{ "id": "3",  "widgetId": "pipeline-value",        "gridX": 6, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
 					{ "id": "4",  "widgetId": "overdue",               "gridX": 9, "gridY": 0,  "gridWidth": 3,  "gridHeight": 2, "showTitle": false },
+					{ "id": "900", "widgetId": "mut-satisfaction", "gridX": 0, "gridY": 20, "gridWidth": 4, "gridHeight": 2, "showTitle": true },
 					{ "id": "14", "widgetId": "lead-conversion",       "gridX": 0, "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
 					{ "id": "15", "widgetId": "avg-resolution",        "gridX": 4, "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false, "dateChip": true },
 					{ "id": "16", "widgetId": "contact-volume",        "gridX": 8, "gridY": 2,  "gridWidth": 4,  "gridHeight": 2, "showTitle": false },
@@ -434,8 +429,7 @@
 					"phone"
 				],
 				"sidebar": {
-					"enabled": true,
-					"showMetadata": true
+					"enabled": false
 				}
 			}
 		},
@@ -674,7 +668,6 @@
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
 					{ "label": "Tickets", "filter": { "ticketType": "request" } },
-					{ "label": "Complaints", "filter": { "ticketType": "complaint" } },
 					{ "label": "Contactmomenten", "filter": { "ticketType": "contactmoment" } }
 				],
 				"actions": [
@@ -1077,7 +1070,7 @@
 				"_searchNote": "The dedicated 'Barcode lookup' page is gone (nav-ia-cleanup): this index's search already matches on barcode, so scanning into the search box resolves the product here — one surface instead of two for the same question. Verified live: searching '8714100838623' returns exactly the matching product. `barcode` is a column so the value is visible on the row you land on, not just the key you searched by.",
 				"columns": [
 					{ "key": "name", "label": "Name" },
-					{ "key": "barcode", "label": "Barcode" },
+					
 					{ "key": "category", "label": "Category" },
 					{ "key": "type", "label": "Type" },
 					{ "key": "status", "label": "Status" },
@@ -1166,7 +1159,7 @@
 				"showMassDelete": false,
 				"includeColumns": ["reference", "cashier", "terminalId", "status", "priceMode", "total", "created"],
 				"headerActions": [
-					{ "id": "create", "label": "Nieuwe transactie", "icon": "Plus", "handler": "navigate", "route": "PosTransactionNew" }
+					{ "id": "create", "label": "MUT Kassabon starten", "icon": "Plus", "handler": "navigate", "route": "PosTransactionNew" }
 				],
 				"actions": [
 					{ "id": "view", "label": "Openen", "icon": "Eye", "handler": "navigate", "route": "PosTransactionDetail" }

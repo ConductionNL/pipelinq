@@ -18,11 +18,6 @@
         { "key": "pipeline-sales", "data": { "title": "[Demo] Sales pipeline", "description": "Demo pipeline: standard commercial stages.", "isDefault": true, "stages": [ { "name": "New", "order": 1, "probability": 10, "isDefault": true }, { "name": "Contacted", "order": 2, "probability": 30 }, { "name": "Proposal", "order": 3, "probability": 60 }, { "name": "Won", "order": 4, "probability": 100, "isClosed": true, "isWon": true }, { "name": "Lost", "order": 5, "probability": 0, "isClosed": true } ] } },
         { "key": "pipeline-service", "data": { "title": "[Demo] Service pipeline", "description": "Demo pipeline: service-desk handling stages.", "stages": [ { "name": "New", "order": 1, "isDefault": true }, { "name": "In behandeling", "order": 2 }, { "name": "Afgerond", "order": 3, "isClosed": true, "isWon": true } ] } }
     ],
-    "queues": [
-        { "key": "queue-algemeen", "data": { "title": "[Demo] Algemene Zaken", "description": "Demo queue: general enquiries.", "categories": ["algemeen"], "isActive": true, "sortOrder": 1 } },
-        { "key": "queue-vergunningen", "data": { "title": "[Demo] Vergunningen", "description": "Demo queue: permit applications.", "categories": ["vergunningen"], "isActive": true, "sortOrder": 2 } },
-        { "key": "queue-klachten", "data": { "title": "[Demo] Klachten", "description": "Demo queue: complaint handling.", "categories": ["klachten"], "isActive": true, "sortOrder": 3 } }
-    ],
     "products": [
         { "key": "product-koffie", "data": { "name": "[Demo] Koffie zwart", "description": "Demo product: black coffee.", "sku": "DEMO-KOF-001", "unitPrice": 2.5, "type": "product", "status": "active", "unit": "stuk", "btwClass": "laag", "taxRate": 9, "barcode": "8714100000017" } },
         { "key": "product-broodje", "data": { "name": "[Demo] Broodje gezond", "description": "Demo product: sandwich.", "sku": "DEMO-BRD-002", "unitPrice": 4.75, "type": "product", "status": "active", "unit": "stuk", "btwClass": "laag", "taxRate": 9, "barcode": "8714100000024" } },
