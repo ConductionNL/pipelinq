@@ -24,7 +24,7 @@
  * not a test defect).
  */
 import { test, expect, Page, Locator } from '@playwright/test'
-import { openApp, navClick, dismissSupportDialog } from '../helpers/pipelinq'
+import { openApp, navClick, dismissSupportDialog, clickHeaderAction } from '../helpers/pipelinq'
 import { FixtureSession } from './helpers/fixtures'
 
 /** Set a numeric input to an exact value and let Vue's @update:value fire. */
@@ -36,18 +36,29 @@ async function setNum(page: Page, input: Locator, value: string): Promise<void> 
 	await page.waitForTimeout(250)
 }
 
-/** Open the POS new-transaction form and wait for the empty cart to render. */
+/**
+ * Open the POS new-transaction form and wait for the empty cart to render.
+ *
+ * FIXED 2026-08-06. This used to click
+ * `#content-vue >> role=button[name=/Add POS Transaction|Add Item|Nieuwe transactie/i]`
+ * and timed out at the TEST timeout (120s/90s) on all three tests in this file,
+ * which read as a slow/flaky POS page. It is neither: none of those three
+ * buttons is on the page.
+ *
+ * The PosTransactions manifest page sets `showAdd: false`, and `showAdd` is the
+ * only condition under which CnActionsBar emits a visible primary Add button.
+ * The create entry point is declared as a `headerActions[]` entry labelled
+ * "Nieuwe transactie", and CnActionsBar renders manifest header actions as
+ * NcActionButtons INSIDE its overflow "Actions" menu — the component's own
+ * schema calls them "Page-level header actions rendered inside CnActionsBar's
+ * overflow dropdown" (verified in @conduction/nextcloud-vue 2.2.0-vue3.3
+ * `dist/`). The regex therefore matched an element that is not rendered until
+ * the menu is opened, and Playwright waited for it forever.
+ */
 async function openPosForm(page: Page): Promise<void> {
 	await navClick(page, 'Kassabon', /pos/)
 	await page.waitForTimeout(800)
-	// The CnIndexPage header "add" button is labelled from the schema
-	// ("Add POS Transaction"); the empty-state action is "Nieuwe transactie".
-	// Match any of these so the helper is robust to the shared component's
-	// label derivation.
-	await page.locator('#content-vue')
-		.getByRole('button', { name: /Add POS Transaction|Add Item|Nieuwe transactie/i })
-		.first()
-		.click()
+	await clickHeaderAction(page, /Nieuwe transactie/i)
 	await page.waitForURL(/pos\/new/, { timeout: 10000 })
 	await page.waitForTimeout(1500)
 	await dismissSupportDialog(page)

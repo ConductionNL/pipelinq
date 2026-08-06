@@ -6,10 +6,10 @@
  * Idempotent demo-data seed shared by the `occ pipelinq:demo:seed` command and
  * the optional `seed-demo-data` setup-wizard action (one write path, ADR-042).
  * Seeds a small coherent linked dataset — clients (person + organisation),
- * leads across pipeline stages, request tickets across statuses, and
- * contactmoment tickets across channels — from lib/Settings/demo_seed_data.json
- * so lists, dashboards and the 360° client view render populated on a fresh
- * install.
+ * their contact persons, pipelines, queues, products, leads across pipeline
+ * stages, request / complaint / contactmoment tickets, and tasks — from
+ * lib/Settings/demo_seed_data.json so lists, dashboards and the 360° client
+ * view render populated on a fresh install.
  *
  * Since unify-ticket-supertype the requests and contactmomenten sections both
  * seed the unified `ticket` schema, distinguished by the `ticketType`
@@ -86,13 +86,50 @@ class DemoSeedService
      * Seed order matters (clients before the objects that link to them);
      * removal runs in reverse.
      *
+     * The contacts / pipelines / queues / products / complaints / tasks
+     * sections were added 2026-08-06. The three that FIXED a failure are
+     * contacts, tasks and pipelines: the base register ships example objects for
+     * products (14), queues (3), clients, leads, tickets and the POS entities,
+     * but none at all for `contact`, `task` or `pipeline`. Those three index
+     * pages therefore had an empty collection on a fresh install and CnIndexPage
+     * rendered `cn-index-page__empty` instead of a data table — silently, with
+     * no console error and no failed request — which the e2e suite read as "the
+     * page does not render its table", blaming the page for a missing fixture.
+     *
+     * The queues / products / complaints rows are not repairing an empty page;
+     * they exist so the seeded set is coherent (a client has contact persons, a
+     * complaint is a first-class ticket subtype alongside requests).
+     *
      * @var array<string, array{0: string, 1: string, 2: string|null}>
      */
     private const SECTIONS = [
         'clients'         => ['client_schema', 'name', null],
+        'contacts'        => ['contact_schema', 'name', null],
+        'pipelines'       => ['pipeline_schema', 'title', null],
+        'queues'          => ['queue_schema', 'title', null],
+        'products'        => ['product_schema', 'name', null],
         'leads'           => ['lead_schema', 'title', null],
         'requests'        => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_REQUEST],
+        'complaints'      => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_COMPLAINT],
         'contactmomenten' => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_CONTACTMOMENT],
+        'tasks'           => ['task_schema', 'subject', null],
+        'contracts'       => ['contract_schema', 'title', null],
+    ];
+
+    /**
+     * Sections whose schema requires a contact-first identity: section => objectType.
+     *
+     * `register.d/15-unify-client-contact.json` marks `contactsUid` REQUIRED on
+     * both the `client` and the `contact` schema, so a plain `saveObject()` of
+     * either is rejected by OpenRegister with "The required property
+     * (contactsUid) is missing". Both must go through ContactVcardService first,
+     * whose own ALLOWED_OBJECT_TYPES is exactly ['client', 'contact'].
+     *
+     * @var array<string, string>
+     */
+    private const CONTACT_FIRST_SECTIONS = [
+        'clients'  => 'client',
+        'contacts' => 'contact',
     ];
 
     /**
@@ -206,28 +243,17 @@ class DemoSeedService
                     continue;
                 }
 
-                // Contact-first unification: the client schema marks contactsUid
-                // REQUIRED (FK to the authoritative Nextcloud addressbook contact,
-                // never minted locally), so provision the NC contact before the
-                // object is saved — same path the create surface uses. Matching an
-                // existing contact by email keeps re-seeding after --remove
-                // duplicate-free on the addressbook side too.
-                if ($section === 'clients') {
-                    $provision = $this->contactVcardService->provisionContactFromForm(
-                        form: $data,
-                        objectType: 'client'
-                    );
-
-                    if ($provision === null) {
+                $identityType = (self::CONTACT_FIRST_SECTIONS[$section] ?? null);
+                if ($identityType !== null) {
+                    $data = $this->withProvisionedIdentity(data: $data, objectType: $identityType);
+                    if ($data === null) {
                         return [
                             'success' => false,
-                            'message' => 'Nextcloud Contacts is unavailable — cannot provision demo client identities.',
+                            'message' => 'Nextcloud Contacts is unavailable — cannot provision demo '.$identityType.' identities.',
                             'created' => $created,
                             'skipped' => $skipped,
                         ];
                     }
-
-                    $data['contactsUid'] = $provision['contactsUid'];
                 }
 
                 if ($ticketType !== null) {
@@ -571,6 +597,47 @@ class DemoSeedService
     }//end resolvePlaceholders()
 
     /**
+     * Resolve the contact-first identity for a client/contact payload.
+     *
+     * Contact-first unification (register.d/15-unify-client-contact.json): BOTH
+     * the client and the contact schema mark `contactsUid` REQUIRED — it is a
+     * foreign key to the authoritative Nextcloud addressbook contact and is
+     * never minted locally — so the NC contact is provisioned BEFORE the object
+     * is saved, through the same path the create surface uses. Matching an
+     * existing contact by email keeps re-seeding after `--remove` duplicate-free
+     * on the addressbook side too.
+     *
+     * Callers gate this on self::CONTACT_FIRST_SECTIONS, whose values are
+     * exactly ContactVcardService::ALLOWED_OBJECT_TYPES, so no third section can
+     * silently take this path.
+     *
+     * @param array<string, mixed> $data       The payload about to be saved.
+     * @param string               $objectType 'client' or 'contact'.
+     *
+     * @return array<string, mixed>|null The payload with `contactsUid` set, or
+     *                                   null when Nextcloud Contacts is
+     *                                   unavailable and no identity can be
+     *                                   resolved.
+     *
+     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+     */
+    private function withProvisionedIdentity(array $data, string $objectType): ?array
+    {
+        $provision = $this->contactVcardService->provisionContactFromForm(
+            form: $data,
+            objectType: $objectType
+        );
+
+        if ($provision === null) {
+            return null;
+        }
+
+        $data['contactsUid'] = $provision['contactsUid'];
+
+        return $data;
+    }//end withProvisionedIdentity()
+
+    /**
      * Wire clientKey / requestKey references onto the payload as uuids.
      *
      * On a ticket the parent-request link is `parentTicket` (the legacy
@@ -588,7 +655,13 @@ class DemoSeedService
         if (isset($definition['clientKey']) === true) {
             $clientUuid = $uuids['clients:'.$definition['clientKey']] ?? null;
             if ($clientUuid !== null) {
-                $data['client'] = $clientUuid;
+                // The FK field name is not uniform across the register: the
+                // contract schema calls it `clientRef` ("UUID reference to the
+                // existing client object. Client identity is never duplicated
+                // into the contract."), everything else calls it `client`.
+                // Writing the wrong key is silent — the object saves, the FK is
+                // simply absent — so the map is explicit rather than assumed.
+                $data[($definition['clientField'] ?? 'client')] = $clientUuid;
             }
         }
 

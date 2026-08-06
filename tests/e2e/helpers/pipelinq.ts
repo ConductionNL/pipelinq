@@ -218,6 +218,117 @@ export async function navClick(page: Page, label: string, urlRe: RegExp): Promis
 }
 
 /**
+ * Click a `config.quickFilters[]` tab on a `type: "index"` page.
+ *
+ * CnIndexPage renders the strip through CnQuickFilterBar, which paints each tab
+ * as `<button type="button" role="tab">` carrying a
+ * `span.cn-quick-filter-bar__label`. Selecting a tab merges that tab's manifest
+ * `filter` map into the useListView fetch and re-fetches at page 1, so the
+ * caller must wait for the re-render before asserting on rows.
+ *
+ * This is the navigation path for the three ticket subtypes since
+ * `unify-ticket-supertype`: the former Requests / Complaints / Contactmomenten
+ * PAGES no longer exist — one `ticket` index carries all three behind this
+ * strip (src/manifest.json, page id `Tickets`).
+ */
+export async function clickQuickFilter(page: Page, label: string): Promise<void> {
+	const tab = page.locator('#content-vue').getByRole('tab', { name: label, exact: true }).first()
+	await expect(tab).toBeVisible({ timeout: 10000 })
+	await tab.click()
+	await expect(tab).toHaveAttribute('aria-selected', 'true', { timeout: 10000 })
+}
+
+/**
+ * Open the index Search/Columns sidebar and return its search field.
+ *
+ * WHY THIS EXISTS. `pages[].config.sidebar.enabled` mounts CnIndexSidebar, but
+ * it mounts it CLOSED: CnIndexPage's own data carries
+ *
+ *   // Search/Columns sidebar open state. Defaults closed so the page
+ *   // content (table / cards) starts at the top and fills the width;
+ *   // opened on demand via the actions-bar toggle.
+ *   sidebarOpen: false,
+ *
+ * and it binds `show-sidebar-toggle: hasSidebar` on CnActionsBar, which renders
+ * a tertiary icon button labelled "Search and columns". Verified in
+ * @conduction/nextcloud-vue 2.2.0-vue3.3 `dist/`.
+ *
+ * The CRUD workflow specs used to reach straight for
+ * `.app-sidebar input.input-field__input[type="text"]` on the assumption that
+ * `sidebar.enabled` was enough for the field to be on screen. It no longer is,
+ * so the wait expired against the search box and the failure surfaced on the
+ * CLIENT/PRODUCT journey rather than on the navigation step that never happened.
+ *
+ * Note the sidebar is mounted at NcContent level by CnAppRoot ("the only place
+ * where Nextcloud's NcAppSidebar slides correctly from the right"), i.e. OUTSIDE
+ * `#content-vue` — so both the toggle click and the field lookup are page-wide.
+ */
+export async function openIndexSearch(page: Page): Promise<Locator> {
+	const field = page.locator('.app-sidebar input.input-field__input[type="text"]').first()
+	if (!(await field.isVisible().catch(() => false))) {
+		const toggle = page.getByRole('button', { name: /search and columns/i }).first()
+		await expect(toggle, 'the index Search/Columns toggle must be rendered when sidebar.enabled is set')
+			.toBeVisible({ timeout: 10000 })
+		await toggle.click()
+	}
+	await field.waitFor({ state: 'visible', timeout: 10000 })
+	return field
+}
+
+/**
+ * Open the CnActionsBar overflow ("Actions") menu on an index page.
+ *
+ * WHY THIS EXISTS. A manifest `config.headerActions[]` on a `type: "index"`
+ * page does NOT render as a visible button. CnActionsBar renders those entries
+ * as `NcActionButton`s INSIDE the overflow menu — the shared component's own
+ * schema documents them as "Page-level header actions rendered inside
+ * CnActionsBar's overflow dropdown", and the template comment above the
+ * `v-for` reads "Manifest-declared page-level header actions (overflow)".
+ * Verified against @conduction/nextcloud-vue 2.2.0-vue3.3 (`dist/`).
+ *
+ * The visible primary CTA is a different control: it is emitted only when
+ * `showAdd` is true and carries `data-testid="cn-cta-primary"`. Pipelinq's POS
+ * ledgers (`PosTransactions`, `PosRefunds`) both set `showAdd: false` and
+ * declare their create entry point as a `headerActions[]` item instead, so
+ * `cn-cta-primary` is genuinely absent there and the create action is one click
+ * deeper than on a normal index.
+ */
+export async function openActionsOverflow(page: Page): Promise<void> {
+	// Two independent handles on the same control, because neither alone is
+	// safe across an @nextcloud/vue major: `data-testid="cn-actions"` is OURS
+	// (set on the NcActions in CnActionsBar) but only survives if NcActions keeps
+	// a single root node to inherit the attribute onto; the accessible name comes
+	// from `menu-name="Actions"` with `force-name`, which is NC's contract.
+	const toggle = page
+		.locator('#content-vue [data-testid="cn-actions"] button')
+		.first()
+		.or(page.locator('#content-vue').getByRole('button', { name: 'Actions' }).first())
+	await expect(toggle.first()).toBeVisible({ timeout: 10000 })
+	await toggle.first().click()
+}
+
+/**
+ * Open the overflow menu and click one manifest `headerActions[]` entry by its
+ * declared label. See openActionsOverflow() for why the entry is not a button
+ * on the page itself.
+ *
+ * NcActions teleports its menu to the document body, so the entry is matched
+ * page-wide rather than inside `#content-vue`.
+ */
+export async function clickHeaderAction(page: Page, label: string | RegExp): Promise<void> {
+	await openActionsOverflow(page)
+	// NcActionButton renders `<li class="action"><button class="action-button">`,
+	// and NcActions teleports the popover to the document body — so the entry is
+	// matched page-wide, not inside `#content-vue`. `menuitem` is tried first
+	// because it is the role NcActions assigns; the class selector is the
+	// fallback for the same element.
+	const entry = page.getByRole('menuitem', { name: label }).first()
+		.or(page.locator('button.action-button, a.action-link').filter({ hasText: label }).first())
+	await expect(entry.first()).toBeVisible({ timeout: 10000 })
+	await entry.first().click()
+}
+
+/**
  * Known APP-SHELL console errors that originate outside the page under test, so
  * a page-level assertion can isolate NEW, page-specific errors.
  *

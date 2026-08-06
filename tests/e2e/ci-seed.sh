@@ -95,6 +95,45 @@ APP_BASE="${BASE}/index.php/apps/pipelinq"
 
 echo "[ci-seed] target: ${BASE}"
 
+# ── 0. Pretty URLs, and the diagnostic that proves what the BROWSER sees ─────
+#
+# `generateUrl()` from @nextcloud/router is:
+#
+#     if (window.OC.config.modRewriteWorking === true) return webroot + path
+#     return webroot + '/index.php' + path
+#
+# and Nextcloud sets `modRewriteWorking` from `htaccess.IgnoreFrontController`.
+# A freshly `occ maintenance:install`ed instance behind `php -S` does NOT have
+# it set, so every generated URL carries an `/index.php` prefix that a real
+# Apache deployment does not.
+#
+# WHAT THAT COSTS ELSEWHERE, AND WHY IT IS NOT FATAL HERE. Apps whose router is
+# `createWebHistory(generateUrl('/apps/<app>'))` get a router BASE of
+# `/index.php/apps/<app>`, which is not a prefix of the `/apps/<app>/…` URL a
+# spec opens — vue-router matches nothing and silently falls back to the default
+# route. That single cause produced 36 failures in decidesk and 67 of 68 in
+# openbuild. Pipelinq is structurally immune: `src/main.js` builds
+# `createWebHashHistory(generateUrl('/apps/pipelinq'))`, and vue-router's hash
+# history reads the route from `location.hash` (`base.slice(hashPos)` is just
+# `'#'`), so the path prefix cannot shift which route matches.
+#
+# It is still set, because the CI box should describe a real deployment rather
+# than a special case, and the shared workflow's `ci-router.php` already serves
+# pretty URLs (it mirrors Nextcloud's .htaccess). And it is VERIFIED against the
+# SERVED PAGE, not against config.php: `occ` writing a value is not evidence
+# that the SPA sees it, and the whole point of the flag is what the browser
+# reads out of `OC.config`.
+if [ -f "./occ" ]; then
+	if php occ config:system:set htaccess.IgnoreFrontController --value=true --type=boolean; then
+		echo "[ci-seed] pretty URLs enabled (htaccess.IgnoreFrontController=true)."
+	else
+		echo "::warning::Could not set htaccess.IgnoreFrontController — generated URLs will keep the /index.php prefix."
+	fi
+	echo "[ci-seed] read-back: $(php occ config:system:get htaccess.IgnoreFrontController || echo '<unset>')"
+else
+	echo "::warning::No occ in $(pwd) — skipping the pretty-URL setting."
+fi
+
 # Small helper: POST JSON as the admin, echo the status, dump the body.
 # Basic auth without a session cookie skips Nextcloud's CSRF check, which is
 # why these admin-only endpoints are reachable from curl at all.
@@ -283,6 +322,22 @@ done
 APP_HTML="$(mktemp)"
 curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	"${APP_BASE}/" -o "$APP_HTML" || true
+
+# THE ONLY EVIDENCE THAT COUNTS for step 0: what the served page tells the SPA.
+# `OC.config` is emitted into the rendered page, so this reads the exact value
+# `generateUrl()` will branch on. Reported either way — a mismatch between the
+# config read-back above and this line means occ wrote a value the web SAPI is
+# not serving (stale opcache is the usual reason), which is worth seeing before
+# 200 selector timeouts are blamed on the app.
+if grep -q '"modRewriteWorking":true' "$APP_HTML"; then
+	echo "[ci-seed] served page reports modRewriteWorking:true — generated URLs are prefix-free."
+else
+	echo "::warning::The served app page does NOT report \"modRewriteWorking\":true."
+	echo "::warning::generateUrl() will prefix every URL with /index.php. Pipelinq's hash router"
+	echo "::warning::tolerates that (see step 0), but it means the CI instance is NOT describing a"
+	echo "::warning::real Apache deployment, and any future switch to createWebHistory would break."
+	grep -o '"modRewriteWorking":[a-z]*' "$APP_HTML" | head -1 || echo "::warning::(the key is not present in the page at all)"
+fi
 
 # `|| true` is load-bearing: grep exits 1 when it matches nothing, and under
 # `set -euo pipefail` that aborts the script right here — so the case the gate

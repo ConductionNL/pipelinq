@@ -21,7 +21,7 @@
  * Created objects are tracked + removed via the OR object API in afterAll.
  */
 import { test, expect, Locator, Page } from '@playwright/test'
-import { openApp, navClick, dismissSupportDialog } from '../helpers/pipelinq'
+import { openApp, navClick, dismissSupportDialog, openIndexSearch } from '../helpers/pipelinq'
 import { FixtureSession, TEST_PREFIX } from './helpers/fixtures'
 
 const NAME = `${TEST_PREFIX}-Cnd Werkbank`
@@ -69,8 +69,11 @@ async function openProductsList(page: Page): Promise<void> {
  * onto. Returns once the list has settled to the filtered result.
  */
 async function searchInList(page: Page, term: string): Promise<void> {
-	const field = page.locator('.app-sidebar input.input-field__input[type="text"]').first()
-	await field.waitFor({ state: 'visible', timeout: 10000 })
+	// FIXED 2026-08-06 — the field is inside the Search/Columns sidebar, which
+	// CnIndexPage mounts CLOSED (`sidebarOpen: false`, "opened on demand via the
+	// actions-bar toggle"). Reaching straight for the input waited 10s against an
+	// element that a user has to open first. openIndexSearch() drives the toggle.
+	const field = await openIndexSearch(page)
 	await field.fill('')
 	await field.fill(term)
 	// The search is debounced + re-fetches the collection; give it a beat to apply.
@@ -120,7 +123,13 @@ test.describe('Products — full CRUD with persistence', () => {
 		const dialog = page.locator('[role="dialog"]').filter({ hasText: 'Create Product' }).first()
 		await expect(dialog).toBeVisible({ timeout: 10000 })
 
-		await dialog.getByRole('textbox', { name: /^name/i }).first().fill(NAME)
+		// FIXED 2026-08-06 — this was `{ name: /^name/i }`, anchored at the START
+		// of the accessible name. CnFormDialog labels each control from the schema
+		// property's `title`, and `product.name` carries `"title": "Product Name"`
+		// (lib/Settings/pipelinq_register.json). "Product Name" does not START with
+		// "name", so the locator matched nothing and `fill()` waited out the whole
+		// 90s test timeout — a label mismatch presenting as a hung create dialog.
+		await dialog.getByRole('textbox', { name: /product name/i }).first().fill(NAME)
 		await pickFormSelect(dialog, 'type', 'product') // required Type
 		// unitPrice is the dialog's single numeric/spinbutton field.
 		const priceField = dialog.getByRole('spinbutton').or(dialog.locator('input[type="number"]')).first()

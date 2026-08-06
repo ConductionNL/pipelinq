@@ -24,7 +24,12 @@ export default defineConfig({
 		// whole suite at the SHARED dev container.
 		baseURL: resolveBaseUrl(),
 		storageState: STORAGE_STATE,
-		trace: 'on-first-retry',
+		// `on-first-retry` writes a trace only for the SECOND attempt. Every
+		// failure that reproduces identically on retry is fine, but a failure
+		// that does NOT reproduce — the ones worth a trace — leaves no record of
+		// the attempt that actually failed. `retain-on-failure` traces every
+		// attempt and keeps the ones that failed.
+		trace: 'retain-on-failure',
 		screenshot: 'only-on-failure',
 	},
 

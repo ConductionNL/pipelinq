@@ -4,6 +4,7 @@
 // REQ-CR-001: Reporting dashboard loads with KPI cards visible.
 // @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
 import { test, expect } from '@playwright/test'
+import { openApp, navClick } from './helpers/pipelinq'
 
 test.describe('Rapportage (Reporting)', () => {
 
@@ -53,49 +54,39 @@ test.describe('Rapportage (Reporting)', () => {
 	})
 
 	/*
-	 * KNOWN-FAILING — pipelinq#687, and deliberately NOT patched.
+	 * pipelinq#687 — FIXED 2026-08-06 by giving the orphan pages a way in.
 	 *
-	 * `/rapportage/channels` (ChannelAnalyticsView) has no menu entry, no
-	 * in-page link and no deepLinks registration, so it is unreachable except
-	 * by typing the hash by hand. This assertion is CORRECT: it asserts a user
-	 * can navigate there. Deep-linking the hash to force it green would hide a
-	 * live UX defect, so it stays red until #687 is decided.
+	 * These two tests were correct and deliberately left red: `/rapportage/channels`
+	 * (ChannelAnalyticsView) and `/rapportage/agents` (AgentPerformanceView) —
+	 * and `/rapportage/contactmomenten` with them — were routed, built and
+	 * rendering, with NO menu entry, no in-page link and no deepLinks
+	 * registration. The only way to reach them was to type the hash by hand.
 	 *
-	 * (The sibling `channel analytics page loads` below deep-links the route
-	 * and passes — the page itself works; only the way in is missing.)
+	 * They also asserted against `.rapportage-links`, a container from the
+	 * bespoke RapportageDashboard.vue that the `pipelinq-dashboards-declarative`
+	 * change deleted — the same class of stale selector the sibling test above
+	 * already documents. So the old assertion could not have passed even if the
+	 * buttons had existed.
+	 *
+	 * The fix is a navigation fix, not a test fix: src/manifest.json now declares
+	 * menu entries for all three reporting pages and src/menu-layout.json
+	 * relocates them under `Rapportage`, so "Reporting" is a group carrying its
+	 * own sub-reports. The tests below assert what they always meant to assert —
+	 * a user can get there — through the sidebar rather than a deleted button.
 	 */
 	test('rapportage page navigates to channel analytics', async ({ page }) => {
-		// Wait for the dashboard to render.
-		await expect(page.locator('.rapportage-links')).toBeVisible({ timeout: 15000 })
+		await openApp(page)
+		await navClick(page, 'Channel Analytics', /rapportage\/channels/)
 
-		// Click Channel Analytics button.
-		const channelBtn = page.getByRole('button', { name: /Channel Analytics|Kanaalanalyse/i })
-		await expect(channelBtn).toBeVisible()
-		await channelBtn.click()
-
-		// The manifest-driven SPA router can rewrite the URL on in-app
-		// navigation, so assert the channel analytics view rendered instead.
 		await expect(
 			page.getByRole('heading', { name: /Channel Analytics|Kanaalanalyse/i }),
 		).toBeVisible({ timeout: 10000 })
 	})
 
-	/*
-	 * KNOWN-FAILING — pipelinq#687, same cause as the test above:
-	 * `/rapportage/agents` (AgentPerformanceView) is unreachable from the UI.
-	 * Left red on purpose rather than rewritten to deep-link the hash.
-	 */
 	test('rapportage page navigates to agent performance', async ({ page }) => {
-		// Wait for the dashboard to render.
-		await expect(page.locator('.rapportage-links')).toBeVisible({ timeout: 15000 })
+		await openApp(page)
+		await navClick(page, 'Agent Performance', /rapportage\/agents/)
 
-		// Click Agent Performance button.
-		const agentBtn = page.getByRole('button', { name: /Agent Performance|Agentprestaties/i })
-		await expect(agentBtn).toBeVisible()
-		await agentBtn.click()
-
-		// The manifest-driven SPA router can rewrite the URL on in-app
-		// navigation, so assert the agent performance view rendered instead.
 		await expect(
 			page.getByRole('heading', { name: /Agent Performance|Agentprestaties/i }),
 		).toBeVisible({ timeout: 10000 })
