@@ -121,7 +121,7 @@ jobs:
       # "DID NOT RUN". v1.3.0 ships 36 such declarations. Measured on doriath
       # (PR #160): gates 4/24/33 went from unexplained "DID NOT RUN" to
       # explicit NOT APPLICABLE, and Hydra Gates went failure -> success.
-      hydra-gates-ref: v1.3.0
+      hydra-gates-ref: v1.5.0
       # `enable-axe` deliberately NOT set: it produces the report gate-33
       # consumes, and a vanilla Nextcloud already carries serious/critical axe
       # violations, so enabling it here would mix "this repo has a defect" with
