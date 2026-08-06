@@ -191,7 +191,10 @@ jobs:
       # thing. The script forces the import, completes setup over the real admin
       # API, and then verifies each of those separately.
       # cwd for this step is the Nextcloud server root.
-      playwright-seed-command: 'bash apps/pipelinq/tests/e2e/ci-seed.sh'
+      # ⚠️ THROWAWAY — DO NOT MERGE. Bundle-truncation control: seeds normally,
+      # then zeroes every app JS bundle and proves (via the SERVED bytes) that
+      # it did. See tests/e2e/bundle-truncation-control.sh.
+      playwright-seed-command: 'bash apps/pipelinq/tests/e2e/bundle-truncation-control.sh'
 
       # Integration Tests (Newman) stays OFF here, deliberately. The
       # `enable-newman: false` further up is not a default nobody chose: it
