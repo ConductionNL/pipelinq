@@ -243,25 +243,10 @@ class DemoSeedService
                     continue;
                 }
 
-                // Contact-first unification (register.d/15-unify-client-contact.json):
-                // BOTH the client and the contact schema mark contactsUid REQUIRED
-                // (FK to the authoritative Nextcloud addressbook contact, never
-                // minted locally), so provision the NC contact before the object is
-                // saved — the same path the create surface uses. Matching an
-                // existing contact by email keeps re-seeding after --remove
-                // duplicate-free on the addressbook side too.
-                //
-                // ContactVcardService::ALLOWED_OBJECT_TYPES is exactly
-                // ['client', 'contact'], so the section name maps 1:1 onto the
-                // objectType and no third section can silently take this branch.
                 $identityType = (self::CONTACT_FIRST_SECTIONS[$section] ?? null);
                 if ($identityType !== null) {
-                    $provision = $this->contactVcardService->provisionContactFromForm(
-                        form: $data,
-                        objectType: $identityType
-                    );
-
-                    if ($provision === null) {
+                    $data = $this->withProvisionedIdentity(data: $data, objectType: $identityType);
+                    if ($data === null) {
                         return [
                             'success' => false,
                             'message' => 'Nextcloud Contacts is unavailable — cannot provision demo '.$identityType.' identities.',
@@ -269,8 +254,6 @@ class DemoSeedService
                             'skipped' => $skipped,
                         ];
                     }
-
-                    $data['contactsUid'] = $provision['contactsUid'];
                 }
 
                 if ($ticketType !== null) {
@@ -612,6 +595,47 @@ class DemoSeedService
 
         return $data;
     }//end resolvePlaceholders()
+
+    /**
+     * Resolve the contact-first identity for a client/contact payload.
+     *
+     * Contact-first unification (register.d/15-unify-client-contact.json): BOTH
+     * the client and the contact schema mark `contactsUid` REQUIRED — it is a
+     * foreign key to the authoritative Nextcloud addressbook contact and is
+     * never minted locally — so the NC contact is provisioned BEFORE the object
+     * is saved, through the same path the create surface uses. Matching an
+     * existing contact by email keeps re-seeding after `--remove` duplicate-free
+     * on the addressbook side too.
+     *
+     * Callers gate this on self::CONTACT_FIRST_SECTIONS, whose values are
+     * exactly ContactVcardService::ALLOWED_OBJECT_TYPES, so no third section can
+     * silently take this path.
+     *
+     * @param array<string, mixed> $data       The payload about to be saved.
+     * @param string               $objectType 'client' or 'contact'.
+     *
+     * @return array<string, mixed>|null The payload with `contactsUid` set, or
+     *                                   null when Nextcloud Contacts is
+     *                                   unavailable and no identity can be
+     *                                   resolved.
+     *
+     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+     */
+    private function withProvisionedIdentity(array $data, string $objectType): ?array
+    {
+        $provision = $this->contactVcardService->provisionContactFromForm(
+            form: $data,
+            objectType: $objectType
+        );
+
+        if ($provision === null) {
+            return null;
+        }
+
+        $data['contactsUid'] = $provision['contactsUid'];
+
+        return $data;
+    }//end withProvisionedIdentity()
 
     /**
      * Wire clientKey / requestKey references onto the payload as uuids.
