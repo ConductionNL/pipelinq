@@ -28,7 +28,7 @@
  * objects are tracked and removed via the OR object API in afterAll.
  */
 import { test, expect, Locator, Page } from '@playwright/test'
-import { openApp, navClick, dismissSupportDialog } from '../helpers/pipelinq'
+import { openApp, navClick, dismissSupportDialog, openIndexSearch } from '../helpers/pipelinq'
 import { FixtureSession, TEST_PREFIX } from './helpers/fixtures'
 
 const NAME = `${TEST_PREFIX}-Acme Diensten BV`
@@ -66,8 +66,11 @@ async function openClientsList(page: Page): Promise<void> {
  * surfaces it. Mirrors product-crud.spec.ts searchInList().
  */
 async function searchInList(page: Page, term: string): Promise<void> {
-	const field = page.locator('.app-sidebar input.input-field__input[type="text"]').first()
-	await field.waitFor({ state: 'visible', timeout: 10000 })
+	// FIXED 2026-08-06 — the field is inside the Search/Columns sidebar, which
+	// CnIndexPage mounts CLOSED (`sidebarOpen: false`, "opened on demand via the
+	// actions-bar toggle"). Reaching straight for the input waited 10s against an
+	// element that a user has to open first. openIndexSearch() drives the toggle.
+	const field = await openIndexSearch(page)
 	await field.fill('')
 	await field.fill(term)
 	// The search is debounced + re-fetches the collection; give it a beat to apply.

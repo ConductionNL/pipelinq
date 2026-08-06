@@ -52,8 +52,22 @@ test('Operational dashboard: previous widgets remain reachable from the nav', as
 	const content = page.locator('#content-vue')
 	// Operational KPIs/panels that used to live on the old Dashboard.
 	await expect(content.getByText('Lead Conversion Rate').first()).toBeVisible({ timeout: 15000 })
-	await expect(content.getByText('Customer Satisfaction').first()).toBeVisible()
+	await expect(content.getByText('Avg Request Resolution').first()).toBeVisible()
+	await expect(content.getByText('Contact Moment Volume').first()).toBeVisible()
 	await expect(content.getByText('Requests by Status').first()).toBeVisible()
+
+	// CORRECTED 2026-08-06. This test asserted that a "Customer Satisfaction"
+	// widget was VISIBLE here. The canonical spec says the opposite:
+	// openspec/specs/dashboard/spec.md — "THEN no Customer Satisfaction widget
+	// MUST be present". The SatisfactionKpiWidget (widget id `satisfaction`,
+	// layout slot 17) was removed in 2026-07 because AnalyticsService hardcodes
+	// an empty survey-response set after the forms-leaf migration, so the tile
+	// was permanently null for every install; it returns with real CSAT data via
+	// the `customer-satisfaction-closed-loop` change. Asserting its presence
+	// could only ever fail — and would have kept failing after a correct fix.
+	// Assert the shipped decision instead, so re-adding a permanently-empty tile
+	// is caught here.
+	await expect(content.getByText('Customer Satisfaction')).toHaveCount(0)
 
 	await assertNoHardError(page)
 })

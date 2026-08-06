@@ -6,10 +6,10 @@
  * Idempotent demo-data seed shared by the `occ pipelinq:demo:seed` command and
  * the optional `seed-demo-data` setup-wizard action (one write path, ADR-042).
  * Seeds a small coherent linked dataset — clients (person + organisation),
- * leads across pipeline stages, request tickets across statuses, and
- * contactmoment tickets across channels — from lib/Settings/demo_seed_data.json
- * so lists, dashboards and the 360° client view render populated on a fresh
- * install.
+ * their contact persons, pipelines, queues, products, leads across pipeline
+ * stages, request / complaint / contactmoment tickets, and tasks — from
+ * lib/Settings/demo_seed_data.json so lists, dashboards and the 360° client
+ * view render populated on a fresh install.
  *
  * Since unify-ticket-supertype the requests and contactmomenten sections both
  * seed the unified `ticket` schema, distinguished by the `ticketType`
@@ -86,13 +86,28 @@ class DemoSeedService
      * Seed order matters (clients before the objects that link to them);
      * removal runs in reverse.
      *
+     * The contacts / pipelines / queues / products / tasks sections were added
+     * 2026-08-06. Without them a fresh install left those five index pages with
+     * an EMPTY collection, so CnIndexPage rendered `cn-index-page__empty` and no
+     * data table at all — silently, with no console error and no failed
+     * request. The e2e suite read that as "the Contacts/Tasks/Queues/Pipelines
+     * page does not render its table", blaming the page for a missing fixture.
+     * Products looked exempt only because two workflow specs create products of
+     * their own and the suite runs `fullyParallel`.
+     *
      * @var array<string, array{0: string, 1: string, 2: string|null}>
      */
     private const SECTIONS = [
         'clients'         => ['client_schema', 'name', null],
+        'contacts'        => ['contact_schema', 'name', null],
+        'pipelines'       => ['pipeline_schema', 'title', null],
+        'queues'          => ['queue_schema', 'title', null],
+        'products'        => ['product_schema', 'name', null],
         'leads'           => ['lead_schema', 'title', null],
         'requests'        => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_REQUEST],
+        'complaints'      => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_COMPLAINT],
         'contactmomenten' => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_CONTACTMOMENT],
+        'tasks'           => ['task_schema', 'subject', null],
     ];
 
     /**

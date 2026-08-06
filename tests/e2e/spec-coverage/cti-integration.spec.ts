@@ -2,52 +2,75 @@
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Gate-19 behavioral e2e coverage for the CTI integration settings page
- * (/settings/cti) and the CTI webhook event log (/settings/cti/event-log).
- * Maps to openspec/changes/cti-screenpop-adapter/specs.md.
+ * Gate-19 behavioral e2e coverage for the CTI screen-pop adapter
+ * (openspec/changes/cti-screenpop-adapter/specs.md).
+ *
+ * RETARGETED 2026-08-06 — there is no `/settings/cti` in-app route and no "CTI
+ * integration" / "CTI event log" sidebar entry. src/menu-layout.json records the
+ * decision:
+ *
+ *   "Genuinely-admin configuration no longer lives in the app nav at all — not
+ *    even in the gear foldout … It lives on the Nextcloud admin page
+ *    (/settings/admin/pipelinq …). Moved there: Messaging …, CTI telephony
+ *    settings, Payment providers (PSP), POS tender types, POS medewerkers, POS
+ *    rollen. Their in-app pages and nav entries are gone; the Vue components are
+ *    mounted as sections on the admin page instead."
+ *
+ * Concretely: `src/views/settings/Settings.vue` renders `<CtiPage>` (guarded by
+ * `isAdmin && isConfigured`), and CtiPage stacks `CtiSettings` (name "CTI
+ * integration", Test connection + Save) over `CtiEventLog` (name "CTI webhook
+ * event log", Reload + `[data-testid="cti-event-log-table"]`). All four tests
+ * previously died in the sidebar navigation helper.
+ *
+ * These run against the NC admin page, which is where an administrator actually
+ * goes — and because both sections are gated on `isConfigured`, a failure here
+ * also catches a settings page that mounted without a provisioned register.
  */
 import { test, expect } from '@playwright/test'
-import { openApp, navClick, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
+import { nextcloudErrorPage } from '../helpers/pipelinq'
+
+const ADMIN_SETTINGS = '/settings/admin/pipelinq'
 
 // @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-settings-page
-test('CTI integration: navigates from sidebar and shows the settings surface', async ({ page }) => {
-	const errs = trackPipelinqErrors(page)
-	await openApp(page)
-	await navClick(page, 'CTI integration', /\/settings\/cti(\?|$|\/)/)
+test('CTI integration: the settings section renders on the pipelinq admin page', async ({ page }) => {
+	const response = await page.goto(ADMIN_SETTINGS)
+	expect(response?.status(), 'admin settings page must be served').toBe(200)
+	await expect(nextcloudErrorPage(page)).toHaveCount(0)
 
-	await expect(page.locator('#content-vue').getByRole('heading', { name: 'CTI integration' }).first()).toBeVisible()
-	await assertNoHardError(page)
-	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
+	const section = page.locator('#pipelinq-settings')
+	await expect(section).toBeVisible({ timeout: 15000 })
+	await expect(section.getByText('CTI integration').first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-settings-actions
 test('CTI integration: exposes Test connection + Save controls', async ({ page }) => {
-	await openApp(page)
-	await navClick(page, 'CTI integration', /\/settings\/cti(\?|$|\/)/)
+	await page.goto(ADMIN_SETTINGS)
+	const section = page.locator('#pipelinq-settings')
+	await expect(section).toBeVisible({ timeout: 15000 })
 
-	const content = page.locator('#content-vue')
-	await expect(content.getByRole('button', { name: 'Test connection' })).toBeVisible()
-	await expect(content.getByRole('button', { name: 'Save' })).toBeVisible()
+	await expect(section.getByRole('button', { name: 'Test connection' })).toBeVisible({ timeout: 15000 })
+	await expect(section.getByRole('button', { name: 'Save', exact: true }).first()).toBeVisible()
 })
 
 // @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-event-log-page
-test('CTI event log: navigates from sidebar and shows the event-log surface', async ({ page }) => {
-	const errs = trackPipelinqErrors(page)
-	await openApp(page)
-	await navClick(page, 'CTI event log', /\/settings\/cti\/event-log/)
+test('CTI event log: the event-log section and its table render', async ({ page }) => {
+	await page.goto(ADMIN_SETTINGS)
+	const section = page.locator('#pipelinq-settings')
+	await expect(section).toBeVisible({ timeout: 15000 })
 
-	await expect(page.locator('#content-vue').getByRole('heading', { name: 'CTI webhook event log' }).first()).toBeVisible()
-	await expect(page.locator('#content-vue').locator('table, .cn-data-table').first()).toBeVisible()
-	await assertNoHardError(page)
-	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
+	await expect(section.getByText('CTI webhook event log').first()).toBeVisible({ timeout: 15000 })
+	// CtiEventLog.vue renders its own table with a stable test id, so this is a
+	// positive signal about THAT component rather than about any table.
+	await expect(section.locator('[data-testid="cti-event-log-table"]')).toBeVisible()
 })
 
 // @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-event-log-reload
 test('CTI event log: exposes a Reload action', async ({ page }) => {
-	await openApp(page)
-	await navClick(page, 'CTI event log', /\/settings\/cti\/event-log/)
+	await page.goto(ADMIN_SETTINGS)
+	const section = page.locator('#pipelinq-settings')
+	await expect(section).toBeVisible({ timeout: 15000 })
 
-	await expect(page.locator('#content-vue').getByRole('button', { name: 'Reload' })).toBeVisible()
+	await expect(section.getByRole('button', { name: 'Reload' })).toBeVisible({ timeout: 15000 })
 })
 
 /*

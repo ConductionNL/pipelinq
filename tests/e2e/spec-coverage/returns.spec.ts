@@ -13,7 +13,7 @@
  * "not registered" error no longer fires on this page.
  */
 import { test, expect } from '@playwright/test'
-import { openApp, navClick, assertNoHardError, trackPipelinqErrors } from '../helpers/pipelinq'
+import { openApp, navClick, assertNoHardError, trackPipelinqErrors, openActionsOverflow } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/pos-refund-return/spec.md#returns-page
 test('Returns: navigates from sidebar and mounts the index chrome', async ({ page }) => {
@@ -25,11 +25,28 @@ test('Returns: navigates from sidebar and mounts the index chrome', async ({ pag
 })
 
 // @e2e openspec/specs/pos-refund-return/spec.md#returns-add-item
-test('Returns: primary "Add Item" action is present', async ({ page }) => {
+test('Returns: the create entry point is reachable from the Actions menu', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Returns', /\/pos\/refunds/)
 
-	await expect(page.locator('#content-vue').getByRole('button', { name: 'Add Item' })).toBeVisible()
+	// CORRECTED 2026-08-06. This asserted a visible "Add Item" button. There is
+	// none, and there is not meant to be: the PosRefunds page sets
+	// `showAdd: false` in src/manifest.json — which is the ONLY condition under
+	// which CnActionsBar emits the primary CTA (`data-testid="cn-cta-primary"`)
+	// — and declares its create entry point as a `headerActions[]` entry labelled
+	// "Nieuwe retour". CnActionsBar renders manifest headerActions as
+	// NcActionButtons INSIDE the overflow "Actions" menu ("Page-level header
+	// actions rendered inside CnActionsBar's overflow dropdown", verified in
+	// @conduction/nextcloud-vue 2.2.0-vue3.3 dist/). So the control exists, one
+	// click deeper, under its Dutch label.
+	//
+	// ⚠️ PRODUCT QUESTION (reported, not silently encoded): burying the primary
+	// create action of a ledger page in a ⋯ menu is a UX regression against every
+	// other index in this app, which shows it as a primary button. If that is
+	// decided to be wrong, the fix is `showAdd: true` in the manifest and this
+	// test should go back to asserting `cn-cta-primary`.
+	await openActionsOverflow(page)
+	await expect(page.getByText('Nieuwe retour').first()).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/pos-refund-return/spec.md#returns-list
