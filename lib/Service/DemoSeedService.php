@@ -86,14 +86,19 @@ class DemoSeedService
      * Seed order matters (clients before the objects that link to them);
      * removal runs in reverse.
      *
-     * The contacts / pipelines / queues / products / tasks sections were added
-     * 2026-08-06. Without them a fresh install left those five index pages with
-     * an EMPTY collection, so CnIndexPage rendered `cn-index-page__empty` and no
-     * data table at all — silently, with no console error and no failed
-     * request. The e2e suite read that as "the Contacts/Tasks/Queues/Pipelines
+     * The contacts / pipelines / queues / products / complaints / tasks
+     * sections were added 2026-08-06. The three that FIXED a failure are
+     * contacts, tasks and pipelines: the base register ships example objects for
+     * products (14), queues (3), clients, leads, tickets and the POS entities,
+     * but none at all for `contact`, `task` or `pipeline`. Those three index
+     * pages therefore had an empty collection on a fresh install and CnIndexPage
+     * rendered `cn-index-page__empty` instead of a data table — silently, with
+     * no console error and no failed request — which the e2e suite read as "the
      * page does not render its table", blaming the page for a missing fixture.
-     * Products looked exempt only because two workflow specs create products of
-     * their own and the suite runs `fullyParallel`.
+     *
+     * The queues / products / complaints rows are not repairing an empty page;
+     * they exist so the seeded set is coherent (a client has contact persons, a
+     * complaint is a first-class ticket subtype alongside requests).
      *
      * @var array<string, array{0: string, 1: string, 2: string|null}>
      */

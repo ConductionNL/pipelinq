@@ -294,11 +294,17 @@ export async function openIndexSearch(page: Page): Promise<Locator> {
  * deeper than on a normal index.
  */
 export async function openActionsOverflow(page: Page): Promise<void> {
+	// Two independent handles on the same control, because neither alone is
+	// safe across an @nextcloud/vue major: `data-testid="cn-actions"` is OURS
+	// (set on the NcActions in CnActionsBar) but only survives if NcActions keeps
+	// a single root node to inherit the attribute onto; the accessible name comes
+	// from `menu-name="Actions"` with `force-name`, which is NC's contract.
 	const toggle = page
-		.locator('#content-vue [data-testid="cn-actions"] button[aria-haspopup], #content-vue [data-testid="cn-actions"] button')
+		.locator('#content-vue [data-testid="cn-actions"] button')
 		.first()
-	await expect(toggle).toBeVisible({ timeout: 10000 })
-	await toggle.click()
+		.or(page.locator('#content-vue').getByRole('button', { name: 'Actions' }).first())
+	await expect(toggle.first()).toBeVisible({ timeout: 10000 })
+	await toggle.first().click()
 }
 
 /**
@@ -311,8 +317,13 @@ export async function openActionsOverflow(page: Page): Promise<void> {
  */
 export async function clickHeaderAction(page: Page, label: string | RegExp): Promise<void> {
 	await openActionsOverflow(page)
+	// NcActionButton renders `<li class="action"><button class="action-button">`,
+	// and NcActions teleports the popover to the document body — so the entry is
+	// matched page-wide, not inside `#content-vue`. `menuitem` is tried first
+	// because it is the role NcActions assigns; the class selector is the
+	// fallback for the same element.
 	const entry = page.getByRole('menuitem', { name: label }).first()
-		.or(page.locator('.action-button, li.action').getByText(label).first())
+		.or(page.locator('button.action-button, a.action-link').filter({ hasText: label }).first())
 	await expect(entry.first()).toBeVisible({ timeout: 10000 })
 	await entry.first().click()
 }

@@ -137,6 +137,31 @@ test('request list exposes the row-selection checkbox that gates bulk actions', 
 	await expect(firstRowCheckbox).toBeVisible({ timeout: 15000 })
 })
 
+// @e2e openspec/specs/request-management/spec.md#pagination
+test('the ticket list paginates and page 2 shows different rows', async ({ page }) => {
+	await openApp(page)
+	await navClick(page, 'Tickets', /\/tickets/)
+
+	// The ALL tab holds every subtype: the base register's 7 example tickets plus
+	// the seeded 8 requests + 3 complaints + 12 contactmomenten — 30 rows against
+	// a page size of 20, so `effectivePagination.pages > 1` and CnIndexPage
+	// renders CnPagination. This is the one index in the app where the paging
+	// contract is genuinely exercisable; asserting it on Queues (6 rows, one
+	// page) asserted a control the component correctly does not render.
+	const content = page.locator('#content-vue')
+	const firstRowBefore = await content.locator('table tbody tr').first().innerText()
+
+	const next = content.locator('.cn-index-page__pagination').getByRole('button', { name: 'Next' }).first()
+	await expect(next).toBeVisible({ timeout: 15000 })
+	await next.click()
+
+	// A pagination control that renders but does not change the result set is a
+	// dead control, so assert the rows actually moved.
+	await expect
+		.poll(async () => await content.locator('table tbody tr').first().innerText(), { timeout: 15000 })
+		.not.toBe(firstRowBefore)
+})
+
 /*
  * Backend/API/service/V1 scenarios excluded:
  * @e2e exclude create-a-request-linked-to-a-client — requires existing client seed data
