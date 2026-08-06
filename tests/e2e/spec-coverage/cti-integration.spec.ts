@@ -48,8 +48,17 @@ test('CTI integration: exposes Test connection + Save controls', async ({ page }
 	const section = page.locator('#pipelinq-settings')
 	await expect(section).toBeVisible({ timeout: 15000 })
 
-	await expect(section.getByRole('button', { name: 'Test connection' })).toBeVisible({ timeout: 15000 })
-	await expect(section.getByRole('button', { name: 'Save', exact: true }).first()).toBeVisible()
+	// SCOPED 2026-08-06 — page-wide this was a strict-mode violation: the admin
+	// page carries TWO "Test connection" buttons, CtiSettings' and the XWiki
+	// section's (Settings.vue line ~229). Matching both and taking `.first()`
+	// would have been worse than the error: whichever section happens to render
+	// first would have carried the assertion, so the CTI section could vanish
+	// entirely and this test would still be green. Scope to the section whose
+	// NcSettingsSection is named "CTI integration" instead.
+	const cti = section.locator('[data-testid="cti-settings"]')
+	await expect(cti).toBeVisible({ timeout: 15000 })
+	await expect(cti.getByRole('button', { name: 'Test connection' })).toBeVisible({ timeout: 15000 })
+	await expect(cti.getByRole('button', { name: 'Save', exact: true }).first()).toBeVisible()
 })
 
 // @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-event-log-page

@@ -76,7 +76,18 @@ test('Dashboard: the recurring-revenue tile renders and defers to shillinq', asy
 	await openApp(page)
 
 	const content = page.locator('#content-vue')
-	await expect(content.getByText('Recurring revenue').first()).toBeVisible({ timeout: 15000 })
+	// The tile's layout slot sets `showTitle: false`, so the manifest `title`
+	// ("Recurring revenue") is never painted — and because the widget declares
+	// `requiresApp: "shillinq"` and shillinq is absent on CI, CnDashboardPage
+	// replaces the body with the install CTA rather than a number. That is the
+	// SPEC'd behaviour, verbatim: "GIVEN shillinq is not installed … THEN the
+	// recurring-revenue tile MUST show the 'Install shillinq' call-to-action AND
+	// MUST NOT display a locally-computed run-rate number."
+	await expect(content.getByText('Install shillinq').first()).toBeVisible({ timeout: 15000 })
+	// The retired local roll-up formatted its figure as EUR currency; asserting
+	// its absence is what makes "MUST NOT display a locally-computed number"
+	// testable rather than decorative.
+	await expect(content.locator('.cn-dashboard-page__requires-app')).not.toContainText('€')
 
 	await assertNoHardError(page)
 })

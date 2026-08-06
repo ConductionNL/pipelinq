@@ -66,6 +66,10 @@
         { "key": "cm-11", "clientKey": "jansen", "data": { "subject": "[Demo] Chatgesprek doorverbonden", "summary": "Demo contactmoment: chat transferred to second line.", "channel": "chat", "outcome": "doorverbonden", "contactedAt": "@datetime:-8" } },
         { "key": "cm-12", "clientKey": "gemeente", "data": { "subject": "[Demo] E-mail met vervolgafspraak", "summary": "Demo contactmoment: follow-up appointment confirmed by email.", "channel": "email", "outcome": "vervolgactie", "contactedAt": "@datetime:-5" } }
     ],
+    "contracts": [
+        { "key": "contract-support", "clientKey": "bakkerij", "clientField": "clientRef", "data": { "contractNumber": "DEMO-C-0001", "title": "[Demo] Support & onderhoud webshop", "billingInterval": "monthly", "valuePerInterval": 450, "currency": "EUR", "startDate": "@days:-300", "endDate": "@days:45", "autoRenew": true, "noticePeriodDays": 30, "status": "expiring" } },
+        { "key": "contract-hosting", "clientKey": "gemeente", "clientField": "clientRef", "data": { "contractNumber": "DEMO-C-0002", "title": "[Demo] Hosting en beheer KCC", "billingInterval": "annual", "valuePerInterval": 12000, "currency": "EUR", "startDate": "@days:-120", "endDate": "@days:245", "autoRenew": false, "noticePeriodDays": 60, "status": "active" } }
+    ],
     "tasks": [
         { "key": "task-terugbel", "data": { "subject": "[Demo] Terugbellen over parkeervergunning", "type": "terugbelverzoek", "status": "open", "priority": "hoog", "deadline": "@datetime:1", "description": "Demo task: call the applicant back about the parking permit.", "callbackPhoneNumber": "+31612345678" } },
         { "key": "task-opvolg", "data": { "subject": "[Demo] Offerte webshop opvolgen", "type": "opvolgtaak", "status": "in_behandeling", "priority": "normaal", "deadline": "@datetime:3", "description": "Demo task: follow up on the webshop quotation." } },

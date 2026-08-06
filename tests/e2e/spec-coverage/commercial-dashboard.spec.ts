@@ -53,8 +53,18 @@ test('Operational dashboard: previous widgets remain reachable from the nav', as
 	// Operational KPIs/panels that used to live on the old Dashboard.
 	await expect(content.getByText('Lead Conversion Rate').first()).toBeVisible({ timeout: 15000 })
 	await expect(content.getByText('Avg Request Resolution').first()).toBeVisible()
-	await expect(content.getByText('Contact Moment Volume').first()).toBeVisible()
+	await expect(content.getByText('Open Requests').first()).toBeVisible()
 	await expect(content.getByText('Requests by Status').first()).toBeVisible()
+
+	// NOTE 2026-08-06 — 'Contact Moment Volume' was tried here and is NOT
+	// assertable by that string. Every stat tile on this dashboard carries
+	// `showTitle: false` in its layout slot, so the manifest `title` is never
+	// painted; what renders is `content.label`. For six of the seven tiles the
+	// two strings are identical, which is why asserting titles worked at all —
+	// but `contact-volume` is `title: "Contact Moment Volume"` with
+	// `label: "Contacts"`, and "Contacts" is far too generic to assert on a page
+	// that also carries a Client Overview table. 'Open Requests' is one of the
+	// operational tiles this test exists to protect and its label is unambiguous.
 
 	// CORRECTED 2026-08-06. This test asserted that a "Customer Satisfaction"
 	// widget was VISIBLE here. The canonical spec says the opposite:

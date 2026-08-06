@@ -174,6 +174,14 @@ export class FixtureSession {
 	 * app's own store.saveObject() uses (the manifest list does not expose an
 	 * in-UI edit path for these schemas). Merges `patch` onto the current object
 	 * and returns the updated object. Returns null on a non-2xx.
+	 *
+	 * INSTRUMENTED 2026-08-06. The non-2xx path used to return `null` silently,
+	 * and the only caller asserted `toBeTruthy()` on it — so a rejected write
+	 * reported as `Received: false` with no status, no body and no clue which
+	 * property the server objected to. It cost a full CI cycle to learn that
+	 * OpenRegister was refusing a write to a `readOnly` field. The status and
+	 * the first part of the body are now logged on every failure; the return
+	 * shape is unchanged so no caller has to change.
 	 */
 	async update(schema: string, id: string, patch: Record<string, unknown>): Promise<any | null> {
 		const current = await this.get(schema, id)
@@ -181,7 +189,16 @@ export class FixtureSession {
 		// Strip OR-internal metadata so the PUT body mirrors a real edit payload.
 		delete (merged as any)['@self']
 		const res = await this.apiFetch('PUT', this.url(schema, id), merged)
-		return res.ok ? res.json : null
+		if (!res.ok) {
+			// eslint-disable-next-line no-console
+			console.error(
+				`[fixture] PUT ${this.url(schema, id)} -> ${res.status}`
+				+ ` | patched keys: ${Object.keys(patch).join(', ')}`
+				+ ` | body: ${String(res.text).slice(0, 400)}`,
+			)
+			return null
+		}
+		return res.json
 	}
 
 	/** Convenience: rename an object's `name` field. Returns true on success. */

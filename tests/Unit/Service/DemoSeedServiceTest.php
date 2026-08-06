@@ -71,6 +71,7 @@ class DemoSeedServiceTest extends TestCase
         'queue_schema'    => '26',
         'product_schema'  => '27',
         'task_schema'     => '28',
+        'contract_schema' => '29',
     ];
 
     /**
@@ -92,6 +93,7 @@ class DemoSeedServiceTest extends TestCase
         'complaints'      => [self::TICKET_SCHEMA_ID, 'title', 'title', 'complaint'],
         'contactmomenten' => [self::TICKET_SCHEMA_ID, 'subject', 'title', 'contactmoment'],
         'tasks'           => ['28', 'subject', 'subject', null],
+        'contracts'       => ['29', 'title', 'title', null],
     ];
 
     /**
@@ -355,6 +357,7 @@ class DemoSeedServiceTest extends TestCase
         self::assertSame(3, $result['created']['complaints']);
         self::assertSame(12, $result['created']['contactmomenten']);
         self::assertSame(3, $result['created']['tasks']);
+        self::assertSame(2, $result['created']['contracts']);
         self::assertSame(0, array_sum($result['skipped']));
 
         // Every seeded object carries the demo marker on its lookup field.
@@ -391,6 +394,20 @@ class DemoSeedServiceTest extends TestCase
         foreach ($leads as $lead) {
             self::assertContains($lead['data']['client'], $clientUuids);
         }
+
+        // The client FK is NOT uniformly named: the contract schema calls it
+        // `clientRef`. Writing it as `client` would save cleanly and leave the
+        // contract unlinked, so assert the key the schema actually declares.
+        $contracts = array_values(
+            array_filter($savedPayloads, static fn (array $p): bool => $p['schema'] === '29')
+        );
+        self::assertCount(2, $contracts);
+        foreach ($contracts as $contract) {
+            self::assertArrayHasKey('clientRef', $contract['data']);
+            self::assertArrayNotHasKey('client', $contract['data']);
+            self::assertContains($contract['data']['clientRef'], $clientUuids);
+        }
+
 
         // Date placeholders are resolved to concrete dates.
         $firstLead = array_values($leads)[0]['data'];
@@ -467,7 +484,7 @@ class DemoSeedServiceTest extends TestCase
 
         self::assertTrue($result['success']);
         self::assertSame(0, array_sum($result['created']));
-        self::assertSame(49, array_sum($result['skipped']));
+        self::assertSame(51, array_sum($result['skipped']));
     }//end testSeedIsIdempotentOnRerun()
 
     /**
@@ -503,8 +520,8 @@ class DemoSeedServiceTest extends TestCase
         $result = $this->service->remove();
 
         self::assertTrue($result['success']);
-        self::assertSame(49, array_sum($result['removed']));
-        self::assertCount(49, $deleted);
+        self::assertSame(51, array_sum($result['removed']));
+        self::assertCount(51, $deleted);
 
         // The non-demo decoy rows are never deleted.
         foreach ($deleted as $uuid) {
@@ -561,8 +578,9 @@ class DemoSeedServiceTest extends TestCase
         self::assertSame(3, $result['retained']['complaints']);
         self::assertSame(0, $result['removed']['complaints']);
         // Clients (5) + contacts (4) + pipelines (2) + queues (3) + products (3)
-        // + leads (6) + tasks (3) are on their own schemas and still delete.
-        self::assertSame(26, array_sum($result['removed']));
+        // + leads (6) + tasks (3) + contracts (2) are on their own schemas and
+        // still delete.
+        self::assertSame(28, array_sum($result['removed']));
     }//end testRemoveRetainsArchivalSchemaRows()
 
     /**

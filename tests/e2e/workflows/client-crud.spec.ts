@@ -161,27 +161,50 @@ test.describe('Clients — full CRUD with persistence', () => {
 		await expect(row).toContainText(EMAIL)
 		await expect(row).toContainText(PHONE)
 
-		// --- UPDATE: change the name, assert persisted + reflected in the list -
-		// (Detail-page edit UI is not reachable from a list row — see fixme.)
+		// --- UPDATE ------------------------------------------------------------
+		// REWRITTEN 2026-08-06. This leg used to rename the client
+		// (`apiUpdateName(... NAME_EDITED)`) and asserted only `toBeTruthy()` on a
+		// helper that collapses any non-2xx into `null`, so when it started
+		// failing the message was the uninformative "Received: false".
+		//
+		// The rename could not have succeeded on a correct instance:
+		// register.d/15-unify-client-contact.json declares `client.name` as
+		// `readOnly: true`, "Denormalised read-only mirror of the NC contact name
+		// (vCard FN). The Nextcloud Contact is authoritative … Edit identity in
+		// the addressbook." Renaming a client through the object API is not the
+		// supported edit path — it is the one edit the contact-first unification
+		// exists to forbid. (It never surfaced before because the test failed
+		// earlier, at the index search box; fixing that exposed this.)
+		//
+		// So the round-trip now edits a field the client genuinely owns, and
+		// separately ASSERTS the read-only mirror rejects a write — which is the
+		// more valuable of the two claims and had no coverage at all.
 		const editId = createdId
-		const updated = await fx.apiUpdateName('client', editId, NAME_EDITED)
-		expect(updated, 'name update accepted by OR API').toBeTruthy()
+
+		const updated = await fx.update('client', editId, { lifecycleStage: 'customer', accountStatus: 'inactive' })
+		expect(updated, 'client-owned fields accepted by the OR API').not.toBeNull()
 		const persisted = await fx.get('client', editId)
-		expect(persisted.name, 'edited name persisted to OpenRegister').toBe(NAME_EDITED)
-		expect(persisted.email, 'email unchanged after rename').toBe(EMAIL)
+		expect(persisted.lifecycleStage, 'lifecycleStage persisted to OpenRegister').toBe('customer')
+		expect(persisted.accountStatus, 'accountStatus persisted to OpenRegister').toBe('inactive')
+		expect(persisted.name, 'the mirrored identity name is untouched by an owned-field edit').toBe(NAME)
+		expect(persisted.email, 'email unchanged').toBe(EMAIL)
+
+		// The identity mirror is authoritative in the addressbook: a direct write
+		// must NOT silently take effect here.
+		await fx.apiUpdateName('client', editId, NAME_EDITED).catch(() => false)
+		const afterRename = await fx.get('client', editId)
+		expect(afterRename.name, 'client.name is a read-only mirror — the object API must not rename it').toBe(NAME)
 
 		await openClientsList(page)
-		await searchInList(page, NAME_EDITED)
-		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME_EDITED })).toBeVisible({ timeout: 10000 })
-		// Old name no longer appears as a row.
-		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME + ' BV' }).filter({ hasNotText: 'Holding' })).toHaveCount(0)
+		await searchInList(page, NAME)
+		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME })).toBeVisible({ timeout: 10000 })
 
 		// --- DELETE: remove + assert the row is gone from the list ------------
 		await fx.remove('client', editId)
 		await openClientsList(page)
-		await searchInList(page, NAME_EDITED)
-		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME_EDITED })).toHaveCount(0)
-		const remaining = await fx.list('client', { _limit: 5, name: NAME_EDITED }).catch(() => [])
+		await searchInList(page, NAME)
+		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME })).toHaveCount(0)
+		const remaining = await fx.list('client', { _limit: 5, name: NAME }).catch(() => [])
 		expect(remaining.length, 'deleted client no longer returned by OR API').toBe(0)
 	})
 

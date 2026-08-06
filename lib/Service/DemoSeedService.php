@@ -113,6 +113,7 @@ class DemoSeedService
         'complaints'      => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_COMPLAINT],
         'contactmomenten' => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_CONTACTMOMENT],
         'tasks'           => ['task_schema', 'subject', null],
+        'contracts'       => ['contract_schema', 'title', null],
     ];
 
     /**
@@ -630,7 +631,13 @@ class DemoSeedService
         if (isset($definition['clientKey']) === true) {
             $clientUuid = $uuids['clients:'.$definition['clientKey']] ?? null;
             if ($clientUuid !== null) {
-                $data['client'] = $clientUuid;
+                // The FK field name is not uniform across the register: the
+                // contract schema calls it `clientRef` ("UUID reference to the
+                // existing client object. Client identity is never duplicated
+                // into the contract."), everything else calls it `client`.
+                // Writing the wrong key is silent — the object saves, the FK is
+                // simply absent — so the map is explicit rather than assumed.
+                $data[($definition['clientField'] ?? 'client')] = $clientUuid;
             }
         }
 
