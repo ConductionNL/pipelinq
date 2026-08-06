@@ -6,8 +6,10 @@
  *
  * Pipelinq mounts at #content-vue. Deep-link `page.goto('/apps/pipelinq/<route>')`
  * resets the SPA back to the Dashboard, so navigation between pages MUST go
- * through a sidebar nav-click. A fleet-wide `cn-support-dialog` can overlay the
- * content and intercept clicks — dismiss it before interacting.
+ * through a sidebar nav-click. Two app-chrome overlays can cover the content
+ * and intercept clicks — the fleet-wide `cn-support-dialog` and the first-visit
+ * `cn-walkthrough` product tour. Both are dismissed before interacting; see
+ * dismissSupportDialog() and dismissWalkthrough().
  */
 import { Page, Locator, expect, ConsoleMessage } from '@playwright/test'
 
@@ -15,7 +17,51 @@ import { Page, Locator, expect, ConsoleMessage } from '@playwright/test'
 export async function openApp(page: Page): Promise<void> {
 	await page.goto('/apps/pipelinq/')
 	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
+	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
+}
+
+/**
+ * End the first-visit product tour if it is running.
+ *
+ * `src/manifest.json#walkthrough` declares `pipelinq:getting-started` with
+ * `trigger: "first-visit"`, so a fresh CI instance — where nobody has ever
+ * completed it — starts the tour on the very first page load. CnWalkthrough
+ * paints `div.cn-walkthrough__dim--full` over the whole viewport for a centered
+ * step, and Playwright then reports, forever, that
+ *
+ *   <div class="cn-walkthrough__dim cn-walkthrough__dim--full"> … subtree
+ *   intercepts pointer events
+ *
+ * on any click underneath it — the element under test is "visible, enabled and
+ * stable", so the click retries until the TEST timeout rather than failing on
+ * the overlay. Measured in run 30898348537 (job 91956896164) on
+ * `spec-coverage/products.spec.ts:34` (60 s) and
+ * `workflows/product-crud.spec.ts:112` (90 s).
+ *
+ * It is NOT deterministic which specs pay for it, which is why it looked like
+ * flake rather than a fixture gap: the tour's second and third steps advance on
+ * `route-match: Products` and then anchor on `data-walkthrough-id="index-add"`,
+ * so whichever worker reaches the Products page first inherits the modal.
+ *
+ * The corner close button (`.cn-walkthrough__close`, aria-label "Close tour")
+ * is the real user affordance and CnWalkthrough's `close()` marks the tour
+ * COMPLETE (writes `walkthrough_seen_version`), so it does not reopen. That is
+ * deliberately preferred over Escape/backdrop, which only dismiss the current
+ * showing.
+ */
+export async function dismissWalkthrough(page: Page): Promise<void> {
+	const tour = page.locator('.cn-walkthrough').first()
+	if (!(await tour.isVisible().catch(() => false))) {
+		return
+	}
+	const close = tour.locator('.cn-walkthrough__close').first()
+	if (await close.isVisible().catch(() => false)) {
+		await close.click().catch(() => {})
+	} else {
+		await page.keyboard.press('Escape').catch(() => {})
+	}
+	await tour.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
 }
 
 /** Dismiss the fleet-wide support dialog if it is overlaying the content. */
@@ -101,19 +147,59 @@ export async function revealNavEntry(page: Page, label: string): Promise<Locator
 	// container is collapsed by default:
 	//  (a) a standard NcAppNavigation GROUP — the leaf sits inside a
 	//      `li.app-navigation-entry--collapsible`; OR
-	//  (b) the NcAppNavigation Settings flyout (`button.settings-button`).
+	//  (b) the NcAppNavigationSettings foldout — see openSettingsFoldout().
 	await link.waitFor({ state: 'attached', timeout: 10000 })
 	if (!(await link.isVisible().catch(() => false))) {
 		await expandCollapsedAncestors(link)
 		if (!(await link.isVisible().catch(() => false))) {
-			const settingsBtn = page.locator('#app-navigation-vue button.settings-button[aria-expanded="false"]').first()
-			if (await settingsBtn.isVisible().catch(() => false)) {
-				await settingsBtn.click().catch(() => {})
-				await link.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
-			}
+			await openSettingsFoldout(page)
+			await link.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
 		}
 	}
 	return link
+}
+
+/**
+ * Open the NcAppNavigationSettings foldout — the gear at the bottom-left,
+ * OUTSIDE the scrollable nav list.
+ *
+ * `src/menu-layout.json#settingsSection` promotes `Pipelines`,
+ * `SettingsIntegrationsCaption` and `ExportJobs` into that foldout
+ * (`applySettingsSection` in @conduction/nextcloud-vue's buildManifest lifts
+ * them out of the main tree and tags them `section: "settings"`; CnAppNav
+ * renders them inside `<NcAppNavigationSettings data-testid="cn-nav-settings">`).
+ * The foldout body is `v-show`-hidden until its own button is pressed, so a
+ * promoted leaf is `hidden` at page load exactly like a collapsed-group leaf.
+ *
+ * WHY THE PREVIOUS SELECTOR MATCHED NOTHING. It was
+ * `button.settings-button[aria-expanded="false"]`. `settings-button` is
+ * @nextcloud/vue **8** markup. pipelinq resolves 9.9.0 (package.json
+ * `^9.9.0`, package-lock 9.9.0), and in 9.x NcAppNavigationSettings renders
+ * an NcButton whose classes come from a CSS module — the built chunk carries
+ * `_button_ypW42`, and the string `settings-button` does not appear anywhere in
+ * `dist/`. So `.isVisible()` was false, the branch never ran, and the
+ * `Pipelines` leaf stayed hidden. All three specs in
+ * `spec-coverage/pipelines.spec.ts` then failed with
+ * `locator resolved to <a href="#/pipelines"> … unexpected value "hidden"`,
+ * blaming the Pipelines page for what is a navigation-helper gap — the same
+ * shape as the group-caption bug fixed above. Measured in run 30898348537
+ * (job 91956896164).
+ *
+ * The toggle is matched by `aria-expanded="false"` scoped to the foldout's own
+ * `data-testid`, which is ours and survives an @nextcloud/vue major. The v8
+ * class is kept as a second alternative so the helper works on both.
+ */
+async function openSettingsFoldout(page: Page): Promise<void> {
+	const toggle = page
+		.locator(
+			'#app-navigation-vue [data-testid="cn-nav-settings"] button[aria-expanded="false"],'
+			+ ' #app-navigation-vue button.settings-button[aria-expanded="false"]',
+		)
+		.first()
+	if (!(await toggle.isVisible().catch(() => false))) {
+		return
+	}
+	await toggle.click().catch(() => {})
 }
 
 /** Click a sidebar nav link by exact label and wait for the URL to settle. */
@@ -122,6 +208,10 @@ export async function navClick(page: Page, label: string, urlRe: RegExp): Promis
 	await expect(link).toBeVisible({ timeout: 10000 })
 	await link.click()
 	await expect(page).toHaveURL(urlRe, { timeout: 10000 })
+	// The tour advances on `route-match` and re-anchors on the new page, so a
+	// navigation can bring the overlay back even after openApp() closed it —
+	// until whichever worker got there first has written the completion flag.
+	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
 	// Give the view a beat to fetch + render its first surface.
 	await page.locator('#content-vue').waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
