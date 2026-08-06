@@ -93,11 +93,21 @@ async function assertAppBoots(page: import('@playwright/test').Page): Promise<vo
 			// rather than an HTTP one.
 			await page.waitForSelector('#pipelinq-app > *', { timeout: 45_000 })
 		} catch {
-			throw new Error(
-				`[boot gate] The Pipelinq Vue app did not mount on ${route}. `
-				+ 'The bundle loaded but rendered nothing — this is a bootstrap '
-				+ 'failure, not a test failure, and running the suite against it '
-				+ 'would produce a wall of meaningless red.\n'
+			// ⚠️⚠️ THROWAWAY — DO NOT MERGE. ⚠️⚠️
+			//
+			// On `development` this THROWS, and that is correct: it is the boot
+			// gate, and it did its job — with the bundle truncated to zero bytes
+			// the whole suite aborted in globalSetup and ZERO tests ran.
+			//
+			// That is the strongest possible answer to "how many tests pass with a
+			// dead bundle?" (none, because none execute), but it does not answer
+			// the follow-up the answer invites: how many INDIVIDUAL assertions are
+			// bundle-independent, i.e. would report green against an app that never
+			// mounted if the gate were ever removed or bypassed? Downgrading the
+			// throw to a warning on this throwaway branch measures exactly that.
+			// eslint-disable-next-line no-console
+			console.error(
+				`[boot gate BYPASSED — truncation control] The Pipelinq Vue app did not mount on ${route}. `
 				+ (consoleErrors.length
 					? `Console errors:\n  ${consoleErrors.slice(0, 10).join('\n  ')}`
 					: 'No console errors were captured.'),
