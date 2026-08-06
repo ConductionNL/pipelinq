@@ -366,12 +366,21 @@ class DemoSeedServiceTest extends TestCase
             self::assertStringStartsWith(DemoSeedService::DEMO_PREFIX, $lookup);
         }
 
-        // Every client carries the contact-first provisioned NC contact uid.
+        // Every client AND every contact carries the contact-first provisioned NC
+        // contact uid. register.d/15-unify-client-contact.json marks contactsUid
+        // REQUIRED on BOTH schemas, so a section that skipped provisioning would
+        // be rejected by OpenRegister at runtime with "The required property
+        // (contactsUid) is missing" — measured on run 31097862359, where the
+        // contacts section did exactly that and failed the whole seed with a 500.
+        $identityRows = 0;
         foreach ($savedPayloads as $payload) {
-            if ($payload['schema'] === '21') {
+            if ($payload['schema'] === '21' || $payload['schema'] === '23') {
                 self::assertStringStartsWith('nc-contact-', (string) $payload['data']['contactsUid']);
+                $identityRows++;
             }
         }
+
+        self::assertSame(9, $identityRows, '5 clients + 4 contacts are provisioned contact-first');
 
         // Leads and contactmomenten are linked to seeded client uuids.
         $clientUuids = array_column(

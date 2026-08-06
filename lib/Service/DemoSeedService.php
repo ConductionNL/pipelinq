@@ -111,6 +111,22 @@ class DemoSeedService
     ];
 
     /**
+     * Sections whose schema requires a contact-first identity: section => objectType.
+     *
+     * `register.d/15-unify-client-contact.json` marks `contactsUid` REQUIRED on
+     * both the `client` and the `contact` schema, so a plain `saveObject()` of
+     * either is rejected by OpenRegister with "The required property
+     * (contactsUid) is missing". Both must go through ContactVcardService first,
+     * whose own ALLOWED_OBJECT_TYPES is exactly ['client', 'contact'].
+     *
+     * @var array<string, string>
+     */
+    private const CONTACT_FIRST_SECTIONS = [
+        'clients'  => 'client',
+        'contacts' => 'contact',
+    ];
+
+    /**
      * Legacy seed-file field name => ticket field name, per ticket type.
      *
      * The shipped demo_seed_data.json still speaks the pre-unification field
@@ -221,22 +237,28 @@ class DemoSeedService
                     continue;
                 }
 
-                // Contact-first unification: the client schema marks contactsUid
-                // REQUIRED (FK to the authoritative Nextcloud addressbook contact,
-                // never minted locally), so provision the NC contact before the
-                // object is saved — same path the create surface uses. Matching an
+                // Contact-first unification (register.d/15-unify-client-contact.json):
+                // BOTH the client and the contact schema mark contactsUid REQUIRED
+                // (FK to the authoritative Nextcloud addressbook contact, never
+                // minted locally), so provision the NC contact before the object is
+                // saved — the same path the create surface uses. Matching an
                 // existing contact by email keeps re-seeding after --remove
                 // duplicate-free on the addressbook side too.
-                if ($section === 'clients') {
+                //
+                // ContactVcardService::ALLOWED_OBJECT_TYPES is exactly
+                // ['client', 'contact'], so the section name maps 1:1 onto the
+                // objectType and no third section can silently take this branch.
+                $identityType = (self::CONTACT_FIRST_SECTIONS[$section] ?? null);
+                if ($identityType !== null) {
                     $provision = $this->contactVcardService->provisionContactFromForm(
                         form: $data,
-                        objectType: 'client'
+                        objectType: $identityType
                     );
 
                     if ($provision === null) {
                         return [
                             'success' => false,
-                            'message' => 'Nextcloud Contacts is unavailable — cannot provision demo client identities.',
+                            'message' => 'Nextcloud Contacts is unavailable — cannot provision demo '.$identityType.' identities.',
                             'created' => $created,
                             'skipped' => $skipped,
                         ];
