@@ -20,8 +20,39 @@ on:
   schedule:
     - cron: "0 6 * * 1"
 
+# Deduplicating a `push` run against the `pull_request` run for the SAME head
+# ref is the point of this block, and for a feature branch it is exactly right:
+# two runs of identical jobs, one of them wasted.
+#
+# It is wrong for `main` and `development`, because the push run there is NOT a
+# duplicate — it is the only carrier of the push-only jobs: "Coverage Baseline
+# Check" (`github.event_name == 'push'`), "SBOM" and "Features Extract". And
+# those two branches always have an open PR whose `head_ref` IS the branch
+# name: the standing "Release: merge development into beta" (#13 here).
+# `github.head_ref` on that PR run and `github.ref_name` on the push run both
+# render `development`, so both landed in the identical group
+# `quality-development`, and `cancel-in-progress` killed whichever started
+# first — always the push run, by a few seconds.
+#
+# Measured on this repo: 12 of the last 20 `development` push runs were
+# cancelled within ~100s of starting — e.g. 31050057822 (6s), 31049983041
+# (38s), 31036452228 (5s), 31040464974 (80s). That duration is the
+# discriminator: the shared workflow's `timeout-minutes: 45` cancellation lands
+# at 45m16s–45m28s, so these are concurrency kills.
+#
+# On the surviving PR run "Coverage Baseline Check" reports `skipped`, which is
+# CORRECT for a pull_request event and renders exactly like a pass. So the gate
+# appears on both runs and executes on neither — a dead gate of the
+# permanently-pending shape.
+#
+# Suffixing only the default-branch push keeps feature-branch dedup untouched
+# (`quality-feature/x` for both events, exactly as before) and gives the two
+# default branches' push runs a lane of their own.
+#
+# Proven in openconnector#1158: its first-ever completed `development` push run
+# (31048998594) executed Coverage Baseline Check, SBOM and Features Extract.
 concurrency:
-  group: quality-${{ github.head_ref || github.ref_name }}
+  group: quality-${{ github.head_ref || github.ref_name }}${{ (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'development')) && '-push' || '' }}
   cancel-in-progress: true
 
 # Permission CEILING for the called quality pipeline. GitHub statically
@@ -45,6 +76,23 @@ jobs:
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
+      # Pinned, because the shared workflow's DEFAULT is '["stable31", "stable32"]'
+      # and stable31 CANNOT WORK here. `additional-apps` below installs
+      # openregister, which declares min-version="32" (its
+      # lib/ContextChat/ContentProvider.php implements
+      # OCP\ContextChat\IContentProvider, absent from core before NC32). On NC31
+      # the install step logs
+      #   App "Open Register" cannot be installed because it is not compatible
+      #   with this version of the server.
+      # and then continues, because the enable failure is only a ::warning::. The
+      # run therefore proceeded without its data layer and every
+      # /apps/openregister/... call returned Nextcloud's HTML 404 page.
+      #
+      # Order matters as much as membership: newman, playwright and
+      # journeydoc-capture all check out `fromJSON(nextcloud-test-refs)[0]` as
+      # their single server, so with the inherited default those three jobs ran
+      # entirely on the version openregister cannot load.
+      nextcloud-test-refs: '["stable32"]'
       # Strict static-analysis gate suite (composer check:strict equivalent).
       # These mirror the shared-workflow defaults (all true) but are pinned
       # here explicitly so the strict-gate posture is self-documenting and
@@ -74,23 +122,38 @@ jobs:
       # on untouched trees and will not block unrelated PRs.
       #
       # No count is written here on purpose: the number of gates depends on the
-      # pin below and the number that run depends on this repo's diff and
-      # toolchain. The package prints both (`COVERAGE: N of M`) in the job log.
-      # See https://github.com/ConductionNL/.github/tree/main/hydra-gates
-      #
-      # Pinned to a tag, not `main`, so a change to the gate package cannot
-      # alter this repository's verdict without a commit here to move the pin.
-      # v1.0.1 was the pin openbuild and openregister ran when this was written.
+      # package version in use and the number that run depends on this repo's
+      # diff and toolchain. The package prints both (`COVERAGE: N of M`) in the
+      # job log. See https://github.com/ConductionNL/.github/tree/main/hydra-gates
       enable-hydra-gates: true
-      # PIN MOVED v1.0.1 -> v1.3.0. `hydra-gates-require-full-coverage`
-      # (default ON) fails a run when a gate whose subject matter EXISTS did
-      # not report; its contract is that a not-applicable gate must DECLARE
-      # itself. v1.0.1 contains ZERO `_skip` calls — no na/structural/wiring
-      # vocabulary at all — so such a gate emits NOTHING and is counted as
-      # "DID NOT RUN". v1.3.0 ships 36 such declarations. Measured on doriath
-      # (PR #160): gates 4/24/33 went from unexplained "DID NOT RUN" to
-      # explicit NOT APPLICABLE, and Hydra Gates went failure -> success.
-      hydra-gates-ref: v1.3.0
+      # No `hydra-gates-ref` here on purpose. The shared workflow defaults it
+      # to @main, and this workflow is itself consumed at @main, so the two
+      # sides move together and a gate fix reaches this repo without a commit
+      # in this repo. A pin is a silent expiry date: 22 repos sat on v1.0.1 and
+      # 16 gates were dead fleet-wide while every one reported PASS (.github#159),
+      # and a default flipped at @main later reached those old runners and made
+      # them red on gates they had no subject matter for (.github#173).
+      # To hold this repo still for a specific reason, set the input explicitly
+      # and say why — it is still honoured. To roll back for everyone, revert on
+      # ConductionNL/.github main.
+      #
+      # THIRD CAUSE, and the one that is failing this repo RIGHT NOW
+      # (.github#177): quality.yml@main began executing three gate helpers BY
+      # NAME — check_spec_anchors.py, check_form_labels.py and
+      # check_license_triangle.py — which exist in NO tag before v1.5.0.
+      # Verified by DIRECTORY LISTING of each tag, not by per-file lookups:
+      # those answered "present" uniformly across v1.0.0..v1.5.0, and the
+      # uniformity across independent inputs was the tell that the instrument
+      # was wrong. So the Hydra Gates job here fails at "Verify the pinned gates
+      # package satisfies this workflow", before a single gate runs, with the
+      # workflow's own words: "This is NOT a code-quality finding about your
+      # repository." Removing the pin is the repair.
+      #
+      # Unpinning also picks up v1.5.1's push scoping (.github#179): on a push to
+      # `development`, `origin/development` IS `HEAD`, so the diff was empty by
+      # construction — <= v1.4.0 passed over it (permanently green) and v1.5.0
+      # refused with exit 99 (permanently red). The scope is now
+      # `github.event.before...HEAD`, what the push actually changed.
       # `enable-axe` deliberately NOT set: it produces the report gate-33
       # consumes, and a vanilla Nextcloud already carries serious/critical axe
       # violations, so enabling it here would mix "this repo has a defect" with

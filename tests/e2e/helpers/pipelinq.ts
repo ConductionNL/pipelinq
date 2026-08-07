@@ -6,8 +6,10 @@
  *
  * Pipelinq mounts at #content-vue. Deep-link `page.goto('/apps/pipelinq/<route>')`
  * resets the SPA back to the Dashboard, so navigation between pages MUST go
- * through a sidebar nav-click. A fleet-wide `cn-support-dialog` can overlay the
- * content and intercept clicks — dismiss it before interacting.
+ * through a sidebar nav-click. Two app-chrome overlays can cover the content
+ * and intercept clicks — the fleet-wide `cn-support-dialog` and the first-visit
+ * `cn-walkthrough` product tour. Both are dismissed before interacting; see
+ * dismissSupportDialog() and dismissWalkthrough().
  */
 import { Page, Locator, expect, ConsoleMessage } from '@playwright/test'
 
@@ -15,7 +17,51 @@ import { Page, Locator, expect, ConsoleMessage } from '@playwright/test'
 export async function openApp(page: Page): Promise<void> {
 	await page.goto('/apps/pipelinq/')
 	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
+	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
+}
+
+/**
+ * End the first-visit product tour if it is running.
+ *
+ * `src/manifest.json#walkthrough` declares `pipelinq:getting-started` with
+ * `trigger: "first-visit"`, so a fresh CI instance — where nobody has ever
+ * completed it — starts the tour on the very first page load. CnWalkthrough
+ * paints `div.cn-walkthrough__dim--full` over the whole viewport for a centered
+ * step, and Playwright then reports, forever, that
+ *
+ *   <div class="cn-walkthrough__dim cn-walkthrough__dim--full"> … subtree
+ *   intercepts pointer events
+ *
+ * on any click underneath it — the element under test is "visible, enabled and
+ * stable", so the click retries until the TEST timeout rather than failing on
+ * the overlay. Measured in run 30898348537 (job 91956896164) on
+ * `spec-coverage/products.spec.ts:34` (60 s) and
+ * `workflows/product-crud.spec.ts:112` (90 s).
+ *
+ * It is NOT deterministic which specs pay for it, which is why it looked like
+ * flake rather than a fixture gap: the tour's second and third steps advance on
+ * `route-match: Products` and then anchor on `data-walkthrough-id="index-add"`,
+ * so whichever worker reaches the Products page first inherits the modal.
+ *
+ * The corner close button (`.cn-walkthrough__close`, aria-label "Close tour")
+ * is the real user affordance and CnWalkthrough's `close()` marks the tour
+ * COMPLETE (writes `walkthrough_seen_version`), so it does not reopen. That is
+ * deliberately preferred over Escape/backdrop, which only dismiss the current
+ * showing.
+ */
+export async function dismissWalkthrough(page: Page): Promise<void> {
+	const tour = page.locator('.cn-walkthrough').first()
+	if (!(await tour.isVisible().catch(() => false))) {
+		return
+	}
+	const close = tour.locator('.cn-walkthrough__close').first()
+	if (await close.isVisible().catch(() => false)) {
+		await close.click().catch(() => {})
+	} else {
+		await page.keyboard.press('Escape').catch(() => {})
+	}
+	await tour.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
 }
 
 /** Dismiss the fleet-wide support dialog if it is overlaying the content. */
@@ -101,19 +147,59 @@ export async function revealNavEntry(page: Page, label: string): Promise<Locator
 	// container is collapsed by default:
 	//  (a) a standard NcAppNavigation GROUP — the leaf sits inside a
 	//      `li.app-navigation-entry--collapsible`; OR
-	//  (b) the NcAppNavigation Settings flyout (`button.settings-button`).
+	//  (b) the NcAppNavigationSettings foldout — see openSettingsFoldout().
 	await link.waitFor({ state: 'attached', timeout: 10000 })
 	if (!(await link.isVisible().catch(() => false))) {
 		await expandCollapsedAncestors(link)
 		if (!(await link.isVisible().catch(() => false))) {
-			const settingsBtn = page.locator('#app-navigation-vue button.settings-button[aria-expanded="false"]').first()
-			if (await settingsBtn.isVisible().catch(() => false)) {
-				await settingsBtn.click().catch(() => {})
-				await link.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
-			}
+			await openSettingsFoldout(page)
+			await link.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
 		}
 	}
 	return link
+}
+
+/**
+ * Open the NcAppNavigationSettings foldout — the gear at the bottom-left,
+ * OUTSIDE the scrollable nav list.
+ *
+ * `src/menu-layout.json#settingsSection` promotes `Pipelines`,
+ * `SettingsIntegrationsCaption` and `ExportJobs` into that foldout
+ * (`applySettingsSection` in @conduction/nextcloud-vue's buildManifest lifts
+ * them out of the main tree and tags them `section: "settings"`; CnAppNav
+ * renders them inside `<NcAppNavigationSettings data-testid="cn-nav-settings">`).
+ * The foldout body is `v-show`-hidden until its own button is pressed, so a
+ * promoted leaf is `hidden` at page load exactly like a collapsed-group leaf.
+ *
+ * WHY THE PREVIOUS SELECTOR MATCHED NOTHING. It was
+ * `button.settings-button[aria-expanded="false"]`. `settings-button` is
+ * @nextcloud/vue **8** markup. pipelinq resolves 9.9.0 (package.json
+ * `^9.9.0`, package-lock 9.9.0), and in 9.x NcAppNavigationSettings renders
+ * an NcButton whose classes come from a CSS module — the built chunk carries
+ * `_button_ypW42`, and the string `settings-button` does not appear anywhere in
+ * `dist/`. So `.isVisible()` was false, the branch never ran, and the
+ * `Pipelines` leaf stayed hidden. All three specs in
+ * `spec-coverage/pipelines.spec.ts` then failed with
+ * `locator resolved to <a href="#/pipelines"> … unexpected value "hidden"`,
+ * blaming the Pipelines page for what is a navigation-helper gap — the same
+ * shape as the group-caption bug fixed above. Measured in run 30898348537
+ * (job 91956896164).
+ *
+ * The toggle is matched by `aria-expanded="false"` scoped to the foldout's own
+ * `data-testid`, which is ours and survives an @nextcloud/vue major. The v8
+ * class is kept as a second alternative so the helper works on both.
+ */
+async function openSettingsFoldout(page: Page): Promise<void> {
+	const toggle = page
+		.locator(
+			'#app-navigation-vue [data-testid="cn-nav-settings"] button[aria-expanded="false"],'
+			+ ' #app-navigation-vue button.settings-button[aria-expanded="false"]',
+		)
+		.first()
+	if (!(await toggle.isVisible().catch(() => false))) {
+		return
+	}
+	await toggle.click().catch(() => {})
 }
 
 /** Click a sidebar nav link by exact label and wait for the URL to settle. */
@@ -122,9 +208,124 @@ export async function navClick(page: Page, label: string, urlRe: RegExp): Promis
 	await expect(link).toBeVisible({ timeout: 10000 })
 	await link.click()
 	await expect(page).toHaveURL(urlRe, { timeout: 10000 })
+	// The tour advances on `route-match` and re-anchors on the new page, so a
+	// navigation can bring the overlay back even after openApp() closed it —
+	// until whichever worker got there first has written the completion flag.
+	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
 	// Give the view a beat to fetch + render its first surface.
 	await page.locator('#content-vue').waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
+}
+
+/**
+ * Click a `config.quickFilters[]` tab on a `type: "index"` page.
+ *
+ * CnIndexPage renders the strip through CnQuickFilterBar, which paints each tab
+ * as `<button type="button" role="tab">` carrying a
+ * `span.cn-quick-filter-bar__label`. Selecting a tab merges that tab's manifest
+ * `filter` map into the useListView fetch and re-fetches at page 1, so the
+ * caller must wait for the re-render before asserting on rows.
+ *
+ * This is the navigation path for the three ticket subtypes since
+ * `unify-ticket-supertype`: the former Requests / Complaints / Contactmomenten
+ * PAGES no longer exist — one `ticket` index carries all three behind this
+ * strip (src/manifest.json, page id `Tickets`).
+ */
+export async function clickQuickFilter(page: Page, label: string): Promise<void> {
+	const tab = page.locator('#content-vue').getByRole('tab', { name: label, exact: true }).first()
+	await expect(tab).toBeVisible({ timeout: 10000 })
+	await tab.click()
+	await expect(tab).toHaveAttribute('aria-selected', 'true', { timeout: 10000 })
+}
+
+/**
+ * Open the index Search/Columns sidebar and return its search field.
+ *
+ * WHY THIS EXISTS. `pages[].config.sidebar.enabled` mounts CnIndexSidebar, but
+ * it mounts it CLOSED: CnIndexPage's own data carries
+ *
+ *   // Search/Columns sidebar open state. Defaults closed so the page
+ *   // content (table / cards) starts at the top and fills the width;
+ *   // opened on demand via the actions-bar toggle.
+ *   sidebarOpen: false,
+ *
+ * and it binds `show-sidebar-toggle: hasSidebar` on CnActionsBar, which renders
+ * a tertiary icon button labelled "Search and columns". Verified in
+ * @conduction/nextcloud-vue 2.2.0-vue3.3 `dist/`.
+ *
+ * The CRUD workflow specs used to reach straight for
+ * `.app-sidebar input.input-field__input[type="text"]` on the assumption that
+ * `sidebar.enabled` was enough for the field to be on screen. It no longer is,
+ * so the wait expired against the search box and the failure surfaced on the
+ * CLIENT/PRODUCT journey rather than on the navigation step that never happened.
+ *
+ * Note the sidebar is mounted at NcContent level by CnAppRoot ("the only place
+ * where Nextcloud's NcAppSidebar slides correctly from the right"), i.e. OUTSIDE
+ * `#content-vue` — so both the toggle click and the field lookup are page-wide.
+ */
+export async function openIndexSearch(page: Page): Promise<Locator> {
+	const field = page.locator('.app-sidebar input.input-field__input[type="text"]').first()
+	if (!(await field.isVisible().catch(() => false))) {
+		const toggle = page.getByRole('button', { name: /search and columns/i }).first()
+		await expect(toggle, 'the index Search/Columns toggle must be rendered when sidebar.enabled is set')
+			.toBeVisible({ timeout: 10000 })
+		await toggle.click()
+	}
+	await field.waitFor({ state: 'visible', timeout: 10000 })
+	return field
+}
+
+/**
+ * Open the CnActionsBar overflow ("Actions") menu on an index page.
+ *
+ * WHY THIS EXISTS. A manifest `config.headerActions[]` on a `type: "index"`
+ * page does NOT render as a visible button. CnActionsBar renders those entries
+ * as `NcActionButton`s INSIDE the overflow menu — the shared component's own
+ * schema documents them as "Page-level header actions rendered inside
+ * CnActionsBar's overflow dropdown", and the template comment above the
+ * `v-for` reads "Manifest-declared page-level header actions (overflow)".
+ * Verified against @conduction/nextcloud-vue 2.2.0-vue3.3 (`dist/`).
+ *
+ * The visible primary CTA is a different control: it is emitted only when
+ * `showAdd` is true and carries `data-testid="cn-cta-primary"`. Pipelinq's POS
+ * ledgers (`PosTransactions`, `PosRefunds`) both set `showAdd: false` and
+ * declare their create entry point as a `headerActions[]` item instead, so
+ * `cn-cta-primary` is genuinely absent there and the create action is one click
+ * deeper than on a normal index.
+ */
+export async function openActionsOverflow(page: Page): Promise<void> {
+	// Two independent handles on the same control, because neither alone is
+	// safe across an @nextcloud/vue major: `data-testid="cn-actions"` is OURS
+	// (set on the NcActions in CnActionsBar) but only survives if NcActions keeps
+	// a single root node to inherit the attribute onto; the accessible name comes
+	// from `menu-name="Actions"` with `force-name`, which is NC's contract.
+	const toggle = page
+		.locator('#content-vue [data-testid="cn-actions"] button')
+		.first()
+		.or(page.locator('#content-vue').getByRole('button', { name: 'Actions' }).first())
+	await expect(toggle.first()).toBeVisible({ timeout: 10000 })
+	await toggle.first().click()
+}
+
+/**
+ * Open the overflow menu and click one manifest `headerActions[]` entry by its
+ * declared label. See openActionsOverflow() for why the entry is not a button
+ * on the page itself.
+ *
+ * NcActions teleports its menu to the document body, so the entry is matched
+ * page-wide rather than inside `#content-vue`.
+ */
+export async function clickHeaderAction(page: Page, label: string | RegExp): Promise<void> {
+	await openActionsOverflow(page)
+	// NcActionButton renders `<li class="action"><button class="action-button">`,
+	// and NcActions teleports the popover to the document body — so the entry is
+	// matched page-wide, not inside `#content-vue`. `menuitem` is tried first
+	// because it is the role NcActions assigns; the class selector is the
+	// fallback for the same element.
+	const entry = page.getByRole('menuitem', { name: label }).first()
+		.or(page.locator('button.action-button, a.action-link').filter({ hasText: label }).first())
+	await expect(entry.first()).toBeVisible({ timeout: 10000 })
+	await entry.first().click()
 }
 
 /**

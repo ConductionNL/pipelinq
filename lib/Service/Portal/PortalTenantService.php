@@ -279,6 +279,20 @@ class PortalTenantService
     /**
      * Whether self-signup is allowed for a tenant.
      *
+     * NOT AN ACTIVE GUARD — it has no callers, because the portal has no
+     * self-signup endpoint: no controller or service creates a
+     * `portalAccount` (`PortalAccountService` only closes existing accounts;
+     * `PortalAuthController` only authenticates them). It reads a real
+     * schema field (`register.d/40-portal.json`), so a tenant admin can set
+     * `selfSignupAllowed` and nothing consumes it.
+     *
+     * Kept rather than deleted because the flow is a plausible near-term
+     * feature on a live schema field — but it must not be mistaken for
+     * enforcement, and the fix for the gate-6 finding it raises is to BUILD
+     * the flow and call this from it, never to invent an account-creation
+     * endpoint just to give the predicate a caller. See pipelinq#401 and the
+     * archived `2026-07-16-orphan-auth-remediation` change.
+     *
      * @param string $tenantId The tenant id.
      *
      * @return bool True when self-signup is allowed.

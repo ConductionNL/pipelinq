@@ -26,11 +26,15 @@
 		"KassakoppelingAuditList": "PointOfSale",
 
 		"Rapportage": "Dashboard",
+		"RapportageContactmomenten": "Rapportage",
+		"ChannelAnalyticsView": "Rapportage",
+		"AgentPerformanceView": "Rapportage",
 		"SlaAttainment": "OperationalDashboard",
 
 		"Prospects": "Dashboard",
 		"Contracts": "OperationalDashboard"
 	},
+	"_reportingChildrenNote": "pipelinq#687 (fixed 2026-08-06): RapportageContactmomenten, ChannelAnalyticsView and AgentPerformanceView were routed, built and rendering correctly with NO way in — no menu entry, no in-page link, no deepLinks registration. The only way to reach them was to type the hash by hand, which is not a feature; the e2e suite carried two deliberately-red tests asserting that a user can navigate there. src/manifest.json now declares a menu entry for each, and the relocations above put all three under Reporting, so that entry becomes the group carrying its own sub-reports instead of a leaf standing beside three orphans.",
 	"sections": {},
 	"settingsSection": [
 		"Pipelines",

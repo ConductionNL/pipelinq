@@ -215,6 +215,27 @@
 			"order": 150
 		},
 		{
+			"id": "RapportageContactmomenten",
+			"label": "Contact reporting",
+			"icon": "AccountMultipleOutline",
+			"route": "RapportageContactmomenten",
+			"order": 151
+		},
+		{
+			"id": "ChannelAnalyticsView",
+			"label": "Channel Analytics",
+			"icon": "ChartLine",
+			"route": "ChannelAnalyticsView",
+			"order": 152
+		},
+		{
+			"id": "AgentPerformanceView",
+			"label": "Agent Performance",
+			"icon": "AccountGroup",
+			"route": "AgentPerformanceView",
+			"order": 153
+		},
+		{
 			"id": "Documentation",
 			"label": "Documentation",
 			"icon": "BookOpenVariantOutline",
