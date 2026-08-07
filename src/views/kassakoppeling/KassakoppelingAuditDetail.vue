@@ -440,12 +440,12 @@ export default {
 
 .verify-pill--ok {
 	background: var(--color-success);
-	color: var(--color-main-background);
+	color: var(--color-success-text);
 }
 
 .verify-pill--fail {
 	background: var(--color-error);
-	color: var(--color-main-background);
+	color: var(--color-error-text);
 }
 
 .verify-pill--pending {
@@ -497,17 +497,17 @@ export default {
 
 .action-badge--sale {
 	background: var(--color-success);
-	color: var(--color-main-background);
+	color: var(--color-success-text);
 }
 
 .action-badge--void {
 	background: var(--color-error);
-	color: var(--color-main-background);
+	color: var(--color-error-text);
 }
 
 .action-badge--refund {
 	background: var(--color-warning);
-	color: var(--color-main-text);
+	color: var(--color-warning-text);
 }
 
 .action-badge--no-sale,

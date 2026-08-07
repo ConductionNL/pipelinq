@@ -120,14 +120,18 @@
 		<table v-else class="kassakoppeling-audit-list__table" data-testid="kassakoppeling-audit-table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Time') }}</th>
-					<th>{{ t('pipelinq', 'Operator') }}</th>
-					<th>{{ t('pipelinq', 'Register') }}</th>
-					<th>{{ t('pipelinq', 'Action') }}</th>
-					<th class="num">
+					<th scope="col">{{ t('pipelinq', 'Time') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Operator') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Register') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Action') }}</th>
+					<th scope="col" class="num">
 						{{ t('pipelinq', 'Amount') }}
 					</th>
-					<th>{{ t('pipelinq', 'Verification') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Verification') }}</th>
+					<!-- Chevron affordance column: presentational only, so it stays
+					     empty and carries no accessible name. `scope="col"` still
+					     declares the association direction — WCAG 2.2 AA SC 1.3.1. -->
+					<th scope="col" class="chevron-col" />
 				</tr>
 			</thead>
 			<tbody>
@@ -152,6 +156,9 @@
 						<span :class="['verify-badge', `verify-badge--${verifyClass(entry.verified)}`]">
 							{{ verifyLabel(entry.verified) }}
 						</span>
+					</td>
+					<td class="chevron-col">
+						<ChevronRight :size="20" class="kassakoppeling-audit-list__chevron" />
 					</td>
 				</tr>
 			</tbody>
@@ -183,6 +190,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Download from 'vue-material-design-icons/Download.vue'
+import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 import BelastingdienstExportDialog from '../../dialogs/BelastingdienstExportDialog.vue'
 
 const PAGE_SIZE = 25
@@ -208,6 +216,7 @@ export default {
 		NcLoadingIcon,
 		Refresh,
 		Download,
+		ChevronRight,
 		BelastingdienstExportDialog,
 	},
 	data() {
@@ -560,7 +569,8 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.kassakoppeling-audit-list__row {
+.kassakoppeling-audit-list__row,
+.kassakoppeling-audit-list__row td {
 	cursor: pointer;
 }
 
@@ -577,6 +587,16 @@ export default {
 	text-align: right;
 }
 
+.kassakoppeling-audit-list__table .chevron-col {
+	width: 1%;
+	padding-inline: 4px;
+}
+
+.kassakoppeling-audit-list__chevron {
+	display: block;
+	color: var(--color-text-maxcontrast);
+}
+
 .action-badge,
 .verify-badge {
 	display: inline-block;
@@ -588,17 +608,17 @@ export default {
 
 .action-badge--sale {
 	background: var(--color-success);
-	color: var(--color-main-background);
+	color: var(--color-success-text);
 }
 
 .action-badge--void {
 	background: var(--color-error);
-	color: var(--color-main-background);
+	color: var(--color-error-text);
 }
 
 .action-badge--refund {
 	background: var(--color-warning);
-	color: var(--color-main-text);
+	color: var(--color-warning-text);
 }
 
 .action-badge--no-sale,
@@ -609,12 +629,12 @@ export default {
 
 .verify-badge--ok {
 	background: var(--color-success);
-	color: var(--color-main-background);
+	color: var(--color-success-text);
 }
 
 .verify-badge--fail {
 	background: var(--color-error);
-	color: var(--color-main-background);
+	color: var(--color-error-text);
 }
 
 .verify-badge--pending {
