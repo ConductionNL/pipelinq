@@ -119,10 +119,9 @@ class ComplaintSlaService
             return null;
         }
 
+        $start = new DateTimeImmutable();
         if ($from !== null) {
             $start = new DateTimeImmutable($from->format('Y-m-d\TH:i:sP'));
-        } else {
-            $start = new DateTimeImmutable();
         }
 
         // DateTimeImmutable::modify() always returns static here; assert confirms it.

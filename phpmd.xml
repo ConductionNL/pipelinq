@@ -97,7 +97,12 @@
     <rule ref="rulesets/unusedcode.xml/UnusedPrivateField"/>
     <rule ref="rulesets/unusedcode.xml/UnusedLocalVariable"/>
     <rule ref="rulesets/unusedcode.xml/UnusedPrivateMethod"/>
-    <rule ref="rulesets/unusedcode.xml/UnusedFormalParameter">
-        <exclude-pattern>*Migration*</exclude-pattern>
-    </rule>
+    <!-- UnusedFormalParameter is NOT in this ruleset. It lives alone in
+         phpmd-unusedparams.xml, which carries a TOP-LEVEL exclude-pattern for
+         lib/BackgroundJob (OCP\BackgroundJob\TimedJob mandates run($argument)).
+         PHPMD honours <exclude-pattern> only as a direct child of <ruleset>, so
+         the `*Migration*` pattern that used to be nested here excluded nothing -
+         and this repo has no lib/Migration to exclude in the first place. Both
+         legs run from the `phpmd` composer script; neither can short-circuit the
+         other. See ConductionNL/.github#155. -->
 </ruleset>

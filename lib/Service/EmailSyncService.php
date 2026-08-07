@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTime;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
@@ -123,10 +124,9 @@ class EmailSyncService
      */
     public function setSyncEnabled(string $userId, bool $enabled): void
     {
+        $value = 'false';
         if ($enabled === true) {
             $value = 'true';
-        } else {
-            $value = 'false';
         }
 
         $this->config->setUserValue(
@@ -194,7 +194,7 @@ class EmailSyncService
             $userId,
             'pipelinq',
             'email_sync_last',
-            (new \DateTime())->format(\DateTime::ATOM),
+            (new DateTime())->format(DateTime::ATOM),
         );
     }//end updateLastSyncTime()
 

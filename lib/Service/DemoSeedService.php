@@ -256,22 +256,13 @@ class DemoSeedService
                     }
                 }
 
-                if ($ticketType !== null) {
-                    // Ticket sections write the unified schema with the
-                    // discriminator forced on by TicketService.
-                    $saved = $this->ticketService->save(
-                        ticketType: $ticketType,
-                        payload: $data,
-                    );
-                } else {
-                    $saved = $objectService->saveObject(
-                        $data,
-                        [],
-                        $registerId,
-                        $schemaIds[$schemaKey],
-                        null
-                    );
-                }
+                $saved = $this->saveSeedObject(
+                    objectService: $objectService,
+                    registerId: $registerId,
+                    schemaId: $schemaIds[$schemaKey],
+                    data: $data,
+                    ticketType: $ticketType,
+                );
 
                 $uuids[$section.':'.$definition['key']] = (string) $saved->getUuid();
                 $created[$section]++;
@@ -350,6 +341,46 @@ class DemoSeedService
 
         return ['success' => true, 'removed' => $removed, 'retained' => $retained];
     }//end remove()
+
+    /**
+     * Persist one seeded demo object and return the saved entity.
+     *
+     * Ticket sections write the unified schema through TicketService, which
+     * forces the `ticketType` discriminator on; every other section writes the
+     * section's own schema directly. Exactly one write happens per call.
+     *
+     * @param object               $objectService The OpenRegister object service.
+     * @param string               $registerId    The register to write into.
+     * @param string               $schemaId      The schema for this section.
+     * @param array<string, mixed> $data          The object payload.
+     * @param string|null          $ticketType    The ticket discriminator, or null for a plain write.
+     *
+     * @return object The saved entity.
+     *
+     * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+     */
+    private function saveSeedObject(
+        object $objectService,
+        string $registerId,
+        string $schemaId,
+        array $data,
+        ?string $ticketType,
+    ): object {
+        if ($ticketType !== null) {
+            return $this->ticketService->save(
+                ticketType: $ticketType,
+                payload: $data,
+            );
+        }
+
+        return $objectService->saveObject(
+            $data,
+            [],
+            $registerId,
+            $schemaId,
+            null
+        );
+    }//end saveSeedObject()
 
     /**
      * Resolve the ObjectService, register id, schema ids and seed definitions.
