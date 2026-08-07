@@ -76,6 +76,23 @@ jobs:
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
+      # Pinned, because the shared workflow's DEFAULT is '["stable31", "stable32"]'
+      # and stable31 CANNOT WORK here. `additional-apps` below installs
+      # openregister, which declares min-version="32" (its
+      # lib/ContextChat/ContentProvider.php implements
+      # OCP\ContextChat\IContentProvider, absent from core before NC32). On NC31
+      # the install step logs
+      #   App "Open Register" cannot be installed because it is not compatible
+      #   with this version of the server.
+      # and then continues, because the enable failure is only a ::warning::. The
+      # run therefore proceeded without its data layer and every
+      # /apps/openregister/... call returned Nextcloud's HTML 404 page.
+      #
+      # Order matters as much as membership: newman, playwright and
+      # journeydoc-capture all check out `fromJSON(nextcloud-test-refs)[0]` as
+      # their single server, so with the inherited default those three jobs ran
+      # entirely on the version openregister cannot load.
+      nextcloud-test-refs: '["stable32"]'
       # Strict static-analysis gate suite (composer check:strict equivalent).
       # These mirror the shared-workflow defaults (all true) but are pinned
       # here explicitly so the strict-gate posture is self-documenting and
