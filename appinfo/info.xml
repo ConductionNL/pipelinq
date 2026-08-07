@@ -86,7 +86,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         Declaring 28 advertised a range this app cannot deliver.
         Same defect as openconnector#1173.
         -->
-        <nextcloud min-version="32" max-version="34"/>
+        <nextcloud min-version="28" max-version="34"/>
         <!-- App dependency (not expressible in app-info.xsd): OpenRegister
              (all Pipelinq data — clients, contacts, leads, requests, contracts,
              contactmomenten — is stored as OpenRegister registers/schemas; see
