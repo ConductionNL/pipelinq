@@ -74,7 +74,19 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
     <dependencies>
         <php min-version="8.3"/>
-        <nextcloud min-version="28" max-version="34"/>
+        <!--
+        min-version is 32, NOT 28, because the OpenRegister dependency noted below is
+        HARD (src/manifest.json lists "openregister" as a required dependency; the
+        optional ones there carry "required": false) and openregister declares
+        min-version="32" — its lib/ContextChat/ContentProvider.php implements
+        OCP\ContextChat\IContentProvider, an interface core does not have before
+        Nextcloud 32. On NC 28-31 openregister refuses to install ("cannot be
+        installed because it is not compatible with this version of the server") and
+        all Pipelinq data is OpenRegister objects, so the app cannot function there.
+        Declaring 28 advertised a range this app cannot deliver.
+        Same defect as openconnector#1173.
+        -->
+        <nextcloud min-version="32" max-version="34"/>
         <!-- App dependency (not expressible in app-info.xsd): OpenRegister
              (all Pipelinq data — clients, contacts, leads, requests, contracts,
              contactmomenten — is stored as OpenRegister registers/schemas; see
