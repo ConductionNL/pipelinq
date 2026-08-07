@@ -20,7 +20,7 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { openApp, navClick } from '../helpers/pipelinq'
+import { openApp, navClick, clickHeaderAction } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#display-transaction-list-with-key-columns
 test('POS transaction list (Kassabon) page renders the real list shell', async ({ page }) => {
@@ -58,9 +58,20 @@ test('Kassabon (POS) page exposes the new-transaction entry point and nav', asyn
 	// robust than goto, which can reset the manifest router to Dashboard).
 	await navClick(page, 'Kassabon', /#\/pos/)
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
-	// The new-draft-transaction entry point is the CnActionsBar primary CTA
-	// ("Add") that calls createNew() → PosTransactionNew route.
-	await expect(page.locator('[data-testid="cn-cta-primary"]').first()).toBeVisible({ timeout: 10000 })
+
+	// CORRECTED 2026-08-06. This asserted `[data-testid="cn-cta-primary"]`.
+	// CnActionsBar emits that element ONLY when `showAdd` is true, and the
+	// PosTransactions page sets `showAdd: false` in src/manifest.json — it
+	// declares the create entry point as a `headerActions[]` entry labelled
+	// "Nieuwe transactie" instead, and CnActionsBar renders manifest header
+	// actions inside the overflow "Actions" menu (verified in
+	// @conduction/nextcloud-vue 2.2.0-vue3.3 dist/). So the CTA was absent by
+	// design and this assertion could not pass on a correct build.
+	//
+	// Clicking through is what proves the entry point WORKS rather than merely
+	// exists: the handler is `navigate` → route PosTransactionNew.
+	await clickHeaderAction(page, /Nieuwe transactie/i)
+	await expect(page).toHaveURL(/pos\/new/, { timeout: 10000 })
 })
 
 /*

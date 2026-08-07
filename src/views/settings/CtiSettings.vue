@@ -11,7 +11,17 @@
 	<NcSettingsSection
 		:name="t('pipelinq', 'CTI integration')"
 		:description="t('pipelinq', 'Configure the telephony platform that powers screen-pop and click-to-dial.')">
-		<form class="cti-settings" @submit.prevent="save">
+		<!--
+		  - `data-testid` on the FORM, not the section: NcSettingsSection's own
+		  - classes come from a CSS module in @nextcloud/vue 9, so there is no
+		  - stable selector for the section wrapper. This gives the CTI controls a
+		  - handle that survives a component major — the sibling CtiEventLog
+		  - already does the same with `cti-event-log-table`. It matters here
+		  - because the pipelinq admin page renders TWO "Test connection" buttons
+		  - (this one and XWiki's), and an unscoped match would let this whole
+		  - section disappear while the assertion stayed green on XWiki's button.
+		  -->
+		<form class="cti-settings" data-testid="cti-settings" @submit.prevent="save">
 			<NcSelect
 				v-model="config.platform"
 				:options="platformOptions"

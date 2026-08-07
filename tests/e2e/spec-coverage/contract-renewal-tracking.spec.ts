@@ -37,26 +37,57 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { openApp, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
+import { openApp, navClick, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
 
 test('Contracts: the Contracts list page renders from the manifest', async ({ page }) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
+	await navClick(page, 'Contracts', /\/contracts/)
 
-	await page.goto('/apps/pipelinq/contracts')
 	const content = page.locator('#content-vue')
-	await expect(content).toBeVisible({ timeout: 15000 })
+	await expect(content.getByRole('heading', { name: 'Contracts' }).first()).toBeVisible({ timeout: 15000 })
+	// `endDate` is the column the renewal-window migration path depends on (see
+	// the REMOVED "Renewals Due Widget" requirement below), so its presence is
+	// the contract this page owes the retired dashboard tile.
+	await expect(content.getByRole('columnheader', { name: /end ?date/i }).first()).toBeVisible({ timeout: 15000 })
 
 	await assertNoHardError(page)
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
-test('Dashboard: MRR KPI card and Renewals-due widget render', async ({ page }) => {
+/*
+ * RETARGETED 2026-08-06. This test asserted two things that do not exist.
+ *
+ *  - `'Recurring revenue (MRR)'` — the manifest widget's title is
+ *    `"Recurring revenue"`. The parenthesised "(MRR)" was never rendered text.
+ *  - `'Renewals due'` — a REMOVED requirement. `recurring-revenue-runrate-widget`
+ *    retired `RenewalsDueWidget` together with the bespoke MRR widget, deleting
+ *    the widget entry, its layout entry, the `widget-renewals-due` slot mapping
+ *    and the component. The string does not occur anywhere under `src/`. Its
+ *    documented migration is: "Renewal-window information remains discoverable
+ *    via the contract list (ordered by endDate)" — asserted in the test above.
+ *
+ * So the tile assertion is corrected to the real title, and the second half is
+ * replaced by the behaviour the same change SPECIFIES for a CI instance:
+ * shillinq is not installed there, and the spec requires the tile to show the
+ * "Install shillinq" call-to-action and NOT a locally computed number.
+ */
+test('Dashboard: the recurring-revenue tile renders and defers to shillinq', async ({ page }) => {
 	await openApp(page)
 
 	const content = page.locator('#content-vue')
-	await expect(content.getByText('Recurring revenue (MRR)').first()).toBeVisible({ timeout: 15000 })
-	await expect(content.getByText('Renewals due').first()).toBeVisible()
+	// The tile's layout slot sets `showTitle: false`, so the manifest `title`
+	// ("Recurring revenue") is never painted — and because the widget declares
+	// `requiresApp: "shillinq"` and shillinq is absent on CI, CnDashboardPage
+	// replaces the body with the install CTA rather than a number. That is the
+	// SPEC'd behaviour, verbatim: "GIVEN shillinq is not installed … THEN the
+	// recurring-revenue tile MUST show the 'Install shillinq' call-to-action AND
+	// MUST NOT display a locally-computed run-rate number."
+	await expect(content.getByText('Install shillinq').first()).toBeVisible({ timeout: 15000 })
+	// The retired local roll-up formatted its figure as EUR currency; asserting
+	// its absence is what makes "MUST NOT display a locally-computed number"
+	// testable rather than decorative.
+	await expect(content.locator('.cn-dashboard-page__requires-app')).not.toContainText('€')
 
 	await assertNoHardError(page)
 })
