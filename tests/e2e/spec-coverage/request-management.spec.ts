@@ -3,65 +3,105 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e coverage for openspec/specs/request-management/spec.md
- * UI-observable scenarios: list view, create form, navigation, visual controls.
- * Backend/API/service scenarios excluded per-scenario below.
+ *
+ * RETARGETED 2026-08-06. This file was the clearest case in the suite of tests
+ * that could not fail.
+ *
+ * `unify-ticket-supertype` removed the `/requests` route: request tickets live
+ * on the unified Tickets index (src/manifest.json page id `Tickets`, route
+ * `/tickets`) behind the "Tickets" `quickFilters[]` tab. Eight of the ten tests
+ * here did `page.goto('/apps/pipelinq/#/requests')` and then asserted only that
+ * the body did NOT contain "Internal Server Error" / "Uncaught Error", or that
+ * `main` was visible. With no `/requests` route the hash router falls back to
+ * the Dashboard — and the Dashboard satisfies every one of those assertions.
+ * They reported green about a page that had not existed for weeks. Only the two
+ * that named the route (`toHaveURL(/requests/)`) and the sidebar entry
+ * ("Requests") were honest enough to go red.
+ *
+ * Each test below now asserts something ONLY the request surface satisfies.
  */
 
 import { test, expect } from '@playwright/test'
-import { openApp, navClick } from '../helpers/pipelinq'
+import {
+	openApp,
+	navClick,
+	clickQuickFilter,
+	trackPipelinqErrors,
+	assertNoHardError,
+	dismissSupportDialog,
+} from '../helpers/pipelinq'
+
+/** Open the Tickets workspace narrowed to the request subtype. */
+async function openRequests(page: import('@playwright/test').Page): Promise<void> {
+	await openApp(page)
+	await navClick(page, 'Tickets', /\/tickets/)
+	await clickQuickFilter(page, 'Tickets')
+}
 
 // @e2e openspec/specs/request-management/spec.md#default-list-display
-test('requests list page renders', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/requests')
-	await expect(page).toHaveURL(/requests/, { timeout: 10000 })
-	await expect(page.locator('body')).not.toContainText('Internal Server Error')
+test('requests list renders the seeded request tickets', async ({ page }) => {
+	await openRequests(page)
+
+	const content = page.locator('#content-vue')
+	await expect(content.locator('table, .cn-data-table, [data-testid="cn-data-table"]').first()).toBeVisible()
+
+	// Asserted per ROW rather than by column index: CnDataTable can prepend a
+	// selection column, so `td:first-child` is not reliably the ticketType cell.
+	const rows = content.locator('table tbody tr')
+	await expect(rows.first()).toBeVisible()
+	const count = await rows.count()
+	expect(count, 'the Tickets tab must show at least one seeded request').toBeGreaterThan(0)
+	for (let i = 0; i < count; i++) {
+		await expect(rows.nth(i)).toContainText(/request/i)
+	}
 })
 
 // @e2e openspec/specs/request-management/spec.md#create-a-minimal-request
-test('request create form has title field', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/requests')
-	const addBtn = page.getByRole('button', { name: /Add|New Request/i }).first()
-	if (await addBtn.isVisible().catch(() => false)) {
-		await addBtn.click()
-		const titleField = page.getByRole('textbox', { name: /Title/i }).first()
-		await expect(titleField).toBeVisible({ timeout: 10000 })
-	} else {
-		// Navigate directly to new form
-		await page.goto('/apps/pipelinq/#/requests/new').catch(() => {})
-		await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
-	}
+test('request create form exposes a title field', async ({ page }) => {
+	await openRequests(page)
+	await dismissSupportDialog(page)
+
+	await page.locator('#content-vue').getByRole('button', { name: 'Add Ticket' }).click()
+	const dialog = page.locator('.modal-container, [role="dialog"]').first()
+	await expect(dialog).toBeVisible({ timeout: 10000 })
+	// `title` is REQUIRED on the ticket schema, so the create form must offer it.
+	await expect(dialog.getByRole('textbox', { name: /title/i }).first()).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#validation---title-is-required
-test('request form save disabled without title', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/requests')
-	const addBtn = page.getByRole('button', { name: /Add|New/i }).first()
-	if (await addBtn.isVisible().catch(() => false)) {
-		await addBtn.click()
-		const createBtn = page.getByRole('button', { name: /Create|Save/i }).first()
-		if (await createBtn.isVisible().catch(() => false)) {
-			await expect(createBtn).toBeDisabled()
-		}
-	}
+test('request create form offers the required ticketType discriminator', async ({ page }) => {
+	await openRequests(page)
+	await dismissSupportDialog(page)
+
+	await page.locator('#content-vue').getByRole('button', { name: 'Add Ticket' }).click()
+	const dialog = page.locator('.modal-container, [role="dialog"]').first()
+	await expect(dialog).toBeVisible({ timeout: 10000 })
+	// `ticketType` is the second REQUIRED field on the schema. It is what makes
+	// this one form able to create a request, a complaint or a contactmoment,
+	// so its presence is the contract this unified surface stands on.
+	await expect(dialog.getByText(/ticket ?type/i).first()).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#set-channel-during-creation
-test('request form channel field visible', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/requests')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+test('request list surfaces the channel column', async ({ page }) => {
+	await openRequests(page)
+	// `channel` is a declared column on the Tickets index and the seeded
+	// requests carry web / telefoon / email values.
+	await expect(page.locator('#content-vue table tbody')).toContainText(/web|telefoon|email|balie/i, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#set-priority-during-creation
-test('request list page accessible from navigation', async ({ page }) => {
+test('request list is reachable from the sidebar', async ({ page }) => {
 	await openApp(page)
-	await navClick(page, 'Requests', /#\/requests/)
+	await navClick(page, 'Tickets', /#\/tickets/)
+	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Tickets' }).first()).toBeVisible()
 })
 
 // @e2e openspec/specs/request-management/spec.md#priority-visual-indicators
-test('requests page loads without error', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/requests')
-	await page.waitForTimeout(1000)
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+test('request list surfaces the priority column', async ({ page }) => {
+	await openRequests(page)
+	// The seeded requests span normal / high / low priorities.
+	await expect(page.locator('#content-vue table tbody')).toContainText(/normal|high|low|urgent/i, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#request-status-distribution-on-dashboard
@@ -74,22 +114,52 @@ test('requests by status widget on dashboard', async ({ page }) => {
 })
 
 // @e2e openspec/specs/request-management/spec.md#request-card-displays-key-information
-test('request page main content renders', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/requests')
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
+test('request rows carry the seeded request titles', async ({ page }) => {
+	await openRequests(page)
+	// A concrete seeded record, not merely "a table exists".
+	await expect(page.locator('#content-vue table tbody')).toContainText('[Demo]', { timeout: 15000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#request-without-queue
-test('requests page renders correctly', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/requests')
-	await expect(page.locator('body')).not.toContainText('Uncaught Error', { timeout: 10000 })
+test('request list renders without pipelinq console errors', async ({ page }) => {
+	const errs = trackPipelinqErrors(page)
+	await openRequests(page)
+	await assertNoHardError(page)
+	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
 // @e2e openspec/specs/request-management/spec.md#bulk-actions-bar-visibility
-test('request list page fully loads', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/requests')
-	await page.waitForLoadState('networkidle').catch(() => {})
-	await expect(page.locator('body')).not.toContainText('Internal Server Error')
+test('request list exposes the row-selection checkbox that gates bulk actions', async ({ page }) => {
+	await openRequests(page)
+	// The bulk-actions bar is gated on a row selection, so the selection
+	// affordance itself is the observable precondition.
+	const firstRowCheckbox = page.locator('#content-vue table tbody tr').first().locator('input[type="checkbox"]').first()
+	await expect(firstRowCheckbox).toBeVisible({ timeout: 15000 })
+})
+
+// @e2e openspec/specs/request-management/spec.md#pagination
+test('the ticket list paginates and page 2 shows different rows', async ({ page }) => {
+	await openApp(page)
+	await navClick(page, 'Tickets', /\/tickets/)
+
+	// The ALL tab holds every subtype: the base register's 7 example tickets plus
+	// the seeded 8 requests + 3 complaints + 12 contactmomenten — 30 rows against
+	// a page size of 20, so `effectivePagination.pages > 1` and CnIndexPage
+	// renders CnPagination. This is the one index in the app where the paging
+	// contract is genuinely exercisable; asserting it on Queues (6 rows, one
+	// page) asserted a control the component correctly does not render.
+	const content = page.locator('#content-vue')
+	const firstRowBefore = await content.locator('table tbody tr').first().innerText()
+
+	const next = content.locator('.cn-index-page__pagination').getByRole('button', { name: 'Next' }).first()
+	await expect(next).toBeVisible({ timeout: 15000 })
+	await next.click()
+
+	// A pagination control that renders but does not change the result set is a
+	// dead control, so assert the rows actually moved.
+	await expect
+		.poll(async () => await content.locator('table tbody tr').first().innerText(), { timeout: 15000 })
+		.not.toBe(firstRowBefore)
 })
 
 /*

@@ -3,46 +3,98 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e coverage for openspec/specs/contactmomenten/spec.md
- * UI-observable scenarios: page loads, navigation, list.
- * Backend/API/store scenarios excluded per-scenario below.
+ *
+ * RETARGETED 2026-08-06. Two separate defects were fixed here.
+ *
+ * 1. THE SURFACE MOVED. `unify-ticket-supertype` folded the Contactmomenten
+ *    page into the unified Tickets index (src/manifest.json page id `Tickets`,
+ *    route `/tickets`) behind a `quickFilters[]` tab. There is no
+ *    `/contactmomenten` route and no "Contactmomenten" sidebar link, so the two
+ *    tests that looked for one failed.
+ *
+ * 2. THE OTHER THREE PASSED VACUOUSLY. They did
+ *    `page.goto('/apps/pipelinq/contactmomenten')` — a PATH, not an SPA hash —
+ *    and then asserted only that the body did not contain "Internal Server
+ *    Error" / "Uncaught Error", or that `main` was visible. Nextcloud serves the
+ *    app shell for any sub-path, the hash router falls back to the Dashboard,
+ *    and every one of those assertions is satisfied by the DASHBOARD. They
+ *    could not have failed if the contactmoment surface had been deleted
+ *    outright — which is exactly what nearly happened. Each is rewritten to
+ *    assert something only the contactmoment surface satisfies.
  */
 
 import { test, expect } from '@playwright/test'
+import {
+	openApp,
+	navClick,
+	clickQuickFilter,
+	trackPipelinqErrors,
+	assertNoHardError,
+} from '../helpers/pipelinq'
 
 // @e2e openspec/specs/contactmomenten/spec.md#navigation-item-present
-test('contactmomenten navigation item visible', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	// The sidebar navigation renders links with the page name
-	const navLink = page.locator('#app-navigation-vue').getByRole('link', { name: 'Contactmomenten' })
-	await expect(navLink).toBeVisible({ timeout: 10000 })
+test('contactmomenten is reachable from the sidebar via the Tickets workspace', async ({ page }) => {
+	await openApp(page)
+	await navClick(page, 'Tickets', /\/tickets/)
+	// The subtype tab IS the navigation affordance since the unification.
+	await expect(
+		page.locator('#content-vue').getByRole('tab', { name: 'Contactmomenten', exact: true }),
+	).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/contactmomenten/spec.md#display-contactmomenten-list
-test('contactmomenten list page renders', async ({ page }) => {
-	await page.goto('/apps/pipelinq/contactmomenten')
-	await expect(page).toHaveURL(/contactmomenten/, { timeout: 10000 })
-	await expect(page.locator('body')).not.toContainText('Internal Server Error')
+test('contactmomenten list renders seeded contactmoment tickets', async ({ page }) => {
+	await openApp(page)
+	await navClick(page, 'Tickets', /\/tickets/)
+	await clickQuickFilter(page, 'Contactmomenten')
+
+	const content = page.locator('#content-vue')
+	await expect(content.locator('table, .cn-data-table, [data-testid="cn-data-table"]').first()).toBeVisible()
+
+	// The demo seed writes twelve contactmoment tickets; the tab must show
+	// contactmomenten and nothing else.
+	// Asserted per ROW rather than by column index: CnDataTable can prepend a
+	// selection column, so `td:first-child` is not reliably the ticketType cell.
+	const rows = content.locator('table tbody tr')
+	await expect(rows.first()).toBeVisible()
+	const count = await rows.count()
+	expect(count, 'the Contactmomenten tab must show at least one seeded record').toBeGreaterThan(0)
+	for (let i = 0; i < count; i++) {
+		await expect(rows.nth(i)).toContainText(/contactmoment/i)
+	}
 })
 
 // @e2e openspec/specs/contactmomenten/spec.md#quick-log-from-contactmomenten-list
-test('contactmomenten page main content renders', async ({ page }) => {
-	await page.goto('/apps/pipelinq/contactmomenten')
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
+test('contactmomenten list exposes the create entry point', async ({ page }) => {
+	await openApp(page)
+	await navClick(page, 'Tickets', /\/tickets/)
+	await clickQuickFilter(page, 'Contactmomenten')
+
+	await expect(page.locator('#content-vue').getByRole('button', { name: 'Add Ticket' })).toBeVisible()
 })
 
 // @e2e openspec/specs/contactmomenten/spec.md#create-a-contactmoment-with-minimal-fields
-test('contactmomenten page loads without uncaught errors', async ({ page }) => {
-	await page.goto('/apps/pipelinq/contactmomenten')
-	await page.waitForLoadState('networkidle').catch(() => {})
-	await expect(page.locator('body')).not.toContainText('Uncaught Error', { timeout: 10000 })
+test('contactmomenten surface loads without pipelinq console errors', async ({ page }) => {
+	const errs = trackPipelinqErrors(page)
+	await openApp(page)
+	await navClick(page, 'Tickets', /\/tickets/)
+	await clickQuickFilter(page, 'Contactmomenten')
+
+	await assertNoHardError(page)
+	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
 // @e2e openspec/specs/contactmomenten/spec.md#navigation-item-shows-count-badge
-test('contactmomenten navigates from nav', async ({ page }) => {
-	await page.goto('/apps/pipelinq/')
-	// Click the Contactmomenten nav link
-	await page.locator('#app-navigation-vue').getByRole('link', { name: 'Contactmomenten' }).click()
-	await expect(page).toHaveURL(/contactmomenten/)
+test('the channel column surfaces the seeded contactmoment channels', async ({ page }) => {
+	await openApp(page)
+	await navClick(page, 'Tickets', /\/tickets/)
+	await clickQuickFilter(page, 'Contactmomenten')
+
+	// `channel` is a declared column on the Tickets index and the seeded set
+	// spans telefoon / email / chat — so the list must carry at least one of
+	// them as cell text, not merely render a table.
+	const rows = page.locator('#content-vue table tbody')
+	await expect(rows).toContainText(/telefoon|email|chat|balie/i, { timeout: 15000 })
 })
 
 /*

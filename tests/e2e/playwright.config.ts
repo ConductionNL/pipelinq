@@ -105,6 +105,18 @@ export default defineConfig({
 	fullyParallel: true,
 	retries: process.env.CI ? 1 : 0,
 	workers: process.env.CI ? 6 : 1,
+	// ── WHY A globalTimeout LIVES HERE ──────────────────────────────────────
+	// The shared workflow caps this job at `timeout-minutes: 45`. That cap is a
+	// CANCELLATION, and a cancelled job is not a verdict: Playwright never prints
+	// a tally, the `if: failure()` trace upload does not run, and `gh pr checks`
+	// renders the cancellation as a plain "fail" — indistinguishable from a real
+	// one. A run that hits the cap therefore tells you nothing at all.
+	//
+	// A globalTimeout INSIDE the config makes Playwright stop itself first and
+	// exit with a reported tally and its artifacts, so the run still says
+	// something. 38 minutes leaves ~7 minutes of the job budget for the reporter
+	// and both upload steps.
+	globalTimeout: 38 * 60 * 1000,
 	reporter: [
 		['html', { open: 'never', outputFolder: path.join(APP_ROOT, 'playwright-report') }],
 		['junit', { outputFile: path.join(APP_ROOT, 'test-results', 'results.xml') }],
@@ -118,7 +130,12 @@ export default defineConfig({
 		// whole suite at the SHARED dev container.
 		baseURL: resolveBaseUrl(),
 		storageState: STORAGE_STATE,
-		trace: 'on-first-retry',
+		// `on-first-retry` writes a trace only for the SECOND attempt. Every
+		// failure that reproduces identically on retry is fine, but a failure
+		// that does NOT reproduce — the ones worth a trace — leaves no record of
+		// the attempt that actually failed. `retain-on-failure` traces every
+		// attempt and keeps the ones that failed.
+		trace: 'retain-on-failure',
 		screenshot: 'only-on-failure',
 	},
 
