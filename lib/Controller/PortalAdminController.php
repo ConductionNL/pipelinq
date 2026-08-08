@@ -36,6 +36,7 @@ use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalTenantService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -78,6 +79,7 @@ class PortalAdminController extends Controller
      *
      * @return JSONResponse The saved config, or an error.
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function saveConfig(): JSONResponse
     {
         return $this->adminGuarded(
@@ -99,6 +101,7 @@ class PortalAdminController extends Controller
      *
      * @return JSONResponse The accounts.
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function accounts(): JSONResponse
     {
         return $this->adminGuarded(
@@ -125,6 +128,7 @@ class PortalAdminController extends Controller
      *
      * @return JSONResponse The events.
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function auditEvents(): JSONResponse
     {
         return $this->adminGuarded(

@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -66,6 +67,7 @@ class BerichtenboxAdminController extends Controller
      *
      * @return JSONResponse
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function retry(string $id): JSONResponse
     {
         try {
@@ -121,6 +123,7 @@ class BerichtenboxAdminController extends Controller
      *
      * @spec exclude mechanical phpmd cleanup — counter tally extracted to a helper, behaviour unchanged
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function stats(): JSONResponse
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

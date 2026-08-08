@@ -29,6 +29,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\PosStaffService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -86,6 +87,7 @@ class PosStaffController extends Controller
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function index(): JSONResponse
     {
         $forbidden = $this->requireAdmin();
@@ -108,6 +110,7 @@ class PosStaffController extends Controller
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function show(string $id): JSONResponse
     {
         $forbidden = $this->requireAdmin();
@@ -133,6 +136,7 @@ class PosStaffController extends Controller
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function create(): JSONResponse
     {
         $forbidden = $this->requireAdmin();
@@ -155,6 +159,7 @@ class PosStaffController extends Controller
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function update(string $id): JSONResponse
     {
         $forbidden = $this->requireAdmin();
@@ -182,6 +187,7 @@ class PosStaffController extends Controller
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
      */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
     public function destroy(string $id): JSONResponse
     {
         $forbidden = $this->requireAdmin();
