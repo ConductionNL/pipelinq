@@ -94,7 +94,7 @@ async function go(page: Page, route: string): Promise<void> {
 		url = `${APP}${tail}`
 	}
 	await page.goto(url).catch(() => { /* tolerate a 404 — caller decides */ })
-	await page.waitForLoadState('networkidle').catch(() => { /* idle never fires on some pages */ })
+	await page.waitForLoadState('domcontentloaded').catch(() => { /* tolerate a navigation that never settles */ })
 	await dismissOverlays(page)
 	await page.waitForTimeout(900)
 }
@@ -215,7 +215,7 @@ test.describe('docs: user track', () => {
 		// the admin settings page. Capture the admin page as stand-in
 		// for the per-user surface until that route is wired in dev.
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'user', '07-settings.png')
@@ -299,7 +299,7 @@ test.describe('docs: admin track', () => {
 		// the admin settings page (Pipelines section) and on the in-app
 		// /pipelines route. Capture both.
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '01-admin-settings.png')
@@ -310,7 +310,7 @@ test.describe('docs: admin track', () => {
 	test('A2 configure request types', async ({ page }) => {
 		// docs/user-guide/admin/02-request-types.md
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '02-request-types.png')
@@ -320,7 +320,7 @@ test.describe('docs: admin track', () => {
 		// docs/user-guide/admin/03-permissions.md — Agent Profiles
 		// section on the admin page.
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		const profiles = page.getByRole('heading', { name: /Agent Profiles/i }).first()
@@ -335,7 +335,7 @@ test.describe('docs: admin track', () => {
 	test('A4 configure CRM workflows and automation', async ({ page }) => {
 		// docs/user-guide/admin/04-configure-automation.md
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '04-admin-settings.png')
@@ -350,7 +350,7 @@ test.describe('docs: admin track', () => {
 	test('A5 connect contacts and calendar sync', async ({ page }) => {
 		// docs/user-guide/admin/05-configure-sync.md
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '05-admin-settings.png')
@@ -361,7 +361,7 @@ test.describe('docs: admin track', () => {
 	test('A6 manage Pipelinq settings', async ({ page }) => {
 		// docs/user-guide/admin/06-admin-settings.md
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await page.evaluate(() => window.scrollTo(0, 0))
