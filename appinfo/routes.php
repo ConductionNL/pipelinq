@@ -6,6 +6,10 @@ return [
     'routes' => [
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
+        // Canonical ADR-066 write verb (OpenRegister AppHost dialect). POST above
+        // stays as the legacy alias for the existing frontend callers. Declared
+        // here in the settings block, BEFORE the SPA/wildcard catch-alls (ADR-016).
+        ['name' => 'settings#update', 'url' => '/api/settings', 'verb' => 'PUT'],
         ['name' => 'settings#reimport', 'url' => '/api/settings/reimport', 'verb' => 'POST'],
         // First-time setup wizard (ADR-042)
         ['name' => 'setup#status',     'url' => '/api/setup/status',            'verb' => 'GET'],
