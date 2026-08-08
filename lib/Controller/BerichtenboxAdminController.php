@@ -67,7 +67,7 @@ class BerichtenboxAdminController extends Controller
      *
      * @return JSONResponse
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function retry(string $id): JSONResponse
     {
         try {
@@ -123,7 +123,7 @@ class BerichtenboxAdminController extends Controller
      *
      * @spec exclude mechanical phpmd cleanup — counter tally extracted to a helper, behaviour unchanged
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function stats(): JSONResponse
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

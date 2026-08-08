@@ -100,7 +100,7 @@ class PosPaymentController extends Controller
      *
      * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function index(): JSONResponse
     {
         try {
@@ -119,7 +119,7 @@ class PosPaymentController extends Controller
      *
      * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function show(string $name): JSONResponse
     {
         try {
@@ -141,7 +141,7 @@ class PosPaymentController extends Controller
      * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-002
      * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function update(string $name): JSONResponse
     {
         try {
@@ -163,7 +163,7 @@ class PosPaymentController extends Controller
      *
      * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function test(string $name): JSONResponse
     {
         try {

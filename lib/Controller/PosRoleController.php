@@ -128,7 +128,7 @@ class PosRoleController extends Controller
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function create(): JSONResponse
     {
         $forbidden = $this->requireAdmin();
@@ -151,7 +151,7 @@ class PosRoleController extends Controller
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function update(string $id): JSONResponse
     {
         $forbidden = $this->requireAdmin();
@@ -178,7 +178,7 @@ class PosRoleController extends Controller
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function destroy(string $id): JSONResponse
     {
         $forbidden = $this->requireAdmin();

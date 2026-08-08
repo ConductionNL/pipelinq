@@ -79,7 +79,7 @@ class PortalAdminController extends Controller
      *
      * @return JSONResponse The saved config, or an error.
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function saveConfig(): JSONResponse
     {
         return $this->adminGuarded(
@@ -101,7 +101,7 @@ class PortalAdminController extends Controller
      *
      * @return JSONResponse The accounts.
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function accounts(): JSONResponse
     {
         return $this->adminGuarded(
@@ -128,7 +128,7 @@ class PortalAdminController extends Controller
      *
      * @return JSONResponse The events.
      */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
+    #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function auditEvents(): JSONResponse
     {
         return $this->adminGuarded(
