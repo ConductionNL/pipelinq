@@ -35,7 +35,9 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Throwable;
 
@@ -47,17 +49,42 @@ class BerichtenboxAdminController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest           $request   Request.
-     * @param ContainerInterface $container DI container.
-     * @param IAppConfig         $appConfig App config.
+     * @param IRequest           $request      Request.
+     * @param ContainerInterface $container    DI container.
+     * @param IAppConfig         $appConfig    App config.
+     * @param IUserSession       $userSession  The user session.
+     * @param IGroupManager      $groupManager The group manager.
      */
     public function __construct(
         IRequest $request,
         private readonly ContainerInterface $container,
         private readonly IAppConfig $appConfig,
+        private readonly IUserSession $userSession,
+        private readonly IGroupManager $groupManager,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
+
+    /**
+     * Reject anyone who is not a full Nextcloud administrator.
+     *
+     * #[AuthorizedAdminSetting] admits a full admin OR a user holding a
+     * delegated grant for the named settings section. These two endpoints
+     * were strictly admin-only before the attribute was added (they relied on
+     * NC's framework default), and this keeps them that way, so declaring the
+     * posture does not widen it. Mirrors PortalAdminController::assertAdmin().
+     *
+     * @return JSONResponse|null A 403 response, or null when the caller is an admin.
+     */
+    private function assertAdmin(): ?JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+            return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
+        }
+
+        return null;
+    }//end assertAdmin()
 
     /**
      * POST /api/admin/berichtenbox/message/{id}/retry — re-queue a failed
@@ -66,10 +93,17 @@ class BerichtenboxAdminController extends Controller
      * @param string $id BerichtenboxMessage uuid.
      *
      * @return JSONResponse
+     *
+     * @spec openspec/changes/archive/2026-06-14-burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-retry-012
      */
     #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function retry(string $id): JSONResponse
     {
+        $forbidden = $this->assertAdmin();
+        if ($forbidden instanceof JSONResponse) {
+            return $forbidden;
+        }
+
         try {
             $service = $this->getObjectService();
             $message = $service->find(
@@ -126,6 +160,11 @@ class BerichtenboxAdminController extends Controller
     #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function stats(): JSONResponse
     {
+        $forbidden = $this->assertAdmin();
+        if ($forbidden instanceof JSONResponse) {
+            return $forbidden;
+        }
+
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'berichtenboxMessage_schema', '');
         $counters = [

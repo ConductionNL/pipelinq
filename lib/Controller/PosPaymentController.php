@@ -44,6 +44,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -85,9 +86,31 @@ class PosPaymentController extends Controller
         private IUserSession $session,
         private IL10N $l10n,
         private LoggerInterface $logger,
+        private IGroupManager $groupManager,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
     }//end __construct()
+
+    /**
+     * Reject anyone who is not a full Nextcloud administrator.
+     *
+     * #[AuthorizedAdminSetting] admits a full admin OR a user holding a
+     * delegated grant for the named settings section. The four provider
+     * configuration endpoints were strictly admin-only before the attribute
+     * was added (they relied on NC's framework default), and this keeps them
+     * that way, so declaring the posture does not widen it.
+     *
+     * @return JSONResponse|null A 403 response, or null when the caller is an admin.
+     */
+    private function assertAdmin(): ?JSONResponse
+    {
+        $user = $this->session->getUser();
+        if ($user === null || $this->groupManager->isAdmin($user->getUID()) === false) {
+            return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
+        }
+
+        return null;
+    }//end assertAdmin()
 
     // ---------------------------------------------------------------------
     // Provider configuration (admin only — NC SecurityMiddleware default).
@@ -103,6 +126,11 @@ class PosPaymentController extends Controller
     #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function index(): JSONResponse
     {
+        $forbidden = $this->assertAdmin();
+        if ($forbidden instanceof JSONResponse) {
+            return $forbidden;
+        }
+
         try {
             return new JSONResponse(['providers' => $this->service->listProviders()]);
         } catch (Throwable $e) {
@@ -122,6 +150,11 @@ class PosPaymentController extends Controller
     #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function show(string $name): JSONResponse
     {
+        $forbidden = $this->assertAdmin();
+        if ($forbidden instanceof JSONResponse) {
+            return $forbidden;
+        }
+
         try {
             return new JSONResponse(['provider' => $this->service->getProviderConfig(name: $name)]);
         } catch (OCSBadRequestException $e) {
@@ -144,6 +177,11 @@ class PosPaymentController extends Controller
     #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function update(string $name): JSONResponse
     {
+        $forbidden = $this->assertAdmin();
+        if ($forbidden instanceof JSONResponse) {
+            return $forbidden;
+        }
+
         try {
             $data = $this->request->getParams();
             return new JSONResponse(['provider' => $this->service->updateProvider(name: $name, data: $data)]);
@@ -166,6 +204,11 @@ class PosPaymentController extends Controller
     #[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
     public function test(string $name): JSONResponse
     {
+        $forbidden = $this->assertAdmin();
+        if ($forbidden instanceof JSONResponse) {
+            return $forbidden;
+        }
+
         try {
             return new JSONResponse(['result' => $this->service->testConnection(name: $name)]);
         } catch (OCSBadRequestException $e) {
