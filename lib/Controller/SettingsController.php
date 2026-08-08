@@ -17,7 +17,6 @@
  * @link https://pipelinq.nl
  *
  * @spec openspec/specs/admin-settings/spec.md
- * @spec openspec/specs/admin-settings/spec.md
  */
 
 declare(strict_types=1);
@@ -148,17 +147,41 @@ class SettingsController extends Controller
     }//end index()
 
     /**
-     * Update Pipelinq settings.
+     * Update Pipelinq settings — the canonical instance-wide write.
      *
-     * Admin-only endpoint (requires admin settings permission). The index()
-     * method carries the read permission so non-admin users can read settings.
+     * This is the ADR-066 canonical write verb, matching
+     * {@see \OCA\OpenRegister\AppHost\Controller\GenericSettingsControllerBase::update()}.
+     * Pipelinq does NOT adopt `\OCA\OpenRegister\AppHost\Routes::standard()`,
+     * and it ships its own SettingsController — so
+     * `AppHost\Bootstrap::aliasControllerUnlessLeafDefinesIt()` never aliases
+     * the generic in and this leaf owes the method itself. Measured on the dev
+     * instance 2026-08-08, before this change: `PUT /api/settings` answered
+     * **405 Method Not Allowed** (no PUT route existed), not a 500.
+     *
+     * Scope: INSTANCE-WIDE. The write goes to
+     * {@see SettingsService::updateSettings()}, which persists the app-config
+     * map (`register`, `*_schema`, `export.*`, thresholds, …) shared by every
+     * user of the instance. It deliberately does NOT touch the per-user
+     * surface served by {@see updateUserSettings()} — that is a different
+     * scope with a different (non-admin) auth posture.
+     *
+     * Auth: the AuthorizedAdminSetting posture, identical to {@see create()}.
+     * An instance-wide write must never inherit the non-admin posture of the
+     * per-user write or of the {@see index()} read.
+     *
+     * Attribute syntax is deliberately NOT written out in this docblock:
+     * gate-5 (route-auth) decides by grepping the lines above the signature,
+     * so a comment quoting the attribute would satisfy the gate on its own and
+     * a later deletion of the real attribute would still report PASS. The
+     * posture is asserted properly, by reflection, in
+     * tests/Unit/Controller/SettingsControllerWriteTest.php.
      *
      * @return JSONResponse The updated settings response.
      *
      * @spec openspec/specs/admin-settings/spec.md
      */
     #[AuthorizedAdminSetting(Application::APP_ID)]
-    public function create(): JSONResponse
+    public function update(): JSONResponse
     {
         $data   = $this->request->getParams();
         $config = $this->settingsService->updateSettings($data);
@@ -169,6 +192,29 @@ class SettingsController extends Controller
                     'config'  => $config,
                 ]
                 );
+    }//end update()
+
+    /**
+     * Legacy alias for {@see update()} — `POST /api/settings`.
+     *
+     * The canonical AppHost route table keeps `settings#create` for the
+     * fleet's pre-ADR-066 `index/create/load` dialect, and pipelinq has live
+     * callers on it (`src/store/modules/settings.js::saveSettings()` and
+     * `src/views/settings/ExportConfigurationSettings.vue::save()`), so the
+     * POST verb stays reachable and behaviourally identical (ADR-029).
+     *
+     * The attribute is repeated deliberately: Nextcloud's SecurityMiddleware
+     * evaluates the attributes of the DISPATCHED method only, so delegating to
+     * `update()` does not carry `update()`'s posture across.
+     *
+     * @return JSONResponse The updated settings response.
+     *
+     * @spec openspec/specs/admin-settings/spec.md
+     */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
+    public function create(): JSONResponse
+    {
+        return $this->update();
     }//end create()
 
     /**
