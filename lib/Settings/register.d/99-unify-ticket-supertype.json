@@ -197,13 +197,15 @@
             "type": "string",
             "title": "Client",
             "description": "UUID reference to the associated client.",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "client"
           },
           "contact": {
             "type": "string",
             "title": "Contact",
             "description": "UUID reference to the associated contact person.",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "contact"
           },
           "assignee": {
             "type": "string",
@@ -243,7 +245,8 @@
             "type": "string",
             "title": "Parent Ticket",
             "description": "For a contactmoment: UUID of the parent request-ticket this interaction belongs to (migrated from contactmoment.request).",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "ticket"
           },
           "decisions": {
             "type": "array",
@@ -277,7 +280,8 @@
             "title": "Pipeline",
             "description": "UUID reference to the pipeline this request is tracked in (request only).",
             "format": "uuid",
-            "visible": false
+            "visible": false,
+            "$ref": "pipeline"
           },
           "stage": {
             "type": "string",
@@ -294,7 +298,8 @@
             "type": "string",
             "title": "Queue",
             "description": "UUID reference to the routing queue (request only).",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "queue"
           },
           "caseReference": {
             "type": "string",

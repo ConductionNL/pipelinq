@@ -1544,9 +1544,9 @@
           },
           "requestId": {
             "type": "string",
-            "description": "UUID reference to the associated request",
+            "description": "UUID reference to the associated request. Requests were folded into the `ticket` supertype by 99-unify-ticket-supertype, so this resolves to a ticket; the property keeps its stored name because renaming it would be a data migration.",
             "format": "uuid",
-            "$ref": "request",
+            "$ref": "ticket",
             "x-relation-filter": { "client": "@object.clientId" },
             "title": "Request"
           },
