@@ -12,11 +12,17 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			</div>
 			<div class="portal-field">
 				<label for="portal-phone">{{ t('pipelinq', 'Phone') }}</label>
-				<input id="portal-phone" v-model="form.phone" type="tel">
+				<input id="portal-phone"
+					v-model="form.phone"
+					type="tel"
+					autocomplete="tel">
 			</div>
 			<div class="portal-field">
 				<label for="portal-address">{{ t('pipelinq', 'Address') }}</label>
-				<input id="portal-address" v-model="form.address" type="text">
+				<input id="portal-address"
+					v-model="form.address"
+					type="text"
+					autocomplete="street-address">
 			</div>
 			<div v-if="form.accountType === 'b2b'" class="portal-field">
 				<label for="portal-jobtitle">{{ t('pipelinq', 'Job title') }}</label>
@@ -41,7 +47,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			</div>
 			<div class="portal-field">
 				<label for="portal-change-email">{{ t('pipelinq', 'Email address') }}</label>
-				<input id="portal-change-email" v-model="form.email" type="email">
+				<input id="portal-change-email"
+					v-model="form.email"
+					type="email"
+					autocomplete="email">
 				<small v-if="pendingEmail">{{ t('pipelinq', 'A verification link has been sent to {email}.', { email: pendingEmail }) }}</small>
 			</div>
 			<p v-if="message"

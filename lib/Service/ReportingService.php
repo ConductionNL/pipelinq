@@ -29,6 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateInterval;
+use DateTimeImmutable;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -185,11 +187,10 @@ class ReportingService
                 }
 
                 try {
-                    $dateTime = new \DateTimeImmutable($contactedAt);
+                    $dateTime = new DateTimeImmutable($contactedAt);
+                    $key      = $dateTime->format('Y-m-d');
                     if ($granularity === 'weekly') {
                         $key = $dateTime->format('o-W');
-                    } else {
-                        $key = $dateTime->format('Y-m-d');
                     }
                 } catch (\Exception) {
                     continue;
@@ -351,11 +352,10 @@ class ReportingService
         int $totalContacts,
         int $withinSla,
     ): array {
-        $target = $this->getSlaTarget(channel: $channel);
+        $target     = $this->getSlaTarget(channel: $channel);
+        $compliance = 0.0;
         if ($totalContacts > 0) {
             $compliance = round(($withinSla / $totalContacts) * 100, 1);
-        } else {
-            $compliance = 0.0;
         }
 
         $status = 'green';
@@ -497,7 +497,7 @@ class ReportingService
         $counted      = 0;
         foreach ($durations as $duration) {
             try {
-                $interval      = new \DateInterval($duration);
+                $interval      = new DateInterval($duration);
                 $totalSeconds += ($interval->h * 3600) + ($interval->i * 60) + $interval->s;
                 $counted++;
             } catch (\Exception) {

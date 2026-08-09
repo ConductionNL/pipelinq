@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTime;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -140,7 +141,7 @@ class TaskService
      */
     public function getDefaultDeadline(): string
     {
-        $now      = new \DateTime();
+        $now      = new DateTime();
         $deadline = clone $now;
 
         // Move to next business day.
@@ -151,7 +152,7 @@ class TaskService
 
         $deadline->setTime($this->getBusinessHourEnd(), 0, 0);
 
-        return $deadline->format(\DateTime::ATOM);
+        return $deadline->format(DateTime::ATOM);
     }//end getDefaultDeadline()
 
     /**
@@ -168,7 +169,7 @@ class TaskService
      */
     public function calculateDeadline(string $createdAt, int $businessHours): string
     {
-        $start         = new \DateTime($createdAt);
+        $start         = new DateTime($createdAt);
         $remaining     = $businessHours;
         $businessStart = $this->getBusinessHourStart();
         $businessEnd   = $this->getBusinessHourEnd();
@@ -186,17 +187,17 @@ class TaskService
             }
         }
 
-        return $start->format(\DateTime::ATOM);
+        return $start->format(DateTime::ATOM);
     }//end calculateDeadline()
 
     /**
      * Check if a date is on a weekend.
      *
-     * @param \DateTime $date The date to check.
+     * @param DateTime $date The date to check.
      *
      * @return bool True if the date is Saturday or Sunday.
      */
-    private function isWeekend(\DateTime $date): bool
+    private function isWeekend(DateTime $date): bool
     {
         $dayOfWeek = (int) $date->format('N');
 

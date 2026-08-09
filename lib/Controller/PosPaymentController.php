@@ -95,6 +95,8 @@ class PosPaymentController extends Controller
     /**
      * GET /api/payment-providers — list providers (credentials masked).
      *
+     * @auth admin-only Lists payment-provider configuration for the instance; restricted to server administrators by the framework default.
+     *
      * @return JSONResponse
      *
      * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
@@ -110,6 +112,8 @@ class PosPaymentController extends Controller
 
     /**
      * GET /api/payment-providers/{name} — single provider config.
+     *
+     * @auth admin-only Reads one payment provider's configuration; restricted to server administrators by the framework default.
      *
      * @param string $name The provider name.
      *
@@ -130,6 +134,8 @@ class PosPaymentController extends Controller
 
     /**
      * PUT /api/payment-providers/{name} — update provider credentials + config.
+     *
+     * @auth admin-only Writes payment-provider credentials for the instance; restricted to server administrators by the framework default.
      *
      * @param string $name The provider name.
      *
@@ -152,6 +158,8 @@ class PosPaymentController extends Controller
 
     /**
      * POST /api/payment-providers/{name}/test — test provider connection.
+     *
+     * @auth admin-only Opens an outbound connection using stored provider credentials; restricted to server administrators by the framework default.
      *
      * @param string $name The provider name.
      *

@@ -12,6 +12,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				<input id="portal-reset-email"
 					v-model="email"
 					type="email"
+					autocomplete="email"
 					required>
 			</div>
 			<button type="submit" class="portal-button-primary">

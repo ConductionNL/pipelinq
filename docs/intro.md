@@ -28,4 +28,3 @@ OpenRegister register on the settings page.
 
 For features, architecture, and government-specific capabilities, see the
 sidebar.
-</content>

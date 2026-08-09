@@ -417,6 +417,7 @@
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
+				"rowClickToView": false,
 				"actions": [
 					{
 						"id": "view",
@@ -1065,6 +1066,7 @@
 				"schema": "product",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
+				"rowClickToView": false,
 				"actions": [
 					{
 						"id": "view",
@@ -1164,6 +1166,7 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
+				"rowClickToView": false,
 				"includeColumns": ["reference", "cashier", "terminalId", "status", "priceMode", "total", "created"],
 				"headerActions": [
 					{ "id": "create", "label": "Nieuwe transactie", "icon": "Plus", "handler": "navigate", "route": "PosTransactionNew" }
@@ -1217,6 +1220,7 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
+				"rowClickToView": false,
 				"includeColumns": ["reference", "originalTransaction", "refundReason", "refundAmount", "status", "created"],
 				"headerActions": [
 					{ "id": "create", "label": "Nieuwe retour", "icon": "Plus", "handler": "navigate", "route": "PosRefundNew" }

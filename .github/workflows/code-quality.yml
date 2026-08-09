@@ -183,7 +183,27 @@ jobs:
       enable-playwright: true
       playwright-test-path: tests/e2e
       enable-playwright-coverage: true
-      playwright-coverage-threshold: 75
+      # RATCHET, not an aspiration. This was 75 while the number the workflow
+      # actually computed was 28% — and the gate emitted `::warning::` and
+      # returned zero, so the run went green anyway (ConductionNL/.github#189).
+      # The declared floor had never once been enforced, which is why it could
+      # sit 47 points above reality without anyone noticing.
+      #
+      # .github#189 makes the threshold enforce (`::error::` + non-zero exit)
+      # AND replaces the metric: it is no longer
+      # `count(test() calls) / count(scenario headings)` — two totals that were
+      # never compared to each other — but real per-scenario matching against
+      # `@e2e` references, in gate-19's dialect.
+      #
+      # Measured on this repo at 51476e2 with the shipped program:
+      #   2659 scenarios found, 2140 @e2e-excluded (with reasons), 519
+      #   enforceable, 116 covered by an @e2e reference => 22%.
+      #
+      # So 20 is the floor we can actually hold today, with two points of slack.
+      # Left at 75 this repo would have gone red on the merge of .github#189
+      # with no code change. Raise this as scenarios get annotated; it must only
+      # ever go up.
+      playwright-coverage-threshold: 20
       # Pin openregister to development: main lacks the react/async composer dep
       # that lib/Service/ObjectService.php (Async\await call) requires, so app:enable
       # fails with "Call to undefined function React\Async\await()" during seed.

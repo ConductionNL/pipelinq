@@ -77,16 +77,23 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <!--
         min-version is 32, NOT 28, because the OpenRegister dependency noted below is
         HARD (src/manifest.json lists "openregister" as a required dependency; the
-        optional ones there carry "required": false) and openregister declares
-        min-version="32" — its lib/ContextChat/ContentProvider.php implements
-        OCP\ContextChat\IContentProvider, an interface core does not have before
-        Nextcloud 32. On NC 28-31 openregister refuses to install ("cannot be
-        installed because it is not compatible with this version of the server") and
-        all Pipelinq data is OpenRegister objects, so the app cannot function there.
-        Declaring 28 advertised a range this app cannot deliver.
-        Same defect as openconnector#1173.
+        optional ones there carry "required": false), and OpenRegister cannot run
+        below Nextcloud 32: its lib/ContextChat/ContentProvider.php declares
+        `class ContentProvider implements IContentProvider` against
+        OCP\ContextChat\IContentProvider, and that interface first ships in core at
+        32.0.0 — verified absent at v29.0.0 / v30.0.0 / v31.0.0 and present at
+        v32.0.0. Because the reference is in the CLASS HEADER it is fatal at
+        autoload, not lazily degradable. All Pipelinq data is OpenRegister objects,
+        so on NC 28-31 this app cannot function. Declaring 28 advertised a range
+        this app cannot deliver. Same defect as openconnector#1173.
+
+        NOTE: OpenRegister's own appinfo/info.xml still declares min-version="28"
+        (canonical origin/development and origin/main, checked 2026-08-08). That
+        declaration is itself too low for the reason above; it is tracked in
+        OpenRegister, and this app does not depend on that value — the floor here
+        rests on the interface fact, not on OpenRegister's declaration.
         -->
-        <nextcloud min-version="28" max-version="34"/>
+        <nextcloud min-version="32" max-version="34"/>
         <!-- App dependency (not expressible in app-info.xsd): OpenRegister
              (all Pipelinq data — clients, contacts, leads, requests, contracts,
              contactmomenten — is stored as OpenRegister registers/schemas; see
