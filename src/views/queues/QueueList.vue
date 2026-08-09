@@ -19,6 +19,7 @@
 				:key="queue.id"
 				class="queue-card"
 				:class="{ 'queue-card--inactive': queue.isActive === false }"
+				role="button"
 				tabindex="0"
 				@click="openQueue(queue)"
 				@keydown.enter="openQueue(queue)">

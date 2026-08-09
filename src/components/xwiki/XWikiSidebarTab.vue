@@ -37,7 +37,11 @@
 						v-for="s in store.spaces"
 						:key="s"
 						class="xwiki-sidebar-tab__space"
-						@click="browseSpace(s)">
+						role="button"
+						tabindex="0"
+						@click="browseSpace(s)"
+						@keydown.enter.prevent="browseSpace(s)"
+						@keydown.space.prevent="browseSpace(s)">
 						{{ s }}
 					</li>
 					<li v-if="!store.spaces.length" class="xwiki-sidebar-tab__empty">
