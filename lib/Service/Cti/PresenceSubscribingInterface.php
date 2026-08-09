@@ -29,8 +29,9 @@
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Cti
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
@@ -54,6 +55,8 @@ interface PresenceSubscribingInterface
      * @param string $extension Agent extension.
      *
      * @return void
+     *
+     * @spec openspec/specs/cti-screenpop-adapter/spec.md
      */
     public function subscribeToPresence(string $userId, string $extension): void;
 }//end interface
