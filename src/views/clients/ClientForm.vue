@@ -5,6 +5,7 @@
 			<NcTextField
 				id="client-name"
 				label-outside
+				:label="t('pipelinq', 'Name')"
 				:model-value="form.name"
 				:error="!!errors.name"
 				:helper-text="errors.name"
@@ -34,6 +35,7 @@
 				<NcTextField
 					id="client-email"
 					label-outside
+					:label="t('pipelinq', 'Email')"
 					:model-value="form.email"
 					:error="!!errors.email"
 					:helper-text="errors.email"
@@ -49,6 +51,7 @@
 				<NcTextField
 					id="client-phone"
 					label-outside
+					:label="t('pipelinq', 'Phone')"
 					:model-value="form.phone"
 					:error="!!errors.phone"
 					:helper-text="errors.phone"
@@ -60,6 +63,7 @@
 				<NcTextField
 					id="client-website"
 					label-outside
+					:label="t('pipelinq', 'Website')"
 					:model-value="form.website"
 					:error="!!errors.website"
 					:helper-text="errors.website"
@@ -73,6 +77,7 @@
 			<NcTextField
 				id="client-address"
 				label-outside
+				:label="t('pipelinq', 'Address')"
 				:model-value="form.address"
 				data-testid="client-address-input"
 				@update:model-value="v => form.address = v" />
