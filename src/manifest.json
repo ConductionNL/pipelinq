@@ -471,13 +471,13 @@
 					] } },
 					{ "id": "client-email", "type": "integration", "integrationId": "email", "title": "Emails", "icon": "Email" },
 					{ "id": "client-files", "type": "integration", "integrationId": "files", "title": "Files", "icon": "FolderOutline" },
-					{ "id": "client-summary-open-tickets", "type": "stat", "title": "Open matters", "content": { "label": "Open matters", "caption": "requests + complaints + contactmomenten", "icon": "TicketOutline", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "openTicketCount", "params": { "clientId": "@objectId" } } } },
-					{ "id": "client-summary-sla-breached", "type": "stat", "title": "SLA breached", "content": { "label": "SLA breached", "caption": "open tickets past their deadline", "icon": "AlertOutline", "valueColor": "var(--color-error)", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "sla.breached", "params": { "clientId": "@objectId" } } } },
-					{ "id": "client-summary-sla-at-risk", "type": "stat", "title": "SLA at risk", "content": { "label": "SLA at risk", "caption": "deadline within 24h", "icon": "ClockAlertOutline", "valueColor": "var(--color-warning)", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "sla.atRisk", "params": { "clientId": "@objectId" } } } },
-					{ "id": "client-summary-queues", "type": "stat", "title": "Active queues", "content": { "label": "Active queues", "caption": "on open tickets", "icon": "FormatListBulletedSquare", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "queueCount", "params": { "clientId": "@objectId" } } } },
+					{ "id": "client-summary-open-tickets", "type": "stat", "title": "Open matters", "content": { "label": "Open matters", "caption": "requests + complaints + contactmomenten", "icon": "ClipboardCheckOutline", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "openTicketCount", "params": { "clientId": "@objectId" } } } },
+					{ "id": "client-summary-sla-breached", "type": "stat", "title": "SLA breached", "content": { "label": "SLA breached", "caption": "open tickets past their deadline", "icon": "AlertCircleOutline", "valueColor": "var(--color-error)", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "sla.breached", "params": { "clientId": "@objectId" } } } },
+					{ "id": "client-summary-sla-at-risk", "type": "stat", "title": "SLA at risk", "content": { "label": "SLA at risk", "caption": "deadline within 24h", "icon": "History", "valueColor": "var(--color-warning)", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "sla.atRisk", "params": { "clientId": "@objectId" } } } },
+					{ "id": "client-summary-queues", "type": "stat", "title": "Active queues", "content": { "label": "Active queues", "caption": "on open tickets", "icon": "FolderOutline", "format": { "style": "number", "decimals": 0 }, "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "queueCount", "params": { "clientId": "@objectId" } } } },
 					{ "id": "client-summary-last-activity", "type": "stat", "title": "Last activity", "content": { "label": "Last activity", "caption": "most recent interaction", "icon": "History", "source": { "kind": "endpoint", "url": "/apps/pipelinq/api/customer-360/summary", "path": "lastActivityAt", "params": { "clientId": "@objectId" } } } },
 					{ "id": "client-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" },
-					{ "id": "client-quick-requests", "type": "object-list", "title": "Requests", "icon": "TicketOutline", "content": {
+					{ "id": "client-quick-requests", "type": "object-list", "title": "Requests", "icon": "ClipboardCheckOutline", "content": {
 						"register": "pipelinq", "schema": "ticket",
 						"filter": { "client": "@objectId", "ticketType": "request" },
 						"sort": { "field": "occurredAt", "dir": "desc" },
@@ -711,6 +711,12 @@
 					{ "id": "ticket-data", "type": "data", "title": "Ticket details", "icon": "FileDocument", "content": { "columns": 2, "hideEmpty": true } },
 					{ "id": "ticket-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
 					{ "id": "ticket-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" }
+				],
+				"_layoutNote": "A declared widgets[] replaces the auto-body, and the auto-body was also what used to place them — so without an explicit layout every widget mapped to 0 grid cells (ADR-062 rule 8) and the page rendered its widgets unplaced. One cell per widget, in reading order: the two-column data block spans the full 12-column width, then Related and Besluitvorming sit side by side beneath it.",
+				"layout": [
+					{ "id": "1", "widgetId": "ticket-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "2", "widgetId": "ticket-related", "gridX": 0, "gridY": 4, "gridWidth": 6, "gridHeight": 3 },
+					{ "id": "3", "widgetId": "ticket-decisions", "gridX": 6, "gridY": 4, "gridWidth": 6, "gridHeight": 3 }
 				]
 			}
 		},
