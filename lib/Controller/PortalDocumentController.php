@@ -117,6 +117,8 @@ class PortalDocumentController extends PortalApiController
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @spec openspec/changes/customer-portal/specs.md#REQ-005
      */
     public function download(string $token)
     {
