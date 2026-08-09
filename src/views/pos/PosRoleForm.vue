@@ -69,6 +69,12 @@
 				</NcButton>
 			</div>
 		</template>
+		<ConfirmDialog v-if="showDeleteConfirm"
+			:name="t('pipelinq', 'Delete role')"
+			:message="t('pipelinq', 'Delete this role? Staff assignments must be removed first.')"
+			:confirm-label="t('pipelinq', 'Delete')"
+			@confirm="performDelete"
+			@cancel="showDeleteConfirm = false" />
 	</div>
 </template>
 
@@ -76,10 +82,11 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 
 export default {
 	name: 'PosRoleForm',
-	components: { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcTextField },
+	components: { ConfirmDialog, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcTextField },
 	props: {
 		id: { type: String, default: '' },
 	},
@@ -96,6 +103,7 @@ export default {
 			loading: false,
 			saving: false,
 			errorMessage: '',
+			showDeleteConfirm: false,
 		}
 	},
 	computed: {
@@ -146,11 +154,11 @@ export default {
 				this.saving = false
 			}
 		},
-		async confirmDelete() {
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('pipelinq', 'Delete this role? Staff assignments must be removed first.'))) {
-				return
-			}
+		confirmDelete() {
+			this.showDeleteConfirm = true
+		},
+		async performDelete() {
+			this.showDeleteConfirm = false
 			this.saving = true
 			this.errorMessage = ''
 			try {

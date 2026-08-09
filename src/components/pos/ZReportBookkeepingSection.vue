@@ -100,11 +100,19 @@
 				</table>
 			</section>
 		</template>
+		<ConfirmDialog v-if="showRetryConfirm"
+			:name="t('pipelinq', 'Re-raise journal entry')"
+			:message="t('pipelinq', 'Re-raise journal entry at shillinq? This uses the same idempotency key, so shillinq prevents duplicate postings.')"
+			:confirm-label="t('pipelinq', 'Re-raise')"
+			variant="primary"
+			@confirm="performRetry"
+			@cancel="showRetryConfirm = false" />
 	</div>
 </template>
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -120,6 +128,7 @@ const BOOKKEEPING_STATUS_LABELS = {
 export default {
 	name: 'ZReportBookkeepingSection',
 	components: {
+		ConfirmDialog,
 		NcButton,
 		NcLoadingIcon,
 		CnStatusBadge,
@@ -139,6 +148,7 @@ export default {
 			zReport: {},
 			loading: false,
 			busy: false,
+			showRetryConfirm: false,
 		}
 	},
 	computed: {
@@ -208,11 +218,15 @@ export default {
 		/**
 		 * Confirm + trigger a manager-gated re-raise of the shillinq journal entry.
 		 */
-		async confirmAndRetry() {
+		confirmAndRetry() {
 			if (!this.resolvedId) {
 				return
 			}
-			if (!window.confirm(t('pipelinq', 'Re-raise journal entry at shillinq? This uses the same idempotency key, so shillinq prevents duplicate postings.'))) {
+			this.showRetryConfirm = true
+		},
+		async performRetry() {
+			this.showRetryConfirm = false
+			if (!this.resolvedId) {
 				return
 			}
 			this.busy = true

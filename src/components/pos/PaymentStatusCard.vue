@@ -55,11 +55,15 @@
 				{{ t('pipelinq', 'Try again') }}
 			</NcButton>
 		</div>
+		<ReversalReasonDialog v-if="showReversalDialog"
+			@confirm="performRefund"
+			@cancel="showReversalDialog = false" />
 	</div>
 </template>
 
 <script>
 import { NcButton } from '@nextcloud/vue'
+import ReversalReasonDialog from '../../dialogs/ReversalReasonDialog.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
 	capturePayment,
@@ -68,7 +72,7 @@ import {
 
 export default {
 	name: 'PaymentStatusCard',
-	components: { NcButton },
+	components: { NcButton, ReversalReasonDialog },
 	props: {
 		transaction: {
 			type: Object,
@@ -82,6 +86,7 @@ export default {
 	data() {
 		return {
 			busy: false,
+			showReversalDialog: false,
 		}
 	},
 	computed: {
@@ -158,9 +163,14 @@ export default {
 				this.busy = false
 			}
 		},
-		async onRefund() {
-			const reason = window.prompt(t('pipelinq', 'Reason for reversal?'))
-			if (!reason) return
+		onRefund() {
+			this.showReversalDialog = true
+		},
+		async performRefund(reason) {
+			this.showReversalDialog = false
+			if (!reason) {
+				return
+			}
 			this.busy = true
 			try {
 				const result = await refundPayment(this.transaction.id || this.transaction['@self']?.id, reason)

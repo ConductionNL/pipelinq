@@ -97,6 +97,12 @@
 			:tender-type="editingType"
 			@close="onFormClose"
 			@saved="onFormSaved" />
+		<ConfirmDialog v-if="pendingDeleteType"
+			:name="t('pipelinq', 'Delete tender type')"
+			:message="deleteTypeMessage"
+			:confirm-label="t('pipelinq', 'Delete')"
+			@confirm="performDeleteType"
+			@cancel="pendingDeleteType = null" />
 	</div>
 </template>
 
@@ -110,10 +116,11 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import PosTenderTypeFormDialog from '../../modals/PosTenderTypeFormDialog.vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 
 export default {
 	name: 'PosTenderTypeList',
-	components: { NcButton, NcLoadingIcon, Refresh, Plus, Pencil, Delete, PosTenderTypeFormDialog },
+	components: { ConfirmDialog, NcButton, NcLoadingIcon, Refresh, Plus, Pencil, Delete, PosTenderTypeFormDialog },
 	data() {
 		return {
 			tenderTypes: [],
@@ -121,10 +128,27 @@ export default {
 			showForm: false,
 			editingType: null,
 			errorMessage: '',
+			pendingDeleteType: null,
 		}
 	},
 	async mounted() {
 		await this.refresh()
+	},
+	computed: {
+		/**
+		 * Built here rather than inline in the template so the t() key stays
+		 * byte-identical to the one the old window.confirm used. Escaping the
+		 * quotes as &quot; in the attribute would have minted a NEW key and
+		 * orphaned every existing translation of this string.
+		 *
+		 * @return {string} The confirmation message.
+		 */
+		deleteTypeMessage() {
+			if (!this.pendingDeleteType) {
+				return ''
+			}
+			return t('pipelinq', 'Delete tender type "{name}"? Active tenders referencing this type block deletion.', { name: this.pendingDeleteType.name })
+		},
 	},
 	methods: {
 		async refresh() {
@@ -151,9 +175,13 @@ export default {
 			this.editingType = { ...type }
 			this.showForm = true
 		},
-		async deleteType(type) {
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('pipelinq', 'Delete tender type "{name}"? Active tenders referencing this type block deletion.', { name: type.name }))) {
+		deleteType(type) {
+			this.pendingDeleteType = type
+		},
+		async performDeleteType() {
+			const type = this.pendingDeleteType
+			this.pendingDeleteType = null
+			if (!type) {
 				return
 			}
 			try {
