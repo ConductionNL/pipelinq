@@ -270,22 +270,6 @@ class CallVoipAdapter implements CtiAdapterInterface
     /**
      * {@inheritDoc}
      *
-     * CallVoip pushes presence via webhook (event: "presence"), so there is no
-     * client-side subscribe to do. Implementation is intentionally a no-op.
-     *
-     * @param string $userId    The user to subscribe.
-     * @param string $extension The extension to subscribe.
-     *
-     * @return void
-     */
-    public function subscribeToPresence(string $userId, string $extension): void
-    {
-        // No-op: CallVoip presence is delivered via inbound webhook events.
-    }//end subscribeToPresence()
-
-    /**
-     * {@inheritDoc}
-     *
      * Validates HMAC-SHA256(raw body, webhook_secret) using a constant-time compare.
      *
      * @param string $payload   The raw webhook body.
