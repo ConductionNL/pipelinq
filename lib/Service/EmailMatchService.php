@@ -327,7 +327,15 @@ class EmailMatchService
             return 0;
         }
 
-        $register     = $this->registerSlug();
+        $register = $this->registerSlug();
+
+        // Fail closed on an unconfigured register. Without this the loop below
+        // casts '' to int and links every email against register id 0 — a write
+        // scoped to the wrong register rather than a refused one.
+        if ($register === '') {
+            return 0;
+        }
+
         $createdCount = 0;
         foreach ($entities as $entity) {
             $schemaSlug = $entity['entityType'].'_schema';
@@ -1039,11 +1047,25 @@ class EmailMatchService
     /**
      * Resolve the pipelinq register slug.
      *
-     * @return string
+     * Fails closed: '' means "unconfigured", and every caller refuses the
+     * OpenRegister call on it. An empty register must never be handed to
+     * OpenRegister — ObjectService skips setRegister() for an empty value, so
+     * the query silently inherits whatever register context an earlier call in
+     * the same request left on the shared service instance. The empty case is
+     * logged so an unprovisioned instance is visible rather than silent.
+     *
+     * @return string The configured register slug, or '' when unconfigured.
      */
     private function registerSlug(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerSlug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        if ($registerSlug === '') {
+            $this->logger->warning(
+                'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
+            );
+        }
+
+        return $registerSlug;
 
     }//end registerSlug()
 

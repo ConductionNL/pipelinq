@@ -57,6 +57,17 @@ class ContactLinkedUidsService
         $objectService = $this->getObjectService();
         $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 
+        // Fail closed on an unconfigured register. getLinkedUidsForType() below
+        // already refuses on '', so this returns the same empty result; stating
+        // it here makes the refusal local to the read instead of resting on a
+        // callee that a later change could relax.
+        if ($registerId === '') {
+            $this->logger->warning(
+                'Pipelinq: app-config "register" is not configured; returning no linked contact UIDs'
+            );
+            return [];
+        }
+
         foreach (['client', 'contact'] as $type) {
             $typeUids = $this->getLinkedUidsForType(
                 objectService: $objectService,
