@@ -6,6 +6,7 @@
 			<textarea
 				v-model="newMessage"
 				:placeholder="t('pipelinq', 'Add a note...')"
+				:aria-label="t('pipelinq', 'New note')"
 				class="entity-notes__textarea"
 				rows="3" />
 			<NcButton

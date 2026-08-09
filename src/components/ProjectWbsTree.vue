@@ -25,7 +25,14 @@
 		</div>
 
 		<div v-for="phase in orderedPhases" :key="phase.id" class="wbs-phase">
-			<div class="wbs-phase__row" @click="toggle(phase.id)">
+			<div class="wbs-phase__row"
+				role="button"
+				tabindex="0"
+				:aria-expanded="isOpen(phase.id)"
+				:aria-label="t('pipelinq', 'Toggle phase {name}', { name: phase.title || phase.name })"
+				@click="toggle(phase.id)"
+				@keydown.enter.prevent="toggle(phase.id)"
+				@keydown.space.prevent="toggle(phase.id)">
 				<span class="wbs-phase__chevron" :class="{ 'wbs-phase__chevron--open': isOpen(phase.id) }">
 					›
 				</span>

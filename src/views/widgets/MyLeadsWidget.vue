@@ -9,7 +9,12 @@
 		:empty-text="t('pipelinq', 'No leads assigned to you')"
 		@row-click="onShow">
 		<template #footer>
-			<a class="cn-data-table__view-all" @click.prevent="onViewAll">
+			<a class="cn-data-table__view-all"
+				role="button"
+				tabindex="0"
+				@click.prevent="onViewAll"
+				@keydown.enter.prevent="onViewAll"
+				@keydown.space.prevent="onViewAll">
 				{{ t('pipelinq', 'View all') }} →
 			</a>
 		</template>

@@ -21,10 +21,16 @@
 					X
 				</button>
 			</div>
-			<input :value="q.text" :placeholder="t('pipelinq', 'Question text')" @input="setProp(i, 'text', $event.target.value)">
+			<input :value="q.text"
+				:placeholder="t('pipelinq', 'Question text')"
+				:aria-label="t('pipelinq', 'Text of question {n}', { n: i + 1 })"
+				@input="setProp(i, 'text', $event.target.value)">
 			<div v-if="q.type === 'multiple_choice'" class="opts">
 				<div v-for="(o, oi) in q.options || []" :key="oi" class="opt-row">
-					<input :value="o" :placeholder="t('pipelinq', 'Option {n}', { n: oi + 1 })" @input="setOpt(i, oi, $event.target.value)">
+					<input :value="o"
+						:placeholder="t('pipelinq', 'Option {n}', { n: oi + 1 })"
+						:aria-label="t('pipelinq', 'Option {n}', { n: oi + 1 })"
+						@input="setOpt(i, oi, $event.target.value)">
 					<button v-if="(q.options || []).length > 2"
 						type="button"
 						:aria-label="t('pipelinq', 'Remove option {n}', { n: oi + 1 })"

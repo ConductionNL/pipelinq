@@ -27,16 +27,16 @@
 
 				<div v-else class="skill-item__edit">
 					<div class="edit-field">
-						<label>{{ t('pipelinq', 'Title') }}</label>
-						<input v-model="editForm.title" type="text">
+						<label for="skill-edit-title">{{ t('pipelinq', 'Title') }}</label>
+						<input id="skill-edit-title" v-model="editForm.title" type="text">
 					</div>
 					<div class="edit-field">
-						<label>{{ t('pipelinq', 'Description') }}</label>
-						<textarea v-model="editForm.description" />
+						<label for="skill-edit-description">{{ t('pipelinq', 'Description') }}</label>
+						<textarea id="skill-edit-description" v-model="editForm.description" />
 					</div>
 					<div class="edit-field">
-						<label>{{ t('pipelinq', 'Categories (comma-separated)') }}</label>
-						<input v-model="editForm.categoriesInput" type="text">
+						<label for="skill-edit-categories">{{ t('pipelinq', 'Categories (comma-separated)') }}</label>
+						<input id="skill-edit-categories" v-model="editForm.categoriesInput" type="text">
 					</div>
 					<div class="edit-field">
 						<label>
