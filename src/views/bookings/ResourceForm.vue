@@ -20,9 +20,9 @@
 	<div class="resource-form" data-testid="resource-form">
 		<div class="form-row">
 			<div class="form-group">
-				<label for="resource-name">{{ t('pipelinq', 'Name') }} *</label>
 				<NcTextField
 					id="resource-name"
+					:label="t('pipelinq', 'Name') + ' *'"
 					:model-value="form.name"
 					:error="!!errors.name"
 					:helper-text="errors.name"
@@ -53,9 +53,9 @@
 					label="label" />
 			</div>
 			<div class="form-group">
-				<label for="resource-max-concurrent">{{ t('pipelinq', 'Max concurrent bookings') }}</label>
 				<NcTextField
 					id="resource-max-concurrent"
+					:label="t('pipelinq', 'Max concurrent bookings')"
 					type="number"
 					:model-value="String(form.maxConcurrent ?? 1)"
 					@update:model-value="v => form.maxConcurrent = v === '' ? 1 : Math.max(1, Number(v))" />
@@ -67,25 +67,25 @@
 		</div>
 
 		<div class="form-group">
-			<label for="resource-skills">{{ t('pipelinq', 'Skills (comma-separated)') }}</label>
 			<NcTextField
 				id="resource-skills"
+				:label="t('pipelinq', 'Skills (comma-separated)')"
 				:model-value="skillsCsv"
 				@update:model-value="onSkillsInput" />
 		</div>
 
 		<div class="form-row">
 			<div class="form-group">
-				<label for="resource-user-id">{{ t('pipelinq', 'Nextcloud user ID (staff only)') }}</label>
 				<NcTextField
 					id="resource-user-id"
+					:label="t('pipelinq', 'Nextcloud user ID (staff only)')"
 					:model-value="form.userId || ''"
 					@update:model-value="v => form.userId = v" />
 			</div>
 			<div class="form-group">
-				<label for="resource-calendar-sync">{{ t('pipelinq', 'Calendar sync link (UUID)') }}</label>
 				<NcTextField
 					id="resource-calendar-sync"
+					:label="t('pipelinq', 'Calendar sync link (UUID)')"
 					:model-value="form.calendarSyncId || ''"
 					@update:model-value="v => form.calendarSyncId = v" />
 			</div>

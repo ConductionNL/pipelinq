@@ -79,8 +79,8 @@
 							:reduce="opt => opt.value" />
 					</div>
 					<div class="form-group">
-						<label>{{ t('pipelinq', 'Notes') }}</label>
-						<textarea v-model="addForm.notes" rows="2" />
+						<label for="lead-contact-role-notes">{{ t('pipelinq', 'Notes') }}</label>
+						<textarea id="lead-contact-role-notes" v-model="addForm.notes" rows="2" />
 					</div>
 					<div class="form-actions">
 						<NcButton

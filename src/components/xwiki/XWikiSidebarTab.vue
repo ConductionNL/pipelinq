@@ -51,6 +51,7 @@
 						v-model="searchTerm"
 						type="search"
 						class="xwiki-sidebar-tab__search-input"
+						:aria-label="t('pipelinq', 'Search knowledge base')"
 						:placeholder="t('pipelinq', 'Search knowledge base')"
 						@input="onSearchInput">
 				</div>

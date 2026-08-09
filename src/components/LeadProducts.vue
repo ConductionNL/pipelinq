@@ -36,6 +36,7 @@
 									type="number"
 									min="1"
 									class="inline-input inline-input--qty"
+									:aria-label="t('pipelinq', 'Quantity for {product}', { product: getProductName(item.product) })"
 									@change="updateLineItem(item)">
 							</td>
 							<td>
@@ -45,6 +46,7 @@
 									min="0"
 									step="0.01"
 									class="inline-input inline-input--price"
+									:aria-label="t('pipelinq', 'Unit price for {product}', { product: getProductName(item.product) })"
 									@change="updateLineItem(item)">
 							</td>
 							<td>
@@ -54,6 +56,7 @@
 									min="0"
 									step="0.01"
 									class="inline-input inline-input--discount"
+									:aria-label="t('pipelinq', 'Discount for {product}', { product: getProductName(item.product) })"
 									@change="updateLineItem(item)">
 							</td>
 							<td class="total-cell">
@@ -65,6 +68,7 @@
 									type="text"
 									class="inline-input inline-input--notes"
 									:placeholder="t('pipelinq', 'Notes...')"
+									:aria-label="t('pipelinq', 'Notes for {product}', { product: getProductName(item.product) })"
 									@change="updateNotes(item)">
 							</td>
 							<td>
@@ -124,30 +128,33 @@
 					</div>
 					<div class="form-row">
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Quantity') }}</label>
 							<NcTextField
+								id="lead-product-quantity"
+								:label="t('pipelinq', 'Quantity')"
 								:model-value="String(addForm.quantity)"
 								type="number"
 								@update:model-value="v => addForm.quantity = Number(v)" />
 						</div>
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Unit Price') }}</label>
 							<NcTextField
+								id="lead-product-unit-price"
+								:label="t('pipelinq', 'Unit Price')"
 								:model-value="String(addForm.unitPrice)"
 								type="number"
 								@update:model-value="v => addForm.unitPrice = Number(v)" />
 						</div>
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Discount') }}</label>
 							<NcTextField
+								id="lead-product-discount"
+								:label="t('pipelinq', 'Discount')"
 								:model-value="String(addForm.discount)"
 								type="number"
 								@update:model-value="v => addForm.discount = Number(v)" />
 						</div>
 					</div>
 					<div class="form-group">
-						<label>{{ t('pipelinq', 'Notes') }}</label>
-						<textarea v-model="addForm.notes" rows="2" />
+						<label for="lead-product-notes">{{ t('pipelinq', 'Notes') }}</label>
+						<textarea id="lead-product-notes" v-model="addForm.notes" rows="2" />
 					</div>
 					<div class="form-actions">
 						<NcButton variant="primary" :disabled="!addForm.product" @click="addLineItem">

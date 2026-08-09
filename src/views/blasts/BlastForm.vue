@@ -18,10 +18,11 @@
 		<div v-else class="blast-form__step">
 			<!-- Step 1: name -->
 			<section v-if="step === 'name'" class="blast-form__panel">
-				<label class="blast-form__label">
+				<label class="blast-form__label" for="blast-form-name">
 					{{ t('pipelinq', 'Blast name') }} *
 				</label>
-				<input v-model="model.name"
+				<input id="blast-form-name"
+					v-model="model.name"
 					type="text"
 					class="blast-form__input"
 					:placeholder="t('pipelinq', 'Q4 Gemeente Outreach')">
@@ -68,10 +69,11 @@
 
 			<!-- Step 5: schedule -->
 			<section v-if="step === 'schedule'" class="blast-form__panel">
-				<label class="blast-form__label">
+				<label class="blast-form__label" for="blast-form-scheduled-for">
 					{{ t('pipelinq', 'Send at') }}
 				</label>
-				<input v-model="model.scheduledFor"
+				<input id="blast-form-scheduled-for"
+					v-model="model.scheduledFor"
 					type="datetime-local"
 					class="blast-form__input">
 				<p class="blast-form__hint">
@@ -86,10 +88,11 @@
 					{{ t('pipelinq', 'Run an A/B variant test') }}
 				</label>
 				<div v-if="abEnabled" class="blast-form__ab">
-					<label class="blast-form__label">
+					<label class="blast-form__label" for="blast-form-ab-split">
 						{{ t('pipelinq', 'Variant A share (%)') }}: {{ model.abSplitPercent }}
 					</label>
-					<input v-model.number="model.abSplitPercent"
+					<input id="blast-form-ab-split"
+						v-model.number="model.abSplitPercent"
 						type="range"
 						min="0"
 						max="100"

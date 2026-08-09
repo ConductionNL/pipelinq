@@ -91,17 +91,17 @@
 							@update:model-value="onTypeSelect" />
 					</div>
 					<div class="form-group">
-						<label>{{ t('pipelinq', 'Notes') }}</label>
-						<textarea v-model="addForm.notes" rows="2" />
+						<label for="contact-relationship-notes">{{ t('pipelinq', 'Notes') }}</label>
+						<textarea id="contact-relationship-notes" v-model="addForm.notes" rows="2" />
 					</div>
 					<div class="form-row">
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Start date') }}</label>
-							<input v-model="addForm.startDate" type="date">
+							<label for="contact-relationship-start-date">{{ t('pipelinq', 'Start date') }}</label>
+							<input id="contact-relationship-start-date" v-model="addForm.startDate" type="date">
 						</div>
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'End date') }}</label>
-							<input v-model="addForm.endDate" type="date">
+							<label for="contact-relationship-end-date">{{ t('pipelinq', 'End date') }}</label>
+							<input id="contact-relationship-end-date" v-model="addForm.endDate" type="date">
 						</div>
 					</div>
 					<div class="form-group">

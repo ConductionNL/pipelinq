@@ -7,8 +7,9 @@
 		<div v-else class="prospect-settings__form">
 			<!-- SBI Codes -->
 			<div class="form-group">
-				<label>{{ t('pipelinq', 'SBI Codes') }}</label>
 				<NcTextField
+					id="prospect-sbi-codes"
+					:label="t('pipelinq', 'SBI Codes')"
 					:model-value="sbiCodesText"
 					:placeholder="t('pipelinq', 'e.g. 62, 72 (comma-separated)')"
 					@update:model-value="v => sbiCodesText = v" />
@@ -20,15 +21,17 @@
 			<!-- Employee Count -->
 			<div class="form-row">
 				<div class="form-group">
-					<label>{{ t('pipelinq', 'Min Employees') }}</label>
 					<NcTextField
+						id="prospect-employee-count-min"
+						:label="t('pipelinq', 'Min Employees')"
 						:model-value="String(form.employeeCountMin)"
 						type="number"
 						@update:model-value="v => form.employeeCountMin = Number(v)" />
 				</div>
 				<div class="form-group">
-					<label>{{ t('pipelinq', 'Max Employees') }}</label>
 					<NcTextField
+						id="prospect-employee-count-max"
+						:label="t('pipelinq', 'Max Employees')"
 						:model-value="String(form.employeeCountMax)"
 						type="number"
 						@update:model-value="v => form.employeeCountMax = Number(v)" />
@@ -70,8 +73,9 @@
 
 			<!-- Keywords (for OpenCorporates) -->
 			<div class="form-group">
-				<label>{{ t('pipelinq', 'Keywords') }}</label>
 				<NcTextField
+					id="prospect-keywords"
+					:label="t('pipelinq', 'Keywords')"
 					:model-value="keywordsText"
 					:placeholder="t('pipelinq', 'e.g. software, IT (comma-separated)')"
 					@update:model-value="v => keywordsText = v" />
@@ -82,8 +86,9 @@
 
 			<!-- KVK API Key -->
 			<div class="form-group">
-				<label>{{ t('pipelinq', 'KVK API Key') }}</label>
 				<NcTextField
+					id="prospect-kvk-api-key"
+					:label="t('pipelinq', 'KVK API Key')"
 					:model-value="form.kvkApiKey"
 					type="password"
 					:placeholder="t('pipelinq', 'Enter your KVK API key')"

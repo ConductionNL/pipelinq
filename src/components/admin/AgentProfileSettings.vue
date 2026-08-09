@@ -28,8 +28,8 @@
 
 				<div v-else class="agent-item__edit">
 					<div class="edit-field">
-						<label>{{ t('pipelinq', 'User ID') }}</label>
-						<input v-model="editForm.userId" type="text" :disabled="!!editForm.id">
+						<label for="agent-edit-user-id">{{ t('pipelinq', 'User ID') }}</label>
+						<input id="agent-edit-user-id" v-model="editForm.userId" type="text" :disabled="!!editForm.id">
 					</div>
 					<div class="edit-field">
 						<label>{{ t('pipelinq', 'Skills') }}</label>
@@ -45,8 +45,8 @@
 					</div>
 					<div class="edit-row">
 						<div class="edit-field">
-							<label>{{ t('pipelinq', 'Max concurrent items') }}</label>
-							<input v-model.number="editForm.maxConcurrent" type="number" min="1">
+							<label for="agent-edit-max-concurrent">{{ t('pipelinq', 'Max concurrent items') }}</label>
+							<input id="agent-edit-max-concurrent" v-model.number="editForm.maxConcurrent" type="number" min="1">
 						</div>
 						<div class="edit-field">
 							<label>

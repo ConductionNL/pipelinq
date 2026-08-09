@@ -25,12 +25,14 @@
 							v-model="editForm.name"
 							class="category-item__input"
 							:placeholder="t('pipelinq', 'Category name')"
+							:aria-label="t('pipelinq', 'Category name')"
 							@keyup.enter="saveEdit(cat.id)"
 							@keyup.escape="cancelEdit">
 						<input
 							v-model="editForm.description"
 							class="category-item__input category-item__input--desc"
-							:placeholder="t('pipelinq', 'Description (optional)')">
+							:placeholder="t('pipelinq', 'Description (optional)')"
+							:aria-label="t('pipelinq', 'Category description')">
 						<div class="category-item__actions">
 							<NcButton variant="primary" :disabled="!editForm.name.trim()" @click="saveEdit(cat.id)">
 								{{ t('pipelinq', 'Save') }}
@@ -65,12 +67,14 @@
 						v-model="addForm.name"
 						class="category-item__input"
 						:placeholder="t('pipelinq', 'Category name')"
+						:aria-label="t('pipelinq', 'New category name')"
 						@keyup.enter="saveNew"
 						@keyup.escape="cancelAdding">
 					<input
 						v-model="addForm.description"
 						class="category-item__input category-item__input--desc"
-						:placeholder="t('pipelinq', 'Description (optional)')">
+						:placeholder="t('pipelinq', 'Description (optional)')"
+						:aria-label="t('pipelinq', 'New category description')">
 					<div class="category-item__actions">
 						<NcButton variant="primary" :disabled="!addForm.name.trim()" @click="saveNew">
 							{{ t('pipelinq', 'Add') }}
