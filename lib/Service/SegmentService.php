@@ -134,7 +134,7 @@ class SegmentService
      * @param ICacheFactory      $cacheFactory     NC cache factory.
      * @param LoggerInterface    $logger           Logger.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.8
+     * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
      */
     public function __construct(
         private ContainerInterface $container,
@@ -169,7 +169,7 @@ class SegmentService
      *
      * @return string|null NULL on success, otherwise the first error.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.2
+     * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
      */
     public function validateRules(array $rules, string $entityType): ?string
     {
@@ -201,7 +201,7 @@ class SegmentService
      *
      * @return bool True when the entity matches the tree.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.5
+     * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
      */
     public function evaluateRules(array $rules, array $entity): bool
     {
@@ -225,7 +225,7 @@ class SegmentService
      *
      * @return array{valid: bool, error: ?string, estimatedSize: int}
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.2
+     * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
      */
     public function previewRulePayload(array $rules, string $entityType): array
     {
@@ -267,7 +267,7 @@ class SegmentService
      *
      * @return array<int, array<string, string>> Recipient rows.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.7
+     * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segments-are-live-not-frozen-lists
      */
     public function getMembersForBlast(string $segmentId): array
     {
@@ -743,7 +743,7 @@ class SegmentService
      *
      * @return int Count of matching entities; 0 on failure.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.6
+     * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segments-are-live-not-frozen-lists
      */
     public function estimateSize(string $segmentId): int
     {
@@ -1615,7 +1615,7 @@ class SegmentService
      * @return array<string, mixed>|null Properties map, or null when the
      *                                   schema is not resolvable.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.3
+     * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
      */
     protected function resolveSchemaProperties(string $entityType): ?array
     {
@@ -1669,7 +1669,7 @@ class SegmentService
      *
      * @return string The resolved schema slug, or empty when unknown.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.3
+     * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
      */
     protected function resolveSchemaSlug(string $entityType): string
     {
