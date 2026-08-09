@@ -467,11 +467,26 @@ class MessagingService
     /**
      * The pipelinq register slug (app-config overridable).
      *
-     * @return string Slug.
+     * Fails closed on a blanked override. Passing the built-in slug as
+     * getValueString()'s default only covers an ABSENT key: a key that is
+     * present but set to an empty string returns '' verbatim, and none of the
+     * callers here check for that. An empty register is not the same as "no
+     * register" to OpenRegister — ObjectService skips setRegister() for an
+     * empty value, so the query silently inherits whatever register context an
+     * earlier call in the same request left on the shared service instance.
+     * Normalising '' back to the built-in slug, exactly as the sibling
+     * schemaSlug() already does, keeps every call scoped.
+     *
+     * @return string Slug; never empty.
      */
     private function registerSlug(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'register', 'pipelinq');
+        $slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return 'pipelinq';
     }//end registerSlug()
 
     /**
