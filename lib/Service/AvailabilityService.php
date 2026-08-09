@@ -1016,11 +1016,25 @@ class AvailabilityService
     /**
      * Resolve the pipelinq register id from app config.
      *
-     * @return string
+     * Fails closed: '' means "unconfigured", and every caller refuses the
+     * OpenRegister call on it. An empty register must never be handed to
+     * OpenRegister — ObjectService skips setRegister() for an empty value, so
+     * the query silently inherits whatever register context an earlier call in
+     * the same request left on the shared service instance. The empty case is
+     * logged so an unprovisioned instance is visible rather than silent.
+     *
+     * @return string The configured register id, or '' when unconfigured.
      */
     private function registerId(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        if ($registerId === '') {
+            $this->logger->warning(
+                'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
+            );
+        }
+
+        return $registerId;
     }//end registerId()
 
     /**

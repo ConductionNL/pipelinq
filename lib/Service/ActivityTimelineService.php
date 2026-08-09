@@ -113,20 +113,32 @@ class ActivityTimelineService
     /**
      * Read the configured register and schema IDs.
      *
-     * The `contactmoment` source is no longer a schema of its own: after
-     * unify-ticket-supertype it is the `ticket` schema narrowed by
-     * `ticketType=contactmoment`, so its id is resolved through TicketService.
+     * `contactmoment` is not a schema of its own: since unify-ticket-supertype
+     * it is `ticket` narrowed by `ticketType`, resolved via TicketService.
+     *
+     * Fails closed: '' means the source MUST NOT be queried — ObjectService
+     * skips setRegister()/setSchema() on '', leaving the request's leftover
+     * context. `register` is logged when unset; optional schema ids are not,
+     * as collectActivities() drops them (a supported degraded mode).
      *
      * @return array<string,string> Map of source-key => value.
      */
     private function getConfig(): array
     {
+        $register     = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $task         = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+        $emailLink    = $this->appConfig->getValueString(Application::APP_ID, 'emailLink_schema', '');
+        $calendarLink = $this->appConfig->getValueString(Application::APP_ID, 'calendarLink_schema', '');
+        if ($register === '') {
+            $this->logger->warning('Pipelinq: "register" is not configured; the activity timeline is refused, not run unscoped');
+        }
+
         return [
-            'register'      => $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
+            'register'      => $register,
             'contactmoment' => $this->ticketService->getSchemaId(),
-            'task'          => $this->appConfig->getValueString(Application::APP_ID, 'task_schema', ''),
-            'emailLink'     => $this->appConfig->getValueString(Application::APP_ID, 'emailLink_schema', ''),
-            'calendarLink'  => $this->appConfig->getValueString(Application::APP_ID, 'calendarLink_schema', ''),
+            'task'          => $task,
+            'emailLink'     => $emailLink,
+            'calendarLink'  => $calendarLink,
         ];
     }//end getConfig()
 

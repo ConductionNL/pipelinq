@@ -282,16 +282,29 @@ class ContractService
     /**
      * Resolve the configured register and contract-schema IDs.
      *
-     * @return array{0:string,1:string} [registerId, schemaId].
+     * Fails closed: '' on either id means "unconfigured", and every caller
+     * refuses the OpenRegister call on it. An empty id must never be handed to
+     * OpenRegister — ObjectService skips setRegister()/setSchema() for an empty
+     * value, so the query silently inherits whatever context an earlier call in
+     * the same request left on the shared service instance. The empty case is
+     * logged so an unprovisioned instance is visible rather than silent.
+     *
+     * @return array{0:string,1:string} [registerId, schemaId], each '' when
+     *                                  unconfigured.
      *
      * @spec exclude config-key plumbing — resolves the OR register/schema ids the lifecycle ops scope to
      */
     public function getRegisterAndSchema(): array
     {
-        return [
-            $this->appConfig->getValueString(Application::APP_ID, 'register', ''),
-            $this->appConfig->getValueString(Application::APP_ID, 'contract_schema', ''),
-        ];
+        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $schemaId   = $this->appConfig->getValueString(Application::APP_ID, 'contract_schema', '');
+        if ($registerId === '' || $schemaId === '') {
+            $this->logger->warning(
+                'Pipelinq: register/contract_schema not configured; OpenRegister calls are refused, not run unscoped'
+            );
+        }
+
+        return [$registerId, $schemaId];
     }//end getRegisterAndSchema()
 
     /**
