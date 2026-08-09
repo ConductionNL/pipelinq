@@ -527,8 +527,31 @@ class BerichtenboxService
         string $bsnPlain,
         string $bodyHash
     ): void {
+        // Fail closed when the tenant's PKI-overheid material is missing.
+        //
+        // An empty key does NOT stop the dispatch on its own: LogiusConnector::
+        // signRequest() falls back to `base64(sha256(body))` — a keyless digest
+        // anyone can recompute — and sends it as the `X-Signature` header. The
+        // message still goes out, carrying a plaintext BSN, with request
+        // signing silently deactivated. The empty default is the permissive
+        // value here, so refuse the dispatch and let the normal retry/fail path
+        // record it instead of shipping an unsigned citizen message.
         $cert = $this->appConfig->getValueString(Application::APP_ID, 'pki_cert', '');
         $key  = $this->appConfig->getValueString(Application::APP_ID, 'pki_key', '');
+        if ($cert === '' || $key === '') {
+            $this->logger->error(
+                'Pipelinq Berichtenbox: refusing to dispatch — tenant PKI-overheid cert/key is not configured, '
+                .'so the Logius request would be sent with an unsigned placeholder signature',
+                ['messageId' => $messageId]
+            );
+            $this->markFailedOrRetry(
+                message: $message,
+                reason: 'Tenant PKI-overheid certificate or key is not configured.',
+                bodyHash: $bodyHash
+            );
+            return;
+        }
+
         try {
             $message['bsnPlain'] = $bsnPlain;
             $response            = $this->logius->sendMessage($message, $cert, $key);
