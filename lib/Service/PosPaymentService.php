@@ -1226,12 +1226,17 @@ class PosPaymentService
         $register = $this->registerId();
         $schema   = $this->posTransactionSchema();
 
-        // Fail closed on an unconfigured register/schema. Every other
-        // OpenRegister call in this service already refuses on '', but this
-        // write did not: an empty id is not the same as "no id" to
-        // ObjectService, which skips setRegister()/setSchema() for an empty
-        // value and so persists the transaction into whatever register/schema
-        // context an earlier call in the same request happened to leave behind.
+        // Fail closed on an unconfigured register/schema. Today this is
+        // defence in depth, not a live hole: loadTransaction() above reads the
+        // same two ids and throws OCSNotFoundException on '', so this branch is
+        // currently unreachable (and is therefore not covered by a test — a
+        // test asserting it would be asserting loadTransaction's behaviour).
+        // It is stated locally anyway because the write MUST NOT run on an
+        // empty id: an empty id is not the same as "no id" to ObjectService,
+        // which skips setRegister()/setSchema() for an empty value and would
+        // persist the transaction into whatever register/schema context an
+        // earlier call in the same request left behind. The guard must not
+        // depend on a read further up staying where it is.
         if ($register === '' || $schema === '') {
             $this->logger->warning(
                 'Pipelinq POS payment: saveTransaction refused — register/posTransaction_schema not configured',
