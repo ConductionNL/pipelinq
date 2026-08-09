@@ -41,7 +41,13 @@
 			<div v-for="client in filteredClients"
 				:key="client.id"
 				class="client-row">
-				<div class="client-info" @click="viewClient(client)">
+				<div class="client-info"
+					role="button"
+					tabindex="0"
+					:aria-label="t('pipelinq', 'Open client {name}', { name: client.name })"
+					@click="viewClient(client)"
+					@keydown.enter.prevent="viewClient(client)"
+					@keydown.space.prevent="viewClient(client)">
 					<span class="client-icon">
 						<AccountGroup v-if="client.type === 'organization'" :size="18" />
 						<Account v-else :size="18" />

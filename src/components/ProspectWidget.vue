@@ -1,6 +1,13 @@
 <template>
 	<div class="prospect-widget">
-		<div class="prospect-widget__header" @click="expanded = !expanded">
+		<div class="prospect-widget__header"
+			role="button"
+			tabindex="0"
+			:aria-expanded="expanded"
+			:aria-label="t('pipelinq', 'Toggle prospect discovery')"
+			@click="expanded = !expanded"
+			@keydown.enter.prevent="expanded = !expanded"
+			@keydown.space.prevent="expanded = !expanded">
 			<div class="prospect-widget__title">
 				<h3>{{ t('pipelinq', 'Prospect Discovery') }}</h3>
 				<span v-if="prospectStore.total > 0" class="prospect-count">

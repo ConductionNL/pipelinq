@@ -41,6 +41,7 @@
 					:key="item.id"
 					class="queue-item"
 					:class="{ 'queue-item--selected': selectedIds.has(item.id) }"
+					role="button"
 					tabindex="0"
 					@click.exact="openItem(item)"
 					@click.ctrl="toggleSelect(item.id)"

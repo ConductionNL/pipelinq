@@ -1,5 +1,11 @@
 <template>
-	<div class="complaints-widget" @click="$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })">
+	<div class="complaints-widget"
+		role="button"
+		tabindex="0"
+		:aria-label="t('pipelinq', 'Open complaints')"
+		@click="$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })"
+		@keydown.enter.prevent="$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })"
+		@keydown.space.prevent="$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })">
 		<div v-if="loading" class="widget-loading">
 			{{ t('pipelinq', 'Loading...') }}
 		</div>
