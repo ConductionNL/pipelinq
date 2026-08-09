@@ -737,7 +737,7 @@ class Application extends App implements IBootstrap
      *
      * @return boolean True when initial state is worth computing.
      *
-     * @spec openspec/changes/object-write-at-instance-floor/specs/object-write-performance/spec.md
+     * @spec openspec/specs/pipelinq-or-adoption/spec.md#requirement-initial-state-is-computed-only-for-requests-that-render-a-page
      */
     private function requestRendersPage($server): bool
     {
