@@ -79,6 +79,8 @@ export default {
 		 * Both selects are required, matching the button guard the overlay had.
 		 *
 		 * @return {boolean} Whether the form may be submitted.
+		 *
+		 * @spec openspec/specs/contact-relationship-mapping/spec.md
 		 */
 		canSubmit() {
 			return !!this.form.toContact && !!this.form.type
