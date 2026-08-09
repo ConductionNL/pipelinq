@@ -317,7 +317,9 @@ class CtiController extends Controller
      *
      * Admin-only — see {@see self::getConfig()} for the auth model.
      *
-     * @auth admin-only Writes the instance-wide CTI platform configuration and credentials reference; the body additionally enforces it with an isAdmin() check.
+     * @auth admin-only Writes the instance-wide CTI platform configuration and
+     *       credentials reference; the body additionally enforces it with an
+     *       isAdmin() check.
      *
      * @return JSONResponse The saved configuration.
      *
