@@ -20,10 +20,10 @@
 			<table class="screen-pop__table" data-testid="screen-pop-matches">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Name') }}</th>
-						<th>{{ t('pipelinq', 'Client') }}</th>
-						<th>{{ t('pipelinq', 'Type') }}</th>
-						<th class="screen-pop__actions" />
+						<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Client') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Type') }}</th>
+						<th scope="col" class="screen-pop__actions" />
 					</tr>
 				</thead>
 				<tbody>

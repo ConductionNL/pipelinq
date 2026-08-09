@@ -7,13 +7,13 @@
 			<table class="viewTable">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'SKU') }}</th>
-						<th>{{ t('pipelinq', 'Name') }}</th>
-						<th>{{ t('pipelinq', 'Attributes') }}</th>
-						<th>{{ t('pipelinq', 'Price') }}</th>
-						<th>{{ t('pipelinq', 'Barcode') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
-						<th class="product-variant-panel__actions-col" />
+						<th scope="col">{{ t('pipelinq', 'SKU') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Attributes') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Price') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Barcode') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
+						<th scope="col" class="product-variant-panel__actions-col" />
 					</tr>
 				</thead>
 				<tbody>

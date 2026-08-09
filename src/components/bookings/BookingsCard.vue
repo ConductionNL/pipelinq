@@ -32,10 +32,10 @@
 			<table class="viewTable">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Date / time') }}</th>
-						<th>{{ t('pipelinq', 'Service') }}</th>
-						<th>{{ t('pipelinq', 'Resource') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Date / time') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Service') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Resource') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -284,5 +284,11 @@ export default {
 	background: var(--color-background-dark);
 	color: var(--color-text-maxcontrast);
 	text-decoration: line-through;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.viewTableRow {
+		transition: none;
+	}
 }
 </style>

@@ -85,7 +85,7 @@
 					@input="onValueInput($event.target.value)"
 					@blur="$emit('validate-leaf')">
 			</div>
-			<NcButton variant="tertiary" @click="$emit('remove')">
+			<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove rule')" @click="$emit('remove')">
 				<template #icon>
 					<Delete :size="18" />
 				</template>

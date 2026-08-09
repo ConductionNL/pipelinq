@@ -72,14 +72,14 @@
 			<table class="activity-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Date') }}</th>
-						<th>{{ t('pipelinq', 'User') }}</th>
-						<th>{{ t('pipelinq', 'Task') }}</th>
-						<th>{{ t('pipelinq', 'Description') }}</th>
-						<th class="numeric">
+						<th scope="col">{{ t('pipelinq', 'Date') }}</th>
+						<th scope="col">{{ t('pipelinq', 'User') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Task') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
+						<th scope="col" class="numeric">
 							{{ t('pipelinq', 'Duration') }}
 						</th>
-						<th>{{ t('pipelinq', 'Billable') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Billable') }}</th>
 					</tr>
 				</thead>
 				<tbody>

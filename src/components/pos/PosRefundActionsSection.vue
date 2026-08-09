@@ -42,16 +42,16 @@
 				<table class="pos-refund-section__lines">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Description') }}</th>
-							<th class="num">
+							<th scope="col">{{ t('pipelinq', 'Description') }}</th>
+							<th scope="col" class="num">
 								{{ t('pipelinq', 'Original qty') }}
 							</th>
-							<th class="num">
+							<th scope="col" class="num">
 								{{ t('pipelinq', 'Returned qty') }}
 							</th>
-							<th>{{ t('pipelinq', 'Reason') }}</th>
-							<th>{{ t('pipelinq', 'Restock') }}</th>
-							<th class="num">
+							<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Restock') }}</th>
+							<th scope="col" class="num">
 								{{ t('pipelinq', 'Refund total') }}
 							</th>
 						</tr>

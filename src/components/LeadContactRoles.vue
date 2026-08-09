@@ -10,10 +10,10 @@
 			<table class="viewTable">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Contact') }}</th>
-						<th>{{ t('pipelinq', 'Role') }}</th>
-						<th>{{ t('pipelinq', 'Notes') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'Contact') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Role') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Notes') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>
@@ -445,5 +445,11 @@ export default {
 	display: flex;
 	gap: 8px;
 	margin-top: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.viewTableRow {
+		transition: none;
+	}
 }
 </style>

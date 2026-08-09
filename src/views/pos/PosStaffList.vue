@@ -26,11 +26,11 @@
 			<table v-if="staff.length" class="pos-staff-list__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Display name') }}</th>
-						<th>{{ t('pipelinq', 'Role') }}</th>
-						<th>{{ t('pipelinq', 'Active') }}</th>
-						<th>{{ t('pipelinq', 'Last login') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'Display name') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Role') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Active') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Last login') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>

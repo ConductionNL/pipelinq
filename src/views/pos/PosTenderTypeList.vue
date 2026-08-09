@@ -34,13 +34,13 @@
 		<table v-else-if="tenderTypes.length > 0" class="pos-tender-type-list__table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Name') }}</th>
-					<th>{{ t('pipelinq', 'Code') }}</th>
-					<th>{{ t('pipelinq', 'GL account') }}</th>
-					<th>{{ t('pipelinq', 'Flags') }}</th>
-					<th>{{ t('pipelinq', 'Active') }}</th>
-					<th>{{ t('pipelinq', 'Sort') }}</th>
-					<th class="pos-tender-type-list__col-actions">
+					<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Code') }}</th>
+					<th scope="col">{{ t('pipelinq', 'GL account') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Flags') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Active') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Sort') }}</th>
+					<th scope="col" class="pos-tender-type-list__col-actions">
 						{{ t('pipelinq', 'Actions') }}
 					</th>
 				</tr>

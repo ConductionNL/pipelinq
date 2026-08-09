@@ -410,4 +410,10 @@ export default {
 .billable-dot--on { background: #43a047; }
 
 .billable-dot--off { background: #b0bec5; }
+
+@media (prefers-reduced-motion: reduce) {
+	.wbs-phase__chevron {
+		transition: none;
+	}
+}
 </style>

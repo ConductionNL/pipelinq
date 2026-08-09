@@ -21,10 +21,10 @@
 		<table v-else class="channel-comparison__table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Channel') }}</th>
-					<th>{{ t('pipelinq', 'Total') }}</th>
-					<th>{{ t('pipelinq', 'FCR Rate') }}</th>
-					<th>{{ t('pipelinq', 'SLA') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Channel') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Total') }}</th>
+					<th scope="col">{{ t('pipelinq', 'FCR Rate') }}</th>
+					<th scope="col">{{ t('pipelinq', 'SLA') }}</th>
 				</tr>
 			</thead>
 			<tbody>

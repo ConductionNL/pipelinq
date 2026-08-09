@@ -96,10 +96,10 @@
 			<table class="hours-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Day') }}</th>
-						<th>{{ t('pipelinq', 'Open') }}</th>
-						<th>{{ t('pipelinq', 'Close') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'Day') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Open') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Close') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>
@@ -146,10 +146,10 @@
 			<table class="hours-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Start date') }}</th>
-						<th>{{ t('pipelinq', 'End date') }}</th>
-						<th>{{ t('pipelinq', 'Label') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'Start date') }}</th>
+						<th scope="col">{{ t('pipelinq', 'End date') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Label') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>

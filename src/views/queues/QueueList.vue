@@ -310,4 +310,10 @@ export default {
 	min-height: 60px;
 	resize: vertical;
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.queue-card {
+		transition: none;
+	}
+}
 </style>

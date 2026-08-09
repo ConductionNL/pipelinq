@@ -467,4 +467,10 @@ export default {
 	font-weight: 600;
 	margin: 0;
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.blast-monitor__bar-fill {
+		transition: none;
+	}
+}
 </style>
