@@ -255,7 +255,6 @@
             "items": {
               "type": "string",
               "format": "uuid",
-              "$ref": "Decision",
               "x-external-register": "decidesk"
             },
             "referenceType": "decision",
@@ -266,7 +265,6 @@
             "title": "Governing contract",
             "description": "The Shillinq contract that governs this ticket (drives its SLA tier / entitlements). References a Shillinq Contract object (ADR-066 cross-app reference); Shillinq owns contract lifecycle. Carried over from the retired `request` schema when it folded into this supertype.",
             "format": "uuid",
-            "$ref": "Contract",
             "x-external-register": "shillinq",
             "x-allow-create": true
           },
@@ -305,7 +303,8 @@
             "type": "string",
             "title": "Case Reference",
             "description": "UUID of the Procest case this request converted into (request only).",
-            "format": "uuid"
+            "format": "uuid",
+            "x-external-register": "procest"
           },
           "complaintCategory": {
             "type": "string",

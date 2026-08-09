@@ -817,7 +817,6 @@
             "items": {
               "type": "string",
               "format": "uuid",
-              "$ref": "Decision",
               "x-external-register": "decidesk"
             },
             "referenceType": "decision",
@@ -2731,6 +2730,7 @@
             "type": "string",
             "description": "Optional UUID of the owning organization for multi-tenant isolation",
             "format": "uuid",
+            "x-external-register": "openregister",
             "visible": false,
             "title": "Organization ID"
           }
