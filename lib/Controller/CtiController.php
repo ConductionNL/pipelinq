@@ -286,16 +286,19 @@ class CtiController extends Controller
     /**
      * Read the current CTI singleton configuration.
      *
-     * Admin-only. Endpoint carries `#[NoAdminRequired]` so the NC SecurityMiddleware
-     * does not block authenticated non-admin requests at the framework layer; we
-     * gate the body with an `isAdmin($uid)` check (consistent with the rest of
-     * the pipelinq admin surface).
+     * Admin-only, and now enforced at BOTH layers. The endpoint used to carry
+     * #[NoAdminRequired] so SecurityMiddleware would let a non-admin through to
+     * a body that then returned 403 itself. That is fail-closed but it declares
+     * the opposite of what it does, and the declaration is what a reviewer
+     * reads. The attribute is gone, so the framework rejects a non-admin before
+     * the controller runs; the isAdmin() check below stays as defence in depth.
+     *
+     * @auth admin-only Returns the instance-wide CTI platform configuration; the body additionally enforces it with an isAdmin() check.
      *
      * @return JSONResponse Current config (credentials never returned).
      *
      * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
      */
-    #[NoAdminRequired]
     public function getConfig(): JSONResponse
     {
         $user = $this->userSession->getUser();
@@ -314,11 +317,12 @@ class CtiController extends Controller
      *
      * Admin-only — see {@see self::getConfig()} for the auth model.
      *
+     * @auth admin-only Writes the instance-wide CTI platform configuration and credentials reference; the body additionally enforces it with an isAdmin() check.
+     *
      * @return JSONResponse The saved configuration.
      *
      * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
      */
-    #[NoAdminRequired]
     public function updateConfig(): JSONResponse
     {
         $user = $this->userSession->getUser();
@@ -360,11 +364,12 @@ class CtiController extends Controller
     /**
      * Test platform connectivity (admin only).
      *
+     * @auth admin-only Opens an outbound connection using the stored CTI credentials; the body additionally enforces it with an isAdmin() check.
+     *
      * @return JSONResponse Test outcome.
      *
      * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
      */
-    #[NoAdminRequired]
     public function testConnection(): JSONResponse
     {
         $user = $this->userSession->getUser();
@@ -378,11 +383,12 @@ class CtiController extends Controller
     /**
      * Read the CTI webhook event log (admin only).
      *
+     * @auth admin-only Exposes the instance-wide CTI webhook event log; the body additionally enforces it with an isAdmin() check.
+     *
      * @return JSONResponse Event log entries (max 30-day retention).
      *
      * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
      */
-    #[NoAdminRequired]
     public function eventLog(): JSONResponse
     {
         $user = $this->userSession->getUser();

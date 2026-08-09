@@ -817,7 +817,6 @@
             "items": {
               "type": "string",
               "format": "uuid",
-              "$ref": "Decision",
               "x-external-register": "decidesk"
             },
             "referenceType": "decision",
@@ -1544,9 +1543,9 @@
           },
           "requestId": {
             "type": "string",
-            "description": "UUID reference to the associated request",
+            "description": "UUID reference to the associated request. Requests were folded into the `ticket` supertype by 99-unify-ticket-supertype, so this resolves to a ticket; the property keeps its stored name because renaming it would be a data migration.",
             "format": "uuid",
-            "$ref": "request",
+            "$ref": "ticket",
             "x-relation-filter": { "client": "@object.clientId" },
             "title": "Request"
           },
@@ -2731,6 +2730,7 @@
             "type": "string",
             "description": "Optional UUID of the owning organization for multi-tenant isolation",
             "format": "uuid",
+            "x-external-register": "openregister",
             "visible": false,
             "title": "Organization ID"
           }
