@@ -154,13 +154,27 @@ class KccWerkplekService
     /**
      * Read the pipelinq register slug from the app config.
      *
-     * @return string Register slug (typically `pipelinq`); empty string when missing.
+     * Fails closed: '' means "unconfigured", and every caller refuses the
+     * OpenRegister call on it. An empty register must never be handed to
+     * OpenRegister — ObjectService skips setRegister() for an empty value, so
+     * the query silently inherits whatever register context an earlier call in
+     * the same request left on the shared service instance. The empty case is
+     * logged so an unprovisioned instance is visible rather than silent.
+     *
+     * @return string Register slug (typically `pipelinq`); '' when unconfigured.
      *
      * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
      */
     private function getRegister(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        if ($registerId === '') {
+            $this->logger->warning(
+                'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
+            );
+        }
+
+        return $registerId;
     }//end getRegister()
 
     /**

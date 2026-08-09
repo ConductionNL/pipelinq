@@ -140,17 +140,40 @@ class TicketService
     /**
      * The pipelinq register id.
      *
+     * Fails closed: '' means "unconfigured". Callers must gate on
+     * {@see isConfigured()} and refuse the OpenRegister call — an empty
+     * register must never be handed to OpenRegister, because ObjectService
+     * skips setRegister() for an empty value and the query then silently
+     * inherits whatever register context an earlier call in the same request
+     * left on the shared service instance. The empty case is logged so an
+     * unprovisioned instance is visible rather than silent.
+     *
      * @return string The register id ('' when unconfigured).
      *
      * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
      */
     public function getRegisterId(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        if ($registerId === '') {
+            $this->logger->warning(
+                'Pipelinq: app-config "register" is not configured; ticket reads/writes are refused, not run unscoped'
+            );
+        }
+
+        return $registerId;
     }//end getRegisterId()
 
     /**
      * The unified ticket schema id.
+     *
+     * Fails closed: '' means "unconfigured". Callers must gate on
+     * {@see isConfigured()} and refuse the OpenRegister call — an empty schema
+     * must never be handed to OpenRegister, because ObjectService skips
+     * setSchema() for an empty value and the query then silently inherits
+     * whatever schema context an earlier call in the same request left on the
+     * shared service instance. The empty case is logged so an unprovisioned
+     * instance is visible rather than silent.
      *
      * @return string The schema id ('' when unconfigured).
      *
@@ -158,7 +181,14 @@ class TicketService
      */
     public function getSchemaId(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'ticket_schema', '');
+        $schemaId = $this->appConfig->getValueString(Application::APP_ID, 'ticket_schema', '');
+        if ($schemaId === '') {
+            $this->logger->warning(
+                'Pipelinq: app-config "ticket_schema" is not configured; ticket reads/writes are refused, not run unscoped'
+            );
+        }
+
+        return $schemaId;
     }//end getSchemaId()
 
     /**

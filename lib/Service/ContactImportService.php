@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
+use RuntimeException;
 
 /**
  * Service for importing Nextcloud contacts into Pipelinq objects.
@@ -54,6 +55,8 @@ class ContactImportService
      *
      * @return array The created client object data.
      *
+     * @throws RuntimeException When `client_schema` is not configured.
+     *
      * @spec openspec/specs/contacts-sync/spec.md
      */
     public function importAsClient(array $ncContact, string $uid): array
@@ -63,6 +66,9 @@ class ContactImportService
             uid: $uid
         );
         $schemaId = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
+        if ($schemaId === '') {
+            throw new RuntimeException('Pipelinq: app-config "client_schema" is not configured.');
+        }
 
         return $this->saveAndSerialize(data: $data, schemaId: $schemaId);
     }//end importAsClient()
@@ -76,6 +82,8 @@ class ContactImportService
      *
      * @return array The created contact object data.
      *
+     * @throws RuntimeException When `contact_schema` is not configured.
+     *
      * @spec openspec/specs/contacts-sync/spec.md
      */
     public function importAsContact(array $ncContact, string $uid, ?string $clientId): array
@@ -86,6 +94,9 @@ class ContactImportService
             clientId: $clientId
         );
         $schemaId = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
+        if ($schemaId === '') {
+            throw new RuntimeException('Pipelinq: app-config "contact_schema" is not configured.');
+        }
 
         return $this->saveAndSerialize(data: $data, schemaId: $schemaId);
     }//end importAsContact()
@@ -93,15 +104,28 @@ class ContactImportService
     /**
      * Save object data and return the serialized result.
      *
+     * Fails closed on an unconfigured register or schema. This write had no
+     * such guard: an empty id is not the same as "no id" to OpenRegister, whose
+     * ObjectService skips setRegister()/setSchema() for an empty value, so the
+     * imported contact would land in whatever register/schema context an
+     * earlier call in the same request left on the shared service instance.
+     * Throwing matches the surrounding import path, which already raises
+     * RuntimeException for unmet preconditions.
+     *
      * @param array  $data     The object data to save.
      * @param string $schemaId The schema ID.
      *
      * @return array The serialized result.
+     *
+     * @throws RuntimeException When the register or schema is not configured.
      */
     private function saveAndSerialize(array $data, string $schemaId): array
     {
         $objectService = $this->getObjectService();
         $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        if ($registerId === '' || $schemaId === '') {
+            throw new RuntimeException('Pipelinq: register or schema is not configured for the contact import.');
+        }
 
         $created = $objectService->saveObject(
             $data,

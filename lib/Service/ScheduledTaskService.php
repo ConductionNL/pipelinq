@@ -399,6 +399,18 @@ class ScheduledTaskService
 
         [$registerId, $schemaId] = $this->getRegisterAndSchema();
 
+        // Fail closed on an unconfigured register/schema. Today this is
+        // defence in depth rather than a live hole: getScheduledTask() above
+        // already throws on '' before we get here. It is stated locally because
+        // the write MUST NOT run on an empty id — an empty id is not the same
+        // as "no id" to ObjectService, which skips setRegister()/setSchema()
+        // for an empty value and so writes the task into whatever
+        // register/schema context an earlier call in the same request left
+        // behind. The guard must not depend on a read further up staying put.
+        if ($registerId === '' || $schemaId === '') {
+            throw new RuntimeException('Task register or schema is not configured.');
+        }
+
         $saved = $this->getObjectService()->saveObject(
             $merged,
             [],
@@ -833,12 +845,25 @@ class ScheduledTaskService
     /**
      * Read configured register and task schema IDs.
      *
-     * @return array{0: string, 1: string} [register, schema] tuple.
+     * Fails closed: '' on either id means "unconfigured", and every caller
+     * refuses the OpenRegister call on it. An empty id must never be handed to
+     * OpenRegister — ObjectService skips setRegister()/setSchema() for an empty
+     * value, so the query silently inherits whatever context an earlier call in
+     * the same request left on the shared service instance. The empty case is
+     * logged so an unprovisioned instance is visible rather than silent.
+     *
+     * @return array{0: string, 1: string} [register, schema] tuple, each ''
+     *                                     when unconfigured.
      */
     private function getRegisterAndSchema(): array
     {
         $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
         $schemaId   = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+        if ($registerId === '' || $schemaId === '') {
+            $this->logger->warning(
+                'Pipelinq: register/task_schema not configured; OpenRegister calls are refused, not run unscoped'
+            );
+        }
 
         return [$registerId, $schemaId];
     }//end getRegisterAndSchema()
