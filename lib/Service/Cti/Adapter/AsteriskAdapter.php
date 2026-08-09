@@ -255,23 +255,6 @@ class AsteriskAdapter implements CtiAdapterInterface
     /**
      * {@inheritDoc}
      *
-     * Asterisk Stasis bridge pushes channel-state events to the configured
-     * webhook URL automatically once the application is registered; nothing to
-     * do here.
-     *
-     * @param string $userId    NC user UID.
-     * @param string $extension Agent extension.
-     *
-     * @return void
-     */
-    public function subscribeToPresence(string $userId, string $extension): void
-    {
-        // No-op: Stasis device-state events are delivered via the existing webhook stream.
-    }//end subscribeToPresence()
-
-    /**
-     * {@inheritDoc}
-     *
      * Validates a shared-secret query parameter against the configured secret.
      *
      * @param string $payload   Raw request body as received.
