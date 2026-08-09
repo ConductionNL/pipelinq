@@ -213,17 +213,22 @@ class KassakoppelingAuditController extends Controller
     /**
      * Export a date-range slice as a Belastingdienst-ready file.
      *
-     * Admin-only at the application layer (the route would otherwise be a
-     * #[NoAdminRequired] sibling of the other endpoints, so the in-body
-     * IGroupManager::isAdmin check is what enforces REQ-AUDIT-005-03).
+     * Admin-only, now enforced at both layers. The route previously carried
+     * #[NoAdminRequired] as a sibling of the other endpoints on this
+     * controller, leaving the in-body IGroupManager::isAdmin check as the only
+     * thing enforcing REQ-AUDIT-005-03. That check remains, but the framework
+     * now rejects a non-admin first — this endpoint streams the full audit
+     * trail to the tax authority, and it is the one place on this controller
+     * where a mis-edit to the body would be worst.
      * Returns the XML / JSON file as a DataDownloadResponse with a
      * Belastingdienst-friendly filename.
+     *
+     * @auth admin-only Streams the complete Belastingdienst audit export for the instance; the body additionally enforces it with an isAdmin() check (REQ-AUDIT-005-03).
      *
      * @return DataDownloadResponse|JSONResponse The export, or an error.
      *
      * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#3.1
      */
-    #[NoAdminRequired]
     public function export(): DataDownloadResponse|JSONResponse
     {
         $uid = $this->requireUserId();
