@@ -59,7 +59,17 @@
 		</div>
 
 		<!-- Add relationship dialog -->
-		<div v-if="showAddDialog" class="create-overlay" @click.self="showAddDialog = false">
+		<!-- The backdrop no longer dismisses on click. That was a MOUSE-ONLY
+		     affordance with no keyboard equivalent, which is what hydra gate-32
+		     reports; the fix is not to give a backdrop role="button" +
+		     tabindex, because a backdrop is presentational and putting it in
+		     the tab order announces it as a control. Dismissal is via the ×
+		     in the header and Cancel, both keyboard-reachable.
+		     This form should follow LeadContactRoles into an NcDialog under
+		     src/dialogs/, which would restore backdrop dismissal along with
+		     Escape and a focus trap; that is a larger change than this one
+		     because of the edit-mode seeding, and is not done here. -->
+		<div v-if="showAddDialog" class="create-overlay">
 			<div class="create-dialog">
 				<div class="create-dialog__header">
 					<h3>{{ editingRelationship ? t('pipelinq', 'Edit relationship') : t('pipelinq', 'Add relationship') }}</h3>

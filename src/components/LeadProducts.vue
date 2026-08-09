@@ -106,7 +106,7 @@
 		</div>
 
 		<!-- Add product dialog -->
-		<div v-if="showAddDialog" class="create-overlay" @click.self="showAddDialog = false">
+		<div v-if="showAddDialog" class="create-overlay">
 			<div class="create-dialog">
 				<div class="create-dialog__header">
 					<h3>{{ t('pipelinq', 'Add Product') }}</h3>
