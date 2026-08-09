@@ -22,7 +22,7 @@
 						v-model="editName"
 						class="tag-chip__input"
 						:aria-label="t('pipelinq', 'Rename tag {name}', { name: tag.name })"
-					@keyup.enter="saveRename(tag.id)"
+						@keyup.enter="saveRename(tag.id)"
 						@keyup.escape="cancelEdit">
 					<button class="tag-chip__action tag-chip__action--save"
 						:title="t('pipelinq', 'Save')"

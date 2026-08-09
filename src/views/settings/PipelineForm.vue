@@ -188,7 +188,7 @@
 								<div class="stage-color-field">
 									<label :for="'stage-color-' + index">{{ t('pipelinq', 'Color') }}</label>
 									<input :id="'stage-color-' + index"
-									type="color"
+										type="color"
 										:value="stage.color || '#6b7280'"
 										@input="e => stage.color = e.target.value">
 								</div>

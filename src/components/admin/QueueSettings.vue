@@ -42,7 +42,10 @@
 					<div class="edit-row">
 						<div class="edit-field">
 							<label for="queue-edit-max-capacity">{{ t('pipelinq', 'Max capacity') }}</label>
-							<input id="queue-edit-max-capacity" v-model.number="editForm.maxCapacity" type="number" min="1">
+							<input id="queue-edit-max-capacity"
+								v-model.number="editForm.maxCapacity"
+								type="number"
+								min="1">
 						</div>
 						<div class="edit-field">
 							<label>
