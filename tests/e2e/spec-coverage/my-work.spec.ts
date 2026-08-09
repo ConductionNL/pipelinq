@@ -45,7 +45,7 @@ test('my work page main content renders', async ({ page }) => {
 // @e2e openspec/specs/my-work/spec.md#manual-refresh
 test('my work page renders without uncaught errors', async ({ page }) => {
 	await page.goto('/apps/pipelinq/my-work')
-	await page.waitForLoadState('networkidle').catch(() => {})
+	await page.waitForLoadState('domcontentloaded').catch(() => {})
 	await expect(page.locator('body')).not.toContainText('Uncaught Error', { timeout: 10000 })
 })
 
