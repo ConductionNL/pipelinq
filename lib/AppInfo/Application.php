@@ -116,6 +116,14 @@ class Application extends App implements IBootstrap
      *
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength) A flat DI registration
      *  manifest — one linear list of service/listener wirings, not branching logic.
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) OC_App is Nextcloud's legacy
+     *  bootstrap class. There is no OCP interface for registering another app's
+     *  autoloader, and this runs at the composition root where no container is
+     *  available to resolve an adapter from. The alternative,
+     *  IAppManager::loadApp(), would mark OpenRegister loaded and boot it before
+     *  its own register() had run — the load-order hazard the prelude exists to
+     *  avoid.
      */
     public function register(IRegistrationContext $context): void
     {
