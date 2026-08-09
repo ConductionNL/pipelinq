@@ -63,6 +63,12 @@
 				</NcButton>
 			</div>
 		</template>
+		<ConfirmDialog v-if="showDeleteConfirm"
+			:name="t('pipelinq', 'Delete staff member')"
+			:message="t('pipelinq', 'Delete this staff member? This cannot be undone.')"
+			:confirm-label="t('pipelinq', 'Delete')"
+			@confirm="performDelete"
+			@cancel="showDeleteConfirm = false" />
 	</div>
 </template>
 
@@ -70,10 +76,11 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 
 export default {
 	name: 'PosStaffForm',
-	components: { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcSelect, NcTextField },
+	components: { ConfirmDialog, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcSelect, NcTextField },
 	props: {
 		id: { type: String, default: '' },
 	},
@@ -90,6 +97,7 @@ export default {
 			loading: false,
 			saving: false,
 			errorMessage: '',
+			showDeleteConfirm: false,
 		}
 	},
 	computed: {
@@ -170,11 +178,25 @@ export default {
 				this.saving = false
 			}
 		},
-		async confirmDelete() {
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('pipelinq', 'Delete this staff member? This cannot be undone.'))) {
-				return
-			}
+		/**
+		 * Open the delete confirmation.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
+		 */
+		confirmDelete() {
+			this.showDeleteConfirm = true
+		},
+		/**
+		 * Delete the staff member once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
+		 */
+		async performDelete() {
+			this.showDeleteConfirm = false
 			this.saving = true
 			this.errorMessage = ''
 			try {

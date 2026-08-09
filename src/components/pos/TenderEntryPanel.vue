@@ -101,6 +101,12 @@
 			:tender-types="activeTenderTypes"
 			@close="showAdd = false"
 			@added="onTenderAdded" />
+		<ConfirmDialog v-if="pendingRemoveTender"
+			:name="t('pipelinq', 'Remove tender')"
+			:message="t('pipelinq', 'Remove this tender?')"
+			:confirm-label="t('pipelinq', 'Remove')"
+			@confirm="performRemoveTender"
+			@cancel="pendingRemoveTender = null" />
 	</div>
 </template>
 
@@ -110,11 +116,12 @@ import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import AddTenderDialog from '../../modals/AddTenderDialog.vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { formatEur } from '../../services/posTotals.js'
 
 export default {
 	name: 'TenderEntryPanel',
-	components: { NcButton, NcLoadingIcon, AddTenderDialog },
+	components: { ConfirmDialog, NcButton, NcLoadingIcon, AddTenderDialog },
 	props: {
 		transactionId: {
 			type: String,
@@ -134,6 +141,7 @@ export default {
 			loading: false,
 			showAdd: false,
 			errorMessage: '',
+			pendingRemoveTender: null,
 		}
 	},
 	computed: {
@@ -230,13 +238,33 @@ export default {
 			await this.loadTenders()
 			this.$emit('changed')
 		},
-		async removeTender(tender) {
-			const id = this.tenderId(tender)
-			if (!id) {
+		/**
+		 * Open the remove confirmation for a tender.
+		 *
+		 * @param {object} tender The tender to remove.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 */
+		removeTender(tender) {
+			if (!this.tenderId(tender)) {
 				return
 			}
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('pipelinq', 'Remove this tender?'))) {
+			this.pendingRemoveTender = tender
+		},
+		/**
+		 * Remove the pending tender once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 */
+		async performRemoveTender() {
+			const tender = this.pendingRemoveTender
+			this.pendingRemoveTender = null
+			const id = tender ? this.tenderId(tender) : null
+			if (!id) {
 				return
 			}
 			try {

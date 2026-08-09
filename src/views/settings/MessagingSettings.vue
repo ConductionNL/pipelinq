@@ -354,6 +354,18 @@
 				</table>
 			</div>
 		</NcSettingsSection>
+		<ConfirmDialog v-if="pendingDeleteProvider"
+			:name="t('pipelinq', 'Delete provider')"
+			:message="deleteProviderMessage"
+			:confirm-label="t('pipelinq', 'Delete')"
+			@confirm="performDeleteProvider"
+			@cancel="pendingDeleteProvider = null" />
+		<ConfirmDialog v-if="pendingDeleteBudget"
+			:name="t('pipelinq', 'Delete send budget')"
+			:message="t('pipelinq', 'Delete this send budget?')"
+			:confirm-label="t('pipelinq', 'Delete')"
+			@confirm="performDeleteBudget"
+			@cancel="pendingDeleteBudget = null" />
 	</div>
 </template>
 
@@ -371,6 +383,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const KIND_LABELS = {
@@ -420,6 +433,7 @@ const DEFAULT_BUDGET_FORM = () => ({
 export default {
 	name: 'MessagingSettings',
 	components: {
+		ConfirmDialog,
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcEmptyContent,
@@ -434,6 +448,8 @@ export default {
 			providers: [],
 			budgets: [],
 			templates: [],
+			pendingDeleteProvider: null,
+			pendingDeleteBudget: null,
 			loadingProviders: false,
 			loadingBudgets: false,
 			loadingTemplates: false,
@@ -452,6 +468,22 @@ export default {
 	computed: {
 		objectStore() {
 			return useObjectStore()
+		},
+		/**
+		 * Built here rather than inline in the template so the t() key stays
+		 * byte-identical to the one the old window.confirm used. Escaping the
+		 * quotes as &quot; in the attribute would have minted a NEW key and
+		 * orphaned every existing translation of this string.
+		 *
+		 * @return {string} The confirmation message.
+		 *
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
+		deleteProviderMessage() {
+			if (!this.pendingDeleteProvider) {
+				return ''
+			}
+			return t('pipelinq', 'Delete provider "{name}"?', { name: this.pendingDeleteProvider.displayName })
 		},
 		kindOptions() {
 			return [
@@ -559,6 +591,13 @@ export default {
 			this.editingProvider = null
 			this.providerForm = DEFAULT_PROVIDER_FORM()
 		},
+		/**
+		 * Create or update a channel provider.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		async saveProvider() {
 			this.savingProvider = true
 			try {
@@ -572,9 +611,29 @@ export default {
 				this.savingProvider = false
 			}
 		},
-		async deleteProvider(provider) {
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('pipelinq', 'Delete provider "{name}"?', { name: provider.displayName }))) {
+		/**
+		 * Open the delete confirmation for a provider.
+		 *
+		 * @param {object} provider The provider to delete.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
+		deleteProvider(provider) {
+			this.pendingDeleteProvider = provider
+		},
+		/**
+		 * Delete the pending provider once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
+		async performDeleteProvider() {
+			const provider = this.pendingDeleteProvider
+			this.pendingDeleteProvider = null
+			if (!provider) {
 				return
 			}
 			try {
@@ -614,10 +673,24 @@ export default {
 			this.budgetForm = DEFAULT_BUDGET_FORM()
 			this.showBudgetForm = true
 		},
+		/**
+		 * Close the send-budget form and reset it.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		cancelBudgetForm() {
 			this.showBudgetForm = false
 			this.budgetForm = DEFAULT_BUDGET_FORM()
 		},
+		/**
+		 * Create a message send budget.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		async createBudget() {
 			this.creatingBudget = true
 			try {
@@ -642,9 +715,29 @@ export default {
 				this.savingBudgetId = null
 			}
 		},
-		async deleteBudget(budget) {
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('pipelinq', 'Delete this send budget?'))) {
+		/**
+		 * Open the delete confirmation for a send budget.
+		 *
+		 * @param {object} budget The budget to delete.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
+		deleteBudget(budget) {
+			this.pendingDeleteBudget = budget
+		},
+		/**
+		 * Delete the pending send budget once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
+		async performDeleteBudget() {
+			const budget = this.pendingDeleteBudget
+			this.pendingDeleteBudget = null
+			if (!budget) {
 				return
 			}
 			try {

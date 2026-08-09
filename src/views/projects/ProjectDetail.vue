@@ -245,6 +245,12 @@
 			name-field="description"
 			@confirm="onActivitySaved"
 			@close="showActivityDialog = false" />
+		<ConfirmDialog v-if="showDeleteProjectConfirm"
+			:name="t('pipelinq', 'Delete project')"
+			:message="t('pipelinq', 'Are you sure you want to delete this project?')"
+			:confirm-label="t('pipelinq', 'Delete')"
+			@confirm="performDeleteProject"
+			@cancel="showDeleteProjectConfirm = false" />
 	</CnDetailPage>
 </template>
 
@@ -252,6 +258,7 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { computed } from 'vue'
 import { CnDetailPage, CnDetailCard, CnFormDialog, useObjectSubscription } from '@conduction/nextcloud-vue'
@@ -261,6 +268,7 @@ import { useObjectStore } from '../../store/modules/object.js'
 export default {
 	name: 'ProjectDetail',
 	components: {
+		ConfirmDialog,
 		NcButton,
 		CnDetailPage,
 		CnDetailCard,
@@ -305,6 +313,7 @@ export default {
 	data() {
 		return {
 			editing: false,
+			showDeleteProjectConfirm: false,
 			showProjectForm: false,
 			showPhaseDialog: false,
 			showTaskDialog: false,
@@ -584,11 +593,25 @@ export default {
 				showError(error?.message || t('pipelinq', 'Could not save project. Please try again.'))
 			}
 		},
-		async confirmDelete() {
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('pipelinq', 'Are you sure you want to delete this project?'))) {
-				return
-			}
+		/**
+		 * Open the project delete confirmation.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		confirmDelete() {
+			this.showDeleteProjectConfirm = true
+		},
+		/**
+		 * Delete the project once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
+		async performDeleteProject() {
+			this.showDeleteProjectConfirm = false
 			const success = await this.objectStore.deleteObject('project', this.projectId)
 			if (success) {
 				this.$router.push({ name: 'Projects' })
