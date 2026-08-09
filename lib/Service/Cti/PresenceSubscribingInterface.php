@@ -27,8 +27,8 @@
  * renew before expiry, how to avoid creating a duplicate subscription on every
  * call) that is not a mechanical change and is not made here.
  *
- * @category Service
- * @package  OCA\Pipelinq\Service\Cti
+ * @category  Service
+ * @package   OCA\Pipelinq\Service\Cti
  * @author    Conduction <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
