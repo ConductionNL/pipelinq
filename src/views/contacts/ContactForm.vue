@@ -4,6 +4,8 @@
 			<label for="contact-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
 				id="contact-name"
+				label-outside
+				:label="t('pipelinq', 'Name')"
 				:model-value="form.name"
 				:error="!!errors.name"
 				:helper-text="errors.name"
@@ -33,6 +35,8 @@
 				<label for="contact-role">{{ t('pipelinq', 'Role') }}</label>
 				<NcTextField
 					id="contact-role"
+					label-outside
+					:label="t('pipelinq', 'Role')"
 					:model-value="form.role"
 					@update:model-value="v => form.role = v" />
 			</div>
@@ -40,6 +44,8 @@
 				<label for="contact-email">{{ t('pipelinq', 'Email') }}</label>
 				<NcTextField
 					id="contact-email"
+					label-outside
+					:label="t('pipelinq', 'Email')"
 					:model-value="form.email"
 					:error="!!errors.email"
 					:helper-text="errors.email"
@@ -52,6 +58,8 @@
 			<label for="contact-phone">{{ t('pipelinq', 'Phone') }}</label>
 			<NcTextField
 				id="contact-phone"
+				label-outside
+				:label="t('pipelinq', 'Phone')"
 				:model-value="form.phone"
 				:error="!!errors.phone"
 				:helper-text="errors.phone"
