@@ -28,7 +28,7 @@
 		:row-click-to-view="false"
 		@row-click="openLead"
 		@view="openLead">
-		<template #header-extra>
+		<template #header-actions>
 			<div class="lead-list__filters">
 				<NcCheckboxRadioSwitch
 					v-model="showStaleOnly"
@@ -45,11 +45,11 @@
 			</div>
 		</template>
 
-		<template #cell-expectedCloseDate="{ item }">
-			<span :class="{ 'overdue-cell': isLeadOverdue(item, stages) }">
-				{{ item.expectedCloseDate || '-' }}
-				<small v-if="isLeadOverdue(item, stages)" class="overdue-suffix">
-					{{ getOverdueDays(item, stages) }}d {{ t('pipelinq', 'late') }}
+		<template #column-expectedCloseDate="{ row }">
+			<span :class="{ 'overdue-cell': isLeadOverdue(row, stages) }">
+				{{ row.expectedCloseDate || '-' }}
+				<small v-if="isLeadOverdue(row, stages)" class="overdue-suffix">
+					{{ getOverdueDays(row, stages) }}d {{ t('pipelinq', 'late') }}
 				</small>
 			</span>
 		</template>
