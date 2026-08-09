@@ -149,7 +149,13 @@
 					:key="stage.name"
 					class="kanban-closed-column"
 					:class="{ expanded: expandedClosed === stage.name }"
+					role="button"
+					tabindex="0"
+					:aria-expanded="expandedClosed === stage.name"
+					:aria-label="t('pipelinq', 'Toggle closed stage {name}', { name: stage.name })"
 					@click="toggleClosedStage(stage.name)"
+					@keydown.enter.prevent="toggleClosedStage(stage.name)"
+					@keydown.space.prevent="toggleClosedStage(stage.name)"
 					@dragover.prevent
 					@drop="onDrop($event, stage)">
 					<span class="closed-title">{{ stage.name.toUpperCase() }}</span>

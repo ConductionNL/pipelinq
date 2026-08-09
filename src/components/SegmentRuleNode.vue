@@ -70,18 +70,21 @@
 					:value="node.value"
 					type="number"
 					class="rule-node__value"
+					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
 					@blur="$emit('validate-leaf')">
 				<input v-else-if="valueInputType === 'date'"
 					:value="node.value"
 					type="date"
 					class="rule-node__value"
+					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
 					@blur="$emit('validate-leaf')">
 				<input v-else
 					:value="node.value"
 					type="text"
 					class="rule-node__value"
+					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
 					@blur="$emit('validate-leaf')">
 			</div>

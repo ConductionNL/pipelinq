@@ -13,7 +13,11 @@
 				v-for="article in articles"
 				:key="article.id || article.title"
 				class="xwiki-article-list__item"
-				@click="$emit('select', article)">
+				role="button"
+				tabindex="0"
+				@click="$emit('select', article)"
+				@keydown.enter.prevent="$emit('select', article)"
+				@keydown.space.prevent="$emit('select', article)">
 				<div class="xwiki-article-list__title">
 					{{ article.title }}
 				</div>
