@@ -5,8 +5,9 @@
  *
  * Admin-only operational endpoints for the Berichtenbox bridge:
  * retry a failed message + read aggregate delivery stats. Both routes
- * are admin-gated by NC's framework default (no #[NoAdminRequired])
- * per [[nc-security-defaults]]; SecurityMiddleware enforces it.
+ * are admin-gated by Nextcloud's framework default — no NoAdminRequired
+ * attribute is present — per [[nc-security-defaults]]; SecurityMiddleware
+ * enforces it. Each method declares that posture in its own docblock.
  *
  * @category Controller
  * @package  OCA\Pipelinq\Controller
@@ -62,6 +63,8 @@ class BerichtenboxAdminController extends Controller
      * POST /api/admin/berichtenbox/message/{id}/retry — re-queue a failed
      * message for immediate dispatch.
      *
+     * @auth admin-only Re-dispatches a citizen message on any tenant's behalf; restricted to server administrators by the framework default.
+     *
      * @param string $id BerichtenboxMessage uuid.
      *
      * @return JSONResponse
@@ -116,6 +119,8 @@ class BerichtenboxAdminController extends Controller
 
     /**
      * GET /api/admin/berichtenbox/stats — aggregate delivery counts.
+     *
+     * @auth admin-only Exposes cross-tenant delivery totals for the whole instance; restricted to server administrators by the framework default.
      *
      * @return JSONResponse
      *
