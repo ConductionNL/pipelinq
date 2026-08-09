@@ -329,11 +329,12 @@ class NotesController extends Controller
      * @param string $objectType The object type.
      * @param string $objectId   The object ID.
      *
+     * @auth admin-only Bulk-deletes every note on an entity the caller need not own; the body additionally enforces it with an isAdmin() check.
+     *
      * @return JSONResponse The response.
      *
      * @spec openspec/specs/entity-notes/spec.md
      */
-    #[NoAdminRequired]
     public function deleteAll(string $objectType, string $objectId): JSONResponse
     {
         $user = $this->userSession->getUser();

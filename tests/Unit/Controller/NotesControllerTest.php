@@ -261,4 +261,70 @@ class NotesControllerTest extends TestCase
 
         $this->assertSame(403, $response->getStatus());
     }//end testDeleteSingleReturns403OnPermissionError()
+
+    /**
+     * deleteAll must refuse a non-admin.
+     *
+     * This pins the half of the check that survives dropping
+     * #[NoAdminRequired] from the method. With the attribute gone,
+     * SecurityMiddleware rejects a non-admin before the controller is even
+     * reached — which is the point of that change — but middleware is not
+     * exercised by a unit test, so the in-body isAdmin() guard is what this
+     * asserts. If someone later removes the body check on the grounds that
+     * "the framework handles it", this test fails.
+     *
+     * deleteAll wipes every note on an entity the caller need not own, so it
+     * is the worst of the seven to get wrong.
+     *
+     * @return void
+     */
+    public function testDeleteAllRefusesNonAdmin(): void
+    {
+        $request     = $this->createMock(IRequest::class);
+        $userSession = $this->createMock(IUserSession::class);
+        $user        = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('regular-user');
+        $userSession->method('getUser')->willReturn($user);
+
+        $l10n = $this->createMock(IL10N::class);
+        $l10n->method('t')->willReturnArgument(0);
+
+        $settingsService = $this->createMock(SettingsService::class);
+        $settingsService->method('getSettings')->willReturn(
+                [
+                    'register'      => 'reg-123',
+                    'client_schema' => 'schema-client',
+                ]
+                );
+
+        $ticketService = $this->createMock(TicketService::class);
+        $ticketService->method('getRegisterId')->willReturn('reg-123');
+        $ticketService->method('getSchemaId')->willReturn('schema-ticket');
+
+        // The notes service must never be reached: the guard has to reject
+        // BEFORE any delete is attempted. Asserting on the outcome alone
+        // would still pass if the guard ran after the wipe.
+        $notesService = $this->createMock(NotesService::class);
+        $notesService->expects($this->never())->method('deleteAllNotes');
+
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isAdmin')->willReturn(false);
+
+        $controller = new NotesController(
+            $request,
+            $notesService,
+            $this->createMock(NoteEventService::class),
+            $userSession,
+            $l10n,
+            $this->createMock(\Psr\Log\LoggerInterface::class),
+            $this->createMock(ContainerInterface::class),
+            $groupManager,
+            $settingsService,
+            $ticketService,
+        );
+
+        $response = $controller->deleteAll('pipelinq_client', 'obj-1');
+
+        $this->assertSame(403, $response->getStatus());
+    }//end testDeleteAllRefusesNonAdmin()
 }//end class
