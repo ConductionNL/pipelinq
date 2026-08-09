@@ -77,7 +77,8 @@
 				<input id="queue-new-max-capacity"
 					v-model.number="newQueue.maxCapacity"
 					type="number"
-					min="1">
+					min="1"
+					autocomplete="off">
 			</div>
 			<template #actions>
 				<NcButton @click="resetCreateForm">

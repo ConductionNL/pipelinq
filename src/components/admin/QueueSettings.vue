@@ -45,7 +45,8 @@
 							<input id="queue-edit-max-capacity"
 								v-model.number="editForm.maxCapacity"
 								type="number"
-								min="1">
+								min="1"
+								autocomplete="off">
 						</div>
 						<div class="edit-field">
 							<label>
