@@ -151,7 +151,7 @@ class IngestProductVendorMaster implements IRepairStep
      *
      * @return string
      *
-     * @spec openspec/changes/pipelinq-product-vendor-master/tasks.md#task-phase4
+     * @spec openspec/specs/product-vendor-master/spec.md
      */
     public function getName(): string
     {
@@ -169,7 +169,7 @@ class IngestProductVendorMaster implements IRepairStep
      *
      * @return void
      *
-     * @spec openspec/changes/pipelinq-product-vendor-master/tasks.md#task-phase4
+     * @spec openspec/specs/product-vendor-master/spec.md
      */
     public function run(IOutput $output): void
     {

@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/customer-360/tasks.md#task-6.1 -->
+<!-- @spec openspec/specs/customer-360/spec.md -->
 <template>
 	<span
 		class="lead-close-cell"

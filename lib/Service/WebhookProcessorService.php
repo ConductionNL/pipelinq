@@ -267,7 +267,7 @@ class WebhookProcessorService
      *
      * @return void
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#bounce-handling
+     * @spec openspec/specs/marketing-blast-delivery/spec.md#requirement-bounce-handling-protects-sender-reputation
      */
     public function processBounce(array $event): void
     {
@@ -361,7 +361,7 @@ class WebhookProcessorService
      *
      * @return void
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#click-attribution
+     * @spec openspec/specs/marketing-blast-delivery/spec.md#requirement-click-events-recorded-for-attribution
      */
     public function processClick(array $event): void
     {
@@ -396,7 +396,7 @@ class WebhookProcessorService
      *
      * @return void
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#unsubscribe-propagation
+     * @spec openspec/specs/marketing-blast-delivery/spec.md#requirement-unsubscribe-propagates-within-minutes
      */
     public function processUnsubscribe(array $event): void
     {

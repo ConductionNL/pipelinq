@@ -154,8 +154,8 @@ export default {
 		 * manifest column references (ADR-036).
 		 *
 		 * @return {Record<string, object>}
-		 * @spec openspec/changes/customer-360/tasks.md#task-6.1
-		 * @spec openspec/changes/customer-360/tasks.md#task-6.2
+		 * @spec openspec/specs/customer-360/spec.md
+		 * @spec openspec/specs/lead-scoring-win-probability/spec.md#requirement-win-probability-is-surfaced-on-the-pipeline-list-and-deal-detail
 		 */
 		cellWidgets() {
 			return {

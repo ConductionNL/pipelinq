@@ -23,7 +23,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#compliance-service
+ * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Cohesive consent + template + queued-delivery gate; splitting fragments one policy.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Guard-heavy but flat GDPR/CAN-SPAM checks; each operation is independently unit-tested.
  *
- * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#compliance-service
+ * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
  */
 class ComplianceService
 {
@@ -138,7 +138,7 @@ class ComplianceService
      * @param SegmentService     $segmentService Segment member projection.
      * @param LoggerInterface    $logger         Logger.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#di
+     * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
      */
     public function __construct(
         private ContainerInterface $container,
@@ -169,7 +169,7 @@ class ComplianceService
      *
      * @return array{compliant: bool, missingConsent: array<int, string>, missingCount: int}
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#check-segment-compliance
+     * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
      */
     public function checkSegmentCompliance(string $segmentId, string $channel): array
     {
@@ -231,7 +231,7 @@ class ComplianceService
      *                              `validateTemplate()` / `checkSegmentCompliance()`
      *                              for the field shapes.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#check-segment-compliance
+     * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
      */
     public function preflightBlast(string $segmentId, array $template, string $channel): array
     {
@@ -260,7 +260,7 @@ class ComplianceService
      *
      * @return bool True when the channel is gated open for this contact.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#has-consent-for-channel
+     * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
      */
     public function hasConsentForChannel(string $contactId, string $channel): bool
     {
@@ -326,7 +326,7 @@ class ComplianceService
      *
      * @return string|null Error message or null when valid.
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#validate-template
+     * @spec openspec/specs/marketing-compliance/spec.md#requirement-unsubscribe-footer-enforced-on-email-templates
      */
     public function validateTemplate(array $templateData, string $channel): ?string
     {
@@ -706,7 +706,7 @@ class ComplianceService
      *
      * @return void
      *
-     * @spec openspec/changes/marketing-segmentation-and-blast-03-compliance-service/tasks.md#record-consent-withdrawal
+     * @spec openspec/specs/marketing-compliance/spec.md#requirement-consent-withdrawal-propagates
      */
     public function recordConsentWithdrawal(
         string $contactId,
