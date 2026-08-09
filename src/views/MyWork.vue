@@ -63,6 +63,7 @@
 						:key="item.id"
 						class="work-card"
 						:class="{ 'work-card--overdue': item.isOverdue, 'work-card--completed': item.isClosed }"
+						role="button"
 						tabindex="0"
 						@click="openItem(item)"
 						@keydown.enter="openItem(item)">

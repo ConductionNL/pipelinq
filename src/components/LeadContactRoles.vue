@@ -48,59 +48,18 @@
 		</div>
 
 		<!-- Add role dialog -->
-		<div v-if="showAddDialog" class="create-overlay" @click.self="showAddDialog = false">
-			<div class="create-dialog">
-				<div class="create-dialog__header">
-					<h3>{{ t('pipelinq', 'Add contact role') }}</h3>
-					<NcButton variant="tertiary" @click="showAddDialog = false">
-						&times;
-					</NcButton>
-				</div>
-				<div class="create-dialog__body">
-					<div class="form-group">
-						<label>{{ t('pipelinq', 'Contact') }} *</label>
-						<NcSelect
-							v-model="addForm.toContact"
-							:options="contactOptions"
-							:aria-label-combobox="t('pipelinq', 'Contact')"
-							:placeholder="t('pipelinq', 'Search contacts...')"
-							label="name"
-							:reduce="opt => opt.id"
-							@search="searchContacts" />
-					</div>
-					<div class="form-group">
-						<label>{{ t('pipelinq', 'Role') }} *</label>
-						<NcSelect
-							v-model="addForm.type"
-							:options="roleOptions"
-							:aria-label-combobox="t('pipelinq', 'Role')"
-							:placeholder="t('pipelinq', 'Select role...')"
-							label="label"
-							:reduce="opt => opt.value" />
-					</div>
-					<div class="form-group">
-						<label>{{ t('pipelinq', 'Notes') }}</label>
-						<textarea v-model="addForm.notes" rows="2" />
-					</div>
-					<div class="form-actions">
-						<NcButton
-							variant="primary"
-							:disabled="!addForm.toContact || !addForm.type"
-							@click="addRole">
-							{{ t('pipelinq', 'Add') }}
-						</NcButton>
-						<NcButton @click="showAddDialog = false">
-							{{ t('pipelinq', 'Cancel') }}
-						</NcButton>
-					</div>
-				</div>
-			</div>
-		</div>
+		<AddContactRoleDialog v-if="showAddDialog"
+			:contact-options="contactOptions"
+			:role-options="roleOptions"
+			@search-contacts="searchContacts"
+			@submit="addRole"
+			@cancel="showAddDialog = false" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import AddContactRoleDialog from '../dialogs/AddContactRoleDialog.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -116,9 +75,9 @@ const CRM_ROLES = [
 export default {
 	name: 'LeadContactRoles',
 	components: {
+		AddContactRoleDialog,
 		NcButton,
 		NcLoadingIcon,
-		NcSelect,
 	},
 	props: {
 		leadId: {
@@ -134,11 +93,6 @@ export default {
 			showAddDialog: false,
 			contactOptions: [],
 			searchTimeout: null,
-			addForm: {
-				toContact: null,
-				type: null,
-				notes: '',
-			},
 		}
 	},
 	computed: {
@@ -243,27 +197,26 @@ export default {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-1
 		 */
-		async addRole() {
-			if (!this.addForm.toContact || !this.addForm.type) {
+		async addRole(form) {
+			if (!form || !form.toContact || !form.type) {
 				return
 			}
 
 			try {
 				await this.objectStore.saveObject('relationship', {
 					fromContact: this.leadId,
-					toContact: this.addForm.toContact,
+					toContact: form.toContact,
 					fromType: 'lead',
 					toType: 'contact',
-					type: this.addForm.type,
-					inverseType: this.addForm.type,
+					type: form.type,
+					inverseType: form.type,
 					category: 'CRM Rol',
-					notes: this.addForm.notes || '',
+					notes: form.notes || '',
 					strength: 'medium',
 				})
 
 				showSuccess(t('pipelinq', 'Contact role added'))
 				this.showAddDialog = false
-				this.addForm = { toContact: null, type: null, notes: '' }
 				await this.fetchRoles()
 			} catch (e) {
 				showError(e.message || t('pipelinq', 'Failed to add contact role'))

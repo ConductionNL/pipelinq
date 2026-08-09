@@ -17,6 +17,7 @@
 					v-model="localQuery"
 					type="search"
 					class="xwiki-widget__search-input"
+					:aria-label="t('pipelinq', 'Search knowledge base')"
 					:placeholder="t('pipelinq', 'Search knowledge base')"
 					@input="onSearchInput">
 			</div>

@@ -28,21 +28,25 @@
 
 				<div v-else class="queue-item__edit">
 					<div class="edit-field">
-						<label>{{ t('pipelinq', 'Title') }}</label>
-						<input v-model="editForm.title" type="text">
+						<label for="queue-edit-title">{{ t('pipelinq', 'Title') }}</label>
+						<input id="queue-edit-title" v-model="editForm.title" type="text">
 					</div>
 					<div class="edit-field">
-						<label>{{ t('pipelinq', 'Description') }}</label>
-						<textarea v-model="editForm.description" />
+						<label for="queue-edit-description">{{ t('pipelinq', 'Description') }}</label>
+						<textarea id="queue-edit-description" v-model="editForm.description" />
 					</div>
 					<div class="edit-field">
-						<label>{{ t('pipelinq', 'Categories (comma-separated)') }}</label>
-						<input v-model="editForm.categoriesInput" type="text">
+						<label for="queue-edit-categories">{{ t('pipelinq', 'Categories (comma-separated)') }}</label>
+						<input id="queue-edit-categories" v-model="editForm.categoriesInput" type="text">
 					</div>
 					<div class="edit-row">
 						<div class="edit-field">
-							<label>{{ t('pipelinq', 'Max capacity') }}</label>
-							<input v-model.number="editForm.maxCapacity" type="number" min="1">
+							<label for="queue-edit-max-capacity">{{ t('pipelinq', 'Max capacity') }}</label>
+							<input id="queue-edit-max-capacity"
+								v-model.number="editForm.maxCapacity"
+								type="number"
+								min="1"
+								autocomplete="off">
 						</div>
 						<div class="edit-field">
 							<label>
@@ -52,8 +56,8 @@
 						</div>
 					</div>
 					<div class="edit-field">
-						<label>{{ t('pipelinq', 'Assigned agents (comma-separated user IDs)') }}</label>
-						<input v-model="editForm.agentsInput" type="text">
+						<label for="queue-edit-agents">{{ t('pipelinq', 'Assigned agents (comma-separated user IDs)') }}</label>
+						<input id="queue-edit-agents" v-model="editForm.agentsInput" type="text">
 					</div>
 					<div class="edit-actions">
 						<NcButton @click="cancelEdit">

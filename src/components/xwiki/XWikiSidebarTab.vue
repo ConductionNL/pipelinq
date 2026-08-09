@@ -37,7 +37,11 @@
 						v-for="s in store.spaces"
 						:key="s"
 						class="xwiki-sidebar-tab__space"
-						@click="browseSpace(s)">
+						role="button"
+						tabindex="0"
+						@click="browseSpace(s)"
+						@keydown.enter.prevent="browseSpace(s)"
+						@keydown.space.prevent="browseSpace(s)">
 						{{ s }}
 					</li>
 					<li v-if="!store.spaces.length" class="xwiki-sidebar-tab__empty">
@@ -51,6 +55,7 @@
 						v-model="searchTerm"
 						type="search"
 						class="xwiki-sidebar-tab__search-input"
+						:aria-label="t('pipelinq', 'Search knowledge base')"
 						:placeholder="t('pipelinq', 'Search knowledge base')"
 						@input="onSearchInput">
 				</div>
