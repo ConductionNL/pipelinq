@@ -222,4 +222,10 @@ export default {
 	from { transform: rotate(0deg); }
 	to { transform: rotate(360deg); }
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.icon-spinning {
+		animation: none;
+	}
+}
 </style>

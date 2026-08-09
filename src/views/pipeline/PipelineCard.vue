@@ -683,4 +683,10 @@ export default {
 .quick-select :deep(.vs__selected) {
 	font-size: 11px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.pipeline-card {
+		transition: none;
+	}
+}
 </style>

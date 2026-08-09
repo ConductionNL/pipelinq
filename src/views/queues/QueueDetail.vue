@@ -410,4 +410,10 @@ export default {
 	border-top: 1px solid var(--color-border);
 	margin-top: 16px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.queue-item {
+		transition: none;
+	}
+}
 </style>

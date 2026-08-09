@@ -45,9 +45,14 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<form @submit.prevent="grant">
 			<div class="portal-field">
 				<label for="portal-grantee">{{ t('pipelinq', 'Colleague email') }}</label>
+				<!-- autocomplete="off": this collects a COLLEAGUE's address, not the
+				     signed-in user's own, so offering their own email would be wrong.
+				     WCAG 1.3.5 covers fields about the user; there is no token for
+				     "another person's email". -->
 				<input id="portal-grantee"
 					v-model="form.granteeEmail"
 					type="email"
+					autocomplete="off"
 					required>
 			</div>
 			<fieldset>

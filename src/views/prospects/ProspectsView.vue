@@ -256,4 +256,10 @@ export default {
 
 .icon-spinning { animation: rotate 1s linear infinite; }
 @keyframes rotate { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+	.icon-spinning {
+		animation: none;
+	}
+}
 </style>

@@ -701,4 +701,10 @@ export default {
 	margin-left: 6px;
 	vertical-align: middle;
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.work-card {
+		transition: none;
+	}
+}
 </style>

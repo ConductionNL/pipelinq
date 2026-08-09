@@ -707,4 +707,10 @@ export default {
 	gap: 8px;
 	margin-top: 16px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.viewTableRow {
+		transition: none;
+	}
+}
 </style>

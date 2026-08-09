@@ -285,4 +285,10 @@ export default {
 	color: var(--color-text-maxcontrast);
 	text-decoration: line-through;
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.viewTableRow {
+		transition: none;
+	}
+}
 </style>

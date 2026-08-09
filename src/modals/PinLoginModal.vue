@@ -51,11 +51,16 @@
 				</NcButton>
 				<NcButton
 					class="pin-keypad__btn"
+					:aria-label="t('pipelinq', 'Digit 0')"
 					:disabled="!selectedStaffId || submitting || pin.length >= 6"
 					@click="press('0')">
 					0
 				</NcButton>
-				<NcButton class="pin-keypad__btn" :disabled="!selectedStaffId || submitting || !pin" @click="backspace">
+				<NcButton
+					class="pin-keypad__btn"
+					:aria-label="t('pipelinq', 'Backspace')"
+					:disabled="!selectedStaffId || submitting || !pin"
+					@click="backspace">
 					⌫
 				</NcButton>
 			</div>

@@ -1463,4 +1463,11 @@ export default {
 	text-align: center;
 	color: var(--color-text-maxcontrast);
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.kanban-closed-column,
+	.list-row {
+		transition: none;
+	}
+}
 </style>

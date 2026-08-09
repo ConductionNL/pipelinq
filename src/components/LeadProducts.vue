@@ -106,7 +106,7 @@
 			<div class="create-dialog">
 				<div class="create-dialog__header">
 					<h3>{{ t('pipelinq', 'Add Product') }}</h3>
-					<NcButton variant="tertiary" @click="showAddDialog = false">
+					<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Close')" @click="showAddDialog = false">
 						✕
 					</NcButton>
 				</div>
