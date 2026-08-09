@@ -142,6 +142,8 @@ export default {
 		 * orphaned every existing translation of this string.
 		 *
 		 * @return {string} The confirmation message.
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
 		 */
 		deleteTypeMessage() {
 			if (!this.pendingDeleteType) {
@@ -171,13 +173,38 @@ export default {
 			this.editingType = null
 			this.showForm = true
 		},
+		/**
+		 * Open the edit form for a tender type.
+		 *
+		 * @param {object} type The tender type to edit.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 */
 		editType(type) {
 			this.editingType = { ...type }
 			this.showForm = true
 		},
+		/**
+		 * Open the delete confirmation for a tender type.
+		 *
+		 * @param {object} type The tender type to delete.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 */
 		deleteType(type) {
 			this.pendingDeleteType = type
 		},
+		/**
+		 * Delete the pending tender type once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 */
 		async performDeleteType() {
 			const type = this.pendingDeleteType
 			this.pendingDeleteType = null

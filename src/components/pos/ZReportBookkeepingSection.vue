@@ -217,6 +217,10 @@ export default {
 		},
 		/**
 		 * Confirm + trigger a manager-gated re-raise of the shillinq journal entry.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		confirmAndRetry() {
 			if (!this.resolvedId) {
@@ -224,6 +228,13 @@ export default {
 			}
 			this.showRetryConfirm = true
 		},
+		/**
+		 * Re-raise the journal entry once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 */
 		async performRetry() {
 			this.showRetryConfirm = false
 			if (!this.resolvedId) {

@@ -163,9 +163,25 @@ export default {
 				this.busy = false
 			}
 		},
+		/**
+		 * Open the reversal-reason dialog.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
 		onRefund() {
 			this.showReversalDialog = true
 		},
+		/**
+		 * Reverse the payment with the reason the dialog collected.
+		 *
+		 * @param {string} reason Why the payment is being reversed.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
 		async performRefund(reason) {
 			this.showReversalDialog = false
 			if (!reason) {

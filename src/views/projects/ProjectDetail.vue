@@ -593,9 +593,23 @@ export default {
 				showError(error?.message || t('pipelinq', 'Could not save project. Please try again.'))
 			}
 		},
+		/**
+		 * Open the project delete confirmation.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		confirmDelete() {
 			this.showDeleteProjectConfirm = true
 		},
+		/**
+		 * Delete the project once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		async performDeleteProject() {
 			this.showDeleteProjectConfirm = false
 			const success = await this.objectStore.deleteObject('project', this.projectId)

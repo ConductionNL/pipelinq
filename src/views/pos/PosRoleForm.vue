@@ -154,9 +154,23 @@ export default {
 				this.saving = false
 			}
 		},
+		/**
+		 * Open the delete confirmation.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
+		 */
 		confirmDelete() {
 			this.showDeleteConfirm = true
 		},
+		/**
+		 * Delete the role once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
+		 */
 		async performDelete() {
 			this.showDeleteConfirm = false
 			this.saving = true

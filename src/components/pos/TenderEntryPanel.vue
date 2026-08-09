@@ -238,12 +238,28 @@ export default {
 			await this.loadTenders()
 			this.$emit('changed')
 		},
+		/**
+		 * Open the remove confirmation for a tender.
+		 *
+		 * @param {object} tender The tender to remove.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 */
 		removeTender(tender) {
 			if (!this.tenderId(tender)) {
 				return
 			}
 			this.pendingRemoveTender = tender
 		},
+		/**
+		 * Remove the pending tender once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 */
 		async performRemoveTender() {
 			const tender = this.pendingRemoveTender
 			this.pendingRemoveTender = null
