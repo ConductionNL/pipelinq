@@ -96,3 +96,24 @@ pipelinq SHALL consume `multi-tenancy-context`, `i18n-source-of-truth`, and
 - **GIVEN** a client sends `Accept-Language: nl-NL` to pipelinq
 - **WHEN** the response includes a translatable label or description
 - **THEN** the field SHALL return the Dutch translation per OR's negotiation spec.
+
+### Requirement: Initial state is computed only for requests that render a page
+
+pipelinq SHALL skip computing and serialising initial state on requests that
+render no template — an object create, a webhook, a DAV call — because building
+it walks the appstore catalogue to resolve dependency statuses, and on those
+requests the result is serialised into a response nobody reads. This is
+pipelinq's adoption of the OpenRegister object-write cost finding recorded in
+ADR-076.
+
+The classification SHALL err toward treating a request as page-rendering: a
+misjudged page request costs an optimisation, whereas a misjudged API request
+would remove state a page needs.
+
+#### Scenario: A rendered pipelinq page still carries its initial state
+
+- **GIVEN** an authenticated user opens a pipelinq page in the browser
+- **WHEN** the app boots and classifies the request as page-rendering
+- **THEN** the rendered document SHALL contain the serialised
+  `initial-state-pipelinq-config` payload, proving the skip did not strip state
+  from a request that genuinely renders.
