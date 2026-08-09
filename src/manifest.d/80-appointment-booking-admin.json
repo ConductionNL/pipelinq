@@ -69,6 +69,7 @@
 			"type": "custom",
 			"title": "Service",
 			"component": "ServiceDetailView",
+			"_note": "Uses CnDetailPage/CnDetailCard, but a type:detail page cannot carry the SIDE EFFECT this one owes: every save calls invalidateAvailability, because changing a service's duration or required skills invalidates the cached booking-availability windows computed from it. Stale windows would offer slots that can no longer be honoured. It also derives display-only labels (formatDuration, formatCurrency, requiredSkillsLabel) that are not schema properties.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "service"
@@ -114,6 +115,7 @@
 			"type": "custom",
 			"title": "Resource",
 			"component": "ResourceDetailView",
+			"_note": "Same reason as ServiceDetail: a type:detail page cannot own the post-save invalidateAvailability side effect, and a resource's skills or working hours changing must expire the cached availability windows or the booking flow will offer slots this resource can no longer serve. It additionally holds a live useObjectSubscription so a concurrently edited resource updates in place, which declarative detail pages do not do.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "resource"

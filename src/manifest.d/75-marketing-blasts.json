@@ -56,6 +56,7 @@
 			"type": "custom",
 			"title": "New blast",
 			"component": "BlastFormView",
+			"_note": "A multi-step wizard with a compliance gate, which no declarative type expresses. Advancing is conditional (canAdvance), the audience can be split into an A/B pair (abEnabled), and before a blast may be sent the page runs preflightCompliance + validateTemplate and blocks on awaitConsentDecision — the lawful-basis and unsubscribe-footer checks from the marketing-compliance spec. A declarative form submits; it cannot hold a send back pending a compliance verdict.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "blast"
@@ -79,6 +80,7 @@
 			"type": "custom",
 			"title": "Blast monitor",
 			"component": "BlastMonitorView",
+			"_note": "Declarative pages render a snapshot; this one is live. It owns a polling lifecycle (startPolling / stopPolling / clearInterval on unmount) and derives send progress from it — progressPercent, processed, audienceTotal, etaLabel and a buildTimeline series — plus an in-flight cancel action guarded by canCancel. There is no declarative primitive for a page that must keep refetching and be torn down cleanly.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "blast"
