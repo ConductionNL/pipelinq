@@ -82,6 +82,8 @@ class PosStaffController extends Controller
     /**
      * List all staff (admin only). The bcrypt pinHash is stripped by the service.
      *
+     * @auth admin-only Enumerates every POS staff record on the instance; the body additionally enforces it with an explicit requireAdmin() guard.
+     *
      * @return JSONResponse The staff list.
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
@@ -101,6 +103,8 @@ class PosStaffController extends Controller
 
     /**
      * Get a single staff record (admin only). The bcrypt pinHash is stripped.
+     *
+     * @auth admin-only Reads one POS staff record including its permission set; the body additionally enforces it with an explicit requireAdmin() guard.
      *
      * @param string $id The staff UUID.
      *
@@ -129,6 +133,8 @@ class PosStaffController extends Controller
     /**
      * Create a staff record (admin only).
      *
+     * @auth admin-only Creates a POS staff identity and its PIN credential; the body additionally enforces it with an explicit requireAdmin() guard.
+     *
      * @return JSONResponse The created staff record.
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
@@ -148,6 +154,8 @@ class PosStaffController extends Controller
 
     /**
      * Update a staff record (admin only).
+     *
+     * @auth admin-only Rewrites a POS staff identity, including its PIN and permissions; the body additionally enforces it with an explicit requireAdmin() guard.
      *
      * @param string $id The staff UUID.
      *
@@ -175,6 +183,8 @@ class PosStaffController extends Controller
 
     /**
      * Delete a staff record (admin only).
+     *
+     * @auth admin-only Removes a POS staff identity and revokes its till access; the body additionally enforces it with an explicit requireAdmin() guard.
      *
      * @param string $id The staff UUID.
      *

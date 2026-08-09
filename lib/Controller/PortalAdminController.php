@@ -76,6 +76,8 @@ class PortalAdminController extends Controller
     /**
      * Save tenant config (contrast-validated).
      *
+     * @auth admin-only Writes tenant-wide portal configuration; the body additionally enforces it through adminGuarded().
+     *
      * @return JSONResponse The saved config, or an error.
      */
     public function saveConfig(): JSONResponse
@@ -96,6 +98,8 @@ class PortalAdminController extends Controller
 
     /**
      * List all portal accounts for a tenant (no secrets).
+     *
+     * @auth admin-only Enumerates every portal account on the tenant; the body additionally enforces it through adminGuarded().
      *
      * @return JSONResponse The accounts.
      */
@@ -122,6 +126,8 @@ class PortalAdminController extends Controller
 
     /**
      * List all audit events for a tenant (DPO).
+     *
+     * @auth admin-only Returns the tenant-wide audit trail used for DPO reporting; the body additionally enforces it through adminGuarded().
      *
      * @return JSONResponse The events.
      */
