@@ -267,13 +267,14 @@ class CallbackController extends Controller
     /**
      * Reassign a task to a different user or group.
      *
+     * @auth admin-only Moves a task onto another user or group; the body additionally enforces it with an isAdmin() check.
+     *
      * @param string $id The task object ID.
      *
      * @return JSONResponse The response with updated task data.
      *
      * @spec openspec/changes/callback-management/tasks.md#task-2.1
      */
-    #[NoAdminRequired]
     public function reassign(string $id): JSONResponse
     {
         $user = $this->userSession->getUser();
