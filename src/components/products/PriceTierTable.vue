@@ -7,10 +7,10 @@
 			<table class="viewTable">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'From quantity') }}</th>
-						<th>{{ t('pipelinq', 'Unit price') }}</th>
-						<th>{{ t('pipelinq', 'Label') }}</th>
-						<th class="price-tier-table__actions-col" />
+						<th scope="col">{{ t('pipelinq', 'From quantity') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Label') }}</th>
+						<th scope="col" class="price-tier-table__actions-col" />
 					</tr>
 				</thead>
 				<tbody>

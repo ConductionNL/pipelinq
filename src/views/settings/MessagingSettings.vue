@@ -41,15 +41,15 @@
 				<table class="messaging-settings__table">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Name') }}</th>
-							<th>{{ t('pipelinq', 'Kind') }}</th>
-							<th>{{ t('pipelinq', 'Vendor') }}</th>
-							<th>{{ t('pipelinq', 'Source') }}</th>
-							<th>{{ t('pipelinq', 'Phone / account') }}</th>
-							<th>{{ t('pipelinq', 'Priority') }}</th>
-							<th>{{ t('pipelinq', 'Status') }}</th>
-							<th>{{ t('pipelinq', 'Webhook URL') }}</th>
-							<th class="messaging-settings__col-actions">
+							<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Kind') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Vendor') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Source') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Phone / account') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Priority') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Status') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Webhook URL') }}</th>
+							<th scope="col" class="messaging-settings__col-actions">
 								{{ t('pipelinq', 'Actions') }}
 							</th>
 						</tr>
@@ -192,14 +192,14 @@
 				<table class="messaging-settings__table">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Provider') }}</th>
-							<th>{{ t('pipelinq', 'Period') }}</th>
-							<th>{{ t('pipelinq', 'Max messages') }}</th>
-							<th>{{ t('pipelinq', 'Max cost (€)') }}</th>
-							<th>{{ t('pipelinq', 'Alert at') }}</th>
-							<th>{{ t('pipelinq', 'Hard stop') }}</th>
-							<th>{{ t('pipelinq', 'Used this period') }}</th>
-							<th class="messaging-settings__col-actions">
+							<th scope="col">{{ t('pipelinq', 'Provider') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Period') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Max messages') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Max cost (€)') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Alert at') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Hard stop') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Used this period') }}</th>
+							<th scope="col" class="messaging-settings__col-actions">
 								{{ t('pipelinq', 'Actions') }}
 							</th>
 						</tr>
@@ -329,11 +329,11 @@
 				<table class="messaging-settings__table">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Provider') }}</th>
-							<th>{{ t('pipelinq', 'External ID') }}</th>
-							<th>{{ t('pipelinq', 'Language') }}</th>
-							<th>{{ t('pipelinq', 'Status') }}</th>
-							<th>{{ t('pipelinq', 'Last synced') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Provider') }}</th>
+							<th scope="col">{{ t('pipelinq', 'External ID') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Language') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Status') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Last synced') }}</th>
 						</tr>
 					</thead>
 					<tbody>

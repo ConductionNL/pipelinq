@@ -36,13 +36,13 @@
 		<table class="cti-event-log__table" data-testid="cti-event-log-table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Received at') }}</th>
-					<th>{{ t('pipelinq', 'Platform') }}</th>
-					<th>{{ t('pipelinq', 'Event type') }}</th>
-					<th>{{ t('pipelinq', 'Call ID') }}</th>
-					<th>{{ t('pipelinq', 'Signature') }}</th>
-					<th>{{ t('pipelinq', 'Error') }}</th>
-					<th class="cti-event-log__actions" />
+					<th scope="col">{{ t('pipelinq', 'Received at') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Platform') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Event type') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Call ID') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Signature') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Error') }}</th>
+					<th scope="col" class="cti-event-log__actions" />
 				</tr>
 			</thead>
 			<tbody>

@@ -174,35 +174,35 @@
 			<table class="list-table">
 				<thead>
 					<tr>
-						<th class="sortable" @click="toggleSort('title')">
+						<th scope="col" class="sortable" @click="toggleSort('title')">
 							{{ t('pipelinq', 'Title') }}
 							<span v-if="sortBy === 'title'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('schemaSlug')">
+						<th scope="col" class="sortable" @click="toggleSort('schemaSlug')">
 							{{ t('pipelinq', 'Type') }}
 							<span v-if="sortBy === 'schemaSlug'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('stage')">
+						<th scope="col" class="sortable" @click="toggleSort('stage')">
 							{{ t('pipelinq', 'Stage') }}
 							<span v-if="sortBy === 'stage'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('assignee')">
+						<th scope="col" class="sortable" @click="toggleSort('assignee')">
 							{{ t('pipelinq', 'Assignee') }}
 							<span v-if="sortBy === 'assignee'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('value')">
+						<th scope="col" class="sortable" @click="toggleSort('value')">
 							{{ t('pipelinq', 'Value') }}
 							<span v-if="sortBy === 'value'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('dueDate')">
+						<th scope="col" class="sortable" @click="toggleSort('dueDate')">
 							{{ t('pipelinq', 'Due Date') }}
 							<span v-if="sortBy === 'dueDate'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('priority')">
+						<th scope="col" class="sortable" @click="toggleSort('priority')">
 							{{ t('pipelinq', 'Priority') }}
 							<span v-if="sortBy === 'priority'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('age')">
+						<th scope="col" class="sortable" @click="toggleSort('age')">
 							{{ t('pipelinq', 'Age') }}
 							<span v-if="sortBy === 'age'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
 						</th>

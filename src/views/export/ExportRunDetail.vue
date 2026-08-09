@@ -44,11 +44,11 @@
 			<table v-if="manifest.length" class="run-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Path') }}</th>
-						<th>{{ t('pipelinq', 'Size') }}</th>
-						<th>{{ t('pipelinq', 'Rows') }}</th>
-						<th>{{ t('pipelinq', 'SHA-256') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Path') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Size') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Rows') }}</th>
+						<th scope="col">{{ t('pipelinq', 'SHA-256') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
 					</tr>
 				</thead>
 				<tbody>

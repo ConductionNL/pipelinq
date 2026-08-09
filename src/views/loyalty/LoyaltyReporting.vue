@@ -66,8 +66,8 @@
 			<table v-if="tierRows.length" class="loyalty-reporting__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Tier') }}</th>
-						<th>{{ t('pipelinq', 'Accounts') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Tier') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Accounts') }}</th>
 					</tr>
 				</thead>
 				<tbody>

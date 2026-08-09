@@ -32,16 +32,16 @@
 			<table v-if="tenders.length > 0" class="tender-panel__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Tender type') }}</th>
-						<th class="num">
+						<th scope="col">{{ t('pipelinq', 'Tender type') }}</th>
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Amount') }}
 						</th>
-						<th class="num">
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Change') }}
 						</th>
-						<th>{{ t('pipelinq', 'GL account') }}</th>
-						<th>{{ t('pipelinq', 'Reference') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'GL account') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Reference') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>

@@ -13,11 +13,11 @@
 			<table class="tax-breakdown__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Rate') }}</th>
-						<th class="num">
+						<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Base') }}
 						</th>
-						<th class="num">
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'VAT') }}
 						</th>
 					</tr>
@@ -46,14 +46,14 @@
 			<table class="tax-breakdown__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Rate') }}</th>
-						<th class="num">
+						<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Base') }}
 						</th>
-						<th class="num">
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'VAT') }}
 						</th>
-						<th>{{ t('pipelinq', 'Description') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
 					</tr>
 				</thead>
 				<tbody>

@@ -50,18 +50,18 @@
 		<table v-else class="prospects-view__table">
 			<thead>
 				<tr>
-					<th class="sortable" @click="setSort('fitScore')">
+					<th scope="col" class="sortable" @click="setSort('fitScore')">
 						{{ t('pipelinq', 'Score') }}{{ sortIndicator('fitScore') }}
 					</th>
-					<th class="sortable" @click="setSort('tradeName')">
+					<th scope="col" class="sortable" @click="setSort('tradeName')">
 						{{ t('pipelinq', 'Company') }}{{ sortIndicator('tradeName') }}
 					</th>
-					<th>{{ t('pipelinq', 'Industry') }}</th>
-					<th class="sortable" @click="setSort('employeeCount')">
+					<th scope="col">{{ t('pipelinq', 'Industry') }}</th>
+					<th scope="col" class="sortable" @click="setSort('employeeCount')">
 						{{ t('pipelinq', 'Employees') }}{{ sortIndicator('employeeCount') }}
 					</th>
-					<th>{{ t('pipelinq', 'Location') }}</th>
-					<th>{{ t('pipelinq', 'Actions') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Location') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Actions') }}</th>
 				</tr>
 			</thead>
 			<tbody>

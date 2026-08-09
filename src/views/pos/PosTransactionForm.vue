@@ -95,14 +95,14 @@
 			<table class="pos-form__lines">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Product') }}</th>
-						<th>{{ t('pipelinq', 'Description') }}</th>
-						<th>{{ t('pipelinq', 'Qty') }}</th>
-						<th>{{ t('pipelinq', 'Unit price') }}</th>
-						<th>{{ t('pipelinq', 'Discount %') }}</th>
-						<th>{{ t('pipelinq', 'VAT') }}</th>
-						<th>{{ t('pipelinq', 'Line total') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'Product') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Qty') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Discount %') }}</th>
+						<th scope="col">{{ t('pipelinq', 'VAT') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Line total') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>

@@ -14,10 +14,10 @@
 					<table class="viewTable">
 						<thead>
 							<tr>
-								<th>{{ t('pipelinq', 'Name') }}</th>
-								<th>{{ t('pipelinq', 'Relationship') }}</th>
-								<th>{{ t('pipelinq', 'Status') }}</th>
-								<th />
+								<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Relationship') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Status') }}</th>
+								<th scope="col" />
 							</tr>
 						</thead>
 						<tbody>

@@ -102,12 +102,12 @@
 			<table v-else class="step-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', '#') }}</th>
-						<th>{{ t('pipelinq', 'Duration (min)') }}</th>
-						<th>{{ t('pipelinq', 'Resource type') }}</th>
-						<th>{{ t('pipelinq', 'Skill required') }}</th>
-						<th>{{ t('pipelinq', 'Allow gap') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', '#') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Duration (min)') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Resource type') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Skill required') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Allow gap') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>

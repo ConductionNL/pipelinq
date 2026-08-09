@@ -18,13 +18,13 @@
 				<table class="viewTable">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Product') }}</th>
-							<th>{{ t('pipelinq', 'Qty') }}</th>
-							<th>{{ t('pipelinq', 'Unit Price') }}</th>
-							<th>{{ t('pipelinq', 'Discount') }}</th>
-							<th>{{ t('pipelinq', 'Total') }}</th>
-							<th>{{ t('pipelinq', 'Notes') }}</th>
-							<th />
+							<th scope="col">{{ t('pipelinq', 'Product') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Qty') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Unit Price') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Discount') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Total') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Notes') }}</th>
+							<th scope="col" />
 						</tr>
 					</thead>
 					<tbody>

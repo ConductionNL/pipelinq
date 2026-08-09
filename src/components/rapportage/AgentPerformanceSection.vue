@@ -21,16 +21,16 @@
 			<table class="agent-performance__table">
 				<thead>
 					<tr>
-						<th class="sortable" :class="{ 'sort-active': sortKey === 'id' }" @click="setSort('id')">
+						<th scope="col" class="sortable" :class="{ 'sort-active': sortKey === 'id' }" @click="setSort('id')">
 							{{ t('pipelinq', 'Agent') }}
 						</th>
-						<th class="sortable" :class="{ 'sort-active': sortKey === 'count' }" @click="setSort('count')">
+						<th scope="col" class="sortable" :class="{ 'sort-active': sortKey === 'count' }" @click="setSort('count')">
 							{{ t('pipelinq', 'Contacts') }}
 						</th>
-						<th class="sortable" :class="{ 'sort-active': sortKey === 'avgHandlingTime' }" @click="setSort('avgHandlingTime')">
+						<th scope="col" class="sortable" :class="{ 'sort-active': sortKey === 'avgHandlingTime' }" @click="setSort('avgHandlingTime')">
 							{{ t('pipelinq', 'Avg Time') }}
 						</th>
-						<th class="sortable" :class="{ 'sort-active': sortKey === 'fcrRate' }" @click="setSort('fcrRate')">
+						<th scope="col" class="sortable" :class="{ 'sort-active': sortKey === 'fcrRate' }" @click="setSort('fcrRate')">
 							{{ t('pipelinq', 'FCR Rate') }}
 						</th>
 					</tr>

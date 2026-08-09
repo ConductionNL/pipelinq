@@ -26,17 +26,17 @@
 			<table class="sla-breakdown__table">
 				<thead>
 					<tr>
-						<th>{{ groupLabel }}</th>
-						<th class="num">
+						<th scope="col">{{ groupLabel }}</th>
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Total') }}
 						</th>
-						<th class="num">
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Met') }}
 						</th>
-						<th class="num">
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Breached') }}
 						</th>
-						<th class="num">
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Attainment') }}
 						</th>
 					</tr>

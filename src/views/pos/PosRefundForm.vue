@@ -46,15 +46,15 @@
 			<table v-if="originalLines.length" class="pos-refund-form__lines">
 				<thead>
 					<tr>
-						<th />
-						<th>{{ t('pipelinq', 'Description') }}</th>
-						<th>{{ t('pipelinq', 'Original qty') }}</th>
-						<th>{{ t('pipelinq', 'Unit price') }}</th>
-						<th>{{ t('pipelinq', 'Returned qty') }}</th>
-						<th>{{ t('pipelinq', 'Reason') }}</th>
-						<th>{{ t('pipelinq', 'Restock') }}</th>
-						<th>{{ t('pipelinq', 'Refund total') }}</th>
-						<th />
+						<th scope="col" />
+						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Original qty') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Returned qty') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Restock') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Refund total') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>

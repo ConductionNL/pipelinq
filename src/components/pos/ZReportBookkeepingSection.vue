@@ -57,9 +57,9 @@
 				<table class="z-report-section__table" data-testid="z-report-tax-table">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Rate') }}</th>
-							<th>{{ t('pipelinq', 'Base') }}</th>
-							<th>{{ t('pipelinq', 'VAT') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Base') }}</th>
+							<th scope="col">{{ t('pipelinq', 'VAT') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -82,8 +82,8 @@
 				<table class="z-report-section__table" data-testid="z-report-payment-table">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Method') }}</th>
-							<th>{{ t('pipelinq', 'Amount') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Method') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Amount') }}</th>
 						</tr>
 					</thead>
 					<tbody>

@@ -38,10 +38,10 @@
 			<table>
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'When') }}</th>
-						<th>{{ t('pipelinq', 'From') }}</th>
-						<th>{{ t('pipelinq', 'To') }}</th>
-						<th>{{ t('pipelinq', 'By') }}</th>
+						<th scope="col">{{ t('pipelinq', 'When') }}</th>
+						<th scope="col">{{ t('pipelinq', 'From') }}</th>
+						<th scope="col">{{ t('pipelinq', 'To') }}</th>
+						<th scope="col">{{ t('pipelinq', 'By') }}</th>
 					</tr>
 				</thead>
 				<tbody>

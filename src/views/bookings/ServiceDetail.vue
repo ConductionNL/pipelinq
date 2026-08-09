@@ -95,11 +95,11 @@
 				<table class="viewTable">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', '#') }}</th>
-							<th>{{ t('pipelinq', 'Duration') }}</th>
-							<th>{{ t('pipelinq', 'Resource type') }}</th>
-							<th>{{ t('pipelinq', 'Skill') }}</th>
-							<th>{{ t('pipelinq', 'Allow gap') }}</th>
+							<th scope="col">{{ t('pipelinq', '#') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Duration') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Resource type') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Skill') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Allow gap') }}</th>
 						</tr>
 					</thead>
 					<tbody>
