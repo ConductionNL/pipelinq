@@ -104,11 +104,13 @@ class PosStaffController extends Controller
     /**
      * Get a single staff record (admin only). The bcrypt pinHash is stripped.
      *
-     * @auth admin-only Reads one POS staff record including its permission set; the body additionally enforces it with an explicit requireAdmin() guard.
-     *
      * @param string $id The staff UUID.
      *
      * @return JSONResponse The staff record.
+     *
+     * @auth admin-only Reads one POS staff record including its permission
+     *       set; the body additionally enforces it with an explicit
+     *       requireAdmin() guard.
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
      */
@@ -155,11 +157,13 @@ class PosStaffController extends Controller
     /**
      * Update a staff record (admin only).
      *
-     * @auth admin-only Rewrites a POS staff identity, including its PIN and permissions; the body additionally enforces it with an explicit requireAdmin() guard.
-     *
      * @param string $id The staff UUID.
      *
      * @return JSONResponse The updated staff record.
+     *
+     * @auth admin-only Rewrites a POS staff identity, including its PIN and
+     *       permissions; the body additionally enforces it with an explicit
+     *       requireAdmin() guard.
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
      */
@@ -184,11 +188,13 @@ class PosStaffController extends Controller
     /**
      * Delete a staff record (admin only).
      *
-     * @auth admin-only Removes a POS staff identity and revokes its till access; the body additionally enforces it with an explicit requireAdmin() guard.
-     *
      * @param string $id The staff UUID.
      *
      * @return JSONResponse Empty payload on success.
+     *
+     * @auth admin-only Removes a POS staff identity and revokes its till
+     *       access; the body additionally enforces it with an explicit
+     *       requireAdmin() guard.
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.2
      */

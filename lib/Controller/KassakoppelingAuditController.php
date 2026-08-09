@@ -223,7 +223,9 @@ class KassakoppelingAuditController extends Controller
      * Returns the XML / JSON file as a DataDownloadResponse with a
      * Belastingdienst-friendly filename.
      *
-     * @auth admin-only Streams the complete Belastingdienst audit export for the instance; the body additionally enforces it with an isAdmin() check (REQ-AUDIT-005-03).
+     * @auth admin-only Streams the complete Belastingdienst audit export for
+     *       the instance; the body additionally enforces it with an isAdmin()
+     *       check (REQ-AUDIT-005-03).
      *
      * @return DataDownloadResponse|JSONResponse The export, or an error.
      *
