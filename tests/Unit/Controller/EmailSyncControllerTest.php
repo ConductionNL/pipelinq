@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/email-calendar-sync/specs/email-calendar-sync/spec.md#req-per-user-matching-settings
+ * @spec openspec/specs/email-calendar-sync/spec.md#requirement-email-sync-must-be-configurable-per-user
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

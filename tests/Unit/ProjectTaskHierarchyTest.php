@@ -24,7 +24,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/project-task-hierarchy/specs/project-task-hierarchy/spec.md
+ * @spec openspec/changes/archive/2026-06-14-project-task-hierarchy/specs.md
  */
 
 declare(strict_types=1);

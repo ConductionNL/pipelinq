@@ -14,9 +14,9 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-001
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-004
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-policy-resolution-at-object-creation
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-holiday-aware-deadline-calculation
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-escalation-chain-execution
  */
 
 declare(strict_types=1);
