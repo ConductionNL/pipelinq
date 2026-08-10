@@ -39,6 +39,7 @@ use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Portal document download proxy.
@@ -116,56 +117,73 @@ class PortalDocumentController extends PortalApiController
      * @NoAdminRequired
      * @NoCSRFRequired
      * @PublicPage
+     *
+     * @spec openspec/changes/customer-portal/specs.md#REQ-005
      */
     public function download(string $token)
     {
-        $result = $this->signing->validateToken(token: $token);
-        if ($result === 'expired') {
-            return new JSONResponse(
-                ['errorCode' => 'linkExpired', 'message' => 'Deze link is verlopen. Download het document opnieuw vanuit het portaal.'],
-                Http::STATUS_GONE
-            );
-        }
-
-        if (is_array($result) === false) {
-            return new JSONResponse(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
-        }
-
-        $accountId  = (string) ($result['accountId'] ?? '');
-        $objectId   = (string) ($result['objectId'] ?? '');
-        $objectType = (string) ($result['objectType'] ?? '');
-        $account    = $this->repository->find(self::ACCOUNT_SCHEMA, $accountId);
-
-        // Defence in depth: re-verify the bound account still has access.
-        if ($account === null
-            || ($account['status'] ?? 'active') === 'closed'
-            || ($objectType !== 'data-export' && $this->ensureAccess(account: $account, objectType: $objectType, objectId: $objectId) === false)
-        ) {
-            return new JSONResponse(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
-        }
-
-        $this->audit->log(
-                $accountId,
-                (string) ($account['tenantId'] ?? ''),
-                'document-download',
-                'success',
-                [
-                    'targetObjectType' => $objectType,
-                    'targetObjectId'   => $objectId,
-                ]
+        try {
+            $result = $this->signing->validateToken(token: $token);
+            if ($result === 'expired') {
+                return new JSONResponse(
+                    ['errorCode' => 'linkExpired', 'message' => 'Deze link is verlopen. Download het document opnieuw vanuit het portaal.'],
+                    Http::STATUS_GONE
                 );
+            }
 
-        // The portal models documents as JSON descriptors over OR objects; an
-        // instance that stores a PDF file id streams the file here via
-        // IRootFolder instead. Streaming the bound file is deferred to a live
-        // instance (see DEPLOYMENT.md), the descriptor below is the canonical
-        // machine-readable representation in the meantime.
-        $payload = $this->documentPayload(objectType: $objectType, objectId: $objectId);
-        return new DataDownloadResponse(
-            (string) json_encode($payload),
-            $objectType.'-'.$objectId.'.json',
-            'application/json'
-        );
+            if (is_array($result) === false) {
+                return new JSONResponse(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
+            }
+
+            $accountId  = (string) ($result['accountId'] ?? '');
+            $objectId   = (string) ($result['objectId'] ?? '');
+            $objectType = (string) ($result['objectType'] ?? '');
+            $account    = $this->repository->find(self::ACCOUNT_SCHEMA, $accountId);
+
+            // Defence in depth: re-verify the bound account still has access.
+            if ($account === null
+                || ($account['status'] ?? 'active') === 'closed'
+                || ($objectType !== 'data-export' && $this->ensureAccess(account: $account, objectType: $objectType, objectId: $objectId) === false)
+            ) {
+                return new JSONResponse(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
+            }
+
+            $this->audit->log(
+                    $accountId,
+                    (string) ($account['tenantId'] ?? ''),
+                    'document-download',
+                    'success',
+                    [
+                        'targetObjectType' => $objectType,
+                        'targetObjectId'   => $objectId,
+                    ]
+                    );
+
+            // The portal models documents as JSON descriptors over OR objects; an
+            // instance that stores a PDF file id streams the file here via
+            // IRootFolder instead. Streaming the bound file is deferred to a live
+            // instance (see DEPLOYMENT.md), the descriptor below is the canonical
+            // machine-readable representation in the meantime.
+            $payload = $this->documentPayload(objectType: $objectType, objectId: $objectId);
+            return new DataDownloadResponse(
+                (string) json_encode($payload),
+                $objectType.'-'.$objectId.'.json',
+                'application/json'
+            );
+        } catch (Throwable $e) {
+            // This endpoint is #[PublicPage]: it is reachable unauthenticated,
+            // so an uncaught throw would return a framework 500 with a stack
+            // trace to an anonymous caller. PortalObjectRepository::find()
+            // throws when the bound account cannot be read, which is the
+            // commonest way to get here. Answer with the same opaque
+            // NOT_FOUND the authorization failures use, so a storage fault
+            // cannot be told apart from an unknown token by probing.
+            $this->logger->error(
+                    'Portal document download failed',
+                    ['exception' => $e]
+                    );
+            return new JSONResponse(['errorCode' => 'notFound', 'message' => 'Niet gevonden.'], Http::STATUS_NOT_FOUND);
+        }//end try
     }//end download()
 
     /**

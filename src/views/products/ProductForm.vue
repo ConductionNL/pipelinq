@@ -5,6 +5,8 @@
 				<label for="product-name">{{ t('pipelinq', 'Name') }} *</label>
 				<NcTextField
 					id="product-name"
+					label-outside
+					:label="t('pipelinq', 'Name')"
 					:model-value="form.name"
 					:error="!!errors.name"
 					:helper-text="errors.name"
@@ -15,6 +17,8 @@
 				<label for="product-sku">{{ t('pipelinq', 'SKU') }}</label>
 				<NcTextField
 					id="product-sku"
+					label-outside
+					:label="t('pipelinq', 'SKU')"
 					:model-value="form.sku"
 					:maxlength="100"
 					@update:model-value="v => form.sku = v" />
@@ -51,6 +55,8 @@
 				<label for="product-unitPrice">{{ t('pipelinq', 'Unit Price') }} *</label>
 				<NcTextField
 					id="product-unitPrice"
+					label-outside
+					:label="t('pipelinq', 'Unit Price')"
 					:model-value="form.unitPrice"
 					:error="!!errors.unitPrice"
 					:helper-text="errors.unitPrice"
@@ -61,6 +67,8 @@
 				<label for="product-cost">{{ t('pipelinq', 'Cost') }}</label>
 				<NcTextField
 					id="product-cost"
+					label-outside
+					:label="t('pipelinq', 'Cost')"
 					:model-value="form.cost"
 					type="number"
 					@update:model-value="v => form.cost = v" />
@@ -72,6 +80,8 @@
 				<label for="product-unit">{{ t('pipelinq', 'Unit') }}</label>
 				<NcTextField
 					id="product-unit"
+					label-outside
+					:label="t('pipelinq', 'Unit')"
 					:model-value="form.unit"
 					:placeholder="t('pipelinq', 'e.g. piece, hour, license')"
 					@update:model-value="v => form.unit = v" />
@@ -80,6 +90,8 @@
 				<label for="product-taxRate">{{ t('pipelinq', 'Tax Rate (%)') }}</label>
 				<NcTextField
 					id="product-taxRate"
+					label-outside
+					:label="t('pipelinq', 'Tax Rate (%)')"
 					:model-value="form.taxRate"
 					:disabled="!!form.btwClass"
 					:helper-text="form.btwClass ? t('pipelinq', 'Derived from the selected BTW class') : ''"
@@ -106,6 +118,8 @@
 				<label for="product-barcode">{{ t('pipelinq', 'Barcode (EAN/UPC)') }}</label>
 				<NcTextField
 					id="product-barcode"
+					label-outside
+					:label="t('pipelinq', 'Barcode (EAN/UPC)')"
 					:model-value="form.barcode"
 					:maxlength="64"
 					@update:model-value="v => form.barcode = v" />
@@ -116,6 +130,8 @@
 			<label for="product-duration">{{ t('pipelinq', 'Duration (minutes)') }}</label>
 			<NcTextField
 				id="product-duration"
+				label-outside
+				:label="t('pipelinq', 'Duration (minutes)')"
 				:model-value="form.duration"
 				type="number"
 				@update:model-value="v => form.duration = v" />

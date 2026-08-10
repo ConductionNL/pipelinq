@@ -192,6 +192,22 @@ class ContactVcardWriterService
             $registerId    = $this->registerResolver->resolve('contact');
             $schemaId      = $this->appConfig->getValueString(Application::APP_ID, "{$objectType}_schema", '');
 
+            // Fail closed on an unconfigured register or schema. This write had
+            // no such guard: an empty id is not the same as "no id" to
+            // OpenRegister, whose ObjectService skips setRegister()/setSchema()
+            // for an empty value, so the object would be written into whatever
+            // register/schema context an earlier call in the same request left
+            // on the shared service instance. `$objectType` also reaches the
+            // config key by interpolation, so an unexpected type resolves to a
+            // key that does not exist and yields the same empty id.
+            if ($registerId === '' || $schemaId === '') {
+                $this->logger->warning(
+                    'Pipelinq: refusing to store contactsUid — register or schema is not configured',
+                    ['objectType' => $objectType]
+                );
+                return;
+            }
+
             $updateData = $objData;
             $updateData['contactsUid'] = $contactsUid;
             $objectService->saveObject(

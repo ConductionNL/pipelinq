@@ -132,4 +132,10 @@ export default {
 	text-align: right;
 	flex-shrink: 0;
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.status-bar-fill {
+		transition: none;
+	}
+}
 </style>

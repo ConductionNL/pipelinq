@@ -14,10 +14,10 @@
 					<table class="viewTable">
 						<thead>
 							<tr>
-								<th>{{ t('pipelinq', 'Name') }}</th>
-								<th>{{ t('pipelinq', 'Relationship') }}</th>
-								<th>{{ t('pipelinq', 'Status') }}</th>
-								<th />
+								<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Relationship') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Status') }}</th>
+								<th scope="col" />
 							</tr>
 						</thead>
 						<tbody>
@@ -59,7 +59,17 @@
 		</div>
 
 		<!-- Add relationship dialog -->
-		<div v-if="showAddDialog" class="create-overlay" @click.self="showAddDialog = false">
+		<!-- The backdrop no longer dismisses on click. That was a MOUSE-ONLY
+		     affordance with no keyboard equivalent, which is what hydra gate-32
+		     reports; the fix is not to give a backdrop role="button" +
+		     tabindex, because a backdrop is presentational and putting it in
+		     the tab order announces it as a control. Dismissal is via the ×
+		     in the header and Cancel, both keyboard-reachable.
+		     This form should follow LeadContactRoles into an NcDialog under
+		     src/dialogs/, which would restore backdrop dismissal along with
+		     Escape and a focus trap; that is a larger change than this one
+		     because of the edit-mode seeding, and is not done here. -->
+		<div v-if="showAddDialog" class="create-overlay">
 			<div class="create-dialog">
 				<div class="create-dialog__header">
 					<h3>{{ editingRelationship ? t('pipelinq', 'Edit relationship') : t('pipelinq', 'Add relationship') }}</h3>
@@ -91,17 +101,17 @@
 							@update:model-value="onTypeSelect" />
 					</div>
 					<div class="form-group">
-						<label>{{ t('pipelinq', 'Notes') }}</label>
-						<textarea v-model="addForm.notes" rows="2" />
+						<label for="contact-relationship-notes">{{ t('pipelinq', 'Notes') }}</label>
+						<textarea id="contact-relationship-notes" v-model="addForm.notes" rows="2" />
 					</div>
 					<div class="form-row">
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Start date') }}</label>
-							<input v-model="addForm.startDate" type="date">
+							<label for="contact-relationship-start-date">{{ t('pipelinq', 'Start date') }}</label>
+							<input id="contact-relationship-start-date" v-model="addForm.startDate" type="date">
 						</div>
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'End date') }}</label>
-							<input v-model="addForm.endDate" type="date">
+							<label for="contact-relationship-end-date">{{ t('pipelinq', 'End date') }}</label>
+							<input id="contact-relationship-end-date" v-model="addForm.endDate" type="date">
 						</div>
 					</div>
 					<div class="form-group">
@@ -706,5 +716,11 @@ export default {
 	display: flex;
 	gap: 8px;
 	margin-top: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.viewTableRow {
+		transition: none;
+	}
 }
 </style>

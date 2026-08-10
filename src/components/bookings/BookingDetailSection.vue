@@ -134,10 +134,10 @@
 					<table class="viewTable">
 						<thead>
 							<tr>
-								<th>{{ t('pipelinq', 'Step') }}</th>
-								<th>{{ t('pipelinq', 'Resource') }}</th>
-								<th>{{ t('pipelinq', 'Start') }}</th>
-								<th>{{ t('pipelinq', 'End') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Step') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Resource') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Start') }}</th>
+								<th scope="col">{{ t('pipelinq', 'End') }}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -161,10 +161,10 @@
 					<table class="viewTable">
 						<thead>
 							<tr>
-								<th>{{ t('pipelinq', 'Status') }}</th>
-								<th>{{ t('pipelinq', 'Changed at') }}</th>
-								<th>{{ t('pipelinq', 'Changed by') }}</th>
-								<th>{{ t('pipelinq', 'Reason') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Status') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Changed at') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Changed by') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
 							</tr>
 						</thead>
 						<tbody>

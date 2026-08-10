@@ -96,6 +96,11 @@ class BerichtenboxServiceTest extends TestCase
                     'mailboxResolution_schema'    => 'sch-mr',
                     'tenant_id'                   => 'tenant-a',
                     'tenant_display_name'         => 'Gemeente Amsterdam',
+                    // A provisioned tenant HAS PKI-overheid material. Leaving
+                    // these at '' made every dispatch test exercise the
+                    // unsigned-request path without saying so.
+                    'pki_cert'                    => '--pki-cert-pem--',
+                    'pki_key'                     => '--pki-key-pem--',
                     default                       => $default,
                 };
             }
@@ -159,7 +164,8 @@ class BerichtenboxServiceTest extends TestCase
         MailboxResolver $resolver,
         LogiusConnector $logius,
         EmailFallbackSender $email,
-        DeliveryAuditLogger $audit
+        DeliveryAuditLogger $audit,
+        ?IAppConfig $appConfig=null
     ): BerichtenboxService {
         $container = $this->createMock(ContainerInterface::class);
         $container->method('get')->willReturn($objectService);
@@ -167,7 +173,7 @@ class BerichtenboxServiceTest extends TestCase
 
         return new BerichtenboxService(
             $container,
-            $this->appConfigStub(),
+            ($appConfig ?? $this->appConfigStub()),
             $this->realEncryption(),
             new TemplateRenderer($this->createMock(LoggerInterface::class)),
             $resolver,
@@ -284,6 +290,78 @@ class BerichtenboxServiceTest extends TestCase
         $this->assertNotEmpty($sentRows);
         $this->assertSame('logius-99', array_values($sentRows)[0]['logiusMessageId']);
     }//end testDispatchOneToBerichtenbox()
+
+    /**
+     * dispatchOne fails CLOSED when the tenant PKI-overheid cert/key is absent.
+     *
+     * An empty `pki_key` does not stop the dispatch by itself: LogiusConnector
+     * ::signRequest() falls back to `base64(sha256(body))`, a keyless digest,
+     * and the message would still leave the instance carrying a plaintext BSN
+     * with request signing silently deactivated. The dispatch must be refused
+     * and routed to the retry/fail path instead.
+     *
+     * @return void
+     */
+    public function testDispatchOneRefusesWhenPkiMaterialMissing(): void
+    {
+        $resolver = $this->createMock(MailboxResolver::class);
+        $resolver->method('resolve')->willReturn([
+            'mailboxAvailable' => true,
+            'optedOut'         => false,
+            'resolvedAt'       => '2026-06-01T00:00:00Z',
+            'expiresAt'        => '2026-06-02T00:00:00Z',
+            'bsnHash'          => str_repeat('a', 64),
+            'source'           => 'cache',
+        ]);
+
+        // The connector must never be reached on an unprovisioned tenant.
+        $logius = $this->createMock(LogiusConnector::class);
+        $logius->expects($this->never())->method('sendMessage');
+
+        $audit = $this->createMock(DeliveryAuditLogger::class);
+        $audit->expects($this->never())->method('logSent');
+        $audit->method('hashPayload')->willReturn('hash');
+
+        $email = $this->createMock(EmailFallbackSender::class);
+
+        // Same stub, minus the PKI material.
+        $appConfig = $this->createMock(IAppConfig::class);
+        $appConfig->method('getValueString')->willReturnCallback(
+            static function (string $app, string $key, string $default=''): string {
+                return match ($key) {
+                    'register'                   => 'reg-1',
+                    'berichtenboxMessage_schema' => 'sch-msg',
+                    'tenant_id'                  => 'tenant-a',
+                    'pki_cert', 'pki_key'        => '',
+                    default                      => $default,
+                };
+            }
+        );
+
+        $service = $this->buildService(
+            $this->captureObjectService(),
+            $resolver,
+            $logius,
+            $email,
+            $audit,
+            $appConfig
+        );
+
+        $encryption = $this->realEncryption();
+
+        $service->dispatchOne([
+            'uuid'           => 'msg-nopki',
+            'bsn'            => $encryption->encrypt('123456789', 'tenant-a'),
+            'bsnHash'        => $encryption->hashBsn('123456789', 'tenant-a'),
+            'subject'        => 'X',
+            'body'           => '<p>x</p>',
+            'deliveryStatus' => 'queued',
+            'retryCount'     => 0,
+        ]);
+
+        $sentRows = array_filter($this->savedMessages, fn ($r) => ($r['deliveryStatus'] ?? '') === 'sent');
+        $this->assertEmpty($sentRows, 'No message may be marked sent without tenant PKI material.');
+    }//end testDispatchOneRefusesWhenPkiMaterialMissing()
 
     /**
      * dispatchOne with no mailbox + email available → fallback path.

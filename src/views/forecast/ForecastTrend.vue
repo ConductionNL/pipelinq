@@ -49,10 +49,10 @@
 				<table v-if="accuracyRows.length" class="accuracy-table">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Rep') }}</th>
-							<th>{{ t('pipelinq', 'Week 1 commit') }}</th>
-							<th>{{ t('pipelinq', 'Actual closed won') }}</th>
-							<th>{{ t('pipelinq', 'Accuracy') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Rep') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Week 1 commit') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Actual closed won') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Accuracy') }}</th>
 						</tr>
 					</thead>
 					<tbody>

@@ -1226,6 +1226,25 @@ class PosPaymentService
         $register = $this->registerId();
         $schema   = $this->posTransactionSchema();
 
+        // Fail closed on an unconfigured register/schema. Today this is
+        // defence in depth, not a live hole: loadTransaction() above reads the
+        // same two ids and throws OCSNotFoundException on '', so this branch is
+        // currently unreachable (and is therefore not covered by a test — a
+        // test asserting it would be asserting loadTransaction's behaviour).
+        // It is stated locally anyway because the write MUST NOT run on an
+        // empty id: an empty id is not the same as "no id" to ObjectService,
+        // which skips setRegister()/setSchema() for an empty value and would
+        // persist the transaction into whatever register/schema context an
+        // earlier call in the same request left behind. The guard must not
+        // depend on a read further up staying where it is.
+        if ($register === '' || $schema === '') {
+            $this->logger->warning(
+                'Pipelinq POS payment: saveTransaction refused — register/posTransaction_schema not configured',
+                ['transactionId' => $id]
+            );
+            return $current;
+        }
+
         try {
             $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
             $saved         = $objectService->saveObject(
@@ -1249,21 +1268,49 @@ class PosPaymentService
     /**
      * Pipelinq register id (from app config).
      *
-     * @return string
+     * Fails closed: '' means "unconfigured", and every caller refuses the
+     * OpenRegister call on it. An empty register must never be handed to
+     * OpenRegister — ObjectService skips setRegister() for an empty value, so
+     * the query silently inherits whatever register context an earlier call in
+     * the same request left on the shared service instance. The empty case is
+     * logged so an unprovisioned instance is visible rather than silent.
+     *
+     * @return string The configured register id, or '' when unconfigured.
      */
     private function registerId(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        if ($registerId === '') {
+            $this->logger->warning(
+                'Pipelinq POS payment: app-config "register" is not configured; transaction storage is refused, not run unscoped'
+            );
+        }
+
+        return $registerId;
     }//end registerId()
 
     /**
      * PosTransaction schema id (from app config).
      *
-     * @return string
+     * Fails closed: '' means "unconfigured", and every caller refuses the
+     * OpenRegister call on it. An empty schema must never be handed to
+     * OpenRegister — ObjectService skips setSchema() for an empty value, so the
+     * write silently lands in whatever schema context an earlier call in the
+     * same request left on the shared service instance. The empty case is
+     * logged so an unprovisioned instance is visible rather than silent.
+     *
+     * @return string The configured schema id, or '' when unconfigured.
      */
     private function posTransactionSchema(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
+        $schemaId = $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
+        if ($schemaId === '') {
+            $this->logger->warning(
+                'Pipelinq POS payment: app-config "posTransaction_schema" is not configured; storage is refused, not run unscoped'
+            );
+        }
+
+        return $schemaId;
     }//end posTransactionSchema()
 
     /**

@@ -139,4 +139,10 @@ export default {
 .channel-distribution__count { width: 120px; text-align: right; font-size: 0.85em; color: var(--color-text-lighter); }
 
 .channel-distribution__empty { padding: 20px; text-align: center; color: var(--color-text-lighter); }
+
+@media (prefers-reduced-motion: reduce) {
+	.channel-distribution__fill {
+		transition: none;
+	}
+}
 </style>

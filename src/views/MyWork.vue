@@ -63,6 +63,7 @@
 						:key="item.id"
 						class="work-card"
 						:class="{ 'work-card--overdue': item.isOverdue, 'work-card--completed': item.isClosed }"
+						role="button"
 						tabindex="0"
 						@click="openItem(item)"
 						@keydown.enter="openItem(item)">
@@ -700,5 +701,11 @@ export default {
 	border: 1px solid #fdba74;
 	margin-left: 6px;
 	vertical-align: middle;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.work-card {
+		transition: none;
+	}
 }
 </style>

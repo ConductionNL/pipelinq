@@ -18,13 +18,13 @@
 				<table class="viewTable">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Product') }}</th>
-							<th>{{ t('pipelinq', 'Qty') }}</th>
-							<th>{{ t('pipelinq', 'Unit Price') }}</th>
-							<th>{{ t('pipelinq', 'Discount') }}</th>
-							<th>{{ t('pipelinq', 'Total') }}</th>
-							<th>{{ t('pipelinq', 'Notes') }}</th>
-							<th />
+							<th scope="col">{{ t('pipelinq', 'Product') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Qty') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Unit Price') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Discount') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Total') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Notes') }}</th>
+							<th scope="col" />
 						</tr>
 					</thead>
 					<tbody>
@@ -36,6 +36,7 @@
 									type="number"
 									min="1"
 									class="inline-input inline-input--qty"
+									:aria-label="t('pipelinq', 'Quantity for {product}', { product: getProductName(item.product) })"
 									@change="updateLineItem(item)">
 							</td>
 							<td>
@@ -45,6 +46,7 @@
 									min="0"
 									step="0.01"
 									class="inline-input inline-input--price"
+									:aria-label="t('pipelinq', 'Unit price for {product}', { product: getProductName(item.product) })"
 									@change="updateLineItem(item)">
 							</td>
 							<td>
@@ -54,6 +56,7 @@
 									min="0"
 									step="0.01"
 									class="inline-input inline-input--discount"
+									:aria-label="t('pipelinq', 'Discount for {product}', { product: getProductName(item.product) })"
 									@change="updateLineItem(item)">
 							</td>
 							<td class="total-cell">
@@ -65,6 +68,7 @@
 									type="text"
 									class="inline-input inline-input--notes"
 									:placeholder="t('pipelinq', 'Notes...')"
+									:aria-label="t('pipelinq', 'Notes for {product}', { product: getProductName(item.product) })"
 									@change="updateNotes(item)">
 							</td>
 							<td>
@@ -102,11 +106,11 @@
 		</div>
 
 		<!-- Add product dialog -->
-		<div v-if="showAddDialog" class="create-overlay" @click.self="showAddDialog = false">
+		<div v-if="showAddDialog" class="create-overlay">
 			<div class="create-dialog">
 				<div class="create-dialog__header">
 					<h3>{{ t('pipelinq', 'Add Product') }}</h3>
-					<NcButton variant="tertiary" @click="showAddDialog = false">
+					<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Close')" @click="showAddDialog = false">
 						✕
 					</NcButton>
 				</div>
@@ -124,30 +128,33 @@
 					</div>
 					<div class="form-row">
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Quantity') }}</label>
 							<NcTextField
+								id="lead-product-quantity"
+								:label="t('pipelinq', 'Quantity')"
 								:model-value="String(addForm.quantity)"
 								type="number"
 								@update:model-value="v => addForm.quantity = Number(v)" />
 						</div>
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Unit Price') }}</label>
 							<NcTextField
+								id="lead-product-unit-price"
+								:label="t('pipelinq', 'Unit Price')"
 								:model-value="String(addForm.unitPrice)"
 								type="number"
 								@update:model-value="v => addForm.unitPrice = Number(v)" />
 						</div>
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Discount') }}</label>
 							<NcTextField
+								id="lead-product-discount"
+								:label="t('pipelinq', 'Discount')"
 								:model-value="String(addForm.discount)"
 								type="number"
 								@update:model-value="v => addForm.discount = Number(v)" />
 						</div>
 					</div>
 					<div class="form-group">
-						<label>{{ t('pipelinq', 'Notes') }}</label>
-						<textarea v-model="addForm.notes" rows="2" />
+						<label for="lead-product-notes">{{ t('pipelinq', 'Notes') }}</label>
+						<textarea id="lead-product-notes" v-model="addForm.notes" rows="2" />
 					</div>
 					<div class="form-actions">
 						<NcButton variant="primary" :disabled="!addForm.product" @click="addLineItem">

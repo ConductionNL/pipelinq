@@ -26,11 +26,11 @@
 			<table v-else class="purchase-history__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Date') }}</th>
-						<th>{{ t('pipelinq', 'Reference') }}</th>
-						<th>{{ t('pipelinq', 'Items') }}</th>
-						<th>{{ t('pipelinq', 'Total') }}</th>
-						<th>{{ t('pipelinq', 'Tender') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Date') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Reference') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Items') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Total') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Tender') }}</th>
 					</tr>
 				</thead>
 				<tbody>

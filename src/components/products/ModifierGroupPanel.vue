@@ -51,9 +51,9 @@
 			<table class="modifier-group-panel__options">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Option') }}</th>
-						<th>{{ t('pipelinq', 'Price adjustment') }}</th>
-						<th class="modifier-group-panel__actions-col" />
+						<th scope="col">{{ t('pipelinq', 'Option') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Price adjustment') }}</th>
+						<th scope="col" class="modifier-group-panel__actions-col" />
 					</tr>
 				</thead>
 				<tbody>

@@ -94,9 +94,9 @@
 				<table class="viewTable">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Day') }}</th>
-							<th>{{ t('pipelinq', 'Open') }}</th>
-							<th>{{ t('pipelinq', 'Close') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Day') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Open') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Close') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -118,9 +118,9 @@
 				<table class="viewTable">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Start') }}</th>
-							<th>{{ t('pipelinq', 'End') }}</th>
-							<th>{{ t('pipelinq', 'Label') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Start') }}</th>
+							<th scope="col">{{ t('pipelinq', 'End') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Label') }}</th>
 						</tr>
 					</thead>
 					<tbody>

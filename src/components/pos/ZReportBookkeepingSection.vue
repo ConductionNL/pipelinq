@@ -57,9 +57,9 @@
 				<table class="z-report-section__table" data-testid="z-report-tax-table">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Rate') }}</th>
-							<th>{{ t('pipelinq', 'Base') }}</th>
-							<th>{{ t('pipelinq', 'VAT') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Base') }}</th>
+							<th scope="col">{{ t('pipelinq', 'VAT') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -82,8 +82,8 @@
 				<table class="z-report-section__table" data-testid="z-report-payment-table">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Method') }}</th>
-							<th>{{ t('pipelinq', 'Amount') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Method') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Amount') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -100,11 +100,19 @@
 				</table>
 			</section>
 		</template>
+		<ConfirmDialog v-if="showRetryConfirm"
+			:name="t('pipelinq', 'Re-raise journal entry')"
+			:message="t('pipelinq', 'Re-raise journal entry at shillinq? This uses the same idempotency key, so shillinq prevents duplicate postings.')"
+			:confirm-label="t('pipelinq', 'Re-raise')"
+			variant="primary"
+			@confirm="performRetry"
+			@cancel="showRetryConfirm = false" />
 	</div>
 </template>
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -120,6 +128,7 @@ const BOOKKEEPING_STATUS_LABELS = {
 export default {
 	name: 'ZReportBookkeepingSection',
 	components: {
+		ConfirmDialog,
 		NcButton,
 		NcLoadingIcon,
 		CnStatusBadge,
@@ -139,6 +148,7 @@ export default {
 			zReport: {},
 			loading: false,
 			busy: false,
+			showRetryConfirm: false,
 		}
 	},
 	computed: {
@@ -207,12 +217,27 @@ export default {
 		},
 		/**
 		 * Confirm + trigger a manager-gated re-raise of the shillinq journal entry.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
-		async confirmAndRetry() {
+		confirmAndRetry() {
 			if (!this.resolvedId) {
 				return
 			}
-			if (!window.confirm(t('pipelinq', 'Re-raise journal entry at shillinq? This uses the same idempotency key, so shillinq prevents duplicate postings.'))) {
+			this.showRetryConfirm = true
+		},
+		/**
+		 * Re-raise the journal entry once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
+		 */
+		async performRetry() {
+			this.showRetryConfirm = false
+			if (!this.resolvedId) {
 				return
 			}
 			this.busy = true

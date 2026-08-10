@@ -335,4 +335,29 @@ class PosPaymentServiceTest extends TestCase
 
         $this->assertSame('ignored', $result['status']);
     }//end testHandleSettlementIgnoresUnknownSession()
+
+    /**
+     * An unconfigured register/posTransaction_schema refuses the read AND
+     * never reaches OpenRegister.
+     *
+     * An empty id is not the same as "no id" to OpenRegister: ObjectService
+     * skips setRegister()/setSchema() on '' and the call would run under
+     * whatever register/schema context an earlier call in the same request
+     * left on the shared instance. Nothing may reach the ObjectService.
+     *
+     * @return void
+     */
+    public function testUnconfiguredRegisterRefusesAndNeverCallsOpenRegister(): void
+    {
+        unset($this->configStore['register'], $this->configStore['posTransaction_schema']);
+
+        $object = $this->createMock(originalClassName: ObjectService::class);
+        $object->expects($this->never())->method('findAll');
+        $object->expects($this->never())->method('saveObject');
+
+        $service = $this->buildService(object: $object);
+
+        $this->expectException(OCSNotFoundException::class);
+        $service->capturePayment(transactionId: 'txn-1');
+    }//end testUnconfiguredRegisterRefusesAndNeverCallsOpenRegister()
 }//end class

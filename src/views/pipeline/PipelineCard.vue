@@ -6,8 +6,12 @@
 		class="pipeline-card"
 		:class="{ 'pipeline-card--overdue': isOverdue }"
 		draggable="true"
+		role="button"
+		tabindex="0"
 		@dragstart="onDragStart"
-		@click="$emit('open', item)">
+		@click="$emit('open', item)"
+		@keydown.enter.prevent="$emit('open', item)"
+		@keydown.space.prevent="$emit('open', item)">
 		<!-- Quick actions menu (top-right) — kept off the keyboard tab-order
 		     for the card itself; CnRowActions handles its own focus.        -->
 		<div class="pipeline-card__menu" @click.stop>
@@ -682,5 +686,11 @@ export default {
 
 .quick-select :deep(.vs__selected) {
 	font-size: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pipeline-card {
+		transition: none;
+	}
 }
 </style>

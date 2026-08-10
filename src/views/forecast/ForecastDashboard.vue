@@ -59,13 +59,13 @@
 			<table v-if="rows.length" class="forecast-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Owner') }}</th>
-						<th>{{ t('pipelinq', 'Commit') }}</th>
-						<th>{{ t('pipelinq', 'Best Case') }}</th>
-						<th>{{ t('pipelinq', 'Pipeline') }}</th>
-						<th>{{ t('pipelinq', 'Closed Won') }}</th>
-						<th>{{ t('pipelinq', 'Quota') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'Owner') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Commit') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Best Case') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Pipeline') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Closed Won') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Quota') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>

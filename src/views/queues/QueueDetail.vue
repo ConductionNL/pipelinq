@@ -41,6 +41,7 @@
 					:key="item.id"
 					class="queue-item"
 					:class="{ 'queue-item--selected': selectedIds.has(item.id) }"
+					role="button"
 					tabindex="0"
 					@click.exact="openItem(item)"
 					@click.ctrl="toggleSelect(item.id)"
@@ -409,5 +410,11 @@ export default {
 	background: var(--color-main-background);
 	border-top: 1px solid var(--color-border);
 	margin-top: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.queue-item {
+		transition: none;
+	}
 }
 </style>

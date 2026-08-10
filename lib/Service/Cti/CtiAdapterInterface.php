@@ -65,19 +65,6 @@ interface CtiAdapterInterface
     public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult;
 
     /**
-     * Subscribe to presence updates for the given user / extension.
-     *
-     * No-op when the platform does not expose a subscribe endpoint; the implementation
-     * may instead rely on inbound presence webhooks.
-     *
-     * @param string $userId    NC user UID.
-     * @param string $extension Agent extension.
-     *
-     * @return void
-     */
-    public function subscribeToPresence(string $userId, string $extension): void;
-
-    /**
      * Verify a webhook payload signature.
      *
      * The $signature is whatever the platform supplies: an HMAC-SHA256 hex digest,

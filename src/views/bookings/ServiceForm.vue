@@ -20,9 +20,9 @@
 <template>
 	<div class="service-form" data-testid="service-form">
 		<div class="form-group">
-			<label for="service-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
 				id="service-name"
+				:label="t('pipelinq', 'Name') + ' *'"
 				:model-value="form.name"
 				:error="!!errors.name"
 				:helper-text="errors.name"
@@ -40,9 +40,9 @@
 
 		<div class="form-row">
 			<div class="form-group">
-				<label for="service-duration">{{ t('pipelinq', 'Duration (minutes)') }} *</label>
 				<NcTextField
 					id="service-duration"
+					:label="t('pipelinq', 'Duration (minutes)') + ' *'"
 					type="number"
 					:model-value="String(form.durationMinutes ?? '')"
 					:error="!!errors.durationMinutes"
@@ -50,17 +50,17 @@
 					@update:model-value="v => { form.durationMinutes = v === '' ? null : Number(v); validateField('durationMinutes') }" />
 			</div>
 			<div class="form-group">
-				<label for="service-buffer-before">{{ t('pipelinq', 'Buffer before (min)') }}</label>
 				<NcTextField
 					id="service-buffer-before"
+					:label="t('pipelinq', 'Buffer before (min)')"
 					type="number"
 					:model-value="String(form.bufferBeforeMinutes ?? 0)"
 					@update:model-value="v => form.bufferBeforeMinutes = v === '' ? 0 : Number(v)" />
 			</div>
 			<div class="form-group">
-				<label for="service-buffer-after">{{ t('pipelinq', 'Buffer after (min)') }}</label>
 				<NcTextField
 					id="service-buffer-after"
+					:label="t('pipelinq', 'Buffer after (min)')"
 					type="number"
 					:model-value="String(form.bufferAfterMinutes ?? 0)"
 					@update:model-value="v => form.bufferAfterMinutes = v === '' ? 0 : Number(v)" />
@@ -69,17 +69,17 @@
 
 		<div class="form-row">
 			<div class="form-group">
-				<label for="service-price">{{ t('pipelinq', 'Price') }}</label>
 				<NcTextField
 					id="service-price"
+					:label="t('pipelinq', 'Price')"
 					type="number"
 					:model-value="String(form.price ?? 0)"
 					@update:model-value="v => form.price = v === '' ? 0 : Number(v)" />
 			</div>
 			<div class="form-group">
-				<label for="service-currency">{{ t('pipelinq', 'Currency') }}</label>
 				<NcTextField
 					id="service-currency"
+					:label="t('pipelinq', 'Currency')"
 					:model-value="form.currency || 'EUR'"
 					:maxlength="3"
 					@update:model-value="v => form.currency = (v || '').toUpperCase()" />
@@ -87,9 +87,9 @@
 		</div>
 
 		<div class="form-group">
-			<label for="service-skills">{{ t('pipelinq', 'Required skills (comma-separated)') }}</label>
 			<NcTextField
 				id="service-skills"
+				:label="t('pipelinq', 'Required skills (comma-separated)')"
 				:model-value="skillsCsv"
 				@update:model-value="onSkillsInput" />
 		</div>
@@ -102,12 +102,12 @@
 			<table v-else class="step-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', '#') }}</th>
-						<th>{{ t('pipelinq', 'Duration (min)') }}</th>
-						<th>{{ t('pipelinq', 'Resource type') }}</th>
-						<th>{{ t('pipelinq', 'Skill required') }}</th>
-						<th>{{ t('pipelinq', 'Allow gap') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', '#') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Duration (min)') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Resource type') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Skill required') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Allow gap') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>
@@ -180,18 +180,18 @@
 
 		<div class="form-row">
 			<div class="form-group">
-				<label for="service-deposit-amount">{{ t('pipelinq', 'Deposit amount') }}</label>
 				<NcTextField
 					id="service-deposit-amount"
+					:label="t('pipelinq', 'Deposit amount')"
 					type="number"
 					:model-value="String(form.depositAmount ?? 0)"
 					:disabled="!form.requiresDeposit"
 					@update:model-value="v => form.depositAmount = v === '' ? 0 : Number(v)" />
 			</div>
 			<div class="form-group">
-				<label for="service-no-show-fee">{{ t('pipelinq', 'No-show fee') }}</label>
 				<NcTextField
 					id="service-no-show-fee"
+					:label="t('pipelinq', 'No-show fee')"
 					type="number"
 					:model-value="String(form.noShowFee ?? 0)"
 					@update:model-value="v => form.noShowFee = v === '' ? 0 : Number(v)" />
@@ -210,9 +210,9 @@
 					label="label" />
 			</div>
 			<div class="form-group">
-				<label for="service-cancellation-hours">{{ t('pipelinq', 'Cancellation hours before') }}</label>
 				<NcTextField
 					id="service-cancellation-hours"
+					:label="t('pipelinq', 'Cancellation hours before')"
 					type="number"
 					:model-value="String(form.cancellationHoursBefore ?? 24)"
 					@update:model-value="v => form.cancellationHoursBefore = v === '' ? 24 : Number(v)" />

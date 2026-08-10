@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Service\Cti\Adapter;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Cti\CtiAdapterInterface;
+use OCA\Pipelinq\Service\Cti\PresenceSubscribingInterface;
 use OCA\Pipelinq\Service\Cti\Result\CtiCallResult;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCP\Http\Client\IClientService;
@@ -40,7 +41,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.3
  */
-class RingCentralAdapter implements CtiAdapterInterface
+class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInterface
 {
     /**
      * Constructor.

@@ -24,6 +24,7 @@
 			"type": "custom",
 			"title": "Loyalty enrollment",
 			"component": "LoyaltyAccountCreationView",
+			"_note": "Neither an index nor a detail: it is an enrolment form that CREATES a loyalty account against a programme chosen from a second collection (programmeOptions, loaded separately), behind a terms-acceptance gate (termsUrl + canSubmit) that must be satisfied before the write is allowed. The declarative page types render or edit an existing object; none models a create form whose options come from another collection and whose submit is gated on accepting external terms.",
 			"config": { "register": "pipelinq", "schema": "klantLoyaltyAccount" }
 		}
 	]

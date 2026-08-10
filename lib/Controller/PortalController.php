@@ -937,11 +937,23 @@ class PortalController extends Controller
     /**
      * The pipelinq register id from app config.
      *
-     * @return string
+     * Fails closed: '' means "unconfigured" and every caller refuses the
+     * OpenRegister call on it. An empty register is NOT the same as none —
+     * ObjectService skips setRegister() for an empty value, so the query
+     * inherits whatever context an earlier call in the request left behind.
+     *
+     * @return string The configured register id, or '' when unconfigured.
      */
     private function registerId(): string
     {
-        return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        if ($registerId === '') {
+            $this->logger->warning(
+                'Pipelinq: app-config "register" is not configured; OpenRegister calls are refused, not run unscoped'
+            );
+        }
+
+        return $registerId;
     }//end registerId()
 
     /**

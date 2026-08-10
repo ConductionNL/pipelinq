@@ -145,11 +145,12 @@ class PosRoleController extends Controller
     /**
      * Update a POS role (admin only).
      *
-     * @auth admin-only Rewrites a POS permission role; the body additionally enforces it with an explicit requireAdmin() guard.
-     *
      * @param string $id The role UUID.
      *
      * @return JSONResponse The updated role.
+     *
+     * @auth admin-only Rewrites a POS permission role; the body additionally
+     *       enforces it with an explicit requireAdmin() guard.
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
      */
@@ -173,11 +174,12 @@ class PosRoleController extends Controller
     /**
      * Delete a POS role (admin only).
      *
-     * @auth admin-only Deletes a POS permission role; the body additionally enforces it with an explicit requireAdmin() guard.
-     *
      * @param string $id The role UUID.
      *
      * @return JSONResponse Empty payload on success.
+     *
+     * @auth admin-only Deletes a POS permission role; the body additionally
+     *       enforces it with an explicit requireAdmin() guard.
      *
      * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#4.1
      */
