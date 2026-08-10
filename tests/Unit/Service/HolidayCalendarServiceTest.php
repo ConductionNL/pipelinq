@@ -14,8 +14,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-002
- * @spec openspec/changes/sla-engine-and-escalation/specs/sla-engine-and-escalation/spec.md#REQ-010
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-holiday-aware-deadline-calculation
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-holiday-calendar-pluggability
  */
 
 declare(strict_types=1);
