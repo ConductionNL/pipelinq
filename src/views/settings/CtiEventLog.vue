@@ -66,14 +66,10 @@
 				</tr>
 			</tbody>
 		</table>
-		<NcDialog
+		<CtiPayloadDialog
 			v-if="payloadRow"
-			:name="t('pipelinq', 'Webhook payload')"
-			:open="!!payloadRow"
-			size="large"
-			@closing="payloadRow = null">
-			<pre class="cti-event-log__pre">{{ pretty(payloadRow.payload_json) }}</pre>
-		</NcDialog>
+			:payload="payloadRow.payload_json"
+			@close="payloadRow = null" />
 		<p class="cti-event-log__note">
 			{{ t('pipelinq', 'Showing events from the last 30 days.') }}
 		</p>
@@ -81,13 +77,14 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcSelect, NcSettingsSection } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcSelect, NcSettingsSection } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import CtiPayloadDialog from '../../dialogs/CtiPayloadDialog.vue'
 import { getEventLog } from '../../services/ctiApi.js'
 
 export default {
 	name: 'CtiEventLog',
-	components: { NcButton, NcDialog, NcLoadingIcon, NcSelect, NcSettingsSection },
+	components: { CtiPayloadDialog, NcButton, NcLoadingIcon, NcSelect, NcSettingsSection },
 	data() {
 		return {
 			events: [],
@@ -138,13 +135,6 @@ export default {
 		viewPayload(row) {
 			this.payloadRow = row
 		},
-		pretty(value) {
-			try {
-				return JSON.stringify(value, null, 2)
-			} catch (e) {
-				return String(value)
-			}
-		},
 	},
 }
 </script>
@@ -171,14 +161,6 @@ export default {
 
 .cti-event-log__actions {
 	text-align: right;
-}
-
-.cti-event-log__pre {
-	max-height: 480px;
-	overflow: auto;
-	background: var(--color-background-hover);
-	padding: 12px;
-	border-radius: 4px;
 }
 
 .cti-event-log__empty {

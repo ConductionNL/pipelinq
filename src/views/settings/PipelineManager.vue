@@ -57,7 +57,7 @@
 			</div>
 		</div>
 
-		<PipelineForm v-if="showForm"
+		<PipelineFormDialog v-if="showForm"
 			:pipeline="editingPipeline"
 			@save="onSave"
 			@cancel="showForm = false; editingPipeline = null" />
@@ -77,7 +77,7 @@ import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../../store/modules/object.js'
 import { resolveObjectType } from '../../services/pipelineUtils.js'
-import PipelineForm from './PipelineForm.vue'
+import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import DeletePipelineDialog from '../../dialogs/DeletePipelineDialog.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
@@ -92,7 +92,7 @@ export default {
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
-		PipelineForm,
+		PipelineFormDialog,
 		DeletePipelineDialog,
 		Delete,
 		Pencil,
