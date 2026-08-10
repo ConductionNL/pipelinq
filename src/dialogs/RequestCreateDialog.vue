@@ -1,23 +1,23 @@
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'New Lead')"
+		:name="t('pipelinq', 'New Request')"
 		:open="true"
 		size="normal"
-		data-testid="lead-create-dialog"
+		data-testid="request-create-dialog"
 		@closing="$emit('close')">
-		<LeadForm
+		<RequestForm
 			ref="form"
 			:show-actions="false"
 			@save="onSave"
 			@update:valid="v => (valid = v)" />
 		<template #actions>
-			<NcButton data-testid="lead-create-cancel" @click="$emit('close')">
+			<NcButton data-testid="request-create-cancel" @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
 				:disabled="!valid || saving"
-				data-testid="lead-create-save"
+				data-testid="request-create-save"
 				@click="submit">
 				{{ saving ? t('pipelinq', 'Creating…') : t('pipelinq', 'Create') }}
 			</NcButton>
@@ -28,15 +28,15 @@
 <script>
 import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
-import LeadForm from './LeadForm.vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import RequestForm from '../views/requests/RequestForm.vue'
+import { useObjectStore } from '../store/modules/object.js'
 
 export default {
-	name: 'LeadCreateDialog',
+	name: 'RequestCreateDialog',
 	components: {
 		NcButton,
 		NcDialog,
-		LeadForm,
+		RequestForm,
 	},
 	emits: ['created', 'close'],
 	data() {
@@ -47,7 +47,7 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-23
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-1
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -62,17 +62,21 @@ export default {
 		},
 		/**
 		 * @param formData
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-24
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-2
 		 */
 		async onSave(formData) {
 			this.saving = true
 			try {
-				const result = await this.objectStore.saveObject('lead', formData)
+				// A request is a `ticket` with ticketType 'request' (unify-ticket-supertype).
+				const result = await this.objectStore.saveObject('ticket', {
+					...formData,
+					ticketType: 'request',
+				})
 				if (result) {
 					this.$emit('created', result.id)
 				} else {
-					const error = this.objectStore.getError('lead')
-					showError(error?.message || t('pipelinq', 'Failed to create lead.'))
+					const error = this.objectStore.getError('ticket')
+					showError(error?.message || t('pipelinq', 'Failed to create request.'))
 				}
 			} finally {
 				this.saving = false

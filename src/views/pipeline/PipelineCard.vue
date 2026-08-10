@@ -67,60 +67,40 @@
 			</span>
 		</div>
 
-		<!-- Sub-menus rendered as dialogs when activated; keep markup compact. -->
-		<NcDialog
+		<!-- Sub-menus rendered as dialogs when activated; each lives in its own
+		     file under src/dialogs/ per ADR-004 (modal-isolation). -->
+		<StagePickerDialog
 			v-if="moveMenuOpen"
-			:name="t('pipelinq', 'Move to stage')"
-			@closing="moveMenuOpen = false">
-			<div class="dialog-list">
-				<NcButton
-					v-for="stage in stages"
-					:key="stage.name"
-					variant="secondary"
-					class="dialog-list__item"
-					@click="onPickStage(stage)">
-					{{ stage.name }}
-				</NcButton>
-			</div>
-		</NcDialog>
+			:stages="stages"
+			@close="moveMenuOpen = false"
+			@select="onPickStage" />
 
-		<NcDialog
+		<AssigneePickerDialog
 			v-if="assignMenuOpen"
-			:name="t('pipelinq', 'Assign user')"
-			@closing="assignMenuOpen = false">
-			<NcSelect
-				v-model="pickedAssignee"
-				:options="userOptions"
-				:clearable="true"
-				:input-label="t('pipelinq', 'Assignee')"
-				@update:model-value="onPickAssignee" />
-		</NcDialog>
+			:options="userOptions"
+			:assignee="pickedAssignee"
+			@close="assignMenuOpen = false"
+			@select="onPickAssignee" />
 
-		<NcDialog
+		<PriorityPickerDialog
 			v-if="priorityMenuOpen"
-			:name="t('pipelinq', 'Set priority')"
-			@closing="priorityMenuOpen = false">
-			<div class="dialog-list">
-				<NcButton
-					v-for="p in priorityOptions"
-					:key="p.value"
-					:variant="item.priority === p.value ? 'primary' : 'secondary'"
-					class="dialog-list__item"
-					@click="onPickPriority(p.value)">
-					{{ p.label }}
-				</NcButton>
-			</div>
-		</NcDialog>
+			:options="priorityOptions"
+			:current="item.priority"
+			@close="priorityMenuOpen = false"
+			@select="onPickPriority" />
 	</div>
 </template>
 
 <script>
-import { NcSelect, NcActions, NcActionButton, NcButton, NcDialog } from '@nextcloud/vue'
+import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import ArrowRightThick from 'vue-material-design-icons/ArrowRightThick.vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import Flag from 'vue-material-design-icons/Flag.vue'
 import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
+import StagePickerDialog from '../../dialogs/StagePickerDialog.vue'
+import AssigneePickerDialog from '../../dialogs/AssigneePickerDialog.vue'
+import PriorityPickerDialog from '../../dialogs/PriorityPickerDialog.vue'
 import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
 import { getDaysAge, getAgingClass, formatAge, getStaleThreshold, resolveObjectType } from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -134,11 +114,11 @@ let usersCache = null
 export default {
 	name: 'PipelineCard',
 	components: {
-		NcSelect,
 		NcActions,
 		NcActionButton,
-		NcButton,
-		NcDialog,
+		StagePickerDialog,
+		AssigneePickerDialog,
+		PriorityPickerDialog,
 		ArrowRightThick,
 		AccountPlus,
 		Flag,
@@ -539,18 +519,6 @@ export default {
 .card-date__icon {
 	margin-right: 2px;
 	vertical-align: middle;
-}
-
-.dialog-list {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding: 12px;
-}
-
-.dialog-list__item {
-	width: 100%;
-	justify-content: flex-start;
 }
 
 .pipeline-card__row {

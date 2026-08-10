@@ -28,8 +28,8 @@
 <script>
 import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
-import ClientForm from './ClientForm.vue'
-import { createWithContact } from '../../services/contactSyncApi.js'
+import ClientForm from '../views/clients/ClientForm.vue'
+import { createWithContact } from '../services/contactSyncApi.js'
 
 export default {
 	name: 'ClientCreateDialog',

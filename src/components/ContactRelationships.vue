@@ -139,32 +139,20 @@
 			</div>
 		</div>
 
-		<!-- Delete confirmation dialog -->
-		<NcDialog
+		<!-- Delete confirmation dialog — own file per ADR-004 (modal-isolation). -->
+		<RemoveRelationshipDialog
 			v-if="showDeleteDialog"
-			:name="t('pipelinq', 'Remove relationship')"
-			@closing="showDeleteDialog = false">
-			<p>
-				{{ t('pipelinq', 'Remove the relationship between {from} and {to}?', {
-					from: entityName,
-					to: getEntityName(deletingRelationship?.toContact),
-				}) }}
-			</p>
-			<template #actions>
-				<NcButton @click="showDeleteDialog = false">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton variant="error" @click="confirmRemove">
-					{{ t('pipelinq', 'Remove') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+			:from-name="entityName"
+			:to-name="getEntityName(deletingRelationship?.toContact)"
+			@close="showDeleteDialog = false"
+			@confirm="confirmRemove" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import RemoveRelationshipDialog from '../dialogs/RemoveRelationshipDialog.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
 const DEFAULT_RELATIONSHIP_TYPES = [
@@ -187,10 +175,10 @@ export default {
 	name: 'ContactRelationships',
 	components: {
 		NcButton,
-		NcDialog,
 		NcEmptyContent,
 		NcLoadingIcon,
 		NcSelect,
+		RemoveRelationshipDialog,
 	},
 	props: {
 		entityId: {

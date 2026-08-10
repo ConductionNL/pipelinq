@@ -47,9 +47,9 @@
 import { NcButton } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
-import LeadCreateDialog from '../leads/LeadCreateDialog.vue'
-import RequestCreateDialog from '../requests/RequestCreateDialog.vue'
-import ClientCreateDialog from '../clients/ClientCreateDialog.vue'
+import LeadCreateDialog from '../../dialogs/LeadCreateDialog.vue'
+import RequestCreateDialog from '../../dialogs/RequestCreateDialog.vue'
+import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import {
 	refreshDashboardData,
 	getLeads,

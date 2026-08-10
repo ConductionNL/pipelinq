@@ -1,23 +1,23 @@
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'New Request')"
+		:name="t('pipelinq', 'New Lead')"
 		:open="true"
 		size="normal"
-		data-testid="request-create-dialog"
+		data-testid="lead-create-dialog"
 		@closing="$emit('close')">
-		<RequestForm
+		<LeadForm
 			ref="form"
 			:show-actions="false"
 			@save="onSave"
 			@update:valid="v => (valid = v)" />
 		<template #actions>
-			<NcButton data-testid="request-create-cancel" @click="$emit('close')">
+			<NcButton data-testid="lead-create-cancel" @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
 				variant="primary"
 				:disabled="!valid || saving"
-				data-testid="request-create-save"
+				data-testid="lead-create-save"
 				@click="submit">
 				{{ saving ? t('pipelinq', 'Creating…') : t('pipelinq', 'Create') }}
 			</NcButton>
@@ -28,15 +28,15 @@
 <script>
 import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
-import RequestForm from './RequestForm.vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import LeadForm from '../views/leads/LeadForm.vue'
+import { useObjectStore } from '../store/modules/object.js'
 
 export default {
-	name: 'RequestCreateDialog',
+	name: 'LeadCreateDialog',
 	components: {
 		NcButton,
 		NcDialog,
-		RequestForm,
+		LeadForm,
 	},
 	emits: ['created', 'close'],
 	data() {
@@ -47,7 +47,7 @@ export default {
 	},
 	computed: {
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-1
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-23
 		 */
 		objectStore() {
 			return useObjectStore()
@@ -62,21 +62,17 @@ export default {
 		},
 		/**
 		 * @param formData
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-2
+		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-24
 		 */
 		async onSave(formData) {
 			this.saving = true
 			try {
-				// A request is a `ticket` with ticketType 'request' (unify-ticket-supertype).
-				const result = await this.objectStore.saveObject('ticket', {
-					...formData,
-					ticketType: 'request',
-				})
+				const result = await this.objectStore.saveObject('lead', formData)
 				if (result) {
 					this.$emit('created', result.id)
 				} else {
-					const error = this.objectStore.getError('ticket')
-					showError(error?.message || t('pipelinq', 'Failed to create request.'))
+					const error = this.objectStore.getError('lead')
+					showError(error?.message || t('pipelinq', 'Failed to create lead.'))
 				}
 			} finally {
 				this.saving = false

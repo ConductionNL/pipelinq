@@ -53,66 +53,29 @@
 			</div>
 		</div>
 
-		<!-- Create Dialog -->
-		<NcDialog
+		<!-- Create Dialog — own file per ADR-004 (modal-isolation). -->
+		<QueueCreateDialog
 			v-if="showCreateDialog"
-			:name="t('pipelinq', 'Create queue')"
-			@closing="resetCreateForm">
-			<div class="create-form">
-				<label for="queue-new-title">{{ t('pipelinq', 'Title') }}</label>
-				<input id="queue-new-title"
-					v-model="newQueue.title"
-					type="text"
-					:placeholder="t('pipelinq', 'Queue name...')">
-
-				<label for="queue-new-description">{{ t('pipelinq', 'Description') }}</label>
-				<textarea id="queue-new-description" v-model="newQueue.description" :placeholder="t('pipelinq', 'Optional description...')" />
-
-				<label for="queue-new-categories">{{ t('pipelinq', 'Categories (comma-separated)') }}</label>
-				<input id="queue-new-categories"
-					v-model="newQueue.categoriesInput"
-					type="text"
-					:placeholder="t('pipelinq', 'e.g. vergunningen, omgevingsrecht')">
-
-				<label for="queue-new-max-capacity">{{ t('pipelinq', 'Max capacity (empty = unlimited)') }}</label>
-				<input id="queue-new-max-capacity"
-					v-model.number="newQueue.maxCapacity"
-					type="number"
-					min="1"
-					autocomplete="off">
-			</div>
-			<template #actions>
-				<NcButton @click="resetCreateForm">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton variant="primary" :disabled="!newQueue.title" @click="createQueue">
-					{{ t('pipelinq', 'Create') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+			@close="resetCreateForm"
+			@create="createQueue" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import QueueCreateDialog from '../../dialogs/QueueCreateDialog.vue'
 import { useQueuesStore } from '../../store/modules/queues.js'
 
 export default {
 	name: 'QueueList',
 	components: {
 		NcButton,
-		NcDialog,
 		NcLoadingIcon,
+		QueueCreateDialog,
 	},
 	data() {
 		return {
 			showCreateDialog: false,
-			newQueue: {
-				title: '',
-				description: '',
-				categoriesInput: '',
-				maxCapacity: null,
-			},
 			itemCounts: {},
 		}
 	},
@@ -160,22 +123,23 @@ export default {
 			return (queue.assignedAgents || []).length
 		},
 		/**
+		 * @param {object} newQueue Raw form fields emitted by QueueCreateDialog.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-15
 		 */
-		async createQueue() {
-			const categories = this.newQueue.categoriesInput
-				? this.newQueue.categoriesInput.split(',').map(c => c.trim()).filter(Boolean)
+		async createQueue(newQueue) {
+			const categories = newQueue.categoriesInput
+				? newQueue.categoriesInput.split(',').map(c => c.trim()).filter(Boolean)
 				: []
 
 			const data = {
-				title: this.newQueue.title,
-				description: this.newQueue.description || undefined,
+				title: newQueue.title,
+				description: newQueue.description || undefined,
 				categories,
 				isActive: true,
 			}
 
-			if (this.newQueue.maxCapacity) {
-				data.maxCapacity = this.newQueue.maxCapacity
+			if (newQueue.maxCapacity) {
+				data.maxCapacity = newQueue.maxCapacity
 			}
 
 			const result = await this.queuesStore.saveQueue(data)
@@ -184,16 +148,13 @@ export default {
 			}
 		},
 		/**
+		 * Close the create dialog. `v-if` unmounts QueueCreateDialog, which owns
+		 * the form state, so closing is what clears the fields.
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-20
 		 */
 		resetCreateForm() {
 			this.showCreateDialog = false
-			this.newQueue = {
-				title: '',
-				description: '',
-				categoriesInput: '',
-				maxCapacity: null,
-			}
 		},
 	},
 }
@@ -294,32 +255,6 @@ export default {
 	font-size: 11px;
 	background: var(--color-primary-element-light);
 	color: var(--color-primary-element-light-text);
-}
-
-.create-form {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding: 8px 0;
-}
-
-.create-form label {
-	font-weight: 600;
-	font-size: 13px;
-	margin-top: 4px;
-}
-
-.create-form input,
-.create-form textarea {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-}
-
-.create-form textarea {
-	min-height: 60px;
-	resize: vertical;
 }
 
 @media (prefers-reduced-motion: reduce) {

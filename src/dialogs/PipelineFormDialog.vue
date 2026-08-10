@@ -1,3 +1,14 @@
+<!--
+  - SPDX-License-Identifier: EUPL-1.2
+  - SPDX-FileCopyrightText: 2026 Conduction B.V.
+  -
+  - PipelineFormDialog is the create/edit form for a pipeline, including its
+  - property mappings and its ordered stages.
+  -
+  - The whole component IS the dialog, so it lives here rather than under
+  - src/views/settings/ — a modal must never be written inline inside its
+  - parent (ADR-004), and PipelineManager.vue is its only caller.
+  -->
 <template>
 	<NcDialog
 		size="large"
@@ -238,10 +249,10 @@ import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
-import { getViews } from '../../services/viewService.js'
+import { getViews } from '../services/viewService.js'
 
 export default {
-	name: 'PipelineForm',
+	name: 'PipelineFormDialog',
 	components: {
 		NcButton,
 		NcCheckboxRadioSwitch,
