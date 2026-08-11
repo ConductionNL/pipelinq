@@ -589,13 +589,50 @@ test('Analytics: every analytics widget is a registered slot of the dashboard gr
 // Requirement: Analytics API Endpoints (REQ-DASH-011)
 // ---------------------------------------------------------------------------
 
+/**
+ * One authenticated GET issued FROM INSIDE the logged-in page.
+ *
+ * WHY NOT `page.request.get()`. Playwright's APIRequestContext shares the
+ * browser context's COOKIES but sends no other header, and Nextcloud's
+ * SecurityMiddleware requires BOTH the strict-cookie check and a matching
+ * `requesttoken` for every controller method that does not carry
+ * `#[NoCSRFRequired]`. `AnalyticsController::overview()/trends()` carry only
+ * `#[NoAdminRequired]`, so a cookie-only request is rejected as
+ * `CrossSiteRequestForgeryException` → HTTP 412 Precondition Failed BEFORE the
+ * controller runs. That is what run 31473685688 measured on all three tests
+ * here (412 where 200/400 was expected); it is a property of the harness, not
+ * of the endpoint. Fetching from inside the page carries `OC.requestToken`,
+ * which is the same request the app itself makes — the pattern already used by
+ * spec-coverage/marketing.spec.ts and spec-coverage/first-time-setup.spec.ts.
+ *
+ * @param page The logged-in page.
+ * @param path Absolute app path to GET.
+ */
+async function apiGet(
+	page: Page,
+	path: string,
+): Promise<{ status: number, json: any, text: string }> {
+	return await page.evaluate(async (p) => {
+		const res = await fetch(p, {
+			headers: {
+				// eslint-disable-next-line no-undef
+				requesttoken: (window as any).OC?.requestToken || '',
+			},
+		})
+		const text = await res.text()
+		let json: any = null
+		try { json = text ? JSON.parse(text) : null } catch { /* non-JSON body */ }
+		return { status: res.status, json, text }
+	}, path)
+}
+
 // @e2e openspec/specs/dashboard/spec.md#get-apianalyticsoverview
 test('GET /api/analytics/overview returns the full KPI envelope with its comparison period', async ({ page }) => {
 	await openApp(page)
-	const res = await page.request.get('/index.php/apps/pipelinq/api/analytics/overview?period=month')
-	expect(res.status()).toBe(200)
+	const res = await apiGet(page, '/index.php/apps/pipelinq/api/analytics/overview?period=month')
+	expect(res.status).toBe(200)
 
-	const body = await res.json()
+	const body = res.json
 	for (const key of [
 		'leadConversionRate', 'avgRequestResolutionTime', 'contactMomentVolume',
 		'customerSatisfactionScore', 'period', 'previousPeriod',
@@ -622,18 +659,18 @@ test('GET /api/analytics/overview returns the full KPI envelope with its compari
 	expect(body.previousPeriod).toHaveProperty('contactMomentVolume')
 
 	// An unsupported window is rejected rather than silently defaulted.
-	const bad = await page.request.get('/index.php/apps/pipelinq/api/analytics/overview?period=fortnight')
-	expect(bad.status()).toBe(400)
-	expect((await bad.json()).message).toBe('Invalid period')
+	const bad = await apiGet(page, '/index.php/apps/pipelinq/api/analytics/overview?period=fortnight')
+	expect(bad.status).toBe(400)
+	expect(bad.json.message).toBe('Invalid period')
 })
 
 // @e2e openspec/specs/dashboard/spec.md#get-apianalyticstrends
 test('GET /api/analytics/trends returns { metric, period, series } with ISO 8601 dates', async ({ page }) => {
 	await openApp(page)
-	const res = await page.request.get('/index.php/apps/pipelinq/api/analytics/trends?metric=leads&period=month')
-	expect(res.status()).toBe(200)
+	const res = await apiGet(page, '/index.php/apps/pipelinq/api/analytics/trends?metric=leads&period=month')
+	expect(res.status).toBe(200)
 
-	const body = await res.json()
+	const body = res.json
 	expect(body.metric).toBe('leads')
 	expect(body.period).toBe('month')
 	expect(Array.isArray(body.series), 'trends must carry a series array').toBe(true)
@@ -649,10 +686,10 @@ test('GET /api/analytics/trends returns { metric, period, series } with ISO 8601
 // @e2e openspec/specs/dashboard/spec.md#unsupported-metric-returns-400
 test('GET /api/analytics/trends rejects an unsupported metric with a static 400', async ({ page }) => {
 	await openApp(page)
-	const res = await page.request.get('/index.php/apps/pipelinq/api/analytics/trends?metric=unknown')
+	const res = await apiGet(page, '/index.php/apps/pipelinq/api/analytics/trends?metric=unknown')
 
-	expect(res.status()).toBe(400)
-	const text = await res.text()
+	expect(res.status).toBe(400)
+	const text = res.text
 	expect(JSON.parse(text).message).toBe('Unsupported metric')
 	// "the response MUST NOT include a stack trace or internal details" — the
 	// controller maps the service exception onto its own constant label, so no

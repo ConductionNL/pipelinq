@@ -45,11 +45,27 @@ import {
 	dismissSupportDialog,
 } from '../helpers/pipelinq'
 
-/** The four leaves `src/menu-layout.json` relocates into the PointOfSale group. */
+/**
+ * The four leaves `src/menu-layout.json` relocates into the PointOfSale group,
+ * labelled AS RENDERED, not as declared.
+ *
+ * `src/manifest.json` declares these menu entries with Dutch labels
+ * (`Kassabon`, `Retouren`, `Kassalade`, `Kassakoppeling audit`) and CnAppNav
+ * puts every one of them through `t('pipelinq', …)`. `l10n/en.json` translates
+ * two of the four — `Retouren` → `Returns` and `Kassalade` → `Cash drawer` —
+ * and passes the other two through unchanged. The CI instance runs in English,
+ * so a lookup by the MANIFEST label matches nothing for exactly those two.
+ *
+ * That is what happened in run 31473685688: `Kassabon` (identity translation)
+ * resolved, and the very next iteration timed out after 10s waiting for
+ * `Retouren`, in both specs below. `spec-coverage/returns.spec.ts` — green in
+ * the same run — already navigates to this page as `Returns`, which is the
+ * corroborating measurement that the English string is what the nav paints.
+ */
 const POS_CHILDREN: Array<{ label: string, url: RegExp }> = [
 	{ label: 'Kassabon', url: /#\/pos$/ },
-	{ label: 'Retouren', url: /#\/pos\/refunds/ },
-	{ label: 'Kassalade', url: /#\/pos\/shifts/ },
+	{ label: 'Returns', url: /#\/pos\/refunds/ },
+	{ label: 'Cash drawer', url: /#\/pos\/shifts/ },
 	{ label: 'Kassakoppeling audit', url: /#\/kassakoppeling\/audit/ },
 ]
 

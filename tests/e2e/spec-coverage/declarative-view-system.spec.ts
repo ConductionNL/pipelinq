@@ -87,28 +87,84 @@ async function gotoPage(page: Page, hash: string): Promise<void> {
 }
 
 /**
- * Open the first row's actions menu on a declarative index and click one
- * manifest `actions[]` entry by its declared label.
+ * Invoke one manifest `actions[]` entry on the first row of a declarative
+ * index, addressed by its declared label's slug.
  *
  * CnDataTable puts the row-action cell in `td.cn-table-col--actions` and
- * CnIndexPage fills it with a CnRowActions (NcActions). @nextcloud/vue's
- * NcActions defaults `inline: 0`, so even a single action lives behind the
- * three-dot trigger and is only in the DOM once the menu is open — and the
- * menu is TELEPORTED to the document body, so the entry is matched page-wide.
- * CnRowActions stamps each entry with `data-testid="cn-action-item-<slug>"`
- * (lower-cased, non-alphanumerics collapsed to `-`), which is ours and
- * survives an @nextcloud/vue major.
+ * CnIndexPage fills it with a CnRowActions (NcActions). CnRowActions stamps
+ * every entry with `data-testid="cn-action-item-<slug>"` (lower-cased,
+ * non-alphanumerics collapsed to `-`) — ours, and stable across an
+ * @nextcloud/vue major.
+ *
+ * WHAT THAT TESTID IS ATTACHED TO DEPENDS ON HOW MANY ACTIONS THE PAGE
+ * DECLARES, and the first version of this helper assumed only the second
+ * shape. @nextcloud/vue 9's NcActions.render() ends with
+ *
+ *     if (actions.length === 1 && validInlineActions.length === 1 && !forceMenu)
+ *         return renderInlineAction(actions[0])
+ *
+ * and `isValidSingleAction` is true for any NcActionButton, while CnRowActions
+ * only sets `force-menu` above three actions. So a page with exactly ONE
+ * manifest action (Bookings "Open", Services "View", ZReports "Openen") gets
+ * NO three-dot trigger and NO menu: the sole action renders INLINE as an
+ * NcButton in the cell, and `renderInlineAction` forwards the vnode's props —
+ * the testid included — onto that button. Clicking the cell's only button then
+ * IS the action, and the old helper's follow-up wait for a menu entry ran
+ * against the page the action had already navigated to, which is exactly the
+ * "element(s) not found" measured in run 31473685688.
+ *
+ * Two or more actions still collapse into the popover menu (`inline` defaults
+ * to 0), which NcPopover teleports to the document body — hence the page-wide
+ * locator on that branch rather than a row-scoped one.
+ *
+ * The two shapes are told apart by the presence of the popover TRIGGER
+ * (`.action-item__menutoggle`, the class NcActions gives it), not by whether
+ * the wanted entry is already in the DOM: probing by entry would mean clicking
+ * the cell's only button first, and on the inline shape that click IS the
+ * action, so a missing testid would navigate away before it could be reported.
+ *
+ * @param page      The page showing a declarative index.
+ * @param labelSlug Slug of the manifest action label to invoke.
  */
 async function clickFirstRowAction(page: Page, labelSlug: string): Promise<void> {
+	const testid = `[data-testid="cn-action-item-${labelSlug}"]`
 	const row = page.locator('#content-vue table tbody tr').first()
 	await expect(row).toBeVisible({ timeout: 20000 })
-	await row.locator('td.cn-table-col--actions button').first().click()
-	const entry = page.locator(`[data-testid="cn-action-item-${labelSlug}"]`).first()
-	await expect(entry).toBeVisible({ timeout: 10000 })
-	await entry.click()
+
+	const cell = row.locator('td.cn-table-col--actions')
+	await expect(
+		cell.locator('button').first(),
+		'the row must expose its declared actions',
+	).toBeVisible({ timeout: 20000 })
+
+	const menuToggle = cell.locator('.action-item__menutoggle')
+	if (await menuToggle.count() > 0) {
+		// Overflow shape: open the menu, then click the entry NcPopover
+		// teleported into document.body.
+		await menuToggle.first().click()
+		const entry = page.locator(testid).first()
+		await expect(entry).toBeVisible({ timeout: 10000 })
+		await entry.click()
+		return
+	}
+
+	// Single-action shape: the action itself is the cell's only control.
+	const inline = cell.locator(testid).first()
+	await expect(inline, `row action "${labelSlug}" must be the row's inline control`)
+		.toBeVisible({ timeout: 10000 })
+	await inline.click()
 }
 
-/** The declarative index host + a settled, schema-driven data table. */
+/**
+ * The declarative index host + a settled, schema-driven data table.
+ *
+ * The `table` assertion is load-bearing beyond "something painted": CnIndexPage
+ * renders CnDataTable only in the `v-else-if` AFTER `effectiveObjects.length
+ * === 0` has already claimed the empty state (NcEmptyContent). A visible table
+ * therefore PROVES the collection is populated, which is why the column and
+ * badge assertions below can be written against real rows without this suite
+ * seeding any.
+ */
 async function expectDeclarativeIndex(page: Page, heading: string): Promise<void> {
 	const content = page.locator('#content-vue')
 	await expect(content.getByRole('heading', { name: heading }).first()).toBeVisible({ timeout: 20000 })
@@ -117,10 +173,83 @@ async function expectDeclarativeIndex(page: Page, heading: string): Promise<void
 	await assertNoHardError(page)
 }
 
+/**
+ * The text a manifest/schema-authored `label` is painted as, for the UI
+ * language the page is actually running in.
+ *
+ * A declared label is NOT rendered verbatim. CnDataTable paints
+ * `{{ translateLabel(col.label) }}` and CnObjectDataWidget derives its field
+ * labels via `fieldsFromSchema(..., { translate: cnTranslate })` — and
+ * `cnTranslate` is wired by pipelinq to `t('pipelinq', key)` in src/App.vue
+ * (`translateForApp`). Several declared labels are Dutch source strings that
+ * pipelinq's own catalogues translate, so the visible text can differ from the
+ * declaration: `l10n/en.json` maps `"Datum"` → `"Date"`. That is why run
+ * 31473685688 found no `Datum` header on the ZReports index while the table
+ * itself was rendering — the header said "Date". Resolving through the SHIPPED
+ * catalogue keeps the assertion exact (it is still one specific string, derived
+ * from the declaration) instead of loosening it to "some header".
+ *
+ * @param label The declared label (manifest column label, schema title, …).
+ * @param lang  The document language the page reports (e.g. `en`, `nl`).
+ * @return The string the rendered element is expected to contain.
+ */
+function renderedLabel(label: string, lang: string): string {
+	const candidates = [lang, lang.split(/[-_]/)[0], 'en']
+	for (const code of candidates) {
+		const file = path.join(APP_ROOT, 'l10n', `${code}.json`)
+		if (!fs.existsSync(file)) continue
+		const translations = JSON.parse(fs.readFileSync(file, 'utf8')).translations || {}
+		return typeof translations[label] === 'string' && translations[label]
+			? translations[label]
+			: label
+	}
+	return label
+}
+
+/**
+ * One authenticated GET issued FROM INSIDE the logged-in page.
+ *
+ * Nextcloud's SecurityMiddleware demands the strict cookie AND a matching
+ * `requesttoken` on every controller method that does not declare
+ * `#[NoCSRFRequired]`; failing either raises a SecurityException that maps to
+ * HTTP 412. Playwright's `page.request` carries the cookies and nothing else,
+ * so it can only ever reach a `#[NoCSRFRequired]` route. Going through the page
+ * sends the token the app itself sends. Same helper shape as
+ * spec-coverage/marketing.spec.ts.
+ *
+ * @param page The logged-in page.
+ * @param path Absolute app path to GET.
+ */
+async function apiGet(
+	page: Page,
+	path: string,
+): Promise<{ status: number, json: any, text: string }> {
+	return await page.evaluate(async (p) => {
+		const res = await fetch(p, {
+			headers: {
+				// eslint-disable-next-line no-undef
+				requesttoken: (window as any).OC?.requestToken || '',
+			},
+		})
+		const text = await res.text()
+		let json: any = null
+		try { json = text ? JSON.parse(text) : null } catch { /* non-JSON body */ }
+		return { status: res.status, json, text }
+	}, path)
+}
+
+/** The UI language the rendered page reports, defaulting to English. */
+async function pageLanguage(page: Page): Promise<string> {
+	return await page.evaluate(() => document.documentElement.lang || 'en')
+}
+
 /** Assert a manifest-declared column label is painted as a table header. */
 async function expectColumn(page: Page, label: string): Promise<void> {
+	const lang = await pageLanguage(page)
+	const expected = renderedLabel(label, lang)
 	await expect(
-		page.locator('#content-vue table thead th').filter({ hasText: label }).first(),
+		page.locator('#content-vue table thead th').filter({ hasText: expected }).first(),
+		`manifest column "${label}" must be painted as "${expected}" (UI language ${lang})`,
 	).toBeVisible({ timeout: 10000 })
 }
 
@@ -137,9 +266,11 @@ test('ZReports renders from a type:"index" manifest page, badge column and all',
 	// host is what paints it — no host-app list component is involved.
 	await expectDeclarativeIndex(page, 'Boekhoudkundige Afhandeling')
 
-	// The manifest `config.columns[]`, in the labels the manifest declares
-	// (`reportDate` → "Datum", `createdAt` → "Aangemaakt"); the unlabelled
-	// entries fall back to their property key.
+	// The manifest `config.columns[]`, addressed by the labels the manifest
+	// declares (`reportDate` → "Datum", `createdAt` → "Aangemaakt"); the
+	// unlabelled entries fall back to their property key. expectColumn resolves
+	// each declared label through pipelinq's own l10n catalogue first, because
+	// CnDataTable render-translates column labels — see renderedColumnLabel().
 	for (const col of ['Datum', 'Status', 'Aangemaakt']) {
 		await expectColumn(page, col)
 	}
@@ -347,9 +478,42 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		await gotoPage(page, `/clients/${clientId}`)
 		const content = page.locator('#content-vue')
 
-		// Identity + account fields, rendered by the default object data widget.
-		await expect(content.getByText('Identity').first()).toBeVisible({ timeout: 25000 })
-		await expect(content.getByText('Account').first()).toBeVisible()
+		/*
+		 * The identity fields, rendered by the default object data widget.
+		 *
+		 * ASSERTED ON THE FIELDS, NOT ON THE CARD TITLE — and that is a product
+		 * finding, not a convenience. The manifest declares the widget as
+		 * `{ id: "client-identity", type: "data", title: "Identity" }`, but
+		 * CnDetailPage.widgetDisplayTitle() returns `content.title || undefined`
+		 * for any widget type whose registry entry sets `ownsTitle`, and `data`
+		 * is registered exactly that way (CnObjectDataWidget/
+		 * dashboardRegistration.js, imported by CnDetailPage itself). Neither
+		 * `client-identity` nor `client-commercial` carries a `content.title`, so
+		 * the resolved title is undefined and CnWidgetWrapper paints its literal
+		 * default "Widget" — which is why run 31473685688 found no "Identity"
+		 * anywhere in `#content-vue`. Reported upstream; the widget-level title
+		 * being dropped is the bug, so this test does not encode "Widget" as the
+		 * expected chrome. What the scenario is actually about — the identity
+		 * fields render declaratively from the schema, with no ClientDetail.vue —
+		 * is asserted on the field labels the data widget emits.
+		 *
+		 * `client-commercial` ("Account") is deliberately NOT asserted on: its
+		 * `content.include` names `type` / `industry` / `notes`, none of which
+		 * the `client` schema declares (lib/Settings/register.d/
+		 * 15-unify-client-contact.json), so that widget resolves zero fields and
+		 * renders its empty state. Also reported.
+		 */
+		const identityLabels = content.locator('.cn-object-data-widget__label')
+		await expect(identityLabels.first()).toBeVisible({ timeout: 25000 })
+		const lang = await pageLanguage(page)
+		// The `client` schema's property titles for the widget's `include` set.
+		for (const field of ['Name', 'Email', 'Phone', 'Website']) {
+			const expected = renderedLabel(field, lang)
+			await expect(
+				identityLabels.filter({ hasText: expected }).first(),
+				`the Identity data widget must render the "${field}" field`,
+			).toBeVisible({ timeout: 15000 })
+		}
 
 		// The cross-schema KPI figures the scenario calls "chips" (now
 		// stats-block widgets, see the note above), all @objectId-scoped.
@@ -657,8 +821,19 @@ test('Lead analytics: four widgets from ONE pipeline-stats fetch, re-fetched on 
 
 /*
  * This one is a SERVER contract, and it is asserted against the running server
- * rather than excluded: `page.request` rides the same authenticated context the
- * browser tests use, so these are real requests against the real controller.
+ * rather than excluded: every call below is issued FROM INSIDE the logged-in
+ * page, so it is a real request against the real controller.
+ *
+ * IT USED TO SAY "`page.request` rides the same authenticated context the
+ * browser tests use". That was false, and it is what run 31473685688 measured:
+ * Playwright's APIRequestContext shares the browser context's COOKIES and
+ * nothing else, while Nextcloud's SecurityMiddleware requires a matching
+ * `requesttoken` (and the strict cookie) for every controller method without
+ * `#[NoCSRFRequired]`. ReportingController::getKpis() has none, so a
+ * cookie-only GET is rejected as CrossSiteRequestForgeryException → HTTP 412
+ * Precondition Failed before the controller runs, and the bare call answered
+ * 412 where the test expected 400. `apiGet()` below carries `OC.requestToken`,
+ * which is the request the app itself makes.
  *
  * The assertions are written to be timezone-independent on purpose. Comparing
  * `period=month` against a from/to pair computed in the TEST would compare the
@@ -671,40 +846,41 @@ test('Lead analytics: four widgets from ONE pipeline-stats fetch, re-fetched on 
  */
 // @e2e openspec/specs/declarative-view-system/spec.md#period-token-resolves-to-a-fromto-window
 test('ReportingController resolves a relative period token server-side, and explicit from/to wins', async ({ page }) => {
-	// The request context needs a session; openApp establishes one.
+	// The calls need a session AND a live page to read `OC.requestToken` from;
+	// openApp establishes both.
 	await openApp(page)
 	const KPIS = '/index.php/apps/pipelinq/api/rapportage/kpis'
 
 	// No window at all → the controller says so, which is what proves the window
 	// is not being invented client-side anywhere.
-	const bare = await page.request.get(KPIS)
-	expect(bare.status(), 'a call with neither period nor from/to has no window').toBe(400)
-	expect(await bare.text()).toContain('Missing required parameters')
+	const bare = await apiGet(page, KPIS)
+	expect(bare.status, 'a call with neither period nor from/to has no window').toBe(400)
+	expect(bare.text).toContain('Missing required parameters')
 
 	// Each supported token resolves to a usable window on its own — one static
 	// select, no client-side date math.
 	for (const token of ['today', 'week', 'month']) {
-		const res = await page.request.get(`${KPIS}?period=${token}`)
-		expect(res.status(), `period=${token} must resolve to a window`).toBe(200)
+		const res = await apiGet(page, `${KPIS}?period=${token}`)
+		expect(res.status, `period=${token} must resolve to a window`).toBe(200)
 	}
 
 	// An unrecognised token resolves to no window rather than silently to a
 	// default one.
-	const bogus = await page.request.get(`${KPIS}?period=quarter-to-date`)
-	expect(bogus.status(), 'an unknown period token must not silently default').toBe(400)
-	expect(await bogus.text()).toContain('Missing required parameters')
+	const bogus = await apiGet(page, `${KPIS}?period=quarter-to-date`)
+	expect(bogus.status, 'an unknown period token must not silently default').toBe(400)
+	expect(bogus.text).toContain('Missing required parameters')
 
 	// PRECEDENCE. With an explicit (here: unparseable) from/to alongside a valid
 	// token, the server must fail on the DATES — it cannot report an invalid
 	// date format unless the explicit pair took precedence over `period=month`,
 	// which on its own would have returned 200 above.
-	const explicitWins = await page.request.get(`${KPIS}?period=month&from=not-a-date&to=also-not`)
-	expect(explicitWins.status(), 'an explicit from/to must take precedence over period').toBe(400)
-	expect(await explicitWins.text()).toContain('Invalid date format')
+	const explicitWins = await apiGet(page, `${KPIS}?period=month&from=not-a-date&to=also-not`)
+	expect(explicitWins.status, 'an explicit from/to must take precedence over period').toBe(400)
+	expect(explicitWins.text).toContain('Invalid date format')
 
 	// And a valid explicit pair is honoured.
-	const explicitOk = await page.request.get(`${KPIS}?period=today&from=2020-01-01&to=2020-12-31`)
-	expect(explicitOk.status()).toBe(200)
+	const explicitOk = await apiGet(page, `${KPIS}?period=today&from=2020-01-01&to=2020-12-31`)
+	expect(explicitOk.status).toBe(200)
 })
 
 // ---------------------------------------------------------------------------
