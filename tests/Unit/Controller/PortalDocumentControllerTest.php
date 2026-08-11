@@ -374,10 +374,16 @@ class PortalDocumentControllerTest extends TestCase
         $this->assertInstanceOf(DataDownloadResponse::class, $response);
         $this->assertSame(Http::STATUS_OK, $response->getStatus());
         $this->assertSame('application/json', $this->ownHeaders($response)['Content-Type']);
-        $this->assertSame(
-            'attachment; filename="invoice-inv-own.json"',
-            $this->ownHeaders($response)['Content-Disposition']
-        );
+
+        // Assert the CONTRACT — an attachment, named for the document — not the
+        // framework's quoting of it. `OCP\AppFramework\Http\DownloadResponse`
+        // builds this header, and the bundled `vendor/nextcloud/ocp` stub quotes
+        // the filename while the real server this suite runs against in CI does
+        // not. Pinning the exact string asserts which OCP is on the include path,
+        // not what this controller returns.
+        $disposition = $this->ownHeaders($response)['Content-Disposition'];
+        $this->assertStringStartsWith('attachment;', $disposition);
+        $this->assertStringContainsString('invoice-inv-own.json', $disposition);
 
         $payload = json_decode($response->render(), true);
         $this->assertSame('invoice', $payload['objectType']);
