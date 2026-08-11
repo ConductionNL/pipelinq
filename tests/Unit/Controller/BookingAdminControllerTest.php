@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Controller\BookingAdminController;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\AvailabilityService;
@@ -40,6 +41,7 @@ use OCA\Pipelinq\Service\BookingService;
 use OCA\Pipelinq\Service\EligibilityService;
 use OCA\Pipelinq\Service\WalkInQueueService;
 use OCP\AppFramework\Http;
+use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -67,11 +69,23 @@ class BookingAdminControllerTest extends TestCase
     private object $objects;
 
     /**
-     * The real walk-in queue service (rebalance seam under measurement).
+     * The real walk-in queue service.
+     *
+     * No longer wired into BookingService — the rebalance is deferred to
+     * WalkInQueueRebalanceJob — but it is kept because it shares the object
+     * store with the controller, which is how these tests observe that not one
+     * waiting ticket was touched by a completion request.
      *
      * @var WalkInQueueService
      */
     private WalkInQueueService $walkIn;
+
+    /**
+     * Background jobs the completion path enqueued, in order.
+     *
+     * @var array<int, string>
+     */
+    private array $enqueued = [];
 
     /**
      * The real booking service.
@@ -93,6 +107,14 @@ class BookingAdminControllerTest extends TestCase
      * @var IRequest
      */
     private IRequest $request;
+
+    /**
+     * The collaborators BookingService is constructed from, kept so a test can
+     * rebuild the service with a different background-job list.
+     *
+     * @var array{container: ContainerInterface, appConfig: IAppConfig, availability: AvailabilityService, logger: LoggerInterface}
+     */
+    private array $collaborators;
 
     /**
      * Build the in-memory object store plus the real service graph.
@@ -155,19 +177,53 @@ class BookingAdminControllerTest extends TestCase
             logger: $logger,
         );
 
-        $this->bookings = new BookingService(
-            container: $container,
-            appConfig: $appConfig,
-            userSession: $this->userSession,
-            availabilityService: $availability,
-            eligibilityService: $this->createMock(EligibilityService::class),
-            logger: $logger,
+        $this->collaborators = [
+            'container'    => $container,
+            'appConfig'    => $appConfig,
+            'availability' => $availability,
+            'logger'       => $logger,
+        ];
+
+        $this->enqueued = [];
+        $this->bookings = $this->buildBookingService(jobList: $this->recordingJobList());
+    }//end setUp()
+
+    /**
+     * A job list that records what the completion path enqueues.
+     *
+     * @return IJobList The recording job list.
+     */
+    private function recordingJobList(): IJobList
+    {
+        $jobList = $this->createMock(IJobList::class);
+        $jobList->method('add')->willReturnCallback(
+            function (string $job, mixed $argument=null): void {
+                $this->enqueued[] = $job;
+            }
         );
 
-        // Exactly the wiring Application::wireBookingWalkInRebalance() performs
-        // at boot, so completeBooking() fires the real rebalance.
-        $this->bookings->setWalkInQueueRebalance(service: $this->walkIn);
-    }//end setUp()
+        return $jobList;
+    }//end recordingJobList()
+
+    /**
+     * Construct the real BookingService over the shared object store.
+     *
+     * @param IJobList $jobList The background-job list to wire in.
+     *
+     * @return BookingService The service under test.
+     */
+    private function buildBookingService(IJobList $jobList): BookingService
+    {
+        return new BookingService(
+            container: $this->collaborators['container'],
+            appConfig: $this->collaborators['appConfig'],
+            userSession: $this->userSession,
+            availabilityService: $this->collaborators['availability'],
+            eligibilityService: $this->createMock(EligibilityService::class),
+            logger: $this->collaborators['logger'],
+            jobList: $jobList,
+        );
+    }//end buildBookingService()
 
     /**
      * Build the in-memory ObjectService double.
@@ -530,14 +586,20 @@ class BookingAdminControllerTest extends TestCase
 
     /**
      * MEASUREMENT (as shipped) — with a deep waiting queue seeded, the
-     * completion request currently issues exactly ONE write: the booking.
+     * completion request issues exactly ONE write: the booking.
      *
-     * The walk-in rebalance is invoked inline by completeBooking(), but every
-     * query it makes supplies its register/schema outside `filters`, which the
-     * ObjectService contract does not read — so the queue read resolves no
-     * context and yields nothing. The fan-out is therefore latent, not absent.
-     * See the sibling test for the write count it produces once the query keys
-     * are corrected.
+     * ⚠️ That holds for TWO INDEPENDENT reasons, and both must be stated,
+     * because removing either one alone leaves this test green for the other
+     * and quietly changes what it means:
+     *
+     *   1. the rebalance is DEFERRED to WalkInQueueRebalanceJob, so no ticket
+     *      work happens in this request at all; and
+     *   2. the queue read is MIS-KEYED — it supplies register/schema outside
+     *      `filters`, which the ObjectService contract does not read — so even
+     *      inline it would find nothing.
+     *
+     * The sibling test removes reason 2 and demands reason 1 still hold. That
+     * is the one to look at if this ever needs to be re-derived.
      *
      * @return void
      */
@@ -564,19 +626,24 @@ class BookingAdminControllerTest extends TestCase
     }//end testMarkCompletedIssuesOnlyTheBookingWriteWhileTheQueueReadIsMisKeyed()
 
     /**
-     * MEASUREMENT (once the queue query keys are corrected) — the synchronous
-     * walk-in rebalance fan-out inside a single completion request.
+     * REGRESSION GUARD for the deferral — the completion request must issue
+     * exactly ONE write even when the queue read WORKS.
      *
-     * completeBooking() calls the rebalance seam inline, which walks every
-     * waiting walk-in ticket (capped at WalkInQueueService::QUEUE_PAGE_SIZE)
-     * and issues one schedule query plus one write per ticket, all inside the
-     * HTTP request that completes the booking. This test pins the resulting
-     * write count for a full queue so a later asynchronous fix can be proven to
-     * change it.
+     * `acceptTopLevelContext` makes the object-store double resolve the
+     * register/schema keys the walk-in queries currently misplace, i.e. it
+     * simulates the world after those queries are repaired. In that world an
+     * inline rebalance would walk every waiting ticket (capped at
+     * WalkInQueueService::QUEUE_PAGE_SIZE) and issue one schedule query plus
+     * one write for each — 201 writes inside one HTTP request.
+     *
+     * So this test holds the fan-out's trigger ON and demands that the request
+     * still writes once and hands the work to the background job. It fails the
+     * moment anything puts the rebalance back on the request path, and it fails
+     * for the right reason rather than because the queue happened to be empty.
      *
      * @return void
      */
-    public function testMarkCompletedFansOutOneWritePerWaitingTicketInsideTheRequest(): void
+    public function testMarkCompletedDefersTheQueueRebalanceEvenWithTheQueryKeysCorrected(): void
     {
         $this->signIn();
         $this->objects->acceptTopLevelContext = true;
@@ -588,57 +655,50 @@ class BookingAdminControllerTest extends TestCase
 
         $this->assertSame(Http::STATUS_OK, $response->getStatus());
 
-        $ticketWrites = 0;
-        foreach ($this->objects->saves as $payload) {
-            if (($payload['status'] ?? '') === 'waiting') {
-                $ticketWrites++;
+        // Exactly one write — the booking. Not QUEUE_PAGE_SIZE + 1.
+        $this->assertCount(1, $this->objects->saves);
+        $this->assertSame('completed', $this->objects->saves[0]['status']);
+
+        // The queue work was handed to the background job instead.
+        $this->assertSame([WalkInQueueRebalanceJob::class], $this->enqueued);
+
+        // And not one waiting ticket was rewritten, though 200 are in the store
+        // and the store would now serve them.
+        foreach ($this->objects->store as $uuid => $row) {
+            if (str_starts_with((string) $uuid, 'ticket-') === true) {
+                $this->assertSame('', $row['estimatedReadyAt']);
             }
         }
-
-        // One write for the booking itself, plus one for every waiting ticket.
-        $this->assertSame(WalkInQueueService::QUEUE_PAGE_SIZE, $ticketWrites);
-        $this->assertCount((WalkInQueueService::QUEUE_PAGE_SIZE + 1), $this->objects->saves);
-
-        // And at least one schedule query per ticket on top of the writes.
-        $this->assertGreaterThanOrEqual(
-            WalkInQueueService::QUEUE_PAGE_SIZE,
-            count($this->objects->queries)
-        );
-    }//end testMarkCompletedFansOutOneWritePerWaitingTicketInsideTheRequest()
+    }//end testMarkCompletedDefersTheQueueRebalanceEvenWithTheQueryKeysCorrected()
 
     /**
-     * A rebalance that throws must not change what the completion endpoint
-     * reports: the booking really was completed, so 200 `{completed: true}` is
-     * the honest answer. This test records what the caller actually observes
-     * when the queue fan-out fails half-way.
+     * A job list that cannot accept the rebalance must not change what the
+     * completion endpoint reports: the booking really was completed and is
+     * already persisted, so 200 `{completed: true}` is the honest answer.
+     *
+     * The ETA refresh is lost until the next completion enqueues it — that is
+     * the deliberate trade, and it is recorded here so a future reader can see
+     * it was chosen rather than overlooked.
      *
      * @return void
      */
-    public function testMarkCompletedStillReportsSuccessWhenTheQueueRebalanceThrows(): void
+    public function testMarkCompletedStillReportsSuccessWhenTheRebalanceCannotBeScheduled(): void
     {
         $this->signIn();
         $this->objects->seed('bk-4', 'pipelinq', 'booking', ['status' => 'confirmed']);
 
-        $exploding = new class {
-            /**
-             * Always fail.
-             *
-             * @return int
-             */
-            public function rebalance(): int
-            {
-                throw new \RuntimeException('queue backend down');
-            }
-        };
-        $this->bookings->setWalkInQueueRebalance(service: $exploding);
+        $failing = $this->createMock(IJobList::class);
+        $failing->method('add')->willThrowException(new \RuntimeException('job list down'));
+        $this->bookings = $this->buildBookingService(jobList: $failing);
 
         $response = $this->buildController()->markCompleted(id: 'bk-4');
 
         $this->assertSame(Http::STATUS_OK, $response->getStatus());
         $this->assertSame(['completed' => true], $response->getData());
-        // The booking write itself succeeded before the seam ran.
+        // The booking write itself succeeded before the enqueue was attempted.
         $this->assertSame('completed', $this->objects->store['bk-4']['status']);
-    }//end testMarkCompletedStillReportsSuccessWhenTheQueueRebalanceThrows()
+        $this->assertSame([], $this->enqueued);
+    }//end testMarkCompletedStillReportsSuccessWhenTheRebalanceCannotBeScheduled()
 
     /**
      * POST /api/bookings/{id}/confirm-deposit returns 200 `{confirmed: true}`
