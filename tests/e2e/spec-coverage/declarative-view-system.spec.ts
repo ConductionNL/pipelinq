@@ -504,11 +504,15 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		// declared fields RENDER, which needs a subject that has them.
 		const clients = await fx.list('client', { _limit: 100 })
 		expect(clients.length, 'ci-seed.sh must have seeded at least one client').toBeGreaterThan(0)
-		const populated = clients.find((c: any) => c.address && c.email && c.phone)
+		const populated = clients.find((c: any) => c.address && c.email && c.phone && c.website)
 		expect(
 			populated,
-			'the demo seed must provide a client carrying the Identity widget include set '
-			+ '(name/email/phone/address) — lib/Settings/demo_seed_data.json seeds five',
+			'the demo seed must provide a client carrying the FULL Identity widget include '
+			+ 'set (name/email/phone/address/website) — lib/Settings/demo_seed_data.json '
+			+ 'seeds five clients, of which exactly ONE ("[Demo] Bakkerij De Gouden Korst") '
+			+ 'carries a website, so this pins that subject deterministically. The widget '
+			+ 'omits valueless fields, so a subject missing one would make the assertions '
+			+ 'below pass or fail on the seed rather than on the renderer.',
 		).toBeTruthy()
 		clientId = String(populated.id || populated['@self']?.id)
 
@@ -567,48 +571,41 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		const identityLabels = content.locator('.cn-object-data-widget__label')
 		await expect(identityLabels.first()).toBeVisible({ timeout: 25000 })
 		const lang = await pageLanguage(page)
-		// The `client` schema's property titles for the widget's `include` set,
-		// restricted to the ones EVERY seeded client carries.
+		// The `client` schema's property titles for the widget's FULL `include`
+		// set. All five are asserted to render.
 		//
-		// MEASURED (run 31478695902): requiring "Website" failed. The widget's
-		// include set is [name, email, phone, address, website], but
-		// THE INCLUDE SET AND THE SCHEMA DISAGREE — measured, and reported as
-		// pipelinq#775 rather than papered over.
-		//
-		// The manifest's Identity widget declares
+		// HISTORY, because this assertion has been inverted once and the reason
+		// matters. The manifest's Identity widget declares
 		//   include: [name, email, phone, address, website]
-		// but `lib/Settings/register.d/15-unify-client-contact.json` marks TWO of
-		// those five `"visible": false`:
-		//   name    visible=<unset>  email visible=<unset>  phone visible=<unset>
-		//   address visible=false    website visible=false
-		// so `address` and `website` can never render, whatever the object holds.
+		// and `lib/Settings/register.d/15-unify-client-contact.json` used to mark
+		// two of those five `"visible": false`. The renderer's own filter runs
+		// `if (prop.visible === false) return false` BEFORE the include
+		// whitelist, so an `include` could not re-admit a hidden property, and
+		// `address`/`website` could never render whatever the object held.
 		//
-		// That is exactly what four CI runs showed, and it is why the earlier
-		// guesses were wrong: run 31478695902 failed on "Website", runs
-		// 31481319464 and 31483593863 on "Address", and Name/Email/Phone passed
-		// every single time. It was never about which client was picked (the
-		// subject selected above demonstrably carries an address) and never about
-		// unpopulated Nextcloud-Contact mirrors (all five are `readOnly`
-		// denormalised mirrors, including the three that render fine).
+		// Four CI runs showed exactly that — run 31478695902 failed on
+		// "Website", runs 31481319464 and 31483593863 on "Address", and
+		// Name/Email/Phone passed every time. It was never about which client
+		// was picked, and never about unpopulated Nextcloud-Contact mirrors (all
+		// five are `readOnly` denormalised mirrors, including the three that
+		// rendered fine). Reported as pipelinq#775 rather than papered over.
 		//
-		// So this asserts the ACTUAL contract in both directions: the visible
-		// fields render, and the two flagged invisible are absent. That is a
-		// stronger assertion than the original, not a retreat from it — a change
-		// to either the include set or a `visible` flag now fails here.
-		for (const field of ['Name', 'Email', 'Phone']) {
+		// #775 is now FIXED on `development` (merged 3621e45a7): the schema sets
+		// `"visible": true`, so all five render. ⚠️ The fix is `visible: true`,
+		// NOT deleting the key — `deepMergeConfig()` iterates only the override's
+		// keys, so it can add or replace but never delete, and the base monolith
+		// declares `visible: false` independently. Removing the key from the
+		// fragment is a measured NO-OP (hidden property count stayed at 83).
+		//
+		// So this asserts the shipped contract: every field the widget declares
+		// in `include` renders. It fails if #775 regresses, if a `visible` flag
+		// is flipped back, or if the include set changes.
+		for (const field of ['Name', 'Email', 'Phone', 'Address', 'Website']) {
 			const expected = renderedLabel(field, lang)
 			await expect(
 				identityLabels.filter({ hasText: expected }).first(),
 				`the Identity data widget must render the "${field}" field`,
 			).toBeVisible({ timeout: 15000 })
-		}
-		for (const hidden of ['Address', 'Website']) {
-			await expect(
-				identityLabels.filter({ hasText: renderedLabel(hidden, lang) }),
-				`"${hidden}" is declared in the widget's include set but marked `
-				+ '"visible": false on the client schema, so it must not render '
-				+ '(pipelinq#775 — the include set and the schema disagree)',
-			).toHaveCount(0)
 		}
 
 		// The cross-schema KPI figures the scenario calls "chips" (now
