@@ -65,7 +65,7 @@ class GiftCardService
      * @param float   $initialBalance Initial card balance.
      * @param int     $expiryDays     Days until expiry (default 365).
      * @param string  $kanaal         Issuance channel.
-     * @param ?string $issuedTo  Recipient label.
+     * @param ?string $issuedTo       Recipient label.
      *
      * @return array{card: array<string, mixed>, pin: string} Card + plaintext PIN (returned ONCE).
      *
@@ -95,11 +95,11 @@ class GiftCardService
             'serial'         => $serial,
             'pin'            => $hash,
             'initialBalance' => $initialBalance,
-            'currentBalance'  => $initialBalance,
+            'currentBalance' => $initialBalance,
             'valuta'         => 'EUR',
             'status'         => 'issued',
-            'issuedOn'   => $now,
-            'issuedTo'  => $issuedTo,
+            'issuedOn'       => $now,
+            'issuedTo'       => $issuedTo,
             'expiresOn'      => $exp,
             'kanaal'         => $kanaal,
         ];
@@ -215,7 +215,7 @@ class GiftCardService
         if ($after <= 0.0) {
             $after = 0.0;
             $card['currentBalance'] = 0.0;
-            $card['status']        = 'depleted';
+            $card['status']         = 'depleted';
             // When the requested amount equals the balance and consumes everything → type "redeem".
             if (abs($applied - $balance) < 0.005 && $change === 0.0) {
                 $type = 'redeem';
@@ -499,9 +499,9 @@ class GiftCardService
             $rows = $this->getObjectService()->findAll(
                 config: [
                     'filters' => [
-                        'customerId'  => $customerId,
-                        'register' => $register,
-                        'schema'   => $schema,
+                        'customerId' => $customerId,
+                        'register'   => $register,
+                        'schema'     => $schema,
                     ],
                     'limit'   => 1000,
                 ]
@@ -541,9 +541,9 @@ class GiftCardService
      * @param string  $giftCardId       The card UUID.
      * @param string  $type             The transaction type.
      * @param float   $bedrag           The movement amount.
-     * @param float   $balanceAfter         The balance after the movement.
+     * @param float   $balanceAfter     The balance after the movement.
      * @param ?string $posTransactionId The POS transaction id.
-     * @param string  $processedBy     Processor identifier.
+     * @param string  $processedBy      Processor identifier.
      *
      * @return void
      */
@@ -564,10 +564,10 @@ class GiftCardService
             'giftCardId'       => $giftCardId,
             'type'             => $type,
             'bedrag'           => $bedrag,
-            'balanceAfter'         => $balanceAfter,
+            'balanceAfter'     => $balanceAfter,
             'timestamp'        => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c'),
             'posTransactionId' => $posTransactionId,
-            'processedBy'     => $processedBy,
+            'processedBy'      => $processedBy,
         ];
 
         try {

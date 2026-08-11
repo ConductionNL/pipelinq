@@ -79,7 +79,7 @@ class LoyaltyEngineService
      * uses it in the ledger entry sourceDocument. Duplicate calls produce
      * additional ledger entries — at-most-once is the caller's responsibility.
      *
-     * @param string               $customerId     The Nextcloud contact UID.
+     * @param string               $customerId  The Nextcloud contact UID.
      * @param array<string, mixed> $transaction Transaction context (amount,
      *                                          category, channel, posTransactionId, segment,
      *                                          timestamp, posTerminalId).
@@ -115,7 +115,7 @@ class LoyaltyEngineService
                     'Pipelinq: loyalty processing failed for programme; POS flow unaffected',
                     [
                         'programmeId' => $programmeId,
-                        'customerId'     => $customerId,
+                        'customerId'  => $customerId,
                         'exception'   => $e->getMessage(),
                     ]
                 );
@@ -133,7 +133,7 @@ class LoyaltyEngineService
     /**
      * Process for a single programme.
      *
-     * @param string               $customerId     The contact UID.
+     * @param string               $customerId  The contact UID.
      * @param string               $programmeId The programme UUID.
      * @param array<string, mixed> $transaction The transaction context.
      *
@@ -485,11 +485,11 @@ class LoyaltyEngineService
             $event = new GenericEvent(
                 null,
                 [
-                    'type'        => 'loyalty.points.credited',
-                    'accountId'   => $accountId,
-                    'programmeId' => $programmeId,
-                    'aantal'      => (int) ($ledgerEntry['aantal'] ?? 0),
-                    'balanceAfter'    => (int) ($ledgerEntry['balanceAfter'] ?? 0),
+                    'type'         => 'loyalty.points.credited',
+                    'accountId'    => $accountId,
+                    'programmeId'  => $programmeId,
+                    'aantal'       => (int) ($ledgerEntry['aantal'] ?? 0),
+                    'balanceAfter' => (int) ($ledgerEntry['balanceAfter'] ?? 0),
                 ]
             );
             $this->eventDispatcher->dispatchTyped($event);

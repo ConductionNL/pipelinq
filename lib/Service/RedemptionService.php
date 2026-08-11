@@ -91,15 +91,15 @@ class RedemptionService
         $code       = $this->generateBeloningCode();
         $now        = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         $redemption = [
-            'accountId'      => $accountId,
-            'customerId'        => $account['customerId'] ?? null,
-            'optionId'       => $optionId,
-            'programmeId'    => $option['programmeId'] ?? null,
+            'accountId'    => $accountId,
+            'customerId'   => $account['customerId'] ?? null,
+            'optionId'     => $optionId,
+            'programmeId'  => $option['programmeId'] ?? null,
             'costInPoints' => $cost,
             'rewardCode'   => $code,
-            'status'         => 'gereserveerd',
-            'initiatedOn'    => $now,
-            'validUntil'      => $this->codeExpiryDefault(),
+            'status'       => 'gereserveerd',
+            'initiatedOn'  => $now,
+            'validUntil'   => $this->codeExpiryDefault(),
         ];
 
         $saved = $this->persist(payload: $redemption, uuid: null);
@@ -188,7 +188,7 @@ class RedemptionService
         }
 
         $validUntil = (string) ($redemption['validUntil'] ?? '');
-        $now       = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+        $now        = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         if ($validUntil !== '' && $validUntil < $now) {
             // Mark as expired in place.
             $this->markExpired(redemptionId: $this->extractUuid(object: $redemption) ?? '');
@@ -219,7 +219,7 @@ class RedemptionService
         }
 
         $redemption['status']           = 'gebruikt';
-        $redemption['usedOn']       = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+        $redemption['usedOn']           = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         $redemption['posTransactionId'] = $posTransactionId;
 
         return $this->persist(payload: $redemption, uuid: $redemptionId);
@@ -380,8 +380,8 @@ class RedemptionService
                 config: [
                     'filters' => [
                         'rewardCode' => $code,
-                        'register'     => $register,
-                        'schema'       => $schema,
+                        'register'   => $register,
+                        'schema'     => $schema,
                     ],
                     'limit'   => 1,
                 ]

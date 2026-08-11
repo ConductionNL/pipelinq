@@ -108,7 +108,7 @@ class LoyaltyControllerTest extends TestCase
             giftCardService: $giftCardService,
             params: [
                 'initialBalance' => '50',
-                'issuedTo'  => 'Bram',
+                'issuedTo'       => 'Bram',
             ]
         );
 

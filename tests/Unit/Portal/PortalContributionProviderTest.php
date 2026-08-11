@@ -558,7 +558,7 @@ final class PortalContributionProviderTest extends TestCase
                         "Filter property '{$property}' must exist on schema '{$schema}'"
                     );
                 }
-            }
+            }//end foreach
 
             foreach ($manifest['actions'] as $action) {
                 $schema = $action['schema'];
@@ -577,7 +577,7 @@ final class PortalContributionProviderTest extends TestCase
                     );
                 }
             }
-        }
+        }//end foreach
     }//end testManifestMatchesShippedRegisterSchemas()
 
     /**
@@ -624,7 +624,7 @@ final class PortalContributionProviderTest extends TestCase
                 $this->assertContains($action['defaults']['ticketType'], $kinds, "Ticket action '{$id}' must stamp a real ticketType");
                 $this->assertNotContains('ticketType', $action['fields'], "Ticket action '{$id}' must not let the client choose the kind");
             }
-        }
+        }//end foreach
     }//end testTicketSurfacesCarryKindDiscriminator()
 
     /**
@@ -639,8 +639,8 @@ final class PortalContributionProviderTest extends TestCase
     {
         $root  = dirname(__DIR__, 3);
         $files = array_merge(
-            [$root . '/lib/Settings/pipelinq_register.json'],
-            glob($root . '/lib/Settings/register.d/*.json') ?: []
+            [$root.'/lib/Settings/pipelinq_register.json'],
+            glob($root.'/lib/Settings/register.d/*.json') ?: []
         );
 
         $properties = [];

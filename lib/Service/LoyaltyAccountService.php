@@ -59,7 +59,7 @@ class LoyaltyAccountService
     /**
      * Create a new KlantLoyaltyAccount.
      *
-     * @param string $customerId      The Nextcloud contact UID.
+     * @param string $customerId   The Nextcloud contact UID.
      * @param string $programmeId  The programme UUID.
      * @param bool   $optIn        Whether the customer accepted opt-in (REQ-LOY-010).
      * @param string $termsVersion The version of terms accepted.
@@ -90,12 +90,12 @@ class LoyaltyAccountService
         $now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
 
         $payload = [
-            'customerId'           => $customerId,
+            'customerId'        => $customerId,
             'programmeId'       => $programmeId,
             'currentBalance'    => 0,
             'lifetimePoints'    => 0,
             'status'            => 'actief',
-            'createdOn'      => $now,
+            'createdOn'         => $now,
             'lastActivityDate'  => $now,
             'optInAccepted'     => true,
             'optInTimestamp'    => $now,
@@ -143,7 +143,7 @@ class LoyaltyAccountService
      *
      * Enforces composite uniqueness at the application layer by querying first.
      *
-     * @param string $customerId      The Nextcloud contact UID.
+     * @param string $customerId   The Nextcloud contact UID.
      * @param string $programmeId  The programme UUID.
      * @param bool   $optIn        Whether opt-in was accepted (only applied on creation).
      * @param string $termsVersion The terms version.
@@ -174,7 +174,7 @@ class LoyaltyAccountService
     /**
      * Find an account by composite (customerId, programmeId).
      *
-     * @param string $customerId     The Nextcloud contact UID.
+     * @param string $customerId  The Nextcloud contact UID.
      * @param string $programmeId The programme UUID.
      *
      * @return array<string, mixed>|null The account, or null.
@@ -190,7 +190,7 @@ class LoyaltyAccountService
             $result = $this->getObjectService()->findAll(
                 config: [
                     'filters' => [
-                        'customerId'     => $customerId,
+                        'customerId'  => $customerId,
                         'programmeId' => $programmeId,
                         'register'    => $register,
                         'schema'      => $schema,
@@ -250,7 +250,7 @@ class LoyaltyAccountService
             return null;
         }
 
-        $account['customerId']    = null;
+        $account['customerId'] = null;
         $account['status']     = 'gedeactiveerd';
         $account['anonymized'] = true;
 
@@ -295,8 +295,8 @@ class LoyaltyAccountService
     /**
      * Set the current tier and validity dates on the account.
      *
-     * @param string  $accountId     The account UUID.
-     * @param ?string $tierId        The new tier ID (null clears).
+     * @param string  $accountId      The account UUID.
+     * @param ?string $tierId         The new tier ID (null clears).
      * @param ?string $tierAchievedOn Timestamp the tier was reached.
      * @param ?string $tierValidUntil Scheduled downgrade date.
      *

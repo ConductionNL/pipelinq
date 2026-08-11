@@ -98,7 +98,7 @@ class TierDowngradeJob extends TimedJob
             );
 
             foreach ($accounts as $account) {
-                $accountId     = (string) $this->extractUuid(object: $account);
+                $accountId      = (string) $this->extractUuid(object: $account);
                 $tierValidUntil = (string) ($account['tierValidUntil'] ?? '');
                 if ($accountId === '' || $tierValidUntil === '' || $tierValidUntil > $now) {
                     continue;

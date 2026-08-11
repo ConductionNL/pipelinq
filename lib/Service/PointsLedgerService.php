@@ -68,11 +68,11 @@ class PointsLedgerService
     /**
      * Credit points to an account (atomic ledger entry + balance update).
      *
-     * @param string               $accountId    The account UUID.
-     * @param int                  $amount       Positive integer points to credit.
-     * @param ?string              $ruleId       The PointsRule UUID that produced the credit.
+     * @param string               $accountId      The account UUID.
+     * @param int                  $amount         Positive integer points to credit.
+     * @param ?string              $ruleId         The PointsRule UUID that produced the credit.
      * @param array<string, mixed> $sourceDocument Source linkage (transactionId etc.).
-     * @param string               $processedBy Who/what processed it (POS terminal id, system).
+     * @param string               $processedBy    Who/what processed it (POS terminal id, system).
      *
      * @return array<string, mixed> The created PointsLedgerEntry.
      *
@@ -105,11 +105,11 @@ class PointsLedgerService
     /**
      * Debit points (redemption-style).
      *
-     * @param string               $accountId    The account UUID.
-     * @param int                  $amount       Positive integer points to debit.
-     * @param string               $redemptionId The Redemption UUID.
+     * @param string               $accountId      The account UUID.
+     * @param int                  $amount         Positive integer points to debit.
+     * @param string               $redemptionId   The Redemption UUID.
      * @param array<string, mixed> $sourceDocument Source linkage.
-     * @param string               $processedBy Who/what processed it.
+     * @param string               $processedBy    Who/what processed it.
      *
      * @return array<string, mixed> The PointsLedgerEntry.
      *
@@ -181,9 +181,9 @@ class PointsLedgerService
     /**
      * Manual adjustment (signed delta).
      *
-     * @param string $accountId    The account UUID.
-     * @param int    $delta        Signed delta.
-     * @param string $reason       Reason.
+     * @param string $accountId   The account UUID.
+     * @param int    $delta       Signed delta.
+     * @param string $reason      Reason.
      * @param string $processedBy Who processed.
      *
      * @return array<string, mixed> The ledger entry.
@@ -211,7 +211,7 @@ class PointsLedgerService
      * @param string $accountId    The account UUID.
      * @param int    $amount       Positive amount to credit back.
      * @param string $redemptionId The cancelled Redemption UUID.
-     * @param string $processedBy Who processed.
+     * @param string $processedBy  Who processed.
      *
      * @return array<string, mixed> The ledger entry.
      */
@@ -400,13 +400,13 @@ class PointsLedgerService
      * roll back the ledger (ledger is the source of truth — denormalised
      * balance can be recomputed via getAccountBalance).
      *
-     * @param string               $accountId     The account UUID.
-     * @param string               $type          One of credit/debit/expiry/adjustment/refund.
-     * @param int                  $signedAantal  Signed delta.
-     * @param ?string              $ruleId        Optional PointsRule UUID.
-     * @param array<string, mixed> $sourceDocument  Source linkage.
-     * @param string               $processedBy  Processor identifier.
-     * @param int                  $lifetimeDelta Positive contribution to lifetimePoints (credits only).
+     * @param string               $accountId      The account UUID.
+     * @param string               $type           One of credit/debit/expiry/adjustment/refund.
+     * @param int                  $signedAantal   Signed delta.
+     * @param ?string              $ruleId         Optional PointsRule UUID.
+     * @param array<string, mixed> $sourceDocument Source linkage.
+     * @param string               $processedBy    Processor identifier.
+     * @param int                  $lifetimeDelta  Positive contribution to lifetimePoints (credits only).
      *
      * @return array<string, mixed> The ledger entry.
      */
@@ -429,15 +429,15 @@ class PointsLedgerService
         $now            = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
 
         $entry = [
-            'accountId'    => $accountId,
-            'customerId'      => $account['customerId'] ?? null,
-            'type'         => $type,
-            'aantal'       => $signedAantal,
-            'balanceAfter'     => $newBalance,
+            'accountId'      => $accountId,
+            'customerId'     => $account['customerId'] ?? null,
+            'type'           => $type,
+            'aantal'         => $signedAantal,
+            'balanceAfter'   => $newBalance,
             'sourceDocument' => $sourceDocument,
-            'ruleId'      => $ruleId,
-            'timestamp'    => $now,
-            'processedBy' => $processedBy,
+            'ruleId'         => $ruleId,
+            'timestamp'      => $now,
+            'processedBy'    => $processedBy,
         ];
 
         $saved = $this->persist(payload: $entry);

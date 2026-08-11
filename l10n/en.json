@@ -2571,7 +2571,7 @@
         "Creditcard": "Creditcard",
         "Currency": "Currency",
         "Customer": "Customer",
-        "Customer (klantId / contact UID)": "Customer (klantId / contact UID)",
+        "Customer (customerId / contact UID)": "Customer (customerId / contact UID)",
         "Customer portal": "Customer portal",
         "Customer-facing notes": "Customer-facing notes",
         "Date / time": "Date / time",

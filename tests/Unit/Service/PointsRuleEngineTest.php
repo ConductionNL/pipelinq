@@ -32,6 +32,7 @@ use Psr\Log\LoggerInterface;
  */
 class PointsRuleEngineTest extends TestCase
 {
+
     private PointsRuleEngine $engine;
 
     protected function setUp(): void
@@ -130,7 +131,8 @@ class PointsRuleEngineTest extends TestCase
         $this->assertFalse(
             $this->engine->evaluateCondition(
                 condition: ['dayOfWeek' => 'tuesday'],
-                context: ['timestamp' => '2026-05-20T10:00:00Z'] // Wednesday
+                context: ['timestamp' => '2026-05-20T10:00:00Z']
+        // Wednesday
             )
         );
     }//end testEvaluateConditionDayOfWeek()

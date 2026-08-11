@@ -448,7 +448,7 @@ class LoyaltyController extends Controller
             $expiryDays = 365;
         }
 
-        $kanaal           = (string) $this->request->getParam('kanaal', 'purchased');
+        $kanaal      = (string) $this->request->getParam('kanaal', 'purchased');
         $issuedToRaw = $this->request->getParam('issuedTo');
         $issuedTo    = null;
         if (is_string($issuedToRaw) === true && $issuedToRaw !== '') {

@@ -30,13 +30,13 @@ class LoyaltyRegisterFragmentTest extends TestCase
 {
     public function testFragmentDeclaresAllNineSchemas(): void
     {
-        $path = __DIR__ . '/../../../lib/Settings/register.d/70-loyalty-program.json';
+        $path = __DIR__.'/../../../lib/Settings/register.d/70-loyalty-program.json';
         $this->assertFileExists($path, 'Loyalty register fragment is missing');
 
         $data = json_decode((string) file_get_contents($path), true);
         $this->assertIsArray($data, 'Fragment JSON is invalid');
 
-        $schemas = $data['components']['schemas'] ?? [];
+        $schemas  = $data['components']['schemas'] ?? [];
         $expected = [
             'loyaltyProgramme',
             'pointsRule',
@@ -69,7 +69,7 @@ class LoyaltyRegisterFragmentTest extends TestCase
 
     public function testGiftCardSchemaFlagsPinAsHashed(): void
     {
-        $path = __DIR__ . '/../../../lib/Settings/register.d/70-loyalty-program.json';
+        $path = __DIR__.'/../../../lib/Settings/register.d/70-loyalty-program.json';
         $data = json_decode((string) file_get_contents($path), true);
 
         $pin = $data['components']['schemas']['giftCard']['properties']['pin'] ?? null;

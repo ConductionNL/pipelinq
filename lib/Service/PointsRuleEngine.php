@@ -113,7 +113,7 @@ class PointsRuleEngine
      * channel (string|string[]).
      *
      * @param array<string, mixed> $condition The condition object.
-     * @param array<string, mixed> $context  Context: category, segment, channel, timestamp...
+     * @param array<string, mixed> $context   Context: category, segment, channel, timestamp...
      *
      * @return bool True when conditions are met (or absent).
      *
@@ -156,7 +156,7 @@ class PointsRuleEngine
      * Whether the excludeCategory condition (if present) allows the context category.
      *
      * @param array<string, mixed> $condition The condition object.
-     * @param array<string, mixed> $context  Evaluation context.
+     * @param array<string, mixed> $context   Evaluation context.
      *
      * @return bool
      */
@@ -179,7 +179,7 @@ class PointsRuleEngine
      * Whether the category condition (if present) matches the context category.
      *
      * @param array<string, mixed> $condition The condition object.
-     * @param array<string, mixed> $context  Evaluation context.
+     * @param array<string, mixed> $context   Evaluation context.
      *
      * @return bool
      */
@@ -202,7 +202,7 @@ class PointsRuleEngine
      * Whether the segment condition (if present) matches the context segment.
      *
      * @param array<string, mixed> $condition The condition object.
-     * @param array<string, mixed> $context  Evaluation context.
+     * @param array<string, mixed> $context   Evaluation context.
      *
      * @return bool
      */
@@ -225,7 +225,7 @@ class PointsRuleEngine
      * Whether the channel condition (if present) matches the context channel.
      *
      * @param array<string, mixed> $condition The condition object.
-     * @param array<string, mixed> $context  Evaluation context.
+     * @param array<string, mixed> $context   Evaluation context.
      *
      * @return bool
      */
@@ -248,7 +248,7 @@ class PointsRuleEngine
      * Whether the dayOfWeek condition (if present) matches the context timestamp.
      *
      * @param array<string, mixed> $condition The condition object.
-     * @param array<string, mixed> $context  Evaluation context.
+     * @param array<string, mixed> $context   Evaluation context.
      *
      * @return bool
      */
@@ -268,7 +268,7 @@ class PointsRuleEngine
      * Whether the timeRange condition (if present) matches the context timestamp.
      *
      * @param array<string, mixed> $condition The condition object.
-     * @param array<string, mixed> $context  Evaluation context.
+     * @param array<string, mixed> $context   Evaluation context.
      *
      * @return bool
      */
