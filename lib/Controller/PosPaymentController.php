@@ -285,6 +285,12 @@ class PosPaymentController extends Controller
      * (the AppointmentPaymentWebhookController + BlastWebhookController
      * already follow this rule).
      *
+     * Status → HTTP mapping (see PosPaymentService::handleWebhook()):
+     *   ok | duplicate | ignored → 200 (the delivery is consumed or can never
+     *                                   be consumed, so a retry is pointless)
+     *   invalid                  → 400
+     *   unmatched                → 503, so the provider redelivers
+     *
      * @param string $provider The provider name.
      *
      * @return JSONResponse
@@ -322,6 +328,22 @@ class PosPaymentController extends Controller
             return new JSONResponse(
                 ['error' => $this->l10n->t('Invalid webhook signature')],
                 Http::STATUS_BAD_REQUEST
+            );
+        }
+
+        if ($status === 'unmatched') {
+            // A signed settlement this instance could not match to a
+            // transaction. NOTHING was persisted, so the delivery must not be
+            // acknowledged: all four supported providers (Mollie, CCV, Adyen,
+            // Stripe) stop redelivering on any 2xx and redeliver on 5xx, so a
+            // 200 here loses the settlement permanently (pipelinq#799).
+            // 503 rather than 500 because the condition is genuinely transient
+            // — a webhook can outrun the transaction write, and an
+            // unconfigured register/schema is repaired by an operator, not by
+            // the provider.
+            return new JSONResponse(
+                $result,
+                Http::STATUS_SERVICE_UNAVAILABLE
             );
         }
 

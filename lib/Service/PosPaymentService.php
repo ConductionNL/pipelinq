@@ -613,11 +613,23 @@ class PosPaymentService
      * Signature failure returns `{ status: invalid }` → controller maps to
      * STATUS_BAD_REQUEST (gate-9 webhook convention).
      *
+     * The status vocabulary is the controller's HTTP contract, so each value
+     * states whether the delivery was consumed:
+     *   - `ok` / `duplicate` — consumed, answered 2xx, provider stops.
+     *   - `invalid`          — the delivery is not ours (bad signature or an
+     *                          unknown provider); 400, never retried.
+     *   - `ignored`          — well-formed but carries no session id, so there
+     *                          is nothing to match and a redelivery of the same
+     *                          bytes can never succeed; 2xx by design.
+     *   - `unmatched`        — signed, carries a session id, and nothing was
+     *                          persisted. MUST be answered with a retryable
+     *                          5xx (pipelinq#799).
+     *
      * @param string $providerName The provider name.
      * @param string $rawPayload   The raw request body.
      * @param string $signature    The signature header value.
      *
-     * @return array<string, mixed> { status: ok|invalid|ignored|duplicate, transactionId?, error? }
+     * @return array<string, mixed> { status: ok|invalid|ignored|unmatched|duplicate, transactionId?, error? }
      *
      * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
      */
@@ -697,14 +709,19 @@ class PosPaymentService
     {
         $transaction = $this->findTransactionBySessionId(sessionId: $sessionId);
         if ($transaction === null) {
-            $this->logger->info(
-                'Pipelinq POS payment: webhook for unknown transaction',
+            // NOT `ignored`. The provider sent a signed settlement for a
+            // session this instance cannot match, so nothing was persisted.
+            // `unmatched` is answered with a retryable 5xx by the controller
+            // so the provider redelivers; a 2xx here tells the provider the
+            // settlement is booked and the money is lost (pipelinq#799).
+            $this->logger->error(
+                'Pipelinq POS payment: webhook for unmatched transaction; asking the provider to retry',
                 [
                     'provider' => $providerName,
                     'session'  => $sessionId,
                 ]
             );
-            return ['status' => 'ignored'];
+            return ['status' => 'unmatched'];
         }
 
         // Idempotency — last processed event id stored on the transaction.
@@ -1163,6 +1180,19 @@ class PosPaymentService
     /**
      * Find a transaction by paymentSessionId.
      *
+     * `register` / `schema` MUST sit inside `filters`. OpenRegister's
+     * `ObjectService::prepareFindAllConfig()` reads the query context from
+     * `$config['filters']['register']` / `['schema']` and from nowhere else,
+     * even though `findAll()`'s own docblock lists them as top-level keys. A
+     * top-level pair leaves `currentRegister` / `currentSchema` untouched and
+     * `MagicMapper::findAll()` then logs a warning and returns `[]`
+     * (pipelinq#793) — which this method reported as `null`, i.e. as the
+     * ordinary "no such transaction" outcome, so every settlement webhook was
+     * discarded (pipelinq#799).
+     *
+     * `limit: 2` exists to detect a duplicate `paymentSessionId`; the second
+     * row is now actually inspected instead of being silently dropped.
+     *
      * @param string $sessionId The session id.
      *
      * @return array<string, mixed>|null
@@ -1188,19 +1218,47 @@ class PosPaymentService
         try {
             $result = $objectService->findAll(
                 config: [
-                    'filters'  => ['paymentSessionId' => $sessionId],
-                    'register' => $register,
-                    'schema'   => $schema,
-                    'limit'    => 2,
+                    'filters' => [
+                        'paymentSessionId' => $sessionId,
+                        'register'         => $register,
+                        'schema'           => $schema,
+                    ],
+                    'limit'   => 2,
                 ]
             );
         } catch (Throwable $e) {
+            $this->logger->error(
+                'Pipelinq POS payment: transaction lookup by session id failed',
+                [
+                    'session'   => $sessionId,
+                    'class'     => get_class($e),
+                    'exception' => $e->getMessage(),
+                ]
+            );
             return null;
-        }
+        }//end try
 
         $rows = $this->resultToArray(result: $result);
         if ($rows === []) {
             return null;
+        }
+
+        if (count($rows) > 1) {
+            // Two transactions carrying one provider session id is data
+            // corruption on the money path: the settlement would land on
+            // whichever row the store happened to return first. Surface it.
+            $this->logger->error(
+                'Pipelinq POS payment: paymentSessionId is not unique; settling the first match',
+                [
+                    'session' => $sessionId,
+                    'matches' => array_map(
+                        static function (array $row): string {
+                            return (string) ($row['@self']['id'] ?? ($row['id'] ?? ''));
+                        },
+                        $rows
+                    ),
+                ]
+            );
         }
 
         return $rows[0];

@@ -46,8 +46,27 @@ use Psr\Log\LoggerInterface;
 /**
  * In-memory fake of the OR ObjectService for the tender tests.
  *
- * Keyed by schema then by uuid; findAll filters on the optional `filters`
- * entry; saveObject auto-assigns a uuid when empty.
+ * Keyed by schema then by uuid; saveObject auto-assigns a uuid when empty.
+ *
+ * ⚠️ This fake models OpenRegister's REGISTER/SCHEMA CONTEXT RESOLUTION, not
+ * just its method names, because that resolution is what pipelinq#793 / #799
+ * are about. The previous version resolved the schema from
+ * `$config['schema']` — the TOP-LEVEL key — which is precisely the key the
+ * real `ObjectService::prepareFindAllConfig()` never reads. It was therefore
+ * shaped to the (broken) caller rather than to the collaborator, and it kept
+ * this suite green over a live outage.
+ *
+ * The rules mirrored here, from `openregister@a4dd9067`:
+ *   - `findAll()` resolves context ONLY from `$config['filters']['register']`
+ *     and `['schema']` (`ObjectService::prepareFindAllConfig()` :1011-1035);
+ *     it then passes `$this->currentRegister` / `$this->currentSchema` to the
+ *     handler and NEVER restores them.
+ *   - With either still null, `MagicMapper::findAll()` (:8681) logs a warning
+ *     and returns `[]` — no exception.
+ *   - `saveObject()` sets the sticky context and does not restore it, so a
+ *     preceding write makes a later mis-keyed read appear to work.
+ *   - `find()` snapshots and restores the sticky context (BUG-OBJ-13 /
+ *     openregister#1520), so it leaves nothing behind for a later read.
  *
  * @SuppressWarnings(PHPMD.UnusedFormalParameter) Mirrors the real ObjectService signature.
  */
@@ -70,23 +89,120 @@ class TenderFakeObjectService
     public bool $throwOnSave = false;
 
     /**
+     * Sticky register context, as left behind by the last call that set it.
+     *
+     * @var string
+     */
+    public string $currentRegister = '';
+
+    /**
+     * Sticky schema context, as left behind by the last call that set it.
+     *
+     * @var string
+     */
+    public string $currentSchema = '';
+
+    /**
+     * Every findAll() config, in call order.
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    public array $queries = [];
+
+    /**
+     * Opt-in switch that makes the fake ALSO honour a register/schema supplied
+     * at the TOP LEVEL of the config array. Real OpenRegister does not.
+     *
+     * ⚠️ It exists for exactly one reason: `PosTenderService` still has three
+     * mis-keyed `findAll()` sites that pipelinq#793 sequences behind guards
+     * this change deliberately does not build —
+     *   `listTenderTypes()`      (:155, flips the endpoint permissive→rejecting)
+     *   `listUnpostedTenders()`  (:828, unbounded whole-table read on a 5-min
+     *                             cron, one outbound GL CloudEvent per row)
+     *   `countTendersForType()`  (:921, makes any ever-used tender type
+     *                             permanently undeletable)
+     * A test that sets this flag is therefore declaring "the site under me is
+     * a KNOWN-BROKEN #793 site"; it still asserts the domain rule around it.
+     * When those three are repaired the flag comes off and the tests must
+     * still pass. Any NEW usage is a bug being pinned — do not add one.
+     *
+     * @var boolean
+     */
+    public bool $acceptTopLevelContext = false;
+
+    /**
+     * Read one object. Snapshots and restores the sticky context, exactly as
+     * `ObjectService::find()` does — so it leaves nothing behind for a later
+     * mis-keyed `findAll()` to inherit.
+     *
+     * @param integer|string  $id       Object id.
+     * @param array|null      $_extend  Extend list.
+     * @param boolean         $files    Include files.
+     * @param string|int|null $register Register context.
+     * @param string|int|null $schema   Schema context.
+     *
      * @return array<string, mixed>|null
      */
-    public function find(string $id, string $register, string $schema): ?array
-    {
-        return $this->store[$schema][$id] ?? null;
+    public function find(
+        int | string $id,
+        ?array $_extend=[],
+        bool $files=false,
+        string | int | null $register=null,
+        string | int | null $schema=null
+    ): ?array {
+        $snapshotRegister = $this->currentRegister;
+        $snapshotSchema   = $this->currentSchema;
+
+        $row = ($this->store[(string) $schema][(string) $id] ?? null);
+
+        $this->currentRegister = $snapshotRegister;
+        $this->currentSchema   = $snapshotSchema;
+
+        return $row;
     }//end find()
 
     /**
-     * @param array<string, mixed> $config
+     * Query objects. Context comes from `filters` only; anything left in the
+     * sticky properties by a previous call is inherited.
+     *
+     * @param array<string, mixed> $config Query config.
      *
      * @return array<int, array<string, mixed>>
      */
     public function findAll(array $config): array
     {
+        $this->queries[] = $config;
+
         $filters = (array) ($config['filters'] ?? []);
-        $schema  = (string) ($config['schema'] ?? '');
-        $rows    = array_values($this->store[$schema] ?? []);
+
+        // prepareFindAllConfig(): filters ONLY, and only when non-empty.
+        if (empty($filters['register']) === false && is_array($filters['register']) === false) {
+            $this->currentRegister = (string) $filters['register'];
+        }
+
+        if (empty($filters['schema']) === false && is_array($filters['schema']) === false) {
+            $this->currentSchema = (string) $filters['schema'];
+        }
+
+        if ($this->acceptTopLevelContext === true) {
+            if (empty($config['register']) === false) {
+                $this->currentRegister = (string) $config['register'];
+            }
+
+            if (empty($config['schema']) === false) {
+                $this->currentSchema = (string) $config['schema'];
+            }
+        }
+
+        if ($this->currentRegister === '' || $this->currentSchema === '') {
+            // MagicMapper::findAll(): warning + empty list, never an exception.
+            return [];
+        }
+
+        $rows = array_values($this->store[$this->currentSchema] ?? []);
+
+        // register/schema are context, not property filters.
+        unset($filters['register'], $filters['schema']);
 
         if ($filters === []) {
             return $rows;
@@ -109,17 +225,34 @@ class TenderFakeObjectService
     }//end findAll()
 
     /**
-     * @param array<string, mixed> $object
+     * Write an object. Sets the sticky context and does NOT restore it.
+     *
+     * @param array<string, mixed> $object   The payload.
+     * @param array|null           $extend   Extend list.
+     * @param string|int|null      $register Register context.
+     * @param string|int|null      $schema   Schema context.
+     * @param string|null          $uuid     Uuid for an update.
      *
      * @return array<string, mixed>
      */
-    public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array
-    {
+    public function saveObject(
+        array $object,
+        ?array $extend=[],
+        string | int | null $register=null,
+        string | int | null $schema=null,
+        ?string $uuid=null
+    ): array {
         if ($this->throwOnSave === true) {
             throw new \RuntimeException('fake save error');
         }
 
-        if ($uuid === '') {
+        $register = (string) $register;
+        $schema   = (string) $schema;
+
+        $this->currentRegister = $register;
+        $this->currentSchema   = $schema;
+
+        if ((string) $uuid === '') {
             $this->seq++;
             $uuid = $schema.'-'.$this->seq;
         }
@@ -129,9 +262,23 @@ class TenderFakeObjectService
         return $object;
     }//end saveObject()
 
-    public function deleteObject(string $id, string $register, string $schema): void
+    /**
+     * Delete an object. The real parameter is `$uuid`; a caller spelling it
+     * `id:` gets `Error: Unknown named parameter $id`, which is what
+     * `deleteTenderType()` and `removeTender()` shipped with.
+     *
+     * @param string          $uuid     The object uuid.
+     * @param string|int|null $register Register context.
+     * @param string|int|null $schema   Schema context.
+     *
+     * @return void
+     */
+    public function deleteObject(string $uuid, string | int | null $register=null, string | int | null $schema=null): void
     {
-        unset($this->store[$schema][$id]);
+        $this->currentRegister = (string) $register;
+        $this->currentSchema   = (string) $schema;
+
+        unset($this->store[(string) $schema][$uuid]);
     }//end deleteObject()
 }//end class
 
@@ -335,10 +482,17 @@ class PosTenderServiceTest extends TestCase
     // -----------------------------------------------------------------
 
     /**
+     * ⚠️ `listTenderTypes()` (:155) is still a mis-keyed #793 site — pipelinq#793
+     * sequences it behind a product decision (it flips the endpoint from
+     * permissive to rejecting), so this change does not repair it. The flag
+     * restores the store's reachability so the sort rule is still asserted.
+     *
      * @return void
      */
     public function testListTenderTypesReturnsAllSortedBySortOrder(): void
     {
+        $this->objects->acceptTopLevelContext = true;
+
         $this->seedTenderType(['id' => 't1', 'code' => 'CASH', 'sortOrder' => 2]);
         $this->seedTenderType(['id' => 't2', 'code' => 'CARD', 'sortOrder' => 1]);
         $this->seedTenderType(['id' => 't3', 'code' => 'OFF',  'sortOrder' => 3, 'isActive' => false]);
@@ -352,10 +506,14 @@ class PosTenderServiceTest extends TestCase
     }//end testListTenderTypesReturnsAllSortedBySortOrder()
 
     /**
+     * ⚠️ Same known-broken site as above: `listTenderTypes()` (:155), #793.
+     *
      * @return void
      */
     public function testListTenderTypesActiveOnlyFiltersDeactivated(): void
     {
+        $this->objects->acceptTopLevelContext = true;
+
         $this->seedTenderType(['id' => 't1', 'code' => 'CASH']);
         $this->seedTenderType(['id' => 't2', 'code' => 'OFF', 'isActive' => false]);
 
@@ -409,10 +567,15 @@ class PosTenderServiceTest extends TestCase
     }//end testCreateTenderTypeRequiresGlAccount()
 
     /**
+     * ⚠️ The uniqueness check reads through `listTenderTypes()` (:155), a
+     * known-broken #793 site this change does not repair.
+     *
      * @return void
      */
     public function testCreateTenderTypeRejectsDuplicateCode(): void
     {
+        $this->objects->acceptTopLevelContext = true;
+
         $this->seedTenderType(['id' => 't1', 'code' => 'CASH']);
 
         $this->expectException(OCSBadRequestException::class);
@@ -458,10 +621,16 @@ class PosTenderServiceTest extends TestCase
     }//end testUpdateTenderTypePreservesCode()
 
     /**
+     * ⚠️ The active-reference guard reads through `countTendersForType()`
+     * (:921), a known-broken #793 site this change does not repair (fixing it
+     * would make any ever-used tender type permanently undeletable).
+     *
      * @return void
      */
     public function testDeleteTenderTypeWithActiveReferencesRejects(): void
     {
+        $this->objects->acceptTopLevelContext = true;
+
         $this->seedTenderType(['id' => 't1', 'code' => 'CASH']);
         $this->seedTender(['tenderType' => 't1']);
 
@@ -718,6 +887,149 @@ class PosTenderServiceTest extends TestCase
     }//end testGetTendersForEmptyIdReturnsEmpty()
 
     // -----------------------------------------------------------------
+    // pipelinq#799 — the settle path, with NO preceding write
+    // -----------------------------------------------------------------
+
+    /**
+     * THE #799 REGRESSION GUARD.
+     *
+     * `POST /api/pos-transactions/{id}/settle` reaches
+     * `getTendersForTransaction()` with nothing having written first:
+     * `fetchTransaction()` is an `ObjectService::find()`, and `find()`
+     * snapshots and restores the sticky register/schema context, so it leaves
+     * none behind. With `register`/`schema` keyed at the top level of the
+     * `findAll()` config — where OpenRegister never reads them — the query
+     * resolved no context at all, returned `[]`, and `assertBalancedForSettle()`
+     * saw `tenderSum = 0` and rejected every non-zero transaction with a 409
+     * "Underpayment" that was arithmetically true and factually wrong.
+     *
+     * The assertion is on the SEEDED AMOUNTS, not on "more than zero rows":
+     * a scoped read and an unscoped one are indistinguishable to a count.
+     *
+     * @return void
+     */
+    public function testSettleReadsTheSeededTendersWithNoPrecedingWrite(): void
+    {
+        $this->seedTenderType(['id' => 't1']);
+        $this->seedTransaction(['id' => 'tx-settle', 'total' => 25.00]);
+        $this->seedTender(['id' => 'a', 'transaction' => 'tx-settle', 'amount' => 10.00, 'sortOrder' => 1]);
+        $this->seedTender(['id' => 'b', 'transaction' => 'tx-settle', 'amount' => 15.00, 'sortOrder' => 2]);
+        $this->seedTender(['id' => 'other', 'transaction' => 'tx-elsewhere', 'amount' => 99.00]);
+
+        // The control that makes this the SETTLE path and not the addTender
+        // path: no write has run, so there is no sticky context to inherit.
+        $this->assertSame('', $this->objects->currentRegister);
+        $this->assertSame('', $this->objects->currentSchema);
+
+        $validation = $this->service->validateTenderSum(transactionId: 'tx-settle');
+
+        $this->assertSame(25.00, $validation['tenderSum']);
+        $this->assertSame(25.00, $validation['transactionTotal']);
+        $this->assertSame(0.00, $validation['variance']);
+        $this->assertTrue($validation['balanced']);
+
+        // And the settle guard itself lets the transaction through.
+        $this->service->assertBalancedForSettle(transactionId: 'tx-settle');
+        $this->addToAssertionCount(1);
+    }//end testSettleReadsTheSeededTendersWithNoPrecedingWrite()
+
+    /**
+     * The context keys must travel INSIDE `filters`.
+     *
+     * `ObjectService::prepareFindAllConfig()` reads
+     * `$config['filters']['register']` / `['schema']` and nothing else, while
+     * `findAll()`'s own docblock advertises them as top-level keys — which is
+     * how eleven sites in this app came to be written the wrong way (#793).
+     * Asserting the emitted query shape pins the contract directly, so a
+     * future edit that moves them back out fails here by name.
+     *
+     * @return void
+     */
+    public function testGetTendersQueriesWithContextInsideFiltersOnly(): void
+    {
+        $this->seedTransaction(['id' => 'tx1', 'total' => 10.00]);
+        $this->seedTender(['id' => 'a', 'transaction' => 'tx1', 'amount' => 10.00]);
+
+        $this->service->getTendersForTransaction(transactionId: 'tx1');
+
+        $this->assertCount(1, $this->objects->queries);
+        $config = $this->objects->queries[0];
+
+        $this->assertSame('reg', $config['filters']['register']);
+        $this->assertSame('posTender', $config['filters']['schema']);
+        $this->assertArrayNotHasKey('register', $config);
+        $this->assertArrayNotHasKey('schema', $config);
+    }//end testGetTendersQueriesWithContextInsideFiltersOnly()
+
+    /**
+     * One line, two call orders, one answer.
+     *
+     * The defect's signature was that `getTendersForTransaction()` WORKED when
+     * reached through `addTender()` — whose preceding `saveObject()` had
+     * already pinned the posTender context that the mis-keyed query then
+     * inherited — and FAILED when reached through settle. Whoever tested
+     * addTender saw it work. This asserts the two orders now agree.
+     *
+     * @return void
+     */
+    public function testAddTenderAndSettleOrdersAgreeOnTheSameTenderSum(): void
+    {
+        $this->seedTenderType(['id' => 't1', 'code' => 'CASH', 'allowsChange' => false]);
+        $this->seedTransaction(['id' => 'tx1', 'total' => 12.50]);
+
+        // Order A — through addTender(), which writes first.
+        $this->service->addTender(
+            transactionId: 'tx1',
+            payload: ['tenderType' => 't1', 'amount' => 12.50],
+        );
+        $afterWrite = $this->service->validateTenderSum(transactionId: 'tx1');
+
+        // Order B — settle, on a service instance with no sticky context.
+        $this->objects->currentRegister = '';
+        $this->objects->currentSchema   = '';
+        $afterRestore = $this->service->validateTenderSum(transactionId: 'tx1');
+
+        $this->assertSame(12.50, $afterWrite['tenderSum']);
+        $this->assertSame(12.50, $afterRestore['tenderSum']);
+        $this->assertSame($afterWrite['tenderSum'], $afterRestore['tenderSum']);
+    }//end testAddTenderAndSettleOrdersAgreeOnTheSameTenderSum()
+
+    /**
+     * `deleteObject()`'s first parameter is `$uuid`. `removeTender()` shipped
+     * calling it `id:`, which is `Error: Unknown named parameter $id` at
+     * runtime — swallowed by the surrounding `catch (Throwable)` and reported
+     * as an ordinary "Failed to remove tender". The previous fake DECLARED the
+     * parameter as `$id`, mirroring the broken caller instead of the real
+     * collaborator, so the suite was green over a guaranteed fatal.
+     *
+     * @return void
+     */
+    public function testRemoveTenderActuallyDeletesTheRow(): void
+    {
+        $this->seedTenderType(['id' => 't1']);
+        $this->seedTransaction(['id' => 'tx1', 'total' => 10.00]);
+        $this->seedTender(['id' => 'tnd1', 'transaction' => 'tx1', 'amount' => 10.00]);
+
+        $this->service->removeTender(transactionId: 'tx1', tenderId: 'tnd1');
+
+        $this->assertArrayNotHasKey('tnd1', $this->objects->store['posTender']);
+    }//end testRemoveTenderActuallyDeletesTheRow()
+
+    /**
+     * Same defect on the tender-type delete path (`deleteTenderType()`).
+     *
+     * @return void
+     */
+    public function testDeleteTenderTypeActuallyDeletesTheRow(): void
+    {
+        $this->seedTenderType(['id' => 't1', 'code' => 'CASH']);
+
+        $this->service->deleteTenderType(id: 't1');
+
+        $this->assertArrayNotHasKey('t1', $this->objects->store['posTenderType']);
+    }//end testDeleteTenderTypeActuallyDeletesTheRow()
+
+    // -----------------------------------------------------------------
     // validateTenderSum + assertBalancedForSettle (REQ-PST-004)
     // -----------------------------------------------------------------
 
@@ -879,10 +1191,17 @@ class PosTenderServiceTest extends TestCase
     }//end testMarkTenderGlPostedFlipsTheFlag()
 
     /**
+     * ⚠️ `listUnpostedTenders()` (:828) is still a mis-keyed #793 site — an
+     * unbounded whole-table read on a five-minute cron that emits one outbound
+     * GL CloudEvent per row, so it needs a limit and a batch cap before it may
+     * be switched on. This change does not repair it.
+     *
      * @return void
      */
     public function testListUnpostedTendersIncludesAttemptedNotConfirmed(): void
     {
+        $this->objects->acceptTopLevelContext = true;
+
         $this->seedTender(['id' => 'a', 'glPosted' => false, 'glPostAttempts' => 1]);
         $this->seedTender(['id' => 'b', 'glPosted' => true,  'glPostAttempts' => 2]);
         $this->seedTender(['id' => 'c', 'glPosted' => false, 'glPostAttempts' => 0]);

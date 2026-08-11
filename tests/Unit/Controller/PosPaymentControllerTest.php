@@ -311,14 +311,42 @@ class PosPaymentControllerTest extends TestCase
     }//end testWebhookReplayIsReportedAsDuplicateNotAsFreshSettlement()
 
     /**
-     * A payload the provider sent for a session this instance does not know is
-     * acknowledged (so the provider stops retrying) but reports `ignored`.
+     * A signed settlement for a session this instance could not match MUST NOT
+     * be acknowledged.
+     *
+     * ⚠️ This test previously asserted `Http::STATUS_OK` and passed — it pinned
+     * pipelinq#799 rather than guarding against it. Nothing is persisted on
+     * this branch, and all four supported providers (Mollie, CCV, Adyen,
+     * Stripe) stop redelivering on any 2xx, so a 200 loses the settlement
+     * permanently. The contract is a retryable 5xx.
      *
      * @return void
      */
-    public function testWebhookForUnknownSessionIsIgnored(): void
+    public function testWebhookForAnUnmatchedSessionIsNotAcknowledged(): void
     {
         $this->withBody(['id' => 'tr_unknown']);
+        $this->withHeaders(['X-Mollie-Signature' => 'good-signature']);
+
+        $this->service->method('handleWebhook')->willReturn(['status' => 'unmatched']);
+
+        $response = $this->controller->webhook(provider: 'mollie');
+
+        $this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $response->getStatus());
+        $this->assertGreaterThanOrEqual(500, $response->getStatus());
+        $this->assertSame('unmatched', $response->getData()['status']);
+    }//end testWebhookForAnUnmatchedSessionIsNotAcknowledged()
+
+    /**
+     * A payload carrying no session id at all is a different case: there is
+     * nothing to match and a redelivery of the same bytes can never succeed,
+     * so it stays acknowledged at 200 and reports `ignored`. Keeping the two
+     * apart is the point — one is retryable, the other is not.
+     *
+     * @return void
+     */
+    public function testWebhookWithNoSessionIdStaysAcknowledged(): void
+    {
+        $this->withBody(['unrelated' => 'payload']);
         $this->withHeaders(['X-Mollie-Signature' => 'good-signature']);
 
         $this->service->method('handleWebhook')->willReturn(['status' => 'ignored']);
@@ -328,7 +356,7 @@ class PosPaymentControllerTest extends TestCase
         $this->assertSame(Http::STATUS_OK, $response->getStatus());
         $this->assertSame('ignored', $response->getData()['status']);
         $this->assertArrayNotHasKey('transactionId', $response->getData());
-    }//end testWebhookForUnknownSessionIsIgnored()
+    }//end testWebhookWithNoSessionIdStaysAcknowledged()
 
     /**
      * The controller must call the verification path exactly once per delivery.
