@@ -89,11 +89,35 @@ function layoutSlotFor(widgetId: string): string {
 	return String(slot.id)
 }
 
-/** Open the Operational overview and clear the two app-chrome overlays. */
+/**
+ * Open the Operational overview and clear the two app-chrome overlays.
+ *
+ * ONE document load, deliberately. This helper used to boot the app three
+ * times — `openApp()` loaded the Sales landing page, a hash `goto` routed away
+ * from it, and a `reload()` booted the whole document again. Measured in run
+ * 31492236997 (job 93781544582), from the failing test's own trace:
+ *
+ *   goto '/apps/pipelinq/'          21.7 s   (the landing page this helper
+ *   expect #content-vue              4.7 s    exists to avoid mounting)
+ *   goto '#/operational'             2.3 s
+ *   reload()                        25.9 s
+ *   expect #content-vue              3.5 s
+ *   ------------------------------------
+ *                                   58.1 s of a 60 s test budget
+ *
+ * The cost is not app logic — it is `waitUntil: 'load'` fetching ~150 static
+ * assets from a single Nextcloud container shared by six parallel workers; the
+ * app bundles alone take 5–6 s each. Two loads is simply twice that bill.
+ *
+ * Both discarded steps are provably redundant. The trace's DOM snapshot taken
+ * AFTER the hash `goto` and BEFORE the `reload` already contains "Operational
+ * overview", "Open Leads" and six `.navi-widget` nodes, and no "Sales
+ * overview" — the router had booted onto `/operational` and the reload changed
+ * nothing but the clock. And the reload is itself a fresh document load of
+ * `…/#/operational`, so that single navigation is the whole fixture.
+ */
 async function openOperationalInteractive(page: Page): Promise<void> {
-	await openApp(page)
 	await page.goto('/apps/pipelinq/#/operational')
-	await page.reload()
 	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 20000 })
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
