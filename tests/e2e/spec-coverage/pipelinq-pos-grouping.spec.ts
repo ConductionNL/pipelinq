@@ -142,7 +142,16 @@ test('every regrouped POS and product route still resolves by deep link', async 
 		// Nextcloud served no error chrome, and the SPA did not bounce elsewhere.
 		await expect(page.locator('#content-vue'), `${route} did not mount`).toBeVisible({ timeout: 20000 })
 		await expect(nextcloudErrorPage(page), `${route} produced Nextcloud error chrome`).toHaveCount(0)
-		await expect(page, `${route} was redirected away`).toHaveURL(new RegExp(route.replace(/\//g, '\\/') + '$'))
+		// Asserted with a PREDICATE, not a pattern. Building a regex by escaping
+		// only `/` leaves `.`, `?`, `+` and friends live as metacharacters — a
+		// latent false pass, because `.` matching any character would let a
+		// redirect to a similar-looking path satisfy the assertion (CodeQL
+		// js/incomplete-sanitization). It also says the right thing for hash
+		// history: what must survive the mount is the HASH, and comparing the
+		// whole URL string would pass on a path-shaped match while vue-router had
+		// quietly redirected to `/`.
+		await expect(page, `${route} was redirected away`)
+			.toHaveURL((u) => new URL(String(u)).hash.endsWith(route))
 		await expect(page.locator('#content-vue')).not.toContainText('Internal Server Error')
 	}
 })

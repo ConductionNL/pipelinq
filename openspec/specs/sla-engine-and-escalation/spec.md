@@ -11,6 +11,8 @@ Resolves an immutable SLA policy per tracked object at creation, computes holida
 
 The engine MUST resolve exactly one `sla_policy` per tracked object at creation time, by matching `appliesTo`, `customerTier`, and `customerScope`, and tie-breaking on `priority` (lower wins) then `validFrom` (newest wins).
 
+`@e2e exclude` in-process policy resolution — `SlaEngineService::resolvePolicyForObject()` runs inside an OpenRegister object-save event and its only externally visible artefact is the object's embedded `slaStatus`, which no tracked object carries: `SlaObjectCreatedListener::handle()` gates on entity types `request`/`complaint`/`klacht`/`callback` while `SchemaMapService::resolveEntityType()` maps the unified schema to `ticket` and carries no `callback_schema` entry at all, so the listener returns before it resolves anything (product bug, reported; measured live — 0 of 86 seeded tickets carry an `slaStatus`, and a freshly created `ticketType: request` object came back with `slaStatus: null`). Snapshot construction and deadline maths asserted by `tests/Unit/Service/SlaEngineServiceTest.php` (`testInitialiseStatusAddsTargets`, `testPolicyIdentityFallback`).
+
 #### Scenario: Gold-tier policy selected over baseline
 
 - **GIVEN** a request is created for customer in `slaTier: gold` and two policies exist:
@@ -57,6 +59,8 @@ The engine MUST resolve exactly one `sla_policy` per tracked object at creation 
 
 Deadline computation MUST respect the policy's `holidayCalendar` and `calendar` (business-hours window), excluding Dutch national holidays.
 
+`@e2e exclude` pure date arithmetic in `HolidayCalendarService` / `BusinessHoursCalculator` with no HTTP or browser surface — a computed deadline is only ever written into an object's `slaStatus`, which no tracked object carries (see the product bug on "Policy resolution at object creation"). Asserted by `tests/Unit/Service/DutchHolidayCalendarTest.php` (`testFiveWorkingDaysAcrossWeekend`, `testWeekendsAreNotWorkingDays`, `testFiveWorkingDaysAcrossKoningsdag`, `testExtraHolidays`), `tests/Unit/Service/HolidayCalendarServiceTest.php` (`testKoningsdagIsHoliday`, `testNoneCalendarReturnsFalse`, `testLustrumTenantOverride`) and `tests/Unit/Service/SlaEngineServiceTest.php` (`testInitialiseStatusAddsTargets`, `testPauseResumeRoundtrip`).
+
 #### Scenario: Business-hours deadline across weekend
 
 - **GIVEN** a request is opened on Friday 2026-05-17 at 17:00 with a 4-business-hour acknowledgement target and `business-hours` calendar (Mon-Fri 09:00-17:00)
@@ -95,6 +99,8 @@ Deadline computation MUST respect the policy's `holidayCalendar` and `calendar` 
 
 The engine MUST pause and resume the timer when the tracked object's status enters or leaves a value listed in the policy's `pauseConditions`.
 
+`@e2e exclude` timer pause/resume runs inside the OpenRegister `ObjectUpdatedEvent` listener, which never fires for a tracked object (same gate as "Policy resolution at object creation"), and everything it mutates lives in the object's `slaStatus` envelope; the "no escalation while paused" guarantee is `SlaObjectUpdatedListener::applyEscalations()` returning early whenever `slaStatus.pausedAt` is set, i.e. the ABSENCE of a dispatch, which a browser cannot observe. Timer maths asserted by `tests/Unit/Service/SlaEngineServiceTest.php` (`testPauseResumeRoundtrip`, `testEvaluateTargetsFlipsStatus`, `testMarkTargetMet`).
+
 #### Scenario: Timer paused on entering pause-condition status
 
 - **GIVEN** a request with an active SLA timer and `pauseConditions: ["awaiting-customer", "on-hold"]`
@@ -129,6 +135,8 @@ The engine MUST pause and resume the timer when the tracked object's status ente
 When `consumedPercentage` crosses an escalation `triggerAt` threshold, the engine MUST notify the configured actor on the configured channel exactly once per level per object, and write an `sla_breach_event`. Channels `sms` and `whatsapp` MUST dispatch through the channel adapters (`SmsAdapter` / `WhatsAppAdapter`, transported via OpenRegister's `MessageDispatchProvider` leaf) and are supported for `notify: customer` — the breached object's linked client/contact is the recipient. For other notify roles, `sms`/`whatsapp` steps MUST record an `unsupported:{channel}:{role}` marker in `notifiedActors` without dispatching. Channels `email` and `webhook` remain delegated to their own capabilities and MUST record a `deferred:{channel}:{role}` marker until those land. Adapter dispatch MUST be resolved lazily (container), MUST never let a Throwable escape the sweep, and every outcome MUST be auditable through the `notifiedActors` marker vocabulary (`sent` = actor identifier, `consent-missing:`, `template-missing:`, `unsupported:`, `deferred:`, `failed:`, `unresolved:`).
 
 **Feature tier**: V1 (sms/whatsapp escalation dispatch); MVP (notification channel, unchanged)
+
+`@e2e exclude` escalation dispatch has no UI trigger — every step fires from the cron `SlaDeadlineSweepJob` or from the object-update listener, both outside a browser session — and the sms/whatsapp legs transport through vendor provider clients (Meta primary, BSP fallback) that CI does not provision (`.github/workflows/code-quality.yml` pins `additional-apps` to openregister only). Asserted by `tests/Unit/Service/SlaEngineDispatchTest.php` (`testSmsCustomerSent`, `testWhatsAppCustomerTemplateSent`, `testConsentMissingMarker`, `testTemplateMissingMarker`, `testUnsupportedRoleMarker`, `testEmailAndWebhookDeferred`, `testAdapterAbsentDegrades`, `testAdapterThrowableDegrades`, `testUnresolvedCustomer`) and `tests/Unit/Service/SlaEngineServiceTest.php` (`testEscalationIdempotent`, `testNoEscalationBelowTrigger`, `testMarkTargetMet`).
 
 #### Scenario: Email sent to team-lead at 80% threshold
 
@@ -205,6 +213,8 @@ When `consumedPercentage` crosses an escalation `triggerAt` threshold, the engin
 ### Requirement: Per-customer SLA tier override
 
 Administrators MUST be able to attach an SLA tier (`bronze` … `platinum`) to a customer organisation or to a specific contract, and the engine MUST honour the most-specific scope.
+
+`@e2e exclude` tier/scope resolution is the same in-process computation as "Policy resolution at object creation" — `SlaEngineService::resolvePolicyForObject()` running during an object-save event — and no HTTP surface reports which policy won, because the resolved snapshot is written to an `slaStatus` that no tracked object carries (measured live: 0 of 86 seeded tickets). The seeded policy set the tier match runs against is read back through the real object API in `tests/e2e/spec-coverage/sla-engine-and-escalation.spec.ts`.
 
 #### Scenario: Contract-level tier overrides organisation-level
 
@@ -285,6 +295,8 @@ The engine MUST expose an aggregation endpoint that returns SLA attainment perce
 
 The engine MUST register as a listener for `object.created`, `object.updated`, and `object.deleted` events on schemas whitelisted in the policy's `appliesTo`, and MUST NOT poll.
 
+`@e2e exclude` listener wiring and its fail-soft guarantee: both listeners are registered in `lib/AppInfo/Application.php` but can never fire for a tracked object — they gate on entity types `request`/`complaint`/`klacht`/`callback` while `SchemaMapService::resolveEntityType()` resolves the unified schema to `ticket` (product bug, reported; measured live — creating a `ticketType: request` object returned `slaStatus: null`). The non-blocking guarantee is additionally a fault-injection path (the listener must throw), which no browser interaction can induce. Envelope maths asserted by `tests/Unit/Service/SlaEngineServiceTest.php` (`testInitialiseStatusAddsTargets`, `testEvaluateTargetsFlipsStatus`, `testMarkTargetMet`).
+
 #### Scenario: SLA initialized on request creation
 
 - **GIVEN** a `request` object is created via the OpenRegister API
@@ -312,6 +324,8 @@ The engine MUST register as a listener for `object.created`, `object.updated`, a
 ### Requirement: Scheduled deadline sweep
 
 A background job MUST run at most every 5 minutes (configurable, min 1, max 30) to detect deadline crossings that did not coincide with an object event (i.e. nothing happened, the clock just ran out).
+
+`@e2e exclude` background cron path — `SlaDeadlineSweepJob` is registered as a `<job>` in `appinfo/info.xml` and has no HTTP route or UI trigger, so a Playwright run never executes it, and the reference-sizing scenario is a 10,000-object load benchmark on 2-vCPU hardware rather than a browser assertion. Escalation idempotency on re-run asserted by `tests/Unit/Service/SlaEngineServiceTest.php` (`testEscalationIdempotent`); target-status transitions by `testEvaluateTargetsFlipsStatus`.
 
 #### Scenario: Breach detected on silent deadline crossing
 
@@ -366,6 +380,8 @@ Every change to an `sla_policy` (create, update, deactivate, target-edit) MUST b
   - After: updated `targets[*].duration` array
   - Justification: "klant-eis nieuw contract Q3"
 
+`@e2e exclude` the audit entry is emitted only to the PSR logger by `SlaPolicyController::auditLog()`; `appinfo/routes.php` exposes no audit read route for SLA policies (the only two are `slaPolicy#create` and `slaPolicy#update`), so there is nothing for a browser to read back. The justification gate that guards this write IS asserted end to end in `tests/e2e/spec-coverage/sla-engine-and-escalation.spec.ts`.
+
 #### Scenario: In-flight requests retain original deadlines
 
 - **GIVEN** an in-flight request bound to a policy with `resolution: P3W`, and the policy is edited to `resolution: P1W`
@@ -374,9 +390,13 @@ Every change to an `sla_policy` (create, update, deactivate, target-edit) MUST b
 - AND its `slaStatus.targets[*].dueAt` MUST NOT be retroactively recomputed
 - (Policy immutability: the binding is the snapshot at object creation time)
 
+`@e2e exclude` policy immutability is the ABSENCE of a recompute — `SlaObjectUpdatedListener` never calls `resolvePolicyForObject()` (grep: 0 occurrences in that file) — and observing it needs an in-flight object carrying an `slaStatus` snapshot, which no tracked object has (measured live: 0 of 86 seeded tickets). Snapshot construction asserted by `tests/Unit/Service/SlaEngineServiceTest.php` (`testInitialiseStatusAddsTargets`).
+
 ### Requirement: Holiday calendar pluggability
 
 The set of recognised holiday calendars MUST be configurable without code change, sourced from a JSON file shipped per locale and overridable per-tenant via OpenRegister.
+
+`@e2e exclude` calendar sets are resolved from per-locale JSON plus `IAppConfig` overrides inside `HolidayCalendarService`, with no HTTP or browser surface of their own — the only consumer is the deadline maths that writes into an object's `slaStatus`. Asserted by `tests/Unit/Service/HolidayCalendarServiceTest.php` (`testCompositeCalendarUnion`, `testLustrumTenantOverride`, `testBevrijdingsdagLustrum`, `testNoneCalendarReturnsFalse`) and `tests/Unit/Service/DutchHolidayCalendarTest.php` (`testExtraHolidays`, `testBevrijdingsdagOnlyInLustrumYears`).
 
 #### Scenario: Composite calendar (NL + BE)
 
