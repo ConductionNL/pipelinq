@@ -335,7 +335,7 @@ test.describe('Marketing API contract', () => {
 			'Retention Newsletter', 'Technical Leads']) {
 			expect(segNames, `seeded segment "${expected}" is missing`).toContain(expected)
 		}
-		expect(new Set(segRows.map((s: any) => s.entityType))).toContain('contact')
+		expect([...new Set(segRows.map((s: any) => s.entityType))]).toContain('contact')
 
 		// The seeded CampaignTemplates — two email, one SMS.
 		const templates = await api(page, 'GET', `${APP}/api/templates`)
