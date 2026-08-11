@@ -323,7 +323,8 @@ class PosTenderService
         [$register, $schema] = $this->config(schemaKey: 'posTenderType_schema');
 
         try {
-            $this->getObjectService()->deleteObject(id: $id, register: $register, schema: $schema);
+            // The parameter is `$uuid`; `id:` is `Error: Unknown named parameter`.
+            $this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
         } catch (Throwable $e) {
             $this->logger->warning(
                 'Pipelinq POS tender: failed to delete tender type',
@@ -339,6 +340,20 @@ class PosTenderService
 
     /**
      * List all tenders attached to a transaction, sorted by sortOrder.
+     *
+     * `register` / `schema` MUST sit inside `filters`. OpenRegister's
+     * `ObjectService::prepareFindAllConfig()` resolves the query context from
+     * `$config['filters']['register']` / `['schema']` and from nowhere else,
+     * even though `findAll()`'s own docblock lists them as top-level keys. A
+     * top-level pair leaves `currentRegister` / `currentSchema` untouched, so
+     * `MagicMapper::findAll()` logs a warning and returns `[]` (pipelinq#793).
+     *
+     * That made this one line behave differently per endpoint: reached through
+     * `addTender()` a preceding `saveObject()` had already pinned the posTender
+     * context and the read worked, while `settle` — which is preceded only by a
+     * `find()`, and `find()` restores the context it borrowed — read nothing,
+     * so `assertBalancedForSettle()` saw `tenderSum = 0` and rejected every
+     * non-zero transaction with a 409 underpayment (pipelinq#799).
      *
      * @param string $transactionId The posTransaction UUID.
      *
@@ -357,9 +372,11 @@ class PosTenderService
         try {
             $results = $this->getObjectService()->findAll(
                 config: [
-                    'filters'  => ['transaction' => $transactionId],
-                    'register' => $register,
-                    'schema'   => $schema,
+                    'filters' => [
+                        'transaction' => $transactionId,
+                        'register'    => $register,
+                        'schema'      => $schema,
+                    ],
                 ]
             );
         } catch (Throwable $e) {
@@ -509,7 +526,8 @@ class PosTenderService
         [$register, $schema] = $this->config(schemaKey: 'posTender_schema');
 
         try {
-            $this->getObjectService()->deleteObject(id: $tenderId, register: $register, schema: $schema);
+            // The parameter is `$uuid`; `id:` is `Error: Unknown named parameter`.
+            $this->getObjectService()->deleteObject(uuid: $tenderId, register: $register, schema: $schema);
         } catch (Throwable $e) {
             $this->logger->warning(
                 'Pipelinq POS tender: failed to delete tender',
