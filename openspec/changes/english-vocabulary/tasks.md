@@ -59,22 +59,41 @@ Klantinteracties); the loyalty programme is entirely pipelinq's own.
       Record as blocked on procest — pipelinq is the fourth app holding this key, alongside
       openconnector and docudesk.
 
-## 6. Code, translations, gates
+## 6. Data migration
 
-- [ ] 6.1 Rename the 9 classes and 19 methods that sit outside the adapter directories;
+- [ ] 6.1 Count live objects for the loyalty and BSN/BRP schemas **before** renaming.
+      Resolve numeric register and schema ids through `oc_openregister_schemas`, read the
+      `oc_openregister_table_<reg>_<schema>` shards (name-matching them matches nothing
+      and reports zero), exclude `_deleted`, and sum across every register each schema is
+      in. Prove the query can return non-zero before recording a zero.
+- [ ] 6.2 Migrate stored keys for the renamed loyalty properties — `klantId` →
+      `customerId` on four schemas, plus the points/redemption/giftCard fields. Loyalty
+      balances are customer-visible; an orphaned `klantId` silently detaches a ledger
+      entry from its customer.
+- [ ] 6.3 ⚠️ Migrate `doelbinding` → `purposeLimitation` on stored `bsnAuditRecord` and
+      `brpLookupVerzoek` objects. These are the audited lawful-basis records for BSN
+      lookups; leaving historical records under the old key breaks the audit trail, which
+      is a compliance defect rather than a data-tidiness one.
+
+## 7. Code, translations, gates
+
+- [ ] 7.1 Rename the 9 classes and 19 methods that sit outside the adapter directories;
       keep `Berichtenbox`, `Klantinteracties`, `HaalCentraal`, `Zrc` and `Digikoppeling`
       where they name the external thing being adapted. `BrpDoelbindingModal.vue` follows
       3.2's rename.
-- [ ] 6.2 `l10n/nl.json` re-pointed not re-extracted; `check-l10n`.
-- [ ] 6.3 Re-run the token-aware scan; residual Dutch SHALL be exactly the classified wire
+- [ ] 7.2 `l10n/nl.json` re-pointed not re-extracted; `check-l10n`.
+- [ ] 7.3 Re-run the token-aware scan; residual Dutch SHALL be exactly the classified wire
       fields plus the held `zaakId`/`zaaktype`.
-- [ ] 6.4 Full suite plus hydra gates 46/53/54/55/57/61, and exercise one BSN lookup end
-      to end to confirm the purpose-limitation ground is still enforced and audited.
+- [ ] 7.4 Full suite plus hydra gates 46/53/54/55/57/61, and exercise one BSN lookup end
+      to end **against migrated data** to confirm the purpose-limitation ground is still
+      enforced and audited.
 
 ## Acceptance criteria
 
 - Every VNG endpoint URL byte-identical; only the properties holding them renamed.
-- `purposeLimitation` provably as constrained and as audited as `doelbinding` was.
+- `purposeLimitation` provably as constrained and as audited as `doelbinding` was,
+  including on historical audit records migrated from the old key.
+- Stored-object count measured and proven by a positive control; migrated if non-zero.
 - `zaakId` and `zaaktype` unchanged, with the procest block recorded.
 - `brpPersoon` classification recorded per property, not assumed.
 - Dutch UI labels unchanged; `check-l10n` passes.
