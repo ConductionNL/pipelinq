@@ -21,6 +21,9 @@
  *     resolved through {@see TicketService}). Survey responses now live in
  *     the OpenRegister forms leaf (NC Forms); a future Navi adapter can
  *     query the leaf via `FormLinkMapper`.
+ *     Conversation state is no exception: it lives in one bounded per-user
+ *     preference row (see {@see NaviConversationStore}), not in a register and
+ *     not behind a migration.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -33,7 +36,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/dashboard/tasks.md#task-1.2
+ * @spec openspec/specs/dashboard/spec.md#requirement-navi-ai-analytics-widget-req-dash-001
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -59,11 +62,14 @@ use RuntimeException;
 /**
  * Conversational analytics orchestrator (Navi AI).
  *
- * Stateless; relies on the caller for conversation persistence (the
- * `conversationId` round-trips through `processQuery` so the frontend can
- * thread follow-up questions).
+ * Conversation state lives in {@see NaviConversationStore}, scoped to the
+ * calling user. A turn whose intent cannot be classified on its own words
+ * inherits the intent of the preceding turn, and a turn that names no subject
+ * inherits the preceding turn's, which is how a follow-up such as "And how many
+ * of those are overdue?" is answered against what the previous question was
+ * about.
  *
- * @spec openspec/changes/dashboard/tasks.md#task-1.2
+ * @spec openspec/specs/dashboard/spec.md#requirement-navi-ai-analytics-widget-req-dash-001
  */
 class NaviService
 {
@@ -85,25 +91,37 @@ class NaviService
     /**
      * Constructor.
      *
-     * @param ContainerInterface $container     DI container (used to resolve OR services lazily).
-     * @param IAppConfig         $appConfig     App configuration (register / schema IDs).
-     * @param LoggerInterface    $logger        Logger.
-     * @param TicketService      $ticketService Resolver for the unified ticket schema.
+     * @param ContainerInterface    $container         DI container (used to resolve OR services lazily).
+     * @param IAppConfig            $appConfig         App configuration (register / schema IDs).
+     * @param LoggerInterface       $logger            Logger.
+     * @param TicketService         $ticketService     Resolver for the unified ticket schema.
+     * @param NaviConversationStore $conversationStore User-scoped store of conversation turns.
      */
     public function __construct(
         private ContainerInterface $container,
         private IAppConfig $appConfig,
         private LoggerInterface $logger,
         private readonly TicketService $ticketService,
+        private readonly NaviConversationStore $conversationStore,
     ) {
     }//end __construct()
 
     /**
      * Main entry point. Detects intent, fetches context, returns the response.
      *
-     * @param string $query  Natural-language query from the user.
-     * @param string $userId Authenticated user id (used only for logging,
-     *                       OpenRegister enforces multi-tenancy itself).
+     * When a `conversationId` is supplied the preceding turns of that
+     * conversation are read back and a query whose own words classify as
+     * `unknown` inherits the previous turn's intent and subject instead of
+     * falling through to the clarification prompt. The turn is then appended to
+     * the record so the next follow-up can do the same.
+     *
+     * @param string      $query          Natural-language query from the user.
+     * @param string      $userId         Authenticated user id. Also scopes the
+     *                                    conversation record; OpenRegister
+     *                                    enforces object multi-tenancy itself.
+     * @param string|null $conversationId Conversation identifier minted by the
+     *                                    controller, or null for a one-shot
+     *                                    query that accumulates nothing.
      *
      * @return array{
      *   query: string,
@@ -115,9 +133,9 @@ class NaviService
      *   conversationId?: string|null
      * }
      *
-     * @spec openspec/changes/dashboard/tasks.md#task-1.2
+     * @spec openspec/specs/dashboard/spec.md#conversational-follow-up
      */
-    public function processQuery(string $query, string $userId): array
+    public function processQuery(string $query, string $userId, ?string $conversationId=null): array
     {
         $trimmed = trim($query);
         if ($trimmed === '') {
@@ -132,8 +150,23 @@ class NaviService
             );
         }
 
-        $intent  = $this->detectIntent(query: $trimmed);
-        $context = $this->buildContext(intent: $intent, params: ['query' => $trimmed]);
+        $history = $this->conversationStore->read(userId: $userId, conversationId: $conversationId);
+        $carried = $this->conversationStore->carryForward(
+            detectedIntent: $this->detectIntent(query: $trimmed),
+            history: $history
+        );
+        $intent  = $carried['intent'];
+        $context = $this->buildContext(
+            intent: $intent,
+            params: ['query' => $trimmed, 'previousQuery' => $carried['query']]
+        );
+
+        $this->conversationStore->append(
+            userId: $userId,
+            conversationId: $conversationId,
+            history: $history,
+            turn: ['query' => $trimmed, 'intent' => $intent]
+        );
 
         // No data: degrade to a polite text response (REQ-DASH-001 empty result).
         if ($context === [] && $intent !== 'unknown') {
@@ -167,7 +200,7 @@ class NaviService
      *
      * @return string One of self::INTENTS.
      *
-     * @spec openspec/changes/dashboard/tasks.md#task-1.2
+     * @spec openspec/specs/dashboard/spec.md#requirement-navi-ai-analytics-widget-req-dash-001
      */
     public function detectIntent(string $query): string
     {
@@ -196,18 +229,23 @@ class NaviService
      * Fetch the OpenRegister objects required to answer the given intent.
      *
      * @param string               $intent One of self::INTENTS.
-     * @param array<string, mixed> $params Free-form params (currently only `query`).
+     * @param array<string, mixed> $params Free-form params: `query`, and the
+     *                                     optional `previousQuery` a follow-up
+     *                                     inherits its subject from.
      *
      * @return array<int, array<string, mixed>> Plain-array rows.
      *
-     * @spec openspec/changes/dashboard/tasks.md#task-1.2
+     * @spec openspec/specs/dashboard/spec.md#conversational-follow-up
      */
     public function buildContext(string $intent, array $params): array
     {
         return match ($intent) {
             'trend', 'conversion' => $this->findObjects(schemaKey: 'lead_schema'),
             'breakdown'           => $this->findTickets(ticketType: TicketService::TYPE_REQUEST),
-            'count'               => $this->buildCountContext(query: (string) ($params['query'] ?? '')),
+            'count'               => $this->buildCountContext(
+                query: (string) ($params['query'] ?? ''),
+                previousQuery: (string) ($params['previousQuery'] ?? '')
+            ),
             default               => [],
         };
     }//end buildContext()
@@ -219,7 +257,12 @@ class NaviService
      * so they are read through TicketService with a `ticketType` discriminator
      * instead of from their own (retired) schemas.
      *
-     * @param string $query Lower-case query (trimmed by caller).
+     * A follow-up that names no subject of its own ("And how many of those are
+     * overdue?") is counted against the subject of the query it follows, which
+     * is what keeps "those" pointing at the same records.
+     *
+     * @param string $query         Query (trimmed by caller).
+     * @param string $previousQuery Preceding turn's query, or '' when there is none.
      *
      * @return array<int, array<string, mixed>> Plain-array rows.
      *
@@ -227,16 +270,15 @@ class NaviService
      *
      * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
      */
-    private function buildCountContext(string $query): array
+    private function buildCountContext(string $query, string $previousQuery=''): array
     {
-        $lower = mb_strtolower($query);
-
-        if (preg_match('/\b(request|verzoek|verzoeken|aanvraag|aanvragen)\b/u', $lower) === 1) {
-            return $this->findTickets(ticketType: TicketService::TYPE_REQUEST);
+        $ticketType = $this->ticketService->detectTypeInText(text: $query);
+        if ($ticketType === null) {
+            $ticketType = $this->ticketService->detectTypeInText(text: $previousQuery);
         }
 
-        if (preg_match('/\b(contactmoment|contactmomenten|contact)\b/u', $lower) === 1) {
-            return $this->findTickets(ticketType: TicketService::TYPE_CONTACTMOMENT);
+        if ($ticketType !== null) {
+            return $this->findTickets(ticketType: $ticketType);
         }
 
         // Leads are both the explicit lead match and the fallback.
@@ -456,7 +498,7 @@ class NaviService
      *
      * @return array<string, mixed>
      *
-     * @spec openspec/changes/dashboard/tasks.md#task-1.2
+     * @spec openspec/specs/dashboard/spec.md#requirement-navi-ai-analytics-widget-req-dash-001
      */
     public function formatResponse(string $query, array $llmResponse, array $rawData): array
     {
