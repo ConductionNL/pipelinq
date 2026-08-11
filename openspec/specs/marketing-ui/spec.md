@@ -9,6 +9,8 @@ Provides the marketing blast user interface: a SegmentBuilder for visually compo
 ## Requirements
 ### Requirement: Segment Builder UI Composes Rule Trees
 
+@e2e exclude UNWIRED COMPONENT — reported as a product bug, not worked around. `src/components/SegmentBuilder.vue` and `src/components/SegmentRuleNode.vue` are imported by NOTHING: the only occurrence of the identifier anywhere outside those two files is a prose comment at src/registry.js:228, so no page, route or registry entry mounts them and no browser can reach the rule-tree editor at all. The rules the component would enforce are asserted at the service boundary by tests/Unit/Service/SegmentServiceTest.php (testValidateRulesRejectsOperatorIncompatibleWithFieldType, testValidateRulesRejectsUnknownField, testValidateRulesRejectsUnsupportedOperator, testEstimateSizeReturnsMatchingCount), and the same validate-then-estimate contract is proven end to end over HTTP by tests/e2e/spec-coverage/marketing.spec.ts ("POST /api/segments validates the rule tree before saving"). This exclusion should be revisited the moment the component is mounted.
+
 The SegmentBuilder Vue component SHALL allow marketers to construct rule
 trees visually using AND/OR logic with leaf predicates, validate them, and
 show a live size estimate before commit.
@@ -31,6 +33,8 @@ The BlastForm Vue component SHALL walk the marketer through name → segment →
 template → channel → schedule → A/B and SHALL check compliance before send.
 
 #### Scenario: Missing-consent modal on send
+
+@e2e exclude the modal is raised only when the compliance preflight returns a non-empty missing-contacts list for the chosen segment, and the send it guards dispatches through openconnector, which the CI instance does not install (.github/workflows/code-quality.yml pins `additional-apps` to openregister only) — so the branch cannot be entered in a browser run. The preflight that decides it is asserted by tests/Unit/Service/ComplianceServiceTest.php (testCheckSegmentComplianceMissingContacts, testPreflightBlastReturnsValidWhenAllChecksPass) and tests/Unit/Service/BlastServiceTest.php (testSendBlastQueuesCompliantSkipsNonCompliant).
 
 - **GIVEN** a segment with contacts lacking email consent
 - **WHEN** the marketer attempts to send

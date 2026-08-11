@@ -79,6 +79,8 @@ against the entity schema before save.
 
 ### Requirement: Segments Are Live, Not Frozen Lists
 
+@e2e exclude the invariant is a NEGATIVE one — "the segment query was NOT materialised as a static list" — and its two scenarios are stated over dated timelines (a Segment saved 2026-01-01, a Contact created 2026-02-15, a Blast sent 2026-02-16) that no browser session can move through; what a browser could see, a member count, is the same number either way. Asserted at the boundary that decides it by tests/Unit/Service/SegmentServiceTest.php (testGetMembersForBlastReturnsProjectedRecipients, testEstimateSizeReturnsMatchingCount, testEstimateSizeReturnsZeroOnMissingSegment, testEstimateSizeAndCompositeOnSeedShape), each of which recomputes membership from the CURRENT rows rather than from a stored list.
+
 A Segment SHALL be evaluated dynamically at blast-send time, not
 materialized as a static contact list at save time. New Contacts matching
 the rules SHALL be auto-included in future Blasts.

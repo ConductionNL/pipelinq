@@ -35,11 +35,15 @@ an absent, malformed, or expired token still returns the pixel (so the email ren
 but records nothing.
 
 #### Scenario: Valid pixel hit records the open
+
+@e2e exclude a VALID token is an HMAC signed with a per-instance secret that no browser can mint, and the assertion is about stored `blastDelivery` fields (`openedAt`, `status`) plus a `totals` roll-up that nothing renders per-delivery; asserted by tests/Unit/Controller/BlastTrackingControllerTest.php (testOpenWithValidTokenRecordsAndReturnsPixel) and tests/Unit/Service/TrackingLinkServiceTest.php (testOpenTokenRoundTrip, testRecordOpenSetsOpenedAtAndUpdatesTotals). The fail-closed half of this requirement IS asserted end to end by tests/e2e/spec-coverage/marketing.spec.ts ("a tampered open token still returns the 1x1 pixel and never 500s").
 - **WHEN** a recipient's mail client loads the pixel with a valid token for a delivered `blastDelivery`
 - **THEN** the endpoint returns a 1×1 GIF and sets `openedAt` (only if unset) and transitions the delivery `status` to `opened`
 - **AND** the per-blast `totals.opened` is refreshed via `updateBlastTotals()`
 
 #### Scenario: Repeated opens do not double-count the first open
+
+@e2e exclude idempotency is a comparison of a stored timestamp BEFORE and AFTER a second valid-token hit — the token cannot be minted from a browser and neither the timestamp nor the un-incremented counter is rendered anywhere; asserted by tests/Unit/Service/TrackingLinkServiceTest.php (testRecordOpenIsIdempotent).
 - **WHEN** the same pixel is loaded a second time
 - **THEN** `openedAt` (first-open timestamp) is unchanged and `totals.opened` still counts the delivery once
 
@@ -56,6 +60,8 @@ carried by the token. On an invalid token the endpoint SHALL NOT redirect to an
 attacker-supplied location — it SHALL return a 4xx.
 
 #### Scenario: Valid click records and redirects
+
+@e2e exclude same reason as the valid pixel hit — the target URL is carried INSIDE an HMAC-signed token a browser cannot mint, and the recorded effect (`firstClickAt`, `clickedUrls`, `totals.clicked`, the AttributionService hand-off) is stored state rather than rendered output; asserted by tests/Unit/Controller/BlastTrackingControllerTest.php (testClickWithValidTokenRedirectsAndRecords) and tests/Unit/Service/TrackingLinkServiceTest.php (testClickTokenRoundTrip, testRecordClickDelegatesToAttributionServiceAndUpdatesTotals, testRecordClickNoOpWhenDeliveryMissing). The refusal half IS asserted end to end by tests/e2e/spec-coverage/marketing.spec.ts ("a tampered click token is refused and produces no redirect").
 - **WHEN** a recipient clicks a tracked link with a valid token
 - **THEN** the endpoint records the click (sets `firstClickAt` if unset, appends the URL to `clickedUrls`, bumps `status` toward `clicked`) and 302-redirects to the decoded target URL
 - **AND** `totals.clicked` is refreshed and `utm_campaign` attribution is preserved via the existing `AttributionService::recordClick()` path
@@ -65,6 +71,8 @@ attacker-supplied location — it SHALL return a 4xx.
 - **THEN** the endpoint returns a 4xx and performs no redirect and no record — the target URL bound in the token is trusted only after the signature verifies
 
 ### Requirement: Tracking tokens are HMAC-signed and PII-free
+
+@e2e exclude both scenarios are properties of the TOKEN STRING and of the comparison used to verify it: "the payload encodes no PII" and "verification is constant-time" (`hash_equals`, not `===`). Neither has any rendered form, and a timing property is specifically not observable through a browser. Asserted by tests/Unit/Service/TrackingLinkServiceTest.php (testOpenTokenRoundTrip, testClickTokenRoundTrip, testVerifyTokenRejectsTamperedToken, testVerifyTokenRejectsMalformedToken, testVerifyTokenRejectsExpiredToken).
 
 Tracking tokens SHALL be opaque, encoding only the `blastDelivery` UUID (and, for
 clicks, the target URL) plus an issue/expiry timestamp, signed with a per-instance
@@ -82,6 +90,8 @@ email address, name, or any other personal identifier.
 - **THEN** verification uses `hash_equals` against the recomputed HMAC and rejects any mismatch
 
 ### Requirement: Render-time injection is feature-flagged with a provider fallback
+
+@e2e exclude injection happens at per-delivery RENDER time, inside the mail body handed to openconnector — which the CI instance does not install (.github/workflows/code-quality.yml pins `additional-apps` to openregister only) — so the rendered email never exists in a browser run, and "unchanged from today" is a diff between two never-displayed strings. Asserted by tests/Unit/Service/TrackingLinkServiceTest.php (testInjectTrackingRewritesLinksAndAppendsPixel, testInjectTrackingLeavesUnsubscribeLinkUntouched, testInjectTrackingNoOpOnEmptyInput) and, across the flag, by tests/Unit/Service/BlastServiceTest.php (testSendOneDeliveryInjectsTrackingWhenFlagOn, testSendOneDeliveryDoesNotInjectTrackingWhenFlagOff).
 
 A `TrackingLinkService` SHALL rewrite `<a href>` links to the click-redirect and
 append the open pixel to a blast email at per-delivery render time, only when the
@@ -107,6 +117,8 @@ tracking events SHALL be retained only as long as the parent blast/delivery reco
 and the retention posture SHALL be documented.
 
 #### Scenario: Analytics open/click rates populate first-party
+
+@e2e exclude the rendered half of this — the Overview table's open-rate and click-rate columns, derived from `blast.totals` — IS asserted end to end by tests/e2e/spec-coverage/marketing.spec.ts ("the Overview tab lists blasts with delivery rates in sortable columns"). What is left, and what this scenario is actually about, is the PROVENANCE of those totals: that a first-party recorded open reaches the same `updateBlastTotals()` roll-up as a webhook-sourced one. Provenance is not visible in the rendered percentage — both sources produce an identical column — and the first-party path needs a valid HMAC token a browser cannot mint. Asserted by tests/Unit/Service/TrackingLinkServiceTest.php (testRecordOpenSetsOpenedAtAndUpdatesTotals, testRecordClickDelegatesToAttributionServiceAndUpdatesTotals) and tests/Unit/Service/BlastServiceTest.php (testUpdateBlastTotalsRecountsByStatus, testUpdateBlastTotalsZeroesAllStatusesWhenNoDeliveries).
 - **WHEN** first-party tracking has recorded opens and clicks for a blast
 - **THEN** the marketing-analytics Overview table's open-rate and click-rate columns reflect them, derived from `blast.totals` exactly as for webhook-sourced events
 
