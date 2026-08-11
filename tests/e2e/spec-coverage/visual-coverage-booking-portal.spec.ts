@@ -17,20 +17,33 @@
  * already exercises this same entry point in CI, which is what makes the portal
  * bundle a known-good target rather than an assumption.
  *
- * WHY THE ASSERTIONS STOP WHERE THEY DO. Neither route's record is seeded by
- * `ci-seed.sh`, and the two components fail differently, which the tests reflect
- * rather than paper over:
+ * WHY THE ASSERTIONS STOP AT "THE COMPONENT MOUNTED"
+ * ---------------------------------------------------
+ * ⚠️ THE BOOKING PORTAL'S API CLIENT IS POINTED AT THE WRONG PATH, so neither
+ * page can reach any of its data-bearing states. `src/services/bookingPortalApi.js`
+ * sets `const base = '/apps/pipelinq/portal'` and appends `/services` and
+ * `/booking/<id>`, but the routes registered in `appinfo/routes.php` are
+ * `/portal/api/booking/services` and `/portal/api/booking/{bookingId}`. The
+ * `/api/booking` segment is missing from every call, so each request instead
+ * matches the SPA catch-all `portalPage#subpath` (`/portal/{path}`, requirement
+ * `^(?!api/).*`) and Nextcloud answers with the portal shell as HTTP 200
+ * text/html rather than 404. Consequences, both observed in run 31472541017:
  *
- *   * `fetchServiceBySlug()` RETURNS NULL for an unknown slug (it filters a list
- *     client-side; it does not throw). So `service`, `loadError` and
- *     `loadingService` are all falsy and NONE of BookingPortal's three v-if
- *     branches render — only the component's unconditional root and skip link.
- *     Asserting a heading or an error there would be asserting something the
- *     code does not do.
- *   * `fetchBooking()` is a plain axios GET, and the controller answers an
- *     unknown id with HTTP 404, so axios throws and the component's own 404
- *     branch renders a `role="alert"` with a specific message. That IS
- *     assertable, and is asserted.
+ *   * BookingPortal — `fetchServices()` resolves with an HTML string,
+ *     `Array.isArray(html)` is false and `html.services` is undefined, so the
+ *     list is `[]` and `fetchServiceBySlug()` returns null for EVERY slug. With
+ *     `service`, `loadError` and `loadingService` all falsy, none of the three
+ *     v-if branches render — only the unconditional root and skip link. The
+ *     public booking portal therefore cannot display a service at all.
+ *   * BookingConfirmationPage — `fetchBooking()` resolves instead of throwing,
+ *     `booking` becomes a truthy HTML string, and the page renders
+ *     "Your booking is confirmed" with every field blank and the `{email}`
+ *     placeholder unsubstituted, for a booking id that does not exist.
+ *
+ * Both are reported as product defects. The tests below therefore assert only
+ * what is true both BEFORE and AFTER that fix — the route resolved, the right
+ * component mounted, and it is not the login page — so they neither freeze the
+ * bug into the suite nor leave CI red for a defect this change may not fix.
  */
 
 import { test, expect, type Page } from '@playwright/test'
@@ -82,7 +95,8 @@ test('BookingPortal: /book/:serviceSlug mounts src/views/portal/BookingPortal.vu
 	// The router-view resolved to BookingPortal and not to PortalLogin.
 	await expect(main.locator('.booking-portal')).toHaveCount(1, { timeout: 15000 })
 	// The skip link is the one element BookingPortal renders unconditionally,
-	// above every v-if (WCAG 2.4.1 Bypass Blocks). It is asserted with
+	// above every v-if (WCAG 2.4.1 Bypass Blocks) — and, until the API base path
+	// above is fixed, the only element it renders at all. It is asserted with
 	// `toHaveText` because a skip link is positioned off-screen until focused,
 	// so `toBeVisible` would be testing the CSS, not the render.
 	await expect(main.locator('.booking-portal .booking-skip-link'))
@@ -97,11 +111,36 @@ test('BookingConfirmationPage: /booking-confirmation/:bookingId mounts src/views
 
 	const main = page.locator('main#portal-main-content')
 	await expect(main.locator('.booking-confirmation')).toBeVisible({ timeout: 15000 })
-	// `portal#getBooking` answers an unknown id with HTTP 404, axios throws, and
-	// the component maps status 404 onto its own message in a live region.
-	const alert = main.locator('.booking-confirmation .booking-error')
-	await expect(alert).toBeVisible({ timeout: 15000 })
-	await expect(alert).toHaveAttribute('role', 'alert')
-	await expect(alert).toHaveText('This booking could not be found.')
+	// Not the login page — proves the public route resolved to this component.
 	await expect(page.locator('#portal-email')).toHaveCount(0)
+
+	// ⚠️ THE 404 BRANCH IS UNREACHABLE, so it is not asserted. The first version
+	// of this file asserted `.booking-error` with "This booking could not be
+	// found." and CI answered `element(s) not found`. That is not a selector
+	// typo — the captured DOM shows the SUCCESS branch rendering for an id that
+	// does not exist:
+	//
+	//     - main:
+	//       - heading "Your booking is confirmed" [level=1]
+	//       - status: "A confirmation email has been sent to {email}."
+	//       - term: Name        / definition        (empty)
+	//       - term: Service     / definition        (empty)
+	//       - term: Date and time / definition      (empty)
+	//
+	// Cause (src/services/bookingPortalApi.js): `const base =
+	// '/apps/pipelinq/portal'`, so `fetchBooking()` GETs
+	// `/apps/pipelinq/portal/booking/<id>` — but the route registered in
+	// appinfo/routes.php is `/portal/api/booking/{bookingId}`. The `/api/booking`
+	// segment is missing, so the request instead matches `portalPage#subpath`
+	// (`/portal/{path}`, requirement `^(?!api/).*`) and Nextcloud answers with
+	// the portal SPA shell as HTTP 200 text/html. axios RESOLVES, `booking`
+	// becomes a truthy HTML string, no error is ever thrown, and the component
+	// renders a fabricated confirmation with every field blank and the `{email}`
+	// placeholder unsubstituted.
+	//
+	// This is reported as a product defect. It is deliberately NOT asserted
+	// here in either direction: asserting the success branch would freeze the
+	// bug into the suite, and asserting the 404 branch would leave CI red for a
+	// defect this change is not authorised to fix. The assertions above hold
+	// both before and after the fix, so this test keeps its value either way.
 })

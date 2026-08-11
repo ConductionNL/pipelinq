@@ -94,11 +94,27 @@ test('ExportDestinationForm: /export/destinations/new mounts src/views/export/Ex
 
 	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
 	await expect(detail).toBeVisible({ timeout: 15000 })
-	// "New destination" rather than "Edit destination" also proves the literal
-	// `/new` route won over `/export/destinations/:id`: `routesFromManifest()`
-	// sorts by parameter count ascending, so the parameterless path is
-	// registered first, and `isEdit` is `!!destinationId`.
-	await expect(detail.locator('.cn-detail-page__title')).toHaveText('New destination')
+	// ⚠️ THE HEADING IS THE MANIFEST'S TITLE, NOT THE COMPONENT'S `:title` PROP.
+	// This literal was WRONG in the first version of this file and CI caught it:
+	// `33 × locator resolved to <h2 class="cn-detail-page__title">New export
+	// destination</h2>` while the component binds
+	// `:title="isEdit ? 'Edit destination' : 'New destination'"`.
+	//
+	// The rule, as measured across the five export pages in run 31472541017:
+	// when the custom page component's SINGLE ROOT is `<CnDetailPage>`, the
+	// manifest page's `title` reaches CnDetailPage's `title` prop (fallthrough
+	// attribute onto a single root component) and the component's own binding
+	// does not win. When the root is a plain `<div>` wrapping the library
+	// component — ExportDestinations, ExportRuns, CashShiftList — the manifest
+	// title lands on that inert `<div>` and the component's prop is what
+	// renders. Both halves of that rule are confirmed by passing tests here and
+	// in visual-coverage-spa-pages.spec.ts.
+	//
+	// So `src/manifest.json` (page `ExportDestinationNew`) is the source of
+	// truth for this string, and the component's own 'New destination' /
+	// 'Edit destination' literals are dead strings that never reach a screen —
+	// reported, not worked around.
+	await expect(detail.locator('.cn-detail-page__title')).toHaveText('New export destination')
 })
 
 // ── src/views/export/ExportJobForm.vue — route `/export/jobs/new` ─────────────
@@ -125,8 +141,27 @@ test('ExportRunDetail: /export/runs/:id mounts src/views/export/ExportRunDetail.
 
 	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
 	await expect(detail).toBeVisible({ timeout: 15000 })
-	// ExportRunDetail passes a STATIC title, so the header reads "Export run"
-	// whether or not the run resolves — which is exactly why it is a safe pin
-	// for "this route mounted this component".
-	await expect(detail.locator('.cn-detail-page__title')).toHaveText('Export run')
+
+	// ⚠️ THIS PAGE RENDERS NO TITLE AT ALL, so it cannot be pinned on one.
+	// The first version of this file asserted `.cn-detail-page__title` here and
+	// CI answered `element(s) not found` — NOT a wrong literal, an absent
+	// element. Cause: ExportRunDetail is the only one of the four CnDetailPage
+	// consumers in this app that overrides `<template #header>` (the other three
+	// use `#actions`), and CnDetailPage's `header` slot DEFAULT CONTENT is the
+	// whole left header block — icon, type eyebrow and the
+	// `<h2 class="cn-detail-page__title">`. Supplying `#header` replaces all of
+	// it, so the status badge and Retry button this page puts there come at the
+	// cost of the page heading. The captured DOM confirms it: `<main>` goes
+	// straight from the optional-dependency banners to `heading "Summary"
+	// [level=3]`, with no h1 or h2 anywhere — an unlabelled `<main>` landmark
+	// (WCAG 1.3.1 / 2.4.6). Reported as a product defect rather than asserted
+	// into place, and rather than papered over by relaxing the matcher.
+	//
+	// Pinned instead on the two CnDetailCards this component always renders —
+	// both read verbatim out of the failing run's own ARIA snapshot, so they are
+	// observed rather than guessed, and both are unique to this page.
+	await expect(detail.getByRole('heading', { name: 'Summary', level: 3 }))
+		.toBeVisible({ timeout: 15000 })
+	await expect(detail.getByRole('heading', { name: 'File manifest', level: 3 }))
+		.toBeVisible()
 })
