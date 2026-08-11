@@ -77,7 +77,7 @@ class LoyaltyController extends Controller
     }//end __construct()
 
     /**
-     * Get an account by its UUID (the caller MUST own the underlying klantId).
+     * Get an account by its UUID (the caller MUST own the underlying customerId).
      *
      * @param string $accountId The account UUID.
      *
@@ -201,7 +201,7 @@ class LoyaltyController extends Controller
     /**
      * Validate a redemption code (POS-facing — auth required as authenticated user).
      *
-     * @param string $code The beloningCode.
+     * @param string $code The rewardCode.
      *
      * @return JSONResponse
      *
@@ -225,7 +225,7 @@ class LoyaltyController extends Controller
     /**
      * Mark a redemption code as used (POS settlement).
      *
-     * @param string $code The beloningCode.
+     * @param string $code The rewardCode.
      *
      * @return JSONResponse
      *
@@ -412,7 +412,7 @@ class LoyaltyController extends Controller
      *
      * Body: `initialBalance` (required, > 0), optional `programmeId`,
      * `expiryDays` (default 365), `kanaal` (default `purchased`),
-     * `uitgegevenAan`.
+     * `issuedTo`.
      *
      * @return JSONResponse The created card + one-time PIN (200), or 400 on invalid input.
      *
@@ -449,10 +449,10 @@ class LoyaltyController extends Controller
         }
 
         $kanaal           = (string) $this->request->getParam('kanaal', 'purchased');
-        $uitgegevenAanRaw = $this->request->getParam('uitgegevenAan');
-        $uitgegevenAan    = null;
-        if (is_string($uitgegevenAanRaw) === true && $uitgegevenAanRaw !== '') {
-            $uitgegevenAan = $uitgegevenAanRaw;
+        $issuedToRaw = $this->request->getParam('issuedTo');
+        $issuedTo    = null;
+        if (is_string($issuedToRaw) === true && $issuedToRaw !== '') {
+            $issuedTo = $issuedToRaw;
         }
 
         try {
@@ -461,7 +461,7 @@ class LoyaltyController extends Controller
                 initialBalance: $initialBalance,
                 expiryDays: $expiryDays,
                 kanaal: $kanaal,
-                uitgegevenAan: $uitgegevenAan
+                issuedTo: $issuedTo
             );
             return new JSONResponse($result);
         } catch (Throwable $e) {

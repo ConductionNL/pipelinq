@@ -71,8 +71,8 @@ class PointsLedgerService
      * @param string               $accountId    The account UUID.
      * @param int                  $amount       Positive integer points to credit.
      * @param ?string              $ruleId       The PointsRule UUID that produced the credit.
-     * @param array<string, mixed> $brondocument Source linkage (transactionId etc.).
-     * @param string               $verwerktDoor Who/what processed it (POS terminal id, system).
+     * @param array<string, mixed> $sourceDocument Source linkage (transactionId etc.).
+     * @param string               $processedBy Who/what processed it (POS terminal id, system).
      *
      * @return array<string, mixed> The created PointsLedgerEntry.
      *
@@ -84,8 +84,8 @@ class PointsLedgerService
         string $accountId,
         int $amount,
         ?string $ruleId,
-        array $brondocument,
-        string $verwerktDoor
+        array $sourceDocument,
+        string $processedBy
     ): array {
         if ($amount <= 0) {
             throw new RuntimeException('Credit amount must be positive.');
@@ -96,8 +96,8 @@ class PointsLedgerService
             type: 'credit',
             signedAantal: $amount,
             ruleId: $ruleId,
-            brondocument: $brondocument,
-            verwerktDoor: $verwerktDoor,
+            sourceDocument: $sourceDocument,
+            processedBy: $processedBy,
             lifetimeDelta: $amount
         );
     }//end creditPoints()
@@ -108,8 +108,8 @@ class PointsLedgerService
      * @param string               $accountId    The account UUID.
      * @param int                  $amount       Positive integer points to debit.
      * @param string               $redemptionId The Redemption UUID.
-     * @param array<string, mixed> $brondocument Source linkage.
-     * @param string               $verwerktDoor Who/what processed it.
+     * @param array<string, mixed> $sourceDocument Source linkage.
+     * @param string               $processedBy Who/what processed it.
      *
      * @return array<string, mixed> The PointsLedgerEntry.
      *
@@ -121,8 +121,8 @@ class PointsLedgerService
         string $accountId,
         int $amount,
         string $redemptionId,
-        array $brondocument,
-        string $verwerktDoor
+        array $sourceDocument,
+        string $processedBy
     ): array {
         if ($amount <= 0) {
             throw new RuntimeException('Debit amount must be positive.');
@@ -137,15 +137,15 @@ class PointsLedgerService
             throw new RuntimeException('Insufficient balance.');
         }
 
-        $brondocument['redemptionId'] = $redemptionId;
+        $sourceDocument['redemptionId'] = $redemptionId;
 
         return $this->appendAndUpdate(
             accountId: $accountId,
             type: 'debit',
             signedAantal: -$amount,
             ruleId: null,
-            brondocument: $brondocument,
-            verwerktDoor: $verwerktDoor,
+            sourceDocument: $sourceDocument,
+            processedBy: $processedBy,
             lifetimeDelta: 0
         );
     }//end debitPoints()
@@ -172,8 +172,8 @@ class PointsLedgerService
             type: 'expiry',
             signedAantal: -$amount,
             ruleId: null,
-            brondocument: ['expiryPolicyRef' => $reason],
-            verwerktDoor: 'system:expiry-batch',
+            sourceDocument: ['expiryPolicyRef' => $reason],
+            processedBy: 'system:expiry-batch',
             lifetimeDelta: 0
         );
     }//end expirePoints()
@@ -184,11 +184,11 @@ class PointsLedgerService
      * @param string $accountId    The account UUID.
      * @param int    $delta        Signed delta.
      * @param string $reason       Reason.
-     * @param string $verwerktDoor Who processed.
+     * @param string $processedBy Who processed.
      *
      * @return array<string, mixed> The ledger entry.
      */
-    public function adjustPoints(string $accountId, int $delta, string $reason, string $verwerktDoor): array
+    public function adjustPoints(string $accountId, int $delta, string $reason, string $processedBy): array
     {
         if ($delta === 0) {
             throw new RuntimeException('Adjustment delta cannot be zero.');
@@ -199,8 +199,8 @@ class PointsLedgerService
             type: 'adjustment',
             signedAantal: $delta,
             ruleId: null,
-            brondocument: ['reason' => $reason],
-            verwerktDoor: $verwerktDoor,
+            sourceDocument: ['reason' => $reason],
+            processedBy: $processedBy,
             lifetimeDelta: max(0, $delta)
         );
     }//end adjustPoints()
@@ -211,7 +211,7 @@ class PointsLedgerService
      * @param string $accountId    The account UUID.
      * @param int    $amount       Positive amount to credit back.
      * @param string $redemptionId The cancelled Redemption UUID.
-     * @param string $verwerktDoor Who processed.
+     * @param string $processedBy Who processed.
      *
      * @return array<string, mixed> The ledger entry.
      */
@@ -219,7 +219,7 @@ class PointsLedgerService
         string $accountId,
         int $amount,
         string $redemptionId,
-        string $verwerktDoor
+        string $processedBy
     ): array {
         if ($amount <= 0) {
             throw new RuntimeException('Refund amount must be positive.');
@@ -230,8 +230,8 @@ class PointsLedgerService
             type: 'refund',
             signedAantal: $amount,
             ruleId: null,
-            brondocument: ['redemptionId' => $redemptionId, 'reason' => 'redemption cancelled'],
-            verwerktDoor: $verwerktDoor,
+            sourceDocument: ['redemptionId' => $redemptionId, 'reason' => 'redemption cancelled'],
+            processedBy: $processedBy,
             lifetimeDelta: 0
         );
     }//end refundPoints()
@@ -404,8 +404,8 @@ class PointsLedgerService
      * @param string               $type          One of credit/debit/expiry/adjustment/refund.
      * @param int                  $signedAantal  Signed delta.
      * @param ?string              $ruleId        Optional PointsRule UUID.
-     * @param array<string, mixed> $brondocument  Source linkage.
-     * @param string               $verwerktDoor  Processor identifier.
+     * @param array<string, mixed> $sourceDocument  Source linkage.
+     * @param string               $processedBy  Processor identifier.
      * @param int                  $lifetimeDelta Positive contribution to lifetimePoints (credits only).
      *
      * @return array<string, mixed> The ledger entry.
@@ -415,8 +415,8 @@ class PointsLedgerService
         string $type,
         int $signedAantal,
         ?string $ruleId,
-        array $brondocument,
-        string $verwerktDoor,
+        array $sourceDocument,
+        string $processedBy,
         int $lifetimeDelta
     ): array {
         $account = $this->accountService->getAccount(accountId: $accountId);
@@ -430,14 +430,14 @@ class PointsLedgerService
 
         $entry = [
             'accountId'    => $accountId,
-            'klantId'      => $account['klantId'] ?? null,
+            'customerId'      => $account['customerId'] ?? null,
             'type'         => $type,
             'aantal'       => $signedAantal,
-            'balansNa'     => $newBalance,
-            'brondocument' => $brondocument,
-            'regelId'      => $ruleId,
+            'balanceAfter'     => $newBalance,
+            'sourceDocument' => $sourceDocument,
+            'ruleId'      => $ruleId,
             'timestamp'    => $now,
-            'verwerktDoor' => $verwerktDoor,
+            'processedBy' => $processedBy,
         ];
 
         $saved = $this->persist(payload: $entry);

@@ -90,8 +90,11 @@ class PosTransactionCompletedListener implements IEventListener
                 return;
             }
 
-            $klantId = (string) ($data['klantId'] ?? $data['customerId'] ?? $data['contactUid'] ?? '');
-            if ($klantId === '') {
+            // The POS transaction entity is not ours: it may carry either the Dutch
+            // or the English key, so BOTH fallbacks stay. Only the variable and the
+            // named argument below are pipelinq's own vocabulary.
+            $customerId = (string) ($data['klantId'] ?? $data['customerId'] ?? $data['contactUid'] ?? '');
+            if ($customerId === '') {
                 // Anonymous transaction; no points to award.
                 return;
             }
@@ -107,7 +110,7 @@ class PosTransactionCompletedListener implements IEventListener
                 'trigger'          => 'purchase',
             ];
 
-            $this->loyaltyEngineService->processPosTransaction(klantId: $klantId, transaction: $context);
+            $this->loyaltyEngineService->processPosTransaction(customerId: $customerId, transaction: $context);
         } catch (Throwable $e) {
             // CRITICAL: never throw — POS flow must not be affected.
             $this->logger->warning(

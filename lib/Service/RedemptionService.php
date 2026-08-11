@@ -5,7 +5,7 @@
  *
  * Owns the Redemption lifecycle (gereserveerd → gebruikt | vervallen | geannuleerd).
  * Atomically debits points via PointsLedgerService and generates a unique
- * beloningCode. Cancellation refunds points.
+ * rewardCode. Cancellation refunds points.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -92,27 +92,27 @@ class RedemptionService
         $now        = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         $redemption = [
             'accountId'      => $accountId,
-            'klantId'        => $account['klantId'] ?? null,
+            'customerId'        => $account['customerId'] ?? null,
             'optionId'       => $optionId,
             'programmeId'    => $option['programmeId'] ?? null,
-            'kostenInPunten' => $cost,
-            'beloningCode'   => $code,
+            'costInPoints' => $cost,
+            'rewardCode'   => $code,
             'status'         => 'gereserveerd',
-            'initiatedOp'    => $now,
-            'geldigTot'      => $this->codeExpiryDefault(),
+            'initiatedOn'    => $now,
+            'validUntil'      => $this->codeExpiryDefault(),
         ];
 
         $saved = $this->persist(payload: $redemption, uuid: null);
 
-        // Debit AFTER the redemption record exists so the brondocument points at the redemption.
+        // Debit AFTER the redemption record exists so the sourceDocument points at the redemption.
         $redemptionUuid = $this->extractUuid(object: $saved);
         try {
             $this->ledgerService->debitPoints(
                 accountId: $accountId,
                 amount: $cost,
                 redemptionId: (string) $redemptionUuid,
-                brondocument: ['optionId' => $optionId, 'beloningCode' => $code],
-                verwerktDoor: 'redemption-service'
+                sourceDocument: ['optionId' => $optionId, 'rewardCode' => $code],
+                processedBy: 'redemption-service'
             );
         } catch (\Throwable $e) {
             // Roll back the Redemption record on debit failure.
@@ -152,12 +152,12 @@ class RedemptionService
             throw new RuntimeException('Redemption option is not currently valid.');
         }
 
-        $cost = (int) ($option['kostenInPunten'] ?? 0);
+        $cost = (int) ($option['costInPoints'] ?? 0);
         if ((int) ($account['currentBalance'] ?? 0) < $cost) {
             throw new RuntimeException('Insufficient balance.');
         }
 
-        $perKlantLimit = $option['perKlantLimiet'] ?? null;
+        $perKlantLimit = $option['perCustomerLimit'] ?? null;
         if ($perKlantLimit !== null && (int) $perKlantLimit > 0) {
             $usedCount = $this->countUsedRedemptions(accountId: $accountId, optionId: $optionId);
             if ($usedCount >= (int) $perKlantLimit) {
@@ -171,7 +171,7 @@ class RedemptionService
     /**
      * Validate a redemption code (without consuming it).
      *
-     * @param string $code The beloningCode.
+     * @param string $code The rewardCode.
      *
      * @return array{valid: bool, redemption: ?array<string, mixed>, reason: ?string}
      */
@@ -187,9 +187,9 @@ class RedemptionService
             return ['valid' => false, 'redemption' => $redemption, 'reason' => 'Status is '.$status];
         }
 
-        $geldigTot = (string) ($redemption['geldigTot'] ?? '');
+        $validUntil = (string) ($redemption['validUntil'] ?? '');
         $now       = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-        if ($geldigTot !== '' && $geldigTot < $now) {
+        if ($validUntil !== '' && $validUntil < $now) {
             // Mark as expired in place.
             $this->markExpired(redemptionId: $this->extractUuid(object: $redemption) ?? '');
             return ['valid' => false, 'redemption' => $redemption, 'reason' => 'Redemption code expired'];
@@ -219,7 +219,7 @@ class RedemptionService
         }
 
         $redemption['status']           = 'gebruikt';
-        $redemption['gebruiktOp']       = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+        $redemption['usedOn']       = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         $redemption['posTransactionId'] = $posTransactionId;
 
         return $this->persist(payload: $redemption, uuid: $redemptionId);
@@ -246,13 +246,13 @@ class RedemptionService
 
         if ((string) ($redemption['status'] ?? '') === 'gereserveerd') {
             $accountId = (string) ($redemption['accountId'] ?? '');
-            $cost      = (int) ($redemption['kostenInPunten'] ?? 0);
+            $cost      = (int) ($redemption['costInPoints'] ?? 0);
             if ($accountId !== '' && $cost > 0) {
                 $this->ledgerService->refundPoints(
                     accountId: $accountId,
                     amount: $cost,
                     redemptionId: $redemptionId,
-                    verwerktDoor: 'redemption-service'
+                    processedBy: 'redemption-service'
                 );
             }
         }
@@ -327,7 +327,7 @@ class RedemptionService
             array_filter(
                 $options,
                 fn(array $option): bool => $this->isOptionValid(option: $option)
-                    && (int) ($option['kostenInPunten'] ?? 0) <= $balance
+                    && (int) ($option['costInPoints'] ?? 0) <= $balance
             )
         );
     }//end getValidRedemptionOptions()
@@ -360,7 +360,7 @@ class RedemptionService
     }//end getRedemption()
 
     /**
-     * Find a Redemption by its beloningCode.
+     * Find a Redemption by its rewardCode.
      *
      * @param string $code The code.
      *
@@ -379,7 +379,7 @@ class RedemptionService
             $rows = $this->getObjectService()->findAll(
                 config: [
                     'filters' => [
-                        'beloningCode' => $code,
+                        'rewardCode' => $code,
                         'register'     => $register,
                         'schema'       => $schema,
                     ],
@@ -464,7 +464,7 @@ class RedemptionService
     }//end countUsedRedemptions()
 
     /**
-     * Whether a RedemptionOption is currently valid (geldigVan/geldigTot).
+     * Whether a RedemptionOption is currently valid (validFrom/validUntil).
      *
      * @param array<string, mixed> $option The option.
      *
@@ -473,8 +473,8 @@ class RedemptionService
     private function isOptionValid(array $option): bool
     {
         $today = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d');
-        $from  = (string) ($option['geldigVan'] ?? '');
-        $to    = (string) ($option['geldigTot'] ?? '');
+        $from  = (string) ($option['validFrom'] ?? '');
+        $to    = (string) ($option['validUntil'] ?? '');
         if ($from !== '' && $today < $from) {
             return false;
         }
@@ -514,7 +514,7 @@ class RedemptionService
     }//end getOption()
 
     /**
-     * Generate a unique beloningCode (RDM-XXXXXXXX).
+     * Generate a unique rewardCode (RDM-XXXXXXXX).
      *
      * @return string
      */

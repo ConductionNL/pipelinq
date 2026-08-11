@@ -4,8 +4,8 @@
  * Pipelinq PointsRuleEngine.
  *
  * Evaluates PointsRule objects for a given trigger and context. Supports
- * conditie filters (category, excludeCategory, segment, dayOfWeek, timeRange,
- * channel) and formule types (fixed, percentage, stepped). Highest-priority
+ * condition filters (category, excludeCategory, segment, dayOfWeek, timeRange,
+ * channel) and formula types (fixed, percentage, stepped). Highest-priority
  * matching rule wins (non-cumulative); tier multipliers are applied AFTER the
  * formula and BEFORE rounding (REQ-LOY-002, REQ-LOY-003).
  *
@@ -75,12 +75,12 @@ class PointsRuleEngine
                 continue;
             }
 
-            $conditie = $rule['conditie'] ?? [];
-            if (is_array($conditie) === false) {
-                $conditie = [];
+            $condition = $rule['condition'] ?? [];
+            if (is_array($condition) === false) {
+                $condition = [];
             }
 
-            if ($this->evaluateCondition(conditie: $conditie, context: $context) === true) {
+            if ($this->evaluateCondition(condition: $condition, context: $context) === true) {
                 $matches[] = $rule;
             }
         }
@@ -106,46 +106,46 @@ class PointsRuleEngine
     }//end getHighestPriorityRule()
 
     /**
-     * Evaluate a JSON conditie object against a context.
+     * Evaluate a JSON condition object against a context.
      *
      * Supported keys: category (string|string[]), excludeCategory (string[]),
      * segment (string[]), dayOfWeek (string|string[]), timeRange ("HH:MM-HH:MM"),
      * channel (string|string[]).
      *
-     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $condition The condition object.
      * @param array<string, mixed> $context  Context: category, segment, channel, timestamp...
      *
      * @return bool True when conditions are met (or absent).
      *
      * @spec exclude phpmd mechanical refactor
      */
-    public function evaluateCondition(array $conditie, array $context): bool
+    public function evaluateCondition(array $condition, array $context): bool
     {
-        if ($conditie === []) {
+        if ($condition === []) {
             return true;
         }
 
-        if ($this->passesExcludeCategory(conditie: $conditie, context: $context) === false) {
+        if ($this->passesExcludeCategory(condition: $condition, context: $context) === false) {
             return false;
         }
 
-        if ($this->passesCategory(conditie: $conditie, context: $context) === false) {
+        if ($this->passesCategory(condition: $condition, context: $context) === false) {
             return false;
         }
 
-        if ($this->passesSegment(conditie: $conditie, context: $context) === false) {
+        if ($this->passesSegment(condition: $condition, context: $context) === false) {
             return false;
         }
 
-        if ($this->passesChannel(conditie: $conditie, context: $context) === false) {
+        if ($this->passesChannel(condition: $condition, context: $context) === false) {
             return false;
         }
 
-        if ($this->passesDayOfWeek(conditie: $conditie, context: $context) === false) {
+        if ($this->passesDayOfWeek(condition: $condition, context: $context) === false) {
             return false;
         }
 
-        if ($this->passesTimeRange(conditie: $conditie, context: $context) === false) {
+        if ($this->passesTimeRange(condition: $condition, context: $context) === false) {
             return false;
         }
 
@@ -155,18 +155,18 @@ class PointsRuleEngine
     /**
      * Whether the excludeCategory condition (if present) allows the context category.
      *
-     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $condition The condition object.
      * @param array<string, mixed> $context  Evaluation context.
      *
      * @return bool
      */
-    private function passesExcludeCategory(array $conditie, array $context): bool
+    private function passesExcludeCategory(array $condition, array $context): bool
     {
-        if (isset($conditie['excludeCategory']) === false) {
+        if (isset($condition['excludeCategory']) === false) {
             return true;
         }
 
-        $excluded        = (array) $conditie['excludeCategory'];
+        $excluded        = (array) $condition['excludeCategory'];
         $contextCategory = (string) ($context['category'] ?? '');
         if ($contextCategory !== '' && in_array($contextCategory, $excluded, true) === true) {
             return false;
@@ -178,18 +178,18 @@ class PointsRuleEngine
     /**
      * Whether the category condition (if present) matches the context category.
      *
-     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $condition The condition object.
      * @param array<string, mixed> $context  Evaluation context.
      *
      * @return bool
      */
-    private function passesCategory(array $conditie, array $context): bool
+    private function passesCategory(array $condition, array $context): bool
     {
-        if (isset($conditie['category']) === false) {
+        if (isset($condition['category']) === false) {
             return true;
         }
 
-        $allowed         = (array) $conditie['category'];
+        $allowed         = (array) $condition['category'];
         $contextCategory = (string) ($context['category'] ?? '');
         if ($contextCategory === '' || in_array($contextCategory, $allowed, true) === false) {
             return false;
@@ -201,18 +201,18 @@ class PointsRuleEngine
     /**
      * Whether the segment condition (if present) matches the context segment.
      *
-     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $condition The condition object.
      * @param array<string, mixed> $context  Evaluation context.
      *
      * @return bool
      */
-    private function passesSegment(array $conditie, array $context): bool
+    private function passesSegment(array $condition, array $context): bool
     {
-        if (isset($conditie['segment']) === false) {
+        if (isset($condition['segment']) === false) {
             return true;
         }
 
-        $allowed        = (array) $conditie['segment'];
+        $allowed        = (array) $condition['segment'];
         $contextSegment = (string) ($context['segment'] ?? '');
         if ($contextSegment === '' || in_array($contextSegment, $allowed, true) === false) {
             return false;
@@ -224,18 +224,18 @@ class PointsRuleEngine
     /**
      * Whether the channel condition (if present) matches the context channel.
      *
-     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $condition The condition object.
      * @param array<string, mixed> $context  Evaluation context.
      *
      * @return bool
      */
-    private function passesChannel(array $conditie, array $context): bool
+    private function passesChannel(array $condition, array $context): bool
     {
-        if (isset($conditie['channel']) === false) {
+        if (isset($condition['channel']) === false) {
             return true;
         }
 
-        $allowed        = (array) $conditie['channel'];
+        $allowed        = (array) $condition['channel'];
         $contextChannel = (string) ($context['channel'] ?? '');
         if ($contextChannel === '' || in_array($contextChannel, $allowed, true) === false) {
             return false;
@@ -247,18 +247,18 @@ class PointsRuleEngine
     /**
      * Whether the dayOfWeek condition (if present) matches the context timestamp.
      *
-     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $condition The condition object.
      * @param array<string, mixed> $context  Evaluation context.
      *
      * @return bool
      */
-    private function passesDayOfWeek(array $conditie, array $context): bool
+    private function passesDayOfWeek(array $condition, array $context): bool
     {
-        if (isset($conditie['dayOfWeek']) === false) {
+        if (isset($condition['dayOfWeek']) === false) {
             return true;
         }
 
-        $allowed = array_map('strtolower', (array) $conditie['dayOfWeek']);
+        $allowed = array_map('strtolower', (array) $condition['dayOfWeek']);
         $day     = $this->dayOfWeekFor(isoTimestamp: (string) ($context['timestamp'] ?? ''));
 
         return in_array($day, $allowed, true);
@@ -267,48 +267,48 @@ class PointsRuleEngine
     /**
      * Whether the timeRange condition (if present) matches the context timestamp.
      *
-     * @param array<string, mixed> $conditie The conditie object.
+     * @param array<string, mixed> $condition The condition object.
      * @param array<string, mixed> $context  Evaluation context.
      *
      * @return bool
      */
-    private function passesTimeRange(array $conditie, array $context): bool
+    private function passesTimeRange(array $condition, array $context): bool
     {
-        if (isset($conditie['timeRange']) === false) {
+        if (isset($condition['timeRange']) === false) {
             return true;
         }
 
-        $timeRange = (string) $conditie['timeRange'];
+        $timeRange = (string) $condition['timeRange'];
 
         return $this->isWithinTimeRange(timeRange: $timeRange, timestamp: (string) ($context['timestamp'] ?? ''));
     }//end passesTimeRange()
 
     /**
-     * Calculate points from a formule + amount + tier multiplier.
+     * Calculate points from a formula + amount + tier multiplier.
      *
-     * Supported formule types: fixed {value}, percentage {value}, stepped
+     * Supported formula types: fixed {value}, percentage {value}, stepped
      * {brackets: [{amount,points}]}. Multiplier applied BEFORE floor rounding.
      *
-     * @param array<string, mixed> $formule    The formule.
+     * @param array<string, mixed> $formula    The formula.
      * @param float                $amount     Transaction amount in EUR.
      * @param float                $multiplier Tier multiplier (default 1.0).
      *
      * @return int Points awarded (floored).
      */
-    public function calculatePoints(array $formule, float $amount, float $multiplier=1.0): int
+    public function calculatePoints(array $formula, float $amount, float $multiplier=1.0): int
     {
-        $type = (string) ($formule['type'] ?? '');
+        $type = (string) ($formula['type'] ?? '');
 
         $raw = 0.0;
         switch ($type) {
             case 'fixed':
-                $raw = (float) ($formule['value'] ?? 0);
+                $raw = (float) ($formula['value'] ?? 0);
                 break;
             case 'percentage':
-                $raw = $amount * (float) ($formule['value'] ?? 0);
+                $raw = $amount * (float) ($formula['value'] ?? 0);
                 break;
             case 'stepped':
-                $brackets = $formule['brackets'] ?? [];
+                $brackets = $formula['brackets'] ?? [];
                 if (is_array($brackets) === true) {
                     foreach ($brackets as $bracket) {
                         $bracketAmount = (float) ($bracket['amount'] ?? 0);
@@ -392,7 +392,7 @@ class PointsRuleEngine
     }//end loadRules()
 
     /**
-     * Whether a rule is within geldigVan/geldigTot for the context timestamp.
+     * Whether a rule is within validFrom/validUntil for the context timestamp.
      *
      * @param array<string, mixed> $rule    The PointsRule.
      * @param array<string, mixed> $context Evaluation context.
@@ -406,8 +406,8 @@ class PointsRuleEngine
             $effectiveTs = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
         }
 
-        $from = (string) ($rule['geldigVan'] ?? '');
-        $to   = (string) ($rule['geldigTot'] ?? '');
+        $from = (string) ($rule['validFrom'] ?? '');
+        $to   = (string) ($rule['validUntil'] ?? '');
 
         if ($from !== '' && substr($effectiveTs, 0, 10) < substr($from, 0, 10)) {
             return false;

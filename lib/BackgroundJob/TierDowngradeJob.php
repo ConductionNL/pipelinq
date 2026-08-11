@@ -4,7 +4,7 @@
  * Pipelinq TierDowngradeJob.
  *
  * Daily job that processes scheduled tier downgrades. Iterates accounts whose
- * tierGeldigTot has passed, re-evaluates the tier via TierService, and applies
+ * tierValidUntil has passed, re-evaluates the tier via TierService, and applies
  * a downgrade when warranted (also emits the tier-changed event for notifications).
  *
  * @category BackgroundJob
@@ -99,8 +99,8 @@ class TierDowngradeJob extends TimedJob
 
             foreach ($accounts as $account) {
                 $accountId     = (string) $this->extractUuid(object: $account);
-                $tierGeldigTot = (string) ($account['tierGeldigTot'] ?? '');
-                if ($accountId === '' || $tierGeldigTot === '' || $tierGeldigTot > $now) {
+                $tierValidUntil = (string) ($account['tierValidUntil'] ?? '');
+                if ($accountId === '' || $tierValidUntil === '' || $tierValidUntil > $now) {
                     continue;
                 }
 

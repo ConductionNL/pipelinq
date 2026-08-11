@@ -5,7 +5,7 @@
  *
  * Orchestrates points awarding on a POS-transaction trigger: looks up the
  * customer's accounts, evaluates rules, applies tier multiplier, enforces
- * maxPerKlantPerPeriode, credits points, and triggers tier reclassification.
+ * maxPerCustomerPerPeriod, credits points, and triggers tier reclassification.
  *
  * Failures NEVER halt the POS flow (REQ-LOY-002-05); errors are logged.
  *
@@ -76,10 +76,10 @@ class LoyaltyEngineService
      * Process a POS transaction (or any 'purchase' trigger) and award points.
      *
      * Idempotency: callers MUST pass a unique posTransactionId; the service
-     * uses it in the ledger entry brondocument. Duplicate calls produce
+     * uses it in the ledger entry sourceDocument. Duplicate calls produce
      * additional ledger entries — at-most-once is the caller's responsibility.
      *
-     * @param string               $klantId     The Nextcloud contact UID.
+     * @param string               $customerId     The Nextcloud contact UID.
      * @param array<string, mixed> $transaction Transaction context (amount,
      *                                          category, channel, posTransactionId, segment,
      *                                          timestamp, posTerminalId).
@@ -90,9 +90,9 @@ class LoyaltyEngineService
      *
      * @spec exclude phpmd mechanical refactor
      */
-    public function processPosTransaction(string $klantId, array $transaction): array
+    public function processPosTransaction(string $customerId, array $transaction): array
     {
-        if ($klantId === '') {
+        if ($customerId === '') {
             return [];
         }
 
@@ -106,7 +106,7 @@ class LoyaltyEngineService
 
             try {
                 $results[] = $this->processForProgramme(
-                    klantId: $klantId,
+                    customerId: $customerId,
                     programmeId: $programmeId,
                     transaction: $transaction
                 );
@@ -115,7 +115,7 @@ class LoyaltyEngineService
                     'Pipelinq: loyalty processing failed for programme; POS flow unaffected',
                     [
                         'programmeId' => $programmeId,
-                        'klantId'     => $klantId,
+                        'customerId'     => $customerId,
                         'exception'   => $e->getMessage(),
                     ]
                 );
@@ -133,19 +133,19 @@ class LoyaltyEngineService
     /**
      * Process for a single programme.
      *
-     * @param string               $klantId     The contact UID.
+     * @param string               $customerId     The contact UID.
      * @param string               $programmeId The programme UUID.
      * @param array<string, mixed> $transaction The transaction context.
      *
      * @return array<string, mixed>
      */
     private function processForProgramme(
-        string $klantId,
+        string $customerId,
         string $programmeId,
         array $transaction
     ): array {
         $account = $this->accountService->findAccountByKlantAndProgramme(
-            klantId: $klantId,
+            customerId: $customerId,
             programmeId: $programmeId
         );
 
@@ -162,7 +162,7 @@ class LoyaltyEngineService
         if ((string) ($account['status'] ?? '') !== 'actief') {
             $this->logger->info(
                 'Pipelinq: account disabled, points credit skipped',
-                ['accountId' => $accountId, 'klantId' => $klantId]
+                ['accountId' => $accountId, 'customerId' => $customerId]
             );
             return [
                 'programmeId' => $programmeId,
@@ -211,13 +211,13 @@ class LoyaltyEngineService
 
         $multiplier = $this->resolveTierMultiplier(account: $account, programmeId: $programmeId);
 
-        $formule = $rule['formule'] ?? [];
-        if (is_array($formule) === false) {
-            $formule = [];
+        $formula = $rule['formula'] ?? [];
+        if (is_array($formula) === false) {
+            $formula = [];
         }
 
         $rawPoints = $this->ruleEngine->calculatePoints(
-            formule: $formule,
+            formula: $formula,
             amount: $context['amount'],
             multiplier: $multiplier
         );
@@ -295,7 +295,7 @@ class LoyaltyEngineService
     }//end resolveTierMultiplier()
 
     /**
-     * Enforce maxPerKlantPerPeriode and return the actually-awardable points.
+     * Enforce maxPerCustomerPerPeriod and return the actually-awardable points.
      *
      * @param array<string, mixed> $rule      The matched PointsRule.
      * @param string               $accountId The account UUID.
@@ -305,8 +305,8 @@ class LoyaltyEngineService
      */
     private function enforceMaxPerPeriod(array $rule, string $accountId, int $rawPoints): int
     {
-        $max     = $rule['maxPerKlantPerPeriode'] ?? null;
-        $period  = (string) ($rule['maxPerKlantPeriode'] ?? 'day');
+        $max     = $rule['maxPerCustomerPerPeriod'] ?? null;
+        $period  = (string) ($rule['maxPerCustomerPeriod'] ?? 'day');
         $already = 0;
         if ($max !== null && (int) $max > 0) {
             $already = $this->countAlreadyEarned(
@@ -354,12 +354,12 @@ class LoyaltyEngineService
             accountId: $accountId,
             amount: $toAward,
             ruleId: $this->extractUuid(object: $rule),
-            brondocument: [
+            sourceDocument: [
                 'transactionId' => $transaction['posTransactionId'] ?? null,
                 'amount'        => $context['amount'],
                 'channel'       => $context['channel'],
             ],
-            verwerktDoor: (string) ($transaction['posTerminalId'] ?? 'system')
+            processedBy: (string) ($transaction['posTerminalId'] ?? 'system')
         );
 
         // Re-evaluate tier.
@@ -433,7 +433,7 @@ class LoyaltyEngineService
         $history = $this->ledgerService->getLedgerHistory(accountId: $accountId, from: $from);
         $sum     = 0;
         foreach ($history as $e) {
-            if ((string) ($e['type'] ?? '') === 'credit' && (string) ($e['regelId'] ?? '') === $ruleId) {
+            if ((string) ($e['type'] ?? '') === 'credit' && (string) ($e['ruleId'] ?? '') === $ruleId) {
                 $sum += (int) ($e['aantal'] ?? 0);
             }
         }
@@ -489,7 +489,7 @@ class LoyaltyEngineService
                     'accountId'   => $accountId,
                     'programmeId' => $programmeId,
                     'aantal'      => (int) ($ledgerEntry['aantal'] ?? 0),
-                    'balansNa'    => (int) ($ledgerEntry['balansNa'] ?? 0),
+                    'balanceAfter'    => (int) ($ledgerEntry['balanceAfter'] ?? 0),
                 ]
             );
             $this->eventDispatcher->dispatchTyped($event);

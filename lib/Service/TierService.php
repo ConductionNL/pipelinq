@@ -124,7 +124,7 @@ class TierService
         $rules   = $this->getTierRules(programmeId: $programmeId);
         $matched = null;
         foreach ($rules as $rule) {
-            $threshold = (float) ($rule['drempelWaarde'] ?? 0);
+            $threshold = (float) ($rule['thresholdValue'] ?? 0);
             if ($lifetimePoints >= $threshold) {
                 $matched = $rule;
             }
@@ -182,17 +182,17 @@ class TierService
         $currentTier     = $this->findRuleByUuid(programmeId: $programmeId, tierId: (string) $currentTierId);
         $downgradePolicy = 'none';
         if ($currentTier !== null) {
-            $downgradePolicy = (string) ($currentTier['downgradeBeleid'] ?? 'none');
+            $downgradePolicy = (string) ($currentTier['downgradePolicy'] ?? 'none');
         }
 
         if ($downgradePolicy === 'end_of_year' || $downgradePolicy === 'end_of_quarter') {
-            // Schedule via tierGeldigTot; do NOT change currentTierId now.
+            // Schedule via tierValidUntil; do NOT change currentTierId now.
             $end = $this->endOfPeriodTimestamp(policy: $downgradePolicy);
             $this->accountService->setTier(
                 accountId: $accountId,
                 tierId: $currentTierId,
-                tierBehaaldOp: null,
-                tierGeldigTot: $end
+                tierAchievedOn: null,
+                tierValidUntil: $end
             );
             return ['from' => $currentTierId, 'to' => $currentTierId, 'changed' => false];
         }
@@ -218,7 +218,7 @@ class TierService
     public function handleTierUpgrade(string $accountId, array $newTier): void
     {
         $now    = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-        $policy = (string) ($newTier['downgradeBeleid'] ?? 'none');
+        $policy = (string) ($newTier['downgradePolicy'] ?? 'none');
         $valid  = null;
         if ($policy === 'end_of_year') {
             $valid = $this->endOfPeriodTimestamp(policy: $policy);
@@ -227,8 +227,8 @@ class TierService
         $this->accountService->setTier(
             accountId: $accountId,
             tierId: $this->extractUuid(object: $newTier),
-            tierBehaaldOp: $now,
-            tierGeldigTot: $valid
+            tierAchievedOn: $now,
+            tierValidUntil: $valid
         );
     }//end handleTierUpgrade()
 
@@ -246,8 +246,8 @@ class TierService
         $this->accountService->setTier(
             accountId: $accountId,
             tierId: $this->extractUuid(object: $newTier),
-            tierBehaaldOp: $now,
-            tierGeldigTot: null
+            tierAchievedOn: $now,
+            tierValidUntil: null
         );
     }//end handleTierDowngrade()
 

@@ -50,7 +50,7 @@ class PointsRuleEngineTest extends TestCase
     public function testCalculatePointsFixedFormula(): void
     {
         $points = $this->engine->calculatePoints(
-            formule: ['type' => 'fixed', 'value' => 50],
+            formula: ['type' => 'fixed', 'value' => 50],
             amount: 0
         );
         $this->assertSame(50, $points);
@@ -59,7 +59,7 @@ class PointsRuleEngineTest extends TestCase
     public function testCalculatePointsPercentageFormula(): void
     {
         $points = $this->engine->calculatePoints(
-            formule: ['type' => 'percentage', 'value' => 1],
+            formula: ['type' => 'percentage', 'value' => 1],
             amount: 45.50
         );
         $this->assertSame(45, $points, 'Percentage formule must floor 45.5 -> 45');
@@ -68,7 +68,7 @@ class PointsRuleEngineTest extends TestCase
     public function testCalculatePointsAppliesMultiplier(): void
     {
         $points = $this->engine->calculatePoints(
-            formule: ['type' => 'percentage', 'value' => 1],
+            formula: ['type' => 'percentage', 'value' => 1],
             amount: 100,
             multiplier: 1.25
         );
@@ -78,7 +78,7 @@ class PointsRuleEngineTest extends TestCase
     public function testCalculatePointsSteppedFormula(): void
     {
         $points = $this->engine->calculatePoints(
-            formule: [
+            formula: [
                 'type'     => 'stepped',
                 'brackets' => [
                     ['amount' => 0,   'points' => 5],
@@ -94,7 +94,7 @@ class PointsRuleEngineTest extends TestCase
     public function testEvaluateConditionEmptyConditionMatches(): void
     {
         $this->assertTrue(
-            $this->engine->evaluateCondition(conditie: [], context: ['category' => 'food'])
+            $this->engine->evaluateCondition(condition: [], context: ['category' => 'food'])
         );
     }//end testEvaluateConditionEmptyConditionMatches()
 
@@ -102,7 +102,7 @@ class PointsRuleEngineTest extends TestCase
     {
         $this->assertFalse(
             $this->engine->evaluateCondition(
-                conditie: ['excludeCategory' => ['gift-card']],
+                condition: ['excludeCategory' => ['gift-card']],
                 context: ['category' => 'gift-card']
             )
         );
@@ -112,7 +112,7 @@ class PointsRuleEngineTest extends TestCase
     {
         $this->assertTrue(
             $this->engine->evaluateCondition(
-                conditie: ['category' => ['food', 'drink']],
+                condition: ['category' => ['food', 'drink']],
                 context: ['category' => 'food']
             )
         );
@@ -123,13 +123,13 @@ class PointsRuleEngineTest extends TestCase
         // Pick a known Tuesday.
         $this->assertTrue(
             $this->engine->evaluateCondition(
-                conditie: ['dayOfWeek' => 'tuesday'],
+                condition: ['dayOfWeek' => 'tuesday'],
                 context: ['timestamp' => '2026-05-19T10:00:00Z']
             )
         );
         $this->assertFalse(
             $this->engine->evaluateCondition(
-                conditie: ['dayOfWeek' => 'tuesday'],
+                condition: ['dayOfWeek' => 'tuesday'],
                 context: ['timestamp' => '2026-05-20T10:00:00Z'] // Wednesday
             )
         );
@@ -139,13 +139,13 @@ class PointsRuleEngineTest extends TestCase
     {
         $this->assertTrue(
             $this->engine->evaluateCondition(
-                conditie: ['timeRange' => '14:00-18:00'],
+                condition: ['timeRange' => '14:00-18:00'],
                 context: ['timestamp' => '2026-05-19T15:00:00Z']
             )
         );
         $this->assertFalse(
             $this->engine->evaluateCondition(
-                conditie: ['timeRange' => '14:00-18:00'],
+                condition: ['timeRange' => '14:00-18:00'],
                 context: ['timestamp' => '2026-05-19T13:00:00Z']
             )
         );
