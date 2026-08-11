@@ -30,20 +30,25 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use OCA\Pipelinq\Service\WalkInQueueService;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\BackgroundJob\Job;
+use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
 
 /**
  * On-demand background job that rebalances walk-in ticket ETAs.
  *
- * Extends `OCP\BackgroundJob\Job` (NOT TimedJob) — runs only when explicitly
- * scheduled by BookingService::completeBooking via the JobList. Each invocation
- * delegates to {@see WalkInQueueService::rebalance()} and logs the touched
- * ticket count.
+ * Extends `OCP\BackgroundJob\QueuedJob` (NOT TimedJob, and NOT a plain Job) —
+ * it runs only when explicitly scheduled by BookingService::completeBooking via
+ * `IJobList::add()`, and removes itself from the job list once it has run. A
+ * plain `Job` added to the list would re-run on every cron tick forever, which
+ * is the opposite of "on-demand"; this job is deliberately never listed as a
+ * `<job>` in appinfo/info.xml, because that channel registers PERIODIC work.
+ *
+ * Each invocation delegates to {@see WalkInQueueService::rebalance()} and logs
+ * the touched ticket count.
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class WalkInQueueRebalanceJob extends Job
+class WalkInQueueRebalanceJob extends QueuedJob
 {
     /**
      * Constructor.
@@ -68,7 +73,7 @@ class WalkInQueueRebalanceJob extends Job
      *
      * @return void
      *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by QueuedJob::run().
      *
      * @spec openspec/specs/appointment-booking/spec.md
      */
