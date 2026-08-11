@@ -504,6 +504,20 @@ class WalkInQueueServiceTest extends TestCase
      * BookingService::completeBooking() schedules WalkInQueueRebalanceJob
      * instead of calling this inline (openregister#2420 family).
      *
+     * ⚠️ SCOPE OF THIS MEASUREMENT — READ BEFORE QUOTING THE NUMBER.
+     * The ObjectService double below resolves register/schema context from the
+     * TOP LEVEL of the findAll() config, which is how `listByStatus()` supplies
+     * it today. The real OpenRegister reads that context ONLY from
+     * `$config['filters']` (`ObjectService::prepareFindAllConfig`), so on a live
+     * instance the ticket read currently resolves no context and
+     * `MagicMapper::findAll()` returns an empty array.
+     *
+     * So this test measures the fan-out THE LOOP PERFORMS PER WAITING TICKET.
+     * It does NOT claim that 200 writes happen in production today: while the
+     * query stays mis-keyed the queue reads empty and the fan-out is LATENT.
+     * It becomes live the moment that separate defect is fixed — which is
+     * exactly why the rebalance must already be off the request path by then.
+     *
      * @return void
      */
     public function testRebalanceFansOutOneSaveObjectPerWaitingTicket(): void
