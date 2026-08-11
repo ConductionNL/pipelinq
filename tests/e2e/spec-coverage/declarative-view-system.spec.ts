@@ -1,0 +1,770 @@
+/*
+ * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * Gate-19 behavioural e2e coverage for
+ * openspec/specs/declarative-view-system/spec.md.
+ *
+ * WHY THIS CAPABILITY IS ALMOST ENTIRELY BROWSER-OBSERVABLE
+ * --------------------------------------------------------
+ * A declarative-view spec is a claim about what a MANIFEST DECLARATION
+ * RENDERS TO. There is no service layer to unit-test here: the whole
+ * capability is "this JSON produced that page". So every scenario below is
+ * asserted against the rendered page — the library's declarative hosts
+ * (`[data-testid="cn-index-page"]`, `[data-testid="cn-body-section"]`,
+ * `[data-testid="cn-related-collections"]`, `[data-testid="cn-page-filter-*"]`),
+ * the manifest-declared column labels, the manifest-declared row/header
+ * actions, and the network calls the declaration is supposed to issue.
+ *
+ * TWO SCENARIOS ARE ABOUT THE MANIFEST DOCUMENT ITSELF ("WHEN the manifest is
+ * inspected", "WHEN a reviewer reads the page `_note`"). Those are automated
+ * here by READING the shipped manifest from disk inside the Playwright test
+ * and asserting on it, paired with a browser assertion of the same page's
+ * rendered consequence — rather than excluded as unobservable. A `_note` is
+ * not paint, but it IS a shipped artefact and a test can hold it to its claim.
+ *
+ * DATA. `tests/e2e/ci-seed.sh` force-imports the register (which carries
+ * `components.objects[]` seed data) and then runs the demo seeder, so on CI
+ * these collections are POPULATED — `posZReport` 4, `booking` 2, `service` 4,
+ * `resource` 4, `project` 3 (lib/Settings/register.d/*.json), plus 5 clients /
+ * 4 contacts / 6 leads from lib/Settings/demo_seed_data.json. The table
+ * assertions below rely on exactly that and on nothing this suite has to
+ * create; the one test that needs a KNOWN relation seeds its own lead and
+ * deletes it again.
+ *
+ * NAVIGATION. Every page here is reached by an SPA hash deep-link + reload,
+ * the pattern already established in tests/e2e/rapportage.spec.ts and
+ * spec-coverage/pos-transaction-core.spec.ts: a path-form `goto` boots the
+ * shell back at the Dashboard, a hash `goto` + `reload()` mounts the target
+ * view. It is also the same navigation a manifest `handler: "navigate"`
+ * performs, so it does not smuggle in an assumption about the sidebar IA.
+ */
+import { test, expect, Page } from '@playwright/test'
+import * as fs from 'fs'
+import * as path from 'path'
+
+import {
+	openApp,
+	clickHeaderAction,
+	assertNoHardError,
+	dismissSupportDialog,
+	dismissWalkthrough,
+} from '../helpers/pipelinq'
+import { FixtureSession, TEST_PREFIX } from '../workflows/helpers/fixtures'
+
+/** App root — tests/e2e/spec-coverage/ is three levels down from it. */
+const APP_ROOT = path.resolve(__dirname, '..', '..', '..')
+
+/** Read one of the shipped manifest documents from the checkout. */
+function readManifest(relPath: string): any {
+	return JSON.parse(fs.readFileSync(path.join(APP_ROOT, relPath), 'utf8'))
+}
+
+/** Find a page entry by id in a manifest document. */
+function manifestPage(doc: any, id: string): any {
+	const found = (doc.pages || []).find((p: any) => p.id === id)
+	expect(found, `manifest page "${id}" must exist`).toBeTruthy()
+	return found
+}
+
+/**
+ * Deep-link a hash route and wait for the app body to settle.
+ *
+ * `openApp()` first so the first-visit walkthrough is closed (and its
+ * completion flag written) before the target page mounts — otherwise
+ * `.cn-walkthrough__dim--full` sits over the content and every click below
+ * retries until the TEST timeout instead of failing on the overlay. See the
+ * long note on dismissWalkthrough() in helpers/pipelinq.ts.
+ */
+async function gotoPage(page: Page, hash: string): Promise<void> {
+	await openApp(page)
+	await page.goto(`/apps/pipelinq/#${hash}`)
+	// Same-document hash change does not remount the view; reload does.
+	await page.reload()
+	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 20000 })
+	await dismissWalkthrough(page)
+	await dismissSupportDialog(page)
+}
+
+/**
+ * Open the first row's actions menu on a declarative index and click one
+ * manifest `actions[]` entry by its declared label.
+ *
+ * CnDataTable puts the row-action cell in `td.cn-table-col--actions` and
+ * CnIndexPage fills it with a CnRowActions (NcActions). @nextcloud/vue's
+ * NcActions defaults `inline: 0`, so even a single action lives behind the
+ * three-dot trigger and is only in the DOM once the menu is open — and the
+ * menu is TELEPORTED to the document body, so the entry is matched page-wide.
+ * CnRowActions stamps each entry with `data-testid="cn-action-item-<slug>"`
+ * (lower-cased, non-alphanumerics collapsed to `-`), which is ours and
+ * survives an @nextcloud/vue major.
+ */
+async function clickFirstRowAction(page: Page, labelSlug: string): Promise<void> {
+	const row = page.locator('#content-vue table tbody tr').first()
+	await expect(row).toBeVisible({ timeout: 20000 })
+	await row.locator('td.cn-table-col--actions button').first().click()
+	const entry = page.locator(`[data-testid="cn-action-item-${labelSlug}"]`).first()
+	await expect(entry).toBeVisible({ timeout: 10000 })
+	await entry.click()
+}
+
+/** The declarative index host + a settled, schema-driven data table. */
+async function expectDeclarativeIndex(page: Page, heading: string): Promise<void> {
+	const content = page.locator('#content-vue')
+	await expect(content.getByRole('heading', { name: heading }).first()).toBeVisible({ timeout: 20000 })
+	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible({ timeout: 20000 })
+	await expect(content.locator('table').first()).toBeVisible({ timeout: 20000 })
+	await assertNoHardError(page)
+}
+
+/** Assert a manifest-declared column label is painted as a table header. */
+async function expectColumn(page: Page, label: string): Promise<void> {
+	await expect(
+		page.locator('#content-vue table thead th').filter({ hasText: label }).first(),
+	).toBeVisible({ timeout: 10000 })
+}
+
+// ---------------------------------------------------------------------------
+// Requirement: Convertible list pages MUST render from a declarative
+//              type:index manifest page
+// ---------------------------------------------------------------------------
+
+// @e2e openspec/specs/declarative-view-system/spec.md#zreports-renders-as-a-declarative-index
+test('ZReports renders from a type:"index" manifest page, badge column and all', async ({ page }) => {
+	await gotoPage(page, '/pos/z-reports')
+
+	// The manifest `title` is the page heading; the library's declarative index
+	// host is what paints it — no host-app list component is involved.
+	await expectDeclarativeIndex(page, 'Boekhoudkundige Afhandeling')
+
+	// The manifest `config.columns[]`, in the labels the manifest declares
+	// (`reportDate` → "Datum", `createdAt` → "Aangemaakt"); the unlabelled
+	// entries fall back to their property key.
+	for (const col of ['Datum', 'Status', 'Aangemaakt']) {
+		await expectColumn(page, col)
+	}
+
+	// `widget: "badge"` on the status column renders CnStatusBadge, not text.
+	await expect(page.locator('#content-vue table tbody .cn-status-badge').first())
+		.toBeVisible({ timeout: 10000 })
+
+	// "AND no ZReportList.vue host component MUST be required to render the
+	// page" — asserted against the checkout, because the strongest possible
+	// evidence that the page does not depend on a host component is that the
+	// host component is not in the tree at all.
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'views', 'pos', 'ZReportList.vue')),
+		'ZReportList.vue must not have come back',
+	).toBe(false)
+
+	// The one declared row action (`handler: "navigate"`, route ZReportDetail).
+	await clickFirstRowAction(page, 'openen')
+	await expect(page).toHaveURL(/#\/pos\/z-reports\/[^/]+$/, { timeout: 15000 })
+})
+
+// @e2e openspec/specs/declarative-view-system/spec.md#bookings-renders-as-a-view-only-declarative-index
+test('Bookings renders as a VIEW-ONLY declarative index — no create control', async ({ page }) => {
+	await gotoPage(page, '/bookings')
+
+	await expectDeclarativeIndex(page, 'Bookings')
+	// `startAt` is declared with `format: "date-time"` under the label
+	// "Datum/tijd"; `status` carries the colour map.
+	await expectColumn(page, 'Datum/tijd')
+	await expectColumn(page, 'Status')
+	await expect(page.locator('#content-vue table tbody .cn-status-badge').first())
+		.toBeVisible({ timeout: 10000 })
+
+	// "AND no Add / create control MUST be shown (bookings are created via the
+	// public portal flow)". The page sets `showAdd: false` and declares NO
+	// `headerActions[]`, so BOTH create surfaces must be absent: the visible
+	// primary CTA that `showAdd` emits, and the overflow entry a headerAction
+	// would add. Asserting only the first would pass on a page that had grown a
+	// create entry point in the overflow.
+	await expect(page.locator('[data-testid="cn-cta-primary"]')).toHaveCount(0)
+	const manifest = readManifest('src/manifest.d/80-appointment-booking-admin.json')
+	const bookings = manifestPage(manifest, 'Bookings')
+	expect(bookings.config.showAdd, 'Bookings must not offer an Add control').toBe(false)
+	expect(bookings.config.headerActions ?? [], 'Bookings must declare no header actions').toEqual([])
+
+	// The single declared row action navigates to the bespoke BookingDetail.
+	await clickFirstRowAction(page, 'open')
+	await expect(page).toHaveURL(/#\/bookings\/[^/]+$/, { timeout: 15000 })
+})
+
+// ---------------------------------------------------------------------------
+// Requirement: Services, Resources and Projects MUST render from declarative
+//              type:index pages with create-to-detail actions
+// ---------------------------------------------------------------------------
+
+// @e2e openspec/specs/declarative-view-system/spec.md#services-renders-as-a-declarative-index-with-currency-and-duration
+test('Services renders declaratively with currency + duration columns and a create-to-detail action', async ({ page }) => {
+	await gotoPage(page, '/services')
+
+	await expectDeclarativeIndex(page, 'Services')
+	// The two format-bearing columns the requirement singles out.
+	await expectColumn(page, 'Duration')
+	await expectColumn(page, 'Price')
+
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'views', 'bookings', 'ServiceList.vue')),
+		'ServiceList.vue must not have come back',
+	).toBe(false)
+
+	// "New service" is a manifest `headerActions[]` entry with a literal
+	// `params: { id: "new" }`, so it lives in the CnActionsBar overflow rather
+	// than as a visible CTA (`showAdd: false`) — see clickHeaderAction().
+	await clickHeaderAction(page, 'New service')
+	await expect(page).toHaveURL(/#\/services\/new$/, { timeout: 15000 })
+	await expect(page.locator('#content-vue').locator('input, .input-field__input, textarea').first())
+		.toBeVisible({ timeout: 15000 })
+})
+
+/*
+ * "AND clicking a row MUST navigate to the ServiceDetail route for that
+ * object". Driven through the row's declared open ACTION rather than a bare
+ * click on the row body: the manifest expresses row navigation as an
+ * `actions[]` entry with `handler: "navigate"`, and a row-body click is
+ * intercepted by the table's own selection/sidebar behaviour on several of
+ * these indexes (see the note in spec-coverage/appointment-booking.spec.ts).
+ * The action is the declaration under test; the row body is not.
+ */
+// @e2e openspec/specs/declarative-view-system/spec.md#services-renders-as-a-declarative-index-with-currency-and-duration
+test('Services: a row\'s open action navigates to that service\'s detail route', async ({ page }) => {
+	await gotoPage(page, '/services')
+	await expect(page.locator('#content-vue table tbody tr').first()).toBeVisible({ timeout: 20000 })
+
+	await clickFirstRowAction(page, 'view')
+	await expect(page).toHaveURL(/#\/services\/[^/]+$/, { timeout: 15000 })
+	// Not the create form — a real object id.
+	await expect(page).not.toHaveURL(/#\/services\/new$/)
+})
+
+// @e2e openspec/specs/declarative-view-system/spec.md#resources-new-action-opens-the-create-form
+test('Resources renders declaratively and its "New resource" action opens the create form', async ({ page }) => {
+	await gotoPage(page, '/resources')
+
+	await expectDeclarativeIndex(page, 'Resources')
+	await expectColumn(page, 'Type')
+	await expectColumn(page, 'Bookable')
+
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'views', 'bookings', 'ResourceList.vue')),
+		'ResourceList.vue must not have come back',
+	).toBe(false)
+
+	await clickHeaderAction(page, 'New resource')
+	await expect(page).toHaveURL(/#\/resources\/new$/, { timeout: 15000 })
+	await expect(page.locator('#content-vue').locator('input, .input-field__input, textarea').first())
+		.toBeVisible({ timeout: 15000 })
+})
+
+/*
+ * SPEC/IMPLEMENTATION MISMATCH — reported, not fixed. The scenario names the
+ * header action "New project" and the page "Projects"; the shipped manifest
+ * (src/manifest.d/65-project-task-hierarchy.json) declares the Dutch strings
+ * "Nieuw project" and "Projecten". Per the fleet rule that all code — labels
+ * included — is English, the manifest is what is wrong here, not the spec. The
+ * test asserts what actually ships so it stays green until that is corrected;
+ * the mismatch is called out rather than silently normalised away.
+ */
+// @e2e openspec/specs/declarative-view-system/spec.md#projects-renders-as-a-declarative-index
+test('Projects renders declaratively with a currency budget column and a billable indicator', async ({ page }) => {
+	await gotoPage(page, '/projects')
+
+	await expectDeclarativeIndex(page, 'Projecten')
+	// `budgetAmount` → EUR currency (label "Budget"); `billable` → boolean
+	// indicator (label "Factureerbaar").
+	await expectColumn(page, 'Budget')
+	await expectColumn(page, 'Factureerbaar')
+
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'views', 'projects', 'ProjectList.vue')),
+		'ProjectList.vue must not have come back',
+	).toBe(false)
+
+	await clickHeaderAction(page, 'Nieuw project')
+	await expect(page).toHaveURL(/#\/projects\/new$/, { timeout: 15000 })
+})
+
+// ---------------------------------------------------------------------------
+// Requirement: The Client 360 / Contact details MUST render from declarative
+//              type:detail pages with in-body sections
+// ---------------------------------------------------------------------------
+
+/*
+ * These need a real object id. Both collections are seeded by ci-seed.sh
+ * (5 demo clients, 4 demo contacts), so the id is READ rather than created —
+ * except for the one relation assertion, which seeds its own lead so that the
+ * related row it clicks is one this test knows the destination of.
+ *
+ * SERIAL because the three tests share one FixtureSession, and the session's
+ * page must stay open for the whole block: FixtureSession issues its requests
+ * through `page.evaluate(fetch …)` so it needs a live authenticated page to
+ * carry `OC.requestToken`.
+ */
+test.describe('Declarative detail pages (client 360 + contact)', () => {
+	test.describe.configure({ mode: 'serial' })
+
+	let fxPage: Page
+	let fx: FixtureSession
+	let clientId = ''
+	let contactId = ''
+	const LEAD_TITLE = `${TEST_PREFIX}-Client360 related lead`
+
+	test.beforeAll(async ({ browser }) => {
+		fxPage = await browser.newPage()
+		await openApp(fxPage)
+		fx = new FixtureSession(fxPage)
+
+		const clients = await fx.list('client', { _limit: 1 })
+		expect(clients.length, 'ci-seed.sh must have seeded at least one client').toBeGreaterThan(0)
+		clientId = String(clients[0].id || clients[0]['@self']?.id)
+
+		const contacts = await fx.list('contact', { _limit: 1 })
+		expect(contacts.length, 'ci-seed.sh must have seeded at least one contact').toBeGreaterThan(0)
+		contactId = String(contacts[0].id || contacts[0]['@self']?.id)
+	})
+
+	test.afterAll(async () => {
+		if (fx) await fx.cleanup()
+		if (fxPage) await fxPage.close()
+	})
+
+	/*
+	 * SPEC/IMPLEMENTATION DRIFT — reported, not fixed. The scenario says the
+	 * KPI chips come from `summaryAggregates`. ADR-062 rev3 retired that
+	 * primitive on this page: the same five figures are now in-grid
+	 * `type: "stats-block"` widgets ("Open leads", "Open leads value", "Won
+	 * leads", "Won leads value", "New requests"), and the page carries no
+	 * `summaryAggregates` key at all. Likewise Contacts and Requests moved out
+	 * of `relatedCollections` into `object-list` widgets with `allowCreate`
+	 * (klantbeeld-360-activation). The assertions below therefore follow the
+	 * shipped manifest: the FIGURES and the LISTS the scenario names are all
+	 * still on the page, through the primitives that replaced the retired ones.
+	 */
+	// @e2e openspec/specs/declarative-view-system/spec.md#client-360-renders-chips-related-lists-and-in-body-sections
+	test('Client 360 renders its KPI figures, related lists and in-body sections', async ({ page }) => {
+		await gotoPage(page, `/clients/${clientId}`)
+		const content = page.locator('#content-vue')
+
+		// Identity + account fields, rendered by the default object data widget.
+		await expect(content.getByText('Identity').first()).toBeVisible({ timeout: 25000 })
+		await expect(content.getByText('Account').first()).toBeVisible()
+
+		// The cross-schema KPI figures the scenario calls "chips" (now
+		// stats-block widgets, see the note above), all @objectId-scoped.
+		for (const kpi of ['Open leads', 'Won leads', 'New requests']) {
+			await expect(content.getByText(kpi, { exact: true }).first()).toBeVisible({ timeout: 15000 })
+		}
+
+		// `relatedCollections` (FK `client`) — the library's declarative host.
+		await expect(page.locator('[data-testid="cn-related-collections"]')).toBeVisible({ timeout: 15000 })
+		for (const title of ['Leads', 'Projecten', 'Contactmomenten', 'Complaints']) {
+			await expect(content.getByText(title, { exact: true }).first()).toBeVisible({ timeout: 15000 })
+		}
+
+		// The sub-features live IN THE PAGE BODY as `bodyWidgets`, not in the
+		// sidebar. CnBodySections stamps each with its manifest id.
+		for (const id of ['relationships', 'activity', 'bookings', 'messaging-conversation', 'contactmoment-quick-log']) {
+			await expect(page.locator(`[data-section-id="${id}"]`)).toHaveCount(1)
+		}
+		// An unresolvable section degrades to an inline error card instead of
+		// breaking the page — which would otherwise let "the section is there"
+		// pass while nothing rendered inside it.
+		await expect(page.locator('[data-testid^="cn-body-section-error-"]')).toHaveCount(0)
+
+		expect(
+			fs.existsSync(path.join(APP_ROOT, 'src', 'views', 'ClientDetail.vue')),
+			'ClientDetail.vue must not have come back',
+		).toBe(false)
+		await assertNoHardError(page)
+	})
+
+	// @e2e openspec/specs/declarative-view-system/spec.md#client-360-renders-chips-related-lists-and-in-body-sections
+	test('Client 360: clicking a related row navigates to that object\'s detail route', async ({ page }) => {
+		// Seeded here, not in beforeAll, so the row this test clicks is one whose
+		// destination it knows. `lead` requires only `title`, and `client` is the
+		// FK the manifest scopes the Leads collection by.
+		const lead = await fx.create('lead', {
+			title: LEAD_TITLE,
+			client: clientId,
+			status: 'open',
+			value: 4200,
+		})
+		const leadId = String(lead.id || lead['@self']?.id)
+
+		await gotoPage(page, `/clients/${clientId}`)
+		const row = page.locator('#content-vue').getByText(LEAD_TITLE).first()
+		await expect(row).toBeVisible({ timeout: 25000 })
+		await row.click()
+
+		// `rowRoute: "LeadDetail"` on the Leads related collection.
+		await expect(page).toHaveURL(new RegExp(`#/leads/${leadId}$`), { timeout: 15000 })
+	})
+
+	// @e2e openspec/specs/declarative-view-system/spec.md#contact-renders-the-relation-link-and-in-body-sections
+	test('Contact renders its fields, the relation-link action and its in-body sections', async ({ page }) => {
+		await gotoPage(page, `/contacts/${contactId}`)
+		const content = page.locator('#content-vue')
+
+		// role / email / phone / client render through the default data widget.
+		await expect(content.getByText('Contact details').first()).toBeVisible({ timeout: 25000 })
+
+		// BSN/BRP, Relationships and Communication history are page-BODY
+		// sections, each resolved from the component registry.
+		for (const id of ['relationships', 'brp', 'messaging-conversation']) {
+			await expect(page.locator(`[data-section-id="${id}"]`)).toHaveCount(1)
+		}
+		await expect(page.locator('[data-testid^="cn-body-section-error-"]')).toHaveCount(0)
+
+		// The parent-organisation relation link: CnDetailPage renders one button
+		// per `config.relationLinks[]` entry, indexed, and clicking it opens
+		// CnRelationLinkModal — the search-and-link modal that patches the FK.
+		const relationLink = page.locator('[data-testid="cn-detail-relation-link-0"]')
+		await expect(relationLink).toBeVisible({ timeout: 15000 })
+		await expect(relationLink).toContainText('Link to Organisation')
+		await relationLink.click()
+		await expect(page.locator('.modal-container, [role="dialog"]').first())
+			.toBeVisible({ timeout: 15000 })
+
+		expect(
+			fs.existsSync(path.join(APP_ROOT, 'src', 'views', 'ContactDetail.vue')),
+			'ContactDetail.vue must not have come back',
+		).toBe(false)
+		await assertNoHardError(page)
+	})
+})
+
+// ---------------------------------------------------------------------------
+// Requirement: Detail sub-features kept-with-reason MUST be recorded in the
+//              manifest
+// ---------------------------------------------------------------------------
+
+/*
+ * "WHEN a reviewer reads the page `_note`" — this scenario is about the
+ * SHIPPED MANIFEST DOCUMENT, so the test reads that document and holds each
+ * note to the specific items the requirement enumerates. It is deliberately
+ * not a length check: a `_note` that had been reduced to "kept custom" would
+ * satisfy a length check and fail every one of these.
+ */
+// @e2e openspec/specs/declarative-view-system/spec.md#kept-with-reason-items-are-documented
+test('the ClientDetail / ContactDetail manifest notes record every kept-with-reason item', async () => {
+	const manifest = readManifest('src/manifest.json')
+
+	const client = manifestPage(manifest, 'ClientDetail')
+	expect(client.type).toBe('detail')
+	const clientNote = String(client._note || '')
+	expect(clientNote).toContain('KEPT-AS-NOTE')
+	// The three items the requirement names, each with its stated reason.
+	expect(clientNote).toContain('Edit in Contacts')
+	expect(clientNote).toContain('delete-with-linked-entity')
+	expect(clientNote).toMatch(/no declarative primitive/i)
+	expect(clientNote).toMatch(/equality-only/i)
+	expect(clientNote).toMatch(/auto-refresh/i)
+
+	const contact = manifestPage(manifest, 'ContactDetail')
+	expect(contact.type).toBe('detail')
+	const contactNote = String(contact._note || '')
+	expect(contactNote).toContain('KEPT-AS-NOTE')
+	expect(contactNote).toContain('Edit in Contacts')
+	expect(contactNote).toMatch(/no declarative primitive/i)
+	expect(contactNote).toContain('BrpContactPanel')
+})
+
+// ---------------------------------------------------------------------------
+// Requirement: Reporting dashboards MUST render from declarative type:dashboard
+//              pages with endpoint stat widgets and a period filter
+// ---------------------------------------------------------------------------
+
+// @e2e openspec/specs/declarative-view-system/spec.md#contact-reporting-kpis-populate-from-the-endpoint-and-re-query-on-period-change
+test('Contact reporting: four endpoint-bound KPIs + a channel section, both re-queried on period change', async ({ page }) => {
+	await gotoPage(page, '/rapportage/contactmomenten')
+	const content = page.locator('#content-vue')
+
+	await expect(content.getByRole('heading', { name: 'Contact reporting' }).first())
+		.toBeVisible({ timeout: 20000 })
+
+	// The four headline KPIs, by the labels the manifest declares. Each is a
+	// `type: "stat"` widget whose `source.kind` is `endpoint`.
+	for (const kpi of ['Total Contacts', 'FCR %', 'Avg Handling Time', 'SLA Compliance']) {
+		await expect(content.getByText(kpi).first()).toBeVisible({ timeout: 15000 })
+	}
+	// POPULATED, not merely present: CnStatWidget paints `.cn-stat-widget__error`
+	// (an em dash) when its endpoint call fails, so a broken KPI grid would
+	// otherwise satisfy the label assertions above.
+	await expect(content.locator('.cn-stat-widget__value').first()).toBeVisible({ timeout: 20000 })
+	await expect(content.locator('.cn-stat-widget__error')).toHaveCount(0)
+
+	// The per-channel distribution chart + its CSV export live in the body as a
+	// kind:"section" bodyWidget (ChannelDistributionSection).
+	await expect(page.locator('[data-section-id="rap-channels"]')).toHaveCount(1)
+	await expect(page.locator('[data-testid^="cn-body-section-error-"]')).toHaveCount(0)
+	await expect(content.getByRole('button', { name: 'Export CSV' }).first()).toBeVisible({ timeout: 15000 })
+
+	// Changing the period pageFilter must re-query BOTH the KPI endpoint and the
+	// section with the new `period` token. Both waiters are armed before the
+	// interaction so neither can be missed.
+	const kpiRequery = page.waitForRequest(
+		(req) => req.url().includes('/api/rapportage/kpis') && req.url().includes('period=week'),
+		{ timeout: 20000 },
+	)
+	const channelRequery = page.waitForRequest(
+		(req) => req.url().includes('/api/rapportage/channels') && req.url().includes('period=week'),
+		{ timeout: 20000 },
+	)
+	await page.locator('[data-testid="cn-page-filter-period"]').first().click()
+	await page.locator('li[role="option"], .vs__dropdown-option').filter({ hasText: 'This week' }).first().click()
+	await kpiRequery
+	await channelRequery
+
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'views', 'rapportage', 'RapportageDashboard.vue')),
+		'RapportageDashboard.vue must not have come back',
+	).toBe(false)
+	await assertNoHardError(page)
+})
+
+// @e2e openspec/specs/declarative-view-system/spec.md#channel-analytics-renders-a-comparison-table-driven-by-period-and-granularity
+test('Channel analytics: a body-hosted comparison table driven by BOTH pageFilters', async ({ page }) => {
+	await gotoPage(page, '/rapportage/channels')
+	const content = page.locator('#content-vue')
+
+	await expect(content.getByRole('heading', { name: /Channel Analytics/i }).first())
+		.toBeVisible({ timeout: 20000 })
+
+	// Both pageFilters are declared, and CnDashboardPage stamps each with its key.
+	await expect(page.locator('[data-testid="cn-page-filter-period"]')).toHaveCount(1)
+	await expect(page.locator('[data-testid="cn-page-filter-granularity"]')).toHaveCount(1)
+
+	// The comparison table itself is the body section — the page declares no
+	// grid widgets at all, so if the section failed to resolve the page would be
+	// empty rather than wrong.
+	await expect(page.locator('[data-section-id="channel-comparison"]')).toHaveCount(1)
+	await expect(page.locator('[data-testid^="cn-body-section-error-"]')).toHaveCount(0)
+	await expect(content.getByText('Channel Comparison').first()).toBeVisible({ timeout: 15000 })
+
+	// The section reads BOTH filters via `@workspace.*`: flipping granularity
+	// alone must re-issue the channels query carrying the new granularity.
+	const requery = page.waitForRequest(
+		(req) => req.url().includes('/api/rapportage/channels') && req.url().includes('granularity=weekly'),
+		{ timeout: 20000 },
+	)
+	await page.locator('[data-testid="cn-page-filter-granularity"]').first().click()
+	await page.locator('li[role="option"], .vs__dropdown-option').filter({ hasText: 'Weekly' }).first().click()
+	await requery
+
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'views', 'rapportage', 'ChannelAnalytics.vue')),
+		'ChannelAnalytics.vue must not have come back',
+	).toBe(false)
+	await assertNoHardError(page)
+})
+
+// @e2e openspec/specs/declarative-view-system/spec.md#agent-performance-renders-a-leaderboard-driven-by-period
+test('Agent performance: a body-hosted leaderboard + team summary driven by period', async ({ page }) => {
+	await gotoPage(page, '/rapportage/agents')
+	const content = page.locator('#content-vue')
+
+	await expect(content.getByRole('heading', { name: /Agent Performance/i }).first())
+		.toBeVisible({ timeout: 20000 })
+	await expect(page.locator('[data-testid="cn-page-filter-period"]')).toHaveCount(1)
+
+	// The leaderboard + team-summary footer are one kind:"section" bodyWidget.
+	await expect(page.locator('[data-section-id="agent-performance"]')).toHaveCount(1)
+	await expect(page.locator('[data-testid^="cn-body-section-error-"]')).toHaveCount(0)
+	// AgentPerformanceSection renders EITHER the sortable table + "Team Summary"
+	// footer or its own "No agent data available" state — the default period is
+	// `today` and the seeded contactmomenten carry fixed historical dates, so
+	// which branch paints is a property of the data, not of the declaration
+	// under test. Both are the section rendering correctly.
+	await expect(
+		content.locator('.agent-performance__table').or(content.locator('.agent-performance__empty')).first(),
+	).toBeVisible({ timeout: 20000 })
+
+	// "driven by period" — the assertion that does not depend on the data: the
+	// section re-queries its endpoint with the newly selected token.
+	const requery = page.waitForRequest(
+		(req) => req.url().includes('/api/rapportage/agents') && req.url().includes('period=month'),
+		{ timeout: 20000 },
+	)
+	await page.locator('[data-testid="cn-page-filter-period"]').first().click()
+	await page.locator('li[role="option"], .vs__dropdown-option').filter({ hasText: 'This month' }).first().click()
+	await requery
+
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'views', 'rapportage', 'AgentPerformance.vue')),
+		'AgentPerformance.vue must not have come back',
+	).toBe(false)
+	await assertNoHardError(page)
+})
+
+// @e2e openspec/specs/declarative-view-system/spec.md#lead-analytics-renders-the-four-lead-widgets-from-one-fetch
+test('Lead analytics: four widgets from ONE pipeline-stats fetch, re-fetched on range change', async ({ page }) => {
+	// Every request the page makes to the lead-analytics endpoint, so "ONE
+	// fetch" is MEASURED rather than assumed.
+	const statsCalls: string[] = []
+	page.on('request', (req) => {
+		if (req.url().includes('/api/rapportage/pipeline-stats')) statsCalls.push(req.url())
+	})
+
+	await gotoPage(page, '/rapportage')
+	const content = page.locator('#content-vue')
+
+	await expect(page.locator('[data-section-id="lead-analytics"]')).toHaveCount(1)
+	await expect(page.locator('[data-testid^="cn-body-section-error-"]')).toHaveCount(0)
+
+	// The four widgets the single fetch feeds.
+	for (const title of ['Pipeline funnel', 'Source performance', 'Lead aging', 'Win/loss']) {
+		await expect(content.getByRole('heading', { name: title }).first()).toBeVisible({ timeout: 20000 })
+	}
+
+	// WHY THE COUNTER IS RESET HERE AND NOT ASSERTED ON THE MOUNT. gotoPage()
+	// mounts the view twice by construction (hash navigation, then a reload so
+	// the router boots on the target route), so a mount-time count measures the
+	// NAVIGATION HELPER, not the section. What the requirement is about — the
+	// four widgets share ONE fetch instead of fetching per widget — is measured
+	// per LOAD, and the range change below is a load this test triggers exactly
+	// once.
+	statsCalls.length = 0
+
+	// The win/loss date-range selector re-fetches the whole section with
+	// dateFrom/dateTo (that from/to pair is exactly what a static period select
+	// cannot emit, which is why this page has no page-level period filter).
+	const refetch = page.waitForRequest(
+		(req) => req.url().includes('/api/rapportage/pipeline-stats') && req.url().includes('dateFrom='),
+		{ timeout: 20000 },
+	)
+	await content.locator('.win-loss-widget__filters').first().click()
+	await page.locator('li[role="option"], .vs__dropdown-option').filter({ hasText: 'Last 30 days' }).first().click()
+	await refetch
+	// Still ONE call — the other three widgets are fed from the same payload and
+	// do not fetch for themselves.
+	await expect(content.getByRole('heading', { name: 'Pipeline funnel' }).first()).toBeVisible()
+	expect(statsCalls.length, `range change issued ${statsCalls.length} fetches: ${statsCalls.join(' | ')}`)
+		.toBe(1)
+
+	expect(
+		fs.existsSync(path.join(APP_ROOT, 'src', 'views', 'rapportage', 'RapportageView.vue')),
+		'RapportageView.vue must not have come back',
+	).toBe(false)
+	await assertNoHardError(page)
+})
+
+// ---------------------------------------------------------------------------
+// Requirement: A relative period token MUST be resolved to a date window
+//              server-side
+// ---------------------------------------------------------------------------
+
+/*
+ * This one is a SERVER contract, and it is asserted against the running server
+ * rather than excluded: `page.request` rides the same authenticated context the
+ * browser tests use, so these are real requests against the real controller.
+ *
+ * The assertions are written to be timezone-independent on purpose. Comparing
+ * `period=month` against a from/to pair computed in the TEST would compare the
+ * runner's clock with PHP's `date_default_timezone`, which is a flake waiting
+ * for a midnight-adjacent run. What is asserted instead is the CONTRACT: a bare
+ * call has no window (400), each of the three tokens produces one (200),
+ * anything else does not, and an explicit from/to pair overrides the token —
+ * proven by an explicit pair the server must reject, which it can only do if it
+ * looked at the pair instead of the token.
+ */
+// @e2e openspec/specs/declarative-view-system/spec.md#period-token-resolves-to-a-fromto-window
+test('ReportingController resolves a relative period token server-side, and explicit from/to wins', async ({ page }) => {
+	// The request context needs a session; openApp establishes one.
+	await openApp(page)
+	const KPIS = '/index.php/apps/pipelinq/api/rapportage/kpis'
+
+	// No window at all → the controller says so, which is what proves the window
+	// is not being invented client-side anywhere.
+	const bare = await page.request.get(KPIS)
+	expect(bare.status(), 'a call with neither period nor from/to has no window').toBe(400)
+	expect(await bare.text()).toContain('Missing required parameters')
+
+	// Each supported token resolves to a usable window on its own — one static
+	// select, no client-side date math.
+	for (const token of ['today', 'week', 'month']) {
+		const res = await page.request.get(`${KPIS}?period=${token}`)
+		expect(res.status(), `period=${token} must resolve to a window`).toBe(200)
+	}
+
+	// An unrecognised token resolves to no window rather than silently to a
+	// default one.
+	const bogus = await page.request.get(`${KPIS}?period=quarter-to-date`)
+	expect(bogus.status(), 'an unknown period token must not silently default').toBe(400)
+	expect(await bogus.text()).toContain('Missing required parameters')
+
+	// PRECEDENCE. With an explicit (here: unparseable) from/to alongside a valid
+	// token, the server must fail on the DATES — it cannot report an invalid
+	// date format unless the explicit pair took precedence over `period=month`,
+	// which on its own would have returned 200 above.
+	const explicitWins = await page.request.get(`${KPIS}?period=month&from=not-a-date&to=also-not`)
+	expect(explicitWins.status(), 'an explicit from/to must take precedence over period').toBe(400)
+	expect(await explicitWins.text()).toContain('Invalid date format')
+
+	// And a valid explicit pair is honoured.
+	const explicitOk = await page.request.get(`${KPIS}?period=today&from=2020-01-01&to=2020-12-31`)
+	expect(explicitOk.status()).toBe(200)
+})
+
+// ---------------------------------------------------------------------------
+// Requirement: pages needing an unavailable declarative primitive MUST stay
+//              custom with a recorded reason (list surfaces + reporting)
+// ---------------------------------------------------------------------------
+
+/**
+ * The pages this capability deliberately did NOT convert, and the manifest
+ * document each one's `_note` lives in.
+ *
+ * The r1 requirement's kept-custom list (Resources / Services / Projects /
+ * BillingCategories / Analytics) was narrowed by later work and this list
+ * reflects what actually ships: r2 converted Services, Resources and Projects
+ * to declarative indexes (asserted above), and the BillingCategories PAGE was
+ * retired outright by nav-ia-cleanup. What remains kept-custom is the reporting
+ * set the second requirement names.
+ */
+const KEPT_CUSTOM_PAGES: Array<{ doc: string, id: string }> = [
+	{ doc: 'src/manifest.json', id: 'Pipeline' },
+	{ doc: 'src/manifest.d/50-forecast.json', id: 'Forecast' },
+	{ doc: 'src/manifest.d/50-forecast.json', id: 'ForecastTrend' },
+	{ doc: 'src/manifest.d/70-loyalty-program.json', id: 'LoyaltyReporting' },
+	{ doc: 'src/manifest.d/75-marketing-blasts.json', id: 'BlastPerformance' },
+]
+
+// @e2e openspec/specs/declarative-view-system/spec.md#kept-custom-reporting-pages-carry-a-recorded-reason
+test('every kept-custom reporting page is still type:"custom" and names why', async () => {
+	for (const { doc, id } of KEPT_CUSTOM_PAGES) {
+		const entry = manifestPage(readManifest(doc), id)
+		expect(entry.type, `${id} must still be a custom page`).toBe('custom')
+		const note = String(entry._note || '')
+		expect(note.length, `${id} must carry a _note`).toBeGreaterThan(40)
+		// The reason must name what is MISSING, not merely assert the decision —
+		// "kept custom" on its own is not a recorded reason.
+		expect(note, `${id}'s _note must name the missing primitive`)
+			.toMatch(/missing primitive|no declarative primitive|cannot|not expressible|pageFilters only|there is no/i)
+	}
+})
+
+// @e2e openspec/specs/declarative-view-system/spec.md#a-page-with-a-non-expressible-renderer-is-not-half-converted
+test('a kept-custom page keeps its host component AND its behaviour — it is not half-converted', async ({ page }) => {
+	// Forecast is the clearest case: it stays custom because its mandatory
+	// `periodId` is derived client-side, and it keeps a bespoke export entry
+	// point that no declarative index action expresses.
+	await gotoPage(page, '/forecast')
+	const content = page.locator('#content-vue')
+
+	await expect(content.getByRole('heading', { name: 'Forecast' }).first()).toBeVisible({ timeout: 20000 })
+	// Its existing entry point is preserved, not dropped in a partial conversion.
+	await expect(content.getByRole('button', { name: 'Export CSV' })).toBeVisible({ timeout: 15000 })
+	// And it is genuinely NOT rendering through the declarative index host — a
+	// half-conversion would have swapped the shell while losing the behaviour.
+	await expect(page.locator('[data-testid="cn-index-page"]')).toHaveCount(0)
+	await assertNoHardError(page)
+
+	// Loyalty reporting, the other surface with a dynamic-selector blocker.
+	await gotoPage(page, '/loyalty/reporting')
+	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Loyalty programme reporting' }).first())
+		.toBeVisible({ timeout: 20000 })
+	await expect(page.locator('[data-testid="cn-index-page"]')).toHaveCount(0)
+	await assertNoHardError(page)
+})
