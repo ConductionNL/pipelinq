@@ -21,10 +21,9 @@
  *     resolved through {@see TicketService}). Survey responses now live in
  *     the OpenRegister forms leaf (NC Forms); a future Navi adapter can
  *     query the leaf via `FormLinkMapper`.
- *   - Conversation state therefore lives in the Nextcloud distributed cache
- *     rather than in a register: it is ephemeral by nature, bounded by both a
- *     TTL and a maximum number of retained turns, and losing it on a cache
- *     flush costs the user nothing but the thread of one chat.
+ *     Conversation state is no exception: it lives in one bounded per-user
+ *     preference row (see {@see NaviConversationStore}), not in a register and
+ *     not behind a migration.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service

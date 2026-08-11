@@ -3,22 +3,36 @@
 /**
  * Pipelinq NaviConversationStore.
  *
- * Ephemeral per-user storage for Navi conversations. A conversation is a short
- * list of turns (`query` + detected `intent`) held in the Nextcloud distributed
- * cache under a TTL, which is what lets a follow-up question be answered in the
+ * Per-user storage for the Navi conversation: a short list of turns (`query`
+ * plus detected `intent`) that lets a follow-up question be answered in the
  * context of the question before it.
  *
- * Two independent barriers keep one user's conversation out of another's
- * answers, because the Navi endpoint is reachable by any authenticated user and
- * the identifier travels in the request body:
- *   1. the cache key is derived from the user id AND the conversation id, so
- *      replaying someone else's identifier addresses a different record;
- *   2. the owning user id is stored inside the record and re-checked on read,
- *      so a record that somehow surfaces under the wrong key is still refused.
+ * WHY USER PREFERENCES AND NOT THE DISTRIBUTED CACHE. The obvious home for
+ * something this ephemeral is `ICacheFactory::createDistributed()`, and that is
+ * what the first cut used. It does not work: on an instance with no memcache
+ * configured — the Nextcloud default — `createDistributed()` hands back a
+ * `NullCache`, whose `set()` silently succeeds and whose `get()` always returns
+ * null. Nothing errors, nothing logs, and every follow-up is answered as if it
+ * were the first question. Unit tests that inject a working cache cannot see
+ * it; the live e2e round trip did. So the record lives in the user's
+ * preferences instead, which are backed by the database on every deployment.
  *
- * No register or schema is involved: conversation context is ephemeral by
- * nature and losing it on a cache flush costs nothing but the thread of one
- * chat. Growth is bounded by the TTL and by a maximum number of retained turns.
+ * Still NO new schema and no migration (the design intent recorded in
+ * NaviService's docblock holds): one small preference row per user, holding one
+ * conversation, bounded three ways —
+ *   - at most self::MAX_TURNS turns are retained;
+ *   - each retained query is truncated to self::MAX_QUERY_LENGTH characters;
+ *   - a record older than self::TTL is ignored on read, since preferences carry
+ *     no expiry of their own.
+ * Asking a question in a new conversation overwrites the row, so the storage a
+ * user occupies is constant, not cumulative. This is user configuration, not a
+ * log: nothing here is an audit trail and losing it costs only the thread of
+ * one chat.
+ *
+ * Storing one record per user also makes cross-user isolation STRUCTURAL — the
+ * conversation identifier is not part of the address, so it cannot be used to
+ * reach another user's row at all. The explicit owner check is kept as defence
+ * in depth.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -41,27 +55,28 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCP\ICache;
-use OCP\ICacheFactory;
+use OCA\Pipelinq\AppInfo\Application;
+use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\IConfig;
 use Psr\Log\LoggerInterface;
 
 /**
- * User-scoped, TTL-bounded store for Navi conversation turns.
+ * Durable, user-scoped store for Navi conversation turns.
  *
  * @spec openspec/specs/dashboard/spec.md#conversational-follow-up
  */
 class NaviConversationStore
 {
     /**
-     * Distributed-cache namespace holding conversation records.
+     * User-preference key holding the current conversation record.
      *
      * @var string
      */
-    public const CACHE_NAMESPACE = 'pipelinq_navi_conversation';
+    public const PREFERENCE_KEY = 'navi_conversation';
 
     /**
-     * Lifetime of a conversation record, in seconds. A thread the user stops
-     * pursuing expires on its own rather than being retained indefinitely.
+     * Age, in seconds, past which a stored conversation is ignored. Enforced
+     * here on read: user preferences have no expiry of their own.
      *
      * @var int
      */
@@ -69,36 +84,40 @@ class NaviConversationStore
 
     /**
      * Maximum number of turns retained per conversation. Older turns are
-     * dropped so a long-running chat cannot grow the record without bound.
+     * dropped so a long chat cannot grow the record without bound.
      *
      * @var int
      */
     public const MAX_TURNS = 10;
 
     /**
-     * Lazily created cache.
+     * Maximum length of a retained query. Only the opening words matter for
+     * carrying a subject forward, and this is user config, not a transcript.
      *
-     * @var ICache|null
+     * @var int
      */
-    private ?ICache $cache = null;
+    public const MAX_QUERY_LENGTH = 240;
 
     /**
      * Constructor.
      *
-     * @param ICacheFactory   $cacheFactory Factory for the distributed cache.
-     * @param LoggerInterface $logger       Logger.
+     * @param IConfig         $config      Nextcloud configuration (user preferences).
+     * @param ITimeFactory    $timeFactory Clock, so the TTL is testable.
+     * @param LoggerInterface $logger      Logger.
      */
     public function __construct(
-        private readonly ICacheFactory $cacheFactory,
+        private readonly IConfig $config,
+        private readonly ITimeFactory $timeFactory,
         private readonly LoggerInterface $logger,
     ) {
     }//end __construct()
 
     /**
-     * Read the retained turns of a conversation belonging to this user.
+     * Read the retained turns of this user's current conversation.
      *
-     * A record whose stored owner is not the reading user is refused and logged
-     * rather than returned.
+     * Returns [] — a fresh conversation — when there is no record, when the
+     * record belongs to a different conversation, when it has aged past the
+     * TTL, or when its stored owner is not the reading user.
      *
      * @param string      $userId         Authenticated user id.
      * @param string|null $conversationId Conversation identifier, or null.
@@ -113,8 +132,13 @@ class NaviConversationStore
             return [];
         }
 
-        $raw = $this->cache()->get($this->key(userId: $userId, conversationId: $conversationId));
-        if (is_string($raw) === false) {
+        $raw = $this->config->getUserValue(
+            userId: $userId,
+            appName: Application::APP_ID,
+            key: self::PREFERENCE_KEY,
+            default: ''
+        );
+        if ($raw === '') {
             return [];
         }
 
@@ -123,11 +147,7 @@ class NaviConversationStore
             return [];
         }
 
-        if (($record['owner'] ?? null) !== $userId) {
-            $this->logger->warning(
-                message: '[NaviConversationStore] record owner mismatch, ignored',
-                context: ['userId' => $userId]
-            );
+        if ($this->isUsable(record: $record, userId: $userId, conversationId: $conversationId) === false) {
             return [];
         }
 
@@ -135,9 +155,10 @@ class NaviConversationStore
     }//end read()
 
     /**
-     * Append one turn to a conversation and store it under the TTL.
+     * Append one turn to this user's conversation and store it.
      *
-     * Only the newest self::MAX_TURNS turns survive.
+     * Overwrites whatever the user's single record held, so starting a new
+     * conversation reclaims the space the previous one used.
      *
      * @param string                           $userId         Authenticated user id.
      * @param string|null                      $conversationId Conversation identifier, or null to store nothing.
@@ -159,10 +180,23 @@ class NaviConversationStore
             $history = array_slice($history, -self::MAX_TURNS);
         }
 
-        $this->cache()->set(
-            $this->key(userId: $userId, conversationId: $conversationId),
-            (string) json_encode(['owner' => $userId, 'turns' => array_values($history)]),
-            self::TTL
+        $compacted = [];
+        foreach ($history as $entry) {
+            $compacted[] = $this->compactTurn(turn: $entry);
+        }
+
+        $record = [
+            'owner'          => $userId,
+            'conversationId' => $conversationId,
+            'updatedAt'      => $this->timeFactory->getTime(),
+            'turns'          => $compacted,
+        ];
+
+        $this->config->setUserValue(
+            userId: $userId,
+            appName: Application::APP_ID,
+            key: self::PREFERENCE_KEY,
+            value: (string) json_encode($record)
         );
     }//end append()
 
@@ -207,9 +241,52 @@ class NaviConversationStore
     }//end carryForward()
 
     /**
+     * Whether a decoded record may answer for this user and conversation.
+     *
+     * @param array<string, mixed> $record         Decoded record.
+     * @param string               $userId         Authenticated user id.
+     * @param string               $conversationId Conversation being asked about.
+     *
+     * @return bool
+     */
+    private function isUsable(array $record, string $userId, string $conversationId): bool
+    {
+        if (($record['owner'] ?? null) !== $userId) {
+            $this->logger->warning(
+                message: '[NaviConversationStore] record owner mismatch, ignored',
+                context: ['userId' => $userId]
+            );
+            return false;
+        }
+
+        if (($record['conversationId'] ?? null) !== $conversationId) {
+            return false;
+        }
+
+        $updatedAt = (int) ($record['updatedAt'] ?? 0);
+        return ($this->timeFactory->getTime() - $updatedAt) <= self::TTL;
+    }//end isUsable()
+
+    /**
+     * Reduce a turn to the two fields the conversation actually uses, with the
+     * query truncated, so the stored record stays small and predictable.
+     *
+     * @param array<string, mixed> $turn A turn as held in memory.
+     *
+     * @return array{query: string, intent: string}
+     */
+    private function compactTurn(array $turn): array
+    {
+        return [
+            'query'  => mb_substr((string) ($turn['query'] ?? ''), 0, self::MAX_QUERY_LENGTH),
+            'intent' => (string) ($turn['intent'] ?? 'unknown'),
+        ];
+    }//end compactTurn()
+
+    /**
      * Extract the turn list from a decoded record.
      *
-     * @param array<string, mixed> $record Decoded cache record.
+     * @param array<string, mixed> $record Decoded record.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -222,34 +299,4 @@ class NaviConversationStore
 
         return array_values(array_filter($turns, 'is_array'));
     }//end turnsOf()
-
-    /**
-     * Derive the cache key for one user's view of one conversation.
-     *
-     * Both components are hashed together, so the key is fixed-length and
-     * neither the user id nor the conversation id shapes it on its own.
-     *
-     * @param string $userId         Authenticated user id.
-     * @param string $conversationId Conversation identifier.
-     *
-     * @return string
-     */
-    private function key(string $userId, string $conversationId): string
-    {
-        return hash('sha256', $userId."\0".$conversationId);
-    }//end key()
-
-    /**
-     * Lazily resolve the distributed cache.
-     *
-     * @return ICache
-     */
-    private function cache(): ICache
-    {
-        if ($this->cache === null) {
-            $this->cache = $this->cacheFactory->createDistributed(self::CACHE_NAMESPACE);
-        }
-
-        return $this->cache;
-    }//end cache()
 }//end class

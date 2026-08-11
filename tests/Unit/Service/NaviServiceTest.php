@@ -27,9 +27,9 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\Pipelinq\Service\NaviConversationStore;
 use OCA\Pipelinq\Service\NaviService;
 use OCA\Pipelinq\Service\TicketService;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
-use OCP\ICache;
-use OCP\ICacheFactory;
+use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -58,23 +58,45 @@ class NaviServiceTest extends TestCase
     private const CONVERSATION_ID = '0123456789abcdef0123456789abcdef';
 
     /**
+     * The preference rows every service built in a test shares, keyed
+     * `<userId>:<key>`. Only these rows survive between two services, exactly
+     * as only the database survives between two HTTP requests.
+     *
+     * @var array<string, string>
+     */
+    private array $rows = [];
+
+    /**
+     * Reset the shared preference rows between tests.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        $this->rows = [];
+    }
+
+    /**
      * Build a service with deterministic config and a fake ObjectService.
      *
      * Request / contactmoment fixtures are keyed `ticket_schema:<ticketType>`:
      * both are subtypes of the unified `ticket` schema and are narrowed with a
      * `ticketType` filter rather than with a schema of their own.
      *
-     * @param array<string, array<int, array<string, mixed>>> $byCollection Per-collection fixture rows.
+     * Every call returns a NEW service over the SHARED preference rows, so two
+     * services stand in for two HTTP requests.
+     *
+     * @param array<string, array<int, array<string, mixed>>> $byCollection  Per-collection fixture rows.
      * @param bool                                            $configMissing Force the register/schema config blank.
-     * @param ICache|null                                     $cache         Conversation cache; a throwaway
-     *                                                                       empty one when omitted.
+     * @param IConfig|null                                    $preferences   Preference backend; the shared
+     *                                                                       in-memory one when omitted.
      *
      * @return NaviService
      */
     private function buildService(
         array $byCollection = [],
         bool $configMissing = false,
-        ?ICache $cache = null,
+        ?IConfig $preferences = null,
     ): NaviService {
         $appConfig = $this->createMock(IAppConfig::class);
         $appConfig->method('getValueString')->willReturnCallback(
@@ -139,17 +161,16 @@ class NaviServiceTest extends TestCase
             }
         );
 
-        if ($cache === null) {
-            $store = [];
-            $cache = $this->inMemoryCache($store);
-        }
+        $timeFactory = $this->createMock(ITimeFactory::class);
+        $timeFactory->method('getTime')->willReturn(1000000);
 
-        $cacheFactory = $this->createMock(ICacheFactory::class);
-        $cacheFactory->method('createDistributed')->willReturn($cache);
-
-        // The real store, so the isolation tests exercise the production key
-        // derivation and owner check rather than a test double of them.
-        $conversationStore = new NaviConversationStore(cacheFactory: $cacheFactory, logger: $logger);
+        // The real store, so these tests exercise the production addressing and
+        // owner check rather than a test double of them.
+        $conversationStore = new NaviConversationStore(
+            config: ($preferences ?? $this->preferenceBackend()),
+            timeFactory: $timeFactory,
+            logger: $logger
+        );
 
         return new NaviService(
             container: $container,
@@ -161,29 +182,26 @@ class NaviServiceTest extends TestCase
     }
 
     /**
-     * An ICache backed by the caller's array, so two services can be given the
-     * SAME store and any leak between them becomes observable.
+     * A preference backend over the shared `$this->rows`, so every service a
+     * test builds reads and writes the same durable rows.
      *
-     * @param array<string, mixed> $store Backing store, by reference.
-     *
-     * @return ICache
+     * @return IConfig
      */
-    private function inMemoryCache(array &$store): ICache
+    private function preferenceBackend(): IConfig
     {
-        $cache = $this->createMock(ICache::class);
-        $cache->method('get')->willReturnCallback(
-            static function (string $key) use (&$store): mixed {
-                return ($store[$key] ?? null);
+        $config = $this->createMock(IConfig::class);
+        $config->method('getUserValue')->willReturnCallback(
+            function (string $userId, string $appName, string $key, $default = ''): string {
+                return ($this->rows[$userId.':'.$key] ?? (string) $default);
             }
         );
-        $cache->method('set')->willReturnCallback(
-            static function (string $key, mixed $value, int $ttl = 0) use (&$store): bool {
-                $store[$key] = $value;
-                return true;
+        $config->method('setUserValue')->willReturnCallback(
+            function (string $userId, string $appName, string $key, $value, $preCondition = null): void {
+                $this->rows[$userId.':'.$key] = (string) $value;
             }
         );
 
-        return $cache;
+        return $config;
     }
 
     /**
@@ -385,24 +403,22 @@ class NaviServiceTest extends TestCase
      * The two fixture sets are deliberately different sizes, so the count in
      * the answer names which subject was actually queried.
      *
+     * The two turns run on SEPARATE service instances, because in production
+     * they are separate HTTP requests and nothing but the stored record crosses
+     * between them.
+     *
      * @return void
      */
     public function testFollowUpInheritsPreviousTurnSubject(): void
     {
-        $store   = [];
-        $service = $this->buildService(
-            byCollection: $this->followUpFixtures(),
-            cache: $this->inMemoryCache($store)
-        );
-
-        $first = $service->processQuery(
+        $first = $this->buildService(byCollection: $this->followUpFixtures())->processQuery(
             query: 'How many requests are open?',
             userId: 'alice',
             conversationId: self::CONVERSATION_ID
         );
         $this->assertStringContainsString('Found 4 records', $first['textResponse']);
 
-        $followUp = $service->processQuery(
+        $followUp = $this->buildService(byCollection: $this->followUpFixtures())->processQuery(
             query: 'And how many of those are overdue?',
             userId: 'alice',
             conversationId: self::CONVERSATION_ID
@@ -442,23 +458,19 @@ class NaviServiceTest extends TestCase
      * control below). Inside one it is answered as the count its predecessor
      * was, over that predecessor's subject.
      *
+     * The two turns run on SEPARATE service instances, mirroring two requests.
+     *
      * @return void
      */
     public function testFollowUpWithoutIntentKeywordInheritsPreviousIntent(): void
     {
-        $store   = [];
-        $service = $this->buildService(
-            byCollection: $this->followUpFixtures(),
-            cache: $this->inMemoryCache($store)
-        );
-
-        $service->processQuery(
+        $this->buildService(byCollection: $this->followUpFixtures())->processQuery(
             query: 'How many requests are open?',
             userId: 'alice',
             conversationId: self::CONVERSATION_ID
         );
 
-        $followUp = $service->processQuery(
+        $followUp = $this->buildService(byCollection: $this->followUpFixtures())->processQuery(
             query: 'And what about last month?',
             userId: 'alice',
             conversationId: self::CONVERSATION_ID
@@ -494,19 +506,14 @@ class NaviServiceTest extends TestCase
      */
     public function testConversationIsNotReadableByAnotherUser(): void
     {
-        $store = [];
-        $cache = $this->inMemoryCache($store);
-
-        $alice = $this->buildService(byCollection: $this->followUpFixtures(), cache: $cache);
-        $alice->processQuery(
+        $this->buildService(byCollection: $this->followUpFixtures())->processQuery(
             query: 'How many requests are open?',
             userId: 'alice',
             conversationId: self::CONVERSATION_ID
         );
-        $this->assertNotSame([], $store, 'the conversation must have been stored at all');
+        $this->assertNotSame([], $this->rows, 'the conversation must have been stored at all');
 
-        $bob      = $this->buildService(byCollection: $this->followUpFixtures(), cache: $cache);
-        $response = $bob->processQuery(
+        $response = $this->buildService(byCollection: $this->followUpFixtures())->processQuery(
             query: 'And what about last month?',
             userId: 'bob',
             conversationId: self::CONVERSATION_ID
@@ -516,31 +523,32 @@ class NaviServiceTest extends TestCase
         $this->assertStringNotContainsString('Found 4 records', $response['textResponse']);
         $this->assertCount(
             2,
-            $store,
-            'one identifier used by two users must occupy two separate cache entries'
+            $this->rows,
+            'one identifier used by two users must occupy two separate per-user rows'
         );
     }
 
     /**
-     * The owner recorded inside the conversation record is a second, independent
-     * barrier: even a cache that hands back Alice's record for EVERY key — the
-     * worst case a key collision or a poisoned store could produce — must not
-     * let Bob inherit her context.
+     * The owner recorded inside the conversation record is a second,
+     * independent barrier: even a preference backend that hands back Alice's
+     * record for EVERY user — the worst case a misconfiguration or a poisoned
+     * row could produce — must not let Bob inherit her context.
      *
      * @return void
      */
     public function testConversationRecordOwnedByAnotherUserIsIgnored(): void
     {
         $aliceRecord = (string) json_encode([
-            'owner' => 'alice',
-            'turns' => [['query' => 'How many requests are open?', 'intent' => 'count']],
+            'owner'          => 'alice',
+            'conversationId' => self::CONVERSATION_ID,
+            'updatedAt'      => 1000000,
+            'turns'          => [['query' => 'How many requests are open?', 'intent' => 'count']],
         ]);
 
-        $leakyCache = $this->createMock(ICache::class);
-        $leakyCache->method('get')->willReturn($aliceRecord);
-        $leakyCache->method('set')->willReturn(true);
+        $leakyBackend = $this->createMock(IConfig::class);
+        $leakyBackend->method('getUserValue')->willReturn($aliceRecord);
 
-        $bob      = $this->buildService(byCollection: $this->followUpFixtures(), cache: $leakyCache);
+        $bob      = $this->buildService(byCollection: $this->followUpFixtures(), preferences: $leakyBackend);
         $response = $bob->processQuery(
             query: 'And what about last month?',
             userId: 'bob',
@@ -552,46 +560,25 @@ class NaviServiceTest extends TestCase
     }
 
     /**
-     * The record is bounded: it is written under the conversation TTL and keeps
-     * at most NaviConversationStore::MAX_TURNS turns however long the chat runs.
+     * However many turns a chat runs for, the user's stored record stays a
+     * single row holding at most NaviConversationStore::MAX_TURNS turns. Each
+     * turn runs on its own service instance, as it would in production.
      *
      * @return void
      */
-    public function testConversationRecordIsBoundedByTurnsAndTtl(): void
+    public function testConversationRecordStaysBoundedAcrossManyTurns(): void
     {
-        $store = [];
-        $cache = $this->createMock(ICache::class);
-        $cache->method('get')->willReturnCallback(
-            static function (string $key) use (&$store): mixed {
-                return ($store[$key] ?? null);
-            }
-        );
-        $cache->expects($this->atLeastOnce())
-            ->method('set')
-            ->with(
-                $this->isType('string'),
-                $this->isType('string'),
-                NaviConversationStore::TTL
-            )
-            ->willReturnCallback(
-                static function (string $key, mixed $value, int $ttl = 0) use (&$store): bool {
-                    $store[$key] = $value;
-                    return true;
-                }
-            );
-
-        $service   = $this->buildService(byCollection: $this->followUpFixtures(), cache: $cache);
-        $extraRuns = (NaviConversationStore::MAX_TURNS + 5);
-        for ($turn = 0; $turn < $extraRuns; $turn++) {
-            $service->processQuery(
+        $turns = (NaviConversationStore::MAX_TURNS + 5);
+        for ($turn = 0; $turn < $turns; $turn++) {
+            $this->buildService(byCollection: $this->followUpFixtures())->processQuery(
                 query: 'How many requests are open?',
                 userId: 'alice',
                 conversationId: self::CONVERSATION_ID
             );
         }
 
-        $this->assertCount(1, $store, 'one conversation must occupy exactly one cache entry');
-        $record = json_decode((string) reset($store), true);
+        $this->assertCount(1, $this->rows, 'one user must occupy exactly one preference row');
+        $record = json_decode((string) reset($this->rows), true);
         $this->assertSame('alice', $record['owner']);
         $this->assertCount(NaviConversationStore::MAX_TURNS, $record['turns']);
     }
