@@ -27,7 +27,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"query\": \"How many leads are open?\", \"conversationId\": \"newman-1\"}"
+          "raw": "{\"query\": \"How many leads are open?\"}"
         },
         "url": "{{baseUrl}}/index.php/apps/pipelinq/api/navi/query"
       },
@@ -49,6 +49,10 @@
               "pm.test('Body has suggestedFollowUps array', function () {",
               "  var json = pm.response.json();",
               "  pm.expect(json.suggestedFollowUps).to.be.an('array');",
+              "});",
+              "pm.test('Server mints a conversationId when the client sends none', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.conversationId).to.match(/^[0-9a-f]{32}$/);",
               "});"
             ]
           }

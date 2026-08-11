@@ -47,7 +47,7 @@ async function gotoOperational(page) {
  * period and watch the analytics endpoints re-query, and hold the rendered grid
  * to the layout the manifest declares.
  *
- * WHERE A STUBBED RESPONSE IS USED, AND WHY. Three Navi scenarios describe
+ * WHERE A STUBBED RESPONSE IS USED, AND WHY. Two Navi scenarios describe
  * response SHAPES the CI instance cannot produce — `tests/e2e/ci-seed.sh`
  * imports the register's seed objects and then runs the demo seeder, so leads,
  * tickets and contactmomenten all EXIST and NaviService's "no matching data"
@@ -323,44 +323,49 @@ test('Navi: a typed question is POSTed to /api/navi/query and its answer is rend
 })
 
 /*
- * SPEC/IMPLEMENTATION MISMATCH — reported, not fixed. The scenario requires the
- * frontend to carry `conversationId` into follow-up requests so context
- * accumulates. The widget does exactly that — but NaviController never MINTS
- * one: `query()` sets `$payload['conversationId'] = null` and only echoes a
- * value the client already sent (lib/Controller/NaviController.php). So against
- * the live backend the id is null on the first turn and stays null forever, and
- * a purely live test could not tell a widget that propagates the id from one
- * that drops it. The route interception below supplies the id the server does
- * not, which is what makes the widget's half of the contract observable at all.
+ * A live round trip, no interception: the server mints the identifier, the
+ * widget adopts it, sends it back, and the second answer is computed in the
+ * context of the first. Both halves of the scenario are observable without a
+ * stub, and both are read off the wire of the ONE navigation this fixture
+ * already performs.
  */
 // @e2e openspec/specs/dashboard/spec.md#conversational-follow-up
-test('Navi: a follow-up question carries the conversationId from the first answer', async ({ page }) => {
+test('Navi: a follow-up question carries the conversationId and is answered in context', async ({ page }) => {
 	await openOperationalInteractive(page)
 
-	const sent: any[] = []
-	await page.route('**/api/navi/query', async (route) => {
-		sent.push(route.request().postDataJSON())
-		await route.fulfill({
-			json: {
-				resultType: 'text',
-				textResponse: `answer ${sent.length}`,
-				suggestedFollowUps: [],
-				conversationId: 'conv-e2e-1',
-			},
-		})
-	})
+	const isNaviCall = (url: string) => url.includes('/apps/pipelinq/api/navi/query')
 
+	// Armed BEFORE the submit so neither turn can be missed.
+	const firstSent = page.waitForRequest((req) => isNaviCall(req.url()) && req.method() === 'POST', { timeout: 30000 })
+	const firstGot = page.waitForResponse((res) => isNaviCall(res.url()) && res.request().method() === 'POST', { timeout: 30000 })
 	await askNavi(page, 'How many leads are open?')
+
+	expect((await firstSent).postDataJSON().conversationId, 'the first turn has no conversation yet').toBeFalsy()
+	const first = await (await firstGot).json()
+	expect(first.conversationId, 'the server must mint an identifier on the first turn')
+		.toMatch(/^[0-9a-f]{32}$/)
+
 	const widget = await naviWidget(page)
-	await expect(widget.getByText('answer 1')).toBeVisible({ timeout: 20000 })
+	await expect(widget.locator('.navi-widget__message--assistant')).toHaveCount(1, { timeout: 30000 })
 
-	await askNavi(page, 'And how many of those are overdue?')
-	await expect(widget.getByText('answer 2')).toBeVisible({ timeout: 20000 })
+	const secondSent = page.waitForRequest((req) => isNaviCall(req.url()) && req.method() === 'POST', { timeout: 30000 })
+	const secondGot = page.waitForResponse((res) => isNaviCall(res.url()) && res.request().method() === 'POST', { timeout: 30000 })
+	// A follow-up that names neither an intent nor a subject of its own: it can
+	// only be answered from what the conversation already holds.
+	await askNavi(page, 'And what about last month?')
 
-	expect(sent.length, 'both turns must reach the endpoint').toBe(2)
-	expect(sent[0].conversationId, 'the first turn has no conversation yet').toBeFalsy()
-	expect(sent[1].conversationId, 'the follow-up must carry the id the answer returned')
-		.toBe('conv-e2e-1')
+	expect((await secondSent).postDataJSON().conversationId, 'the follow-up must carry the minted identifier')
+		.toBe(first.conversationId)
+	const second = await (await secondGot).json()
+	expect(second.conversationId, 'the identifier must stay stable across the conversation')
+		.toBe(first.conversationId)
+	// Answered in context. Asked cold, this wording matches no intent and earns
+	// the clarification instead.
+	expect(second.textResponse, 'the follow-up must be answered from the accumulated context')
+		.not.toContain('I am not sure how to answer that yet')
+
+	await expect(widget.locator('.navi-widget__message--assistant')).toHaveCount(2, { timeout: 30000 })
+	await expect(widget.locator('.navi-widget__error')).toHaveCount(0)
 })
 
 // @e2e openspec/specs/dashboard/spec.md#empty-result-set
