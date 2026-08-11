@@ -33,7 +33,9 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
+use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -148,17 +150,6 @@ class BookingService
     private ?object $emailProvider = null;
 
     /**
-     * Optional walk-in queue rebalance seam (member 09).
-     *
-     * Invoked from {@see completeBooking()} so the walk-in queue ETAs are
-     * recomputed as scheduled appointments finish. Implementations expose
-     * `rebalance(): int` (the WalkInQueueService satisfies this contract).
-     *
-     * @var object|null
-     */
-    private ?object $walkInQueueRebalance = null;
-
-    /**
      * Optional calendar seam (member 10).
      *
      * Implementations expose `pushBookingEvent(string $bookingId): void`. Called
@@ -179,6 +170,7 @@ class BookingService
      * @param AvailabilityService $availabilityService Member 02 — invalidated on every write.
      * @param EligibilityService  $eligibilityService  Member 03 — skill-eligible resource filter.
      * @param LoggerInterface     $logger              The logger.
+     * @param IJobList            $jobList             The background-job list (member 09 rebalance is deferred to it).
      */
     public function __construct(
         private ContainerInterface $container,
@@ -187,6 +179,7 @@ class BookingService
         private AvailabilityService $availabilityService,
         private EligibilityService $eligibilityService,
         private LoggerInterface $logger,
+        private IJobList $jobList,
     ) {
     }//end __construct()
 
@@ -217,23 +210,6 @@ class BookingService
     {
         $this->emailProvider = $provider;
     }//end setEmailProvider()
-
-    /**
-     * Inject the walk-in queue rebalance seam (member 09).
-     *
-     * Wired by Application bootstrap to the WalkInQueueService instance so
-     * that {@see completeBooking()} fires the rebalance on completion.
-     *
-     * @param object|null $service Provider exposing `rebalance(): int`.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/appointment-booking/spec.md
-     */
-    public function setWalkInQueueRebalance(?object $service): void
-    {
-        $this->walkInQueueRebalance = $service;
-    }//end setWalkInQueueRebalance()
 
     /**
      * Inject a calendar provider seam (member 10).
@@ -692,12 +668,28 @@ class BookingService
     }//end completeBooking()
 
     /**
-     * Fire the walk-in queue rebalance seam (member 09).
+     * Schedule the walk-in queue rebalance (member 09).
      *
      * The rebalance recomputes ETAs for every waiting walk-in ticket so the
-     * queue panel reflects the freshly freed slot. Errors are swallowed —
-     * the booking completion already succeeded and the walk-in panel
-     * auto-refreshes regardless.
+     * queue panel reflects the freshly freed slot. It is DEFERRED to
+     * {@see WalkInQueueRebalanceJob}, which is what
+     * `openspec/specs/appointment-booking/spec.md` ("Queue rebalances as
+     * appointments complete") requires: *the WalkInQueueRebalanceJob MUST
+     * recalculate `estimatedReadyAt` for all waiting tickets*.
+     *
+     * It used to call `WalkInQueueService::rebalance()` inline. That walked up
+     * to `WalkInQueueService::QUEUE_PAGE_SIZE` (200) waiting tickets and did an
+     * availability computation plus a `saveObject()` for EACH — up to 200
+     * object writes inside the HTTP request that completes one booking, with
+     * every error swallowed. Request latency scaled with queue depth and a
+     * total failure of the rebalance was invisible to the caller. That is the
+     * openregister#2420 family: a synchronous write fan-out on a request path.
+     *
+     * `IJobList::add()` is idempotent for an identical (class, argument) pair,
+     * so N completions in one cron window collapse to ONE queued rebalance —
+     * which is also strictly more correct, since the rebalance is a whole-queue
+     * recomputation and running it once after the last completion produces the
+     * same ETAs as running it after each.
      *
      * @return void
      *
@@ -705,19 +697,16 @@ class BookingService
      */
     private function rebalanceWalkInQueue(): void
     {
-        if ($this->walkInQueueRebalance === null) {
-            return;
-        }
-
-        if (method_exists($this->walkInQueueRebalance, 'rebalance') === false) {
-            return;
-        }
-
         try {
-            // @phpstan-ignore-next-line dynamic provider seam
-            $this->walkInQueueRebalance->rebalance();
+            $this->jobList->add(WalkInQueueRebalanceJob::class);
         } catch (\Throwable $e) {
-            $this->logger->warning('Pipelinq: walk-in queue rebalance failed');
+            // Enqueueing is best-effort: the booking completion has already
+            // been persisted and must not be rolled back because the ETA
+            // refresh could not be scheduled.
+            $this->logger->warning(
+                'Pipelinq: could not schedule the walk-in queue rebalance',
+                ['exception' => $e->getMessage()]
+            );
         }
     }//end rebalanceWalkInQueue()
 

@@ -67,7 +67,6 @@ use OCA\Pipelinq\Service\BsnValidationService;
 use OCA\Pipelinq\Service\Gdpr\PipelinqApRegulatorEscalateProvider;
 use OCA\Pipelinq\Service\Gdpr\PipelinqBsnIdentityVerifyProvider;
 use OCA\Pipelinq\Service\HaalCentraalClient;
-use OCA\Pipelinq\Service\WalkInQueueService;
 use Throwable;
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
@@ -805,7 +804,6 @@ class Application extends App implements IBootstrap
     {
         $this->registerCommentResolvers(server: $server);
         $this->wireAppointmentEmailSeam();
-        $this->wireBookingWalkInRebalance();
         $this->wireAppointmentCalendarSeam();
         $this->wireAppointmentPaymentSeam();
         $this->wireGdprSeamProviders();
@@ -843,24 +841,6 @@ class Application extends App implements IBootstrap
         }//end try
 
     }//end registerCommentResolvers()
-
-    /**
-     * Wire the walk-in queue rebalance seam into the booking lifecycle, so a
-     * Booking completion fires WalkInQueueService::rebalance.
-     *
-     * @return void
-     */
-    private function wireBookingWalkInRebalance(): void
-    {
-        try {
-            $bookingService     = $this->getContainer()->get(BookingService::class);
-            $walkInQueueService = $this->getContainer()->get(WalkInQueueService::class);
-            $bookingService->setWalkInQueueRebalance(service: $walkInQueueService);
-        } catch (\Exception $e) {
-            // Booking / walk-in surfaces not available — leave rebalance seam unset.
-        }
-
-    }//end wireBookingWalkInRebalance()
 
     /**
      * Read the SPA manifest's declared app dependencies, as a flat id list.

@@ -491,4 +491,102 @@ class WalkInQueueServiceTest extends TestCase
         $this->assertSame(expected: 0, actual: $walkIn->rebalance());
 
     }//end testRebalanceWithNoWaitingTickets()
+
+    /**
+     * Pins the SIZE of the rebalance fan-out, which is why it may not run on a
+     * request path.
+     *
+     * `rebalance()` reads every waiting ticket (capped at
+     * WalkInQueueService::QUEUE_PAGE_SIZE) and, per ticket, performs a service
+     * read, a resource read, an availability computation and a `saveObject()`.
+     * With a full queue that is QUEUE_PAGE_SIZE object writes and
+     * QUEUE_PAGE_SIZE availability computations in one call — the reason
+     * BookingService::completeBooking() schedules WalkInQueueRebalanceJob
+     * instead of calling this inline (openregister#2420 family).
+     *
+     * ⚠️ SCOPE OF THIS MEASUREMENT — READ BEFORE QUOTING THE NUMBER.
+     * The ObjectService double below resolves register/schema context from the
+     * TOP LEVEL of the findAll() config, which is how `listByStatus()` supplies
+     * it today. The real OpenRegister reads that context ONLY from
+     * `$config['filters']` (`ObjectService::prepareFindAllConfig`), so on a live
+     * instance the ticket read currently resolves no context and
+     * `MagicMapper::findAll()` returns an empty array.
+     *
+     * So this test measures the fan-out THE LOOP PERFORMS PER WAITING TICKET.
+     * It does NOT claim that 200 writes happen in production today: while the
+     * query stays mis-keyed the queue reads empty and the fan-out is LATENT.
+     * It becomes live the moment that separate defect is fixed — which is
+     * exactly why the rebalance must already be off the request path by then.
+     *
+     * @return void
+     */
+    public function testRebalanceFansOutOneSaveObjectPerWaitingTicket(): void
+    {
+        $queueDepth = WalkInQueueService::QUEUE_PAGE_SIZE;
+
+        $waiting = [];
+        for ($i = 0; $i < $queueDepth; $i++) {
+            $waiting[] = [
+                '@self'            => ['id' => 'ticket-'.$i],
+                'status'           => 'waiting',
+                'serviceId'        => 'svc-haircut',
+                'displayName'      => 'Walk-in '.$i,
+                'estimatedReadyAt' => '',
+            ];
+        }
+
+        $resources = [
+            ['@self' => ['id' => 'res-a'], 'type' => 'staff', 'status' => 'active', 'bookable' => true],
+        ];
+
+        $object = $this->createMock(originalClassName: ObjectService::class);
+        $object->method('find')->willReturn(
+            [
+                '@self'                 => ['id' => 'svc-haircut'],
+                'durationMinutes'       => 30,
+                'requiredResourceTypes' => ['staff'],
+            ]
+        );
+        $object->method('findAll')->willReturnCallback(
+            static function (array $config) use ($waiting, $resources): array {
+                if (($config['schema'] ?? '') === 'walkInTicket') {
+                    return $waiting;
+                }
+
+                return $resources;
+            }
+        );
+
+        $writes = 0;
+        $object->method('saveObject')->willReturnCallback(
+            function (
+                array|object $payload,
+                ?array $extend=[],
+                string|int|null $register=null,
+                string|int|null $schema=null,
+                ?string $uuid=null,
+            ) use (&$writes): array {
+                $writes++;
+                return ['@self' => ['id' => (string) $uuid]];
+            }
+        );
+
+        $availabilityCalls = 0;
+        $availability      = $this->createMock(originalClassName: AvailabilityService::class);
+        $availability->method('computeAvailability')->willReturnCallback(
+            static function (string $resourceId, string $date, int $duration) use (&$availabilityCalls): array {
+                $availabilityCalls++;
+                return [['startTime' => '11:00', 'endTime' => '11:30', 'durationMinutes' => 30]];
+            }
+        );
+
+        [$walkIn] = $this->buildService(objectService: $object, availability: $availability);
+
+        $touched = $walkIn->rebalance();
+
+        $this->assertSame(expected: $queueDepth, actual: $touched);
+        $this->assertSame(expected: $queueDepth, actual: $writes);
+        $this->assertSame(expected: $queueDepth, actual: $availabilityCalls);
+
+    }//end testRebalanceFansOutOneSaveObjectPerWaitingTicket()
 }//end class
