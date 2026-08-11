@@ -32,6 +32,7 @@ is a legitimate first-party API and MUST NOT be flagged by gate-27 Rule E.
 
 #### Scenario: Gate-27 does not flag the first-party Activity API
 
+- @e2e exclude this scenario's subject is A STATIC ANALYSER, not the application: its WHEN is "the gate-27 detector scans `lib/Service/ActivityService.php`". No Nextcloud is running when that happens and no browser is involved, so an e2e test could not observe the thing being asserted. It is also already enforced, on every PR and by the exact mechanism the scenario names — hydra gate-27 (`no-phantom-cross-app-rpc`) runs in the `Hydra Gates` job and currently reports PASS on this tree (measured at full scope: `[gate-27] no-phantom-cross-app-rpc: PASS`). A regression that made Rule E flag `$this->activityManager->publish()` would turn that job red, which is a stronger signal than any test here could give.
 - WHEN the gate-27 detector scans `lib/Service/ActivityService.php`
 - THEN it MUST NOT report any `phantom-foundation-call` finding for
   `$this->activityManager->publish()` or the internal `$this->publish()` helper
