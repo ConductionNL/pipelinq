@@ -72,7 +72,27 @@ async function newIdentity(authenticated: boolean): Promise<APIRequestContext> {
 	if (authenticated) {
 		headers.Authorization = `Basic ${Buffer.from(`${ADMIN_USER}:${ADMIN_PASS}`).toString('base64')}`
 	}
-	return playwrightRequest.newContext({ baseURL: resolveBaseUrl(), extraHTTPHeaders: headers })
+	return playwrightRequest.newContext({
+		baseURL: resolveBaseUrl(),
+		extraHTTPHeaders: headers,
+		// AN EMPTY JAR HAS TO BE ASKED FOR, EXPLICITLY.
+		//
+		// This project's playwright.config.ts sets `use.storageState` (written
+		// by globalSetup, which logs in as admin). A context created without
+		// naming `storageState` inherits it — so a context intended to be
+		// anonymous starts holding the ADMIN SESSION COOKIE, and since a valid
+		// cookie outranks a later Authorization header, it stays admin no
+		// matter what Basic credentials are sent.
+		//
+		// Measured, not assumed: the byte-identical helper passes in portaliq,
+		// whose config declares NO storageState, and failed here with
+		// `assertCallerIs(anon, null)` reading back `"admin"`. Same code, two
+		// repos, one difference. Without this line the "anonymous cannot read
+		// a per-user preference" assertion below would have been made BY THE
+		// ADMIN — the exact false green the identity guard exists to catch,
+		// and which it did catch.
+		storageState: { cookies: [], origins: [] },
+	})
 }
 
 /**
