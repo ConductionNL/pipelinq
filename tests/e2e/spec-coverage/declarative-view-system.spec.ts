@@ -692,7 +692,36 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		const content = page.locator('#content-vue')
 
 		// role / email / phone / client render through the default data widget.
-		await expect(content.getByText('Contact details').first()).toBeVisible({ timeout: 25000 })
+		//
+		// ASSERTED BY FIELD LABEL, NOT BY WIDGET TITLE (run 31487636093). The
+		// manifest does title this widget "Contact details", but that string was
+		// not found on the page: a `type: "data"` widget's title is chrome the
+		// host may or may not paint, and nothing in the scenario depends on it.
+		// The Client 360 test above asserts the same kind of widget through
+		// `.cn-object-data-widget__label` and passes, so that is the handle used
+		// here too — it also asserts the thing the scenario actually names, which
+		// is that the contact's FIELDS render.
+		//
+		// `contact-data` declares `content: { columns: 2 }` with no `include`, so
+		// it auto-renders the schema's visible properties. The two client/contact
+		// schema fragments disagree on titles — 15-unify-client-contact.json says
+		// "Email"/"Phone" while pipelinq_register.json says "Email Address"/
+		// "Phone Number" — so the labels are matched with an optional suffix
+		// rather than pinned to whichever fragment won the merge.
+		const contactLabels = content.locator('.cn-object-data-widget__label')
+		await expect(contactLabels.first()).toBeVisible({ timeout: 25000 })
+		await expect(
+			contactLabels.filter({ hasText: /^Name$/ }),
+			'the contact data widget must render the Name field',
+		).not.toHaveCount(0)
+		await expect(
+			contactLabels.filter({ hasText: /^Email( Address)?$/ }),
+			'the contact data widget must render the Email field',
+		).not.toHaveCount(0)
+		await expect(
+			contactLabels.filter({ hasText: /^Phone( Number)?$/ }),
+			'the contact data widget must render the Phone field',
+		).not.toHaveCount(0)
 
 		// BSN/BRP, Relationships and Communication history are page-BODY
 		// sections, each resolved from the component registry.
