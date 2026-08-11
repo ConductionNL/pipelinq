@@ -283,9 +283,15 @@ test.describe('SLA attainment reporting', () => {
 		// Either rendering of the manifest page is proof it mounted: the KPI
 		// tile label, or the page title. Written as an `or` so the assertion does
 		// not pin one shared-component layout revision.
+		// `.first()` must wrap the WHOLE `.or(...)`, not each side of it. Applying
+		// it per-branch leaves the union itself with two members, and Playwright
+		// raised exactly that: "strict mode violation: … resolved to 2 elements".
+		// Measured in run 31473685688 — both the KPI label and the heading render,
+		// so the union genuinely matches twice and either one proves the mount.
 		await expect(
-			content.getByText('Overall attainment').first()
-				.or(content.getByRole('heading', { name: 'SLA attainment' }).first()),
+			content.getByText('Overall attainment')
+				.or(content.getByRole('heading', { name: 'SLA attainment' }))
+				.first(),
 		).toBeVisible({ timeout: 20000 })
 
 		await assertNoHardError(page)
