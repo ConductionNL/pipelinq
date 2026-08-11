@@ -40,6 +40,8 @@ use OCP\IGroupManager;
  *
  * Fails closed: an object with no owner value authorizes nobody but a
  * privileged-group member.
+ *
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
  */
 class ObjectOwnerAccessPolicy
 {

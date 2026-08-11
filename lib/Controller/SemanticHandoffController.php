@@ -95,10 +95,10 @@ class SemanticHandoffController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest               $request        HTTP request.
-     * @param SemanticHandoffService $handoffService Kind resolution + emit wrapper.
-     * @param ContainerInterface     $container      DI container (OR ObjectService).
-     * @param IAppConfig             $appConfig      App config (register/schema slugs).
+     * @param IRequest                $request        HTTP request.
+     * @param SemanticHandoffService  $handoffService Kind resolution + emit wrapper.
+     * @param ContainerInterface      $container      DI container (OR ObjectService).
+     * @param IAppConfig              $appConfig      App config (register/schema slugs).
      * @param TicketService           $ticketService  Unified ticket resolver.
      * @param IUserSession            $userSession    User session.
      * @param ObjectOwnerAccessPolicy $accessPolicy   Per-object owner authorization.

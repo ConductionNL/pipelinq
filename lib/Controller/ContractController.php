@@ -55,13 +55,13 @@ class ContractController extends Controller
     /**
      * Constructor.
      *
-     * @param IRequest                 $request         The request.
-     * @param ContractService          $contractService Contract lifecycle service.
-     * @param RecurringRevenueService  $revenueService  Recurring-revenue service.
-     * @param IUserSession             $userSession     The user session.
-     * @param ObjectOwnerAccessPolicy  $accessPolicy    Per-object owner authorization.
-     * @param ContainerInterface       $container       The DI container.
-     * @param LoggerInterface          $logger          PSR logger.
+     * @param IRequest                $request         The request.
+     * @param ContractService         $contractService Contract lifecycle service.
+     * @param RecurringRevenueService $revenueService  Recurring-revenue service.
+     * @param IUserSession            $userSession     The user session.
+     * @param ObjectOwnerAccessPolicy $accessPolicy    Per-object owner authorization.
+     * @param ContainerInterface      $container       The DI container.
+     * @param LoggerInterface         $logger          PSR logger.
      */
     public function __construct(
         IRequest $request,
