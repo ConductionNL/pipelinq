@@ -32,13 +32,13 @@ namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContractService;
 use OCA\Pipelinq\Service\RecurringRevenueService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -53,29 +53,22 @@ use Throwable;
 class ContractController extends Controller
 {
     /**
-     * Groups whose members may transition any contract.
-     *
-     * @var string[]
-     */
-    private const PRIVILEGED_GROUPS = ['admin', 'sales'];
-
-    /**
      * Constructor.
      *
-     * @param IRequest                $request         The request.
-     * @param ContractService         $contractService Contract lifecycle service.
-     * @param RecurringRevenueService $revenueService  Recurring-revenue service.
-     * @param IUserSession            $userSession     The user session.
-     * @param IGroupManager           $groupManager    The group manager.
-     * @param ContainerInterface      $container       The DI container.
-     * @param LoggerInterface         $logger          PSR logger.
+     * @param IRequest                 $request         The request.
+     * @param ContractService          $contractService Contract lifecycle service.
+     * @param RecurringRevenueService  $revenueService  Recurring-revenue service.
+     * @param IUserSession             $userSession     The user session.
+     * @param ObjectOwnerAccessPolicy  $accessPolicy    Per-object owner authorization.
+     * @param ContainerInterface       $container       The DI container.
+     * @param LoggerInterface          $logger          PSR logger.
      */
     public function __construct(
         IRequest $request,
         private ContractService $contractService,
         private RecurringRevenueService $revenueService,
         private IUserSession $userSession,
-        private IGroupManager $groupManager,
+        private ObjectOwnerAccessPolicy $accessPolicy,
         private ContainerInterface $container,
         private LoggerInterface $logger,
     ) {
@@ -245,7 +238,16 @@ class ContractController extends Controller
 
         try {
             $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $object        = $objectService->find($id, $registerId, $schemaId);
+            // Named arguments are load-bearing: ObjectService::find()'s second and
+            // third parameters are `?array $_extend` and `bool $files`, so the
+            // positional form passed the register id into $_extend and raised a
+            // TypeError that the catch below swallowed into a 404 — for the owner
+            // as well as for a stranger. See #801.
+            $object = $objectService->find(
+                id: $id,
+                register: $registerId,
+                schema: $schemaId,
+            );
             if ($object === null) {
                 return null;
             }
@@ -272,16 +274,6 @@ class ContractController extends Controller
      */
     private function isAuthorized(string $uid, array $contract): bool
     {
-        if (((string) ($contract['ownerId'] ?? '')) === $uid) {
-            return true;
-        }
-
-        foreach (self::PRIVILEGED_GROUPS as $group) {
-            if ($this->groupManager->isInGroup($uid, $group) === true) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->accessPolicy->mayAccess(uid: $uid, object: $contract, ownerField: 'ownerId');
     }//end isAuthorized()
 }//end class

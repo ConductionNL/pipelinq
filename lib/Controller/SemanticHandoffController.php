@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SemanticHandoffService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Controller;
@@ -46,11 +47,20 @@ use Throwable;
 /**
  * Request→Case and Contract→Invoice emit endpoints.
  *
- * Endpoints (all NoAdminRequired + per-object register-RBAC guard):
+ * Endpoints (all NoAdminRequired):
  *   GET  /api/handoff/request/{id}/availability
  *   POST /api/handoff/request/{id}/convert-to-case
  *   GET  /api/handoff/contract/{id}/availability
  *   POST /api/handoff/contract/{id}/send-to-invoicing
+ *
+ * ⚠️ There is no per-object "register-RBAC guard" behind these routes — an
+ * earlier version of this docblock claimed one and there never was one. A
+ * schema that declares no `authorization` block makes OpenRegister's
+ * PermissionHandler grant every action to every authenticated user, so the
+ * controller is the only layer. The two contract routes therefore authorize
+ * explicitly against the contract's `ownerId` via {@see ObjectOwnerAccessPolicy}.
+ * The two request routes cannot: the `ticket` schema declares no owner field,
+ * so who may act on someone else's ticket is an open product decision (#801).
  *
  * Since unify-ticket-supertype a request is a `ticket` carrying
  * `ticketType: request` — the request endpoints read and write the unified
@@ -89,9 +99,10 @@ class SemanticHandoffController extends Controller
      * @param SemanticHandoffService $handoffService Kind resolution + emit wrapper.
      * @param ContainerInterface     $container      DI container (OR ObjectService).
      * @param IAppConfig             $appConfig      App config (register/schema slugs).
-     * @param TicketService          $ticketService  Unified ticket resolver.
-     * @param IUserSession           $userSession    User session.
-     * @param LoggerInterface        $logger         Logger.
+     * @param TicketService           $ticketService  Unified ticket resolver.
+     * @param IUserSession            $userSession    User session.
+     * @param ObjectOwnerAccessPolicy $accessPolicy   Per-object owner authorization.
+     * @param LoggerInterface         $logger         Logger.
      */
     public function __construct(
         IRequest $request,
@@ -100,6 +111,7 @@ class SemanticHandoffController extends Controller
         private IAppConfig $appConfig,
         private TicketService $ticketService,
         private IUserSession $userSession,
+        private ObjectOwnerAccessPolicy $accessPolicy,
         private LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
@@ -222,13 +234,18 @@ class SemanticHandoffController extends Controller
     #[NoAdminRequired]
     public function contractAvailability(string $id=''): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
             return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
         }
 
         $contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'contract'), id: $id);
         if ($contract === null) {
             return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+        }
+
+        if ($this->mayActOnContract(uid: $user->getUID(), contract: $contract) === false) {
+            return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
         }
 
         $available = $this->handoffService->hasImplementer(kindUri: self::KIND_INVOICE);
@@ -255,13 +272,20 @@ class SemanticHandoffController extends Controller
     #[NoAdminRequired]
     public function sendContractToInvoicing(string $id=''): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
             return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
         }
 
         $contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'contract'), id: $id);
         if ($contract === null) {
             return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+        }
+
+        // Authorize BEFORE the status gate: a stranger must not be able to
+        // distinguish "not yours" from "not active" on someone else's contract.
+        if ($this->mayActOnContract(uid: $user->getUID(), contract: $contract) === false) {
+            return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
         }
 
         if ((string) ($contract['status'] ?? '') !== 'active') {
@@ -345,7 +369,24 @@ class SemanticHandoffController extends Controller
     }//end ticketSchema()
 
     /**
-     * Load a pipelinq-register object by schema slug/id + id (per-object guard).
+     * Per-object authorization for a contract: owner or privileged group.
+     *
+     * @param string              $uid      The caller user ID.
+     * @param array<string,mixed> $contract The loaded contract.
+     *
+     * @return bool True when the caller may act on this contract.
+     */
+    private function mayActOnContract(string $uid, array $contract): bool
+    {
+        return $this->accessPolicy->mayAccess(uid: $uid, object: $contract, ownerField: 'ownerId');
+    }//end mayActOnContract()
+
+    /**
+     * Load a pipelinq-register object by schema slug/id + id.
+     *
+     * ⚠️ This is a LOAD, not a guard. Its docblock used to say "per-object
+     * guard" and the body has only ever been `find(id, register, schema)`;
+     * callers must authorize the object themselves (#801).
      *
      * @param string $schema Schema id or slug.
      * @param string $id     Object UUID.
