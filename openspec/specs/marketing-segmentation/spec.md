@@ -58,6 +58,8 @@ against the entity schema before save.
 
 #### Scenario: Rule tree validated on save
 
+@e2e exclude no save can currently succeed, so the "on validation success SHALL save" half has no observable state and the "on failure" half is indistinguishable from it. MEASURED, run 31473685688: POST `/api/segments` returned 400 `{"error":"Invalid rule tree: Unknown entityType \"contact\" (no schema mapping configured)."}` for a VALID leaf, byte-identical to the reply the two deliberately-invalid trees in the same test drew — so a 400 there says nothing about the leaf. ROOT CAUSE: `SegmentService::resolveSchemaProperties()` calls `$schemaMapper->find(id: …, published: null, …)`; OpenRegister's `SchemaMapper::find()` dropped `$published` in commit ea99a5004 (2026-06-25, on `origin/development`, the ref CI installs), so PHP raises `Error: Unknown named parameter $published`, the local `catch (Throwable)` swallows it, and validation aborts before reading the tree. Covered at the service boundary by tests/Unit/Service/SegmentServiceTest.php (testValidateRulesAcceptsValidLeaf, testValidateRulesAcceptsAndComposite, testValidateRulesRejectsUnknownField, testValidateRulesRejectsIncoercibleValue, testValidateRulesRejectsUnknownEntityType) — which pass only because their fake SchemaMapper still declares `find(string $id, $published = null, …)`, i.e. the mock is shaped to the caller rather than to the collaborator. Tracked as pipelinq#773; this exclusion lapses when that lands — drop it when the call site stops passing the removed parameter.
+
 - **GIVEN** a rule `industry = "gemeente" AND (employees > 50 OR annual_revenue > 5000000) AND last_contact_moment < 90 days`
 - **WHEN** the segment is saved
 - **THEN** the system SHALL serialize the rule tree as JSON and call `SegmentService.validateRules()` to verify each leaf predicate (field exists, operator valid for type, value coercible)
@@ -73,11 +75,15 @@ against the entity schema before save.
 
 #### Scenario: Operators validated per field type
 
+@e2e exclude the operator/type matrix is never consulted over HTTP on a current OpenRegister, so a browser cannot tell an operator-not-valid-for-type rejection from any other rejection. MEASURED, run 31473685688: `POST /api/segments` with `{field: industry, operator: gt, value: 50}` and with a VALID `{field: industry, operator: eq, value: gemeente}` both returned the same 400 `{"error":"Invalid rule tree: Unknown entityType \"contact\" (no schema mapping configured)."}`. ROOT CAUSE: `SegmentService::resolveSchemaProperties()` passes a `published:` named argument that OpenRegister's `SchemaMapper::find()` removed in commit ea99a5004 (2026-06-25, `origin/development`); the resulting `Error` is caught locally and reported as a missing schema mapping, so `validateRules()` returns before the matrix is reached. The matrix itself is covered by tests/Unit/Service/SegmentServiceTest.php (testValidateRulesRejectsOperatorIncompatibleWithFieldType, testValidateRulesRejectsUnsupportedOperator, testValidateRulesRejectsIncoercibleValue), which exercise `validateRules()` directly against a properties map. Those tests cannot detect this defect — their fake SchemaMapper's `find()` still accepts `$published`. Tracked as pipelinq#773; this exclusion lapses as soon as the call site is corrected.
+
 - **GIVEN** a contact schema with `industry` (string), `employees` (integer), `last_contact_moment` (date)
 - **WHEN** a predicate `industry > 50` is validated (string field with numeric operator)
 - **THEN** `validateRules()` SHALL reject the predicate with an operator-not-valid-for-type error
 
 ### Requirement: Segments Are Live, Not Frozen Lists
+
+@e2e exclude the invariant is a NEGATIVE one — "the segment query was NOT materialised as a static list" — and its two scenarios are stated over dated timelines (a Segment saved 2026-01-01, a Contact created 2026-02-15, a Blast sent 2026-02-16) that no browser session can move through; what a browser could see, a member count, is the same number either way. Asserted at the boundary that decides it by tests/Unit/Service/SegmentServiceTest.php (testGetMembersForBlastReturnsProjectedRecipients, testEstimateSizeReturnsMatchingCount, testEstimateSizeReturnsZeroOnMissingSegment, testEstimateSizeAndCompositeOnSeedShape), each of which recomputes membership from the CURRENT rows rather than from a stored list.
 
 A Segment SHALL be evaluated dynamically at blast-send time, not
 materialized as a static contact list at save time. New Contacts matching

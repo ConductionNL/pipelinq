@@ -9,6 +9,8 @@ Provides end-to-end appointment booking with services, resources, and availabili
 ## Requirements
 ### Requirement: REQ-APT-001 Service Entity Schema
 
+@e2e exclude register-schema persistence invariants — "the Service MUST be queryable" and "the multiStep array MUST be persisted" are stored-shape assertions about OpenRegister, with no browser surface that reveals the stored shape; asserted by tests/Integration/AppointmentBookingRegisterTest.php (testNamedServiceSeedsAreResolvable, testMultiStepServiceSeedRoundTrip).
+
 The system MUST support Service entities with configurable duration, pricing,
 skills, multi-step composition, and booking policies.
 
@@ -27,6 +29,8 @@ skills, multi-step composition, and booking policies.
 - **THEN** the multiStep array MUST be persisted with each step's `durationMinutes`, `skillRequired`, `resourceType`, and `allowGap`
 
 ### Requirement: REQ-APT-002 Resource Entity Schema
+
+@e2e exclude register-schema persistence invariants — both scenarios assert that a stored array (workingHours / vacations) round-trips in OpenRegister, which no UI renders; the same arrays are exercised at unit level by tests/Unit/Service/AvailabilityServiceTest.php (testComputeAvailabilityReturnsFreeSlotsWhenResourceIsAvailable, testComputeAvailabilityExcludesVacationDates).
 
 The system MUST support Resource entities (staff, room, equipment) with working
 hours, vacations, skills, and optional calendar sync.
@@ -47,6 +51,8 @@ hours, vacations, skills, and optional calendar sync.
 
 ### Requirement: REQ-APT-016 AvailabilityCache Schema
 
+@e2e exclude register materialisation — "a schema MUST exist" and "findObjects MUST return the four seed Services" are assertions about the imported register, not about anything a browser renders; asserted by tests/Integration/AppointmentBookingRegisterTest.php (testAppointmentBookingSchemaMaterialises, testSeedObjectsAreFindable).
+
 The system MUST declare a read-only AvailabilityCache schema of free slots per
 resource per date for sub-second queries.
 
@@ -65,6 +71,8 @@ resource per date for sub-second queries.
 - **THEN** the four seed Services (haircut-simple, color-and-cut, oil-change-standard, consultation-tax) MUST be returned
 
 ### Requirement: REQ-APT-003 Availability Computation
+
+@e2e exclude pure slot-arithmetic invariant in AvailabilityService — the exact set of 15-minute-aligned start times and the buffer expansion are computed server-side and never exposed as a list a browser can enumerate; asserted by tests/Unit/Service/AvailabilityServiceTest.php (testComputeAvailabilityExcludesBookedTimes, testAlignToSlotsReturnsFifteenMinuteAlignedBoundaries, testBuffersAreAppliedAroundBookings).
 
 The system MUST compute available 15-minute-aligned slots per resource per date by
 intersecting working hours, vacations, booked times, and calendar-synced blocks.
@@ -91,6 +99,8 @@ intersecting working hours, vacations, booked times, and calendar-synced blocks.
 
 ### Requirement: REQ-APT-016 AvailabilityCache Behaviour
 
+@e2e exclude cache-layer behaviour — the cache record, its expiresAt stamp and the stale-but-usable read path are internal to AvailabilityService and produce no distinguishable browser output; asserted by tests/Unit/Service/AvailabilityServiceTest.php (testGetOrComputeCachePersistsOnMiss, testGetOrComputeCacheReturnsFreshEntry, testGetOrComputeCacheReturnsStaleEntryFlagged).
+
 The system MUST maintain a read-only cache of free slots per resource per date,
 regenerated on changes and expiring after 24 hours.
 
@@ -109,6 +119,8 @@ regenerated on changes and expiring after 24 hours.
 - **THEN** the stale cache MUST still be returned, but the next change event MUST trigger a refresh
 
 ### Requirement: REQ-APT-004 Skill-Based Routing
+
+@e2e exclude service-layer eligibility computation — "eligible resources are computed" has no UI that lists them (the admin Resources index is unfiltered by service), so the invariant is only observable at the service boundary; asserted by tests/Unit/Service/EligibilityServiceTest.php (testEligibleResourcesExcludesUncertifiedForSkillRequiredService, testResourceWithNoSkillsIsEligibleForNoSkillService, testMultiStepServiceAppliesStepSpecificSkillFilters).
 
 The system MUST query skill-routing to determine which Resources are eligible for a
 Service, then intersect with availability.
@@ -135,6 +147,8 @@ Service, then intersect with availability.
 
 ### Requirement: REQ-APT-008 Reschedule via Signed Link
 
+@e2e exclude reschedule is driven by an HMAC-signed public link that only exists inside a dispatched email, and the assertions are about the resulting object graph (previousBookingId, freed slot, inherited customerId/serviceId) rather than about rendered output; asserted by tests/Unit/Service/BookingServiceTest.php (testRescheduleBookingPreservesOriginalAndCreatesNew) and tests/Unit/Controller/PortalControllerTest.php (testRescheduleWithValidLink).
+
 The system MUST allow rescheduling an appointment by marking the original Booking as
 rescheduled and creating a new Booking, preserving the audit trail.
 
@@ -153,6 +167,8 @@ rescheduled and creating a new Booking, preserving the audit trail.
 - **THEN** it MUST have the same `customerId` and `serviceId` as the original, but a new `startAt`/`endAt` and `resourceAssignments`
 
 ### Requirement: REQ-APT-009 Cancellation with Policy Enforcement
+
+@e2e exclude policy arithmetic against the booking's start time plus a queued charge on the openconnector payment seam — neither the policy decision nor the queued charge is rendered anywhere, and the CI instance has no payment provider configured; asserted by tests/Unit/Service/BookingServiceTest.php (testCancelBookingFreePolicyDoesNotChargeWithinWindow, testCancelBookingTriggersChargeWhenInsidePolicyWindow, testStaffCancellationSkipsChargeRegardlessOfPolicy).
 
 The system MUST enforce configurable cancellation policies: free-until-N-hours-before,
 always-charge, or no-charge. Late cancellations trigger optional payment charges.
@@ -179,6 +195,8 @@ always-charge, or no-charge. Late cancellations trigger optional payment charges
 
 ### Requirement: REQ-APT-011 No-Show Tracking
 
+@e2e exclude the no-show action is one of the TIME-WINDOW-gated admin actions in BookingDetailSection and only appears for a booking whose start is in the past; the register seed's two bookings are fixed at 2026-05/2026-06 and the assertion is about the customer's incremented counter, which no page renders; asserted by tests/Unit/Service/BookingServiceTest.php (testMarkNoShowIncrementsCustomerNoShowCount).
+
 The system MUST track no-shows and increment customer lifetime no-show count.
 
 **Feature tier**: V1
@@ -196,6 +214,8 @@ The system MUST track no-shows and increment customer lifetime no-show count.
 - **THEN** the no-show MUST be recorded and the count incremented (fee charging is deferred to member 08)
 
 ### Requirement: REQ-APT-013 Booking Status Lifecycle
+
+@e2e exclude transition legality and the statusHistory append are server-side guards; an illegal transition is not offerable from the UI at all (the admin actions are gated before they render), so a browser cannot exercise the rejection path; asserted by tests/Unit/Service/BookingServiceTest.php (testInvalidStatusTransitionIsRejected, testLegalAndTerminalBookingTransitions, testRescheduleBookingPreservesOriginalAndCreatesNew).
 
 The system MUST enforce a valid status transition flow: pending-deposit → confirmed
 → completed/no-show/cancelled, with rescheduled as a parallel branch.
@@ -221,6 +241,8 @@ The system MUST enforce a valid status transition flow: pending-deposit → conf
 - **THEN** `statusHistory` MUST be appended with `{status, changedAt, changedBy, reason}` where `changedBy` is the Nextcloud user UID
 
 ### Requirement: REQ-APT-005 Public Booking API
+
+@e2e exclude HTTP-contract scenarios stated in terms of a status code and a response body for `GET /portal/services`, `POST /portal/book` and `POST /portal/reschedule` — an API contract, not a rendered surface; asserted by tests/Unit/Controller/PortalControllerTest.php (testServicesReturnsBookableList, testBookCreatesBookingForValidInput, testBookRejectsInvalidEmail, testRescheduleRejectsInvalidSignature, testRescheduleRejectsExpiredSignature) and tests/Unit/Service/AppointmentEmailServiceTest.php (testSignedTokenHasFourParts, testSigningIsDeterministic).
 
 The system MUST provide a public, unauthenticated API at `/portal/*` where customers
 list services, query availability, create bookings, and reschedule/cancel via signed
@@ -273,18 +295,22 @@ where customers self-book appointments.
 - **AND** they MUST NOT be required to log in or create an account
 
 #### Scenario: Unavailable dates are disabled in picker
+@e2e exclude the date picker only renders after a service loads, and the portal's own client (src/services/bookingPortalApi.js) requests `/apps/pipelinq/portal/services` while appinfo/routes.php registers that endpoint at `/portal/api/booking/services` — the SPA catch-all answers the former with HTML, so no service can be selected on any instance. Reported as a product bug rather than asserted; the slot data behind the picker is covered by tests/Unit/Controller/PortalControllerTest.php (testAvailabilityReturnsSlots).
 
 - **GIVEN** available slots exist only on Tuesday and Thursday
 - **WHEN** the customer views the date picker
 - **THEN** dates other than Tuesday/Thursday MUST be visually disabled or grayed out
 
 #### Scenario: Confirmation page shows booking summary
+@e2e exclude the confirmation page is only reachable with a real bookingId produced by the public booking flow, which cannot complete on any instance (see the picker scenario above: the portal client calls `/portal/booking/{id}` while the registered route is `/portal/api/booking/{bookingId}`); the projection it renders is asserted by tests/Unit/Controller/PortalControllerTest.php (testGetBookingReturnsPublicProjection, testGetBookingReturns404WhenMissing).
 
 - **GIVEN** a booking was created successfully
 - **WHEN** the customer lands on `/booking-confirmation/{bookingId}`
 - **THEN** the page MUST display the service, resource, date/time, status, and price, plus a "confirmation email sent" notice and reschedule/cancel links
 
 ### Requirement: REQ-APT-006 Booking Confirmation Email
+
+@e2e exclude outbound mail — the assertion is about a dispatched message and its `.ics` attachment; no mail is delivered anywhere a browser can read it and the CI instance has no mail transport; asserted by tests/Unit/Service/AppointmentEmailServiceTest.php and by the dispatch seam in tests/Unit/Service/BookingServiceTest.php (testConfirmBookingTransitionsAndFiresEmailSeam).
 
 The system MUST send a confirmation email immediately after a Booking is created or a
 deposit is paid, including an `.ics` calendar attachment and signed reschedule/cancel
@@ -307,6 +333,8 @@ links.
 - **THEN** it MUST include an `.ics` (iCalendar) attachment per RFC 5545
 
 ### Requirement: REQ-APT-007 Reminder Email and SMS
+
+@e2e exclude a cron path — the trigger is ReminderDispatchJob::run() 24 hours before a booking, which a browser session can neither schedule nor observe; asserted by tests/Unit/BackgroundJob/ReminderDispatchJobTest.php and tests/Unit/Service/AppointmentEmailServiceTest.php.
 
 The system MUST send a 24-hour reminder email and optional SMS before each
 appointment.
@@ -332,6 +360,8 @@ appointment.
 The system MUST support optional deposits: bookings requiring deposits are created
 with `status: "pending-deposit"`, the slot is held for 15 minutes, and on successful
 payment `status` transitions to `confirmed`.
+
+@e2e exclude every scenario here needs a configured openconnector PaymentService and a hosted-checkout redirect; the CI instance provisions no payment provider (tests/e2e/ci-seed.sh seeds only the register, the reporting currency and the demo dataset), and the slot-release path is a background job; asserted by tests/Unit/Service/AppointmentDepositServiceTest.php (testCreateDepositSessionReturnsSessionUrl, testCreateDepositSessionReturnsUnavailableWhenPaymentServiceMissing, testIsDepositExpiredHonoursFifteenMinuteWindow, testHandlePaymentCallbackConfirmsOnPaidStatus) and tests/Unit/BackgroundJob/AppointmentDepositTimeoutJobTest.php.
 
 Initiating the payment session is not sufficient on its own: the portal MUST
 also **forward the customer to the hosted checkout** by returning the session's
@@ -384,6 +414,8 @@ timeout then releases the slot — losing both the booking and the deposit.
 
 ### Requirement: REQ-APT-011A No-Show and Late-Cancellation Fee Charging
 
+@e2e exclude fee charging runs through the openconnector payment seam, which is not provisioned on the CI instance, and the outcome is a queued charge plus a timestamp field — never a rendered surface; asserted by tests/Unit/Service/AppointmentPaymentProviderTest.php (testChargeNoShowFeeQueuesChargeWhenPaymentMethodOnFile, testChargeNoShowFeeSkippedWhenNoPaymentMethod, testChargeCancellationFeeStampsCancellationField).
+
 The system MUST charge no-show and late-cancellation fees via openconnector when a
 payment method is on file.
 
@@ -408,6 +440,8 @@ payment method is on file.
 - **THEN** a 50 EUR charge MUST be queued via openconnector
 
 ### Requirement: REQ-APT-012 Walk-In Queue
+
+@e2e exclude the operator surface these scenarios describe (WalkInQueuePanel, "Call next" / "Serve" / "Abandon") has no entry point: src/components/bookings/WalkInQueuePanel.vue is referenced by no manifest page, no menu entry and no registry entry, so no route renders it and a browser cannot reach the buttons; the queue behaviour itself is asserted by tests/Unit/Service/WalkInQueueServiceTest.php (testCreateTicketSeatsWaitingAndComputesEta, testCallNextPicksOldestWaitingAndAssignsResource, testServeTicketStampsActualServedAt, testAbandonTicketTransitionsToAbandoned) and tests/Unit/BackgroundJob/WalkInQueueRebalanceJobTest.php.
 
 The system MUST support walk-in arrivals (WalkInTicket) for businesses that mix
 scheduled and unscheduled service.
@@ -439,6 +473,8 @@ scheduled and unscheduled service.
 - **THEN** the ticket MUST transition to `served` with `actualServedAt` set (or `abandoned`)
 
 ### Requirement: REQ-APT-018 Bi-Directional Calendar Sync
+
+@e2e exclude both directions of this sync cross the `calendar` leaf app, which the CI instance does not install (tests/e2e/ci-seed.sh provisions only pipelinq + openregister), and the hourly refresh is a BackgroundJob `run()` with no browser surface; asserted by tests/Unit/Service/AppointmentCalendarLeafProviderTest.php (testGetBlockedTimesConvertsLeafEventsToBlocks, testPushBookingEventCreatesVeventViaLeaf, testPushBookingEventMovesNotDuplicates) and tests/Unit/BackgroundJob/AvailabilityCacheRefreshJobTest.php (testJobInvalidatesEveryResourceAcrossHorizon, testJobContinuesPastPerResourceErrors).
 
 The system MUST react to staff calendar blocks (vacation, lunch, meetings) synced by
 the `calendar` leaf every 5 minutes, and MUST push created Bookings back to staff
@@ -517,12 +553,16 @@ Boekhoudplicht 7-year retention, and WCAG 2.1 AA accessibility on the public por
 
 #### Scenario: AVG right-to-be-forgotten pseudonymizes data
 
+@e2e exclude erasure is delegated to OpenRegister's erase API in pseudonymise mode and the assertion is about the STORED shape (hashed name/email/phone, Booking row retained, aggregates unchanged) — no pipelinq screen renders a pseudonymised booking, and the CI instance has no right-to-be-forgotten UI entry point; asserted by tests/Unit/Service/DataDeletionServiceTest.php (testDelegatesToOrEraseInPseudonymiseMode, testHeldBookingRowSurvivesErasure, testDryRunPassesThroughWithoutMutating).
+
 - **GIVEN** a customer exercises right-to-be-forgotten
 - **WHEN** the request is processed
 - **THEN** customer name, email, and phone on Bookings MUST be replaced with hashes (e.g. `sha256(email)`), but Booking records MUST NOT be deleted (7-year retention)
 - **AND** aggregates (counts, totals) MUST remain unchanged
 
 #### Scenario: Bookings are never auto-deleted
+
+@e2e exclude a retention sweep is a background code path whose ABSENCE of an effect is the assertion; a browser cannot observe "a sweep ran and deleted nothing", and no sweep is triggerable from the UI; asserted by tests/Unit/Service/DataDeletionServiceTest.php (testHeldBookingRowSurvivesErasure), which is the one path that could remove a Booking row and proves it does not.
 
 - **GIVEN** Bookings in terminal statuses (completed/cancelled/no-show)
 - **WHEN** any retention sweep runs
@@ -535,6 +575,8 @@ Boekhoudplicht 7-year retention, and WCAG 2.1 AA accessibility on the public por
 - **THEN** zero WCAG AA violations MUST be found, all form fields MUST have associated labels, and colour MUST NOT be the sole carrier of information
 
 ### Requirement: REQ-APT-019 Unit Tests and Code Quality
+
+@e2e exclude both scenarios are assertions about the TOOLCHAIN, not about the product: "phpcs/phpstan/phpmd report zero violations" and "composer test passes with >=80% service coverage" are static analysis and a coverage ratchet, which a browser cannot observe at all. They are enforced by `composer check:strict` and by the `PHP Quality` + `PHPUnit` jobs in .github/workflows/code-quality.yml.
 
 Every new PHP service, controller, and background job MUST have PHPUnit tests; code
 MUST pass phpcs, phpstan, and phpmd.
@@ -554,6 +596,8 @@ MUST pass phpcs, phpstan, and phpmd.
 - **THEN** all tests MUST pass with ≥80% coverage for services
 
 ### Requirement: REQ-APT-020 Internationalization (i18n)
+
+@e2e exclude the CI Nextcloud is provisioned with the default English locale — tests/e2e/ci-seed.sh sets no `default_language`/`force_language` — so no Dutch-rendered portal state exists for a browser to observe, and key parity is a comparison of two JSON files rather than of anything rendered; asserted by tests/Unit/AppointmentBookingI18nTest.php (testEnglishCatalogueHasAllBookingKeys, testDutchCatalogueHasAllBookingKeys, testDutchTranslationsArePresent) and by `npm run test:l10n` (tests/l10n/check-l10n.js).
 
 All user-visible strings in the portal, admin UI, and email templates MUST have
 English and Dutch translations. No hardcoded strings.
