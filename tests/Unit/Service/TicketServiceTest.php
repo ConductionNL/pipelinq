@@ -301,4 +301,30 @@ class TicketServiceTest extends TestCase
 
         $this->assertSame(expected: 'forbidden', actual: $result['error']['code']);
     }//end testLogContactmomentDeniedByRbacReturnsForbidden()
+
+    /**
+     * detectTypeInText maps the NL/EN words for a subtype onto its constant,
+     * singular and plural alike, and returns null for text naming no subtype.
+     *
+     * @return void
+     */
+    public function testDetectTypeInTextRecognisesSubtypeVocabulary(): void
+    {
+        $service = $this->buildService();
+
+        $this->assertSame(
+            expected: TicketService::TYPE_REQUEST,
+            actual: $service->detectTypeInText(text: 'How many requests are open?')
+        );
+        $this->assertSame(
+            expected: TicketService::TYPE_REQUEST,
+            actual: $service->detectTypeInText(text: 'Hoeveel verzoeken zijn er?')
+        );
+        $this->assertSame(
+            expected: TicketService::TYPE_CONTACTMOMENT,
+            actual: $service->detectTypeInText(text: 'How many contactmomenten were logged?')
+        );
+        $this->assertNull(actual: $service->detectTypeInText(text: 'How many leads are open?'));
+        $this->assertNull(actual: $service->detectTypeInText(text: ''));
+    }//end testDetectTypeInTextRecognisesSubtypeVocabulary()
 }//end class

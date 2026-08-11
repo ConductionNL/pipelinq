@@ -106,6 +106,18 @@ class TicketService
     ];
 
     /**
+     * The words a user writes when they mean one of the ticket subtypes,
+     * bilingual NL/EN, keyed by the subtype they name. Consumed by
+     * detectTypeInText(); the subtype vocabulary lives with the subtype.
+     *
+     * @var array<string, string>
+     */
+    private const TYPE_VOCABULARY = [
+        self::TYPE_REQUEST       => '/\b(request|requests|verzoek|verzoeken|aanvraag|aanvragen)\b/u',
+        self::TYPE_CONTACTMOMENT => '/\b(contactmoment|contactmomenten|contact)\b/u',
+    ];
+
+    /**
      * Constructor.
      *
      * @param ContainerInterface $container The DI container (OpenRegister ObjectService).
@@ -202,6 +214,32 @@ class TicketService
     {
         return $this->getRegisterId() !== '' && $this->getSchemaId() !== '';
     }//end isConfigured()
+
+    /**
+     * Recognise which ticket subtype a piece of free text is about.
+     *
+     * The subtype vocabulary belongs with the subtypes themselves, so callers
+     * that read natural language (Navi) do not each carry their own copy of the
+     * NL/EN words for "request" and "contactmoment".
+     *
+     * @param string $text Free text, e.g. a natural-language query.
+     *
+     * @return string|null One of the TYPE_* constants, or null when the text
+     *         names no subtype.
+     *
+     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
+     */
+    public function detectTypeInText(string $text): ?string
+    {
+        $lower = mb_strtolower($text);
+        foreach (self::TYPE_VOCABULARY as $ticketType => $pattern) {
+            if (preg_match($pattern, $lower) === 1) {
+                return $ticketType;
+            }
+        }
+
+        return null;
+    }//end detectTypeInText()
 
     /**
      * Find tickets of one subtype.

@@ -42,6 +42,13 @@ use Psr\Log\LoggerInterface;
 class NaviControllerTest extends TestCase
 {
     /**
+     * An identifier of the shape the controller itself mints.
+     *
+     * @var string
+     */
+    private const VALID_CONVERSATION_ID = '0123456789abcdef0123456789abcdef';
+
+    /**
      * Mock request.
      *
      * @var IRequest&MockObject
@@ -83,7 +90,8 @@ class NaviControllerTest extends TestCase
     }
 
     /**
-     * Successful query returns 200 with the service envelope echoed.
+     * A well-formed conversation identifier is accepted: it is handed to the
+     * service so the turn joins that conversation, and echoed in the payload.
      *
      * @return void
      */
@@ -95,12 +103,12 @@ class NaviControllerTest extends TestCase
 
         $this->request->method('getParam')->willReturnMap([
             ['query', '', 'How many leads are open?'],
-            ['conversationId', '', 'conv-1'],
+            ['conversationId', '', self::VALID_CONVERSATION_ID],
         ]);
 
         $this->service->expects($this->once())
             ->method('processQuery')
-            ->with('How many leads are open?', 'alice')
+            ->with('How many leads are open?', 'alice', self::VALID_CONVERSATION_ID)
             ->willReturn([
                 'query'              => 'How many leads are open?',
                 'resultType'         => 'text',
@@ -114,7 +122,94 @@ class NaviControllerTest extends TestCase
         $this->assertSame(Http::STATUS_OK, $response->getStatus());
         $payload = $response->getData();
         $this->assertSame('text', $payload['resultType']);
-        $this->assertSame('conv-1', $payload['conversationId']);
+        $this->assertSame(self::VALID_CONVERSATION_ID, $payload['conversationId']);
+    }
+
+    /**
+     * A first turn sends no identifier, so the controller mints one: the
+     * payload carries a usable identifier rather than null, and the service is
+     * given the same value so the turn is recorded under it.
+     *
+     * @return void
+     */
+    public function testQueryMintsConversationIdWhenClientSendsNone(): void
+    {
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('alice');
+        $this->userSession->method('getUser')->willReturn($user);
+
+        $this->request->method('getParam')->willReturnMap([
+            ['query', '', 'How many leads are open?'],
+            ['conversationId', '', ''],
+        ]);
+
+        $seen = null;
+        $this->service->expects($this->once())
+            ->method('processQuery')
+            ->willReturnCallback(
+                static function (string $query, string $userId, ?string $conversationId = null) use (&$seen): array {
+                    $seen = $conversationId;
+                    return [
+                        'query'              => $query,
+                        'resultType'         => 'text',
+                        'textResponse'       => 'Found 3 records.',
+                        'suggestedFollowUps' => [],
+                    ];
+                }
+            );
+
+        $controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
+        $payload    = $controller->query()->getData();
+
+        $this->assertNotNull($payload['conversationId']);
+        $this->assertMatchesRegularExpression(
+            NaviController::CONVERSATION_ID_PATTERN,
+            $payload['conversationId']
+        );
+        $this->assertSame($payload['conversationId'], $seen, 'the minted id must reach the service');
+    }
+
+    /**
+     * A client-supplied identifier that does not match the minted shape is
+     * treated as absent. It must never be handed on as part of a store key, so
+     * a fresh identifier is minted and the caller's string is discarded.
+     *
+     * @return void
+     */
+    public function testQueryRejectsMalformedConversationId(): void
+    {
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('alice');
+        $this->userSession->method('getUser')->willReturn($user);
+
+        $hostile = '../../etc/passwd';
+        $this->request->method('getParam')->willReturnMap([
+            ['query', '', 'How many leads are open?'],
+            ['conversationId', '', $hostile],
+        ]);
+
+        $seen = null;
+        $this->service->method('processQuery')->willReturnCallback(
+            static function (string $query, string $userId, ?string $conversationId = null) use (&$seen): array {
+                $seen = $conversationId;
+                return [
+                    'query'              => $query,
+                    'resultType'         => 'text',
+                    'textResponse'       => 'Found 3 records.',
+                    'suggestedFollowUps' => [],
+                ];
+            }
+        );
+
+        $controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
+        $payload    = $controller->query()->getData();
+
+        $this->assertNotSame($hostile, $seen);
+        $this->assertNotSame($hostile, $payload['conversationId']);
+        $this->assertMatchesRegularExpression(
+            NaviController::CONVERSATION_ID_PATTERN,
+            $payload['conversationId']
+        );
     }
 
     /**
