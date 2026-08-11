@@ -618,9 +618,33 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		}
 
 		// `relatedCollections` (FK `client`) — the library's declarative host.
-		await expect(page.locator('[data-testid="cn-related-collections"]')).toBeVisible({ timeout: 15000 })
+		const related = page.locator('[data-testid="cn-related-collections"]')
+		await expect(related).toBeVisible({ timeout: 15000 })
+
+		// PRESENCE INSIDE THE HOST, NOT PAGE-WIDE VISIBILITY (run 31485495866).
+		//
+		// This asserted `content.getByText(title).first()` was VISIBLE and failed
+		// on "Projecten" with `Received: hidden` — note hidden, not missing: the
+		// element is rendered, it just has no box. Two things were wrong with the
+		// old form. It searched the WHOLE page, so `.first()` could settle on a
+		// hidden match (a collapsed panel's header, or a nav entry with the same
+		// text) while a visible one existed elsewhere. And it required visibility
+		// of every collection at once, which the host does not promise:
+		// CnRelatedCollections renders each collection as its own collapsible
+		// section, so at most the expanded one is on screen — "Leads" passed for
+		// precisely that reason, being first.
+		//
+		// The scenario's claim is that the declared related lists are RENDERED on
+		// the page, which a collapsed section satisfies. So each title is asserted
+		// to exist INSIDE the related-collections host, and the host itself is
+		// asserted visible above — that keeps the assertion about this widget
+		// rather than about any text anywhere, and makes it independent of which
+		// section happens to be expanded.
 		for (const title of ['Leads', 'Projecten', 'Contactmomenten', 'Complaints']) {
-			await expect(content.getByText(title, { exact: true }).first()).toBeVisible({ timeout: 15000 })
+			await expect(
+				related.getByText(title, { exact: true }),
+				`the "${title}" related collection must be rendered by the host`,
+			).not.toHaveCount(0, { timeout: 15000 })
 		}
 
 		// The sub-features live IN THE PAGE BODY as `bodyWidgets`, not in the
