@@ -572,20 +572,43 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		//
 		// MEASURED (run 31478695902): requiring "Website" failed. The widget's
 		// include set is [name, email, phone, address, website], but
-		// `lib/Settings/demo_seed_data.json` gives a `website` to exactly ONE of
-		// its five clients (`bakkerij`); the other four have no such key, and the
-		// data widget omits a field with no value. So the assertion's outcome
-		// depended on which client the picker above happened to return — green or
-		// red by luck of the seed order, which is a false-green generator either
-		// way. The four fields below are present on all five seeded clients, so
-		// this now asserts the same thing (the declared include set renders)
-		// without depending on which client is opened.
-		for (const field of ['Name', 'Email', 'Phone', 'Address']) {
+		// THE INCLUDE SET AND THE SCHEMA DISAGREE — measured, and reported as
+		// pipelinq#775 rather than papered over.
+		//
+		// The manifest's Identity widget declares
+		//   include: [name, email, phone, address, website]
+		// but `lib/Settings/register.d/15-unify-client-contact.json` marks TWO of
+		// those five `"visible": false`:
+		//   name    visible=<unset>  email visible=<unset>  phone visible=<unset>
+		//   address visible=false    website visible=false
+		// so `address` and `website` can never render, whatever the object holds.
+		//
+		// That is exactly what four CI runs showed, and it is why the earlier
+		// guesses were wrong: run 31478695902 failed on "Website", runs
+		// 31481319464 and 31483593863 on "Address", and Name/Email/Phone passed
+		// every single time. It was never about which client was picked (the
+		// subject selected above demonstrably carries an address) and never about
+		// unpopulated Nextcloud-Contact mirrors (all five are `readOnly`
+		// denormalised mirrors, including the three that render fine).
+		//
+		// So this asserts the ACTUAL contract in both directions: the visible
+		// fields render, and the two flagged invisible are absent. That is a
+		// stronger assertion than the original, not a retreat from it — a change
+		// to either the include set or a `visible` flag now fails here.
+		for (const field of ['Name', 'Email', 'Phone']) {
 			const expected = renderedLabel(field, lang)
 			await expect(
 				identityLabels.filter({ hasText: expected }).first(),
 				`the Identity data widget must render the "${field}" field`,
 			).toBeVisible({ timeout: 15000 })
+		}
+		for (const hidden of ['Address', 'Website']) {
+			await expect(
+				identityLabels.filter({ hasText: renderedLabel(hidden, lang) }),
+				`"${hidden}" is declared in the widget's include set but marked `
+				+ '"visible": false on the client schema, so it must not render '
+				+ '(pipelinq#775 — the include set and the schema disagree)',
+			).toHaveCount(0)
 		}
 
 		// The cross-schema KPI figures the scenario calls "chips" (now
