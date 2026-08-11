@@ -30,9 +30,11 @@ use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\BookingService;
 use OCA\Pipelinq\Service\EligibilityService;
+use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -96,14 +98,16 @@ class BookingServiceTest extends TestCase
      * @param AvailabilityService|null $availability  Optional pre-built AvailabilityService mock.
      * @param EligibilityService|null  $eligibility   Optional pre-built EligibilityService mock.
      * @param IUserSession|null        $userSession   Optional pre-built user session mock.
+     * @param IJobList|null            $jobList       Optional pre-built background-job list mock.
      *
-     * @return array{0: BookingService, 1: ObjectService, 2: AvailabilityService, 3: EligibilityService}
+     * @return array{0: BookingService, 1: ObjectService, 2: AvailabilityService, 3: EligibilityService, 4: IJobList}
      */
     private function buildService(
         ?ObjectService $objectService=null,
         ?AvailabilityService $availability=null,
         ?EligibilityService $eligibility=null,
         ?IUserSession $userSession=null,
+        ?IJobList $jobList=null,
     ): array {
         $objectService = ($objectService ?? $this->createMock(originalClassName: ObjectService::class));
         $availability  = ($availability ?? $this->createMock(originalClassName: AvailabilityService::class));
@@ -134,7 +138,8 @@ class BookingServiceTest extends TestCase
             $userSession->method('getUser')->willReturn($user);
         }
 
-        $logger = $this->createMock(originalClassName: LoggerInterface::class);
+        $logger  = $this->createMock(originalClassName: LoggerInterface::class);
+        $jobList = ($jobList ?? $this->createMock(originalClassName: IJobList::class));
 
         $service = new BookingService(
             container: $container,
@@ -142,10 +147,11 @@ class BookingServiceTest extends TestCase
             userSession: $userSession,
             availabilityService: $availability,
             eligibilityService: $eligibility,
-            logger: $logger
+            logger: $logger,
+            jobList: $jobList
         );
 
-        return [$service, $objectService, $availability, $eligibility];
+        return [$service, $objectService, $availability, $eligibility, $jobList];
     }//end buildService()
 
     /**
@@ -752,7 +758,7 @@ class BookingServiceTest extends TestCase
         $service->assertTransitionAllowed(from: 'pending-deposit', to: 'confirmed');
         $service->assertTransitionAllowed(from: 'confirmed', to: 'completed');
         $service->assertTransitionAllowed(from: 'confirmed', to: 'cancelled-by-business');
-        $this->addToAssertionCount(3);
+        $this->addToAssertionCount(count: 3);
 
         // Out of a terminal state: completed has an empty target list, so any
         // target is an invalid transition.
@@ -966,12 +972,6 @@ class BookingServiceTest extends TestCase
     }//end testGetAvailableSlotsDelegatesToAvailabilityService()
 
     /**
-     * Confirms completeBooking rejects transitions from already-terminal
-     * statuses (here: completed) and never persists.
-     *
-     * @return void
-     */
-    /**
      * A confirmed-from-creation Booking pushes a VEVENT through the calendar
      * seam (member 10). Pending-deposit bookings MUST NOT push — the calendar
      * mirror only mirrors actually-confirmed appointments.
@@ -1089,7 +1089,7 @@ class BookingServiceTest extends TestCase
     }//end testPendingDepositBookingSkipsCalendarPushSeam()
 
     /**
-     * confirmBooking (pending-deposit → confirmed) fires the calendar seam,
+     * The confirmBooking (pending-deposit → confirmed) path fires the calendar seam,
      * mirroring the freshly-confirmed booking to the staff calendar.
      *
      * @return void
@@ -1151,6 +1151,12 @@ class BookingServiceTest extends TestCase
 
     }//end testConfirmBookingFiresCalendarPushSeam()
 
+    /**
+     * Confirms completeBooking rejects transitions from already-terminal
+     * statuses (here: completed) and never persists.
+     *
+     * @return void
+     */
     public function testCompleteBookingRejectsTransitionFromTerminalStatus(): void
     {
         $booking = [
@@ -1177,16 +1183,13 @@ class BookingServiceTest extends TestCase
     }//end testCompleteBookingRejectsTransitionFromTerminalStatus()
 
     /**
-     * completeBooking fires the walk-in queue rebalance seam (member 09) so
-     * the queue panel refreshes ETAs for waiting tickets.
+     * A confirmed booking fixture ready to be completed.
      *
-     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
-     *
-     * @return void
+     * @return array<string, mixed> The booking row.
      */
-    public function testCompleteBookingFiresWalkInQueueRebalanceSeam(): void
+    private function completableBooking(): array
     {
-        $booking = [
+        return [
             '@self'         => ['id' => 'b-finish'],
             'customerId'    => 'cust-1',
             'serviceId'     => 'svc-haircut',
@@ -1196,38 +1199,87 @@ class BookingServiceTest extends TestCase
             'statusHistory' => [],
             'depositAmount' => 0.0,
         ];
+    }//end completableBooking()
 
+    /**
+     * The completeBooking path SCHEDULES the walk-in queue rebalance (member 09) rather
+     * than running it inline, so the queue panel refreshes ETAs for waiting
+     * tickets without the completing request paying for the whole queue.
+     *
+     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     *
+     * @return void
+     */
+    public function testCompleteBookingSchedulesWalkInQueueRebalanceJob(): void
+    {
         $object = $this->createMock(originalClassName: ObjectService::class);
-        $object->method('find')->willReturn($booking);
+        $object->method('find')->willReturn($this->completableBooking());
         $object->method('saveObject')->willReturn(['@self' => ['id' => 'b-finish']]);
 
-        $rebalance = new class {
+        $jobList = $this->createMock(originalClassName: IJobList::class);
+        $jobList->expects($this->once())
+            ->method('add')
+            ->with(WalkInQueueRebalanceJob::class);
 
-            /**
-             * Number of rebalance invocations seen by the seam.
-             *
-             * @var int
-             */
-            public int $calls = 0;
-
-            /**
-             * Capture rebalance call.
-             *
-             * @return int Tickets touched (irrelevant for assertion).
-             */
-            public function rebalance(): int
-            {
-                $this->calls++;
-                return 0;
-            }//end rebalance()
-        };
-
-        [$service] = $this->buildService(objectService: $object);
-        $service->setWalkInQueueRebalance(service: $rebalance);
+        [$service] = $this->buildService(objectService: $object, jobList: $jobList);
 
         $service->completeBooking(bookingId: 'b-finish');
 
-        $this->assertSame(expected: 1, actual: $rebalance->calls);
+    }//end testCompleteBookingSchedulesWalkInQueueRebalanceJob()
 
-    }//end testCompleteBookingFiresWalkInQueueRebalanceSeam()
+    /**
+     * The completing request must write exactly ONE object through this
+     * service's ObjectService — the booking itself. Before the rebalance was
+     * deferred, completeBooking() reached WalkInQueueService::rebalance(),
+     * which fans out to one saveObject() per waiting ticket (measured at
+     * QUEUE_PAGE_SIZE = 200 by
+     * WalkInQueueServiceTest::testRebalanceFansOutOneSaveObjectPerWaitingTicket).
+     *
+     * This pins the write budget of the completion path. It constrains any
+     * re-introduced fan-out that goes through the container-resolved
+     * ObjectService; it cannot see one routed through a separately-injected
+     * collaborator, which is why the enqueue itself is asserted separately.
+     *
+     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     *
+     * @return void
+     */
+    public function testCompleteBookingWritesOnlyTheBookingItself(): void
+    {
+        $object = $this->createMock(originalClassName: ObjectService::class);
+        $object->method('find')->willReturn($this->completableBooking());
+        $object->expects($this->once())
+            ->method('saveObject')
+            ->willReturn(['@self' => ['id' => 'b-finish']]);
+
+        [$service] = $this->buildService(objectService: $object);
+
+        $service->completeBooking(bookingId: 'b-finish');
+
+    }//end testCompleteBookingWritesOnlyTheBookingItself()
+
+    /**
+     * A job list that cannot accept the rebalance must not fail the booking:
+     * the completion is already persisted, so the enqueue is best-effort.
+     *
+     * @spec openspec/changes/appointment-booking-09-walkin-queue/specs/appointment-booking/spec.md#req-apt-012
+     *
+     * @return void
+     */
+    public function testCompleteBookingSurvivesAnUnavailableJobList(): void
+    {
+        $object = $this->createMock(originalClassName: ObjectService::class);
+        $object->method('find')->willReturn($this->completableBooking());
+        $object->method('saveObject')->willReturn(['@self' => ['id' => 'b-finish']]);
+
+        $jobList = $this->createMock(originalClassName: IJobList::class);
+        $jobList->method('add')->willThrowException(new \RuntimeException('job list down'));
+
+        [$service] = $this->buildService(objectService: $object, jobList: $jobList);
+
+        $service->completeBooking(bookingId: 'b-finish');
+
+        $this->addToAssertionCount(count: 1);
+
+    }//end testCompleteBookingSurvivesAnUnavailableJobList()
 }//end class
