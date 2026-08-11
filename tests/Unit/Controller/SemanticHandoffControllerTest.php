@@ -334,4 +334,117 @@ class SemanticHandoffControllerTest extends TestCase
         $this->assertSame('inv-7', $response->getData()['invoiceReference']);
         $this->assertSame('inv-7', $this->objectService->store['c-1']['invoiceReference']);
     }//end testSendContractSuccess()
+
+    /**
+     * Unauthenticated contract-availability probe is refused with 401 and no
+     * implementer lookup is attempted.
+     *
+     * @return void
+     */
+    public function testContractAvailabilityUnauthorized(): void
+    {
+        $this->userSession->method('getUser')->willReturn(null);
+        $this->handoffService->expects($this->never())->method('hasImplementer');
+
+        $response = $this->controller->contractAvailability(id: 'c-1');
+
+        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+        $this->assertSame(['status' => 'unauthorized'], $response->getData());
+    }//end testContractAvailabilityUnauthorized()
+
+    /**
+     * An unknown contract is reported as 404 without consulting the handoff
+     * registry.
+     *
+     * @return void
+     */
+    public function testContractAvailabilityNotFound(): void
+    {
+        $this->signIn();
+        $this->handoffService->expects($this->never())->method('hasImplementer');
+
+        $response = $this->controller->contractAvailability(id: 'nope');
+
+        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+        $this->assertSame(['status' => 'not-found'], $response->getData());
+    }//end testContractAvailabilityNotFound()
+
+    /**
+     * An active contract with an invoice implementer present reports the full
+     * triple with `canSend: true`.
+     *
+     * @return void
+     */
+    public function testContractAvailabilityAllowsSendingAnActiveContract(): void
+    {
+        $this->signIn();
+        $this->objectService->store['c-1'] = ['uuid' => 'c-1', 'status' => 'active'];
+        $this->handoffService->method('hasImplementer')->willReturn(true);
+
+        $response = $this->controller->contractAvailability(id: 'c-1');
+
+        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame(
+            ['available' => true, 'status' => 'active', 'canSend' => true],
+            $response->getData()
+        );
+    }//end testContractAvailabilityAllowsSendingAnActiveContract()
+
+    /**
+     * A non-active contract reports its real status and refuses sending, even
+     * when an implementer is present.
+     *
+     * @return void
+     */
+    public function testContractAvailabilityRefusesANonActiveContract(): void
+    {
+        $this->signIn();
+        $this->objectService->store['c-2'] = ['uuid' => 'c-2', 'status' => 'draft'];
+        $this->handoffService->method('hasImplementer')->willReturn(true);
+
+        $response = $this->controller->contractAvailability(id: 'c-2');
+
+        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame(
+            ['available' => true, 'status' => 'draft', 'canSend' => false],
+            $response->getData()
+        );
+    }//end testContractAvailabilityRefusesANonActiveContract()
+
+    /**
+     * With no invoice implementer registered, an active contract still reports
+     * its status but `available` and `canSend` are both false.
+     *
+     * @return void
+     */
+    public function testContractAvailabilityReportsNoImplementer(): void
+    {
+        $this->signIn();
+        $this->objectService->store['c-3'] = ['uuid' => 'c-3', 'status' => 'active'];
+        $this->handoffService->method('hasImplementer')->willReturn(false);
+
+        $response = $this->controller->contractAvailability(id: 'c-3');
+
+        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame(
+            ['available' => false, 'status' => 'active', 'canSend' => false],
+            $response->getData()
+        );
+    }//end testContractAvailabilityReportsNoImplementer()
+
+    /**
+     * The probe is read-only — it must never write to the contract.
+     *
+     * @return void
+     */
+    public function testContractAvailabilityWritesNothing(): void
+    {
+        $this->signIn();
+        $this->objectService->store['c-4'] = ['uuid' => 'c-4', 'status' => 'active'];
+        $this->handoffService->method('hasImplementer')->willReturn(true);
+
+        $this->controller->contractAvailability(id: 'c-4');
+
+        $this->assertSame([], $this->objectService->saves);
+    }//end testContractAvailabilityWritesNothing()
 }//end class
