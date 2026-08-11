@@ -231,6 +231,49 @@ class ActivityTimelineControllerTest extends TestCase
     }//end testGetTimelineReturnsNotFoundForAnAbsentEntity()
 
     /**
+     * When the object service cannot answer, the entity check DENIES.
+     *
+     * Regression for #801. `objectExists()` used to `return true` from its
+     * catch — "fails open so a temporary OR outage does not block the timeline
+     * surface" — which made an unavailable object service indistinguishable
+     * from a successful check on a caller-supplied `entityId` (CWE-863). This
+     * branch had no test at all, so the behaviour change was invisible to the
+     * other 2171.
+     *
+     * @return void
+     */
+    public function testGetTimelineDeniesWhenTheEntityCheckCannotBeCompleted(): void
+    {
+        $this->objects = new class {
+            /**
+             * Stand in for an object service that is unavailable.
+             *
+             * @param int|string $id      Object id.
+             * @param array|null $_extend Extend directives.
+             * @param bool       $files   Include files.
+             *
+             * @return array<string, mixed>|null
+             *
+             * @throws \RuntimeException Always.
+             */
+            public function find(int|string $id, ?array $_extend=[], bool $files=false): ?array
+            {
+                throw new \RuntimeException('object service unavailable');
+            }//end find()
+        };
+
+        $this->signIn();
+        $this->withParams(['entityType' => 'client', 'entityId' => 'someone-elses-client']);
+        // The point of the fix: an unanswerable check must not become an
+        // answered one. The timeline service is never reached.
+        $this->service->expects($this->never())->method('getTimeline');
+
+        $response = $this->buildController()->getTimeline();
+
+        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+    }//end testGetTimelineDeniesWhenTheEntityCheckCannotBeCompleted()
+
+    /**
      * A service failure is mapped to a 500 carrying a static message — no
      * internal exception text may reach the wire.
      *
