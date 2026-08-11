@@ -26,6 +26,8 @@ Dolibarr, Salesforce Einstein, Zoho, HubSpot)
 
 ### Requirement: Recency-decayed win probability is derived on every lead
 
+@e2e exclude the four decay bands are keyed on `@self.updated` — OpenRegister's own write timestamp, which no client may set — so "a lead untouched for 45 days" and "for 90 days" are states a browser session cannot construct, and a Playwright run cannot wait 90 days to reach them. The decay itself is not pipelinq code at all: it is a declarative `x-openregister-calculations` expression with `materialise: false` on the `lead` schema in lib/Settings/pipelinq_register.json (`components.schemas.lead.configuration.x-openregister-calculations.winProbability`), evaluated by OpenRegister's expression engine on every read, and this spec's own Purpose records that no service class exists to unit-test. What pipelinq is responsible for — never writing the field itself and passing OpenRegister's computed value through untouched — is asserted by tests/Unit/Service/LeadServiceTest.php (testCreateLeadWritesLeadAndReturnsMaterialisedCalculations, which asserts `winProbability` is absent from the saved object and present unmodified on the returned lead). That the delivered value reaches the UI is asserted end to end by tests/e2e/spec-coverage/lead-scoring-win-probability.spec.ts.
+
 The `lead` schema SHALL declare a `winProbability` calculation
 (`x-openregister-calculations`) that yields an integer 0–100. The value SHALL be
 the lead's `probability` decayed by inactivity, measured as the whole-day
@@ -79,6 +81,8 @@ index in `src/manifest.json`, the index column reusing the existing
 The register seed SHALL include representative leads whose age and `probability`
 place them across the hot / warm / cold bands, so the surfaced value is verifiable
 on a fresh install.
+
+@e2e exclude the scenario is unsatisfiable on the install it names. The three band seeds in lib/Settings/pipelinq_register.json say so themselves: the warm one is annotated "winProbability decays toward the 80%/50% bands **as this seed ages past 14/30 days untouched**" and the cold one "decays to the 25% band **once this seed ages past 60 days untouched**". On a FRESH import every seed's `@self.updated` is the import moment, so all three read their full probability and no decayed band exists to observe — and CI reimports on every run (tests/e2e/ci-seed.sh step 1). The observable half, that the seeded leads render a 0-100 Win % through the shared banded cell widget, IS asserted by tests/e2e/spec-coverage/lead-scoring-win-probability.spec.ts ("the Leads index renders a Win % column through the shared banded cell widget"). Making this scenario testable needs seeds with an explicitly backdated activity timestamp, which is a product change, not a test change.
 
 #### Scenario: Seed leads render distinct bands
 - **WHEN** the register seed is imported and the `Leads` index is opened
