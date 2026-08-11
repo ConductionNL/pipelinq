@@ -77,10 +77,24 @@ function manifestPage(doc: any, id: string): any {
  * long note on dismissWalkthrough() in helpers/pipelinq.ts.
  */
 async function gotoPage(page: Page, hash: string): Promise<void> {
-	await openApp(page)
-	await page.goto(`/apps/pipelinq/#${hash}`)
-	// Same-document hash change does not remount the view; reload does.
-	await page.reload()
+	// THREE NAVIGATIONS PER CALL WAS THE COST, NOT A SLOW PAGE (run 31478695902).
+	// This used to be openApp() -> goto(hash) -> reload() unconditionally: a full
+	// document load, a same-document hash change, then a SECOND full load. The
+	// kept-custom test calls it twice, so one test paid for six navigations and
+	// blew the 60 s budget inside `page.reload`. The fix is to stop doing the
+	// redundant work rather than to raise the timeout — the pages themselves
+	// render fine, as every other test using them shows.
+	//
+	// The reload is only needed when the app is ALREADY mounted, because then the
+	// hash change is same-document and does not remount the view. On the first
+	// navigation of a test the goto IS a full document load and already mounts
+	// the target route.
+	const target = `/apps/pipelinq/#${hash}`
+	const alreadyMounted = page.url().includes('/apps/pipelinq')
+	await page.goto(target)
+	if (alreadyMounted) {
+		await page.reload()
+	}
 	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 20000 })
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
@@ -149,10 +163,35 @@ async function clickFirstRowAction(page: Page, labelSlug: string): Promise<void>
 	}
 
 	// Single-action shape: the action itself is the cell's only control.
-	const inline = cell.locator(testid).first()
-	await expect(inline, `row action "${labelSlug}" must be the row's inline control`)
-		.toBeVisible({ timeout: 10000 })
-	await inline.click()
+	//
+	// MEASURED CORRECTION (run 31478695902). The paragraph above is right that
+	// NcActions collapses a lone action to an inline button, but wrong that
+	// `renderInlineAction` forwards `data-testid` onto it: all three
+	// single-action pages (ZReports "Openen", Bookings "Open", Services "View")
+	// failed with `element(s) not found` on
+	// `td.cn-table-col--actions [data-testid="cn-action-item-<slug>"]`. The
+	// testid is real — CnRowActions stamps it on the NcActionButton vnode — but
+	// on this branch it does not survive onto the rendered control.
+	//
+	// So the inline branch is identified STRUCTURALLY instead: no popover
+	// trigger and exactly one button in the actions cell IS the single-action
+	// shape, and that button is the action. Asserting the count is what keeps
+	// this from being a blind "click whatever is there" — if a page ever grew a
+	// second action without gaining a menu toggle, this fails rather than
+	// silently invoking the wrong one. The proof that the RIGHT action ran is
+	// the caller's assertion on the route it navigates to.
+	const buttons = cell.locator('button')
+	await expect(
+		buttons,
+		`row action "${labelSlug}": expected the single-action inline shape `
+		+ '(no menu toggle, exactly one control in the actions cell)',
+	).toHaveCount(1, { timeout: 10000 })
+
+	// Prefer the testid when it IS present, so the stronger handle is used
+	// wherever the library forwards it.
+	const tagged = cell.locator(testid)
+	const target = (await tagged.count()) > 0 ? tagged.first() : buttons.first()
+	await target.click()
 }
 
 /**
@@ -506,8 +545,20 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		const identityLabels = content.locator('.cn-object-data-widget__label')
 		await expect(identityLabels.first()).toBeVisible({ timeout: 25000 })
 		const lang = await pageLanguage(page)
-		// The `client` schema's property titles for the widget's `include` set.
-		for (const field of ['Name', 'Email', 'Phone', 'Website']) {
+		// The `client` schema's property titles for the widget's `include` set,
+		// restricted to the ones EVERY seeded client carries.
+		//
+		// MEASURED (run 31478695902): requiring "Website" failed. The widget's
+		// include set is [name, email, phone, address, website], but
+		// `lib/Settings/demo_seed_data.json` gives a `website` to exactly ONE of
+		// its five clients (`bakkerij`); the other four have no such key, and the
+		// data widget omits a field with no value. So the assertion's outcome
+		// depended on which client the picker above happened to return — green or
+		// red by luck of the seed order, which is a false-green generator either
+		// way. The four fields below are present on all five seeded clients, so
+		// this now asserts the same thing (the declared include set renders)
+		// without depending on which client is opened.
+		for (const field of ['Name', 'Email', 'Phone', 'Address']) {
 			const expected = renderedLabel(field, lang)
 			await expect(
 				identityLabels.filter({ hasText: expected }).first(),
