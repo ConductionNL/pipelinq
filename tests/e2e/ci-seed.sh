@@ -368,7 +368,24 @@ fi
 # reproduce that state, because `tests/e2e/global-setup.ts`'s
 # `ensureBundleBuilt()` does an `fs.existsSync()` check and silently rebuilds
 # it. TRUNCATE the file instead.
-if [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
+#
+# PIPELINQ_SEED_BUNDLE_GATE=off — the ONE legitimate opt-out, and it is narrow.
+# This gate asks "can the SPA mount?", which is a question only a job that
+# drives a browser has any stake in. The shared workflow's Newman job
+# (`quality.yml`, job `newman`) has no "Build app frontend" step at all: its
+# steps are checkout → setup-php → install NC → composer install → app:enable →
+# `php -S` → seed → newman. There is therefore never a bundle to serve there,
+# and leaving the gate armed would fail the seed — and so the whole job — for a
+# reason that has nothing to do with any API assertion Newman makes.
+#
+# It is an explicit opt-out rather than a sniff for "is a browser involved"
+# precisely so it cannot switch itself off: `tests/newman/ci-seed.sh` sets it,
+# nothing else does, and the Playwright path is untouched. If you find yourself
+# setting it for a job that DOES render the app, you are disarming a real gate.
+if [ "${PIPELINQ_SEED_BUNDLE_GATE:-on}" != "on" ]; then
+	echo "[ci-seed] bundle gate disabled by PIPELINQ_SEED_BUNDLE_GATE=${PIPELINQ_SEED_BUNDLE_GATE}."
+	echo "[ci-seed] (API-only caller — no frontend build in this job, so there is no bundle to verify.)"
+elif [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
 	case "$BUNDLE_INFO" in
 		*javascript*)
 			echo "[ci-seed] bundle verified as JavaScript."

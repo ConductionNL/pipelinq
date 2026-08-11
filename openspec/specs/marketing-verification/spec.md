@@ -9,6 +9,21 @@ Defines the end-to-end verification and pre-merge checklist for the marketing bl
 ## Requirements
 ### Requirement: End-to-End Verification Passes
 
+@e2e exclude this is a PRE-MERGE VERIFICATION CHECKLIST, not a behavioural
+requirement — three of its four scenarios have "WHEN verification runs" or
+"WHEN `composer test` runs" as their trigger, i.e. their subject is the release
+process, and one ("Tests green with coverage") asserts a coverage percentage,
+which no browser can observe. The behaviour the remaining items re-state is
+already specified — and covered — in the capabilities that own it:
+`marketing-compliance` ("Send blocked with missing consent list", "Save
+rejected if unsubscribe token missing", "Withdrawal updates consent and skips
+queued deliveries"), `marketing-ui` ("Missing-consent modal on send"),
+`marketing-blast-delivery` (the unsubscribe webhook) and `marketing-analytics`
+(the significance test). All of those headings were read to confirm the overlap
+before this was written. Anchoring a second e2e test here would assert the same
+behaviour twice under a heading that is not its canonical home, and the two
+copies would drift.
+
 The marketing blast feature SHALL be verified end to end before the chain is
 considered complete.
 
@@ -39,6 +54,18 @@ considered complete.
 - **AND** the unsubscribe SHALL withdraw consent within 60 seconds and future sends SHALL skip the contact
 
 ### Requirement: Pre-Merge Security Checklist
+
+@e2e exclude the subject here is a CHECKLIST COMPLETED BEFORE A PR IS
+SUBMITTED — "the pre-merge checklist SHALL confirm …" — so the thing required
+to happen occurs outside any running instance and before the code is merged. A
+browser test cannot observe whether a reviewer ticked a box. The pattern
+invariants it lists are the ones already enforced mechanically on every PR by
+the hydra gate suite (ObjectService-only CRUD by gate-20 `or-objectservice-api`
+and gate-23 `or-abstraction-anti-patterns`; the auth posture of every route by
+gates 5, 7, 9; consent gating and template enforcement by the
+`marketing-compliance` capability's own scenarios) — enforcement that runs
+whether or not anyone remembers the checklist, which is strictly stronger than
+the checklist itself.
 
 The pre-merge checklist SHALL confirm the security and pattern invariants
 before the PR is submitted.
