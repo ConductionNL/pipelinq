@@ -41,7 +41,7 @@ class LoyaltyRegisterFragmentTest extends TestCase
             'loyaltyProgramme',
             'pointsRule',
             'tierRule',
-            'klantLoyaltyAccount',
+            'customerLoyaltyAccount',
             'pointsLedgerEntry',
             'redemptionOption',
             'redemption',

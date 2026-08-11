@@ -61,7 +61,10 @@ class SchemaMapService
         'loyaltyProgramme_schema'    => 'loyaltyProgramme',
         'pointsRule_schema'          => 'pointsRule',
         'tierRule_schema'            => 'tierRule',
-        'klantLoyaltyAccount_schema' => 'klantLoyaltyAccount',
+        // The KEY is a persisted oc_appconfig name — renaming it would silently
+        // unconfigure every existing instance, so it stays until a migration ships.
+        // The VALUE is the schema slug, which the register now declares in English.
+        'klantLoyaltyAccount_schema' => 'customerLoyaltyAccount',
         'pointsLedgerEntry_schema'   => 'pointsLedgerEntry',
         'redemptionOption_schema'    => 'redemptionOption',
         'redemption_schema'          => 'redemption',

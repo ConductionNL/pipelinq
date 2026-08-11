@@ -9,8 +9,8 @@
 
 		<form @submit.prevent="enroll">
 			<NcTextField
-				v-model="klantId"
-				:label="t('pipelinq', 'Customer (klantId / contact UID)')"
+				v-model="customerId"
+				:label="t('pipelinq', 'Customer (customerId / contact UID)')"
 				required />
 
 			<NcSelect
@@ -65,7 +65,7 @@ export default {
 	components: { NcButton, NcCheckboxRadioSwitch, NcNoteCard, NcSelect, NcTextField },
 	data() {
 		return {
-			klantId: '',
+			customerId: '',
 			selectedProgramme: null,
 			programmes: [],
 			optInAccepted: false,
@@ -81,7 +81,7 @@ export default {
 			return this.selectedProgramme && this.selectedProgramme.termsUrl
 		},
 		canSubmit() {
-			return this.optInAccepted && this.klantId && this.selectedProgramme
+			return this.optInAccepted && this.customerId && this.selectedProgramme
 		},
 		resultId() {
 			if (!this.result) {
@@ -117,7 +117,7 @@ export default {
 			try {
 				// Create the account via OR /objects, with opt-in fields set.
 				const payload = {
-					klantId: this.klantId,
+					customerId: this.customerId,
 					programmeId: this.selectedProgramme.id,
 					currentBalance: 0,
 					lifetimePoints: 0,
@@ -125,11 +125,11 @@ export default {
 					optInAccepted: true,
 					optInTimestamp: new Date().toISOString(),
 					optInTermsVersion: this.termsVersion,
-					aangemaaktOp: new Date().toISOString(),
+					createdOn: new Date().toISOString(),
 					lastActivityDate: new Date().toISOString(),
 				}
 				const response = await axios.post(
-					generateUrl('/apps/openregister/api/objects/pipelinq/klantLoyaltyAccount'),
+					generateUrl('/apps/openregister/api/objects/pipelinq/customerLoyaltyAccount'),
 					payload,
 				)
 				this.result = response.data

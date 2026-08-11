@@ -351,7 +351,7 @@ class LoyaltyReportingService
 
         $totalCost = 0.0;
         foreach ($debits as $entry) {
-            $bron = $entry['brondocument'] ?? [];
+            $bron = $entry['sourceDocument'] ?? [];
             if (is_array($bron) === false || isset($bron['optionId']) === false) {
                 continue;
             }
@@ -485,6 +485,8 @@ class LoyaltyReportingService
     private function accountConfig(): array
     {
         $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        // Persisted oc_appconfig key — deliberately still Dutch. Renaming it would
+        // unconfigure every existing instance; it needs a migration, not an edit.
         $schema   = $this->appConfig->getValueString(Application::APP_ID, 'klantLoyaltyAccount_schema', '');
         if ($register === '' || $schema === '') {
             throw new RuntimeException('KlantLoyaltyAccount register/schema is not configured.');

@@ -389,7 +389,7 @@ class PortalContributionProvider
      *
      * The `avgVerzoek` DSAR self-service collection + intake action were removed
      * by consume-or-dsar (ADR-047 Phase 3) — DSAR moved to OpenRegister.
-     * `klantLoyaltyAccount` is scoped by `klantId`
+     * `customerLoyaltyAccount` is scoped by `customerId`
      * via `claims.pipelinq.customerUid` (Nextcloud contact UID — a DIFFERENT
      * identifier space than contactId, see design.md). `booking` is scoped by
      * `customerId` (also a Nextcloud addressbook contact ref → `customerUid`)
@@ -420,8 +420,8 @@ class PortalContributionProvider
                 [
                     'id'         => 'customerLoyalty',
                     'register'   => self::REGISTER,
-                    'schema'     => 'klantLoyaltyAccount',
-                    'scopeField' => 'klantId',
+                    'schema'     => 'customerLoyaltyAccount',
+                    'scopeField' => 'customerId',
                     'scopeClaim' => 'customerUid',
                     'label'      => 'My loyalty account',
                     'listable'   => true,

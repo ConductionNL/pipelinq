@@ -106,7 +106,7 @@ class SettingsLoadService
         'loyaltyProgramme',
         'pointsRule',
         'tierRule',
-        'klantLoyaltyAccount',
+        'customerLoyaltyAccount',
         'pointsLedgerEntry',
         'redemptionOption',
         'redemption',

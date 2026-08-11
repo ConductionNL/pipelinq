@@ -62,7 +62,7 @@ class PointsRuleEngineTest extends TestCase
             formula: ['type' => 'percentage', 'value' => 1],
             amount: 45.50
         );
-        $this->assertSame(45, $points, 'Percentage formule must floor 45.5 -> 45');
+        $this->assertSame(45, $points, 'Percentage formula must floor 45.5 -> 45');
     }//end testCalculatePointsPercentageFormula()
 
     public function testCalculatePointsAppliesMultiplier(): void

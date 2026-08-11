@@ -571,7 +571,7 @@ const registry = {
 	LoyaltyAccountCreationView: {
 		kind: 'page',
 		component: LoyaltyAccountCreationView,
-		_note: 'GDPR-compliant loyalty account enrollment form: mandatory opt-in checkbox, terms version capture, klantId+programmeId input (REQ-LOY-010-01).',
+		_note: 'GDPR-compliant loyalty account enrollment form: mandatory opt-in checkbox, terms version capture, customerId+programmeId input (REQ-LOY-010-01).',
 	},
 
 	// --- Admin managers. ---

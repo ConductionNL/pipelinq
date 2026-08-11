@@ -99,7 +99,7 @@ class LoyaltyControllerTest extends TestCase
             ->with(null, 50.0, 365, 'purchased', 'Bram')
             ->willReturn(
                 [
-                    'card' => ['@self' => ['id' => 'gc-1'], 'serial' => 'GC-00000042', 'status' => 'issued', 'currentBalans' => 50.0],
+                    'card' => ['@self' => ['id' => 'gc-1'], 'serial' => 'GC-00000042', 'status' => 'issued', 'currentBalance' => 50.0],
                     'pin'  => '123456',
                 ]
             );
@@ -108,7 +108,7 @@ class LoyaltyControllerTest extends TestCase
             giftCardService: $giftCardService,
             params: [
                 'initialBalance' => '50',
-                'uitgegevenAan'  => 'Bram',
+                'issuedTo'  => 'Bram',
             ]
         );
 
