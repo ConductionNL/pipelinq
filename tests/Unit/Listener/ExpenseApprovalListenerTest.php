@@ -87,13 +87,15 @@ class ExpenseApprovalListenerTest extends TestCase
      */
     private function entity(string $schema, array $data): ObjectEntity
     {
-        $entity = $this->getMockBuilder(ObjectEntity::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getSchema', 'getUuid', 'getObject', 'jsonSerialize'])
-            ->getMock();
-        $entity->method('getSchema')->willReturn($schema);
-        $entity->method('getUuid')->willReturn((string) ($data['uuid'] ?? 'exp-1'));
-        $entity->method('getObject')->willReturn($data);
+        // A REAL entity, not a mock. Production's getSchema()/getUuid() are served
+        // by Entity::__call and are not declared methods, so a double that declares
+        // them (or a mock configured through onlyMethods) inverts the very
+        // predicate the listener guards on — that inversion is what kept this
+        // listener's death invisible for the life of the feature (pipelinq#807).
+        $entity = new ObjectEntity();
+        $entity->setUuid((string) ($data['uuid'] ?? 'exp-1'));
+        $entity->setSchema($schema);
+        $entity->setObject($data);
         return $entity;
     }//end entity()
 

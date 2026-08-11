@@ -30,6 +30,7 @@ use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\LoyaltyEngineService;
 use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -40,9 +41,13 @@ use Throwable;
  * Listens for posTransaction created/updated events and triggers the loyalty engine.
  *
  * @implements IEventListener<Event>
+ *
+ * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
  */
 class PosTransactionCompletedListener implements IEventListener
 {
+    use EntityAccessorTrait;
+
     /**
      * Constructor.
      *
@@ -84,26 +89,44 @@ class PosTransactionCompletedListener implements IEventListener
 
             $data = $this->getEntityData(entity: $entity);
 
-            // Only fire for completed/settled transactions.
+            // Only fire for completed/settled transactions. The live posTransaction
+            // status enum is draft|parked|confirmed|settled|refunded; 'completed'
+            // and 'paid' are retained for payloads written by older POS clients.
             $status = (string) ($data['status'] ?? '');
             if (in_array($status, ['completed', 'settled', 'paid'], true) === false) {
                 return;
             }
 
-            $klantId = (string) ($data['klantId'] ?? $data['customerId'] ?? $data['contactUid'] ?? '');
+            // The customer link on a posTransaction is `customer` — a uuid ref to a
+            // pipelinq contact, which is exactly what processPosTransaction() calls
+            // its $klantId. `klantId` / `customerId` / `contactUid` are a retired
+            // vocabulary that the posTransaction schema has never declared and that
+            // nothing in this codebase writes, so this read resolved to '' on every
+            // real transaction and returned before awarding anything (pipelinq#807).
+            $klantId = (string) ($data['customer'] ?? $data['klantId'] ?? $data['customerId'] ?? $data['contactUid'] ?? '');
             if ($klantId === '') {
                 // Anonymous transaction; no points to award.
                 return;
             }
 
+            // Same correction for the transaction context: the schema declares
+            // total / settledAt / reference / terminalId. The Dutch keys below them
+            // (totaalbedrag / voltooidOp / transactieId / kanaal) appear nowhere else
+            // in the app and are kept only as a fallback for legacy payloads —
+            // without the schema names an award would have been computed on amount 0.
+            $transactionId = (string) ($data['reference'] ?? $data['transactieId'] ?? $data['transactionId'] ?? '');
+            if ($transactionId === '') {
+                $transactionId = $this->getEntityUuid(entity: $entity);
+            }
+
             $context = [
-                'amount'           => (float) ($data['totaalbedrag'] ?? $data['amount'] ?? 0),
+                'amount'           => (float) ($data['total'] ?? $data['totaalbedrag'] ?? $data['amount'] ?? 0),
                 'category'         => (string) ($data['category'] ?? ''),
                 'channel'          => (string) ($data['kanaal'] ?? $data['channel'] ?? 'offline'),
                 'segment'          => (string) ($data['segment'] ?? ''),
-                'timestamp'        => (string) ($data['voltooidOp'] ?? $data['timestamp'] ?? ''),
-                'posTransactionId' => (string) ($data['transactieId'] ?? $data['transactionId'] ?? $this->getEntityUuid(entity: $entity)),
-                'posTerminalId'    => (string) ($data['posTerminalId'] ?? $data['terminalId'] ?? ''),
+                'timestamp'        => (string) ($data['settledAt'] ?? $data['voltooidOp'] ?? $data['timestamp'] ?? ''),
+                'posTransactionId' => $transactionId,
+                'posTerminalId'    => (string) ($data['terminalId'] ?? $data['posTerminalId'] ?? ''),
                 'trigger'          => 'purchase',
             ];
 
@@ -126,18 +149,23 @@ class PosTransactionCompletedListener implements IEventListener
      */
     private function isPosTransaction(object $entity): bool
     {
-        if (method_exists($entity, 'getSchema') === false) {
+        // `getSchema()` is served by Entity::__call, so method_exists() is FALSE
+        // for it on a real ObjectEntity; probing with it made this guard reject
+        // every POS transaction and switched the loyalty award path off
+        // entirely. Read the value instead (pipelinq#807).
+        $schemaId = $this->readEntityValue(entity: $entity, getter: 'getSchema');
+        if ($schemaId === '') {
             return false;
         }
 
-        $entityType = $this->schemaMapService->resolveEntityType(schemaId: (string) $entity->getSchema());
+        $entityType = $this->schemaMapService->resolveEntityType(schemaId: $schemaId);
         if ($entityType === 'posTransaction') {
             return true;
         }
 
         // Fallback: direct compare against app-config posTransaction_schema.
         $posSchema = $this->appConfig->getValueString(Application::APP_ID, 'posTransaction_schema', '');
-        return $posSchema !== '' && (string) $entity->getSchema() === $posSchema;
+        return $posSchema !== '' && $schemaId === $posSchema;
     }//end isPosTransaction()
 
     /**
@@ -175,10 +203,9 @@ class PosTransactionCompletedListener implements IEventListener
      */
     private function getEntityUuid(object $entity): string
     {
-        if (method_exists($entity, 'getUuid') === true) {
-            return (string) $entity->getUuid();
-        }
-
-        return '';
+        // `getUuid()` is magic too — the method_exists() probe here made this
+        // return '' unconditionally, so the loyalty context carried an empty
+        // posTransactionId whenever the payload had no reference (pipelinq#807).
+        return $this->readEntityValue(entity: $entity, getter: 'getUuid');
     }//end getEntityUuid()
 }//end class

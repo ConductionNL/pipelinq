@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
 use OCP\IGroupManager;
@@ -47,6 +48,8 @@ use RuntimeException;
  */
 class ContactmomentService
 {
+    use EntityAccessorTrait;
+
     /**
      * Constructor.
      *
@@ -199,12 +202,18 @@ class ContactmomentService
             return null;
         }
 
-        if (is_object($saved) === true && method_exists($saved, 'getUuid') === true) {
-            return (string) $saved->getUuid();
-        }
-
         if (is_array($saved) === true) {
             return (string) ($saved['uuid'] ?? ($saved['id'] ?? ''));
+        }
+
+        if (is_object($saved) === true) {
+            // SaveObject() returns an ObjectEntity whose getUuid() is served by
+            // Entity::__call — method_exists() is FALSE for it, so the outbound
+            // message row was persisted and this returned null (pipelinq#807).
+            $uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
+            if ($uuid !== '') {
+                return $uuid;
+            }
         }
 
         return null;

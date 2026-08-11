@@ -37,6 +37,7 @@ use OCA\Pipelinq\Event\ExpenseApprovedEvent;
 use OCA\Pipelinq\Service\ApSyncNotifier;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\ShillinqApService;
+use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\EventDispatcher\IEventListener;
@@ -62,6 +63,8 @@ use Throwable;
  */
 class ExpenseApprovalListener implements IEventListener
 {
+    use EntityAccessorTrait;
+
     /**
      * Constructor.
      *
@@ -219,18 +222,23 @@ class ExpenseApprovalListener implements IEventListener
      */
     private function isExpense(object $entity): bool
     {
-        if (method_exists($entity, 'getSchema') === false) {
+        // `getSchema()` is served by Entity::__call, so method_exists() is FALSE
+        // for it on a real ObjectEntity; probing with it turned this listener —
+        // and the whole AP dispatch behind it — permanently off. Read the value
+        // instead and treat '' as "no schema" (pipelinq#807).
+        $schemaId = $this->readEntityValue(entity: $entity, getter: 'getSchema');
+        if ($schemaId === '') {
             return false;
         }
 
-        $entityType = $this->schemaMapService->resolveEntityType(schemaId: (string) $entity->getSchema());
+        $entityType = $this->schemaMapService->resolveEntityType(schemaId: $schemaId);
         if ($entityType === 'expense') {
             return true;
         }
 
         // Fallback: direct compare against app-config expense_schema (REQ-AP-002).
         $expenseSchema = $this->appConfig->getValueString(Application::APP_ID, 'expense_schema', '');
-        return $expenseSchema !== '' && (string) $entity->getSchema() === $expenseSchema;
+        return $expenseSchema !== '' && $schemaId === $expenseSchema;
     }//end isExpense()
 
     /**

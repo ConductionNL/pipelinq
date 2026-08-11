@@ -48,6 +48,20 @@ class ObjectUpdatedEvent extends Event
     /**
      * The updated object entity.
      *
+     * Parity with production (openregister lib/Event/ObjectUpdatedEvent.php:71):
+     * the update event exposes getObject() as well as getNewObject(), and several
+     * pipelinq listeners resolve the entity through the former.
+     *
+     * @return ObjectEntity The new object entity.
+     */
+    public function getObject(): ObjectEntity
+    {
+        return $this->newObject;
+    }//end getObject()
+
+    /**
+     * The updated object entity.
+     *
      * @return ObjectEntity The new object entity.
      */
     public function getNewObject(): ObjectEntity

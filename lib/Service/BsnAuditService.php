@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Container\ContainerInterface;
@@ -47,6 +48,8 @@ use Throwable;
  */
 class BsnAuditService
 {
+    use EntityAccessorTrait;
+
     /**
      * Default retention for audit records (5 years per RvIG guideline).
      */
@@ -148,8 +151,12 @@ class BsnAuditService
             $uuid = '';
             if (is_array($saved) === true) {
                 $uuid = (string) ($saved['@self']['id'] ?? $saved['id'] ?? '');
-            } else if (is_object($saved) === true && method_exists($saved, 'getUuid') === true) {
-                $uuid = (string) $saved->getUuid();
+            } else if (is_object($saved) === true) {
+                // SaveObject() returns an ObjectEntity whose getUuid() is served by
+                // Entity::__call — method_exists() is FALSE for it, so every AVG/BSN
+                // audit record was written and its handle returned as ''
+                // (pipelinq#807); four callers consume that handle.
+                $uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
             }
 
             $this->logger->info(
