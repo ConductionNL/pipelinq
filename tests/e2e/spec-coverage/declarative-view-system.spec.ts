@@ -486,9 +486,31 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		await openApp(fxPage)
 		fx = new FixtureSession(fxPage)
 
-		const clients = await fx.list('client', { _limit: 1 })
+		// PICK A DEMO-SEEDED CLIENT, NOT WHICHEVER ROW COMES BACK FIRST.
+		//
+		// `_limit: 1` took an arbitrary client, and the register is shared: other
+		// specs in this same run create their own clients through the
+		// contact-first dialog with only a name and a type (see
+		// spec-coverage/appointment-booking.spec.ts). Landing on one of those made
+		// the Identity data-widget assertions below fail on `Address` in run
+		// 31481319464 — the widget omits valueless fields, so the test's outcome
+		// depended on which worker had written last. Under `fullyParallel: true`
+		// that is a coin toss, and a coin toss that lands green is worse than one
+		// that lands red.
+		//
+		// Selecting a client that actually carries the widget's include set makes
+		// this deterministic and immune to other specs' fixtures, without
+		// weakening what is asserted: the point of the scenario is that the
+		// declared fields RENDER, which needs a subject that has them.
+		const clients = await fx.list('client', { _limit: 100 })
 		expect(clients.length, 'ci-seed.sh must have seeded at least one client').toBeGreaterThan(0)
-		clientId = String(clients[0].id || clients[0]['@self']?.id)
+		const populated = clients.find((c: any) => c.address && c.email && c.phone)
+		expect(
+			populated,
+			'the demo seed must provide a client carrying the Identity widget include set '
+			+ '(name/email/phone/address) — lib/Settings/demo_seed_data.json seeds five',
+		).toBeTruthy()
+		clientId = String(populated.id || populated['@self']?.id)
 
 		const contacts = await fx.list('contact', { _limit: 1 })
 		expect(contacts.length, 'ci-seed.sh must have seeded at least one contact').toBeGreaterThan(0)

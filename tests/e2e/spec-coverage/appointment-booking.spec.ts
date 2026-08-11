@@ -148,6 +148,16 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		const dialog = fxPage.locator('[data-testid="client-create-dialog"]').first()
 		await expect(dialog).toBeVisible({ timeout: 15000 })
 		await dialog.locator('[data-testid="client-name-input"]').fill(CUSTOMER_NAME)
+		// Email and phone are filled even though this capability does not read
+		// them: the register is SHARED across the whole parallel run, and a client
+		// carrying only a name and a type is a degraded row that other specs can
+		// pick up. In run 31481319464 exactly that happened — the declarative
+		// -view-system Client 360 test took `clients[0]`, landed on a bare fixture
+		// like this one, and failed asserting the Identity widget's fields. That
+		// test now selects a populated client, and this fixture no longer leaves a
+		// half-filled row for anyone else to trip over.
+		await dialog.locator('[data-testid="client-email-input"]').fill('gate19-booking@example.test')
+		await dialog.locator('[data-testid="client-phone-input"]').fill('+31 20 000 0000')
 		await dialog.locator('[data-testid="client-type-select"]').click()
 		// NcSelect teleports its dropdown, so the option is matched page-wide, and
 		// it is awaited rather than clicked blind — the list is populated
