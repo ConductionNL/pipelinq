@@ -83,16 +83,27 @@ async function newIdentity(authenticated: boolean): Promise<APIRequestContext> {
  */
 async function assertCallerIs(ctx: APIRequestContext, expected: string | null): Promise<void> {
 	const res = await ctx.get('/ocs/v2.php/cloud/user?format=json')
+	const body = await res.json().catch(() => null)
+	// The OCS layer signals "not logged in" as HTTP 200 with
+	// `ocs.meta.statuscode: 997`, NOT as a 401 — so the HTTP status is the
+	// wrong channel to read here. An earlier revision of this helper asserted
+	// `status !== 200` and failed on CI against a correctly-anonymous context,
+	// which is the guard working and reporting the wrong reason. Read the
+	// resolved identity itself: absent uid means nobody is authenticated,
+	// whichever way this Nextcloud version chooses to say so.
+	const uid = body?.ocs?.data?.id ?? null
+
 	if (expected === null) {
 		expect(
-			res.status(),
-			'this context must NOT resolve to a Nextcloud session — if it does, a cookie leaked in and the 401 assertion below proves nothing',
-		).not.toBe(200)
+			uid,
+			'this context must NOT resolve to a Nextcloud user — if it does, a cookie leaked in from another identity and the refusal assertion below proves nothing',
+		).toBeNull()
 		return
 	}
-	expect(res.status(), `caller identity probe must succeed for ${expected}`).toBe(200)
-	const body = await res.json()
-	expect(body?.ocs?.data?.id, `this context must be acting as ${expected}`).toBe(expected)
+	expect(
+		uid,
+		`this context must be acting as ${expected}; a different uid (or none) means the jar is shared or the credentials did not authenticate, and the assertions below measure the wrong caller`,
+	).toBe(expected)
 }
 
 test.describe('settings/preferences documented operations', () => {
