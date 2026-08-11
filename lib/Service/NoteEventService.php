@@ -153,7 +153,7 @@ class NoteEventService
             return null;
         }//end try
 
-        return $this->toArray($object);
+        return $this->toArray(row: $object);
     }//end fetchEntityData()
 
     /**

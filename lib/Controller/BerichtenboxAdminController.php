@@ -63,9 +63,9 @@ class BerichtenboxAdminController extends Controller
      * POST /api/admin/berichtenbox/message/{id}/retry — re-queue a failed
      * message for immediate dispatch.
      *
-     * @auth admin-only Re-dispatches a citizen message on any tenant's behalf; restricted to server administrators by the framework default.
-     *
      * @param string $id BerichtenboxMessage uuid.
+     *
+     * @auth admin-only Re-dispatches a citizen message on any tenant's behalf; restricted to server administrators by the framework default.
      *
      * @return JSONResponse
      */
