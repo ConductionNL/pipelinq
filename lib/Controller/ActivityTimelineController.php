@@ -73,13 +73,20 @@ class ActivityTimelineController extends Controller
     /**
      * Verify that the underlying OR object exists and is accessible.
      *
-     * Returns true if the object is found. Returns false on a clean 404.
-     * Fails open on service errors so a temporary OR outage does not block
-     * the entire timeline/worklog surface.
+     * Returns true if the object is found. Returns false on a clean 404 and
+     * **false on any service error**.
+     *
+     * ⚠️ This used to `return true` from the catch, described as "fails open so
+     * a temporary OR outage does not block the timeline surface". That makes an
+     * unavailable object service indistinguishable from a successful check —
+     * CWE-863, and it is the only thing standing between a caller-supplied
+     * `entityId` and someone else's merged contactmoment/worklog/note history
+     * (#801). Availability is not worth trading for it: a failed check now
+     * denies, and the warning still records the outage.
      *
      * @param string $entityId The OR object UUID.
      *
-     * @return bool Whether the object can be accessed.
+     * @return bool Whether the object could be verified.
      */
     private function objectExists(string $entityId): bool
     {
@@ -89,10 +96,10 @@ class ActivityTimelineController extends Controller
             return $object !== null;
         } catch (\Throwable $e) {
             $this->logger->warning(
-                'ActivityTimelineController: could not verify object existence',
+                'ActivityTimelineController: could not verify object existence, denying',
                 ['entityId' => $entityId, 'exception' => $e->getMessage()]
             );
-            return true;
+            return false;
         }
     }//end objectExists()
 

@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ContractController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContractService;
 use OCA\Pipelinq\Service\RecurringRevenueService;
 use OCP\AppFramework\Http;
@@ -138,15 +139,41 @@ class ContractControllerTest extends TestCase
             }//end seed()
 
             /**
-             * Read one row, tolerating any trailing arguments.
+             * Read one row.
              *
-             * @param int|string $id   Object id.
-             * @param mixed      $rest Any further arguments.
+             * ⚠️ This signature MIRRORS `OCA\OpenRegister\Service\ObjectService::find()`
+             * parameter for parameter, and that is load-bearing. It used to be
+             * `find(int|string $id, mixed ...$rest)` — "tolerating any trailing
+             * arguments" — which silently absorbed
+             * `find($id, $registerId, $schemaId)`, the positional call the
+             * controller actually shipped. Against the real service that call
+             * puts a string into `?array $_extend` and raises a TypeError, so
+             * `ContractController::transition` returned 404 to *every* caller,
+             * owner included, and its `isAuthorized()` guard never ran (#801).
+             * A double shaped to what the caller passes cannot detect that the
+             * caller is wrong.
+             *
+             * @param int|string  $id            Object id.
+             * @param array|null  $_extend       Extend directives.
+             * @param bool        $files         Include files.
+             * @param mixed       $register      Register id or slug.
+             * @param mixed       $schema        Schema id or slug.
+             * @param bool        $_rbac         RBAC posture.
+             * @param bool        $_multitenancy Tenancy posture.
+             * @param bool        $_render       Render posture.
              *
              * @return array<string, mixed>|null
              */
-            public function find(int|string $id, mixed ...$rest): ?array
-            {
+            public function find(
+                int|string $id,
+                ?array $_extend=[],
+                bool $files=false,
+                mixed $register=null,
+                mixed $schema=null,
+                bool $_rbac=true,
+                bool $_multitenancy=true,
+                bool $_render=true
+            ): ?array {
                 $row = ($this->store[(string) $id] ?? null);
                 if ($row === null || ($row['_deleted'] ?? null) !== null) {
                     return null;
@@ -368,7 +395,7 @@ class ContractControllerTest extends TestCase
                 logger: $logger,
             ),
             userSession: $this->userSession,
-            groupManager: $this->groupManager,
+            accessPolicy: new ObjectOwnerAccessPolicy(groupManager: $this->groupManager),
             container: $container,
             logger: $logger,
         );
@@ -595,14 +622,13 @@ class ContractControllerTest extends TestCase
 
         $response = $this->buildController($store)->transition(id: 'c-8');
 
-        if ($response->getStatus() === Http::STATUS_NOT_FOUND) {
-            $this->markTestSkipped(
-                'BUG: ContractController::loadContract() passes register/schema positionally to '
-                .'ObjectService::find(), where they land on $_extend/$files — every existing '
-                .'contract resolves to 404. See coordinator report.'
-            );
-        }
-
+        // ⚠️ This assertion used to sit behind
+        // `if ($response->getStatus() === 404) { markTestSkipped(<the bug>); }`.
+        // A conditional self-skip whose condition IS the defect can never fail:
+        // it was green for the whole life of the bug and would have gone green
+        // again once fixed, so it reported "pass" in both worlds and the
+        // security control it protects never ran. The skip is removed; the
+        // assertion now stands on its own.
         $this->assertSame(Http::STATUS_OK, $response->getStatus());
         $this->assertSame('active', $response->getData()['status']);
     }//end testTransitionResolvesTheContractAgainstTheUpstreamFindSignature()

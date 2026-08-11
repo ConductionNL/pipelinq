@@ -26,10 +26,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\SemanticHandoffController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SemanticHandoffService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -48,6 +50,10 @@ class SemanticHandoffControllerTest extends TestCase
     private SemanticHandoffService $handoffService;
     private IUserSession $userSession;
     private object $objectService;
+    private IGroupManager $groupManager;
+    private ContainerInterface $container;
+    private IAppConfig $appConfig;
+    private TicketService $ticketService;
     private SemanticHandoffController $controller;
 
     /**
@@ -59,6 +65,10 @@ class SemanticHandoffControllerTest extends TestCase
     {
         $this->handoffService = $this->createMock(SemanticHandoffService::class);
         $this->userSession    = $this->createMock(IUserSession::class);
+        $this->groupManager   = $this->createMock(IGroupManager::class);
+        // Default: the caller holds no privileged group, so authorization has to
+        // come from ownership. A test that wants the privileged path says so.
+        $this->groupManager->method('isInGroup')->willReturn(false);
 
         $this->objectService = new class {
             /** @var array<string, array<string, mixed>> */
@@ -123,16 +133,36 @@ class SemanticHandoffControllerTest extends TestCase
         $ticketService = $this->createMock(TicketService::class);
         $ticketService->method('getSchemaId')->willReturn('');
 
+        $this->container     = $container;
+        $this->appConfig     = $appConfig;
+        $this->ticketService = $ticketService;
+
+        $this->rebuildControllerWithGroupManager($this->groupManager);
+    }//end setUp()
+
+    /**
+     * Rebuild the controller behind a specific group manager.
+     *
+     * Lets one test exercise the privileged-group branch without loosening the
+     * default (no privileged membership) that every other test relies on.
+     *
+     * @param IGroupManager $groupManager The group manager to authorize against.
+     *
+     * @return void
+     */
+    private function rebuildControllerWithGroupManager(IGroupManager $groupManager): void
+    {
         $this->controller = new SemanticHandoffController(
             $this->createMock(IRequest::class),
             $this->handoffService,
-            $container,
-            $appConfig,
-            $ticketService,
+            $this->container,
+            $this->appConfig,
+            $this->ticketService,
             $this->userSession,
+            new ObjectOwnerAccessPolicy(groupManager: $groupManager),
             $this->createMock(LoggerInterface::class),
         );
-    }//end setUp()
+    }//end rebuildControllerWithGroupManager()
 
     /**
      * Sign a user in.
@@ -303,7 +333,7 @@ class SemanticHandoffControllerTest extends TestCase
     public function testSendContractInvalidStatus(): void
     {
         $this->signIn();
-        $this->objectService->store['c-1'] = ['uuid' => 'c-1', 'status' => 'draft'];
+        $this->objectService->store['c-1'] = ['uuid' => 'c-1', 'status' => 'draft', 'ownerId' => 'agent-1'];
         $this->handoffService->expects($this->never())->method('handoff');
 
         $response = $this->controller->sendContractToInvoicing(id: 'c-1');
@@ -319,7 +349,7 @@ class SemanticHandoffControllerTest extends TestCase
     public function testSendContractSuccess(): void
     {
         $this->signIn();
-        $this->objectService->store['c-1'] = ['uuid' => 'c-1', 'status' => 'active', 'contractNumber' => 'C-2026-1'];
+        $this->objectService->store['c-1'] = ['uuid' => 'c-1', 'status' => 'active', 'contractNumber' => 'C-2026-1', 'ownerId' => 'agent-1'];
         $this->handoffService->method('hasImplementer')->willReturn(true);
         $this->handoffService->method('handoff')->willReturn([
             'ok'            => true,
@@ -370,6 +400,100 @@ class SemanticHandoffControllerTest extends TestCase
     }//end testContractAvailabilityNotFound()
 
     /**
+     * A stranger may not read another user's contract through the availability
+     * endpoint: 403, and the handoff service is never consulted.
+     *
+     * Regression for #801. Before the guard this returned **200** with the
+     * victim's `status`, measured live on a two-account rig.
+     *
+     * @return void
+     */
+    public function testContractAvailabilityRefusesAContractTheCallerDoesNotOwn(): void
+    {
+        $this->signIn();
+        $this->objectService->store['c-9'] = ['uuid' => 'c-9', 'status' => 'active', 'ownerId' => 'someone-else'];
+        $this->handoffService->expects($this->never())->method('hasImplementer');
+
+        $response = $this->controller->contractAvailability(id: 'c-9');
+
+        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+        $this->assertSame(['status' => 'forbidden'], $response->getData());
+    }//end testContractAvailabilityRefusesAContractTheCallerDoesNotOwn()
+
+    /**
+     * A stranger may not mint an invoice against another user's contract: 403,
+     * nothing is handed off and nothing is written back.
+     *
+     * Regression for #801 — the worst endpoint in that issue. Live, the
+     * attacker passed the object load AND the `status === 'active'` gate on the
+     * victim's contract and was stopped only because no app implemented
+     * `ns#Invoice` on that rig (409 `not-available`). On an instance with
+     * shillinq installed the next statement mints a real invoice.
+     *
+     * @return void
+     */
+    public function testSendToInvoicingRefusesAContractTheCallerDoesNotOwn(): void
+    {
+        $this->signIn();
+        $this->objectService->store['c-9'] = ['uuid' => 'c-9', 'status' => 'active', 'ownerId' => 'someone-else'];
+        $this->handoffService->expects($this->never())->method('handoff');
+
+        $response = $this->controller->sendContractToInvoicing(id: 'c-9');
+
+        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+        $this->assertSame(['status' => 'forbidden'], $response->getData());
+        $this->assertSame([], $this->objectService->saves);
+    }//end testSendToInvoicingRefusesAContractTheCallerDoesNotOwn()
+
+    /**
+     * Authorization is decided BEFORE the status gate, so a stranger cannot use
+     * the response to learn whether someone else's contract is active.
+     *
+     * @return void
+     */
+    public function testSendToInvoicingDoesNotLeakStatusOfAForeignContract(): void
+    {
+        $this->signIn();
+        $this->objectService->store['c-10'] = ['uuid' => 'c-10', 'status' => 'draft', 'ownerId' => 'someone-else'];
+
+        $response = $this->controller->sendContractToInvoicing(id: 'c-10');
+
+        // Not `invalid-status`: that answer would confirm the contract exists
+        // and is not active — a working oracle over another user's data.
+        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+        $this->assertSame(['status' => 'forbidden'], $response->getData());
+    }//end testSendToInvoicingDoesNotLeakStatusOfAForeignContract()
+
+    /**
+     * A privileged-group member (sales) may act on a contract they do not own.
+     *
+     * This is the other half of the guard: without it a "deny everything" fix
+     * would pass every test above while breaking the app.
+     *
+     * @return void
+     */
+    public function testSendToInvoicingAllowsAPrivilegedGroupMember(): void
+    {
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isInGroup')->willReturnCallback(
+            static fn (string $uid, string $group): bool => ($group === 'sales')
+        );
+        $this->rebuildControllerWithGroupManager($groupManager);
+
+        $this->signIn();
+        $this->objectService->store['c-11'] = ['uuid' => 'c-11', 'status' => 'active', 'ownerId' => 'someone-else'];
+        $this->handoffService->method('hasImplementer')->willReturn(true);
+        $this->handoffService->method('handoff')->willReturn(
+            ['ok' => true, 'targetUuid' => 'inv-9', 'correlationId' => 'corr-9', 'reason' => '']
+        );
+
+        $response = $this->controller->sendContractToInvoicing(id: 'c-11');
+
+        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame('sent', $response->getData()['status']);
+    }//end testSendToInvoicingAllowsAPrivilegedGroupMember()
+
+    /**
      * An active contract with an invoice implementer present reports the full
      * triple with `canSend: true`.
      *
@@ -378,7 +502,7 @@ class SemanticHandoffControllerTest extends TestCase
     public function testContractAvailabilityAllowsSendingAnActiveContract(): void
     {
         $this->signIn();
-        $this->objectService->store['c-1'] = ['uuid' => 'c-1', 'status' => 'active'];
+        $this->objectService->store['c-1'] = ['uuid' => 'c-1', 'status' => 'active', 'ownerId' => 'agent-1'];
         $this->handoffService->method('hasImplementer')->willReturn(true);
 
         $response = $this->controller->contractAvailability(id: 'c-1');
@@ -399,7 +523,7 @@ class SemanticHandoffControllerTest extends TestCase
     public function testContractAvailabilityRefusesANonActiveContract(): void
     {
         $this->signIn();
-        $this->objectService->store['c-2'] = ['uuid' => 'c-2', 'status' => 'draft'];
+        $this->objectService->store['c-2'] = ['uuid' => 'c-2', 'status' => 'draft', 'ownerId' => 'agent-1'];
         $this->handoffService->method('hasImplementer')->willReturn(true);
 
         $response = $this->controller->contractAvailability(id: 'c-2');
@@ -420,7 +544,7 @@ class SemanticHandoffControllerTest extends TestCase
     public function testContractAvailabilityReportsNoImplementer(): void
     {
         $this->signIn();
-        $this->objectService->store['c-3'] = ['uuid' => 'c-3', 'status' => 'active'];
+        $this->objectService->store['c-3'] = ['uuid' => 'c-3', 'status' => 'active', 'ownerId' => 'agent-1'];
         $this->handoffService->method('hasImplementer')->willReturn(false);
 
         $response = $this->controller->contractAvailability(id: 'c-3');
@@ -440,7 +564,7 @@ class SemanticHandoffControllerTest extends TestCase
     public function testContractAvailabilityWritesNothing(): void
     {
         $this->signIn();
-        $this->objectService->store['c-4'] = ['uuid' => 'c-4', 'status' => 'active'];
+        $this->objectService->store['c-4'] = ['uuid' => 'c-4', 'status' => 'active', 'ownerId' => 'agent-1'];
         $this->handoffService->method('hasImplementer')->willReturn(true);
 
         $this->controller->contractAvailability(id: 'c-4');
