@@ -73,11 +73,12 @@ class PosTransactionCompletedListenerTest extends TestCase
     /**
      * Build the listener with a capturing loyalty engine.
      *
-     * @param string $mappedType The entity type SchemaMapService resolves to.
+     * @param string|null $mappedType     The entity type SchemaMapService resolves to.
+     * @param string      $configuredPos  The `posTransaction_schema` app-config value.
      *
      * @return PosTransactionCompletedListener The listener under test.
      */
-    private function listener(string $mappedType='posTransaction'): PosTransactionCompletedListener
+    private function listener(?string $mappedType='posTransaction', string $configuredPos=''): PosTransactionCompletedListener
     {
         $this->calls = [];
 
@@ -93,7 +94,7 @@ class PosTransactionCompletedListenerTest extends TestCase
         $schemaMap->method('resolveEntityType')->willReturn($mappedType);
 
         $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturn('');
+        $appConfig->method('getValueString')->willReturn($configuredPos);
 
         return new PosTransactionCompletedListener(
             $engine,
@@ -103,6 +104,50 @@ class PosTransactionCompletedListenerTest extends TestCase
         );
 
     }//end listener()
+
+
+    /**
+     * The comparand contract: pipelinq matches on the NUMERIC schema id.
+     *
+     * OpenRegister stamps the schema's numeric id into the entity — measured on
+     * a live Nextcloud 34, `MagicMapper::find(<uuid>)->getSchema()` returns
+     * `'434'` for a posTransaction, and pipelinq's `posTransaction_schema`
+     * app-config holds `434` because `SettingsMapBuilder::addSchemaToMap()`
+     * stores `$schema['id']` keyed by slug. So reading the raw value is
+     * sufficient here and slug resolution would BREAK the comparison
+     * (`'posTransaction' !== '434'`).
+     *
+     * This test drives the app-config fallback arm with `resolveEntityType()`
+     * returning null, so the only thing that can make it pass is the raw
+     * numeric value matching the configured id.
+     *
+     * @return void
+     */
+    public function testTheGuardMatchesOnTheNumericSchemaIdOpenRegisterStamps(): void
+    {
+        $listener = $this->listener(mappedType: null, configuredPos: '434');
+        $entity   = $this->entity(
+            '434',
+            ['status' => 'settled', 'customer' => 'contact-42', 'total' => 5]
+        );
+
+        $listener->handle(new ObjectCreatedEvent($entity));
+
+        $this->assertCount(1, $this->calls, 'the numeric schema id must match the configured id');
+
+        // The mirror: an entity carrying the SLUG does not match a numeric-id
+        // configuration, which is what makes the id-vs-slug distinction real.
+        $listener = $this->listener(mappedType: null, configuredPos: '434');
+        $slugged  = $this->entity(
+            'posTransaction',
+            ['status' => 'settled', 'customer' => 'contact-42', 'total' => 5]
+        );
+
+        $listener->handle(new ObjectCreatedEvent($slugged));
+
+        $this->assertSame([], $this->calls);
+
+    }//end testTheGuardMatchesOnTheNumericSchemaIdOpenRegisterStamps()
 
 
     /**
