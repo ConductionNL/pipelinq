@@ -40,130 +40,124 @@ use Psr\Log\LoggerInterface;
  * id is not "no id" to OpenRegister — ObjectService skips setSchema() on '',
  * so the write would land in the request's leftover schema context.
  */
-class ContactVcardWriterServiceGuardTest extends TestCase
-{
-    /**
-     * Build the service over a config map, with a stub addressbook that
-     * returns a fresh UID so the write-back path is reached.
-     *
-     * @param array<string, string> $config   The app-config contents.
-     * @param ObjectService         $object   The ObjectService mock.
-     * @param string                $register The resolved register id.
-     *
-     * @return ContactVcardWriterService
-     */
-    private function buildService(
-        array $config,
-        ObjectService $object,
-        string $register='reg-1'
-    ): ContactVcardWriterService {
-        $addressBook = new class {
-            /**
-             * Stub createOrUpdate returning a card with a fresh UID.
-             *
-             * @param array<string, mixed> $properties The vCard properties.
-             *
-             * @return array<string, mixed>
-             */
-            public function createOrUpdate(array $properties): array
-            {
-                return ['UID' => 'nc-uid-1'];
-            }//end createOrUpdate()
-        };
+class ContactVcardWriterServiceGuardTest extends TestCase {
+	/**
+	 * Build the service over a config map, with a stub addressbook that
+	 * returns a fresh UID so the write-back path is reached.
+	 *
+	 * @param array<string, string> $config The app-config contents.
+	 * @param ObjectService $object The ObjectService mock.
+	 * @param string $register The resolved register id.
+	 *
+	 * @return ContactVcardWriterService
+	 */
+	private function buildService(
+		array $config,
+		ObjectService $object,
+		string $register = 'reg-1',
+	): ContactVcardWriterService {
+		$addressBook = new class {
+			/**
+			 * Stub createOrUpdate returning a card with a fresh UID.
+			 *
+			 * @param array<string, mixed> $properties The vCard properties.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function createOrUpdate(array $properties): array {
+				return ['UID' => 'nc-uid-1'];
+			}//end createOrUpdate()
+		};
 
-        $contacts = $this->createMock(IContactsManager::class);
-        $contacts->method('getUserAddressBooks')->willReturn([$addressBook]);
+		$contacts = $this->createMock(IContactsManager::class);
+		$contacts->method('getUserAddressBooks')->willReturn([$addressBook]);
 
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturnCallback(
-            static function (string $app, string $key, string $default='') use ($config): string {
-                return ($config[$key] ?? $default);
-            }
-        );
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = '') use ($config): string {
+				return ($config[$key] ?? $default);
+			}
+		);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($object);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($object);
 
-        $resolver = $this->createMock(RegisterResolverService::class);
-        $resolver->method('resolve')->willReturn($register);
+		$resolver = $this->createMock(RegisterResolverService::class);
+		$resolver->method('resolve')->willReturn($register);
 
-        return new ContactVcardWriterService(
-            $contacts,
-            $appConfig,
-            $container,
-            $this->createMock(LoggerInterface::class),
-            $resolver
-        );
-    }//end buildService()
+		return new ContactVcardWriterService(
+			$contacts,
+			$appConfig,
+			$container,
+			$this->createMock(LoggerInterface::class),
+			$resolver
+		);
+	}//end buildService()
 
-    /**
-     * An unset {objectType}_schema refuses the write-back.
-     *
-     * @return void
-     */
-    public function testMissingSchemaRefusesTheWriteBack(): void
-    {
-        $object = $this->createMock(ObjectService::class);
-        $object->expects($this->never())->method('saveObject');
+	/**
+	 * An unset {objectType}_schema refuses the write-back.
+	 *
+	 * @return void
+	 */
+	public function testMissingSchemaRefusesTheWriteBack(): void {
+		$object = $this->createMock(ObjectService::class);
+		$object->expects($this->never())->method('saveObject');
 
-        $service = $this->buildService([], $object);
+		$service = $this->buildService([], $object);
 
-        $uid = $service->writeToAddressBook(['FN' => 'Alice'], ['id' => 'o-1'], 'contact');
+		$uid = $service->writeToAddressBook(['FN' => 'Alice'], ['id' => 'o-1'], 'contact');
 
-        $this->assertSame('nc-uid-1', $uid);
-    }//end testMissingSchemaRefusesTheWriteBack()
+		$this->assertSame('nc-uid-1', $uid);
+	}//end testMissingSchemaRefusesTheWriteBack()
 
-    /**
-     * An unresolvable register refuses the write-back even when the schema
-     * is configured.
-     *
-     * @return void
-     */
-    public function testMissingRegisterRefusesTheWriteBack(): void
-    {
-        $object = $this->createMock(ObjectService::class);
-        $object->expects($this->never())->method('saveObject');
+	/**
+	 * An unresolvable register refuses the write-back even when the schema
+	 * is configured.
+	 *
+	 * @return void
+	 */
+	public function testMissingRegisterRefusesTheWriteBack(): void {
+		$object = $this->createMock(ObjectService::class);
+		$object->expects($this->never())->method('saveObject');
 
-        $service = $this->buildService(['contact_schema' => 'sch-contact'], $object, '');
+		$service = $this->buildService(['contact_schema' => 'sch-contact'], $object, '');
 
-        $uid = $service->writeToAddressBook(['FN' => 'Alice'], ['id' => 'o-1'], 'contact');
+		$uid = $service->writeToAddressBook(['FN' => 'Alice'], ['id' => 'o-1'], 'contact');
 
-        $this->assertSame('nc-uid-1', $uid);
-    }//end testMissingRegisterRefusesTheWriteBack()
+		$this->assertSame('nc-uid-1', $uid);
+	}//end testMissingRegisterRefusesTheWriteBack()
 
-    /**
-     * An unexpected object type resolves to a config key that does not exist,
-     * which is the same empty-schema hazard reached by a different route.
-     *
-     * @return void
-     */
-    public function testUnknownObjectTypeRefusesTheWriteBack(): void
-    {
-        $object = $this->createMock(ObjectService::class);
-        $object->expects($this->never())->method('saveObject');
+	/**
+	 * An unexpected object type resolves to a config key that does not exist,
+	 * which is the same empty-schema hazard reached by a different route.
+	 *
+	 * @return void
+	 */
+	public function testUnknownObjectTypeRefusesTheWriteBack(): void {
+		$object = $this->createMock(ObjectService::class);
+		$object->expects($this->never())->method('saveObject');
 
-        $service = $this->buildService(['contact_schema' => 'sch-contact'], $object);
+		$service = $this->buildService(['contact_schema' => 'sch-contact'], $object);
 
-        $uid = $service->writeToAddressBook(['FN' => 'Alice'], ['id' => 'o-1'], 'nonsense');
+		$uid = $service->writeToAddressBook(['FN' => 'Alice'], ['id' => 'o-1'], 'nonsense');
 
-        $this->assertSame('nc-uid-1', $uid);
-    }//end testUnknownObjectTypeRefusesTheWriteBack()
+		$this->assertSame('nc-uid-1', $uid);
+	}//end testUnknownObjectTypeRefusesTheWriteBack()
 
-    /**
-     * A configured instance does write back — otherwise the negative
-     * assertions above would pass for the wrong reason.
-     *
-     * @return void
-     */
-    public function testConfiguredWriteBackReachesOpenRegister(): void
-    {
-        $object = $this->createMock(ObjectService::class);
-        $object->expects($this->once())->method('saveObject');
+	/**
+	 * A configured instance does write back — otherwise the negative
+	 * assertions above would pass for the wrong reason.
+	 *
+	 * @return void
+	 */
+	public function testConfiguredWriteBackReachesOpenRegister(): void {
+		$object = $this->createMock(ObjectService::class);
+		$object->expects($this->once())->method('saveObject');
 
-        $service = $this->buildService(['contact_schema' => 'sch-contact'], $object);
+		$service = $this->buildService(['contact_schema' => 'sch-contact'], $object);
 
-        $uid = $service->writeToAddressBook(['FN' => 'Alice'], ['id' => 'o-1'], 'contact');
+		$uid = $service->writeToAddressBook(['FN' => 'Alice'], ['id' => 'o-1'], 'contact');
 
-        $this->assertSame('nc-uid-1', $uid);
-    }//end testConfiguredWriteBackReachesOpenRegister()
+		$this->assertSame('nc-uid-1', $uid);
+	}//end testConfiguredWriteBackReachesOpenRegister()
 }//end class

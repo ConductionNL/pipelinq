@@ -31,62 +31,57 @@ use Exception;
 /**
  * Safe, status-bearing portal error.
  */
-class PortalException extends Exception
-{
-    /**
-     * Constructor.
-     *
-     * @param int                  $status    The HTTP status code.
-     * @param string               $errorCode The stable machine error code.
-     * @param string               $message   The user-facing safe message.
-     * @param array<string, mixed> $context   Extra safe fields for the response body.
-     */
-    public function __construct(
-        private int $status,
-        private string $errorCode,
-        string $message,
-        private array $context=[]
-    ) {
-        parent::__construct(message: $message);
-    }//end __construct()
+class PortalException extends Exception {
+	/**
+	 * Constructor.
+	 *
+	 * @param int $status The HTTP status code.
+	 * @param string $errorCode The stable machine error code.
+	 * @param string $message The user-facing safe message.
+	 * @param array<string, mixed> $context Extra safe fields for the response body.
+	 */
+	public function __construct(
+		private int $status,
+		private string $errorCode,
+		string $message,
+		private array $context = [],
+	) {
+		parent::__construct(message: $message);
+	}//end __construct()
 
-    /**
-     * The HTTP status code.
-     *
-     * @return int The status.
-     */
-    public function getStatus(): int
-    {
-        return $this->status;
-    }//end getStatus()
+	/**
+	 * The HTTP status code.
+	 *
+	 * @return int The status.
+	 */
+	public function getStatus(): int {
+		return $this->status;
+	}//end getStatus()
 
-    /**
-     * The stable machine error code.
-     *
-     * @return string The error code.
-     */
-    public function getErrorCode(): string
-    {
-        return $this->errorCode;
-    }//end getErrorCode()
+	/**
+	 * The stable machine error code.
+	 *
+	 * @return string The error code.
+	 */
+	public function getErrorCode(): string {
+		return $this->errorCode;
+	}//end getErrorCode()
 
-    /**
-     * Extra safe context fields for the response body.
-     *
-     * @return array<string, mixed> The context.
-     */
-    public function getContext(): array
-    {
-        return $this->context;
-    }//end getContext()
+	/**
+	 * Extra safe context fields for the response body.
+	 *
+	 * @return array<string, mixed> The context.
+	 */
+	public function getContext(): array {
+		return $this->context;
+	}//end getContext()
 
-    /**
-     * The full safe response body for this error.
-     *
-     * @return array<string, mixed> The body.
-     */
-    public function toBody(): array
-    {
-        return array_merge(['errorCode' => $this->errorCode, 'message' => $this->getMessage()], $this->context);
-    }//end toBody()
+	/**
+	 * The full safe response body for this error.
+	 *
+	 * @return array<string, mixed> The body.
+	 */
+	public function toBody(): array {
+		return array_merge(['errorCode' => $this->errorCode, 'message' => $this->getMessage()], $this->context);
+	}//end toBody()
 }//end class

@@ -38,40 +38,39 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
  *
  * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.4
  */
-class PosTransactionRefundGuard implements LifecycleGuardInterface
-{
-    /**
-     * Constructor.
-     *
-     * @param PosAccessPolicy $policy The shared POS access policy.
-     */
-    public function __construct(private PosAccessPolicy $policy)
-    {
-    }//end __construct()
+class PosTransactionRefundGuard implements LifecycleGuardInterface {
+	/**
+	 * Constructor.
+	 *
+	 * @param PosAccessPolicy $policy The shared POS access policy.
+	 */
+	public function __construct(
+		private PosAccessPolicy $policy,
+	) {
+	}//end __construct()
 
-    /**
-     * Authorise the refund transition.
-     *
-     * @param array<string, mixed> $object The posTransaction payload.
-     * @param string               $action The transition action ('refund').
-     * @param string               $userId The acting user UID.
-     *
-     * @return GuardResult Allow only for a POS manager or admin; deny otherwise.
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
-     *  static allow()/deny() factories mandated by OpenRegister's contract.
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $object and $action are part
-     *  of the LifecycleGuardInterface signature; the refund verdict depends only
-     *  on the caller's manager status.
-     *
-     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.4
-     */
-    public function check(array $object, string $action, string $userId): GuardResult
-    {
-        if ($this->policy->isManager(userId: $userId) === false) {
-            return GuardResult::deny('Alleen een beheerder mag een transactie terugboeken.');
-        }
+	/**
+	 * Authorise the refund transition.
+	 *
+	 * @param array<string, mixed> $object The posTransaction payload.
+	 * @param string $action The transition action ('refund').
+	 * @param string $userId The acting user UID.
+	 *
+	 * @return GuardResult Allow only for a POS manager or admin; deny otherwise.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
+	 *  static allow()/deny() factories mandated by OpenRegister's contract.
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $object and $action are part
+	 *  of the LifecycleGuardInterface signature; the refund verdict depends only
+	 *  on the caller's manager status.
+	 *
+	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.4
+	 */
+	public function check(array $object, string $action, string $userId): GuardResult {
+		if ($this->policy->isManager(userId: $userId) === false) {
+			return GuardResult::deny('Alleen een beheerder mag een transactie terugboeken.');
+		}
 
-        return GuardResult::allow();
-    }//end check()
+		return GuardResult::allow();
+	}//end check()
 }//end class

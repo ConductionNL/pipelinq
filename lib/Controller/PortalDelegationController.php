@@ -38,119 +38,114 @@ use Psr\Log\LoggerInterface;
 /**
  * Portal B2B delegation endpoints.
  */
-class PortalDelegationController extends PortalApiController
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest                $request     The request.
-     * @param PortalRequestGuard      $guard       The portal guard.
-     * @param LoggerInterface         $logger      The logger.
-     * @param PortalDelegationService $delegations The delegation service.
-     */
-    public function __construct(
-        IRequest $request,
-        PortalRequestGuard $guard,
-        LoggerInterface $logger,
-        private PortalDelegationService $delegations,
-    ) {
-        parent::__construct(request: $request, guard: $guard, logger: $logger);
-    }//end __construct()
+class PortalDelegationController extends PortalApiController {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param LoggerInterface $logger The logger.
+	 * @param PortalDelegationService $delegations The delegation service.
+	 */
+	public function __construct(
+		IRequest $request,
+		PortalRequestGuard $guard,
+		LoggerInterface $logger,
+		private PortalDelegationService $delegations,
+	) {
+		parent::__construct(request: $request, guard: $guard, logger: $logger);
+	}//end __construct()
 
-    /**
-     * List the delegations granted by the current account.
-     *
-     * @return JSONResponse The delegations.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function index(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $ctx = $this->requireSession();
-                    $this->requireB2b(account: $ctx['account']);
-                    return [['delegations' => $this->delegations->listGrantedBy(granterAccountId: $ctx['accountId'])], Http::STATUS_OK];
-                }
-                );
-    }//end index()
+	/**
+	 * List the delegations granted by the current account.
+	 *
+	 * @return JSONResponse The delegations.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function index(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$ctx = $this->requireSession();
+				$this->requireB2b(account: $ctx['account']);
+				return [['delegations' => $this->delegations->listGrantedBy(granterAccountId: $ctx['accountId'])], Http::STATUS_OK];
+			}
+		);
+	}//end index()
 
-    /**
-     * Grant a delegation to a colleague.
-     *
-     * @return JSONResponse The created delegation.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function create(): JSONResponse
-    {
-        return $this->guarded(
-            handler: function (): array {
-                $ctx = $this->requireSession();
-                $this->requireB2b(account: $ctx['account']);
+	/**
+	 * Grant a delegation to a colleague.
+	 *
+	 * @return JSONResponse The created delegation.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function create(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$ctx = $this->requireSession();
+				$this->requireB2b(account: $ctx['account']);
 
-                $scopes = $this->request->getParam('scopes', []);
-                if (is_array($scopes) === false) {
-                    $scopes = [];
-                }
+				$scopes = $this->request->getParam('scopes', []);
+				if (is_array($scopes) === false) {
+					$scopes = [];
+				}
 
-                $validUntil = $this->strParam(name: 'validUntil');
-                if ($validUntil === '') {
-                    $validUntil = null;
-                }
+				$validUntil = $this->strParam(name: 'validUntil');
+				if ($validUntil === '') {
+					$validUntil = null;
+				}
 
-                $delegation = $this->delegations->grant(
-                    granterAccountId: $ctx['accountId'],
-                    tenantId: $ctx['tenantId'],
-                    granteeEmail: $this->strParam(name: 'granteeEmail'),
-                    scopes: $scopes,
-                    validUntil: $validUntil
-                );
-                return [$delegation, Http::STATUS_CREATED];
-            }
-        );
-    }//end create()
+				$delegation = $this->delegations->grant(
+					granterAccountId: $ctx['accountId'],
+					tenantId: $ctx['tenantId'],
+					granteeEmail: $this->strParam(name: 'granteeEmail'),
+					scopes: $scopes,
+					validUntil: $validUntil
+				);
+				return [$delegation, Http::STATUS_CREATED];
+			}
+		);
+	}//end create()
 
-    /**
-     * Revoke a delegation owned by the current account.
-     *
-     * @param string $id The delegation id.
-     *
-     * @return JSONResponse The result.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function destroy(string $id): JSONResponse
-    {
-        return $this->guarded(
-                handler: function () use ($id): array {
-                    $ctx = $this->requireSession();
-                    $this->requireB2b(account: $ctx['account']);
-                    $this->delegations->revoke(delegationId: $id, granterAccountId: $ctx['accountId'], tenantId: $ctx['tenantId']);
-                    return [['status' => 'revoked'], Http::STATUS_OK];
-                }
-                );
-    }//end destroy()
+	/**
+	 * Revoke a delegation owned by the current account.
+	 *
+	 * @param string $id The delegation id.
+	 *
+	 * @return JSONResponse The result.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function destroy(string $id): JSONResponse {
+		return $this->guarded(
+			handler: function () use ($id): array {
+				$ctx = $this->requireSession();
+				$this->requireB2b(account: $ctx['account']);
+				$this->delegations->revoke(delegationId: $id, granterAccountId: $ctx['accountId'], tenantId: $ctx['tenantId']);
+				return [['status' => 'revoked'], Http::STATUS_OK];
+			}
+		);
+	}//end destroy()
 
-    /**
-     * Require the account to be a B2B account (delegation is B2B-only).
-     *
-     * @param array<string, mixed> $account The account.
-     *
-     * @return void
-     *
-     * @throws PortalException When the account is not B2B.
-     */
-    private function requireB2b(array $account): void
-    {
-        if (($account['accountType'] ?? 'b2c') !== 'b2b') {
-            throw new PortalException(status: Http::STATUS_FORBIDDEN, errorCode: 'b2bOnly', message: 'Delegatie is alleen voor zakelijke accounts.');
-        }
-    }//end requireB2b()
+	/**
+	 * Require the account to be a B2B account (delegation is B2B-only).
+	 *
+	 * @param array<string, mixed> $account The account.
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException When the account is not B2B.
+	 */
+	private function requireB2b(array $account): void {
+		if (($account['accountType'] ?? 'b2c') !== 'b2b') {
+			throw new PortalException(status: Http::STATUS_FORBIDDEN, errorCode: 'b2bOnly', message: 'Delegatie is alleen voor zakelijke accounts.');
+		}
+	}//end requireB2b()
 }//end class

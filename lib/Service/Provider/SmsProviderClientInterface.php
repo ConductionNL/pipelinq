@@ -36,33 +36,32 @@ namespace OCA\Pipelinq\Service\Provider;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
  */
-interface SmsProviderClientInterface
-{
-    /**
-     * Send a single SMS.
-     *
-     * @param string $toNumber Recipient phone number in E.164.
-     * @param string $body     Plain-text body.
-     *
-     * @return array{externalMessageId: string, vendor: string} Provider
-     *         message id and the vendor key that produced it.
-     */
-    public function send(string $toNumber, string $body): array;
+interface SmsProviderClientInterface {
+	/**
+	 * Send a single SMS.
+	 *
+	 * @param string $toNumber Recipient phone number in E.164.
+	 * @param string $body Plain-text body.
+	 *
+	 * @return array{externalMessageId: string, vendor: string} Provider
+	 *                                                          message id and the vendor key that produced it.
+	 */
+	public function send(string $toNumber, string $body): array;
 
-    /**
-     * Verify the HMAC signature of an inbound webhook body.
-     *
-     * @param string $rawBody   Raw request body.
-     * @param string $signature Signature header value (provider-specific).
-     *
-     * @return bool True when the signature matches the configured secret.
-     */
-    public function verifySignature(string $rawBody, string $signature): bool;
+	/**
+	 * Verify the HMAC signature of an inbound webhook body.
+	 *
+	 * @param string $rawBody Raw request body.
+	 * @param string $signature Signature header value (provider-specific).
+	 *
+	 * @return bool True when the signature matches the configured secret.
+	 */
+	public function verifySignature(string $rawBody, string $signature): bool;
 
-    /**
-     * The vendor key for this client (twilio, messagebird, cm-com, ...).
-     *
-     * @return string Vendor key.
-     */
-    public function getVendor(): string;
+	/**
+	 * The vendor key for this client (twilio, messagebird, cm-com, ...).
+	 *
+	 * @return string Vendor key.
+	 */
+	public function getVendor(): string;
 }//end interface

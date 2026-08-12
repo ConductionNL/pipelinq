@@ -38,41 +38,39 @@ use Psr\Log\LoggerInterface;
 /**
  * Public tenant-branding endpoint.
  */
-class PortalTenantController extends PortalApiController
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest            $request The request.
-     * @param PortalRequestGuard  $guard   The portal guard.
-     * @param LoggerInterface     $logger  The logger.
-     * @param PortalTenantService $tenant  The tenant service.
-     */
-    public function __construct(
-        IRequest $request,
-        PortalRequestGuard $guard,
-        LoggerInterface $logger,
-        private PortalTenantService $tenant,
-    ) {
-        parent::__construct(request: $request, guard: $guard, logger: $logger);
-    }//end __construct()
+class PortalTenantController extends PortalApiController {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param LoggerInterface $logger The logger.
+	 * @param PortalTenantService $tenant The tenant service.
+	 */
+	public function __construct(
+		IRequest $request,
+		PortalRequestGuard $guard,
+		LoggerInterface $logger,
+		private PortalTenantService $tenant,
+	) {
+		parent::__construct(request: $request, guard: $guard, logger: $logger);
+	}//end __construct()
 
-    /**
-     * Get the public branding for the resolved tenant (no auth required).
-     *
-     * @return JSONResponse The public branding.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function config(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $tenantId = $this->requireTenant();
-                    return [$this->tenant->getPublicConfig(tenantId: $tenantId), Http::STATUS_OK];
-                }
-                );
-    }//end config()
+	/**
+	 * Get the public branding for the resolved tenant (no auth required).
+	 *
+	 * @return JSONResponse The public branding.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function config(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$tenantId = $this->requireTenant();
+				return [$this->tenant->getPublicConfig(tenantId: $tenantId), Http::STATUS_OK];
+			}
+		);
+	}//end config()
 }//end class

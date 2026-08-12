@@ -49,229 +49,224 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
  */
-class BerichtenboxZaakStatusListener implements IEventListener
-{
-    use EntityAccessorTrait;
+class BerichtenboxZaakStatusListener implements IEventListener {
+	use EntityAccessorTrait;
 
-    /**
-     * Statuses that trigger a Berichtenbox dispatch.
-     *
-     * @var array<int, string>
-     */
-    public const TRIGGER_STATUSES = [
-        'received',
-        'in-behandeling',
-        'meer-info-nodig',
-        'afgehandeld',
-        'afgewezen',
-    ];
+	/**
+	 * Statuses that trigger a Berichtenbox dispatch.
+	 *
+	 * @var array<int, string>
+	 */
+	public const TRIGGER_STATUSES = [
+		'received',
+		'in-behandeling',
+		'meer-info-nodig',
+		'afgehandeld',
+		'afgewezen',
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param IAppConfig          $appConfig     App config.
-     * @param BerichtenboxService $berichtenbox  Bridge service.
-     * @param TicketService       $ticketService Resolver for the unified ticket schema.
-     * @param LoggerInterface     $logger        Logger.
-     */
-    public function __construct(
-        private readonly IAppConfig $appConfig,
-        private readonly BerichtenboxService $berichtenbox,
-        private readonly TicketService $ticketService,
-        private readonly LoggerInterface $logger,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $appConfig App config.
+	 * @param BerichtenboxService $berichtenbox Bridge service.
+	 * @param TicketService $ticketService Resolver for the unified ticket schema.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		private readonly IAppConfig $appConfig,
+		private readonly BerichtenboxService $berichtenbox,
+		private readonly TicketService $ticketService,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Handle an OR ObjectUpdatedEvent for a zaak.
-     *
-     * Duck-typed on the event class name so we don't hard-require
-     * zaakafhandelapp at compile time (the listener is bound from the
-     * Application bootstrap and silently no-ops when the event class
-     * isn't loaded).
-     *
-     * @param Event $event Event.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
-     */
-    public function handle(Event $event): void
-    {
-        if ($this->isZaakUpdate(event: $event) === false) {
-            return;
-        }
+	/**
+	 * Handle an OR ObjectUpdatedEvent for a zaak.
+	 *
+	 * Duck-typed on the event class name so we don't hard-require
+	 * zaakafhandelapp at compile time (the listener is bound from the
+	 * Application bootstrap and silently no-ops when the event class
+	 * isn't loaded).
+	 *
+	 * @param Event $event Event.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
+	 */
+	public function handle(Event $event): void {
+		if ($this->isZaakUpdate(event: $event) === false) {
+			return;
+		}
 
-        try {
-            [$oldData, $newData] = $this->extractObjectPair(event: $event);
-            if ($newData === null) {
-                return;
-            }
+		try {
+			[$oldData, $newData] = $this->extractObjectPair(event: $event);
+			if ($newData === null) {
+				return;
+			}
 
-            $newStatus = (string) ($newData['status'] ?? '');
-            $oldStatus = (string) ($oldData['status'] ?? '');
-            if ($newStatus === '' || $newStatus === $oldStatus) {
-                return;
-            }
+			$newStatus = (string)($newData['status'] ?? '');
+			$oldStatus = (string)($oldData['status'] ?? '');
+			if ($newStatus === '' || $newStatus === $oldStatus) {
+				return;
+			}
 
-            if (in_array($newStatus, self::TRIGGER_STATUSES, true) === false) {
-                return;
-            }
+			if (in_array($newStatus, self::TRIGGER_STATUSES, true) === false) {
+				return;
+			}
 
-            $bsn = (string) ($newData['bsn'] ?? '');
-            if ($bsn === '') {
-                // Try the linked Contactmoment.
-                $bsn = $this->resolveBsnViaContactmoment(
-                    contactmomentId: (string) ($newData['contactmomentId'] ?? '')
-                );
-            }
+			$bsn = (string)($newData['bsn'] ?? '');
+			if ($bsn === '') {
+				// Try the linked Contactmoment.
+				$bsn = $this->resolveBsnViaContactmoment(
+					contactmomentId: (string)($newData['contactmomentId'] ?? '')
+				);
+			}
 
-            if ($bsn === '') {
-                $this->logger->info(
-                    'BerichtenboxZaakStatusListener: no BSN resolved, skipping.',
-                    ['zaakId' => (string) ($newData['id'] ?? '')]
-                );
-                return;
-            }
+			if ($bsn === '') {
+				$this->logger->info(
+					'BerichtenboxZaakStatusListener: no BSN resolved, skipping.',
+					['zaakId' => (string)($newData['id'] ?? '')]
+				);
+				return;
+			}
 
-            $this->berichtenbox->queueOutboundMessage(
-                zaakId: (string) ($newData['id'] ?? $newData['uuid'] ?? ''),
-                contactmomentId: (string) ($newData['contactmomentId'] ?? null),
-                status: $newStatus,
-                bsn: $bsn,
-                templateOverride: null,
-                extraVariables: [
-                    'zaaktype' => (string) ($newData['zaaktype'] ?? ''),
-                    'language' => (string) ($newData['language'] ?? 'nl'),
-                ],
-                attachments: ($newData['attachments'] ?? [])
-            );
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'BerichtenboxZaakStatusListener: dispatch suppressed.',
-                ['exception' => $e->getMessage()]
-            );
-        }//end try
-    }//end handle()
+			$this->berichtenbox->queueOutboundMessage(
+				zaakId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
+				contactmomentId: (string)($newData['contactmomentId'] ?? null),
+				status: $newStatus,
+				bsn: $bsn,
+				templateOverride: null,
+				extraVariables: [
+					'zaaktype' => (string)($newData['zaaktype'] ?? ''),
+					'language' => (string)($newData['language'] ?? 'nl'),
+				],
+				attachments: ($newData['attachments'] ?? [])
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'BerichtenboxZaakStatusListener: dispatch suppressed.',
+				['exception' => $e->getMessage()]
+			);
+		}//end try
+	}//end handle()
 
-    /**
-     * Heuristic: is this an OR ObjectUpdatedEvent on a zaak schema?
-     *
-     * @param Event $event Event.
-     *
-     * @return bool
-     */
-    private function isZaakUpdate(Event $event): bool
-    {
-        $class = $event::class;
-        if (str_contains($class, 'ObjectUpdatedEvent') === false) {
-            return false;
-        }
+	/**
+	 * Heuristic: is this an OR ObjectUpdatedEvent on a zaak schema?
+	 *
+	 * @param Event $event Event.
+	 *
+	 * @return bool
+	 */
+	private function isZaakUpdate(Event $event): bool {
+		$class = $event::class;
+		if (str_contains($class, 'ObjectUpdatedEvent') === false) {
+			return false;
+		}
 
-        // Best-effort schema detection.
-        if (method_exists($event, 'getNewObject') === false) {
-            return false;
-        }
+		// Best-effort schema detection.
+		if (method_exists($event, 'getNewObject') === false) {
+			return false;
+		}
 
-        // `getSchema()` is served by Entity::__call, so method_exists() is FALSE
-        // for it on a real ObjectEntity and this guard rejected every event
-        // (pipelinq#807). Note the second, independent kill switch below: no
-        // `zaak_schema` app-config key is written anywhere in this app and the
-        // register declares no `zaak` schema, so `$zaakSchema` is '' and the
-        // listener still cannot fire. That gap is a configuration/product
-        // decision and is deliberately NOT invented here.
-        $new      = $event->getNewObject();
-        $schemaId = $this->readEntityValue(entity: $new, getter: 'getSchema');
-        if ($schemaId === '') {
-            return false;
-        }
+		// `getSchema()` is served by Entity::__call, so method_exists() is FALSE
+		// for it on a real ObjectEntity and this guard rejected every event
+		// (pipelinq#807). Note the second, independent kill switch below: no
+		// `zaak_schema` app-config key is written anywhere in this app and the
+		// register declares no `zaak` schema, so `$zaakSchema` is '' and the
+		// listener still cannot fire. That gap is a configuration/product
+		// decision and is deliberately NOT invented here.
+		$new = $event->getNewObject();
+		$schemaId = $this->readEntityValue(entity: $new, getter: 'getSchema');
+		if ($schemaId === '') {
+			return false;
+		}
 
-        $zaakSchema = $this->appConfig->getValueString(
-            Application::APP_ID,
-            'zaak_schema',
-            ''
-        );
-        return ($schemaId === $zaakSchema && $zaakSchema !== '');
-    }//end isZaakUpdate()
+		$zaakSchema = $this->appConfig->getValueString(
+			Application::APP_ID,
+			'zaak_schema',
+			''
+		);
+		return ($schemaId === $zaakSchema && $zaakSchema !== '');
+	}//end isZaakUpdate()
 
-    /**
-     * Extract (old, new) object data from an OR event.
-     *
-     * @param Event $event Event.
-     *
-     * @return array{0: ?array, 1: ?array}
-     */
-    private function extractObjectPair(Event $event): array
-    {
-        $oldData = null;
-        $newData = null;
-        if (method_exists($event, 'getOldObject') === true) {
-            $old = $event->getOldObject();
-            if ($old !== null && method_exists($old, 'getObject') === true) {
-                $candidate = $old->getObject();
-                if (is_array($candidate) === true) {
-                    $oldData = $candidate;
-                }
-            }
-        }
+	/**
+	 * Extract (old, new) object data from an OR event.
+	 *
+	 * @param Event $event Event.
+	 *
+	 * @return array{0: ?array, 1: ?array}
+	 */
+	private function extractObjectPair(Event $event): array {
+		$oldData = null;
+		$newData = null;
+		if (method_exists($event, 'getOldObject') === true) {
+			$old = $event->getOldObject();
+			if ($old !== null && method_exists($old, 'getObject') === true) {
+				$candidate = $old->getObject();
+				if (is_array($candidate) === true) {
+					$oldData = $candidate;
+				}
+			}
+		}
 
-        if (method_exists($event, 'getNewObject') === true) {
-            $new = $event->getNewObject();
-            if ($new !== null && method_exists($new, 'getObject') === true) {
-                $candidate = $new->getObject();
-                if (is_array($candidate) === true) {
-                    $newData = $candidate;
-                }
-            }
-        }
+		if (method_exists($event, 'getNewObject') === true) {
+			$new = $event->getNewObject();
+			if ($new !== null && method_exists($new, 'getObject') === true) {
+				$candidate = $new->getObject();
+				if (is_array($candidate) === true) {
+					$newData = $candidate;
+				}
+			}
+		}
 
-        return [$oldData, $newData];
-    }//end extractObjectPair()
+		return [$oldData, $newData];
+	}//end extractObjectPair()
 
-    /**
-     * Resolve a BSN by reading the linked Contactmoment + Burger.
-     *
-     * The contactmoment is a `ticket` with `ticketType: contactmoment`
-     * (unify-ticket-supertype), so the lookup resolves the unified ticket
-     * schema through TicketService instead of the retired
-     * `contactmoment_schema`.
-     *
-     * @param string $contactmomentId Contactmoment (ticket) uuid.
-     *
-     * @return string
-     */
-    private function resolveBsnViaContactmoment(string $contactmomentId): string
-    {
-        if ($contactmomentId === '') {
-            return '';
-        }
+	/**
+	 * Resolve a BSN by reading the linked Contactmoment + Burger.
+	 *
+	 * The contactmoment is a `ticket` with `ticketType: contactmoment`
+	 * (unify-ticket-supertype), so the lookup resolves the unified ticket
+	 * schema through TicketService instead of the retired
+	 * `contactmoment_schema`.
+	 *
+	 * @param string $contactmomentId Contactmoment (ticket) uuid.
+	 *
+	 * @return string
+	 */
+	private function resolveBsnViaContactmoment(string $contactmomentId): string {
+		if ($contactmomentId === '') {
+			return '';
+		}
 
-        if ($this->ticketService->isConfigured() === false) {
-            return '';
-        }
+		if ($this->ticketService->isConfigured() === false) {
+			return '';
+		}
 
-        try {
-            $service  = $this->ticketService->getObjectService();
-            $register = $this->ticketService->getRegisterId();
-            $schema   = $this->ticketService->getSchemaId();
+		try {
+			$service = $this->ticketService->getObjectService();
+			$register = $this->ticketService->getRegisterId();
+			$schema = $this->ticketService->getSchemaId();
 
-            $row = $service->find(id: $contactmomentId, register: $register, schema: $schema);
-            if ($row === null) {
-                return '';
-            }
+			$row = $service->find(id: $contactmomentId, register: $register, schema: $schema);
+			if ($row === null) {
+				return '';
+			}
 
-            $data = $row;
-            if (is_array($row) === false) {
-                $data = ($row->getObject() ?? []);
-            }
+			$data = $row;
+			if (is_array($row) === false) {
+				$data = ($row->getObject() ?? []);
+			}
 
-            return (string) ($data['bsn'] ?? '');
-        } catch (\Throwable $e) {
-            $this->logger->info(
-                'BerichtenboxZaakStatusListener: BSN-via-contactmoment lookup failed.',
-                ['exception' => $e->getMessage()]
-            );
-            return '';
-        }//end try
-    }//end resolveBsnViaContactmoment()
+			return (string)($data['bsn'] ?? '');
+		} catch (\Throwable $e) {
+			$this->logger->info(
+				'BerichtenboxZaakStatusListener: BSN-via-contactmoment lookup failed.',
+				['exception' => $e->getMessage()]
+			);
+			return '';
+		}//end try
+	}//end resolveBsnViaContactmoment()
 }//end class

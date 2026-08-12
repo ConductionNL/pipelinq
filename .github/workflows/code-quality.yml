@@ -92,7 +92,13 @@ jobs:
       # journeydoc-capture all check out `fromJSON(nextcloud-test-refs)[0]` as
       # their single server, so with the inherited default those three jobs ran
       # entirely on the version openregister cannot load.
-      nextcloud-test-refs: '["stable32"]'
+      #
+      # THE LIST IS THE WHOLE DECLARED RANGE. appinfo/info.xml declares
+      # <nextcloud min-version="32" max-version="34"/>, so 32, 33 and 34 each get
+      # a leg. Adopting NC 34 by REPLACING the list left 32 and 33 advertised to
+      # the App Store with no job touching them — the declared floor became the
+      # untested end, which is the same drift as never testing 34, reversed.
+      nextcloud-test-refs: '["stable34", "stable32", "stable33"]'
       # Strict static-analysis gate suite (composer check:strict equivalent).
       # These mirror the shared-workflow defaults (all true) but are pinned
       # here explicitly so the strict-gate posture is self-documenting and

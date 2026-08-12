@@ -39,71 +39,69 @@ use Psr\Log\LoggerInterface;
 /**
  * 5-minute dispatcher for queued Berichtenbox messages.
  */
-class DispatchQueuedMessagesJob extends TimedJob
-{
-    /**
-     * Job interval in seconds (5 minutes).
-     *
-     * @var int
-     */
-    public const INTERVAL_SECONDS = 300;
+class DispatchQueuedMessagesJob extends TimedJob {
+	/**
+	 * Job interval in seconds (5 minutes).
+	 *
+	 * @var int
+	 */
+	public const INTERVAL_SECONDS = 300;
 
-    /**
-     * Maximum rows per run.
-     *
-     * @var int
-     */
-    public const BATCH_LIMIT = 100;
+	/**
+	 * Maximum rows per run.
+	 *
+	 * @var int
+	 */
+	public const BATCH_LIMIT = 100;
 
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory       $time      Time factory.
-     * @param ContainerInterface $container DI container (lazy resolves the
-     *                                      BerichtenboxService).
-     * @param LoggerInterface    $logger    Logger.
-     */
-    public function __construct(
-        ITimeFactory $time,
-        private ContainerInterface $container,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $time);
-        $this->setInterval(seconds: self::INTERVAL_SECONDS);
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $time Time factory.
+	 * @param ContainerInterface $container DI container (lazy resolves the
+	 *                                      BerichtenboxService).
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		ITimeFactory $time,
+		private ContainerInterface $container,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(time: $time);
+		$this->setInterval(seconds: self::INTERVAL_SECONDS);
+	}//end __construct()
 
-    /**
-     * Run the dispatch cycle.
-     *
-     * @param mixed $argument Job argument (unused).
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
-     */
-    protected function run(mixed $argument): void
-    {
-        try {
-            $service = $this->container->get(BerichtenboxService::class);
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'DispatchQueuedMessagesJob: BerichtenboxService unavailable.',
-                ['exception' => $e->getMessage()]
-            );
-            return;
-        }
+	/**
+	 * Run the dispatch cycle.
+	 *
+	 * @param mixed $argument Job argument (unused).
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+	 */
+	protected function run(mixed $argument): void {
+		try {
+			$service = $this->container->get(BerichtenboxService::class);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'DispatchQueuedMessagesJob: BerichtenboxService unavailable.',
+				['exception' => $e->getMessage()]
+			);
+			return;
+		}
 
-        try {
-            $count = $service->dispatchQueuedMessages(self::BATCH_LIMIT);
-            $this->logger->info(
-                'DispatchQueuedMessagesJob processed messages.',
-                ['count' => $count]
-            );
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                'DispatchQueuedMessagesJob run failed.',
-                ['exception' => $e->getMessage()]
-            );
-        }
-    }//end run()
+		try {
+			$count = $service->dispatchQueuedMessages(self::BATCH_LIMIT);
+			$this->logger->info(
+				'DispatchQueuedMessagesJob processed messages.',
+				['count' => $count]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'DispatchQueuedMessagesJob run failed.',
+				['exception' => $e->getMessage()]
+			);
+		}
+	}//end run()
 }//end class

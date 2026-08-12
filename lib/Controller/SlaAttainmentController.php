@@ -46,60 +46,58 @@ use Throwable;
  * scoping is honoured by the underlying ObjectService row-level RBAC
  * (out of controller scope).
  */
-class SlaAttainmentController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest             $request     HTTP request.
-     * @param SlaAttainmentService $attainment  Attainment service.
-     * @param IUserSession         $userSession Active session.
-     * @param LoggerInterface      $logger      Logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private SlaAttainmentService $attainment,
-        private IUserSession $userSession,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class SlaAttainmentController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request HTTP request.
+	 * @param SlaAttainmentService $attainment Attainment service.
+	 * @param IUserSession $userSession Active session.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private SlaAttainmentService $attainment,
+		private IUserSession $userSession,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * GET /api/sla/attainment.
-     *
-     * @return JSONResponse The attainment payload, or an error envelope.
-     *
-     * @spec openspec/specs/sla-engine-and-escalation/spec.md
-     */
-    #[NoAdminRequired]
-    public function attainment(): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(['error' => 'notAuthenticated'], Http::STATUS_UNAUTHORIZED);
-        }
+	/**
+	 * GET /api/sla/attainment.
+	 *
+	 * @return JSONResponse The attainment payload, or an error envelope.
+	 *
+	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
+	 */
+	#[NoAdminRequired]
+	public function attainment(): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(['error' => 'notAuthenticated'], Http::STATUS_UNAUTHORIZED);
+		}
 
-        $params = [
-            'bucket'  => $this->request->getParam('bucket', 'month'),
-            'date'    => $this->request->getParam('date', ''),
-            'week'    => $this->request->getParam('week', ''),
-            'month'   => $this->request->getParam('month', ''),
-            'quarter' => $this->request->getParam('quarter', ''),
-            'groupBy' => $this->request->getParam('groupBy', 'policy'),
-            'policy'  => $this->request->getParam('policy', ''),
-        ];
+		$params = [
+			'bucket' => $this->request->getParam('bucket', 'month'),
+			'date' => $this->request->getParam('date', ''),
+			'week' => $this->request->getParam('week', ''),
+			'month' => $this->request->getParam('month', ''),
+			'quarter' => $this->request->getParam('quarter', ''),
+			'groupBy' => $this->request->getParam('groupBy', 'policy'),
+			'policy' => $this->request->getParam('policy', ''),
+		];
 
-        try {
-            $payload = $this->attainment->compute($params);
-            return new JSONResponse($payload);
-        } catch (InvalidArgumentException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
-        } catch (Throwable $e) {
-            $this->logger->error(
-                'SlaAttainmentController: compute failed',
-                ['error' => $e->getMessage()]
-            );
-            return new JSONResponse(['error' => 'computeFailed'], Http::STATUS_INTERNAL_SERVER_ERROR);
-        }
-    }//end attainment()
+		try {
+			$payload = $this->attainment->compute($params);
+			return new JSONResponse($payload);
+		} catch (InvalidArgumentException $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'SlaAttainmentController: compute failed',
+				['error' => $e->getMessage()]
+			);
+			return new JSONResponse(['error' => 'computeFailed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+	}//end attainment()
 }//end class

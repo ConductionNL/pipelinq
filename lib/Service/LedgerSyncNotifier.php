@@ -36,49 +36,47 @@ use OCP\IGroupManager;
  *
  * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
  */
-class LedgerSyncNotifier
-{
-    /**
-     * Constructor.
-     *
-     * @param NotificationService $notificationService The notification service.
-     * @param IGroupManager       $groupManager        The group manager (admin resolution).
-     */
-    public function __construct(
-        private NotificationService $notificationService,
-        private IGroupManager $groupManager,
-    ) {
-    }//end __construct()
+class LedgerSyncNotifier {
+	/**
+	 * Constructor.
+	 *
+	 * @param NotificationService $notificationService The notification service.
+	 * @param IGroupManager $groupManager The group manager (admin resolution).
+	 */
+	public function __construct(
+		private NotificationService $notificationService,
+		private IGroupManager $groupManager,
+	) {
+	}//end __construct()
 
-    /**
-     * Notify every admin user that a ledger dispatch permanently failed.
-     *
-     * @param string $projectName The project name.
-     * @param string $eventType   The event type (creation or status change).
-     * @param string $uuid        The project UUID (for the detail-view reference).
-     *
-     * @return void
-     *
-     * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
-     */
-    public function notifyFailure(string $projectName, string $eventType, string $uuid): void
-    {
-        $adminGroup = $this->groupManager->get('admin');
-        if ($adminGroup === null) {
-            return;
-        }
+	/**
+	 * Notify every admin user that a ledger dispatch permanently failed.
+	 *
+	 * @param string $projectName The project name.
+	 * @param string $eventType The event type (creation or status change).
+	 * @param string $uuid The project UUID (for the detail-view reference).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-003-02
+	 */
+	public function notifyFailure(string $projectName, string $eventType, string $uuid): void {
+		$adminGroup = $this->groupManager->get('admin');
+		if ($adminGroup === null) {
+			return;
+		}
 
-        foreach ($adminGroup->getUsers() as $user) {
-            $this->notificationService->sendNotification(
-                userId: $user->getUID(),
-                subject: 'ledger_sync_failed',
-                parameters: [
-                    'projectName' => $projectName,
-                    'eventType'   => $eventType,
-                ],
-                objectType: 'project',
-                objectId: $uuid
-            );
-        }
-    }//end notifyFailure()
+		foreach ($adminGroup->getUsers() as $user) {
+			$this->notificationService->sendNotification(
+				userId: $user->getUID(),
+				subject: 'ledger_sync_failed',
+				parameters: [
+					'projectName' => $projectName,
+					'eventType' => $eventType,
+				],
+				objectType: 'project',
+				objectId: $uuid
+			);
+		}
+	}//end notifyFailure()
 }//end class

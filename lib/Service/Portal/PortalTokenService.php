@@ -34,119 +34,113 @@ use OCP\Security\ISecureRandom;
 /**
  * Issues and verifies single-use hashed portal tokens.
  */
-class PortalTokenService
-{
-    /**
-     * Token byte length (32 bytes = 256 bits).
-     *
-     * @var int
-     */
-    private const TOKEN_BYTES = 32;
+class PortalTokenService {
+	/**
+	 * Token byte length (32 bytes = 256 bits).
+	 *
+	 * @var int
+	 */
+	private const TOKEN_BYTES = 32;
 
-    /**
-     * Constructor.
-     *
-     * @param ISecureRandom $secureRandom The CSPRNG.
-     * @param ITimeFactory  $time         The time factory.
-     */
-    public function __construct(
-        private ISecureRandom $secureRandom,
-        private ITimeFactory $time,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ISecureRandom $secureRandom The CSPRNG.
+	 * @param ITimeFactory $time The time factory.
+	 */
+	public function __construct(
+		private ISecureRandom $secureRandom,
+		private ITimeFactory $time,
+	) {
+	}//end __construct()
 
-    /**
-     * Issue a token, returning the plaintext (to email) and the hash + expiry
-     * (to persist on the account). The plaintext is never persisted.
-     *
-     * @param int $ttlMinutes Minutes until the token expires.
-     *
-     * @return array{plain: string, hash: string, expiresAt: string} The token material.
-     */
-    public function issue(int $ttlMinutes): array
-    {
-        $plain  = $this->randomToken();
-        $expiry = $this->time->getDateTime();
-        $expiry->modify('+'.max(1, $ttlMinutes).' minutes');
+	/**
+	 * Issue a token, returning the plaintext (to email) and the hash + expiry
+	 * (to persist on the account). The plaintext is never persisted.
+	 *
+	 * @param int $ttlMinutes Minutes until the token expires.
+	 *
+	 * @return array{plain: string, hash: string, expiresAt: string} The token material.
+	 */
+	public function issue(int $ttlMinutes): array {
+		$plain = $this->randomToken();
+		$expiry = $this->time->getDateTime();
+		$expiry->modify('+' . max(1, $ttlMinutes) . ' minutes');
 
-        return [
-            'plain'     => $plain,
-            'hash'      => $this->hash(plain: $plain),
-            'expiresAt' => $expiry->format(DATE_ATOM),
-        ];
-    }//end issue()
+		return [
+			'plain' => $plain,
+			'hash' => $this->hash(plain: $plain),
+			'expiresAt' => $expiry->format(DATE_ATOM),
+		];
+	}//end issue()
 
-    /**
-     * Verify a presented plaintext token against a stored hash and expiry.
-     *
-     * Returns false for an empty/absent token, a hash mismatch, or an expired
-     * token. The hash comparison is constant-time.
-     *
-     * @param string|null $plain      The presented plaintext token.
-     * @param string|null $storedHash The stored SHA-256 hash.
-     * @param string|null $expiresAt  The stored ISO-8601 expiry, or null.
-     *
-     * @return bool True when the token is valid and unexpired.
-     */
-    public function verify(?string $plain, ?string $storedHash, ?string $expiresAt): bool
-    {
-        if ($plain === null || $plain === '' || $storedHash === null || $storedHash === '') {
-            return false;
-        }
+	/**
+	 * Verify a presented plaintext token against a stored hash and expiry.
+	 *
+	 * Returns false for an empty/absent token, a hash mismatch, or an expired
+	 * token. The hash comparison is constant-time.
+	 *
+	 * @param string|null $plain The presented plaintext token.
+	 * @param string|null $storedHash The stored SHA-256 hash.
+	 * @param string|null $expiresAt The stored ISO-8601 expiry, or null.
+	 *
+	 * @return bool True when the token is valid and unexpired.
+	 */
+	public function verify(?string $plain, ?string $storedHash, ?string $expiresAt): bool {
+		if ($plain === null || $plain === '' || $storedHash === null || $storedHash === '') {
+			return false;
+		}
 
-        if (hash_equals($storedHash, $this->hash(plain: $plain)) === false) {
-            return false;
-        }
+		if (hash_equals($storedHash, $this->hash(plain: $plain)) === false) {
+			return false;
+		}
 
-        return $this->isUnexpired(expiresAt: $expiresAt);
-    }//end verify()
+		return $this->isUnexpired(expiresAt: $expiresAt);
+	}//end verify()
 
-    /**
-     * Whether an ISO-8601 expiry timestamp is still in the future.
-     *
-     * @param string|null $expiresAt The expiry timestamp, or null.
-     *
-     * @return bool True when unexpired.
-     */
-    public function isUnexpired(?string $expiresAt): bool
-    {
-        if ($expiresAt === null || $expiresAt === '') {
-            return false;
-        }
+	/**
+	 * Whether an ISO-8601 expiry timestamp is still in the future.
+	 *
+	 * @param string|null $expiresAt The expiry timestamp, or null.
+	 *
+	 * @return bool True when unexpired.
+	 */
+	public function isUnexpired(?string $expiresAt): bool {
+		if ($expiresAt === null || $expiresAt === '') {
+			return false;
+		}
 
-        $now = $this->time->getDateTime()->getTimestamp();
-        $exp = strtotime($expiresAt);
-        if ($exp === false) {
-            return false;
-        }
+		$now = $this->time->getDateTime()->getTimestamp();
+		$exp = strtotime($expiresAt);
+		if ($exp === false) {
+			return false;
+		}
 
-        return $exp > $now;
-    }//end isUnexpired()
+		return $exp > $now;
+	}//end isUnexpired()
 
-    /**
-     * SHA-256 hash of a token (the only form stored).
-     *
-     * @param string $plain The plaintext token.
-     *
-     * @return string The hex SHA-256 digest.
-     */
-    public function hash(string $plain): string
-    {
-        return hash('sha256', $plain);
-    }//end hash()
+	/**
+	 * SHA-256 hash of a token (the only form stored).
+	 *
+	 * @param string $plain The plaintext token.
+	 *
+	 * @return string The hex SHA-256 digest.
+	 */
+	public function hash(string $plain): string {
+		return hash('sha256', $plain);
+	}//end hash()
 
-    /**
-     * Generate a 256-bit URL-safe random token.
-     *
-     * @return string The base64url-encoded token.
-     */
-    public function randomToken(): string
-    {
-        $bytes = $this->secureRandom->generate(
-            self::TOKEN_BYTES,
-            ISecureRandom::CHAR_ALPHANUMERIC
-        );
+	/**
+	 * Generate a 256-bit URL-safe random token.
+	 *
+	 * @return string The base64url-encoded token.
+	 */
+	public function randomToken(): string {
+		$bytes = $this->secureRandom->generate(
+			self::TOKEN_BYTES,
+			ISecureRandom::CHAR_ALPHANUMERIC
+		);
 
-        return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
-    }//end randomToken()
+		return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
+	}//end randomToken()
 }//end class

@@ -38,104 +38,104 @@ $autoloader = require __DIR__ . '/../vendor/autoload.php';
 // autoloader is ever polluted. Loading is lazy, so ordering relative to the
 // OCP/NC registration below is irrelevant.
 if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
-    $autoloader->addPsr4('OCA\\OpenRegister\\', __DIR__ . '/Stubs/');
-    $autoloader->addPsr4('Doctrine\\DBAL\\', __DIR__ . '/Stubs/DBAL/');
-    $autoloader->addPsr4('OC\\', __DIR__ . '/Stubs/OC/');
+	$autoloader->addPsr4('OCA\\OpenRegister\\', __DIR__ . '/Stubs/');
+	$autoloader->addPsr4('Doctrine\\DBAL\\', __DIR__ . '/Stubs/DBAL/');
+	$autoloader->addPsr4('OC\\', __DIR__ . '/Stubs/OC/');
 }
 
 if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
-    if (is_dir(__DIR__ . '/../vendor/nextcloud/ocp/OCP') === true) {
-        $autoloader->addPsr4('OCP\\', __DIR__ . '/../vendor/nextcloud/ocp/OCP/');
-    }
+	if (is_dir(__DIR__ . '/../vendor/nextcloud/ocp/OCP') === true) {
+		$autoloader->addPsr4('OCP\\', __DIR__ . '/../vendor/nextcloud/ocp/OCP/');
+	}
 
-    if (is_dir(__DIR__ . '/../vendor/nextcloud/ocp/NCU') === true) {
-        $autoloader->addPsr4('NCU\\', __DIR__ . '/../vendor/nextcloud/ocp/NCU/');
-    }
+	if (is_dir(__DIR__ . '/../vendor/nextcloud/ocp/NCU') === true) {
+		$autoloader->addPsr4('NCU\\', __DIR__ . '/../vendor/nextcloud/ocp/NCU/');
+	}
 
-    // Register NC 3rdparty paths for Psr\Http and Symfony\Component not bundled
-    // in pipelinq's own vendor/ but available from the NC installation.
-    $ncBase = dirname(dirname(dirname(__DIR__)));
-    if (is_dir($ncBase . '/3rdparty') === true) {
-        // Psr\Http\Client + Psr\Http\Message
-        if (is_dir($ncBase . '/3rdparty/psr/http-client/src') === true) {
-            $autoloader->addPsr4('Psr\\Http\\Client\\', $ncBase . '/3rdparty/psr/http-client/src/');
-        }
+	// Register NC 3rdparty paths for Psr\Http and Symfony\Component not bundled
+	// in pipelinq's own vendor/ but available from the NC installation.
+	$ncBase = dirname(dirname(dirname(__DIR__)));
+	if (is_dir($ncBase . '/3rdparty') === true) {
+		// Psr\Http\Client + Psr\Http\Message
+		if (is_dir($ncBase . '/3rdparty/psr/http-client/src') === true) {
+			$autoloader->addPsr4('Psr\\Http\\Client\\', $ncBase . '/3rdparty/psr/http-client/src/');
+		}
 
-        if (is_dir($ncBase . '/3rdparty/psr/http-message/src') === true) {
-            $autoloader->addPsr4('Psr\\Http\\Message\\', $ncBase . '/3rdparty/psr/http-message/src/');
-        }
+		if (is_dir($ncBase . '/3rdparty/psr/http-message/src') === true) {
+			$autoloader->addPsr4('Psr\\Http\\Message\\', $ncBase . '/3rdparty/psr/http-message/src/');
+		}
 
-        // Symfony\Component\HttpFoundation (needed by XWikiService + others)
-        if (is_dir($ncBase . '/3rdparty/symfony/http-foundation') === true) {
-            $autoloader->addPsr4('Symfony\\Component\\HttpFoundation\\', $ncBase . '/3rdparty/symfony/http-foundation/');
-        }
+		// Symfony\Component\HttpFoundation (needed by XWikiService + others)
+		if (is_dir($ncBase . '/3rdparty/symfony/http-foundation') === true) {
+			$autoloader->addPsr4('Symfony\\Component\\HttpFoundation\\', $ncBase . '/3rdparty/symfony/http-foundation/');
+		}
 
-        // GuzzleHttp
-        if (is_dir($ncBase . '/3rdparty/guzzlehttp/guzzle/src') === true) {
-            $autoloader->addPsr4('GuzzleHttp\\', $ncBase . '/3rdparty/guzzlehttp/guzzle/src/');
-        }
+		// GuzzleHttp
+		if (is_dir($ncBase . '/3rdparty/guzzlehttp/guzzle/src') === true) {
+			$autoloader->addPsr4('GuzzleHttp\\', $ncBase . '/3rdparty/guzzlehttp/guzzle/src/');
+		}
 
-        if (is_dir($ncBase . '/3rdparty/guzzlehttp/promises/src') === true) {
-            $autoloader->addPsr4('GuzzleHttp\\Promise\\', $ncBase . '/3rdparty/guzzlehttp/promises/src/');
-        }
-    }
+		if (is_dir($ncBase . '/3rdparty/guzzlehttp/promises/src') === true) {
+			$autoloader->addPsr4('GuzzleHttp\\Promise\\', $ncBase . '/3rdparty/guzzlehttp/promises/src/');
+		}
+	}
 }
 
 // Eager preload stubs before anything else declares the real classes.
 foreach ([
-    'Db/ObjectEntity.php',
-    'Service/ObjectService.php',
-    'Service/Integration/Providers/MessageDispatchProvider.php',
+	'Db/ObjectEntity.php',
+	'Service/ObjectService.php',
+	'Service/Integration/Providers/MessageDispatchProvider.php',
 ] as $stubRelativePath) {
-    $stubFile = __DIR__ . '/Stubs/' . $stubRelativePath;
-    if (is_file($stubFile) === true) {
-        try {
-            require_once $stubFile;
-        } catch (\Throwable $e) {
-            // A stub whose dependency is unavailable is skipped.
-        }
-    }
+	$stubFile = __DIR__ . '/Stubs/' . $stubRelativePath;
+	if (is_file($stubFile) === true) {
+		try {
+			require_once $stubFile;
+		} catch (\Throwable $e) {
+			// A stub whose dependency is unavailable is skipped.
+		}
+	}
 }
 
 // Load remaining stubs via class_exists / interface_exists guards.
 if (interface_exists(\OCA\OpenRegister\Mcp\IMcpToolProvider::class) === false) {
-    $stubFile = __DIR__ . '/Stubs/Mcp/IMcpToolProvider.php';
-    if (file_exists($stubFile) === true) {
-        require_once $stubFile;
-    }
+	$stubFile = __DIR__ . '/Stubs/Mcp/IMcpToolProvider.php';
+	if (file_exists($stubFile) === true) {
+		require_once $stubFile;
+	}
 }
 
 if (class_exists(\OCA\OpenRegister\Service\ObjectService::class) === false) {
-    $stubFile = __DIR__ . '/Stubs/Service/ObjectService.php';
-    if (file_exists($stubFile) === true) {
-        require_once $stubFile;
-    }
+	$stubFile = __DIR__ . '/Stubs/Service/ObjectService.php';
+	if (file_exists($stubFile) === true) {
+		require_once $stubFile;
+	}
 }
 
 if (interface_exists(\OCA\OpenRegister\Lifecycle\LifecycleGuardInterface::class) === false) {
-    $f1 = __DIR__ . '/Stubs/Lifecycle/GuardResult.php';
-    $f2 = __DIR__ . '/Stubs/Lifecycle/LifecycleGuardInterface.php';
-    if (file_exists($f1) === true) {
-        require_once $f1;
-    }
+	$f1 = __DIR__ . '/Stubs/Lifecycle/GuardResult.php';
+	$f2 = __DIR__ . '/Stubs/Lifecycle/LifecycleGuardInterface.php';
+	if (file_exists($f1) === true) {
+		require_once $f1;
+	}
 
-    if (file_exists($f2) === true) {
-        require_once $f2;
-    }
+	if (file_exists($f2) === true) {
+		require_once $f2;
+	}
 }
 
 if (class_exists(\OCA\OpenRegister\Service\Lifecycle\TransitionEngine::class) === false) {
-    $stubFile = __DIR__ . '/Stubs/Service/Lifecycle/TransitionEngine.php';
-    if (file_exists($stubFile) === true) {
-        require_once $stubFile;
-    }
+	$stubFile = __DIR__ . '/Stubs/Service/Lifecycle/TransitionEngine.php';
+	if (file_exists($stubFile) === true) {
+		require_once $stubFile;
+	}
 }
 
 // Portal test helpers.
 if (file_exists(__DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php') === true) {
-    require_once __DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php';
+	require_once __DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php';
 }
 
 if (file_exists(__DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php') === true) {
-    require_once __DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php';
+	require_once __DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php';
 }

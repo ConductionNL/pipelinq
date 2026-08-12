@@ -43,160 +43,153 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates profile, account and
  *  export services this self-service surface fronts.
  */
-class PortalAccountController extends PortalApiController
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest             $request The request.
-     * @param PortalRequestGuard   $guard   The portal guard.
-     * @param LoggerInterface      $logger  The logger.
-     * @param PortalProfileService $profile The profile service.
-     * @param PortalAccountService $account The account service.
-     * @param PortalExportService  $export  The export service.
-     */
-    public function __construct(
-        IRequest $request,
-        PortalRequestGuard $guard,
-        LoggerInterface $logger,
-        private PortalProfileService $profile,
-        private PortalAccountService $account,
-        private PortalExportService $export,
-    ) {
-        parent::__construct(request: $request, guard: $guard, logger: $logger);
-    }//end __construct()
+class PortalAccountController extends PortalApiController {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param LoggerInterface $logger The logger.
+	 * @param PortalProfileService $profile The profile service.
+	 * @param PortalAccountService $account The account service.
+	 * @param PortalExportService $export The export service.
+	 */
+	public function __construct(
+		IRequest $request,
+		PortalRequestGuard $guard,
+		LoggerInterface $logger,
+		private PortalProfileService $profile,
+		private PortalAccountService $account,
+		private PortalExportService $export,
+	) {
+		parent::__construct(request: $request, guard: $guard, logger: $logger);
+	}//end __construct()
 
-    /**
-     * Read the current account's profile.
-     *
-     * @return JSONResponse The profile.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function profile(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $ctx = $this->requireSession();
-                    return [$this->profile->present($ctx['account']), Http::STATUS_OK];
-                }
-                );
-    }//end profile()
+	/**
+	 * Read the current account's profile.
+	 *
+	 * @return JSONResponse The profile.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function profile(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$ctx = $this->requireSession();
+				return [$this->profile->present($ctx['account']), Http::STATUS_OK];
+			}
+		);
+	}//end profile()
 
-    /**
-     * Update the current account's profile.
-     *
-     * @return JSONResponse The updated profile.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function updateProfile(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $ctx     = $this->requireSession();
-                    $changes = [];
-                    foreach (['displayName', 'phone', 'locale', 'address', 'jobTitle', 'email'] as $field) {
-                        $value = $this->request->getParam($field, null);
-                        if ($value !== null) {
-                            $changes[$field] = $value;
-                            if (is_string($value) === true) {
-                                $changes[$field] = trim($value);
-                            }
-                        }
-                    }
+	/**
+	 * Update the current account's profile.
+	 *
+	 * @return JSONResponse The updated profile.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function updateProfile(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$ctx = $this->requireSession();
+				$changes = [];
+				foreach (['displayName', 'phone', 'locale', 'address', 'jobTitle', 'email'] as $field) {
+					$value = $this->request->getParam($field, null);
+					if ($value !== null) {
+						$changes[$field] = $value;
+						if (is_string($value) === true) {
+							$changes[$field] = trim($value);
+						}
+					}
+				}
 
-                    $updated = $this->profile->update($ctx['account'], $ctx['tenantId'], $changes);
-                    return [$updated, Http::STATUS_OK];
-                }
-                );
-    }//end updateProfile()
+				$updated = $this->profile->update($ctx['account'], $ctx['tenantId'], $changes);
+				return [$updated, Http::STATUS_OK];
+			}
+		);
+	}//end updateProfile()
 
-    /**
-     * Verify a pending email change with a token.
-     *
-     * @return JSONResponse The result.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function verifyEmail(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $tenantId = $this->requireTenant();
-                    $ok       = $this->profile->verifyEmail($this->strParam(name: 'token'), $tenantId);
-                    if ($ok === false) {
-                        return [['errorCode' => 'invalidToken', 'message' => 'Ongeldige of verlopen link.'], Http::STATUS_BAD_REQUEST];
-                    }
+	/**
+	 * Verify a pending email change with a token.
+	 *
+	 * @return JSONResponse The result.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function verifyEmail(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$tenantId = $this->requireTenant();
+				$ok = $this->profile->verifyEmail($this->strParam(name: 'token'), $tenantId);
+				if ($ok === false) {
+					return [['errorCode' => 'invalidToken', 'message' => 'Ongeldige of verlopen link.'], Http::STATUS_BAD_REQUEST];
+				}
 
-                    return [['status' => 'email-verified'], Http::STATUS_OK];
-                }
-                );
-    }//end verifyEmail()
+				return [['status' => 'email-verified'], Http::STATUS_OK];
+			}
+		);
+	}//end verifyEmail()
 
-    /**
-     * Request an AVG data export.
-     *
-     * @return JSONResponse The export download descriptor.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function requestExport(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $ctx    = $this->requireSession();
-                    $result = $this->export->requestExport($ctx['account'], $ctx['tenantId']);
-                    return [$result, Http::STATUS_ACCEPTED];
-                }
-                );
-    }//end requestExport()
+	/**
+	 * Request an AVG data export.
+	 *
+	 * @return JSONResponse The export download descriptor.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function requestExport(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$ctx = $this->requireSession();
+				$result = $this->export->requestExport($ctx['account'], $ctx['tenantId']);
+				return [$result, Http::STATUS_ACCEPTED];
+			}
+		);
+	}//end requestExport()
 
-    /**
-     * Request account closure (sends a confirmation email).
-     *
-     * @return JSONResponse The acknowledgement.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function requestClose(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $ctx = $this->requireSession();
-                    $this->account->requestClosure(account: $ctx['account'], tenantId: $ctx['tenantId']);
-                    return [['status' => 'closure-requested'], Http::STATUS_OK];
-                }
-                );
-    }//end requestClose()
+	/**
+	 * Request account closure (sends a confirmation email).
+	 *
+	 * @return JSONResponse The acknowledgement.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function requestClose(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$ctx = $this->requireSession();
+				$this->account->requestClosure(account: $ctx['account'], tenantId: $ctx['tenantId']);
+				return [['status' => 'closure-requested'], Http::STATUS_OK];
+			}
+		);
+	}//end requestClose()
 
-    /**
-     * Confirm account closure with a token.
-     *
-     * @return JSONResponse The result.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function confirmClose(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $tenantId = $this->requireTenant();
-                    $this->account->close(token: $this->strParam(name: 'token'), tenantId: $tenantId);
-                    return [['status' => 'account-closed'], Http::STATUS_OK];
-                }
-                );
-    }//end confirmClose()
+	/**
+	 * Confirm account closure with a token.
+	 *
+	 * @return JSONResponse The result.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	public function confirmClose(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$tenantId = $this->requireTenant();
+				$this->account->close(token: $this->strParam(name: 'token'), tenantId: $tenantId);
+				return [['status' => 'account-closed'], Http::STATUS_OK];
+			}
+		);
+	}//end confirmClose()
 }//end class

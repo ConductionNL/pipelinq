@@ -40,204 +40,196 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Minimal collaborator set
  *  (OR container, app config, logger) a register reader needs.
  */
-class MainRegisterReader
-{
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface $container The DI container.
-     * @param IAppConfig         $appConfig The app config.
-     * @param LoggerInterface    $logger    The logger.
-     */
-    public function __construct(
-        private ContainerInterface $container,
-        private IAppConfig $appConfig,
-        private LoggerInterface $logger,
-    ) {
-    }//end __construct()
+class MainRegisterReader {
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container The DI container.
+	 * @param IAppConfig $appConfig The app config.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private ContainerInterface $container,
+		private IAppConfig $appConfig,
+		private LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Whether a given main-register schema is configured on this instance.
-     *
-     * @param string $schemaKey The app-config schema key (e.g. posTransaction_schema).
-     *
-     * @return bool True when both register and schema are configured.
-     */
-    public function hasSchema(string $schemaKey): bool
-    {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-        return $register !== '' && $schema !== '';
-    }//end hasSchema()
+	/**
+	 * Whether a given main-register schema is configured on this instance.
+	 *
+	 * @param string $schemaKey The app-config schema key (e.g. posTransaction_schema).
+	 *
+	 * @return bool True when both register and schema are configured.
+	 */
+	public function hasSchema(string $schemaKey): bool {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		return $register !== '' && $schema !== '';
+	}//end hasSchema()
 
-    /**
-     * Find all objects of a main-register schema matching equality filters.
-     *
-     * The register and schema are always injected here, never from the caller's
-     * filters, so the read is constrained to the intended schema.
-     *
-     * @param string               $schemaKey The app-config schema key.
-     * @param array<string, mixed> $filters   Extra equality filters.
-     *
-     * @return array<int, array<string, mixed>> The objects as arrays.
-     */
-    public function findAll(string $schemaKey, array $filters=[]): array
-    {
-        if ($this->hasSchema(schemaKey: $schemaKey) === false) {
-            return [];
-        }
+	/**
+	 * Find all objects of a main-register schema matching equality filters.
+	 *
+	 * The register and schema are always injected here, never from the caller's
+	 * filters, so the read is constrained to the intended schema.
+	 *
+	 * @param string $schemaKey The app-config schema key.
+	 * @param array<string, mixed> $filters Extra equality filters.
+	 *
+	 * @return array<int, array<string, mixed>> The objects as arrays.
+	 */
+	public function findAll(string $schemaKey, array $filters = []): array {
+		if ($this->hasSchema(schemaKey: $schemaKey) === false) {
+			return [];
+		}
 
-        [$register, $schema] = $this->config(schemaKey: $schemaKey);
+		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
-        try {
-            $results = $this->objectService()->findAll(
-                config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)]
-            );
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'Pipelinq portal: main-register findAll failed',
-                ['schemaKey' => $schemaKey, 'exception' => $e->getMessage()]
-            );
-            return [];
-        }
+		try {
+			$results = $this->objectService()->findAll(
+				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq portal: main-register findAll failed',
+				['schemaKey' => $schemaKey, 'exception' => $e->getMessage()]
+			);
+			return [];
+		}
 
-        $objects = [];
-        foreach (($results ?? []) as $result) {
-            $objects[] = $this->toArray(object: $result);
-        }
+		$objects = [];
+		foreach (($results ?? []) as $result) {
+			$objects[] = $this->toArray(object: $result);
+		}
 
-        return $objects;
-    }//end findAll()
+		return $objects;
+	}//end findAll()
 
-    /**
-     * Find a single main-register object by id, or null.
-     *
-     * @param string $schemaKey The app-config schema key.
-     * @param string $id        The object id.
-     *
-     * @return array<string, mixed>|null The object, or null.
-     */
-    public function find(string $schemaKey, string $id): ?array
-    {
-        if ($id === '' || $this->hasSchema(schemaKey: $schemaKey) === false) {
-            return null;
-        }
+	/**
+	 * Find a single main-register object by id, or null.
+	 *
+	 * @param string $schemaKey The app-config schema key.
+	 * @param string $id The object id.
+	 *
+	 * @return array<string, mixed>|null The object, or null.
+	 */
+	public function find(string $schemaKey, string $id): ?array {
+		if ($id === '' || $this->hasSchema(schemaKey: $schemaKey) === false) {
+			return null;
+		}
 
-        [$register, $schema] = $this->config(schemaKey: $schemaKey);
+		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
-        try {
-            $object = $this->objectService()->find(id: $id, register: $register, schema: $schema);
-        } catch (\Throwable $e) {
-            return null;
-        }
+		try {
+			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema);
+		} catch (\Throwable $e) {
+			return null;
+		}
 
-        if ($object === null) {
-            return null;
-        }
+		if ($object === null) {
+			return null;
+		}
 
-        return $this->toArray(object: $object);
-    }//end find()
+		return $this->toArray(object: $object);
+	}//end find()
 
-    /**
-     * Persist an object to a main-register schema. The portal only writes here
-     * for a customer-submitted request; the register and schema are injected so
-     * a caller can never redirect the write to another schema.
-     *
-     * @param string               $schemaKey The app-config schema key.
-     * @param array<string, mixed> $data      The object payload.
-     * @param string|null          $id        The id for an update, or null.
-     *
-     * @return array<string, mixed> The saved object.
-     *
-     * @throws RuntimeException When persistence fails.
-     */
-    public function save(string $schemaKey, array $data, ?string $id=null): array
-    {
-        [$register, $schema] = $this->config(schemaKey: $schemaKey);
-        unset($data['@self']);
+	/**
+	 * Persist an object to a main-register schema. The portal only writes here
+	 * for a customer-submitted request; the register and schema are injected so
+	 * a caller can never redirect the write to another schema.
+	 *
+	 * @param string $schemaKey The app-config schema key.
+	 * @param array<string, mixed> $data The object payload.
+	 * @param string|null $id The id for an update, or null.
+	 *
+	 * @return array<string, mixed> The saved object.
+	 *
+	 * @throws RuntimeException When persistence fails.
+	 */
+	public function save(string $schemaKey, array $data, ?string $id = null): array {
+		[$register, $schema] = $this->config(schemaKey: $schemaKey);
+		unset($data['@self']);
 
-        try {
-            $saved = $this->objectService()->saveObject(
-                object: $data,
-                extend: [],
-                register: $register,
-                schema: $schema,
-                uuid: $id
-            );
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                'Pipelinq portal: main-register save failed',
-                ['schemaKey' => $schemaKey, 'exception' => $e->getMessage()]
-            );
-            throw new RuntimeException('Failed to persist object.');
-        }
+		try {
+			$saved = $this->objectService()->saveObject(
+				object: $data,
+				extend: [],
+				register: $register,
+				schema: $schema,
+				uuid: $id
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'Pipelinq portal: main-register save failed',
+				['schemaKey' => $schemaKey, 'exception' => $e->getMessage()]
+			);
+			throw new RuntimeException('Failed to persist object.');
+		}
 
-        return $this->toArray(object: $saved);
-    }//end save()
+		return $this->toArray(object: $saved);
+	}//end save()
 
-    /**
-     * Resolve [register, schema] for a schema key.
-     *
-     * @param string $schemaKey The app-config schema key.
-     *
-     * @return array{0: string, 1: string} The register and schema ids.
-     *
-     * @throws RuntimeException When unconfigured.
-     */
-    private function config(string $schemaKey): array
-    {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-        if ($register === '' || $schema === '') {
-            throw new RuntimeException("Main register schema '{$schemaKey}' is not configured.");
-        }
+	/**
+	 * Resolve [register, schema] for a schema key.
+	 *
+	 * @param string $schemaKey The app-config schema key.
+	 *
+	 * @return array{0: string, 1: string} The register and schema ids.
+	 *
+	 * @throws RuntimeException When unconfigured.
+	 */
+	private function config(string $schemaKey): array {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		if ($register === '' || $schema === '') {
+			throw new RuntimeException("Main register schema '{$schemaKey}' is not configured.");
+		}
 
-        return [$register, $schema];
-    }//end config()
+		return [$register, $schema];
+	}//end config()
 
-    /**
-     * Normalise an OR object (entity or array) into a plain array.
-     *
-     * @param mixed $object The OR object.
-     *
-     * @return array<string, mixed> The object as an array.
-     */
-    private function toArray(mixed $object): array
-    {
-        if (is_array($object) === true) {
-            return $object;
-        }
+	/**
+	 * Normalise an OR object (entity or array) into a plain array.
+	 *
+	 * @param mixed $object The OR object.
+	 *
+	 * @return array<string, mixed> The object as an array.
+	 */
+	private function toArray(mixed $object): array {
+		if (is_array($object) === true) {
+			return $object;
+		}
 
-        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $serialized = $object->jsonSerialize();
-            if (is_array($serialized) === true) {
-                return $serialized;
-            }
-        }
+		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+			$serialized = $object->jsonSerialize();
+			if (is_array($serialized) === true) {
+				return $serialized;
+			}
+		}
 
-        if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-            $data = $object->getObject();
-            if (is_array($data) === true) {
-                return $data;
-            }
-        }
+		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+			$data = $object->getObject();
+			if (is_array($data) === true) {
+				return $data;
+			}
+		}
 
-        return (array) $object;
-    }//end toArray()
+		return (array)$object;
+	}//end toArray()
 
-    /**
-     * Get the OpenRegister ObjectService.
-     *
-     * @return object The object service.
-     *
-     * @throws RuntimeException When OpenRegister is unavailable.
-     */
-    private function objectService(): object
-    {
-        try {
-            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-        } catch (\Throwable $e) {
-            throw new RuntimeException('OpenRegister service is not available.');
-        }
-    }//end objectService()
+	/**
+	 * Get the OpenRegister ObjectService.
+	 *
+	 * @return object The object service.
+	 *
+	 * @throws RuntimeException When OpenRegister is unavailable.
+	 */
+	private function objectService(): object {
+		try {
+			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		} catch (\Throwable $e) {
+			throw new RuntimeException('OpenRegister service is not available.');
+		}
+	}//end objectService()
 }//end class

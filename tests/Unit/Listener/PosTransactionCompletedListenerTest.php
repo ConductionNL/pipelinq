@@ -40,232 +40,213 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for the POS → loyalty seam.
  */
-class PosTransactionCompletedListenerTest extends TestCase
-{
+class PosTransactionCompletedListenerTest extends TestCase {
 
-    /**
-     * Calls captured from the loyalty engine.
-     *
-     * @var array<int, array{klantId: string, transaction: array<string, mixed>}>
-     */
-    private array $calls = [];
+	/**
+	 * Calls captured from the loyalty engine.
+	 *
+	 * @var array<int, array{klantId: string, transaction: array<string, mixed>}>
+	 */
+	private array $calls = [];
 
+	/**
+	 * Build a real posTransaction entity (never a mock — see EntityAccessorTest).
+	 *
+	 * @param string $schema The schema id carried by the entity.
+	 * @param array<string, mixed> $data The object payload.
+	 *
+	 * @return ObjectEntity The entity.
+	 */
+	private function entity(string $schema, array $data): ObjectEntity {
+		$entity = new ObjectEntity();
+		$entity->setUuid((string)($data['uuid'] ?? 'txn-1'));
+		$entity->setSchema($schema);
+		$entity->setObject($data);
+		return $entity;
+	}//end entity()
 
-    /**
-     * Build a real posTransaction entity (never a mock — see EntityAccessorTest).
-     *
-     * @param string               $schema The schema id carried by the entity.
-     * @param array<string, mixed> $data   The object payload.
-     *
-     * @return ObjectEntity The entity.
-     */
-    private function entity(string $schema, array $data): ObjectEntity
-    {
-        $entity = new ObjectEntity();
-        $entity->setUuid((string) ($data['uuid'] ?? 'txn-1'));
-        $entity->setSchema($schema);
-        $entity->setObject($data);
-        return $entity;
+	/**
+	 * Build the listener with a capturing loyalty engine.
+	 *
+	 * @param string|null $mappedType The entity type SchemaMapService resolves to.
+	 * @param string $configuredPos The `posTransaction_schema` app-config value.
+	 *
+	 * @return PosTransactionCompletedListener The listener under test.
+	 */
+	private function listener(?string $mappedType = 'posTransaction', string $configuredPos = ''): PosTransactionCompletedListener {
+		$this->calls = [];
 
-    }//end entity()
+		$engine = $this->createMock(LoyaltyEngineService::class);
+		$engine->method('processPosTransaction')->willReturnCallback(
+			function (string $klantId, array $transaction): array {
+				$this->calls[] = ['klantId' => $klantId, 'transaction' => $transaction];
+				return [];
+			}
+		);
 
+		$schemaMap = $this->createMock(SchemaMapService::class);
+		$schemaMap->method('resolveEntityType')->willReturn($mappedType);
 
-    /**
-     * Build the listener with a capturing loyalty engine.
-     *
-     * @param string|null $mappedType     The entity type SchemaMapService resolves to.
-     * @param string      $configuredPos  The `posTransaction_schema` app-config value.
-     *
-     * @return PosTransactionCompletedListener The listener under test.
-     */
-    private function listener(?string $mappedType='posTransaction', string $configuredPos=''): PosTransactionCompletedListener
-    {
-        $this->calls = [];
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn($configuredPos);
 
-        $engine = $this->createMock(LoyaltyEngineService::class);
-        $engine->method('processPosTransaction')->willReturnCallback(
-            function (string $klantId, array $transaction): array {
-                $this->calls[] = ['klantId' => $klantId, 'transaction' => $transaction];
-                return [];
-            }
-        );
+		return new PosTransactionCompletedListener(
+			$engine,
+			$schemaMap,
+			$appConfig,
+			$this->createMock(LoggerInterface::class)
+		);
 
-        $schemaMap = $this->createMock(SchemaMapService::class);
-        $schemaMap->method('resolveEntityType')->willReturn($mappedType);
+	}//end listener()
 
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturn($configuredPos);
+	/**
+	 * The comparand contract: pipelinq matches on the NUMERIC schema id.
+	 *
+	 * OpenRegister stamps the schema's numeric id into the entity — measured on
+	 * a live Nextcloud 34, `MagicMapper::find(<uuid>)->getSchema()` returns
+	 * `'434'` for a posTransaction, and pipelinq's `posTransaction_schema`
+	 * app-config holds `434` because `SettingsMapBuilder::addSchemaToMap()`
+	 * stores `$schema['id']` keyed by slug. So reading the raw value is
+	 * sufficient here and slug resolution would BREAK the comparison
+	 * (`'posTransaction' !== '434'`).
+	 *
+	 * This test drives the app-config fallback arm with `resolveEntityType()`
+	 * returning null, so the only thing that can make it pass is the raw
+	 * numeric value matching the configured id.
+	 *
+	 * @return void
+	 */
+	public function testTheGuardMatchesOnTheNumericSchemaIdOpenRegisterStamps(): void {
+		$listener = $this->listener(mappedType: null, configuredPos: '434');
+		$entity = $this->entity(
+			'434',
+			['status' => 'settled', 'customer' => 'contact-42', 'total' => 5]
+		);
 
-        return new PosTransactionCompletedListener(
-            $engine,
-            $schemaMap,
-            $appConfig,
-            $this->createMock(LoggerInterface::class)
-        );
+		$listener->handle(new ObjectCreatedEvent($entity));
 
-    }//end listener()
+		$this->assertCount(1, $this->calls, 'the numeric schema id must match the configured id');
 
+		// The mirror: an entity carrying the SLUG does not match a numeric-id
+		// configuration, which is what makes the id-vs-slug distinction real.
+		$listener = $this->listener(mappedType: null, configuredPos: '434');
+		$slugged = $this->entity(
+			'posTransaction',
+			['status' => 'settled', 'customer' => 'contact-42', 'total' => 5]
+		);
 
-    /**
-     * The comparand contract: pipelinq matches on the NUMERIC schema id.
-     *
-     * OpenRegister stamps the schema's numeric id into the entity — measured on
-     * a live Nextcloud 34, `MagicMapper::find(<uuid>)->getSchema()` returns
-     * `'434'` for a posTransaction, and pipelinq's `posTransaction_schema`
-     * app-config holds `434` because `SettingsMapBuilder::addSchemaToMap()`
-     * stores `$schema['id']` keyed by slug. So reading the raw value is
-     * sufficient here and slug resolution would BREAK the comparison
-     * (`'posTransaction' !== '434'`).
-     *
-     * This test drives the app-config fallback arm with `resolveEntityType()`
-     * returning null, so the only thing that can make it pass is the raw
-     * numeric value matching the configured id.
-     *
-     * @return void
-     */
-    public function testTheGuardMatchesOnTheNumericSchemaIdOpenRegisterStamps(): void
-    {
-        $listener = $this->listener(mappedType: null, configuredPos: '434');
-        $entity   = $this->entity(
-            '434',
-            ['status' => 'settled', 'customer' => 'contact-42', 'total' => 5]
-        );
+		$listener->handle(new ObjectCreatedEvent($slugged));
 
-        $listener->handle(new ObjectCreatedEvent($entity));
+		$this->assertSame([], $this->calls);
 
-        $this->assertCount(1, $this->calls, 'the numeric schema id must match the configured id');
+	}//end testTheGuardMatchesOnTheNumericSchemaIdOpenRegisterStamps()
 
-        // The mirror: an entity carrying the SLUG does not match a numeric-id
-        // configuration, which is what makes the id-vs-slug distinction real.
-        $listener = $this->listener(mappedType: null, configuredPos: '434');
-        $slugged  = $this->entity(
-            'posTransaction',
-            ['status' => 'settled', 'customer' => 'contact-42', 'total' => 5]
-        );
+	/**
+	 * A settled posTransaction awards points, with the amount and the customer
+	 * link read from the fields the posTransaction schema actually declares.
+	 *
+	 * Reverting `isPosTransaction()` to `method_exists($entity, 'getSchema')`
+	 * makes this test fail, because the probe is false for a magic accessor.
+	 *
+	 * @return void
+	 */
+	public function testASettledTransactionReachesTheLoyaltyEngine(): void {
+		$listener = $this->listener();
+		$entity = $this->entity(
+			'schema-pos',
+			[
+				'uuid' => 'txn-9',
+				'status' => 'settled',
+				'customer' => 'contact-42',
+				'total' => 87.5,
+				'settledAt' => '2026-08-12T10:00:00+00:00',
+				'reference' => 'TXN-2026-0009',
+				'terminalId' => 'POS-1',
+			]
+		);
 
-        $listener->handle(new ObjectCreatedEvent($slugged));
+		$listener->handle(new ObjectUpdatedEvent($entity, null));
 
-        $this->assertSame([], $this->calls);
+		$this->assertCount(1, $this->calls);
+		$this->assertSame('contact-42', $this->calls[0]['klantId']);
 
-    }//end testTheGuardMatchesOnTheNumericSchemaIdOpenRegisterStamps()
+		$transaction = $this->calls[0]['transaction'];
+		$this->assertSame(87.5, $transaction['amount']);
+		$this->assertSame('2026-08-12T10:00:00+00:00', $transaction['timestamp']);
+		$this->assertSame('TXN-2026-0009', $transaction['posTransactionId']);
+		$this->assertSame('POS-1', $transaction['posTerminalId']);
+		$this->assertSame('purchase', $transaction['trigger']);
 
+	}//end testASettledTransactionReachesTheLoyaltyEngine()
 
-    /**
-     * A settled posTransaction awards points, with the amount and the customer
-     * link read from the fields the posTransaction schema actually declares.
-     *
-     * Reverting `isPosTransaction()` to `method_exists($entity, 'getSchema')`
-     * makes this test fail, because the probe is false for a magic accessor.
-     *
-     * @return void
-     */
-    public function testASettledTransactionReachesTheLoyaltyEngine(): void
-    {
-        $listener = $this->listener();
-        $entity   = $this->entity(
-            'schema-pos',
-            [
-                'uuid'       => 'txn-9',
-                'status'     => 'settled',
-                'customer'   => 'contact-42',
-                'total'      => 87.5,
-                'settledAt'  => '2026-08-12T10:00:00+00:00',
-                'reference'  => 'TXN-2026-0009',
-                'terminalId' => 'POS-1',
-            ]
-        );
+	/**
+	 * With no `reference` on the payload the transaction id falls back to the
+	 * entity uuid — which is itself a magic accessor.
+	 *
+	 * @return void
+	 */
+	public function testTheTransactionIdFallsBackToTheEntityUuid(): void {
+		$listener = $this->listener();
+		$entity = $this->entity(
+			'schema-pos',
+			[
+				'uuid' => 'txn-fallback',
+				'status' => 'settled',
+				'customer' => 'contact-7',
+				'total' => 10,
+			]
+		);
 
-        $listener->handle(new ObjectUpdatedEvent($entity, null));
+		$listener->handle(new ObjectCreatedEvent($entity));
 
-        $this->assertCount(1, $this->calls);
-        $this->assertSame('contact-42', $this->calls[0]['klantId']);
+		$this->assertCount(1, $this->calls);
+		$this->assertSame('txn-fallback', $this->calls[0]['transaction']['posTransactionId']);
 
-        $transaction = $this->calls[0]['transaction'];
-        $this->assertSame(87.5, $transaction['amount']);
-        $this->assertSame('2026-08-12T10:00:00+00:00', $transaction['timestamp']);
-        $this->assertSame('TXN-2026-0009', $transaction['posTransactionId']);
-        $this->assertSame('POS-1', $transaction['posTerminalId']);
-        $this->assertSame('purchase', $transaction['trigger']);
+	}//end testTheTransactionIdFallsBackToTheEntityUuid()
 
-    }//end testASettledTransactionReachesTheLoyaltyEngine()
+	/**
+	 * A transaction with no customer link awards nothing.
+	 *
+	 * @return void
+	 */
+	public function testAnAnonymousTransactionAwardsNothing(): void {
+		$listener = $this->listener();
+		$entity = $this->entity('schema-pos', ['status' => 'settled', 'total' => 12]);
 
+		$listener->handle(new ObjectCreatedEvent($entity));
 
-    /**
-     * With no `reference` on the payload the transaction id falls back to the
-     * entity uuid — which is itself a magic accessor.
-     *
-     * @return void
-     */
-    public function testTheTransactionIdFallsBackToTheEntityUuid(): void
-    {
-        $listener = $this->listener();
-        $entity   = $this->entity(
-            'schema-pos',
-            [
-                'uuid'     => 'txn-fallback',
-                'status'   => 'settled',
-                'customer' => 'contact-7',
-                'total'    => 10,
-            ]
-        );
+		$this->assertSame([], $this->calls);
 
-        $listener->handle(new ObjectCreatedEvent($entity));
+	}//end testAnAnonymousTransactionAwardsNothing()
 
-        $this->assertCount(1, $this->calls);
-        $this->assertSame('txn-fallback', $this->calls[0]['transaction']['posTransactionId']);
+	/**
+	 * A transaction that has not settled awards nothing.
+	 *
+	 * @return void
+	 */
+	public function testADraftTransactionAwardsNothing(): void {
+		$listener = $this->listener();
+		$entity = $this->entity('schema-pos', ['status' => 'draft', 'customer' => 'contact-1', 'total' => 12]);
 
-    }//end testTheTransactionIdFallsBackToTheEntityUuid()
+		$listener->handle(new ObjectCreatedEvent($entity));
 
+		$this->assertSame([], $this->calls);
 
-    /**
-     * A transaction with no customer link awards nothing.
-     *
-     * @return void
-     */
-    public function testAnAnonymousTransactionAwardsNothing(): void
-    {
-        $listener = $this->listener();
-        $entity   = $this->entity('schema-pos', ['status' => 'settled', 'total' => 12]);
+	}//end testADraftTransactionAwardsNothing()
 
-        $listener->handle(new ObjectCreatedEvent($entity));
+	/**
+	 * An entity on another schema is ignored — the guard still discriminates.
+	 *
+	 * @return void
+	 */
+	public function testAnUnrelatedSchemaIsIgnored(): void {
+		$listener = $this->listener(mappedType: 'lead');
+		$entity = $this->entity('schema-lead', ['status' => 'settled', 'customer' => 'contact-1', 'total' => 12]);
 
-        $this->assertSame([], $this->calls);
+		$listener->handle(new ObjectCreatedEvent($entity));
 
-    }//end testAnAnonymousTransactionAwardsNothing()
+		$this->assertSame([], $this->calls);
 
-
-    /**
-     * A transaction that has not settled awards nothing.
-     *
-     * @return void
-     */
-    public function testADraftTransactionAwardsNothing(): void
-    {
-        $listener = $this->listener();
-        $entity   = $this->entity('schema-pos', ['status' => 'draft', 'customer' => 'contact-1', 'total' => 12]);
-
-        $listener->handle(new ObjectCreatedEvent($entity));
-
-        $this->assertSame([], $this->calls);
-
-    }//end testADraftTransactionAwardsNothing()
-
-
-    /**
-     * An entity on another schema is ignored — the guard still discriminates.
-     *
-     * @return void
-     */
-    public function testAnUnrelatedSchemaIsIgnored(): void
-    {
-        $listener = $this->listener(mappedType: 'lead');
-        $entity   = $this->entity('schema-lead', ['status' => 'settled', 'customer' => 'contact-1', 'total' => 12]);
-
-        $listener->handle(new ObjectCreatedEvent($entity));
-
-        $this->assertSame([], $this->calls);
-
-    }//end testAnUnrelatedSchemaIsIgnored()
-
+	}//end testAnUnrelatedSchemaIsIgnored()
 
 }//end class

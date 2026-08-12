@@ -20,27 +20,26 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service\Gdpr\Evidence;
 
 if (interface_exists(EvidenceSourceProvider::class) === false) {
-    /**
-     * Stub of OR's EvidenceSourceProvider interface (unit tests only).
-     */
-    interface EvidenceSourceProvider
-    {
-        /**
-         * @return string The stable provider id.
-         */
-        public function getSourceId(): string;
+	/**
+	 * Stub of OR's EvidenceSourceProvider interface (unit tests only).
+	 */
+	interface EvidenceSourceProvider {
+		/**
+		 * @return string The stable provider id.
+		 */
+		public function getSourceId(): string;
 
-        /**
-         * @return bool Whether the provider can harvest now.
-         */
-        public function isEnabled(): bool;
+		/**
+		 * @return bool Whether the provider can harvest now.
+		 */
+		public function isEnabled(): bool;
 
-        /**
-         * @param string               $caseUuid The case uuid.
-         * @param array<string, mixed> $case     The case payload.
-         *
-         * @return EvidenceItem[] The harvested items.
-         */
-        public function harvest(string $caseUuid, array $case): array;
-    }//end interface
+		/**
+		 * @param string $caseUuid The case uuid.
+		 * @param array<string, mixed> $case The case payload.
+		 *
+		 * @return EvidenceItem[] The harvested items.
+		 */
+		public function harvest(string $caseUuid, array $case): array;
+	}//end interface
 }//end if

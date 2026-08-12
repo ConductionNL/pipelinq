@@ -30,62 +30,57 @@ use OCP\EventDispatcher\Event;
 /**
  * Minimal ObjectsMergedEvent stub.
  */
-class ObjectsMergedEvent extends Event
-{
-    /**
-     * Constructor.
-     *
-     * @param string             $survivorUuid     Surviving object uuid.
-     * @param array<int, string> $mergedFromUuids  Merged-away object uuids.
-     * @param string             $mergeOperationId Persisted mergeOperation uuid.
-     * @param bool               $isReversal       True for a reversal, not a merge.
-     */
-    public function __construct(
-        private string $survivorUuid,
-        private array $mergedFromUuids,
-        private string $mergeOperationId,
-        private bool $isReversal=false,
-    ) {
-        parent::__construct();
-    }//end __construct()
+class ObjectsMergedEvent extends Event {
+	/**
+	 * Constructor.
+	 *
+	 * @param string $survivorUuid Surviving object uuid.
+	 * @param array<int, string> $mergedFromUuids Merged-away object uuids.
+	 * @param string $mergeOperationId Persisted mergeOperation uuid.
+	 * @param bool $isReversal True for a reversal, not a merge.
+	 */
+	public function __construct(
+		private string $survivorUuid,
+		private array $mergedFromUuids,
+		private string $mergeOperationId,
+		private bool $isReversal = false,
+	) {
+		parent::__construct();
+	}//end __construct()
 
-    /**
-     * The surviving object's uuid.
-     *
-     * @return string Survivor uuid.
-     */
-    public function getSurvivorUuid(): string
-    {
-        return $this->survivorUuid;
-    }//end getSurvivorUuid()
+	/**
+	 * The surviving object's uuid.
+	 *
+	 * @return string Survivor uuid.
+	 */
+	public function getSurvivorUuid(): string {
+		return $this->survivorUuid;
+	}//end getSurvivorUuid()
 
-    /**
-     * The merged-away object uuids.
-     *
-     * @return array<int, string> Merged-from uuids.
-     */
-    public function getMergedFromUuids(): array
-    {
-        return $this->mergedFromUuids;
-    }//end getMergedFromUuids()
+	/**
+	 * The merged-away object uuids.
+	 *
+	 * @return array<int, string> Merged-from uuids.
+	 */
+	public function getMergedFromUuids(): array {
+		return $this->mergedFromUuids;
+	}//end getMergedFromUuids()
 
-    /**
-     * The persisted mergeOperation uuid.
-     *
-     * @return string Merge-operation uuid.
-     */
-    public function getMergeOperationId(): string
-    {
-        return $this->mergeOperationId;
-    }//end getMergeOperationId()
+	/**
+	 * The persisted mergeOperation uuid.
+	 *
+	 * @return string Merge-operation uuid.
+	 */
+	public function getMergeOperationId(): string {
+		return $this->mergeOperationId;
+	}//end getMergeOperationId()
 
-    /**
-     * Whether this event represents a reversal.
-     *
-     * @return bool True when reversal.
-     */
-    public function isReversal(): bool
-    {
-        return $this->isReversal;
-    }//end isReversal()
+	/**
+	 * Whether this event represents a reversal.
+	 *
+	 * @return bool True when reversal.
+	 */
+	public function isReversal(): bool {
+		return $this->isReversal;
+	}//end isReversal()
 }//end class

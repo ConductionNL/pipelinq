@@ -31,43 +31,40 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for CtiContactMatcher.
  */
-class CtiContactMatcherTest extends TestCase
-{
-    /**
-     * Test that an empty/null phone number short-circuits with no matches.
-     *
-     * @return void
-     */
-    public function testNullNumberReturnsEmpty(): void
-    {
-        $container = $this->createMock(ContainerInterface::class);
-        $appConfig = $this->createMock(IAppConfig::class);
-        $normaliser = $this->createMock(PhoneNormaliser::class);
-        $logger    = $this->createMock(LoggerInterface::class);
+class CtiContactMatcherTest extends TestCase {
+	/**
+	 * Test that an empty/null phone number short-circuits with no matches.
+	 *
+	 * @return void
+	 */
+	public function testNullNumberReturnsEmpty(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$appConfig = $this->createMock(IAppConfig::class);
+		$normaliser = $this->createMock(PhoneNormaliser::class);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $matcher = new CtiContactMatcher($container, $appConfig, $normaliser, $logger);
-        $result  = $matcher->findByPhoneNumber(null);
+		$matcher = new CtiContactMatcher($container, $appConfig, $normaliser, $logger);
+		$result = $matcher->findByPhoneNumber(null);
 
-        $this->assertSame(['matches' => [], 'totalMatches' => 0], $result);
-    }//end testNullNumberReturnsEmpty()
+		$this->assertSame(['matches' => [], 'totalMatches' => 0], $result);
+	}//end testNullNumberReturnsEmpty()
 
-    /**
-     * Test that an empty register config returns empty result.
-     *
-     * @return void
-     */
-    public function testMissingRegisterReturnsEmpty(): void
-    {
-        $container = $this->createMock(ContainerInterface::class);
-        $appConfig = $this->createMock(IAppConfig::class);
-        $normaliser = $this->createMock(PhoneNormaliser::class);
-        $logger    = $this->createMock(LoggerInterface::class);
+	/**
+	 * Test that an empty register config returns empty result.
+	 *
+	 * @return void
+	 */
+	public function testMissingRegisterReturnsEmpty(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$appConfig = $this->createMock(IAppConfig::class);
+		$normaliser = $this->createMock(PhoneNormaliser::class);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $appConfig->method('getValueString')->willReturn('');
+		$appConfig->method('getValueString')->willReturn('');
 
-        $matcher = new CtiContactMatcher($container, $appConfig, $normaliser, $logger);
-        $result  = $matcher->findByPhoneNumber('+31612345678');
+		$matcher = new CtiContactMatcher($container, $appConfig, $normaliser, $logger);
+		$result = $matcher->findByPhoneNumber('+31612345678');
 
-        $this->assertSame(0, $result['totalMatches']);
-    }//end testMissingRegisterReturnsEmpty()
+		$this->assertSame(0, $result['totalMatches']);
+	}//end testMissingRegisterReturnsEmpty()
 }//end class
