@@ -45,84 +45,82 @@ use Throwable;
  *
  * @spec openspec/specs/email-calendar-sync/spec.md
  */
-class EmailMatchJob extends TimedJob
-{
+class EmailMatchJob extends TimedJob {
 
-    /**
-     * Run interval in seconds (5 minutes).
-     *
-     * @var int
-     */
-    private const INTERVAL = 300;
+	/**
+	 * Run interval in seconds (5 minutes).
+	 *
+	 * @var int
+	 */
+	private const INTERVAL = 300;
 
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory      $time              Time factory.
-     * @param EmailMatchService $emailMatchService Matching service.
-     * @param IUserManager      $userManager       User manager.
-     * @param LoggerInterface   $logger            Logger.
-     */
-    public function __construct(
-        ITimeFactory $time,
-        private EmailMatchService $emailMatchService,
-        private IUserManager $userManager,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $time);
-        $this->setInterval(seconds: self::INTERVAL);
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $time Time factory.
+	 * @param EmailMatchService $emailMatchService Matching service.
+	 * @param IUserManager $userManager User manager.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		ITimeFactory $time,
+		private EmailMatchService $emailMatchService,
+		private IUserManager $userManager,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(time: $time);
+		$this->setInterval(seconds: self::INTERVAL);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Run the matching pass for every user.
-     *
-     * @param mixed $argument Unused job argument (TimedJob contract).
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by
-     *  TimedJob::run().
-     *
-     * @spec openspec/specs/email-calendar-sync/spec.md
-     */
-    protected function run(mixed $argument): void
-    {
-        $totalLinked  = 0;
-        $totalScanned = 0;
-        $userErrors   = 0;
+	/**
+	 * Run the matching pass for every user.
+	 *
+	 * @param mixed $argument Unused job argument (TimedJob contract).
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by
+	 *  TimedJob::run().
+	 *
+	 * @spec openspec/specs/email-calendar-sync/spec.md
+	 */
+	protected function run(mixed $argument): void {
+		$totalLinked = 0;
+		$totalScanned = 0;
+		$userErrors = 0;
 
-        $this->userManager->callForAllUsers(
-            function (IUser $user) use (&$totalLinked, &$totalScanned, &$userErrors): void {
-                $userId = $user->getUID();
-                try {
-                    $result        = $this->emailMatchService->runForUser(userId: $userId);
-                    $totalLinked  += (int) $result['linked'];
-                    $totalScanned += (int) $result['scanned'];
-                } catch (Throwable $e) {
-                    $userErrors++;
-                    $this->emailMatchService->writeStatus(
-                        userId: $userId,
-                        linked: 0,
-                        scanned: 0,
-                        error: 'Match run failed'
-                    );
-                    $this->logger->warning(
-                        'Pipelinq: email match job failed for user',
-                        ['userId' => $userId]
-                    );
-                }
-            }
-        );
+		$this->userManager->callForAllUsers(
+			function (IUser $user) use (&$totalLinked, &$totalScanned, &$userErrors): void {
+				$userId = $user->getUID();
+				try {
+					$result = $this->emailMatchService->runForUser(userId: $userId);
+					$totalLinked += (int)$result['linked'];
+					$totalScanned += (int)$result['scanned'];
+				} catch (Throwable $e) {
+					$userErrors++;
+					$this->emailMatchService->writeStatus(
+						userId: $userId,
+						linked: 0,
+						scanned: 0,
+						error: 'Match run failed'
+					);
+					$this->logger->warning(
+						'Pipelinq: email match job failed for user',
+						['userId' => $userId]
+					);
+				}
+			}
+		);
 
-        $this->logger->info(
-            'Pipelinq: email match job complete',
-            [
-                'linked'  => $totalLinked,
-                'scanned' => $totalScanned,
-                'errors'  => $userErrors,
-            ]
-        );
+		$this->logger->info(
+			'Pipelinq: email match job complete',
+			[
+				'linked' => $totalLinked,
+				'scanned' => $totalScanned,
+				'errors' => $userErrors,
+			]
+		);
 
-    }//end run()
+	}//end run()
 }//end class

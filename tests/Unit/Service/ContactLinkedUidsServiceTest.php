@@ -28,33 +28,30 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for ContactLinkedUidsService.
  */
-class ContactLinkedUidsServiceTest extends TestCase
-{
-    /**
-     * Test getLinkedContactsUids handles missing schema gracefully.
-     *
-     * @return void
-     */
-    public function testGetLinkedUidsHandlesMissingSchema(): void
-    {
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturn('');
+class ContactLinkedUidsServiceTest extends TestCase {
+	/**
+	 * Test getLinkedContactsUids handles missing schema gracefully.
+	 *
+	 * @return void
+	 */
+	public function testGetLinkedUidsHandlesMissingSchema(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('');
 
-        $objectService = new class {
-            public function findAll(array $params, bool $_rbac, bool $_multitenancy): array
-            {
-                return [];
-            }
-        };
+		$objectService = new class {
+			public function findAll(array $params, bool $_rbac, bool $_multitenancy): array {
+				return [];
+			}
+		};
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($objectService);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
 
-        $logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $service = new ContactLinkedUidsService($appConfig, $container, $logger);
+		$service = new ContactLinkedUidsService($appConfig, $container, $logger);
 
-        // With empty register/schema, should return empty.
-        $this->assertSame([], $service->getLinkedContactsUids());
-    }//end testGetLinkedUidsHandlesMissingSchema()
+		// With empty register/schema, should return empty.
+		$this->assertSame([], $service->getLinkedContactsUids());
+	}//end testGetLinkedUidsHandlesMissingSchema()
 }//end class

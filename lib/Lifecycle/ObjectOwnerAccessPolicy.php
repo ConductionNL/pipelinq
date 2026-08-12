@@ -43,67 +43,64 @@ use OCP\IGroupManager;
  *
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
  */
-class ObjectOwnerAccessPolicy
-{
-    /**
-     * Groups whose members may act on any owned object.
-     *
-     * @var array<int, string>
-     */
-    public const PRIVILEGED_GROUPS = ['admin', 'sales'];
+class ObjectOwnerAccessPolicy {
+	/**
+	 * Groups whose members may act on any owned object.
+	 *
+	 * @var array<int, string>
+	 */
+	public const PRIVILEGED_GROUPS = ['admin', 'sales'];
 
-    /**
-     * Constructor.
-     *
-     * @param IGroupManager $groupManager The NC group manager.
-     */
-    public function __construct(
-        private IGroupManager $groupManager,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IGroupManager $groupManager The NC group manager.
+	 */
+	public function __construct(
+		private IGroupManager $groupManager,
+	) {
+	}//end __construct()
 
-    /**
-     * Whether the caller may read or mutate this object.
-     *
-     * @param string              $uid        The caller user ID.
-     * @param array<string,mixed> $object     The loaded object.
-     * @param string              $ownerField The property holding the owner UID.
-     *
-     * @return bool True when the caller owns the object or is privileged.
-     *
-     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
-     */
-    public function mayAccess(string $uid, array $object, string $ownerField='ownerId'): bool
-    {
-        if ($uid === '') {
-            return false;
-        }
+	/**
+	 * Whether the caller may read or mutate this object.
+	 *
+	 * @param string $uid The caller user ID.
+	 * @param array<string,mixed> $object The loaded object.
+	 * @param string $ownerField The property holding the owner UID.
+	 *
+	 * @return bool True when the caller owns the object or is privileged.
+	 *
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+	 */
+	public function mayAccess(string $uid, array $object, string $ownerField = 'ownerId'): bool {
+		if ($uid === '') {
+			return false;
+		}
 
-        $owner = trim((string) ($object[$ownerField] ?? ''));
-        if ($owner !== '' && $owner === $uid) {
-            return true;
-        }
+		$owner = trim((string)($object[$ownerField] ?? ''));
+		if ($owner !== '' && $owner === $uid) {
+			return true;
+		}
 
-        return $this->isPrivileged(uid: $uid);
-    }//end mayAccess()
+		return $this->isPrivileged(uid: $uid);
+	}//end mayAccess()
 
-    /**
-     * Whether the caller belongs to any privileged group.
-     *
-     * @param string $uid The caller user ID.
-     *
-     * @return bool True when the caller is privileged.
-     *
-     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
-     */
-    public function isPrivileged(string $uid): bool
-    {
-        foreach (self::PRIVILEGED_GROUPS as $group) {
-            if ($this->groupManager->isInGroup($uid, $group) === true) {
-                return true;
-            }
-        }
+	/**
+	 * Whether the caller belongs to any privileged group.
+	 *
+	 * @param string $uid The caller user ID.
+	 *
+	 * @return bool True when the caller is privileged.
+	 *
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
+	 */
+	public function isPrivileged(string $uid): bool {
+		foreach (self::PRIVILEGED_GROUPS as $group) {
+			if ($this->groupManager->isInGroup($uid, $group) === true) {
+				return true;
+			}
+		}
 
-        return false;
-    }//end isPrivileged()
+		return false;
+	}//end isPrivileged()
 }//end class

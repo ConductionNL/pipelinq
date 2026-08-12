@@ -45,111 +45,98 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
  */
-class AcClientTest extends TestCase
-{
-    /**
-     * Build an AcClient with a no-op transport and a mock registry.
-     *
-     * @return AcClient
-     */
-    private function makeClient(): AcClient
-    {
-        $api       = $this->createMock(ZgwApiClient::class);
-        $registers = $this->createMock(ZgwRegisterAccess::class);
-        $appConfig = $this->createMock(IAppConfig::class);
-        $logger    = $this->createMock(LoggerInterface::class);
-        $appConfig->method('getValueInt')->willReturnArgument(2);
-        $registers->method('findClientForEndpoint')->willReturn(null);
-        return new AcClient($api, $registers, $appConfig, $logger);
-    }//end makeClient()
+class AcClientTest extends TestCase {
+	/**
+	 * Build an AcClient with a no-op transport and a mock registry.
+	 *
+	 * @return AcClient
+	 */
+	private function makeClient(): AcClient {
+		$api = $this->createMock(ZgwApiClient::class);
+		$registers = $this->createMock(ZgwRegisterAccess::class);
+		$appConfig = $this->createMock(IAppConfig::class);
+		$logger = $this->createMock(LoggerInterface::class);
+		$appConfig->method('getValueInt')->willReturnArgument(2);
+		$registers->method('findClientForEndpoint')->willReturn(null);
+		return new AcClient($api, $registers, $appConfig, $logger);
+	}//end makeClient()
 
+	/**
+	 * Test: primed cache satisfies hasScope().
+	 *
+	 * @return void
+	 */
+	public function testPrimedCacheGrantsScope(): void {
+		$client = $this->makeClient();
+		$endpoint = ['id' => 'zgw-ep-zoetermeer-openzaak', 'componenten' => ['ac' => 'https://ac.example']];
+		$client->primeCache(
+			'zgw-ep-zoetermeer-openzaak',
+			['https://zk/zaaktype/1' => ['zaken.aanmaken', 'zaken.lezen']]
+		);
 
-    /**
-     * Test: primed cache satisfies hasScope().
-     *
-     * @return void
-     */
-    public function testPrimedCacheGrantsScope(): void
-    {
-        $client   = $this->makeClient();
-        $endpoint = ['id' => 'zgw-ep-zoetermeer-openzaak', 'componenten' => ['ac' => 'https://ac.example']];
-        $client->primeCache(
-            'zgw-ep-zoetermeer-openzaak',
-            ['https://zk/zaaktype/1' => ['zaken.aanmaken', 'zaken.lezen']]
-        );
+		self::assertTrue($client->hasScope($endpoint, 'https://zk/zaaktype/1', 'zaken.aanmaken'));
+		self::assertTrue($client->hasScope($endpoint, 'https://zk/zaaktype/1', 'zaken.lezen'));
+		self::assertFalse($client->hasScope($endpoint, 'https://zk/zaaktype/1', 'zaken.bijwerken'));
+	}//end testPrimedCacheGrantsScope()
 
-        self::assertTrue($client->hasScope($endpoint, 'https://zk/zaaktype/1', 'zaken.aanmaken'));
-        self::assertTrue($client->hasScope($endpoint, 'https://zk/zaaktype/1', 'zaken.lezen'));
-        self::assertFalse($client->hasScope($endpoint, 'https://zk/zaaktype/1', 'zaken.bijwerken'));
-    }//end testPrimedCacheGrantsScope()
+	/**
+	 * Test: require() raises on missing scope (REQ-ZGW-006 missing-scope scenario).
+	 *
+	 * @return void
+	 */
+	public function testRequireRaisesOnMissingScope(): void {
+		$client = $this->makeClient();
+		$endpoint = ['id' => 'zgw-ep-zoetermeer-openzaak'];
+		$client->primeCache('zgw-ep-zoetermeer-openzaak', ['https://zk/zaaktype/1' => ['zaken.lezen']]);
 
+		$this->expectException(InsufficientScopeException::class);
+		$client->require($endpoint, 'https://zk/zaaktype/1', 'zaken.aanmaken');
+	}//end testRequireRaisesOnMissingScope()
 
-    /**
-     * Test: require() raises on missing scope (REQ-ZGW-006 missing-scope scenario).
-     *
-     * @return void
-     */
-    public function testRequireRaisesOnMissingScope(): void
-    {
-        $client   = $this->makeClient();
-        $endpoint = ['id' => 'zgw-ep-zoetermeer-openzaak'];
-        $client->primeCache('zgw-ep-zoetermeer-openzaak', ['https://zk/zaaktype/1' => ['zaken.lezen']]);
+	/**
+	 * Test: stale-beyond-2x-window cache fails closed.
+	 *
+	 * @return void
+	 */
+	public function testCacheStaleBeyondTwoWindowsFailsClosed(): void {
+		$client = $this->makeClient();
+		$endpoint = ['id' => 'ep-stale'];
+		// Default refresh interval is 900s; prime with timestamp 3000s ago (> 2 * 900).
+		$client->primeCache(
+			'ep-stale',
+			['https://zk/zaaktype/2' => ['zaken.aanmaken']],
+			time() - 3000
+		);
+		self::assertFalse($client->hasScope($endpoint, 'https://zk/zaaktype/2', 'zaken.aanmaken'));
+	}//end testCacheStaleBeyondTwoWindowsFailsClosed()
 
-        $this->expectException(InsufficientScopeException::class);
-        $client->require($endpoint, 'https://zk/zaaktype/1', 'zaken.aanmaken');
-    }//end testRequireRaisesOnMissingScope()
+	/**
+	 * Test: wildcard scope (granted on '*') matches any resource.
+	 *
+	 * @return void
+	 */
+	public function testWildcardScopeMatchesAnyResource(): void {
+		$client = $this->makeClient();
+		$endpoint = ['id' => 'ep-component-level'];
+		$client->primeCache('ep-component-level', ['*' => ['documenten.aanmaken']]);
+		self::assertTrue($client->hasScope($endpoint, 'https://drc/io/anything', 'documenten.aanmaken'));
+	}//end testWildcardScopeMatchesAnyResource()
 
-
-    /**
-     * Test: stale-beyond-2x-window cache fails closed.
-     *
-     * @return void
-     */
-    public function testCacheStaleBeyondTwoWindowsFailsClosed(): void
-    {
-        $client   = $this->makeClient();
-        $endpoint = ['id' => 'ep-stale'];
-        // Default refresh interval is 900s; prime with timestamp 3000s ago (> 2 * 900).
-        $client->primeCache(
-            'ep-stale',
-            ['https://zk/zaaktype/2' => ['zaken.aanmaken']],
-            time() - 3000
-        );
-        self::assertFalse($client->hasScope($endpoint, 'https://zk/zaaktype/2', 'zaken.aanmaken'));
-    }//end testCacheStaleBeyondTwoWindowsFailsClosed()
-
-
-    /**
-     * Test: wildcard scope (granted on '*') matches any resource.
-     *
-     * @return void
-     */
-    public function testWildcardScopeMatchesAnyResource(): void
-    {
-        $client   = $this->makeClient();
-        $endpoint = ['id' => 'ep-component-level'];
-        $client->primeCache('ep-component-level', ['*' => ['documenten.aanmaken']]);
-        self::assertTrue($client->hasScope($endpoint, 'https://drc/io/anything', 'documenten.aanmaken'));
-    }//end testWildcardScopeMatchesAnyResource()
-
-
-    /**
-     * Test: getScopesFor merges resource-specific + wildcard buckets.
-     *
-     * @return void
-     */
-    public function testGetScopesForMergesWildcardAndResource(): void
-    {
-        $client   = $this->makeClient();
-        $endpoint = ['id' => 'ep-merged'];
-        $client->primeCache('ep-merged', [
-            'https://zk/zaaktype/3' => ['zaken.aanmaken'],
-            '*'                     => ['catalogi.lezen'],
-        ]);
-        $merged = $client->getScopesFor($endpoint, 'https://zk/zaaktype/3');
-        sort($merged);
-        self::assertSame(['catalogi.lezen', 'zaken.aanmaken'], $merged);
-    }//end testGetScopesForMergesWildcardAndResource()
-
+	/**
+	 * Test: getScopesFor merges resource-specific + wildcard buckets.
+	 *
+	 * @return void
+	 */
+	public function testGetScopesForMergesWildcardAndResource(): void {
+		$client = $this->makeClient();
+		$endpoint = ['id' => 'ep-merged'];
+		$client->primeCache('ep-merged', [
+			'https://zk/zaaktype/3' => ['zaken.aanmaken'],
+			'*' => ['catalogi.lezen'],
+		]);
+		$merged = $client->getScopesFor($endpoint, 'https://zk/zaaktype/3');
+		sort($merged);
+		self::assertSame(['catalogi.lezen', 'zaken.aanmaken'], $merged);
+	}//end testGetScopesForMergesWildcardAndResource()
 
 }//end class

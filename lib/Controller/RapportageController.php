@@ -43,85 +43,83 @@ use OCP\IUserSession;
  *
  * @spec openspec/specs/lead-management/spec.md
  */
-class RapportageController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest          $request           The request.
-     * @param RapportageService $rapportageService Analytics aggregation service.
-     * @param IUserSession      $userSession       The user session.
-     */
-    public function __construct(
-        IRequest $request,
-        private RapportageService $rapportageService,
-        private IUserSession $userSession,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+class RapportageController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param RapportageService $rapportageService Analytics aggregation service.
+	 * @param IUserSession $userSession The user session.
+	 */
+	public function __construct(
+		IRequest $request,
+		private RapportageService $rapportageService,
+		private IUserSession $userSession,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Aggregate lead analytics for the Rapportage dashboard.
-     *
-     * Available to any authenticated Nextcloud user (REQ-LM-009). The
-     * endpoint returns 401 for unauthenticated requests, 500 on aggregation
-     * failure with a static error string (no exception leakage).
-     *
-     * @return JSONResponse The analytics payload.
-     *
-     * @spec openspec/specs/lead-management/spec.md
-     * @spec openspec/specs/lead-management/spec.md
-     */
-    #[NoAdminRequired]
-    public function getPipelineStats(): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(data: ['message' => 'Authentication required'], statusCode: Http::STATUS_UNAUTHORIZED);
-        }
+	/**
+	 * Aggregate lead analytics for the Rapportage dashboard.
+	 *
+	 * Available to any authenticated Nextcloud user (REQ-LM-009). The
+	 * endpoint returns 401 for unauthenticated requests, 500 on aggregation
+	 * failure with a static error string (no exception leakage).
+	 *
+	 * @return JSONResponse The analytics payload.
+	 *
+	 * @spec openspec/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
+	 */
+	#[NoAdminRequired]
+	public function getPipelineStats(): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(data: ['message' => 'Authentication required'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
 
-        $pipelineId = (string) $this->request->getParam('pipelineId', '');
-        $dateFrom   = (string) $this->request->getParam('dateFrom', '');
-        $dateTo     = (string) $this->request->getParam('dateTo', '');
+		$pipelineId = (string)$this->request->getParam('pipelineId', '');
+		$dateFrom = (string)$this->request->getParam('dateFrom', '');
+		$dateTo = (string)$this->request->getParam('dateTo', '');
 
-        $pipelineIdArg = null;
-        if ($pipelineId !== '') {
-            $pipelineIdArg = $pipelineId;
-        }
+		$pipelineIdArg = null;
+		if ($pipelineId !== '') {
+			$pipelineIdArg = $pipelineId;
+		}
 
-        $dateFromArg = null;
-        if ($dateFrom !== '') {
-            $dateFromArg = $dateFrom;
-        }
+		$dateFromArg = null;
+		if ($dateFrom !== '') {
+			$dateFromArg = $dateFrom;
+		}
 
-        $dateToArg = null;
-        if ($dateTo !== '') {
-            $dateToArg = $dateTo;
-        }
+		$dateToArg = null;
+		if ($dateTo !== '') {
+			$dateToArg = $dateTo;
+		}
 
-        try {
-            $stageValues       = $this->rapportageService->getStageValues(pipelineId: $pipelineIdArg);
-            $sourcePerformance = $this->rapportageService->getSourcePerformance(
-                dateFrom: $dateFromArg,
-                dateTo: $dateToArg,
-            );
-            $agingBuckets      = $this->rapportageService->getAgingBuckets();
-            $winLoss           = $this->rapportageService->getWinLossAnalysis(
-                dateFrom: $dateFromArg,
-                dateTo: $dateToArg,
-            );
-        } catch (\Throwable) {
-            return new JSONResponse(data: ['message' => 'Operation failed'], statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);
-        }
+		try {
+			$stageValues = $this->rapportageService->getStageValues(pipelineId: $pipelineIdArg);
+			$sourcePerformance = $this->rapportageService->getSourcePerformance(
+				dateFrom: $dateFromArg,
+				dateTo: $dateToArg,
+			);
+			$agingBuckets = $this->rapportageService->getAgingBuckets();
+			$winLoss = $this->rapportageService->getWinLossAnalysis(
+				dateFrom: $dateFromArg,
+				dateTo: $dateToArg,
+			);
+		} catch (\Throwable) {
+			return new JSONResponse(data: ['message' => 'Operation failed'], statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 
-        return new JSONResponse(
-            data: [
-                'stageValues'       => $stageValues,
-                'sourcePerformance' => $sourcePerformance,
-                'agingBuckets'      => $agingBuckets,
-                'winLoss'           => $winLoss,
-            ]
-        );
+		return new JSONResponse(
+			data: [
+				'stageValues' => $stageValues,
+				'sourcePerformance' => $sourcePerformance,
+				'agingBuckets' => $agingBuckets,
+				'winLoss' => $winLoss,
+			]
+		);
 
-    }//end getPipelineStats()
+	}//end getPipelineStats()
 }//end class

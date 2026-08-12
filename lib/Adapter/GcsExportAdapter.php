@@ -32,27 +32,24 @@ namespace OCA\Pipelinq\Adapter;
  *
  * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-01
  */
-class GcsExportAdapter extends AbstractOpenConnectorSink
-{
-    /**
-     * The destination type slug.
-     *
-     * @return string The type ('gcs').
-     */
-    public function getType(): string
-    {
-        return 'gcs';
-    }//end getType()
+class GcsExportAdapter extends AbstractOpenConnectorSink {
+	/**
+	 * The destination type slug.
+	 *
+	 * @return string The type ('gcs').
+	 */
+	public function getType(): string {
+		return 'gcs';
+	}//end getType()
 
-    /**
-     * Surface the GCS object generation/metadata as the acknowledgement.
-     *
-     * @param array<string, mixed> $result The transfer result metadata.
-     *
-     * @return string The object metadata (or a generic ack when absent).
-     */
-    protected function acknowledge(array $result): string
-    {
-        return (string) ($result['generation'] ?? $result['md5Hash'] ?? ($result['path'] ?? ''));
-    }//end acknowledge()
+	/**
+	 * Surface the GCS object generation/metadata as the acknowledgement.
+	 *
+	 * @param array<string, mixed> $result The transfer result metadata.
+	 *
+	 * @return string The object metadata (or a generic ack when absent).
+	 */
+	protected function acknowledge(array $result): string {
+		return (string)($result['generation'] ?? $result['md5Hash'] ?? ($result['path'] ?? ''));
+	}//end acknowledge()
 }//end class

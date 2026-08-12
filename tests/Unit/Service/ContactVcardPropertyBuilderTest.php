@@ -27,101 +27,94 @@ use Psr\Container\ContainerInterface;
 /**
  * Tests for ContactVcardPropertyBuilder.
  */
-class ContactVcardPropertyBuilderTest extends TestCase
-{
-    /**
-     * The service under test.
-     *
-     * @var ContactVcardPropertyBuilder
-     */
-    private ContactVcardPropertyBuilder $builder;
+class ContactVcardPropertyBuilderTest extends TestCase {
+	/**
+	 * The service under test.
+	 *
+	 * @var ContactVcardPropertyBuilder
+	 */
+	private ContactVcardPropertyBuilder $builder;
 
-    /**
-     * Set up the test.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $appConfig = $this->createMock(IAppConfig::class);
-        $container = $this->createMock(ContainerInterface::class);
+	/**
+	 * Set up the test.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$container = $this->createMock(ContainerInterface::class);
 
-        $this->builder = new ContactVcardPropertyBuilder($appConfig, $container);
-    }//end setUp()
+		$this->builder = new ContactVcardPropertyBuilder($appConfig, $container);
+	}//end setUp()
 
-    /**
-     * Test buildProperties returns FN for client.
-     *
-     * @return void
-     */
-    public function testBuildPropertiesReturnsFnForClient(): void
-    {
-        $result = $this->builder->buildProperties(
-            ['name' => 'Test Corp', 'email' => 'test@test.com', 'type' => 'organization'],
-            'client'
-        );
+	/**
+	 * Test buildProperties returns FN for client.
+	 *
+	 * @return void
+	 */
+	public function testBuildPropertiesReturnsFnForClient(): void {
+		$result = $this->builder->buildProperties(
+			['name' => 'Test Corp', 'email' => 'test@test.com', 'type' => 'organization'],
+			'client'
+		);
 
-        $this->assertSame('Test Corp', $result['FN']);
-        $this->assertSame('test@test.com', $result['EMAIL']);
-        $this->assertSame('Test Corp', $result['ORG']);
-    }//end testBuildPropertiesReturnsFnForClient()
+		$this->assertSame('Test Corp', $result['FN']);
+		$this->assertSame('test@test.com', $result['EMAIL']);
+		$this->assertSame('Test Corp', $result['ORG']);
+	}//end testBuildPropertiesReturnsFnForClient()
 
-    /**
-     * Test buildProperties includes phone.
-     *
-     * @return void
-     */
-    public function testBuildPropertiesIncludesPhone(): void
-    {
-        $result = $this->builder->buildProperties(
-            ['name' => 'John', 'phone' => '+31612345678'],
-            'contact'
-        );
+	/**
+	 * Test buildProperties includes phone.
+	 *
+	 * @return void
+	 */
+	public function testBuildPropertiesIncludesPhone(): void {
+		$result = $this->builder->buildProperties(
+			['name' => 'John', 'phone' => '+31612345678'],
+			'contact'
+		);
 
-        $this->assertSame('+31612345678', $result['TEL']);
-    }//end testBuildPropertiesIncludesPhone()
+		$this->assertSame('+31612345678', $result['TEL']);
+	}//end testBuildPropertiesIncludesPhone()
 
-    /**
-     * Test buildProperties includes client website and notes.
-     *
-     * @return void
-     */
-    public function testBuildPropertiesIncludesClientWebsiteAndNotes(): void
-    {
-        $result = $this->builder->buildProperties(
-            ['name' => 'Corp', 'website' => 'https://example.com', 'notes' => 'Important', 'address' => 'Street 1'],
-            'client'
-        );
+	/**
+	 * Test buildProperties includes client website and notes.
+	 *
+	 * @return void
+	 */
+	public function testBuildPropertiesIncludesClientWebsiteAndNotes(): void {
+		$result = $this->builder->buildProperties(
+			['name' => 'Corp', 'website' => 'https://example.com', 'notes' => 'Important', 'address' => 'Street 1'],
+			'client'
+		);
 
-        $this->assertSame('https://example.com', $result['URL']);
-        $this->assertSame('Important', $result['NOTE']);
-        $this->assertSame('Street 1', $result['ADR']);
-    }//end testBuildPropertiesIncludesClientWebsiteAndNotes()
+		$this->assertSame('https://example.com', $result['URL']);
+		$this->assertSame('Important', $result['NOTE']);
+		$this->assertSame('Street 1', $result['ADR']);
+	}//end testBuildPropertiesIncludesClientWebsiteAndNotes()
 
-    /**
-     * Test buildProperties includes contact role.
-     *
-     * @return void
-     */
-    public function testBuildPropertiesIncludesContactRole(): void
-    {
-        $result = $this->builder->buildProperties(
-            ['name' => 'Jane', 'role' => 'Manager'],
-            'contact'
-        );
+	/**
+	 * Test buildProperties includes contact role.
+	 *
+	 * @return void
+	 */
+	public function testBuildPropertiesIncludesContactRole(): void {
+		$result = $this->builder->buildProperties(
+			['name' => 'Jane', 'role' => 'Manager'],
+			'contact'
+		);
 
-        $this->assertSame('Manager', $result['ROLE']);
-    }//end testBuildPropertiesIncludesContactRole()
+		$this->assertSame('Manager', $result['ROLE']);
+	}//end testBuildPropertiesIncludesContactRole()
 
-    /**
-     * Test buildProperties defaults to Unknown for missing name.
-     *
-     * @return void
-     */
-    public function testBuildPropertiesDefaultsToUnknown(): void
-    {
-        $result = $this->builder->buildProperties([], 'client');
+	/**
+	 * Test buildProperties defaults to Unknown for missing name.
+	 *
+	 * @return void
+	 */
+	public function testBuildPropertiesDefaultsToUnknown(): void {
+		$result = $this->builder->buildProperties([], 'client');
 
-        $this->assertSame('Unknown', $result['FN']);
-    }//end testBuildPropertiesDefaultsToUnknown()
+		$this->assertSame('Unknown', $result['FN']);
+	}//end testBuildPropertiesDefaultsToUnknown()
 }//end class

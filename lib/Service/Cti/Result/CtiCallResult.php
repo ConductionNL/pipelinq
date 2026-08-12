@@ -26,21 +26,20 @@ namespace OCA\Pipelinq\Service\Cti\Result;
 /**
  * Outcome of an outbound click-to-dial originate request.
  */
-final class CtiCallResult
-{
-    /**
-     * Constructor.
-     *
-     * @param bool        $success        Whether the originate request was accepted.
-     * @param string|null $externalCallId Platform's call UUID when allocated.
-     * @param string|null $error          Error message when $success is false.
-     * @param string|null $platform       Adapter platform identifier.
-     */
-    public function __construct(
-        public readonly bool $success,
-        public readonly ?string $externalCallId=null,
-        public readonly ?string $error=null,
-        public readonly ?string $platform=null,
-    ) {
-    }//end __construct()
+final class CtiCallResult {
+	/**
+	 * Constructor.
+	 *
+	 * @param bool $success Whether the originate request was accepted.
+	 * @param string|null $externalCallId Platform's call UUID when allocated.
+	 * @param string|null $error Error message when $success is false.
+	 * @param string|null $platform Adapter platform identifier.
+	 */
+	public function __construct(
+		public readonly bool $success,
+		public readonly ?string $externalCallId = null,
+		public readonly ?string $error = null,
+		public readonly ?string $platform = null,
+	) {
+	}//end __construct()
 }//end class

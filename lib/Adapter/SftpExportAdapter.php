@@ -32,27 +32,24 @@ namespace OCA\Pipelinq\Adapter;
  *
  * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-01
  */
-class SftpExportAdapter extends AbstractOpenConnectorSink
-{
-    /**
-     * The destination type slug.
-     *
-     * @return string The type ('sftp').
-     */
-    public function getType(): string
-    {
-        return 'sftp';
-    }//end getType()
+class SftpExportAdapter extends AbstractOpenConnectorSink {
+	/**
+	 * The destination type slug.
+	 *
+	 * @return string The type ('sftp').
+	 */
+	public function getType(): string {
+		return 'sftp';
+	}//end getType()
 
-    /**
-     * Surface the remote file path as the acknowledgement.
-     *
-     * @param array<string, mixed> $result The transfer result metadata.
-     *
-     * @return string The remote path.
-     */
-    protected function acknowledge(array $result): string
-    {
-        return (string) ($result['remotePath'] ?? $result['path'] ?? '');
-    }//end acknowledge()
+	/**
+	 * Surface the remote file path as the acknowledgement.
+	 *
+	 * @param array<string, mixed> $result The transfer result metadata.
+	 *
+	 * @return string The remote path.
+	 */
+	protected function acknowledge(array $result): string {
+		return (string)($result['remotePath'] ?? $result['path'] ?? '');
+	}//end acknowledge()
 }//end class

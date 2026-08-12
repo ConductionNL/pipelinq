@@ -45,198 +45,196 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
-class CtiDispositionService
-{
-    /**
-     * Allowed disposition outcomes.
-     *
-     * @var array<int,string>
-     */
-    public const OUTCOMES = [
-        'resolved',
-        'callback',
-        'escalated',
-        'wrong-number',
-        'no-answer',
-        'abandoned',
-    ];
+class CtiDispositionService {
+	/**
+	 * Allowed disposition outcomes.
+	 *
+	 * @var array<int,string>
+	 */
+	public const OUTCOMES = [
+		'resolved',
+		'callback',
+		'escalated',
+		'wrong-number',
+		'no-answer',
+		'abandoned',
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface $container     Container for OR lookups.
-     * @param IAppConfig         $appConfig     App config.
-     * @param TicketService      $ticketService Unified ticket resolver.
-     * @param LoggerInterface    $logger        Logger.
-     */
-    public function __construct(
-        private ContainerInterface $container,
-        private IAppConfig $appConfig,
-        private TicketService $ticketService,
-        private LoggerInterface $logger,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container Container for OR lookups.
+	 * @param IAppConfig $appConfig App config.
+	 * @param TicketService $ticketService Unified ticket resolver.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		private ContainerInterface $container,
+		private IAppConfig $appConfig,
+		private TicketService $ticketService,
+		private LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Process the disposition for a completed contactmoment.
-     *
-     * @param string $contactmomentId The contactmoment UUID.
-     * @param string $subject         Disposition subject (free text).
-     * @param string $outcome         One of self::OUTCOMES.
-     * @param string $notes           Free-text notes from the agent.
-     *
-     * @return array{outcome: string, contactmomentId: string, taskId: string|null}
-     *
-     * @throws \InvalidArgumentException When $outcome is not in self::OUTCOMES.
-     *
-     * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
-     */
-    public function processDisposition(
-        string $contactmomentId,
-        string $subject,
-        string $outcome,
-        string $notes,
-    ): array {
-        if (in_array($outcome, self::OUTCOMES, true) === false) {
-            throw new InvalidArgumentException('Unknown disposition outcome: '.$outcome);
-        }
+	/**
+	 * Process the disposition for a completed contactmoment.
+	 *
+	 * @param string $contactmomentId The contactmoment UUID.
+	 * @param string $subject Disposition subject (free text).
+	 * @param string $outcome One of self::OUTCOMES.
+	 * @param string $notes Free-text notes from the agent.
+	 *
+	 * @return array{outcome: string, contactmomentId: string, taskId: string|null}
+	 *
+	 * @throws \InvalidArgumentException When $outcome is not in self::OUTCOMES.
+	 *
+	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
+	 */
+	public function processDisposition(
+		string $contactmomentId,
+		string $subject,
+		string $outcome,
+		string $notes,
+	): array {
+		if (in_array($outcome, self::OUTCOMES, true) === false) {
+			throw new InvalidArgumentException('Unknown disposition outcome: ' . $outcome);
+		}
 
-        $this->updateContactmoment(
-            id: $contactmomentId,
-            subject: $subject,
-            outcome: $outcome,
-            notes: $notes,
-        );
+		$this->updateContactmoment(
+			id: $contactmomentId,
+			subject: $subject,
+			outcome: $outcome,
+			notes: $notes,
+		);
 
-        $taskId = null;
-        if ($outcome === 'callback') {
-            $taskId = $this->createTask(
-                type: 'terugbelverzoek',
-                subject: $subject,
-                notes: $notes,
-                contactmomentId: $contactmomentId,
-            );
-        } else if ($outcome === 'escalated') {
-            $taskId = $this->createTask(
-                type: 'opvolgtaak',
-                subject: $subject,
-                notes: $notes,
-                contactmomentId: $contactmomentId,
-                queueName: $this->appConfig->getValueString(
-                    Application::APP_ID,
-                    'cti_escalation_queue',
-                    ''
-                ),
-            );
-        }
+		$taskId = null;
+		if ($outcome === 'callback') {
+			$taskId = $this->createTask(
+				type: 'terugbelverzoek',
+				subject: $subject,
+				notes: $notes,
+				contactmomentId: $contactmomentId,
+			);
+		} elseif ($outcome === 'escalated') {
+			$taskId = $this->createTask(
+				type: 'opvolgtaak',
+				subject: $subject,
+				notes: $notes,
+				contactmomentId: $contactmomentId,
+				queueName: $this->appConfig->getValueString(
+					Application::APP_ID,
+					'cti_escalation_queue',
+					''
+				),
+			);
+		}
 
-        return [
-            'outcome'         => $outcome,
-            'contactmomentId' => $contactmomentId,
-            'taskId'          => $taskId,
-        ];
-    }//end processDisposition()
+		return [
+			'outcome' => $outcome,
+			'contactmomentId' => $contactmomentId,
+			'taskId' => $taskId,
+		];
+	}//end processDisposition()
 
-    /**
-     * Write the disposition back onto the contactmoment ticket.
-     *
-     * @param string $id      Contactmoment ticket UUID.
-     * @param string $subject Disposition subject.
-     * @param string $outcome Outcome enum value.
-     * @param string $notes   Free-text notes.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
-     */
-    private function updateContactmoment(string $id, string $subject, string $outcome, string $notes): void
-    {
-        if ($this->ticketService->isConfigured() === false) {
-            $this->logger->warning('CTI disposition: ticket register/schema not configured.');
-            return;
-        }
+	/**
+	 * Write the disposition back onto the contactmoment ticket.
+	 *
+	 * @param string $id Contactmoment ticket UUID.
+	 * @param string $subject Disposition subject.
+	 * @param string $outcome Outcome enum value.
+	 * @param string $notes Free-text notes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+	 */
+	private function updateContactmoment(string $id, string $subject, string $outcome, string $notes): void {
+		if ($this->ticketService->isConfigured() === false) {
+			$this->logger->warning('CTI disposition: ticket register/schema not configured.');
+			return;
+		}
 
-        try {
-            $this->ticketService->save(
-                ticketType: TicketService::TYPE_CONTACTMOMENT,
-                payload: [
-                    'disposition_subject' => $subject,
-                    'disposition_outcome' => $outcome,
-                    'disposition_notes'   => $notes,
-                ],
-                uuid: $id,
-            );
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                'CTI disposition: contactmoment save failed',
-                ['exception' => $e->getMessage(), 'id' => $id]
-            );
-        }
-    }//end updateContactmoment()
+		try {
+			$this->ticketService->save(
+				ticketType: TicketService::TYPE_CONTACTMOMENT,
+				payload: [
+					'disposition_subject' => $subject,
+					'disposition_outcome' => $outcome,
+					'disposition_notes' => $notes,
+				],
+				uuid: $id,
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'CTI disposition: contactmoment save failed',
+				['exception' => $e->getMessage(), 'id' => $id]
+			);
+		}
+	}//end updateContactmoment()
 
-    /**
-     * Create the follow-up task in the task schema.
-     *
-     * @param string      $type            Task type (terugbelverzoek|opvolgtaak).
-     * @param string      $subject         Task subject.
-     * @param string      $notes           Task notes.
-     * @param string      $contactmomentId Linked contactmoment UUID.
-     * @param string|null $queueName       Optional queue (for escalation).
-     *
-     * @return string|null The created task UUID or null when creation failed.
-     */
-    private function createTask(
-        string $type,
-        string $subject,
-        string $notes,
-        string $contactmomentId,
-        ?string $queueName=null,
-    ): ?string {
-        $register   = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $taskSchema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
-        if ($register === '' || $taskSchema === '') {
-            $this->logger->warning('CTI disposition: task register/schema not configured -- skipping task creation.');
-            return null;
-        }
+	/**
+	 * Create the follow-up task in the task schema.
+	 *
+	 * @param string $type Task type (terugbelverzoek|opvolgtaak).
+	 * @param string $subject Task subject.
+	 * @param string $notes Task notes.
+	 * @param string $contactmomentId Linked contactmoment UUID.
+	 * @param string|null $queueName Optional queue (for escalation).
+	 *
+	 * @return string|null The created task UUID or null when creation failed.
+	 */
+	private function createTask(
+		string $type,
+		string $subject,
+		string $notes,
+		string $contactmomentId,
+		?string $queueName = null,
+	): ?string {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$taskSchema = $this->appConfig->getValueString(Application::APP_ID, 'task_schema', '');
+		if ($register === '' || $taskSchema === '') {
+			$this->logger->warning('CTI disposition: task register/schema not configured -- skipping task creation.');
+			return null;
+		}
 
-        try {
-            $objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-            $saved         = $objectService->saveObject(
-                array_filter(
-                    [
-                        'type'          => $type,
-                        'subject'       => $subject,
-                        'description'   => $notes,
-                        'status'        => 'open',
-                        'queueName'     => $queueName,
-                        'contactmoment' => $contactmomentId,
-                    ],
-                    static fn($value): bool => ($value !== null && $value !== '')
-                ),
-                [],
-                $register,
-                $taskSchema,
-                null
-            );
+		try {
+			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
+			$saved = $objectService->saveObject(
+				array_filter(
+					[
+						'type' => $type,
+						'subject' => $subject,
+						'description' => $notes,
+						'status' => 'open',
+						'queueName' => $queueName,
+						'contactmoment' => $contactmomentId,
+					],
+					static fn ($value): bool => ($value !== null && $value !== '')
+				),
+				[],
+				$register,
+				$taskSchema,
+				null
+			);
 
-            $id = null;
-            if (is_array($saved) === true) {
-                $id = ($saved['id'] ?? ($saved['uuid'] ?? null));
-            } else if (is_object($saved) === true && method_exists($saved, 'getUuid') === true) {
-                $id = $saved->getUuid();
-            }
+			$id = null;
+			if (is_array($saved) === true) {
+				$id = ($saved['id'] ?? ($saved['uuid'] ?? null));
+			} elseif (is_object($saved) === true && method_exists($saved, 'getUuid') === true) {
+				$id = $saved->getUuid();
+			}
 
-            if ($id !== null) {
-                return (string) $id;
-            }
+			if ($id !== null) {
+				return (string)$id;
+			}
 
-            return null;
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                'CTI disposition: task save failed',
-                ['exception' => $e->getMessage(), 'contactmomentId' => $contactmomentId]
-            );
-            return null;
-        }//end try
-    }//end createTask()
+			return null;
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'CTI disposition: task save failed',
+				['exception' => $e->getMessage(), 'contactmomentId' => $contactmomentId]
+			);
+			return null;
+		}//end try
+	}//end createTask()
 }//end class

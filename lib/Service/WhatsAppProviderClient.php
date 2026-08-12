@@ -55,291 +55,284 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.5
  */
-class WhatsAppProviderClient
-{
-    use MessageDispatchTrait;
+class WhatsAppProviderClient {
+	use MessageDispatchTrait;
 
-    /**
-     * Map a logical action to the vendor send path (relative to the source
-     * base URL). Send/template actions POST to `messages`; media
-     * upload/download to `media`; the template-approval read to
-     * `message_templates`.
-     *
-     * @var array<string, string>
-     */
-    private const ACTION_PATHS = [
-        'send-template'  => 'messages',
-        'send-text'      => 'messages',
-        'download-media' => 'media',
-        'upload-media'   => 'media',
-        'list-templates' => 'message_templates',
-    ];
+	/**
+	 * Map a logical action to the vendor send path (relative to the source
+	 * base URL). Send/template actions POST to `messages`; media
+	 * upload/download to `media`; the template-approval read to
+	 * `message_templates`.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ACTION_PATHS = [
+		'send-template' => 'messages',
+		'send-text' => 'messages',
+		'download-media' => 'media',
+		'upload-media' => 'media',
+		'list-templates' => 'message_templates',
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface $container DI container.
-     * @param LoggerInterface    $logger    Logger.
-     *
-     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.5
-     */
-    public function __construct(
-        private ContainerInterface $container,
-        private LoggerInterface $logger,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container DI container.
+	 * @param LoggerInterface $logger Logger.
+	 *
+	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.5
+	 */
+	public function __construct(
+		private ContainerInterface $container,
+		private LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Send an HSM template via the provider.
-     *
-     * @param array<string, mixed> $channelProvider Provider row.
-     * @param string               $phoneNumber     Recipient E.164.
-     * @param string               $templateName    Template external id.
-     * @param string               $language        Language code (e.g. `nl`).
-     * @param array<int, string>   $parameters      Positional template parameters.
-     *
-     * @return array{externalMessageId: string, vendor: string} Provider id.
-     *
-     * @throws TransientSmsProviderException On 5xx / network failure.
-     * @throws PermanentSmsProviderException On 4xx / config failure.
-     */
-    public function sendTemplate(
-        array $channelProvider,
-        string $phoneNumber,
-        string $templateName,
-        string $language,
-        array $parameters
-    ): array {
-        $payload = [
-            'messaging_product' => 'whatsapp',
-            'to'                => $phoneNumber,
-            'type'              => 'template',
-            'template'          => [
-                'name'       => $templateName,
-                'language'   => ['code' => $language],
-                'components' => [
-                    [
-                        'type'       => 'body',
-                        'parameters' => array_values(
-                            array_map(
-                                static function (string $value): array {
-                                    return ['type' => 'text', 'text' => $value];
-                                },
-                                $parameters
-                            )
-                        ),
-                    ],
-                ],
-            ],
-        ];
+	/**
+	 * Send an HSM template via the provider.
+	 *
+	 * @param array<string, mixed> $channelProvider Provider row.
+	 * @param string $phoneNumber Recipient E.164.
+	 * @param string $templateName Template external id.
+	 * @param string $language Language code (e.g. `nl`).
+	 * @param array<int, string> $parameters Positional template parameters.
+	 *
+	 * @return array{externalMessageId: string, vendor: string} Provider id.
+	 *
+	 * @throws TransientSmsProviderException On 5xx / network failure.
+	 * @throws PermanentSmsProviderException On 4xx / config failure.
+	 */
+	public function sendTemplate(
+		array $channelProvider,
+		string $phoneNumber,
+		string $templateName,
+		string $language,
+		array $parameters,
+	): array {
+		$payload = [
+			'messaging_product' => 'whatsapp',
+			'to' => $phoneNumber,
+			'type' => 'template',
+			'template' => [
+				'name' => $templateName,
+				'language' => ['code' => $language],
+				'components' => [
+					[
+						'type' => 'body',
+						'parameters' => array_values(
+							array_map(
+								static function (string $value): array {
+									return ['type' => 'text', 'text' => $value];
+								},
+								$parameters
+							)
+						),
+					],
+				],
+			],
+		];
 
-        $result = $this->dispatch(
-            channelProvider: $channelProvider,
-            action: 'send-template',
-            payload: $payload,
-        );
+		$result = $this->dispatch(
+			channelProvider: $channelProvider,
+			action: 'send-template',
+			payload: $payload,
+		);
 
-        return [
-            'externalMessageId' => $this->extractWamid(result: $result),
-            'vendor'            => (string) ($channelProvider['vendor'] ?? ''),
-        ];
-    }//end sendTemplate()
+		return [
+			'externalMessageId' => $this->extractWamid(result: $result),
+			'vendor' => (string)($channelProvider['vendor'] ?? ''),
+		];
+	}//end sendTemplate()
 
-    /**
-     * Send a free-form text (and optional media) message.
-     *
-     * @param array<string, mixed> $channelProvider Provider row.
-     * @param string               $phoneNumber     Recipient E.164.
-     * @param string               $body            Message body.
-     * @param array<int, string>   $mediaIds        Optional uploaded media ids.
-     *
-     * @return array{externalMessageId: string, vendor: string} Provider id.
-     *
-     * @throws TransientSmsProviderException On transient.
-     * @throws PermanentSmsProviderException On permanent.
-     */
-    public function sendFreeForm(
-        array $channelProvider,
-        string $phoneNumber,
-        string $body,
-        array $mediaIds=[]
-    ): array {
-        $payload = [
-            'messaging_product' => 'whatsapp',
-            'to'                => $phoneNumber,
-            'type'              => 'text',
-            'text'              => ['body' => $body],
-        ];
+	/**
+	 * Send a free-form text (and optional media) message.
+	 *
+	 * @param array<string, mixed> $channelProvider Provider row.
+	 * @param string $phoneNumber Recipient E.164.
+	 * @param string $body Message body.
+	 * @param array<int, string> $mediaIds Optional uploaded media ids.
+	 *
+	 * @return array{externalMessageId: string, vendor: string} Provider id.
+	 *
+	 * @throws TransientSmsProviderException On transient.
+	 * @throws PermanentSmsProviderException On permanent.
+	 */
+	public function sendFreeForm(
+		array $channelProvider,
+		string $phoneNumber,
+		string $body,
+		array $mediaIds = [],
+	): array {
+		$payload = [
+			'messaging_product' => 'whatsapp',
+			'to' => $phoneNumber,
+			'type' => 'text',
+			'text' => ['body' => $body],
+		];
 
-        if ($mediaIds !== []) {
-            $payload['type']  = 'image';
-            $payload['image'] = ['id' => $mediaIds[0]];
-        }
+		if ($mediaIds !== []) {
+			$payload['type'] = 'image';
+			$payload['image'] = ['id' => $mediaIds[0]];
+		}
 
-        $result = $this->dispatch(
-            channelProvider: $channelProvider,
-            action: 'send-text',
-            payload: $payload,
-        );
+		$result = $this->dispatch(
+			channelProvider: $channelProvider,
+			action: 'send-text',
+			payload: $payload,
+		);
 
-        return [
-            'externalMessageId' => $this->extractWamid(result: $result),
-            'vendor'            => (string) ($channelProvider['vendor'] ?? ''),
-        ];
-    }//end sendFreeForm()
+		return [
+			'externalMessageId' => $this->extractWamid(result: $result),
+			'vendor' => (string)($channelProvider['vendor'] ?? ''),
+		];
+	}//end sendFreeForm()
 
-    /**
-     * Download a media file by Meta media id.
-     *
-     * @param array<string, mixed> $channelProvider Provider row.
-     * @param string               $mediaId         Meta media id.
-     *
-     * @return array{url: string, mimeType: string, sha256?: string} Media handle.
-     *
-     * @throws TransientSmsProviderException On transient.
-     * @throws PermanentSmsProviderException On permanent.
-     */
-    public function downloadMedia(array $channelProvider, string $mediaId): array
-    {
-        $result = $this->dispatch(
-            channelProvider: $channelProvider,
-            action: 'download-media',
-            payload: ['mediaId' => $mediaId],
-        );
+	/**
+	 * Download a media file by Meta media id.
+	 *
+	 * @param array<string, mixed> $channelProvider Provider row.
+	 * @param string $mediaId Meta media id.
+	 *
+	 * @return array{url: string, mimeType: string, sha256?: string} Media handle.
+	 *
+	 * @throws TransientSmsProviderException On transient.
+	 * @throws PermanentSmsProviderException On permanent.
+	 */
+	public function downloadMedia(array $channelProvider, string $mediaId): array {
+		$result = $this->dispatch(
+			channelProvider: $channelProvider,
+			action: 'download-media',
+			payload: ['mediaId' => $mediaId],
+		);
 
-        return [
-            'url'      => (string) ($result['url'] ?? ''),
-            'mimeType' => (string) ($result['mime_type'] ?? ($result['mimeType'] ?? '')),
-            'sha256'   => (string) ($result['sha256'] ?? ''),
-        ];
-    }//end downloadMedia()
+		return [
+			'url' => (string)($result['url'] ?? ''),
+			'mimeType' => (string)($result['mime_type'] ?? ($result['mimeType'] ?? '')),
+			'sha256' => (string)($result['sha256'] ?? ''),
+		];
+	}//end downloadMedia()
 
-    /**
-     * Upload a media file to the provider.
-     *
-     * @param array<string, mixed> $channelProvider Provider row.
-     * @param string               $filePath        Local file path.
-     * @param string               $mimeType        Mime type.
-     *
-     * @return string Provider media id.
-     *
-     * @throws TransientSmsProviderException On transient.
-     * @throws PermanentSmsProviderException On permanent.
-     */
-    public function uploadMedia(array $channelProvider, string $filePath, string $mimeType): string
-    {
-        $result = $this->dispatch(
-            channelProvider: $channelProvider,
-            action: 'upload-media',
-            payload: ['filePath' => $filePath, 'mimeType' => $mimeType],
-        );
+	/**
+	 * Upload a media file to the provider.
+	 *
+	 * @param array<string, mixed> $channelProvider Provider row.
+	 * @param string $filePath Local file path.
+	 * @param string $mimeType Mime type.
+	 *
+	 * @return string Provider media id.
+	 *
+	 * @throws TransientSmsProviderException On transient.
+	 * @throws PermanentSmsProviderException On permanent.
+	 */
+	public function uploadMedia(array $channelProvider, string $filePath, string $mimeType): string {
+		$result = $this->dispatch(
+			channelProvider: $channelProvider,
+			action: 'upload-media',
+			payload: ['filePath' => $filePath, 'mimeType' => $mimeType],
+		);
 
-        return (string) ($result['id'] ?? '');
-    }//end uploadMedia()
+		return (string)($result['id'] ?? '');
+	}//end uploadMedia()
 
-    /**
-     * List remote templates for the approval-sync job.
-     *
-     * @param array<string, mixed> $channelProvider Provider row.
-     *
-     * @return array<int, array<string, mixed>> Template rows.
-     *
-     * @throws TransientSmsProviderException On transient.
-     * @throws PermanentSmsProviderException On permanent.
-     */
-    public function listTemplates(array $channelProvider): array
-    {
-        $result = $this->dispatch(
-            channelProvider: $channelProvider,
-            action: 'list-templates',
-            payload: [],
-        );
+	/**
+	 * List remote templates for the approval-sync job.
+	 *
+	 * @param array<string, mixed> $channelProvider Provider row.
+	 *
+	 * @return array<int, array<string, mixed>> Template rows.
+	 *
+	 * @throws TransientSmsProviderException On transient.
+	 * @throws PermanentSmsProviderException On permanent.
+	 */
+	public function listTemplates(array $channelProvider): array {
+		$result = $this->dispatch(
+			channelProvider: $channelProvider,
+			action: 'list-templates',
+			payload: [],
+		);
 
-        if (isset($result['data']) === true && is_array($result['data']) === true) {
-            return $result['data'];
-        }
+		if (isset($result['data']) === true && is_array($result['data']) === true) {
+			return $result['data'];
+		}
 
-        return [];
-    }//end listTemplates()
+		return [];
+	}//end listTemplates()
 
-    /**
-     * Verify a Meta X-Hub-Signature-256 header.
-     *
-     * @param array<string, mixed> $channelProvider Provider row (carries webhookSecret).
-     * @param string               $rawBody         Raw body.
-     * @param string               $signature       Header value (sha256=...).
-     *
-     * @return bool True when authentic.
-     */
-    public function verifySignature(array $channelProvider, string $rawBody, string $signature): bool
-    {
-        $secret = (string) ($channelProvider['webhookSecret'] ?? '');
-        if ($secret === '' || $signature === '') {
-            return false;
-        }
+	/**
+	 * Verify a Meta X-Hub-Signature-256 header.
+	 *
+	 * @param array<string, mixed> $channelProvider Provider row (carries webhookSecret).
+	 * @param string $rawBody Raw body.
+	 * @param string $signature Header value (sha256=...).
+	 *
+	 * @return bool True when authentic.
+	 */
+	public function verifySignature(array $channelProvider, string $rawBody, string $signature): bool {
+		$secret = (string)($channelProvider['webhookSecret'] ?? '');
+		if ($secret === '' || $signature === '') {
+			return false;
+		}
 
-        $compare = $signature;
-        if (str_starts_with($signature, 'sha256=') === true) {
-            $compare = substr($signature, 7);
-        }
+		$compare = $signature;
+		if (str_starts_with($signature, 'sha256=') === true) {
+			$compare = substr($signature, 7);
+		}
 
-        $expected = hash_hmac('sha256', $rawBody, $secret);
-        return hash_equals($expected, $compare);
-    }//end verifySignature()
+		$expected = hash_hmac('sha256', $rawBody, $secret);
+		return hash_equals($expected, $compare);
+	}//end verifySignature()
 
-    /**
-     * Dispatch a call via the OpenRegister MessageDispatchProvider leaf.
-     *
-     * The `channelProvider.sourceId` (a.k.a. `openconnectorSourceId`) is the
-     * OpenConnector source slug (`whatsapp-cloud-api` / `whatsapp-bsp`) the
-     * leaf routes through. The logical `$action` is mapped to the vendor send
-     * path; the connection + credentials live in OpenConnector (ADR-022).
-     *
-     * @param array<string, mixed> $channelProvider Provider row.
-     * @param string               $action          Action name.
-     * @param array<string, mixed> $payload         Payload.
-     *
-     * @return array<string, mixed> Result (raw provider response).
-     *
-     * @throws TransientSmsProviderException On transient.
-     * @throws PermanentSmsProviderException On permanent.
-     */
-    private function dispatch(array $channelProvider, string $action, array $payload): array
-    {
-        $sourceId = (string) ($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
-        if ($sourceId === '') {
-            throw new PermanentSmsProviderException(message: 'WhatsApp provider source not configured');
-        }
+	/**
+	 * Dispatch a call via the OpenRegister MessageDispatchProvider leaf.
+	 *
+	 * The `channelProvider.sourceId` (a.k.a. `openconnectorSourceId`) is the
+	 * OpenConnector source slug (`whatsapp-cloud-api` / `whatsapp-bsp`) the
+	 * leaf routes through. The logical `$action` is mapped to the vendor send
+	 * path; the connection + credentials live in OpenConnector (ADR-022).
+	 *
+	 * @param array<string, mixed> $channelProvider Provider row.
+	 * @param string $action Action name.
+	 * @param array<string, mixed> $payload Payload.
+	 *
+	 * @return array<string, mixed> Result (raw provider response).
+	 *
+	 * @throws TransientSmsProviderException On transient.
+	 * @throws PermanentSmsProviderException On permanent.
+	 */
+	private function dispatch(array $channelProvider, string $action, array $payload): array {
+		$sourceId = (string)($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
+		if ($sourceId === '') {
+			throw new PermanentSmsProviderException(message: 'WhatsApp provider source not configured');
+		}
 
-        $path = self::ACTION_PATHS[$action] ?? 'messages';
+		$path = self::ACTION_PATHS[$action] ?? 'messages';
 
-        return $this->dispatchViaLeaf(
-            source: $sourceId,
-            body: $payload,
-            path: $path,
-        );
-    }//end dispatch()
+		return $this->dispatchViaLeaf(
+			source: $sourceId,
+			body: $payload,
+			path: $path,
+		);
+	}//end dispatch()
 
-    /**
-     * Extract a Meta wamid from a send response.
-     *
-     * @param array<string, mixed> $result Provider response.
-     *
-     * @return string wamid or empty.
-     */
-    private function extractWamid(array $result): string
-    {
-        if (isset($result['messages']) === true && is_array($result['messages']) === true) {
-            $first = $result['messages'][0] ?? null;
-            if (is_array($first) === true && isset($first['id']) === true) {
-                return (string) $first['id'];
-            }
-        }
+	/**
+	 * Extract a Meta wamid from a send response.
+	 *
+	 * @param array<string, mixed> $result Provider response.
+	 *
+	 * @return string wamid or empty.
+	 */
+	private function extractWamid(array $result): string {
+		if (isset($result['messages']) === true && is_array($result['messages']) === true) {
+			$first = $result['messages'][0] ?? null;
+			if (is_array($first) === true && isset($first['id']) === true) {
+				return (string)$first['id'];
+			}
+		}
 
-        if (isset($result['externalMessageId']) === true) {
-            return (string) $result['externalMessageId'];
-        }
+		if (isset($result['externalMessageId']) === true) {
+			return (string)$result['externalMessageId'];
+		}
 
-        return (string) ($result['id'] ?? '');
-    }//end extractWamid()
+		return (string)($result['id'] ?? '');
+	}//end extractWamid()
 }//end class

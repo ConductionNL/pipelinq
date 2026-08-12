@@ -45,240 +45,235 @@ use Psr\Log\LoggerInterface;
  * responses use static messages — internal exception details are logged but
  * never returned to the caller.
  */
-class ActivityTimelineController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest                $request     The request.
-     * @param ActivityTimelineService $service     The activity timeline service.
-     * @param IUserSession            $userSession The user session.
-     * @param LoggerInterface         $logger      The logger.
-     * @param ContainerInterface      $container   The DI container.
-     */
-    public function __construct(
-        IRequest $request,
-        private ActivityTimelineService $service,
-        private IUserSession $userSession,
-        private LoggerInterface $logger,
-        private ContainerInterface $container,
-    ) {
-        // @PublicPage — DI constructor (not HTTP-routable). The actual auth
-        // posture for each endpoint lives on its own method attribute; this
-        // ctor is wired by the Nextcloud app framework and never serves a
-        // request.
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class ActivityTimelineController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param ActivityTimelineService $service The activity timeline service.
+	 * @param IUserSession $userSession The user session.
+	 * @param LoggerInterface $logger The logger.
+	 * @param ContainerInterface $container The DI container.
+	 */
+	public function __construct(
+		IRequest $request,
+		private ActivityTimelineService $service,
+		private IUserSession $userSession,
+		private LoggerInterface $logger,
+		private ContainerInterface $container,
+	) {
+		// @PublicPage — DI constructor (not HTTP-routable). The actual auth
+		// posture for each endpoint lives on its own method attribute; this
+		// ctor is wired by the Nextcloud app framework and never serves a
+		// request.
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * Verify that the underlying OR object exists and is accessible.
-     *
-     * Returns true if the object is found. Returns false on a clean 404 and
-     * **false on any service error**.
-     *
-     * ⚠️ This used to `return true` from the catch, described as "fails open so
-     * a temporary OR outage does not block the timeline surface". That makes an
-     * unavailable object service indistinguishable from a successful check —
-     * CWE-863, and it is the only thing standing between a caller-supplied
-     * `entityId` and someone else's merged contactmoment/worklog/note history
-     * (#801). Availability is not worth trading for it: a failed check now
-     * denies, and the warning still records the outage.
-     *
-     * @param string $entityId The OR object UUID.
-     *
-     * @return bool Whether the object could be verified.
-     */
-    private function objectExists(string $entityId): bool
-    {
-        try {
-            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $object        = $objectService->find($entityId, []);
-            return $object !== null;
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'ActivityTimelineController: could not verify object existence, denying',
-                ['entityId' => $entityId, 'exception' => $e->getMessage()]
-            );
-            return false;
-        }
-    }//end objectExists()
+	/**
+	 * Verify that the underlying OR object exists and is accessible.
+	 *
+	 * Returns true if the object is found. Returns false on a clean 404 and
+	 * **false on any service error**.
+	 *
+	 * ⚠️ This used to `return true` from the catch, described as "fails open so
+	 * a temporary OR outage does not block the timeline surface". That makes an
+	 * unavailable object service indistinguishable from a successful check —
+	 * CWE-863, and it is the only thing standing between a caller-supplied
+	 * `entityId` and someone else's merged contactmoment/worklog/note history
+	 * (#801). Availability is not worth trading for it: a failed check now
+	 * denies, and the warning still records the outage.
+	 *
+	 * @param string $entityId The OR object UUID.
+	 *
+	 * @return bool Whether the object could be verified.
+	 */
+	private function objectExists(string $entityId): bool {
+		try {
+			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			$object = $objectService->find($entityId, []);
+			return $object !== null;
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'ActivityTimelineController: could not verify object existence, denying',
+				['entityId' => $entityId, 'exception' => $e->getMessage()]
+			);
+			return false;
+		}
+	}//end objectExists()
 
-    /**
-     * Return the merged activity timeline for an entity.
-     *
-     * Reads `entityType`, `entityId`, `from`, `to`, `types[]`, `_page`, `_limit`
-     * from the request.
-     *
-     * @return JSONResponse The merged timeline or an error response.
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-entries-must-be-available-via-api
-     */
-    public function getTimeline(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-        }
+	/**
+	 * Return the merged activity timeline for an entity.
+	 *
+	 * Reads `entityType`, `entityId`, `from`, `to`, `types[]`, `_page`, `_limit`
+	 * from the request.
+	 *
+	 * @return JSONResponse The merged timeline or an error response.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-entries-must-be-available-via-api
+	 */
+	public function getTimeline(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
 
-        $entityType = (string) $this->request->getParam('entityType', '');
-        $entityId   = (string) $this->request->getParam('entityId', '');
+		$entityType = (string)$this->request->getParam('entityType', '');
+		$entityId = (string)$this->request->getParam('entityId', '');
 
-        if ($entityType === '' || $entityId === '') {
-            return new JSONResponse(
-                ['message' => 'entityType and entityId are required'],
-                Http::STATUS_BAD_REQUEST
-            );
-        }
+		if ($entityType === '' || $entityId === '') {
+			return new JSONResponse(
+				['message' => 'entityType and entityId are required'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
 
-        if ($this->objectExists(entityId: $entityId) === false) {
-            return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
-        }
+		if ($this->objectExists(entityId: $entityId) === false) {
+			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
+		}
 
-        $params = [
-            'from'   => $this->request->getParam('from'),
-            'to'     => $this->request->getParam('to'),
-            'types'  => $this->request->getParam('types'),
-            '_page'  => $this->request->getParam('_page'),
-            '_limit' => $this->request->getParam('_limit'),
-        ];
+		$params = [
+			'from' => $this->request->getParam('from'),
+			'to' => $this->request->getParam('to'),
+			'types' => $this->request->getParam('types'),
+			'_page' => $this->request->getParam('_page'),
+			'_limit' => $this->request->getParam('_limit'),
+		];
 
-        try {
-            $result = $this->service->getTimeline(
-                entityType: $entityType,
-                entityId: $entityId,
-                params: $params
-            );
-            return new JSONResponse($result);
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                'ActivityTimelineController: failed to load timeline',
-                [
-                    'exception' => $e->getMessage(),
-                    'trace'     => $e->getTraceAsString(),
-                ]
-            );
-            return new JSONResponse(
-                ['message' => 'Failed to load timeline'],
-                Http::STATUS_INTERNAL_SERVER_ERROR
-            );
-        }
-    }//end getTimeline()
+		try {
+			$result = $this->service->getTimeline(
+				entityType: $entityType,
+				entityId: $entityId,
+				params: $params
+			);
+			return new JSONResponse($result);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'ActivityTimelineController: failed to load timeline',
+				[
+					'exception' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				]
+			);
+			return new JSONResponse(
+				['message' => 'Failed to load timeline'],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+	}//end getTimeline()
 
-    /**
-     * Return worklog entries (contactmomenten with channel=worklog) for an entity.
-     *
-     * @return JSONResponse The paginated worklog or an error response.
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
-     */
-    public function getWorklog(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-        }
+	/**
+	 * Return worklog entries (contactmomenten with channel=worklog) for an entity.
+	 *
+	 * @return JSONResponse The paginated worklog or an error response.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
+	 */
+	public function getWorklog(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
 
-        $entityType = (string) $this->request->getParam('entityType', '');
-        $entityId   = (string) $this->request->getParam('entityId', '');
+		$entityType = (string)$this->request->getParam('entityType', '');
+		$entityId = (string)$this->request->getParam('entityId', '');
 
-        if ($entityType === '' || $entityId === '') {
-            return new JSONResponse(
-                ['message' => 'entityType and entityId are required'],
-                Http::STATUS_BAD_REQUEST
-            );
-        }
+		if ($entityType === '' || $entityId === '') {
+			return new JSONResponse(
+				['message' => 'entityType and entityId are required'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
 
-        if ($this->objectExists(entityId: $entityId) === false) {
-            return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
-        }
+		if ($this->objectExists(entityId: $entityId) === false) {
+			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
+		}
 
-        $params = [
-            '_page'  => $this->request->getParam('_page'),
-            '_limit' => $this->request->getParam('_limit'),
-        ];
+		$params = [
+			'_page' => $this->request->getParam('_page'),
+			'_limit' => $this->request->getParam('_limit'),
+		];
 
-        try {
-            $result = $this->service->getWorklog(
-                entityType: $entityType,
-                entityId: $entityId,
-                params: $params
-            );
-            return new JSONResponse($result);
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                'ActivityTimelineController: failed to load worklog',
-                [
-                    'exception' => $e->getMessage(),
-                    'trace'     => $e->getTraceAsString(),
-                ]
-            );
-            return new JSONResponse(
-                ['message' => 'Failed to load worklog'],
-                Http::STATUS_INTERNAL_SERVER_ERROR
-            );
-        }
-    }//end getWorklog()
+		try {
+			$result = $this->service->getWorklog(
+				entityType: $entityType,
+				entityId: $entityId,
+				params: $params
+			);
+			return new JSONResponse($result);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'ActivityTimelineController: failed to load worklog',
+				[
+					'exception' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				]
+			);
+			return new JSONResponse(
+				['message' => 'Failed to load worklog'],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+	}//end getWorklog()
 
-    /**
-     * Create a worklog entry for an entity.
-     *
-     * @return JSONResponse The created worklog or an error response.
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
-     */
-    public function createWorklog(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-        }
+	/**
+	 * Create a worklog entry for an entity.
+	 *
+	 * @return JSONResponse The created worklog or an error response.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-support-manual-entries
+	 */
+	public function createWorklog(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
 
-        $entityType = (string) $this->request->getParam('entityType', '');
-        $entityId   = (string) $this->request->getParam('entityId', '');
-        $duration   = (string) $this->request->getParam('duration', '');
+		$entityType = (string)$this->request->getParam('entityType', '');
+		$entityId = (string)$this->request->getParam('entityId', '');
+		$duration = (string)$this->request->getParam('duration', '');
 
-        if ($entityType === '' || $entityId === '' || $duration === '') {
-            return new JSONResponse(
-                ['message' => 'entityType, entityId and duration are required'],
-                Http::STATUS_BAD_REQUEST
-            );
-        }
+		if ($entityType === '' || $entityId === '' || $duration === '') {
+			return new JSONResponse(
+				['message' => 'entityType, entityId and duration are required'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
 
-        if ($this->objectExists(entityId: $entityId) === false) {
-            return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
-        }
+		if ($this->objectExists(entityId: $entityId) === false) {
+			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
+		}
 
-        $data = [
-            'duration'    => $duration,
-            'description' => $this->request->getParam('description'),
-            'date'        => $this->request->getParam('date'),
-        ];
+		$data = [
+			'duration' => $duration,
+			'description' => $this->request->getParam('description'),
+			'date' => $this->request->getParam('date'),
+		];
 
-        try {
-            $created = $this->service->createWorklog(
-                entityType: $entityType,
-                entityId: $entityId,
-                data: $data
-            );
-            return new JSONResponse($created, Http::STATUS_CREATED);
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                'ActivityTimelineController: failed to create worklog',
-                [
-                    'exception' => $e->getMessage(),
-                    'trace'     => $e->getTraceAsString(),
-                ]
-            );
-            return new JSONResponse(
-                ['message' => 'Failed to create worklog'],
-                Http::STATUS_INTERNAL_SERVER_ERROR
-            );
-        }
-    }//end createWorklog()
+		try {
+			$created = $this->service->createWorklog(
+				entityType: $entityType,
+				entityId: $entityId,
+				data: $data
+			);
+			return new JSONResponse($created, Http::STATUS_CREATED);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'ActivityTimelineController: failed to create worklog',
+				[
+					'exception' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				]
+			);
+			return new JSONResponse(
+				['message' => 'Failed to create worklog'],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+	}//end createWorklog()
 }//end class

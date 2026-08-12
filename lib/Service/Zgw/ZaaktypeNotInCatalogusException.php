@@ -33,20 +33,20 @@ namespace OCA\Pipelinq\Service\Zgw;
 /**
  * Zaaktype omschrijving not found in ZTC catalogus.
  */
-class ZaaktypeNotInCatalogusException extends ZgwException
-{
-    /**
-     * Constructor.
-     *
-     * @param string $omschrijving The zaaktype omschrijving we attempted to resolve.
-     */
-    public function __construct(public readonly string $omschrijving)
-    {
-        parent::__construct(
-            message: sprintf(
-                'ZGW: zaaktype with omschrijving "%s" not found in catalogus',
-                $omschrijving
-            )
-        );
-    }//end __construct()
+class ZaaktypeNotInCatalogusException extends ZgwException {
+	/**
+	 * Constructor.
+	 *
+	 * @param string $omschrijving The zaaktype omschrijving we attempted to resolve.
+	 */
+	public function __construct(
+		public readonly string $omschrijving,
+	) {
+		parent::__construct(
+			message: sprintf(
+				'ZGW: zaaktype with omschrijving "%s" not found in catalogus',
+				$omschrijving
+			)
+		);
+	}//end __construct()
 }//end class

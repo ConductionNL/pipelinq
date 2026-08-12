@@ -36,48 +36,46 @@ use OCP\IGroupManager;
  *
  * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
-class ApSyncNotifier
-{
-    /**
-     * Constructor.
-     *
-     * @param NotificationService $notificationService The notification service.
-     * @param IGroupManager       $groupManager        The group manager (admin resolution).
-     */
-    public function __construct(
-        private NotificationService $notificationService,
-        private IGroupManager $groupManager,
-    ) {
-    }//end __construct()
+class ApSyncNotifier {
+	/**
+	 * Constructor.
+	 *
+	 * @param NotificationService $notificationService The notification service.
+	 * @param IGroupManager $groupManager The group manager (admin resolution).
+	 */
+	public function __construct(
+		private NotificationService $notificationService,
+		private IGroupManager $groupManager,
+	) {
+	}//end __construct()
 
-    /**
-     * Notify every admin user that an AP dispatch permanently failed.
-     *
-     * @param string $expenseTitle The expense title (for the notification body).
-     * @param string $uuid         The expense UUID (for the detail-view reference).
-     *
-     * @return void
-     *
-     * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
-     */
-    public function notifyFailure(string $expenseTitle, string $uuid): void
-    {
-        $adminGroup = $this->groupManager->get('admin');
-        if ($adminGroup === null) {
-            return;
-        }
+	/**
+	 * Notify every admin user that an AP dispatch permanently failed.
+	 *
+	 * @param string $expenseTitle The expense title (for the notification body).
+	 * @param string $uuid The expense UUID (for the detail-view reference).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+	 */
+	public function notifyFailure(string $expenseTitle, string $uuid): void {
+		$adminGroup = $this->groupManager->get('admin');
+		if ($adminGroup === null) {
+			return;
+		}
 
-        foreach ($adminGroup->getUsers() as $user) {
-            $this->notificationService->sendNotification(
-                userId: $user->getUID(),
-                subject: 'ap_sync_failed',
-                parameters: [
-                    'expenseTitle' => $expenseTitle,
-                    'id'           => $uuid,
-                ],
-                objectType: 'expense',
-                objectId: $uuid
-            );
-        }
-    }//end notifyFailure()
+		foreach ($adminGroup->getUsers() as $user) {
+			$this->notificationService->sendNotification(
+				userId: $user->getUID(),
+				subject: 'ap_sync_failed',
+				parameters: [
+					'expenseTitle' => $expenseTitle,
+					'id' => $uuid,
+				],
+				objectType: 'expense',
+				objectId: $uuid
+			);
+		}
+	}//end notifyFailure()
 }//end class

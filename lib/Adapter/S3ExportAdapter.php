@@ -32,27 +32,24 @@ namespace OCA\Pipelinq\Adapter;
  *
  * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-01
  */
-class S3ExportAdapter extends AbstractOpenConnectorSink
-{
-    /**
-     * The destination type slug.
-     *
-     * @return string The type ('s3').
-     */
-    public function getType(): string
-    {
-        return 's3';
-    }//end getType()
+class S3ExportAdapter extends AbstractOpenConnectorSink {
+	/**
+	 * The destination type slug.
+	 *
+	 * @return string The type ('s3').
+	 */
+	public function getType(): string {
+		return 's3';
+	}//end getType()
 
-    /**
-     * Surface the S3 ETag as the acknowledgement.
-     *
-     * @param array<string, mixed> $result The transfer result metadata.
-     *
-     * @return string The S3 ETag (or a generic ack when absent).
-     */
-    protected function acknowledge(array $result): string
-    {
-        return (string) ($result['etag'] ?? $result['ETag'] ?? ($result['path'] ?? ''));
-    }//end acknowledge()
+	/**
+	 * Surface the S3 ETag as the acknowledgement.
+	 *
+	 * @param array<string, mixed> $result The transfer result metadata.
+	 *
+	 * @return string The S3 ETag (or a generic ack when absent).
+	 */
+	protected function acknowledge(array $result): string {
+		return (string)($result['etag'] ?? $result['ETag'] ?? ($result['path'] ?? ''));
+	}//end acknowledge()
 }//end class
