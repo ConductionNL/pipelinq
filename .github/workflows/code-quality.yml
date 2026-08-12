@@ -92,7 +92,7 @@ jobs:
       # journeydoc-capture all check out `fromJSON(nextcloud-test-refs)[0]` as
       # their single server, so with the inherited default those three jobs ran
       # entirely on the version openregister cannot load.
-      nextcloud-test-refs: '["stable32"]'
+      nextcloud-test-refs: '["stable34"]'
       # Strict static-analysis gate suite (composer check:strict equivalent).
       # These mirror the shared-workflow defaults (all true) but are pinned
       # here explicitly so the strict-gate posture is self-documenting and
