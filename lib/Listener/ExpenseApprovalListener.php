@@ -65,6 +65,19 @@ class ExpenseApprovalListener implements IEventListener {
 	use EntityAccessorTrait;
 
 	/**
+	 * Expense UUIDs whose dispatch is currently on the stack.
+	 *
+	 * Static rather than per-instance on purpose: Nextcloud's event dispatcher
+	 * resolves the listener from the container per dispatch, so a re-entrant
+	 * dispatch is not guaranteed to reach the same object. Static state is safe
+	 * here because PHP-FPM tears the process context down per request, and the
+	 * `finally` in handle() releases the key even when dispatch throws.
+	 *
+	 * @var array<string, true>
+	 */
+	private static array $inFlight = [];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param SchemaMapService $schemaMapService The schema map service.
@@ -131,7 +144,40 @@ class ExpenseApprovalListener implements IEventListener {
 				return;
 			}
 
-			$this->dispatchApproval(uuid: $uuid, data: $data);
+			// Re-entrancy: our own persist() re-enters this listener.
+			//
+			// dispatchApproval() -> persist() -> ObjectService::saveObject(), and
+			// MagicMapper::update() dispatches ObjectUpdatedEvent for that write.
+			// The event carries the SAME expense, still status=approved, so every
+			// check above passes again. The idempotency guard cannot stop it: it
+			// short-circuits only on apSyncStatus === 'synced', and the first
+			// re-entry sees 'pending' — the value persist() has just written. The
+			// terminating write is therefore never reached and each level fires
+			// another outbound AP webhook with its own retries.
+			//
+			// `silent: true` on saveObject() does NOT fix this and was measured:
+			// $silent gates the audit trail and updateInverseRelations only
+			// (openregister lib/Service/Object/SaveObject.php:3468, :3489, :5445,
+			// :5515). The lifecycle dispatch at MagicMapper.php:8997 is gated
+			// solely by suppressLifecycleEvents(), i.e. by
+			// SystemOperationContext::isActive(), which a listener is not in.
+			//
+			// Until now the only thing preventing the loop was the method_exists()
+			// probe this branch repairs: isExpense() was permanently false, so
+			// handle() never reached dispatchApproval() at all. Reviving the
+			// listener without this guard arms the loop. Today it stays bounded
+			// only because shouldDispatch() is false without a configured webhook
+			// URL — i.e. it would arm the moment anyone configures AP sync.
+			if (isset(self::$inFlight[$uuid]) === true) {
+				return;
+			}
+
+			self::$inFlight[$uuid] = true;
+			try {
+				$this->dispatchApproval(uuid: $uuid, data: $data);
+			} finally {
+				unset(self::$inFlight[$uuid]);
+			}
 		} catch (Throwable $e) {
 			// CRITICAL: never throw — approval workflow must not be affected.
 			$this->logger->warning(
