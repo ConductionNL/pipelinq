@@ -55,12 +55,25 @@ use Throwable;
  *    the only probe in the table that separates a real accessor from a
  *    fabricated one.
  *
- * This trait therefore does what `Entity` does: it calls the accessor and
- * treats a throw (or a non-scalar result) as "absent". Callers that need a
- * DECISION rather than a value compare the returned string against ''.
+ * Every caller here wants a VALUE, not a membership decision, so this trait
+ * uses the value-read shape: call the accessor and treat a throw (or a
+ * non-scalar result) as "absent". `property_exists()` is the right instrument
+ * only for the decision form ("does this entity carry this column at all?").
  *
- * @see shillinq/lib/Service/ListenerSchemaResolver.php readAccessor() — the
- *      in-tree fix this shape is copied from.
+ * ⚠️ The value is whatever OpenRegister STAMPED, which is the schema's numeric
+ * id — so a caller must compare it against an id, not a slug. In pipelinq that
+ * holds by construction: `SettingsMapBuilder::addSchemaToMap()` stores
+ * `$schema['id']` keyed by slug, so every `<slug>_schema` app-config value and
+ * the whole `SchemaMapService` map are numeric. An app whose loader stores the
+ * SLUG instead needs `SchemaMapper::find($raw)->getSlug()` on top of this read
+ * — and `getSlug()` is magic too. Pinned by
+ * `PosTransactionCompletedListenerTest::testTheGuardMatchesOnTheNumericSchemaIdOpenRegisterStamps`.
+ *
+ * @see shillinq/lib/Service/ListenerSchemaResolver.php readAccessor() and
+ *      openbuild/lib/Service/ObjectSchemaSlugResolver.php:163 — the two in-tree
+ *      VALUE-read exemplars this shape is copied from. (For the DECISION form
+ *      the exemplar is openregister/lib/Db/MultiTenancyTrait.php:647 and :684,
+ *      the only in-tree `property_exists` use.)
  *
  * @spec exclude Infrastructure helper for OpenRegister's magic accessors; it carries
  *       no product requirement of its own and only restores the behaviour the specs

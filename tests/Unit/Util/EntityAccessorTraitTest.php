@@ -94,8 +94,16 @@ class EntityAccessorTraitTest extends TestCase
         $this->assertTrue(is_callable([$entity, 'getSchema']));
         $this->assertTrue(is_callable([$entity, 'getThisAccessorDoesNotExist']));
 
-        // Property_exists() is what Entity::getter() itself consults.
-        $this->assertTrue(property_exists($entity, 'schema'));
+        // Property_exists() is what Entity::getter() itself consults, so the
+        // double must BACK every magic accessor with a real property. A stub
+        // that declares the method but omits the property inverts the second
+        // probe as well — softwarecatalog shipped exactly that and applying the
+        // fix turned four green tests red. Measured on the live class: uuid,
+        // schema, register and object all exist.
+        foreach (['uuid', 'schema', 'register', 'object'] as $property) {
+            $this->assertTrue(property_exists($entity, $property), "missing backing property \${$property}");
+        }
+
         $this->assertFalse(property_exists($entity, 'thisAccessorDoesNotExist'));
     }//end testTheDoubleReproducesProductionsMagicAccessorShape()
 
