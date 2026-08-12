@@ -116,33 +116,12 @@ class ExpenseApprovalListener implements IEventListener {
 		}
 
 		try {
-			$entity = $this->resolveEntity(event: $event);
-
-			if ($this->isExpense(entity: $entity) === false) {
+			$dispatchable = $this->resolveDispatchable(event: $event);
+			if ($dispatchable === null) {
 				return;
 			}
 
-			$data = $entity->getObject();
-
-			// Only fire for approved expenses (REQ-AP-002).
-			if (($data['status'] ?? '') !== 'approved') {
-				return;
-			}
-
-			$uuid = (string)$entity->getUuid();
-			if ($uuid === '') {
-				return;
-			}
-
-			// Idempotency: never re-dispatch an already-synced expense (REQ-AP-002 Scenario 5).
-			if (($data['apSyncStatus'] ?? null) === 'synced') {
-				return;
-			}
-
-			// Webhook not configured: silent no-op (REQ-AP-002 Scenario 6).
-			if ($this->apService->shouldDispatch() === false) {
-				return;
-			}
+			[$uuid, $data] = $dispatchable;
 
 			// Re-entrancy: our own persist() re-enters this listener.
 			//
@@ -186,6 +165,50 @@ class ExpenseApprovalListener implements IEventListener {
 			);
 		}//end try
 	}//end handle()
+
+	/**
+	 * Decide whether this event should produce an AP dispatch, and for what.
+	 *
+	 * Extracted from handle() so the preconditions live in one place and
+	 * handle() is left with the re-entrancy guard and the error boundary. Every
+	 * `null` here is a deliberate no-op named by REQ-AP-002.
+	 *
+	 * @param ObjectCreatedEvent|ObjectUpdatedEvent $event The dispatched event.
+	 *
+	 * @return array{0: string, 1: array<string, mixed>}|null The expense UUID and
+	 *                                                        its data, or null when this event is not an approval to dispatch.
+	 */
+	private function resolveDispatchable(ObjectCreatedEvent|ObjectUpdatedEvent $event): ?array {
+		$entity = $this->resolveEntity(event: $event);
+
+		if ($this->isExpense(entity: $entity) === false) {
+			return null;
+		}
+
+		$data = $entity->getObject();
+
+		// Only fire for approved expenses (REQ-AP-002).
+		if (($data['status'] ?? '') !== 'approved') {
+			return null;
+		}
+
+		$uuid = (string)$entity->getUuid();
+		if ($uuid === '') {
+			return null;
+		}
+
+		// Idempotency: never re-dispatch an already-synced expense (REQ-AP-002 Scenario 5).
+		if (($data['apSyncStatus'] ?? null) === 'synced') {
+			return null;
+		}
+
+		// Webhook not configured: silent no-op (REQ-AP-002 Scenario 6).
+		if ($this->apService->shouldDispatch() === false) {
+			return null;
+		}
+
+		return [$uuid, $data];
+	}//end resolveDispatchable()
 
 	/**
 	 * Resolve the event's target entity.
