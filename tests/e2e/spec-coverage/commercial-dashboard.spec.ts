@@ -103,30 +103,42 @@ test('Commercial dashboard: the charts start on the row below the KPI tiles', as
 
 	const content = page.locator('#content-vue')
 
-	// Wait for both bands to have painted before measuring anything — a
-	// bounding box taken mid-mount measures the skeleton, not the layout.
-	const openPipeline = content.getByText('Open Pipeline').first()
-	await expect(openPipeline).toBeVisible({ timeout: 15000 })
-	const chart = content.locator('svg.apexcharts-svg').first()
-	await expect(chart).toBeVisible({ timeout: 15000 })
+	// Measure the WIDGET boxes, not text. The renderer wraps each manifest
+	// widget in a role="group" whose accessible name is the widget id, so these
+	// are the same handles the manifest declares. An earlier version of this
+	// test located `getByText('Open Pipeline')` and measured a label span
+	// instead of its tile — it failed at 286px against a 64px "row" that was
+	// really the text line box, i.e. it measured the wrong two things and would
+	// have been "fixed" by loosening the threshold.
+	const lastKpi = content.getByRole('group', { name: 'avg-deal-size' })
+	const firstChart = content.getByRole('group', { name: 'revenue-over-time' })
+	await expect(lastKpi).toBeVisible({ timeout: 15000 })
+	await expect(firstChart).toBeVisible({ timeout: 15000 })
+	// The chart's own canvas has to have painted, or the group box is a
+	// skeleton and the geometry below describes the loading state.
+	await expect(firstChart.locator('svg.apexcharts-svg').first()).toBeVisible({ timeout: 15000 })
 
-	const kpiBox = await openPipeline.boundingBox()
-	const chartBox = await chart.boundingBox()
-	expect(kpiBox, 'KPI tile has no bounding box').not.toBeNull()
-	expect(chartBox, 'chart has no bounding box').not.toBeNull()
+	const kpiBox = await lastKpi.boundingBox()
+	const chartBox = await firstChart.boundingBox()
+	expect(kpiBox, 'the avg-deal-size KPI tile has no bounding box').not.toBeNull()
+	expect(chartBox, 'the revenue-over-time chart has no bounding box').not.toBeNull()
 
-	// The chart must be BELOW the KPI band, not beside it — otherwise the gap
-	// arithmetic below would be measuring two columns and would pass for the
-	// wrong reason.
+	// Below, not beside — otherwise the gap arithmetic would be measuring two
+	// columns and would pass for the wrong reason.
 	expect(chartBox.y, 'the chart is not below the KPI band').toBeGreaterThan(kpiBox.y)
 
-	// One grid row is the tile height plus its gutter. Measuring the gap against
-	// the tile's own height keeps this independent of the theme's row size.
+	// `avg-deal-size` is declared `gridY: 2, gridHeight: 2` and
+	// `revenue-over-time` is `gridY: 4`, so the chart begins on the row
+	// immediately after the KPI band and the gap should be one gutter. Half the
+	// KPI tile's rendered height is exactly one grid row, which makes the
+	// threshold self-calibrating: an inserted empty row adds a full row and
+	// fails, a theme with different row heights does not.
+	const oneGridRow = kpiBox.height / 2
 	const gap = chartBox.y - (kpiBox.y + kpiBox.height)
 	expect(
 		gap,
-		`gap between the last KPI row and the first chart is ${Math.round(gap)}px, which is more than one grid row (${Math.round(kpiBox.height)}px) — an empty row has appeared between them`,
-	).toBeLessThan(kpiBox.height)
+		`gap between the last KPI row and the first chart is ${Math.round(gap)}px; one grid row is ${Math.round(oneGridRow)}px — an empty row has appeared between them`,
+	).toBeLessThan(oneGridRow)
 
 	await assertNoHardError(page)
 })
