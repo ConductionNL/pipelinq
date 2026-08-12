@@ -153,6 +153,27 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar</step>
             <step>OCA\Pipelinq\Repair\RemoveLegacyPspKeys</step>
         </post-migration>
+        <!--
+            FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
+            `Installer::installAppLastSteps()` guards both the pre-migration and
+            post-migration blocks with `if ($previousVersion !== '')`, and only
+            `repair-steps/install` runs unconditionally afterwards. Until this block
+            existed a brand-new Pipelinq install ran NONE of the steps above, so
+            InitializeSettings never fired and the pipelinq register and schemas were
+            never imported. The step is annotated
+            `@spec openspec/specs/openregister-integration/spec.md#requirement-auto-configuration-on-install-repair-step`
+            — the spec said "on install"; the wiring never fired on install.
+
+            Only baseline-CREATING steps belong here. Everything else above operates
+            on data a fresh install does not have: the Normalise*/Unify*/Drain*/
+            InitSlaStatus steps rewrite existing rows, the Migrate*/Remove* steps are
+            one-way migrations, and IngestProductVendorMaster consumes a shillinq
+            export that a new instance has never received.
+        -->
+        <install>
+            <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+            <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+        </install>
     </repair-steps>
 
     <settings>
