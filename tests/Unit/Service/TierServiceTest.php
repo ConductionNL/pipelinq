@@ -31,58 +31,53 @@ use PHPUnit\Framework\TestCase;
  * walk + downgrade + emit-event paths are covered by integration tests
  * (no in-memory ObjectService stub yet in pipelinq).
  */
-class TierServiceTest extends TestCase
-{
-    public function testApplyTierBenefitsDefaultsToOne(): void
-    {
-        $service = $this->makeServiceStub();
-        $this->assertEqualsWithDelta(
-            1.0,
-            $service->applyTierBenefits(tier: []),
-            0.001,
-            'Tier without benefits returns multiplier 1.0'
-        );
-    }//end testApplyTierBenefitsDefaultsToOne()
+class TierServiceTest extends TestCase {
+	public function testApplyTierBenefitsDefaultsToOne(): void {
+		$service = $this->makeServiceStub();
+		$this->assertEqualsWithDelta(
+			1.0,
+			$service->applyTierBenefits(tier: []),
+			0.001,
+			'Tier without benefits returns multiplier 1.0'
+		);
+	}//end testApplyTierBenefitsDefaultsToOne()
 
-    public function testApplyTierBenefitsReadsMultiplier(): void
-    {
-        $service = $this->makeServiceStub();
-        $this->assertEqualsWithDelta(
-            1.25,
-            $service->applyTierBenefits(tier: ['benefits' => ['pointsMultiplier' => 1.25]]),
-            0.001
-        );
-    }//end testApplyTierBenefitsReadsMultiplier()
+	public function testApplyTierBenefitsReadsMultiplier(): void {
+		$service = $this->makeServiceStub();
+		$this->assertEqualsWithDelta(
+			1.25,
+			$service->applyTierBenefits(tier: ['benefits' => ['pointsMultiplier' => 1.25]]),
+			0.001
+		);
+	}//end testApplyTierBenefitsReadsMultiplier()
 
-    public function testApplyTierBenefitsRejectsMalformedBenefits(): void
-    {
-        $service = $this->makeServiceStub();
-        $this->assertEqualsWithDelta(
-            1.0,
-            $service->applyTierBenefits(tier: ['benefits' => 'not-an-object']),
-            0.001
-        );
-    }//end testApplyTierBenefitsRejectsMalformedBenefits()
+	public function testApplyTierBenefitsRejectsMalformedBenefits(): void {
+		$service = $this->makeServiceStub();
+		$this->assertEqualsWithDelta(
+			1.0,
+			$service->applyTierBenefits(tier: ['benefits' => 'not-an-object']),
+			0.001
+		);
+	}//end testApplyTierBenefitsRejectsMalformedBenefits()
 
-    /**
-     * Construct a TierService with mocked collaborators.
-     *
-     * @return TierService
-     */
-    private function makeServiceStub(): TierService
-    {
-        $container       = $this->createMock(\Psr\Container\ContainerInterface::class);
-        $appConfig       = $this->createMock(\OCP\IAppConfig::class);
-        $accountService  = $this->createMock(\OCA\Pipelinq\Service\LoyaltyAccountService::class);
-        $eventDispatcher = $this->createMock(\OCP\EventDispatcher\IEventDispatcher::class);
-        $logger          = $this->createMock(\Psr\Log\LoggerInterface::class);
+	/**
+	 * Construct a TierService with mocked collaborators.
+	 *
+	 * @return TierService
+	 */
+	private function makeServiceStub(): TierService {
+		$container = $this->createMock(\Psr\Container\ContainerInterface::class);
+		$appConfig = $this->createMock(\OCP\IAppConfig::class);
+		$accountService = $this->createMock(\OCA\Pipelinq\Service\LoyaltyAccountService::class);
+		$eventDispatcher = $this->createMock(\OCP\EventDispatcher\IEventDispatcher::class);
+		$logger = $this->createMock(\Psr\Log\LoggerInterface::class);
 
-        return new TierService(
-            container: $container,
-            appConfig: $appConfig,
-            accountService: $accountService,
-            eventDispatcher: $eventDispatcher,
-            logger: $logger
-        );
-    }//end makeServiceStub()
+		return new TierService(
+			container: $container,
+			appConfig: $appConfig,
+			accountService: $accountService,
+			eventDispatcher: $eventDispatcher,
+			logger: $logger
+		);
+	}//end makeServiceStub()
 }//end class

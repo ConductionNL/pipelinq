@@ -43,113 +43,110 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
  */
-class ExportSchedulerJob extends TimedJob
-{
-    /**
-     * Poll interval in seconds (1 minute) — cron granularity is the minute.
-     *
-     * @var int
-     */
-    private const INTERVAL = 60;
+class ExportSchedulerJob extends TimedJob {
+	/**
+	 * Poll interval in seconds (1 minute) — cron granularity is the minute.
+	 *
+	 * @var int
+	 */
+	private const INTERVAL = 60;
 
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory         $time   The time factory (required by TimedJob).
-     * @param ExportJobService     $jobs   The job service.
-     * @param ExportRunService     $runs   The run service.
-     * @param CronExpressionHelper $cron   The cron helper.
-     * @param LoggerInterface      $logger The logger.
-     */
-    public function __construct(
-        ITimeFactory $time,
-        private ExportJobService $jobs,
-        private ExportRunService $runs,
-        private CronExpressionHelper $cron,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $time);
-        $this->setInterval(seconds: self::INTERVAL);
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $time The time factory (required by TimedJob).
+	 * @param ExportJobService $jobs The job service.
+	 * @param ExportRunService $runs The run service.
+	 * @param CronExpressionHelper $cron The cron helper.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		ITimeFactory $time,
+		private ExportJobService $jobs,
+		private ExportRunService $runs,
+		private CronExpressionHelper $cron,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(time: $time);
+		$this->setInterval(seconds: self::INTERVAL);
+	}//end __construct()
 
-    /**
-     * Execute the scheduler: enqueue a pending run per due enabled job.
-     *
-     * @param mixed $argument The job argument (unused; required by TimedJob).
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     *
-     * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
-     */
-    protected function run(mixed $argument): void
-    {
-        $now = new DateTimeImmutable();
+	/**
+	 * Execute the scheduler: enqueue a pending run per due enabled job.
+	 *
+	 * @param mixed $argument The job argument (unused; required by TimedJob).
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 *
+	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-004-01
+	 */
+	protected function run(mixed $argument): void {
+		$now = new DateTimeImmutable();
 
-        try {
-            $jobs = $this->jobs->listJobs();
-        } catch (\Throwable $e) {
-            $this->logger->error('ExportSchedulerJob: failed to list jobs', ['error' => $e->getMessage()]);
-            return;
-        }
+		try {
+			$jobs = $this->jobs->listJobs();
+		} catch (\Throwable $e) {
+			$this->logger->error('ExportSchedulerJob: failed to list jobs', ['error' => $e->getMessage()]);
+			return;
+		}
 
-        $enqueued = 0;
-        foreach ($jobs as $job) {
-            if (($job['enabled'] ?? false) !== true) {
-                continue;
-            }
+		$enqueued = 0;
+		foreach ($jobs as $job) {
+			if (($job['enabled'] ?? false) !== true) {
+				continue;
+			}
 
-            $cron = (string) ($job['scheduleCron'] ?? '');
-            if ($this->cron->isDue(expression: $cron, when: $now) === false) {
-                continue;
-            }
+			$cron = (string)($job['scheduleCron'] ?? '');
+			if ($this->cron->isDue(expression: $cron, when: $now) === false) {
+				continue;
+			}
 
-            try {
-                $watermarkFrom = $this->resolveWatermarkFrom(job: $job);
-                $this->runs->createPendingRun(job: $job, watermarkFrom: $watermarkFrom);
-                $enqueued++;
-            } catch (\Throwable $e) {
-                $this->logger->error(
-                    'ExportSchedulerJob: failed to enqueue run',
-                    ['jobId' => ($job['id'] ?? $job['uuid'] ?? ''), 'error' => $e->getMessage()]
-                );
-            }
-        }//end foreach
+			try {
+				$watermarkFrom = $this->resolveWatermarkFrom(job: $job);
+				$this->runs->createPendingRun(job: $job, watermarkFrom: $watermarkFrom);
+				$enqueued++;
+			} catch (\Throwable $e) {
+				$this->logger->error(
+					'ExportSchedulerJob: failed to enqueue run',
+					['jobId' => ($job['id'] ?? $job['uuid'] ?? ''), 'error' => $e->getMessage()]
+				);
+			}
+		}//end foreach
 
-        if ($enqueued > 0) {
-            $this->logger->info('ExportSchedulerJob: enqueued export runs', ['count' => $enqueued]);
-        }
-    }//end run()
+		if ($enqueued > 0) {
+			$this->logger->info('ExportSchedulerJob: enqueued export runs', ['count' => $enqueued]);
+		}
+	}//end run()
 
-    /**
-     * Resolve the incremental watermark start from the last succeeded run.
-     *
-     * @param array<string, mixed> $job The job.
-     *
-     * @return string|null The previous run's watermarkTo, or null.
-     */
-    private function resolveWatermarkFrom(array $job): ?string
-    {
-        if ((string) ($job['mode'] ?? 'full') !== 'incremental') {
-            return null;
-        }
+	/**
+	 * Resolve the incremental watermark start from the last succeeded run.
+	 *
+	 * @param array<string, mixed> $job The job.
+	 *
+	 * @return string|null The previous run's watermarkTo, or null.
+	 */
+	private function resolveWatermarkFrom(array $job): ?string {
+		if ((string)($job['mode'] ?? 'full') !== 'incremental') {
+			return null;
+		}
 
-        $jobId = (string) ($job['id'] ?? $job['uuid'] ?? '');
-        if ($jobId === '') {
-            return null;
-        }
+		$jobId = (string)($job['id'] ?? $job['uuid'] ?? '');
+		if ($jobId === '') {
+			return null;
+		}
 
-        $last = $this->runs->lastSucceededRun(jobId: $jobId);
-        if ($last === null) {
-            return null;
-        }
+		$last = $this->runs->lastSucceededRun(jobId: $jobId);
+		if ($last === null) {
+			return null;
+		}
 
-        $watermarkTo = ($last['watermarkTo'] ?? null);
-        if ($watermarkTo === null) {
-            return null;
-        }
+		$watermarkTo = ($last['watermarkTo'] ?? null);
+		if ($watermarkTo === null) {
+			return null;
+		}
 
-        return (string) $watermarkTo;
-    }//end resolveWatermarkFrom()
+		return (string)$watermarkTo;
+	}//end resolveWatermarkFrom()
 }//end class

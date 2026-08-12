@@ -34,83 +34,78 @@ use OCA\Pipelinq\Service\Payment\HttpTransport;
  *
  * @spec openspec/changes/pos-payment-provider-adapter/tasks.md#11.1
  */
-class StubHttpTransport implements HttpTransport
-{
-    /**
-     * Queued responses.
-     *
-     * @var array<int, array<string, mixed>>
-     */
-    private array $responses;
+class StubHttpTransport implements HttpTransport {
+	/**
+	 * Queued responses.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $responses;
 
-    /**
-     * Recorded requests.
-     *
-     * @var array<int, array<string, mixed>>
-     */
-    private array $requests = [];
+	/**
+	 * Recorded requests.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $requests = [];
 
-    /**
-     * Constructor.
-     *
-     * @param array<int, array<string, mixed>> $responses Queued responses (FIFO).
-     */
-    public function __construct(array $responses)
-    {
-        $this->responses = $responses;
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param array<int, array<string, mixed>> $responses Queued responses (FIFO).
+	 */
+	public function __construct(array $responses) {
+		$this->responses = $responses;
+	}//end __construct()
 
-    /**
-     * Execute a request — returns the next queued response.
-     *
-     * @param string                $method  The HTTP method.
-     * @param string                $url     The URL.
-     * @param array<string, string> $headers The headers.
-     * @param string|null           $body    The raw body.
-     *
-     * @return array{status: int, body: array<string, mixed>, raw: string}
-     */
-    public function request(string $method, string $url, array $headers=[], ?string $body=null): array
-    {
-        $this->requests[] = [
-            'method'  => $method,
-            'url'     => $url,
-            'headers' => $headers,
-            'body'    => ($body ?? ''),
-        ];
+	/**
+	 * Execute a request — returns the next queued response.
+	 *
+	 * @param string $method The HTTP method.
+	 * @param string $url The URL.
+	 * @param array<string, string> $headers The headers.
+	 * @param string|null $body The raw body.
+	 *
+	 * @return array{status: int, body: array<string, mixed>, raw: string}
+	 */
+	public function request(string $method, string $url, array $headers = [], ?string $body = null): array {
+		$this->requests[] = [
+			'method' => $method,
+			'url' => $url,
+			'headers' => $headers,
+			'body' => ($body ?? ''),
+		];
 
-        if ($this->responses === []) {
-            return [
-                'status' => 0,
-                'body'   => [],
-                'raw'    => '',
-            ];
-        }
+		if ($this->responses === []) {
+			return [
+				'status' => 0,
+				'body' => [],
+				'raw' => '',
+			];
+		}
 
-        return array_shift($this->responses);
-    }//end request()
+		return array_shift($this->responses);
+	}//end request()
 
-    /**
-     * Get the last recorded request.
-     *
-     * @return array<string, mixed>
-     */
-    public function lastRequest(): array
-    {
-        if ($this->requests === []) {
-            return [];
-        }
+	/**
+	 * Get the last recorded request.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function lastRequest(): array {
+		if ($this->requests === []) {
+			return [];
+		}
 
-        return $this->requests[(count($this->requests) - 1)];
-    }//end lastRequest()
+		return $this->requests[(count($this->requests) - 1)];
+	}//end lastRequest()
 
-    /**
-     * Get all recorded requests.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    public function allRequests(): array
-    {
-        return $this->requests;
-    }//end allRequests()
+	/**
+	 * Get all recorded requests.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function allRequests(): array {
+		return $this->requests;
+	}//end allRequests()
 }//end class

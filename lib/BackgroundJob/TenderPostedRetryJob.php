@@ -46,86 +46,84 @@ use Throwable;
  *
  * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
  */
-class TenderPostedRetryJob extends TimedJob
-{
-    /**
-     * Job interval in seconds. 300 = 5 minutes per the spec.
-     *
-     * @var int
-     */
-    private const INTERVAL_SECONDS = 300;
+class TenderPostedRetryJob extends TimedJob {
+	/**
+	 * Job interval in seconds. 300 = 5 minutes per the spec.
+	 *
+	 * @var int
+	 */
+	private const INTERVAL_SECONDS = 300;
 
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory     $time    The time factory.
-     * @param PosTenderService $service The tender service.
-     * @param LoggerInterface  $logger  The logger.
-     */
-    public function __construct(
-        ITimeFactory $time,
-        private PosTenderService $service,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $time);
-        $this->setInterval(seconds: self::INTERVAL_SECONDS);
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $time The time factory.
+	 * @param PosTenderService $service The tender service.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		ITimeFactory $time,
+		private PosTenderService $service,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(time: $time);
+		$this->setInterval(seconds: self::INTERVAL_SECONDS);
+	}//end __construct()
 
-    /**
-     * Re-emit `tender.posted` CloudEvents for unposted tenders.
-     *
-     * @param mixed $argument The job argument (unused).
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
-     *
-     * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
-     */
-    protected function run(mixed $argument): void
-    {
-        try {
-            $unposted = $this->service->listUnpostedTenders();
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                'Pipelinq TenderPostedRetryJob: failed to list unposted tenders',
-                ['exception' => $e->getMessage()]
-            );
-            return;
-        }
+	/**
+	 * Re-emit `tender.posted` CloudEvents for unposted tenders.
+	 *
+	 * @param mixed $argument The job argument (unused).
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+	 *
+	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+	 */
+	protected function run(mixed $argument): void {
+		try {
+			$unposted = $this->service->listUnpostedTenders();
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq TenderPostedRetryJob: failed to list unposted tenders',
+				['exception' => $e->getMessage()]
+			);
+			return;
+		}
 
-        if ($unposted === []) {
-            return;
-        }
+		if ($unposted === []) {
+			return;
+		}
 
-        $count = 0;
-        foreach ($unposted as $tender) {
-            $transactionUuid = (string) ($tender['transaction'] ?? '');
-            if ($transactionUuid === '') {
-                continue;
-            }
+		$count = 0;
+		foreach ($unposted as $tender) {
+			$transactionUuid = (string)($tender['transaction'] ?? '');
+			if ($transactionUuid === '') {
+				continue;
+			}
 
-            try {
-                $eventId = $this->service->emitSingleTenderPosted(
-                    transactionUuid: $transactionUuid,
-                    transactionReference: '',
-                    tender: $tender
-                );
-                if ($eventId !== '') {
-                    $count++;
-                }
-            } catch (Throwable $e) {
-                $this->logger->info(
-                    'Pipelinq TenderPostedRetryJob: per-tender re-emit failed (soft)',
-                    ['exception' => $e->getMessage()]
-                );
-            }
-        }//end foreach
+			try {
+				$eventId = $this->service->emitSingleTenderPosted(
+					transactionUuid: $transactionUuid,
+					transactionReference: '',
+					tender: $tender
+				);
+				if ($eventId !== '') {
+					$count++;
+				}
+			} catch (Throwable $e) {
+				$this->logger->info(
+					'Pipelinq TenderPostedRetryJob: per-tender re-emit failed (soft)',
+					['exception' => $e->getMessage()]
+				);
+			}
+		}//end foreach
 
-        if ($count > 0) {
-            $this->logger->info(
-                'Pipelinq TenderPostedRetryJob: re-emitted '.$count.' tender CloudEvent(s)'
-            );
-        }
-    }//end run()
+		if ($count > 0) {
+			$this->logger->info(
+				'Pipelinq TenderPostedRetryJob: re-emitted ' . $count . ' tender CloudEvent(s)'
+			);
+		}
+	}//end run()
 }//end class

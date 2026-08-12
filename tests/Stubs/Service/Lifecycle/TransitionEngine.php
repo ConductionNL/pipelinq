@@ -28,18 +28,16 @@ namespace OCA\OpenRegister\Service\Lifecycle;
 /**
  * Applies named lifecycle transitions (stub).
  */
-class TransitionEngine
-{
-    /**
-     * Apply a named transition to an object.
-     *
-     * @param string $objectId Object id/uuid/slug.
-     * @param string $action   Transition action name.
-     *
-     * @return mixed The saved object after the transition.
-     */
-    public function transition(string $objectId, string $action): mixed
-    {
-        return null;
-    }//end transition()
+class TransitionEngine {
+	/**
+	 * Apply a named transition to an object.
+	 *
+	 * @param string $objectId Object id/uuid/slug.
+	 * @param string $action Transition action name.
+	 *
+	 * @return mixed The saved object after the transition.
+	 */
+	public function transition(string $objectId, string $action): mixed {
+		return null;
+	}//end transition()
 }//end class

@@ -37,130 +37,118 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for widget-origin enforcement in tenant resolution.
  */
-class PortalRequestGuardTest extends TestCase
-{
-    /**
-     * The tenant service double.
-     *
-     * @var PortalTenantService
-     */
-    private $tenant;
+class PortalRequestGuardTest extends TestCase {
+	/**
+	 * The tenant service double.
+	 *
+	 * @var PortalTenantService
+	 */
+	private $tenant;
 
-    /**
-     * The guard under test.
-     *
-     * @var PortalRequestGuard
-     */
-    private PortalRequestGuard $guard;
+	/**
+	 * The guard under test.
+	 *
+	 * @var PortalRequestGuard
+	 */
+	private PortalRequestGuard $guard;
 
+	/**
+	 * Build a guard with mocked collaborators; only the tenant service is
+	 * exercised for these tenant-resolution tests.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$repository = $this->createMock(PortalObjectRepository::class);
+		$sessions = $this->createMock(PortalSessionManager::class);
+		$this->tenant = $this->createMock(PortalTenantService::class);
+		$this->guard = new PortalRequestGuard($repository, $sessions, $this->tenant);
 
-    /**
-     * Build a guard with mocked collaborators; only the tenant service is
-     * exercised for these tenant-resolution tests.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $repository   = $this->createMock(PortalObjectRepository::class);
-        $sessions     = $this->createMock(PortalSessionManager::class);
-        $this->tenant = $this->createMock(PortalTenantService::class);
-        $this->guard  = new PortalRequestGuard($repository, $sessions, $this->tenant);
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Build an IRequest double returning the given header map + host.
+	 *
+	 * @param array<string, string> $headers The header values keyed by name.
+	 * @param string $host The server host.
+	 *
+	 * @return IRequest The request double.
+	 */
+	private function request(array $headers, string $host = 'portal.example'): IRequest {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getServerHost')->willReturn($host);
+		$request->method('getHeader')->willReturnCallback(
+			static fn (string $name): string => ($headers[$name] ?? '')
+		);
+		return $request;
+	}//end request()
 
+	/**
+	 * Widget mode + a disallowed Origin is rejected with a 403 at the gate —
+	 * an embedded widget on a site the tenant never allow-listed cannot drive
+	 * any portal action.
+	 *
+	 * @return void
+	 */
+	public function testWidgetModeRejectsDisallowedOrigin(): void {
+		$this->tenant->method('resolveTenantId')->willReturn('tenant-a');
+		$this->tenant->expects($this->once())
+			->method('isWidgetOriginAllowed')
+			->with('tenant-a', 'https://evil.example')
+			->willReturn(false);
 
-    /**
-     * Build an IRequest double returning the given header map + host.
-     *
-     * @param array<string, string> $headers The header values keyed by name.
-     * @param string                $host    The server host.
-     *
-     * @return IRequest The request double.
-     */
-    private function request(array $headers, string $host='portal.example'): IRequest
-    {
-        $request = $this->createMock(IRequest::class);
-        $request->method('getServerHost')->willReturn($host);
-        $request->method('getHeader')->willReturnCallback(
-            static fn (string $name): string => ($headers[$name] ?? '')
-        );
-        return $request;
+		$request = $this->request(
+			[
+				'X-Portal-Tenant' => 'tenant-a',
+				'Origin' => 'https://evil.example',
+			]
+		);
 
-    }//end request()
+		try {
+			$this->guard->resolveTenant($request);
+			$this->fail('Expected PortalException for disallowed widget origin');
+		} catch (PortalException $e) {
+			$this->assertSame(Http::STATUS_FORBIDDEN, $e->getStatus());
+		}
 
+	}//end testWidgetModeRejectsDisallowedOrigin()
 
-    /**
-     * Widget mode + a disallowed Origin is rejected with a 403 at the gate —
-     * an embedded widget on a site the tenant never allow-listed cannot drive
-     * any portal action.
-     *
-     * @return void
-     */
-    public function testWidgetModeRejectsDisallowedOrigin(): void
-    {
-        $this->tenant->method('resolveTenantId')->willReturn('tenant-a');
-        $this->tenant->expects($this->once())
-            ->method('isWidgetOriginAllowed')
-            ->with('tenant-a', 'https://evil.example')
-            ->willReturn(false);
+	/**
+	 * Widget mode + an allow-listed Origin resolves normally.
+	 *
+	 * @return void
+	 */
+	public function testWidgetModeAllowsAllowlistedOrigin(): void {
+		$this->tenant->method('resolveTenantId')->willReturn('tenant-a');
+		$this->tenant->method('isWidgetOriginAllowed')
+			->with('tenant-a', 'https://partner.example')
+			->willReturn(true);
 
-        $request = $this->request(
-            [
-                'X-Portal-Tenant' => 'tenant-a',
-                'Origin'          => 'https://evil.example',
-            ]
-        );
+		$request = $this->request(
+			[
+				'X-Portal-Tenant' => 'tenant-a',
+				'Origin' => 'https://partner.example',
+			]
+		);
 
-        try {
-            $this->guard->resolveTenant($request);
-            $this->fail('Expected PortalException for disallowed widget origin');
-        } catch (PortalException $e) {
-            $this->assertSame(Http::STATUS_FORBIDDEN, $e->getStatus());
-        }
+		$this->assertSame('tenant-a', $this->guard->resolveTenant($request));
 
-    }//end testWidgetModeRejectsDisallowedOrigin()
+	}//end testWidgetModeAllowsAllowlistedOrigin()
 
+	/**
+	 * First-party mode (no X-Portal-Tenant header) never invokes the
+	 * widget-origin gate and resolves from host signals unchanged — the
+	 * enforcement is fail-closed for the widget path only.
+	 *
+	 * @return void
+	 */
+	public function testFirstPartyModeSkipsOriginCheck(): void {
+		$this->tenant->method('resolveTenantId')->willReturn('default');
+		$this->tenant->expects($this->never())->method('isWidgetOriginAllowed');
 
-    /**
-     * Widget mode + an allow-listed Origin resolves normally.
-     *
-     * @return void
-     */
-    public function testWidgetModeAllowsAllowlistedOrigin(): void
-    {
-        $this->tenant->method('resolveTenantId')->willReturn('tenant-a');
-        $this->tenant->method('isWidgetOriginAllowed')
-            ->with('tenant-a', 'https://partner.example')
-            ->willReturn(true);
+		$request = $this->request([], host: 'tenant-a.portal.example');
 
-        $request = $this->request(
-            [
-                'X-Portal-Tenant' => 'tenant-a',
-                'Origin'          => 'https://partner.example',
-            ]
-        );
+		$this->assertSame('default', $this->guard->resolveTenant($request));
 
-        $this->assertSame('tenant-a', $this->guard->resolveTenant($request));
-
-    }//end testWidgetModeAllowsAllowlistedOrigin()
-
-
-    /**
-     * First-party mode (no X-Portal-Tenant header) never invokes the
-     * widget-origin gate and resolves from host signals unchanged — the
-     * enforcement is fail-closed for the widget path only.
-     *
-     * @return void
-     */
-    public function testFirstPartyModeSkipsOriginCheck(): void
-    {
-        $this->tenant->method('resolveTenantId')->willReturn('default');
-        $this->tenant->expects($this->never())->method('isWidgetOriginAllowed');
-
-        $request = $this->request([], host: 'tenant-a.portal.example');
-
-        $this->assertSame('default', $this->guard->resolveTenant($request));
-
-    }//end testFirstPartyModeSkipsOriginCheck()
+	}//end testFirstPartyModeSkipsOriginCheck()
 }//end class

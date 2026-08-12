@@ -34,50 +34,48 @@ use Psr\Log\LoggerInterface;
 /**
  * Runs portal closed-account cleanup nightly.
  */
-class PortalCleanupJob extends TimedJob
-{
-    /**
-     * Interval in seconds (24 hours).
-     *
-     * @var int
-     */
-    private const INTERVAL = 86400;
+class PortalCleanupJob extends TimedJob {
+	/**
+	 * Interval in seconds (24 hours).
+	 *
+	 * @var int
+	 */
+	private const INTERVAL = 86400;
 
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory         $time    The time factory.
-     * @param PortalCleanupService $cleanup The cleanup service.
-     * @param LoggerInterface      $logger  The logger.
-     */
-    public function __construct(
-        ITimeFactory $time,
-        private PortalCleanupService $cleanup,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $time);
-        $this->setInterval(seconds: self::INTERVAL);
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $time The time factory.
+	 * @param PortalCleanupService $cleanup The cleanup service.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		ITimeFactory $time,
+		private PortalCleanupService $cleanup,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(time: $time);
+		$this->setInterval(seconds: self::INTERVAL);
+	}//end __construct()
 
-    /**
-     * Run the cleanup pass.
-     *
-     * @param mixed $argument The job argument (unused; required by TimedJob).
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is part of the
-     *  TimedJob::run() contract.
-     */
-    protected function run(mixed $argument): void
-    {
-        try {
-            $count = $this->cleanup->run();
-            if ($count > 0) {
-                $this->logger->info('Pipelinq portal: pseudonymised '.$count.' closed-account contacts');
-            }
-        } catch (\Throwable $e) {
-            $this->logger->error('Pipelinq portal: cleanup job failed', ['exception' => $e->getMessage()]);
-        }
-    }//end run()
+	/**
+	 * Run the cleanup pass.
+	 *
+	 * @param mixed $argument The job argument (unused; required by TimedJob).
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is part of the
+	 *  TimedJob::run() contract.
+	 */
+	protected function run(mixed $argument): void {
+		try {
+			$count = $this->cleanup->run();
+			if ($count > 0) {
+				$this->logger->info('Pipelinq portal: pseudonymised ' . $count . ' closed-account contacts');
+			}
+		} catch (\Throwable $e) {
+			$this->logger->error('Pipelinq portal: cleanup job failed', ['exception' => $e->getMessage()]);
+		}
+	}//end run()
 }//end class

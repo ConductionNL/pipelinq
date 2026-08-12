@@ -49,187 +49,177 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the controller's mocks.
  */
-class PosBookkeepingControllerTest extends TestCase
-{
+class PosBookkeepingControllerTest extends TestCase {
 
-    private PosBookkeepingController $controller;
+	private PosBookkeepingController $controller;
 
-    /**
-     * @var PosBookkeepingService&MockObject
-     */
-    private PosBookkeepingService $service;
+	/**
+	 * @var PosBookkeepingService&MockObject
+	 */
+	private PosBookkeepingService $service;
 
-    /**
-     * @var IRequest&MockObject
-     */
-    private IRequest $request;
+	/**
+	 * @var IRequest&MockObject
+	 */
+	private IRequest $request;
 
-    /**
-     * @var IUserSession&MockObject
-     */
-    private IUserSession $userSession;
+	/**
+	 * @var IUserSession&MockObject
+	 */
+	private IUserSession $userSession;
 
-    /**
-     * Wire the controller with mocks; l10n echoes its input.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->request     = $this->createMock(IRequest::class);
-        $this->service     = $this->createMock(PosBookkeepingService::class);
-        $this->userSession = $this->createMock(IUserSession::class);
+	/**
+	 * Wire the controller with mocks; l10n echoes its input.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->request = $this->createMock(IRequest::class);
+		$this->service = $this->createMock(PosBookkeepingService::class);
+		$this->userSession = $this->createMock(IUserSession::class);
 
-        $l10n = $this->createMock(IL10N::class);
-        $l10n->method('t')->willReturnCallback(fn (string $text): string => $text);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(fn (string $text): string => $text);
 
-        $this->controller = new PosBookkeepingController(
-            $this->request,
-            $this->service,
-            $this->userSession,
-            $l10n,
-            $this->createMock(LoggerInterface::class),
-        );
-    }//end setUp()
+		$this->controller = new PosBookkeepingController(
+			$this->request,
+			$this->service,
+			$this->userSession,
+			$l10n,
+			$this->createMock(LoggerInterface::class),
+		);
+	}//end setUp()
 
-    /**
-     * Make the session resolve to a user with the given uid.
-     *
-     * @param string $uid The acting uid.
-     *
-     * @return void
-     */
-    private function loginAs(string $uid): void
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn($uid);
-        $this->userSession->method('getUser')->willReturn($user);
-    }//end loginAs()
+	/**
+	 * Make the session resolve to a user with the given uid.
+	 *
+	 * @param string $uid The acting uid.
+	 *
+	 * @return void
+	 */
+	private function loginAs(string $uid): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($uid);
+		$this->userSession->method('getUser')->willReturn($user);
+	}//end loginAs()
 
-    /**
-     * post() returns 401 when no user is in the session.
-     *
-     * @return void
-     */
-    public function testPostRequiresAuthentication(): void
-    {
-        $this->userSession->method('getUser')->willReturn(null);
-        $this->service->expects($this->never())->method('raiseJournalEntry');
+	/**
+	 * post() returns 401 when no user is in the session.
+	 *
+	 * @return void
+	 */
+	public function testPostRequiresAuthentication(): void {
+		$this->userSession->method('getUser')->willReturn(null);
+		$this->service->expects($this->never())->method('raiseJournalEntry');
 
-        $response = $this->controller->post();
+		$response = $this->controller->post();
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-    }//end testPostRequiresAuthentication()
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testPostRequiresAuthentication()
 
-    /**
-     * post() returns 400 when the body is missing the zReportId.
-     *
-     * @return void
-     */
-    public function testPostRejectsEmptyZReportId(): void
-    {
-        $this->loginAs('boss');
-        $this->request->method('getParam')->willReturn('');
+	/**
+	 * post() returns 400 when the body is missing the zReportId.
+	 *
+	 * @return void
+	 */
+	public function testPostRejectsEmptyZReportId(): void {
+		$this->loginAs('boss');
+		$this->request->method('getParam')->willReturn('');
 
-        $response = $this->controller->post();
+		$response = $this->controller->post();
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-    }//end testPostRejectsEmptyZReportId()
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+	}//end testPostRejectsEmptyZReportId()
 
-    /**
-     * post() with a valid zReportId delegates with the session uid.
-     *
-     * @return void
-     */
-    public function testPostDelegatesWithSessionUid(): void
-    {
-        $this->loginAs('boss');
-        $this->request->method('getParam')->willReturn('zr-1');
+	/**
+	 * post() with a valid zReportId delegates with the session uid.
+	 *
+	 * @return void
+	 */
+	public function testPostDelegatesWithSessionUid(): void {
+		$this->loginAs('boss');
+		$this->request->method('getParam')->willReturn('zr-1');
 
-        $this->service->expects($this->once())
-            ->method('raiseJournalEntry')
-            ->with('zr-1', 'boss')
-            ->willReturn(['id' => 'zr-1', 'bookkeepingStatus' => 'raised']);
+		$this->service->expects($this->once())
+			->method('raiseJournalEntry')
+			->with('zr-1', 'boss')
+			->willReturn(['id' => 'zr-1', 'bookkeepingStatus' => 'raised']);
 
-        $response = $this->controller->post();
+		$response = $this->controller->post();
 
-        $this->assertSame(Http::STATUS_ACCEPTED, $response->getStatus());
-        $data = $response->getData();
-        $this->assertSame('raised', $data['zReport']['bookkeepingStatus']);
-    }//end testPostDelegatesWithSessionUid()
+		$this->assertSame(Http::STATUS_ACCEPTED, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame('raised', $data['zReport']['bookkeepingStatus']);
+	}//end testPostDelegatesWithSessionUid()
 
-    /**
-     * post() maps OCSForbiddenException to 403 (manager-gate / IDOR).
-     *
-     * @return void
-     */
-    public function testPostMapsForbiddenTo403(): void
-    {
-        $this->loginAs('clerk');
-        $this->request->method('getParam')->willReturn('zr-1');
+	/**
+	 * post() maps OCSForbiddenException to 403 (manager-gate / IDOR).
+	 *
+	 * @return void
+	 */
+	public function testPostMapsForbiddenTo403(): void {
+		$this->loginAs('clerk');
+		$this->request->method('getParam')->willReturn('zr-1');
 
-        $this->service->method('raiseJournalEntry')
-            ->willThrowException(new OCSForbiddenException('not a manager'));
+		$this->service->method('raiseJournalEntry')
+			->willThrowException(new OCSForbiddenException('not a manager'));
 
-        $response = $this->controller->post();
+		$response = $this->controller->post();
 
-        $this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
-    }//end testPostMapsForbiddenTo403()
+		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}//end testPostMapsForbiddenTo403()
 
-    /**
-     * post() maps OCSNotFoundException to 404 (Z-report not found).
-     *
-     * @return void
-     */
-    public function testPostMapsNotFoundTo404(): void
-    {
-        $this->loginAs('boss');
-        $this->request->method('getParam')->willReturn('zr-missing');
+	/**
+	 * post() maps OCSNotFoundException to 404 (Z-report not found).
+	 *
+	 * @return void
+	 */
+	public function testPostMapsNotFoundTo404(): void {
+		$this->loginAs('boss');
+		$this->request->method('getParam')->willReturn('zr-missing');
 
-        $this->service->method('raiseJournalEntry')
-            ->willThrowException(new OCSNotFoundException('not found'));
+		$this->service->method('raiseJournalEntry')
+			->willThrowException(new OCSNotFoundException('not found'));
 
-        $response = $this->controller->post();
+		$response = $this->controller->post();
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
-    }//end testPostMapsNotFoundTo404()
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+	}//end testPostMapsNotFoundTo404()
 
-    /**
-     * post() maps OCSBadRequestException to 422 (precondition failed).
-     *
-     * @return void
-     */
-    public function testPostMapsBadRequestTo422(): void
-    {
-        $this->loginAs('boss');
-        $this->request->method('getParam')->willReturn('zr-1');
+	/**
+	 * post() maps OCSBadRequestException to 422 (precondition failed).
+	 *
+	 * @return void
+	 */
+	public function testPostMapsBadRequestTo422(): void {
+		$this->loginAs('boss');
+		$this->request->method('getParam')->willReturn('zr-1');
 
-        $this->service->method('raiseJournalEntry')
-            ->willThrowException(new OCSBadRequestException('register not configured'));
+		$this->service->method('raiseJournalEntry')
+			->willThrowException(new OCSBadRequestException('register not configured'));
 
-        $response = $this->controller->post();
+		$response = $this->controller->post();
 
-        $this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
-    }//end testPostMapsBadRequestTo422()
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+	}//end testPostMapsBadRequestTo422()
 
-    /**
-     * post() maps unexpected exceptions to 500 without leaking internal detail.
-     *
-     * @return void
-     */
-    public function testPostMapsUnexpectedTo500(): void
-    {
-        $this->loginAs('boss');
-        $this->request->method('getParam')->willReturn('zr-1');
+	/**
+	 * post() maps unexpected exceptions to 500 without leaking internal detail.
+	 *
+	 * @return void
+	 */
+	public function testPostMapsUnexpectedTo500(): void {
+		$this->loginAs('boss');
+		$this->request->method('getParam')->willReturn('zr-1');
 
-        $this->service->method('raiseJournalEntry')
-            ->willThrowException(new \RuntimeException('SECRET TOKEN xyz'));
+		$this->service->method('raiseJournalEntry')
+			->willThrowException(new \RuntimeException('SECRET TOKEN xyz'));
 
-        $response = $this->controller->post();
-        $data     = $response->getData();
+		$response = $this->controller->post();
+		$data = $response->getData();
 
-        $this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
-        // No internal detail in the response body.
-        $this->assertStringNotContainsString('SECRET TOKEN', json_encode($data));
-    }//end testPostMapsUnexpectedTo500()
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		// No internal detail in the response body.
+		$this->assertStringNotContainsString('SECRET TOKEN', json_encode($data));
+	}//end testPostMapsUnexpectedTo500()
 }//end class

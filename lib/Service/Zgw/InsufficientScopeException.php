@@ -39,31 +39,30 @@ namespace OCA\Pipelinq\Service\Zgw;
 /**
  * AC scope-missing pre-flight error.
  */
-class InsufficientScopeException extends ZgwException
-{
-    /**
-     * Constructor.
-     *
-     * @param string $scope          Missing scope name (e.g. "zaken.aanmaken").
-     * @param string $zaaktypeUrl    Target zaaktype/besluittype/informatieobjecttype URL.
-     * @param string $additionalInfo Optional extra context for the operator.
-     */
-    public function __construct(
-        public readonly string $scope,
-        public readonly string $zaaktypeUrl,
-        string $additionalInfo='',
-    ) {
-        $suffix = '';
-        if ($additionalInfo !== '') {
-            $suffix = ' '.$additionalInfo;
-        }
+class InsufficientScopeException extends ZgwException {
+	/**
+	 * Constructor.
+	 *
+	 * @param string $scope Missing scope name (e.g. "zaken.aanmaken").
+	 * @param string $zaaktypeUrl Target zaaktype/besluittype/informatieobjecttype URL.
+	 * @param string $additionalInfo Optional extra context for the operator.
+	 */
+	public function __construct(
+		public readonly string $scope,
+		public readonly string $zaaktypeUrl,
+		string $additionalInfo = '',
+	) {
+		$suffix = '';
+		if ($additionalInfo !== '') {
+			$suffix = ' ' . $additionalInfo;
+		}
 
-        $msg = sprintf(
-            'ZGW: missing scope "%s" on resource "%s".%s',
-            $scope,
-            $zaaktypeUrl,
-            $suffix
-        );
-        parent::__construct(message: $msg);
-    }//end __construct()
+		$msg = sprintf(
+			'ZGW: missing scope "%s" on resource "%s".%s',
+			$scope,
+			$zaaktypeUrl,
+			$suffix
+		);
+		parent::__construct(message: $msg);
+	}//end __construct()
 }//end class

@@ -62,83 +62,80 @@ use Psr\Container\ContainerInterface;
  *
  * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
  */
-class MetricsController extends Controller
-{
+class MetricsController extends Controller {
 
-    /**
-     * FQCN of the AppHost observability manifest loader.
-     *
-     * Referenced as a string, never imported: the class only exists when
-     * openregister is installed.
-     *
-     * @var string
-     */
-    private const MANIFEST_LOADER = 'OCA\\OpenRegister\\AppHost\\Observability\\ManifestLoader';
+	/**
+	 * FQCN of the AppHost observability manifest loader.
+	 *
+	 * Referenced as a string, never imported: the class only exists when
+	 * openregister is installed.
+	 *
+	 * @var string
+	 */
+	private const MANIFEST_LOADER = 'OCA\\OpenRegister\\AppHost\\Observability\\ManifestLoader';
 
-    /**
-     * FQCN of the AppHost Prometheus metrics engine.
-     *
-     * Referenced as a string, never imported: the class only exists when
-     * openregister is installed.
-     *
-     * @var string
-     */
-    private const METRICS_ENGINE = 'OCA\\OpenRegister\\AppHost\\Observability\\MetricsEngine';
+	/**
+	 * FQCN of the AppHost Prometheus metrics engine.
+	 *
+	 * Referenced as a string, never imported: the class only exists when
+	 * openregister is installed.
+	 *
+	 * @var string
+	 */
+	private const METRICS_ENGINE = 'OCA\\OpenRegister\\AppHost\\Observability\\MetricsEngine';
 
-    /**
-     * Prometheus text exposition content type (mirrors the engine's renderer).
-     *
-     * @var string
-     */
-    private const CONTENT_TYPE = 'text/plain; version=0.0.4; charset=utf-8';
+	/**
+	 * Prometheus text exposition content type (mirrors the engine's renderer).
+	 *
+	 * @var string
+	 */
+	private const CONTENT_TYPE = 'text/plain; version=0.0.4; charset=utf-8';
 
-    /**
-     * Constructor.
-     *
-     * @param IRequest           $request   The HTTP request.
-     * @param ContainerInterface $container DI container — resolves the AppHost engine lazily.
-     *
-     * @return void
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly ContainerInterface $container
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The HTTP request.
+	 * @param ContainerInterface $container DI container — resolves the AppHost engine lazily.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly ContainerInterface $container,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * GET /api/metrics — declarative Prometheus metrics (admin-only, ADR-006).
-     *
-     * Admin-only by the deliberate absence of `#[NoAdminRequired]`.
-     *
-     * Returns HTTP 503 with a Prometheus comment line when the AppHost engine
-     * is unavailable (openregister absent or disabled) — never a 500.
-     *
-     * @return TextPlainResponse Prometheus text exposition 0.0.4.
-     *
-     * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
-     */
-    #[NoCSRFRequired]
-    public function index(): TextPlainResponse
-    {
-        try {
-            $manifestLoader = $this->container->get(self::MANIFEST_LOADER);
-            $engine         = $this->container->get(self::METRICS_ENGINE);
+	/**
+	 * GET /api/metrics — declarative Prometheus metrics (admin-only, ADR-006).
+	 *
+	 * Admin-only by the deliberate absence of `#[NoAdminRequired]`.
+	 *
+	 * Returns HTTP 503 with a Prometheus comment line when the AppHost engine
+	 * is unavailable (openregister absent or disabled) — never a 500.
+	 *
+	 * @return TextPlainResponse Prometheus text exposition 0.0.4.
+	 *
+	 * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+	 */
+	#[NoCSRFRequired]
+	public function index(): TextPlainResponse {
+		try {
+			$manifestLoader = $this->container->get(self::MANIFEST_LOADER);
+			$engine = $this->container->get(self::METRICS_ENGINE);
 
-            $manifest = $manifestLoader->load(appId: $this->appName);
-            $body     = (string) $engine->render(manifest: $manifest);
-            $status   = Http::STATUS_OK;
-        } catch (\Throwable $e) {
-            $body   = '# metrics unavailable: the OpenRegister AppHost observability engine is not installed'."\n";
-            $status = Http::STATUS_SERVICE_UNAVAILABLE;
-        }//end try
+			$manifest = $manifestLoader->load(appId: $this->appName);
+			$body = (string)$engine->render(manifest: $manifest);
+			$status = Http::STATUS_OK;
+		} catch (\Throwable $e) {
+			$body = '# metrics unavailable: the OpenRegister AppHost observability engine is not installed' . "\n";
+			$status = Http::STATUS_SERVICE_UNAVAILABLE;
+		}//end try
 
-        $response = new TextPlainResponse($body, $status);
-        $response->addHeader('Content-Type', self::CONTENT_TYPE);
+		$response = new TextPlainResponse($body, $status);
+		$response->addHeader('Content-Type', self::CONTENT_TYPE);
 
-        return $response;
-
-    }//end index()
+		return $response;
+	}//end index()
 }//end class

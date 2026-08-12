@@ -27,54 +27,42 @@ namespace OCA\OpenRegister\Db;
  * them with `onlyMethods(['getSchema', ...])`; PHPUnit's createMock() overrides
  * the bodies anyway.
  */
-class ObjectEntity
-{
+class ObjectEntity {
 
-    /**
-     * Return the raw object data as an array.
-     *
-     * @return array<string,mixed>
-     */
-    public function getObject(): array
-    {
-        return [];
+	/**
+	 * Return the raw object data as an array.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function getObject(): array {
+		return [];
+	}//end getObject()
 
-    }//end getObject()
+	/**
+	 * Return the object UUID.
+	 *
+	 * @return string
+	 */
+	public function getUuid(): string {
+		return '';
+	}//end getUuid()
 
+	/**
+	 * Return the schema id/slug the object belongs to.
+	 *
+	 * @return string|null
+	 */
+	public function getSchema(): ?string {
+		return null;
+	}//end getSchema()
 
-    /**
-     * Return the object UUID.
-     *
-     * @return string
-     */
-    public function getUuid(): string
-    {
-        return '';
-
-    }//end getUuid()
-
-
-    /**
-     * Return the schema id/slug the object belongs to.
-     *
-     * @return string|null
-     */
-    public function getSchema(): ?string
-    {
-        return null;
-
-    }//end getSchema()
-
-
-    /**
-     * Return a JSON-serializable representation of the entity.
-     *
-     * @return array<string,mixed>
-     */
-    public function jsonSerialize(): array
-    {
-        return [];
-
-    }//end jsonSerialize()
+	/**
+	 * Return a JSON-serializable representation of the entity.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function jsonSerialize(): array {
+		return [];
+	}//end jsonSerialize()
 
 }//end class

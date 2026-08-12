@@ -48,48 +48,46 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class WalkInQueueRebalanceJob extends QueuedJob
-{
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory       $time    The time factory (parent contract).
-     * @param WalkInQueueService $service The walk-in queue service.
-     * @param LoggerInterface    $logger  The logger.
-     */
-    public function __construct(
-        ITimeFactory $time,
-        private WalkInQueueService $service,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $time);
-    }//end __construct()
+class WalkInQueueRebalanceJob extends QueuedJob {
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $time The time factory (parent contract).
+	 * @param WalkInQueueService $service The walk-in queue service.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		ITimeFactory $time,
+		private WalkInQueueService $service,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(time: $time);
+	}//end __construct()
 
-    /**
-     * Run the rebalance.
-     *
-     * @param mixed $argument Optional payload (unused; the job rebalances every
-     *                        waiting ticket each invocation).
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by QueuedJob::run().
-     *
-     * @spec openspec/specs/appointment-booking/spec.md
-     */
-    protected function run(mixed $argument): void
-    {
-        try {
-            $touched = $this->service->rebalance();
-            $this->logger->info(
-                'WalkInQueueRebalanceJob: rebalance completed',
-                ['touched' => $touched]
-            );
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'WalkInQueueRebalanceJob: rebalance failed',
-                ['exception' => $e]
-            );
-        }
-    }//end run()
+	/**
+	 * Run the rebalance.
+	 *
+	 * @param mixed $argument Optional payload (unused; the job rebalances every
+	 *                        waiting ticket each invocation).
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by QueuedJob::run().
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
+	protected function run(mixed $argument): void {
+		try {
+			$touched = $this->service->rebalance();
+			$this->logger->info(
+				'WalkInQueueRebalanceJob: rebalance completed',
+				['touched' => $touched]
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'WalkInQueueRebalanceJob: rebalance failed',
+				['exception' => $e]
+			);
+		}
+	}//end run()
 }//end class

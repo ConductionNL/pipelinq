@@ -31,152 +31,147 @@ use RuntimeException;
 /**
  * Service for managing notes on Pipelinq entities.
  */
-class NotesService
-{
-    public const VALID_TYPES = [
-        'pipelinq_client',
-        'pipelinq_contact',
-        'pipelinq_lead',
-        'pipelinq_request',
-    ];
+class NotesService {
+	public const VALID_TYPES = [
+		'pipelinq_client',
+		'pipelinq_contact',
+		'pipelinq_lead',
+		'pipelinq_request',
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param ICommentsManager $commentsManager The comments manager.
-     * @param IUserSession     $userSession     The user session.
-     * @param IUserManager     $userManager     The user manager.
-     */
-    public function __construct(
-        private ICommentsManager $commentsManager,
-        private IUserSession $userSession,
-        private IUserManager $userManager,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ICommentsManager $commentsManager The comments manager.
+	 * @param IUserSession $userSession The user session.
+	 * @param IUserManager $userManager The user manager.
+	 */
+	public function __construct(
+		private ICommentsManager $commentsManager,
+		private IUserSession $userSession,
+		private IUserManager $userManager,
+	) {
+	}//end __construct()
 
-    /**
-     * Get all notes for a given entity.
-     *
-     * @param string $objectType The object type.
-     * @param string $objectId   The object ID.
-     *
-     * @return array The notes.
-     *
-     * @spec openspec/specs/entity-notes/spec.md
-     */
-    public function getNotes(string $objectType, string $objectId): array
-    {
-        $currentUserId = $this->userSession->getUser()?->getUID();
-        $comments      = $this->commentsManager->getForObject(
-            objectType: $objectType,
-            objectId: $objectId,
-            limit: 200,
-            offset: 0
-        );
+	/**
+	 * Get all notes for a given entity.
+	 *
+	 * @param string $objectType The object type.
+	 * @param string $objectId The object ID.
+	 *
+	 * @return array The notes.
+	 *
+	 * @spec openspec/specs/entity-notes/spec.md
+	 */
+	public function getNotes(string $objectType, string $objectId): array {
+		$currentUserId = $this->userSession->getUser()?->getUID();
+		$comments = $this->commentsManager->getForObject(
+			objectType: $objectType,
+			objectId: $objectId,
+			limit: 200,
+			offset: 0
+		);
 
-        $notes = [];
-        foreach ($comments as $comment) {
-            $authorId   = $comment->getActorId();
-            $authorName = $authorId;
+		$notes = [];
+		foreach ($comments as $comment) {
+			$authorId = $comment->getActorId();
+			$authorName = $authorId;
 
-            $user = $this->userManager->get($authorId);
-            if ($user !== null) {
-                $authorName = $user->getDisplayName();
-            }
+			$user = $this->userManager->get($authorId);
+			if ($user !== null) {
+				$authorName = $user->getDisplayName();
+			}
 
-            $notes[] = [
-                'id'         => (int) $comment->getId(),
-                'message'    => $comment->getMessage(),
-                'authorId'   => $authorId,
-                'authorName' => $authorName,
-                'timestamp'  => $comment->getCreationDateTime()->format('c'),
-                'isOwn'      => $authorId === $currentUserId,
-            ];
-        }
+			$notes[] = [
+				'id' => (int)$comment->getId(),
+				'message' => $comment->getMessage(),
+				'authorId' => $authorId,
+				'authorName' => $authorName,
+				'timestamp' => $comment->getCreationDateTime()->format('c'),
+				'isOwn' => $authorId === $currentUserId,
+			];
+		}
 
-        // Reverse to show newest first.
-        return array_reverse($notes);
-    }//end getNotes()
+		// Reverse to show newest first.
+		return array_reverse($notes);
+	}//end getNotes()
 
-    /**
-     * Add a note to an entity.
-     *
-     * @param string $objectType The object type.
-     * @param string $objectId   The object ID.
-     * @param string $message    The note message.
-     *
-     * @return array The created note.
-     *
-     * @spec openspec/specs/entity-notes/spec.md
-     */
-    public function addNote(string $objectType, string $objectId, string $message): array
-    {
-        $userId = $this->userSession->getUser()?->getUID();
-        if ($userId === null) {
-            throw new RuntimeException('No authenticated user');
-        }
+	/**
+	 * Add a note to an entity.
+	 *
+	 * @param string $objectType The object type.
+	 * @param string $objectId The object ID.
+	 * @param string $message The note message.
+	 *
+	 * @return array The created note.
+	 *
+	 * @spec openspec/specs/entity-notes/spec.md
+	 */
+	public function addNote(string $objectType, string $objectId, string $message): array {
+		$userId = $this->userSession->getUser()?->getUID();
+		if ($userId === null) {
+			throw new RuntimeException('No authenticated user');
+		}
 
-        $comment = $this->commentsManager->create(
-            actorType: 'users',
-            actorId: $userId,
-            objectType: $objectType,
-            objectId: $objectId
-        );
-        $comment->setMessage(trim($message));
-        $comment->setVerb('comment');
-        $this->commentsManager->save($comment);
+		$comment = $this->commentsManager->create(
+			actorType: 'users',
+			actorId: $userId,
+			objectType: $objectType,
+			objectId: $objectId
+		);
+		$comment->setMessage(trim($message));
+		$comment->setVerb('comment');
+		$this->commentsManager->save($comment);
 
-        $user = $this->userManager->get($userId);
+		$user = $this->userManager->get($userId);
 
-        return [
-            'id'         => (int) $comment->getId(),
-            'message'    => $comment->getMessage(),
-            'authorId'   => $userId,
-            'authorName' => $user?->getDisplayName() ?? $userId,
-            'timestamp'  => $comment->getCreationDateTime()->format('c'),
-            'isOwn'      => true,
-        ];
-    }//end addNote()
+		return [
+			'id' => (int)$comment->getId(),
+			'message' => $comment->getMessage(),
+			'authorId' => $userId,
+			'authorName' => $user?->getDisplayName() ?? $userId,
+			'timestamp' => $comment->getCreationDateTime()->format('c'),
+			'isOwn' => true,
+		];
+	}//end addNote()
 
-    /**
-     * Delete a single note. Only the author may delete their own note.
-     *
-     * @param int $noteId The note ID.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/entity-notes/spec.md
-     */
-    public function deleteNote(int $noteId): void
-    {
-        $userId = $this->userSession->getUser()?->getUID();
-        if ($userId === null) {
-            throw new RuntimeException('No authenticated user');
-        }
+	/**
+	 * Delete a single note. Only the author may delete their own note.
+	 *
+	 * @param int $noteId The note ID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/entity-notes/spec.md
+	 */
+	public function deleteNote(int $noteId): void {
+		$userId = $this->userSession->getUser()?->getUID();
+		if ($userId === null) {
+			throw new RuntimeException('No authenticated user');
+		}
 
-        $comment = $this->commentsManager->get((string) $noteId);
-        if ($comment->getActorId() !== $userId) {
-            throw new RuntimeException('You can only delete your own notes');
-        }
+		$comment = $this->commentsManager->get((string)$noteId);
+		if ($comment->getActorId() !== $userId) {
+			throw new RuntimeException('You can only delete your own notes');
+		}
 
-        $this->commentsManager->delete((string) $noteId);
-    }//end deleteNote()
+		$this->commentsManager->delete((string)$noteId);
+	}//end deleteNote()
 
-    /**
-     * Delete all notes for an entity (used when entity is deleted).
-     *
-     * @param string $objectType The object type.
-     * @param string $objectId   The object ID.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/entity-notes/spec.md
-     */
-    public function deleteAllNotes(string $objectType, string $objectId): void
-    {
-        $this->commentsManager->deleteCommentsAtObject(
-            objectType: $objectType,
-            objectId: $objectId
-        );
-    }//end deleteAllNotes()
+	/**
+	 * Delete all notes for an entity (used when entity is deleted).
+	 *
+	 * @param string $objectType The object type.
+	 * @param string $objectId The object ID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/entity-notes/spec.md
+	 */
+	public function deleteAllNotes(string $objectType, string $objectId): void {
+		$this->commentsManager->deleteCommentsAtObject(
+			objectType: $objectType,
+			objectId: $objectId
+		);
+	}//end deleteAllNotes()
 }//end class
