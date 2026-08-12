@@ -94,7 +94,7 @@ async function totalsText(page: Page): Promise<string> {
 	return (await page.locator('.pos-totals').innerText()).replace(/\s+/g, ' ').trim()
 }
 
-test.describe('POS — money workflow computes correct totals', () => {
+test.describe('POS — PosTransactionForm money workflow computes correct totals', () => {
 	test('cart line totals, subtotal, per-rate VAT and grand total are exact', async ({ page }) => {
 		test.setTimeout(120000)
 		await openApp(page)

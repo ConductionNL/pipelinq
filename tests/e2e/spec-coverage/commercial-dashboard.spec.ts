@@ -81,3 +81,52 @@ test('Operational dashboard: previous widgets remain reachable from the nav', as
 
 	await assertNoHardError(page)
 })
+
+/*
+ * "Charts sit directly below the KPI rows" is a LAYOUT claim, and the only
+ * honest way to test a layout claim is geometry. The manifest places the KPI
+ * tiles at gridY 0 and 2 and the two commercial charts at gridY 4
+ * (src/manifest.json), i.e. the charts start on the row immediately after the
+ * second KPI row with no empty row between them.
+ *
+ * Asserting the manifest JSON would test the JSON, not the render — the same
+ * mistake as asserting a data widget's title, which is host chrome. So this
+ * measures the rendered boxes: the vertical gap between the bottom of the
+ * lowest KPI tile and the top of the first chart must be smaller than one grid
+ * row. A regression that pushes the charts down by a row (the shape the spec
+ * was written against, and the shape a layout edit reintroduces) makes that gap
+ * exceed a row height and fails here.
+ */
+// @e2e commercial-dashboard::charts-sit-directly-below-the-kpi-rows
+test('Commercial dashboard: the charts start on the row below the KPI tiles', async ({ page }) => {
+	await openApp(page)
+
+	const content = page.locator('#content-vue')
+
+	// Wait for both bands to have painted before measuring anything — a
+	// bounding box taken mid-mount measures the skeleton, not the layout.
+	const openPipeline = content.getByText('Open Pipeline').first()
+	await expect(openPipeline).toBeVisible({ timeout: 15000 })
+	const chart = content.locator('svg.apexcharts-svg').first()
+	await expect(chart).toBeVisible({ timeout: 15000 })
+
+	const kpiBox = await openPipeline.boundingBox()
+	const chartBox = await chart.boundingBox()
+	expect(kpiBox, 'KPI tile has no bounding box').not.toBeNull()
+	expect(chartBox, 'chart has no bounding box').not.toBeNull()
+
+	// The chart must be BELOW the KPI band, not beside it — otherwise the gap
+	// arithmetic below would be measuring two columns and would pass for the
+	// wrong reason.
+	expect(chartBox.y, 'the chart is not below the KPI band').toBeGreaterThan(kpiBox.y)
+
+	// One grid row is the tile height plus its gutter. Measuring the gap against
+	// the tile's own height keeps this independent of the theme's row size.
+	const gap = chartBox.y - (kpiBox.y + kpiBox.height)
+	expect(
+		gap,
+		`gap between the last KPI row and the first chart is ${Math.round(gap)}px, which is more than one grid row (${Math.round(kpiBox.height)}px) — an empty row has appeared between them`,
+	).toBeLessThan(kpiBox.height)
+
+	await assertNoHardError(page)
+})

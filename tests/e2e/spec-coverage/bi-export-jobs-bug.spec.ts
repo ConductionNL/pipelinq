@@ -28,7 +28,7 @@ async function gotoExportJobs(page: Page) {
 }
 
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-ui-shell
-test('BI export jobs: navigates from sidebar and mounts the index chrome', async ({ page }) => {
+test('BI export jobs: ExportJobs mounts from the sidebar with its index chrome', async ({ page }) => {
 	await gotoExportJobs(page)
 
 	await assertNoHardError(page)

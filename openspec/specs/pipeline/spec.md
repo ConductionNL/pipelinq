@@ -685,6 +685,7 @@ drag-and-drop, board CRUD) SHALL be provided by the OpenRegister deck leaf
 (`integration-deck`) wrapping the NC Deck app (hydra ADR-022).
 
 #### Scenario: Bespoke board is removed
+@e2e exclude not implemented: the migrate-pipeline-to-deck change never landed. src/views/pipeline/PipelineBoard.vue is still the shipped board and is the surface tests/e2e/spec-coverage/pipeline.spec.ts drives, so this scenario is contradicted by the tree rather than untested. Re-tag when the migration lands.
 
 - **GIVEN** the migrate-pipeline-to-deck-leaf change is applied
 - **THEN** `src/views/pipeline/PipelineBoard.vue` and its bespoke board
@@ -693,6 +694,7 @@ drag-and-drop, board CRUD) SHALL be provided by the OpenRegister deck leaf
   deck leaf.
 
 #### Scenario: Pipeline maps to Deck constructs
+@e2e exclude not implemented: no board/stack/card mapping exists — CnDeckTab, CnDeckCard and integration-deck appear nowhere in src/ or lib/. Re-tag when the migration lands.
 
 - **GIVEN** a Pipelinq pipeline with ordered stages and lead/request cards
 - **WHEN** the migration is applied
@@ -705,6 +707,7 @@ The `lead` and `request` schemas SHALL declare `deck` in `linkedTypes` so the
 leaf's tab and mini-kanban widget appear on those objects.
 
 #### Scenario: Deck tab and widget appear on leads and requests
+@e2e exclude half built, half deliberately absent: deck IS declared in linkedTypes for lead and ticket, but the leaf sidebar tab and mini-kanban widget were intentionally removed from the detail pages under the audit-only rule (recorded in src/manifest.json as a _note). Nothing renders for a test to assert. Re-tag if the tab/widget are restored.
 
 - **GIVEN** the NC `deck` app is installed and the deck leaf is registered
 - **WHEN** a user opens a `lead` or `request` detail page
@@ -719,6 +722,7 @@ The deck leaf's tab and widget SHALL be surfaced through `src/manifest.json`
 (ADR-024), and `deck` SHALL be declared as a dependency.
 
 #### Scenario: Manifest places tab/widget and declares dependency
+@e2e exclude half built, half deliberately absent: the dependencies[] half is done (deck is declared in src/manifest.json), but the tab/widget placement is not, per the same audit-only rule. A test over the dependency half alone would assert the trivial half and read as coverage of the whole scenario.
 
 - **GIVEN** Pipelinq's `src/manifest.json`
 - **THEN** the lead/request detail pages' `sidebar` config SHALL include the
@@ -733,6 +737,7 @@ CRM-specific stage semantics SHALL be preserved as a thin pipeline-config object
 plus declarative business logic, NOT a parallel board engine (ADR-031).
 
 #### Scenario: Win/closed/probability/default rules survive on top of Deck
+@e2e exclude not implemented: the win/closed/probability rules exist and are asserted by PipelineStageDataTest, but the "on top of Deck" premise does not — there is no Deck-backed board to preserve them on. Re-tag when the migration lands.
 
 - **GIVEN** a thin pipeline-config object holding `probability`, `isWon`,
   `isClosed`, and `isDefault`-per-entity

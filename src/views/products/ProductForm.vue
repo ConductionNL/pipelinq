@@ -166,6 +166,9 @@
 </template>
 
 <script>
+/*
+ * @visual exclude unmounted orphan — no e2e can reach it. This file is imported by nothing in src/ (measured: zero references outside itself, against ExportJobsView's three as the positive control), it is named by no manifest component, and it is absent from src/registry.js. The /products/:id page is a declarative type:"detail" page drawn by the manifest renderer, and the ProductDetail.vue that tests/e2e/workflows/product-crud.spec.ts pairs it with does not exist on disk. An unmounted component has no surface to screenshot. openspec/specs/product-catalog/spec.md:592 still describes this file as shipped UI, so deleting it is a product decision rather than a gate fix.
+ */
 import { NcButton, NcTextField, NcSelect } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
