@@ -66,7 +66,7 @@ class ZrcClientTest extends TestCase {
 	protected function setUp(): void {
 		$this->endpoint = [
 			'id' => 'zgw-ep-zoetermeer-openzaak',
-			'gemeenteCode' => '0637',
+			'municipalityCode' => '0637',
 			'clientId' => 'zgw-client-zoetermeer',
 			'componenten' => [
 				'zrc' => 'https://open-zaak.zoetermeer.nl/zaken/api/v1',
@@ -123,19 +123,19 @@ class ZrcClientTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateZaakPersistsMapping(): void {
-		$zaakUrl = 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/3f9a4f1e-1a0d-4d10-9b22-c1ef0b8fbb2a';
+		$caseUrl = 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/3f9a4f1e-1a0d-4d10-9b22-c1ef0b8fbb2a';
 
 		$client = $this->buildClient([
-			['status' => 201, 'headers' => ['location' => $zaakUrl, 'etag' => 'W/"a1b2c3"'], 'body' => []],
+			['status' => 201, 'headers' => ['location' => $caseUrl, 'etag' => 'W/"a1b2c3"'], 'body' => []],
 		]);
 
 		$mapping = $client->createZaak(
 			$this->endpoint,
 			[
 				'bronorganisatie' => '002564440',
-				'zaaktype' => 'https://ztc/zaaktype/1',
+				'caseType' => 'https://ztc/zaaktype/1',
 				'verantwoordelijkeOrganisatie' => '002564440',
-				'startdatum' => '2026-05-21',
+				'startDate' => '2026-05-21',
 				'registratiedatum' => '2026-05-21',
 				'omschrijving' => 'Aanvraag evenementenvergunning Stadshart Run',
 			],
@@ -143,7 +143,7 @@ class ZrcClientTest extends TestCase {
 		);
 
 		self::assertSame('zaak', $mapping['zgwResourceType']);
-		self::assertSame($zaakUrl, $mapping['zgwUrl']);
+		self::assertSame($caseUrl, $mapping['zgwUrl']);
 		self::assertSame('3f9a4f1e-1a0d-4d10-9b22-c1ef0b8fbb2a', $mapping['zgwUuid']);
 		self::assertSame('W/"a1b2c3"', $mapping['etag']);
 		self::assertSame('zgw-ep-zoetermeer-openzaak', $mapping['endpointId']);
@@ -166,7 +166,7 @@ class ZrcClientTest extends TestCase {
 		$this->expectException(\OCA\Pipelinq\Service\Zgw\InsufficientScopeException::class);
 		$client->createZaak(
 			$this->endpoint,
-			['zaaktype' => 'https://ztc/zaaktype/1'],
+			['caseType' => 'https://ztc/zaaktype/1'],
 			'req-zoetermeer-test'
 		);
 	}//end testMissingScopeBlocksCreateZaak()
@@ -199,7 +199,7 @@ class ZrcClientTest extends TestCase {
 					return [
 						'status' => 200,
 						'headers' => ['etag' => 'W/"server-fresh"'],
-						'body' => ['omschrijving' => 'Server-updated', 'zaaktype' => 'https://ztc/zaaktype/1'],
+						'body' => ['omschrijving' => 'Server-updated', 'caseType' => 'https://ztc/zaaktype/1'],
 					];
 				}
 				return ['status' => 200, 'headers' => [], 'body' => []];
@@ -222,7 +222,7 @@ class ZrcClientTest extends TestCase {
 			'zgwUrl' => 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/aaa',
 			'zgwResourceType' => 'zaak',
 			'etag' => 'W/"stale"',
-			'zaaktype' => 'https://ztc/zaaktype/1',
+			'caseType' => 'https://ztc/zaaktype/1',
 		];
 
 		try {
@@ -241,7 +241,7 @@ class ZrcClientTest extends TestCase {
 	 * @return void
 	 */
 	public function testLinkInitiatorIdempotentSkipsPost(): void {
-		$existingRolUrl = 'https://open-zaak.zoetermeer.nl/zaken/api/v1/rollen/77ee44aa-1234-4d10-9b22-aabbccddeeff';
+		$existingRoleUrl = 'https://open-zaak.zoetermeer.nl/zaken/api/v1/rollen/77ee44aa-1234-4d10-9b22-aabbccddeeff';
 		$api = $this->createMock(ZgwApiClient::class);
 		$api->expects(self::once())
 			->method('callComponent')
@@ -276,11 +276,11 @@ class ZrcClientTest extends TestCase {
 		$url = $client->linkInitiator(
 			$this->endpoint,
 			['zgwUrl' => 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/abc'],
-			['bsn' => '123456789', 'naam' => 'Jeroen van der Velde'],
+			['bsn' => '123456789', 'name' => 'Jeroen van der Velde'],
 			'https://ztc/roltype/initiator'
 		);
 
-		self::assertSame($existingRolUrl, $url);
+		self::assertSame($existingRoleUrl, $url);
 	}//end testLinkInitiatorIdempotentSkipsPost()
 
 	/**

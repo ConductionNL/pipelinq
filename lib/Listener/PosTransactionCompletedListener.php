@@ -88,8 +88,8 @@ class PosTransactionCompletedListener implements IEventListener {
 				return;
 			}
 
-			$klantId = (string)($data['klantId'] ?? $data['customerId'] ?? $data['contactUid'] ?? '');
-			if ($klantId === '') {
+			$customerId = (string)($data['customerId'] ?? $data['contactUid'] ?? '');
+			if ($customerId === '') {
 				// Anonymous transaction; no points to award.
 				return;
 			}
@@ -97,7 +97,7 @@ class PosTransactionCompletedListener implements IEventListener {
 			$context = [
 				'amount' => (float)($data['totaalbedrag'] ?? $data['amount'] ?? 0),
 				'category' => (string)($data['category'] ?? ''),
-				'channel' => (string)($data['kanaal'] ?? $data['channel'] ?? 'offline'),
+				'channel' => (string)($data['channel'] ?? 'offline'),
 				'segment' => (string)($data['segment'] ?? ''),
 				'timestamp' => (string)($data['voltooidOp'] ?? $data['timestamp'] ?? ''),
 				'posTransactionId' => (string)($data['transactieId'] ?? $data['transactionId'] ?? $this->getEntityUuid(entity: $entity)),
@@ -105,7 +105,7 @@ class PosTransactionCompletedListener implements IEventListener {
 				'trigger' => 'purchase',
 			];
 
-			$this->loyaltyEngineService->processPosTransaction(klantId: $klantId, transaction: $context);
+			$this->loyaltyEngineService->processPosTransaction(customerId: $customerId, transaction: $context);
 		} catch (Throwable $e) {
 			// CRITICAL: never throw — POS flow must not be affected.
 			$this->logger->warning(

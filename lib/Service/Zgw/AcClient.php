@@ -204,7 +204,7 @@ class AcClient {
 				continue;
 			}
 
-			$resource = (string)($auth['zaaktype'] ?? $auth['besluittype'] ?? $auth['informatieobjecttype'] ?? '*');
+			$resource = (string)($auth['caseType'] ?? $auth['besluittype'] ?? $auth['informatieobjecttype'] ?? '*');
 			$list = $auth['scopes'] ?? [];
 			if (is_array($list) === false) {
 				continue;
@@ -311,7 +311,7 @@ class AcClient {
 
 		throw new InsufficientScopeException(
 			scope: $scope,
-			zaaktypeUrl: $resourceUrl,
+			caseTypeUrl: $resourceUrl,
 			additionalInfo: 'Vraag de gemeente-beheerder om de juiste autorisatie te verlenen op het AC.'
 		);
 	}//end require()

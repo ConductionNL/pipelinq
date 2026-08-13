@@ -119,7 +119,11 @@ class TemplateRenderer {
 
 		$query = http_build_query(
 			[
-				'zaakId' => (string)($variables['zaakId'] ?? ''),
+				// The QUERY PARAMETER stays `zaakId`: these links are emailed to
+				// citizens and already exist in inboxes, so renaming the parameter
+				// breaks every link previously sent. The internal variable is
+				// English; only the wire name is held.
+				'zaakId' => (string)($variables['caseId'] ?? ''),
 				'status' => (string)($variables['status'] ?? ''),
 				'ref' => (string)($variables['messageId'] ?? ''),
 			]

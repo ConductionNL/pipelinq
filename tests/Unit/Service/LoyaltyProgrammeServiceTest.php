@@ -97,8 +97,8 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 		$service = $this->buildService(
 			programme: [
 				'status' => 'concept',
-				'startdatum' => '2026-01-01',
-				'einddatum' => '2026-12-31',
+				'startDate' => '2026-01-01',
+				'endDate' => '2026-12-31',
 			],
 		);
 

@@ -269,7 +269,7 @@ class KvkApiClientTest extends TestCase {
 	public function testSearchFallsBackToLegacyWhenLeafUnavailable(): void {
 		$legacyUrl = null;
 
-		$rawRow = ['kvkNummer' => '87654321', 'naam' => 'Beta NV'];
+		$rawRow = ['kvkNummer' => '87654321', 'name' => 'Beta NV'];
 		$legacyResponse = $this->createMock(IResponse::class);
 		$legacyResponse->method('getBody')->willReturn(json_encode(['resultaten' => [$rawRow]]));
 

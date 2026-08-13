@@ -64,7 +64,7 @@
           }
         },
         "required": [
-          "naam",
+          "name",
           "merk",
           "status"
         ],
@@ -74,7 +74,7 @@
             "description": "Stable external identifier for the programme. Used by POS terminals.",
             "title": "Programme ID"
           },
-          "naam": {
+          "name": {
             "type": "string",
             "description": "Display name of the programme.",
             "title": "Naam"
@@ -84,18 +84,18 @@
             "description": "Brand or retailer that owns the programme.",
             "title": "Merk"
           },
-          "beschrijving": {
+          "description": {
             "type": "string",
             "description": "Customer-facing description of the programme.",
             "title": "Beschrijving"
           },
-          "startdatum": {
+          "startDate": {
             "type": "string",
             "format": "date",
             "description": "ISO-8601 programme start date.",
             "title": "Startdatum"
           },
-          "einddatum": {
+          "endDate": {
             "type": "string",
             "format": "date",
             "description": "ISO-8601 programme end date (null for open-ended).",
@@ -119,7 +119,7 @@
             "description": "ISO 4217 currency code for spend-based rules and liability.",
             "title": "Valuta"
           },
-          "taal": {
+          "language": {
             "type": "string",
             "default": "nl",
             "description": "Default language for customer notifications.",
@@ -181,7 +181,7 @@
         "@type": "PointsRule",
         "required": [
           "programmeId",
-          "naam",
+          "name",
           "trigger",
           "formule"
         ],
@@ -196,7 +196,7 @@
             "description": "FK to LoyaltyProgramme.",
             "title": "Programme ID"
           },
-          "naam": {
+          "name": {
             "type": "string",
             "description": "Display name.",
             "title": "Naam"
@@ -215,7 +215,7 @@
             "description": "Event type that fires the rule.",
             "title": "Trigger"
           },
-          "conditie": {
+          "condition": {
             "type": "object",
             "description": "Optional JSON filter (category, excludeCategory, segment, dayOfWeek, timeRange, channel).",
             "title": "Conditie"
@@ -225,12 +225,12 @@
             "description": "Points formula. Supported types: fixed {value}, percentage {value}, stepped {brackets:[{amount,points}]}.",
             "title": "Formule"
           },
-          "maxPerKlantPerPeriode": {
+          "maxPerCustomerPerPeriod": {
             "type": "integer",
             "description": "Optional cap on points awarded to a single customer per period (null = no cap).",
             "title": "Max Per Klant Per Periode"
           },
-          "maxPerKlantPeriode": {
+          "maxPerCustomerPeriod": {
             "type": "string",
             "enum": [
               "day",
@@ -242,19 +242,19 @@
             "description": "Window used to evaluate maxPerKlantPerPeriode.",
             "title": "Max Per Klant Periode"
           },
-          "geldigVan": {
+          "validFrom": {
             "type": "string",
             "format": "date",
             "title": "Geldig Van",
             "description": "Geldig Van for this record."
           },
-          "geldigTot": {
+          "validTo": {
             "type": "string",
             "format": "date",
             "title": "Geldig Tot",
             "description": "Geldig Tot for this record."
           },
-          "prioriteit": {
+          "priority": {
             "type": "integer",
             "default": 1,
             "description": "Rule priority; HIGHER value wins. Highest-priority matching rule wins (non-cumulative).",
@@ -271,10 +271,10 @@
         "@type": "TierRule",
         "required": [
           "programmeId",
-          "naam",
+          "name",
           "sequence",
-          "drempelType",
-          "drempelWaarde"
+          "thresholdType",
+          "thresholdValue"
         ],
         "properties": {
           "tierId": {
@@ -287,7 +287,7 @@
             "description": "FK to LoyaltyProgramme.",
             "title": "Programme ID"
           },
-          "naam": {
+          "name": {
             "type": "string",
             "description": "Display name (e.g. Zilver, Goud).",
             "title": "Naam"
@@ -297,7 +297,7 @@
             "description": "Order from lowest to highest; used to walk tiers in calculateTier.",
             "title": "Sequence"
           },
-          "drempelType": {
+          "thresholdType": {
             "type": "string",
             "enum": [
               "lifetimePoints",
@@ -307,7 +307,7 @@
             "description": "Threshold metric type.",
             "title": "Drempel Type"
           },
-          "drempelWaarde": {
+          "thresholdValue": {
             "type": "number",
             "description": "Threshold value (points or spend).",
             "title": "Drempel Waarde"
@@ -347,7 +347,7 @@
         "description": "KlantLoyaltyAccount links one customer (klantId, references a Nextcloud contact UID) to one LoyaltyProgramme. currentBalance and lifetimePoints are denormalised for query performance; the immutable PointsLedgerEntry collection is the source of truth (REQ-LOY-002, REQ-LOY-005). Composite uniqueness on (klantId, programmeId).",
         "@type": "KlantLoyaltyAccount",
         "required": [
-          "klantId",
+          "customerId",
           "programmeId"
         ],
         "properties": {
@@ -356,7 +356,7 @@
             "description": "Stable external identifier.",
             "title": "Account ID"
           },
-          "klantId": {
+          "customerId": {
             "type": "string",
             "description": "Nextcloud contact UID (OCP\\Contacts\\IManager link).",
             "title": "Klant ID"
@@ -383,13 +383,13 @@
             "description": "FK to TierRule.tierId.",
             "title": "Current Tier ID"
           },
-          "tierBehaaldOp": {
+          "tierAchievedOn": {
             "type": "string",
             "format": "date-time",
             "description": "Timestamp tier was reached.",
             "title": "Tier Behaald Op"
           },
-          "tierGeldigTot": {
+          "tierValidTo": {
             "type": "string",
             "format": "date-time",
             "description": "Scheduled downgrade evaluation date.",
@@ -406,7 +406,7 @@
             "description": "Account status. Geblokkerd accounts do not earn points (REQ-LOY-002-05).",
             "title": "Status"
           },
-          "aangemaaktOp": {
+          "createdOn": {
             "type": "string",
             "format": "date-time",
             "title": "Aangemaakt Op",
@@ -453,7 +453,7 @@
         "required": [
           "accountId",
           "type",
-          "aantal",
+          "count",
           "timestamp"
         ],
         "properties": {
@@ -467,7 +467,7 @@
             "description": "FK to KlantLoyaltyAccount.",
             "title": "Account ID"
           },
-          "klantId": {
+          "customerId": {
             "type": "string",
             "description": "Denormalised klantId for GDPR queries; anonymised on deletion.",
             "title": "Klant ID"
@@ -484,12 +484,12 @@
             "description": "Movement type.",
             "title": "Type"
           },
-          "aantal": {
+          "count": {
             "type": "integer",
             "description": "Signed delta. Credit positive, debit/expiry negative, adjustment signed.",
             "title": "Aantal"
           },
-          "balansNa": {
+          "balansAfter": {
             "type": "integer",
             "description": "Running balance AFTER this entry was applied.",
             "title": "Balans Na"
@@ -499,7 +499,7 @@
             "description": "Source linkage (e.g. {transactionId, redemptionId, expiryPolicyRef, reason}).",
             "title": "Brondocument"
           },
-          "regelId": {
+          "ruleId": {
             "type": "string",
             "description": "Optional FK to PointsRule that produced the credit.",
             "title": "Regel ID"
@@ -510,7 +510,7 @@
             "description": "Movement timestamp (UTC).",
             "title": "Timestamp"
           },
-          "verwerktDoor": {
+          "processedBy": {
             "type": "string",
             "description": "Who/what processed the entry (POS terminal id, system, user id).",
             "title": "Verwerkt Door"
@@ -526,8 +526,8 @@
         "@type": "RedemptionOption",
         "required": [
           "programmeId",
-          "naam",
-          "kostenInPunten",
+          "name",
+          "costInPunten",
           "beloningType"
         ],
         "properties": {
@@ -541,17 +541,17 @@
             "description": "FK to LoyaltyProgramme.",
             "title": "Programme ID"
           },
-          "naam": {
+          "name": {
             "type": "string",
             "title": "Naam",
             "description": "Human-readable name for this record."
           },
-          "beschrijving": {
+          "description": {
             "type": "string",
             "title": "Beschrijving",
             "description": "Detailed description of this record."
           },
-          "kostenInPunten": {
+          "costInPunten": {
             "type": "integer",
             "description": "Points cost.",
             "title": "Kosten In Punten"
@@ -567,7 +567,7 @@
             "description": "Reward type.",
             "title": "Beloning Type"
           },
-          "beloningWaarde": {
+          "beloningValue": {
             "description": "Reward value (number for discount, string for product name, etc.).",
             "title": "Beloning Waarde",
             "oneOf": [
@@ -588,24 +588,24 @@
             "description": "Estimated business cost in EUR for cost % reporting (REQ-LOY-008).",
             "title": "Kost Basis Eur"
           },
-          "voorraad": {
+          "stock": {
             "type": "integer",
             "description": "Optional inventory cap (null = unlimited).",
             "title": "Voorraad"
           },
-          "geldigVan": {
+          "validFrom": {
             "type": "string",
             "format": "date",
             "title": "Geldig Van",
             "description": "Geldig Van for this record."
           },
-          "geldigTot": {
+          "validTo": {
             "type": "string",
             "format": "date",
             "title": "Geldig Tot",
             "description": "Geldig Tot for this record."
           },
-          "perKlantLimiet": {
+          "perCustomerLimiet": {
             "type": "integer",
             "description": "Max times one customer can redeem this option (null = unlimited).",
             "title": "Per Klant Limiet"
@@ -636,7 +636,7 @@
             "description": "FK to KlantLoyaltyAccount.",
             "title": "Account ID"
           },
-          "klantId": {
+          "customerId": {
             "type": "string",
             "description": "Denormalised for GDPR queries.",
             "title": "Klant ID"
@@ -651,7 +651,7 @@
             "description": "FK to LoyaltyProgramme.",
             "title": "Programme ID"
           },
-          "kostenInPunten": {
+          "costInPunten": {
             "type": "integer",
             "description": "Points debited at redemption time.",
             "title": "Kosten In Punten"
@@ -673,19 +673,19 @@
             "title": "Status",
             "description": "Current lifecycle status of this record."
           },
-          "geldigTot": {
+          "validTo": {
             "type": "string",
             "format": "date-time",
             "description": "Expiry of the code itself.",
             "title": "Geldig Tot"
           },
-          "initiatedOp": {
+          "initiatedOn": {
             "type": "string",
             "format": "date-time",
             "title": "Initiated Op",
             "description": "Initiated Op for this record."
           },
-          "gebruiktOp": {
+          "gebruiktOn": {
             "type": "string",
             "format": "date-time",
             "title": "Gebruikt Op",
@@ -761,24 +761,24 @@
             "description": "Status transitions are sequential.",
             "title": "Status"
           },
-          "uitgegevenOp": {
+          "uitgegevenOn": {
             "type": "string",
             "format": "date-time",
             "title": "Uitgegeven Op",
             "description": "Uitgegeven Op for this record."
           },
-          "uitgegevenAan": {
+          "uitgegevenIn": {
             "type": "string",
             "description": "Recipient label or klantId.",
             "title": "Uitgegeven Aan"
           },
-          "vervaltOp": {
+          "vervaltOn": {
             "type": "string",
             "format": "date-time",
             "title": "Vervalt Op",
             "description": "Vervalt Op for this record."
           },
-          "kanaal": {
+          "channel": {
             "type": "string",
             "enum": [
               "purchased",
@@ -788,7 +788,7 @@
             "description": "Issuance channel.",
             "title": "Kanaal"
           },
-          "klantId": {
+          "customerId": {
             "type": "string",
             "description": "Optional owner klantId (for GDPR cascading).",
             "title": "Klant ID"
@@ -805,7 +805,7 @@
         "required": [
           "giftCardId",
           "type",
-          "bedrag",
+          "amount",
           "timestamp"
         ],
         "properties": {
@@ -832,12 +832,12 @@
             "title": "Type",
             "description": "Type for this record."
           },
-          "bedrag": {
+          "amount": {
             "type": "number",
             "description": "Movement amount (positive).",
             "title": "Bedrag"
           },
-          "balansNa": {
+          "balansAfter": {
             "type": "number",
             "description": "Running balance after the movement.",
             "title": "Balans Na"
@@ -853,7 +853,7 @@
             "title": "POS Transaction ID",
             "description": "Unique identifier for the associated pos transaction."
           },
-          "verwerktDoor": {
+          "processedBy": {
             "type": "string",
             "title": "Verwerkt Door",
             "description": "Verwerkt Door for this record."

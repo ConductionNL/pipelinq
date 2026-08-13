@@ -80,13 +80,13 @@ class ZrcClient {
 	/**
 	 * Create a zaak (POST /zaken) and persist a ZgwResourceMapping.
 	 *
-	 * The provided $zaakData MUST contain at minimum: bronorganisatie,
+	 * The provided $caseData MUST contain at minimum: bronorganisatie,
 	 * zaaktype (URL), verantwoordelijkeOrganisatie, startdatum,
 	 * registratiedatum, omschrijving. The pipelinqRequestId / pipelinqId is
 	 * passed in so the mapping can be linked back to the originating Request.
 	 *
 	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param array<string, mixed> $zaakData Body for POST /zaken.
+	 * @param array<string, mixed> $caseData Body for POST /zaken.
 	 * @param string $pipelinqRequestId UUID of the originating pipelinq Request.
 	 *
 	 * @return array<string, mixed> Saved ZgwResourceMapping (with zgwUrl, zgwUuid, etag).
@@ -96,13 +96,13 @@ class ZrcClient {
 	 *
 	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
 	 */
-	public function createZaak(array $endpoint, array $zaakData, string $pipelinqRequestId): array {
+	public function createZaak(array $endpoint, array $caseData, string $pipelinqRequestId): array {
 		$client = $this->requireClient(endpoint: $endpoint);
 		$zrcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
 
-		$zaaktypeUrl = (string)($zaakData['zaaktype'] ?? '');
-		if ($zaaktypeUrl !== '') {
-			$this->acClient->require($endpoint, $zaaktypeUrl, self::SCOPE_AANMAKEN);
+		$caseTypeUrl = (string)($caseData['caseType'] ?? '');
+		if ($caseTypeUrl !== '') {
+			$this->acClient->require($endpoint, $caseTypeUrl, self::SCOPE_AANMAKEN);
 		}
 
 		$response = $this->api->callComponent(
@@ -110,7 +110,7 @@ class ZrcClient {
 			method: 'POST',
 			path: '/zaken',
 			client: $client,
-			body: $zaakData
+			body: $caseData
 		);
 
 		$url = (string)($response['headers']['location'] ?? $response['body']['url'] ?? '');
@@ -118,13 +118,13 @@ class ZrcClient {
 		$uuid = self::extractUuid(url: $url);
 
 		$mapping = [
-			'pipelinqEntiteit' => 'request',
+			'pipelinqEntity' => 'request',
 			'pipelinqId' => $pipelinqRequestId,
 			'zgwResourceType' => 'zaak',
 			'zgwUrl' => $url,
 			'zgwUuid' => $uuid,
 			'endpointId' => (string)($endpoint['id'] ?? ''),
-			'laatsteSynchronisatie' => self::nowIso(),
+			'lastSynchronisation' => self::nowIso(),
 			'etag' => $etag,
 		];
 
@@ -190,9 +190,9 @@ class ZrcClient {
 		$etag = (string)($mapping['etag'] ?? '');
 		$client = $this->requireClient(endpoint: $endpoint);
 
-		$zaaktypeUrl = (string)($mapping['zaaktype'] ?? $updates['zaaktype'] ?? '');
-		if ($zaaktypeUrl !== '') {
-			$this->acClient->require($endpoint, $zaaktypeUrl, self::SCOPE_BIJWERK);
+		$caseTypeUrl = (string)($mapping['caseType'] ?? $updates['caseType'] ?? '');
+		if ($caseTypeUrl !== '') {
+			$this->acClient->require($endpoint, $caseTypeUrl, self::SCOPE_BIJWERK);
 		}
 
 		$extraHeaders = [];
@@ -226,7 +226,7 @@ class ZrcClient {
 		}//end try
 
 		$newEtag = (string)($response['headers']['etag'] ?? '');
-		$mapping['laatsteSynchronisatie'] = self::nowIso();
+		$mapping['lastSynchronisation'] = self::nowIso();
 		$mapping['etag'] = $etag;
 		if ($newEtag !== '') {
 			$mapping['etag'] = $newEtag;
@@ -240,17 +240,17 @@ class ZrcClient {
 	 * Append a status to a zaak.
 	 *
 	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param array<string, mixed> $zaakMap ZgwResourceMapping for the parent zaak.
+	 * @param array<string, mixed> $caseMap ZgwResourceMapping for the parent zaak.
 	 * @param array<string, mixed> $statusData Body for POST /statussen.
 	 *
 	 * @return string URL of the created status.
 	 */
-	public function addStatus(array $endpoint, array $zaakMap, array $statusData): string {
+	public function addStatus(array $endpoint, array $caseMap, array $statusData): string {
 		$client = $this->requireClient(endpoint: $endpoint);
 		$zrcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
 
 		$body = array_merge(
-			['zaak' => (string)($zaakMap['zgwUrl'] ?? '')],
+			['zaak' => (string)($caseMap['zgwUrl'] ?? '')],
 			$statusData
 		);
 
@@ -292,7 +292,7 @@ class ZrcClient {
 	 *    for natural persons, innNnpId for organisations).
 	 *
 	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param array<string, mixed> $zaakMap ZgwResourceMapping for the parent zaak.
+	 * @param array<string, mixed> $caseMap ZgwResourceMapping for the parent zaak.
 	 * @param array<string, mixed> $contact Pipelinq Contact payload.
 	 * @param string $roltypeUrl Roltype URL (from ZtcClient::resolveRoltype).
 	 * @param string $roltoelichting Free-text role description.
@@ -301,14 +301,14 @@ class ZrcClient {
 	 */
 	public function linkInitiator(
 		array $endpoint,
-		array $zaakMap,
+		array $caseMap,
 		array $contact,
 		string $roltypeUrl,
 		string $roltoelichting = 'Initiator',
 	): string {
 		$client = $this->requireClient(endpoint: $endpoint);
 		$zrcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
-		$zaakUrl = (string)($zaakMap['zgwUrl'] ?? '');
+		$caseUrl = (string)($caseMap['zgwUrl'] ?? '');
 		[$betrType, $ident] = self::contactIdentification(contact: $contact);
 
 		// Pre-flight: list existing rollen on the zaak.
@@ -318,7 +318,7 @@ class ZrcClient {
 				method: 'GET',
 				path: '/rollen',
 				client: $client,
-				query: ['zaak' => $zaakUrl, 'betrokkeneType' => $betrType]
+				query: ['zaak' => $caseUrl, 'betrokkeneType' => $betrType]
 			);
 			$rows = $existing['body']['results'] ?? $existing['body'];
 			if (is_array($rows) === true) {
@@ -344,7 +344,7 @@ class ZrcClient {
 		}//end try
 
 		$body = [
-			'zaak' => $zaakUrl,
+			'zaak' => $caseUrl,
 			'betrokkeneType' => $betrType,
 			'betrokkeneIdentificatie' => $ident,
 			'roltype' => $roltypeUrl,
@@ -383,7 +383,7 @@ class ZrcClient {
 		// Fallback — register the contact as an organisation with their display name only.
 		return [
 			'niet_natuurlijk_persoon',
-			['statutaireNaam' => (string)($contact['naam'] ?? $contact['name'] ?? 'Onbekend')],
+			['statutaireNaam' => (string)($contact['name'] ?? 'Onbekend')],
 		];
 	}//end contactIdentification()
 
@@ -406,7 +406,7 @@ class ZrcClient {
 		}
 
 		$mapping['etag'] = $etag;
-		$mapping['laatsteSynchronisatie'] = self::nowIso();
+		$mapping['lastSynchronisation'] = self::nowIso();
 		$this->registers->save(ZgwRegisterAccess::SCHEMA_MAPPING, $mapping, $uuid);
 	}//end saveEtag()
 

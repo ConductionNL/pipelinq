@@ -117,7 +117,7 @@ class ZgwNotificationControllerTest extends TestCase {
 			$api,
 			$listener,
 			$this->createMock(LoggerInterface::class),
-			'{"kanaal":"zaken"}'
+			'{"channel":"zaken"}'
 		);
 
 		$response = $controller->inbox();
@@ -178,7 +178,7 @@ class ZgwNotificationControllerTest extends TestCase {
 			->method('dispatch')
 			->with(
 				self::callback(static fn (array $a): bool => ($a['callbackAuth'] ?? '') === 'right-bearer'),
-				self::callback(static fn (array $b): bool => ($b['kanaal'] ?? '') === 'zaken')
+				self::callback(static fn (array $b): bool => ($b['channel'] ?? '') === 'zaken')
 			);
 
 		$controller = $this->makeController(
@@ -187,7 +187,7 @@ class ZgwNotificationControllerTest extends TestCase {
 			$api,
 			$listener,
 			$this->createMock(LoggerInterface::class),
-			'{"kanaal":"zaken","resource":"status","actie":"create","hoofdObject":"https://open-zaak/zaken/abc","resourceUrl":"https://open-zaak/statussen/def"}'
+			'{"channel":"zaken","resource":"status","action":"create","hoofdObject":"https://open-zaak/zaken/abc","resourceUrl":"https://open-zaak/statussen/def"}'
 		);
 
 		$response = $controller->inbox();

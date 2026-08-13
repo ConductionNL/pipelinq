@@ -9,7 +9,7 @@
 
 		<form @submit.prevent="enroll">
 			<NcTextField
-				v-model="klantId"
+				v-model="customerId"
 				:label="t('pipelinq', 'Customer (klantId / contact UID)')"
 				required />
 

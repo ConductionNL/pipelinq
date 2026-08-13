@@ -109,7 +109,7 @@ class KvkResultMapperTest extends TestCase {
 	public function testMapResultUsesNaamFallback(): void {
 		$item = [
 			'kvkNummer' => '11111111',
-			'naam' => 'Fallback Name',
+			'name' => 'Fallback Name',
 		];
 
 		$result = $this->mapper->mapResult($item, '62');

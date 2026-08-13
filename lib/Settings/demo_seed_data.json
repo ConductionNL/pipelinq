@@ -25,9 +25,9 @@
         { "key": "queue-klachten", "data": { "title": "[Demo] Klachten", "description": "Demo queue: complaint handling.", "categories": ["klachten"], "isActive": true, "sortOrder": 3 } }
     ],
     "products": [
-        { "key": "product-koffie", "data": { "name": "[Demo] Koffie zwart", "description": "Demo product: black coffee.", "sku": "DEMO-KOF-001", "unitPrice": 2.5, "type": "product", "status": "active", "unit": "stuk", "btwClass": "laag", "taxRate": 9, "barcode": "8714100000017" } },
-        { "key": "product-broodje", "data": { "name": "[Demo] Broodje gezond", "description": "Demo product: sandwich.", "sku": "DEMO-BRD-002", "unitPrice": 4.75, "type": "product", "status": "active", "unit": "stuk", "btwClass": "laag", "taxRate": 9, "barcode": "8714100000024" } },
-        { "key": "product-advies", "data": { "name": "[Demo] Adviesuur", "description": "Demo service: one hour of consultancy.", "sku": "DEMO-ADV-003", "unitPrice": 95, "type": "service", "status": "active", "unit": "uur", "btwClass": "hoog", "taxRate": 21 } }
+        { "key": "product-koffie", "data": { "name": "[Demo] Koffie zwart", "description": "Demo product: black coffee.", "sku": "DEMO-KOF-001", "unitPrice": 2.5, "type": "product", "status": "active", "unit": "stuk", "vatClass": "laag", "taxRate": 9, "barcode": "8714100000017" } },
+        { "key": "product-broodje", "data": { "name": "[Demo] Broodje gezond", "description": "Demo product: sandwich.", "sku": "DEMO-BRD-002", "unitPrice": 4.75, "type": "product", "status": "active", "unit": "stuk", "vatClass": "laag", "taxRate": 9, "barcode": "8714100000024" } },
+        { "key": "product-advies", "data": { "name": "[Demo] Adviesuur", "description": "Demo service: one hour of consultancy.", "sku": "DEMO-ADV-003", "unitPrice": 95, "type": "service", "status": "active", "unit": "uur", "vatClass": "hoog", "taxRate": 21 } }
     ],
     "leads": [
         { "key": "lead-website", "clientKey": "bakkerij", "data": { "title": "[Demo] Webshop vernieuwing Gouden Korst", "source": "website", "value": 12500, "probability": 20, "expectedCloseDate": "@days:45", "priority": "normal", "stage": "New", "stageOrder": 0, "status": "open", "description": "Demo lead: replace the bakery webshop." } },

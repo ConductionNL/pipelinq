@@ -152,6 +152,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\DrainMdmSyncQueue</step>
             <step>OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar</step>
             <step>OCA\Pipelinq\Repair\RemoveLegacyPspKeys</step>
+            <!--
+                Must run AFTER the register sync that adds the English columns.
+                Covers pipelinq, pipelinq-portal AND sla: the renamed properties
+                are spread across all three, and a step that migrated only some
+                would leave the rest silently reading null.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameDutchColumns</step>
         </post-migration>
         <!--
             FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:

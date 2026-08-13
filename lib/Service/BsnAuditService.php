@@ -79,11 +79,11 @@ class BsnAuditService {
 	 * @param string $verzoekreden Verzoekreden (compliance audit field).
 	 * @param string $doelbinding Doelbinding (compliance audit field).
 	 * @param string $uitkomst Outcome enum value (see schema).
-	 * @param string $actie Action enum value (default `brp-lookup-uitgevoerd`).
+	 * @param string $action Action enum value (default `brp-lookup-uitgevoerd`).
 	 * @param int|null $responseCode HTTP status from HaalCentraal (200, 404, 503).
 	 * @param string|null $haalcentraalCorrelationId Correlation ID for trace.
-	 * @param string|null $gekoppeldVerzoek UUID of linked Pipelinq verzoek.
-	 * @param string|null $actorRol Role of actor (behandelaar-burgerzaken).
+	 * @param string|null $gekoppeldRequest UUID of linked Pipelinq verzoek.
+	 * @param string|null $actorRole Role of actor (behandelaar-burgerzaken).
 	 * @param bool $vogScreening VOG-screening flag for Justis.
 	 *
 	 * @return string The UUID of the written audit record (empty string if writing fails).
@@ -101,22 +101,22 @@ class BsnAuditService {
 		string $verzoekreden,
 		string $doelbinding,
 		string $uitkomst,
-		string $actie = 'brp-lookup-uitgevoerd',
+		string $action = 'brp-lookup-uitgevoerd',
 		?int $responseCode = null,
 		?string $haalcentraalCorrelationId = null,
-		?string $gekoppeldVerzoek = null,
-		?string $actorRol = null,
+		?string $gekoppeldRequest = null,
+		?string $actorRole = null,
 		bool $vogScreening = false,
 	): string {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$bewaartot = $now->modify('+' . self::RETENTION_YEARS . ' years');
+		$retainUntil = $now->modify('+' . self::RETENTION_YEARS . ' years');
 
 		$record = [
-			'actie' => $actie,
+			'action' => $action,
 			'bsnHash' => BsnValidationService::hash($rawBsn),
 			'actor' => $actor,
-			'actorRol' => $actorRol,
-			'tijdstip' => $now->format(DATE_ATOM),
+			'actorRole' => $actorRole,
+			'moment' => $now->format(DATE_ATOM),
 			'verzoekreden' => $verzoekreden,
 			'doelbinding' => $doelbinding,
 			'uitkomst' => $uitkomst,
@@ -124,9 +124,9 @@ class BsnAuditService {
 			'ipAdres' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
 			'userAgent' => 'Pipelinq/' . (Application::APP_ID) . ' (Nextcloud)',
 			'haalcentraalCorrelationId' => $haalcentraalCorrelationId,
-			'gekoppeldVerzoek' => $gekoppeldVerzoek,
+			'gekoppeldRequest' => $gekoppeldRequest,
 			'vogScreening' => $vogScreening,
-			'bewaartot' => $bewaartot->format(DATE_ATOM),
+			'retainUntil' => $retainUntil->format(DATE_ATOM),
 		];
 
 		// Drop nulls — they pollute the audit record.
@@ -154,7 +154,7 @@ class BsnAuditService {
 			$this->logger->info(
 				'BSN audit record written',
 				[
-					'actie' => $actie,
+					'action' => $action,
 					'actor' => $actor,
 					'bsn' => $maskedBsn,
 					'uitkomst' => $uitkomst,
@@ -168,7 +168,7 @@ class BsnAuditService {
 			$this->logger->error(
 				'BSN audit record write failed',
 				[
-					'actie' => $actie,
+					'action' => $action,
 					'actor' => $actor,
 					'bsn' => $maskedBsn,
 					'error' => $e->getMessage(),
@@ -241,7 +241,7 @@ class BsnAuditService {
 
 				// Immutable schema: callers MUST go through the system pseudonym path.
 				$arr['bsnHash'] = $newHash;
-				$arr['actie'] = 'brp-rtbf-gepseudonimiseerd';
+				$arr['action'] = 'brp-rtbf-gepseudonimiseerd';
 				$arr['uitkomst'] = 'gepseudonimiseerd';
 				$this->getObjectService()->saveObject(
 					object: $arr,

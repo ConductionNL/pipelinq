@@ -415,7 +415,7 @@ class PortalContributionProvider {
 					'id' => 'customerLoyalty',
 					'register' => self::REGISTER,
 					'schema' => 'klantLoyaltyAccount',
-					'scopeField' => 'klantId',
+					'scopeField' => 'customerId',
 					'scopeClaim' => 'customerUid',
 					'label' => 'My loyalty account',
 					'listable' => true,
