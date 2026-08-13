@@ -20,10 +20,19 @@
 			:reduce="(o) => o.value"
 			:loading="loading"
 			@update:model-value="onSelect" />
-		<p v-if="selection && providerOf(selection) === 'mollie'" class="payment-method-selector__hint">
-			{{ t('pipelinq', 'Customer is redirected to Mollie to complete the iDEAL/Bancontact payment.') }}
+		<p
+			v-if="selection && providerOf(selection) === 'mollie'"
+			class="payment-method-selector__hint">
+			{{
+				t(
+					'pipelinq',
+					'Customer is redirected to Mollie to complete the iDEAL/Bancontact payment.',
+				)
+			}}
 		</p>
-		<p v-if="selection && providerOf(selection) === 'ccv'" class="payment-method-selector__hint">
+		<p
+			v-if="selection && providerOf(selection) === 'ccv'"
+			class="payment-method-selector__hint">
 			{{ t('pipelinq', 'Customer pays at the CCV PIN terminal.') }}
 		</p>
 	</div>
@@ -76,47 +85,59 @@ export default {
 			return this.modelValue || null
 		},
 		combinedOptions() {
-			const opts = STATIC_OPTIONS
-				.filter((o) => o.value !== 'account' || this.clientSelected)
-				.map((o) => ({ ...o, label: t('pipelinq', o.label) }))
+			const opts = STATIC_OPTIONS.filter(
+				(o) => o.value !== 'account' || this.clientSelected,
+			).map((o) => ({ ...o, label: t('pipelinq', o.label) }))
 			for (const p of this.activeProviders) {
 				if (p.name === 'mollie') {
 					opts.push({
 						value: 'mollie:ideal',
-						label: t('pipelinq', '{name} — iDEAL', { name: p.displayName }),
+						label: t('pipelinq', '{name} — iDEAL', {
+							name: p.displayName,
+						}),
 						provider: 'mollie',
 						method: 'ideal',
 					})
 					opts.push({
 						value: 'mollie:bancontact',
-						label: t('pipelinq', '{name} — Bancontact', { name: p.displayName }),
+						label: t('pipelinq', '{name} — Bancontact', {
+							name: p.displayName,
+						}),
 						provider: 'mollie',
 						method: 'bancontact',
 					})
 					opts.push({
 						value: 'mollie:creditcard',
-						label: t('pipelinq', '{name} — Credit card', { name: p.displayName }),
+						label: t('pipelinq', '{name} — Credit card', {
+							name: p.displayName,
+						}),
 						provider: 'mollie',
 						method: 'creditcard',
 					})
 				} else if (p.name === 'ccv') {
 					opts.push({
 						value: 'ccv:card',
-						label: t('pipelinq', '{name} (PIN-terminal)', { name: p.displayName }),
+						label: t('pipelinq', '{name} (PIN-terminal)', {
+							name: p.displayName,
+						}),
 						provider: 'ccv',
 						method: 'card',
 					})
 				} else if (p.name === 'adyen') {
 					opts.push({
 						value: 'adyen:card',
-						label: t('pipelinq', '{name} — Card', { name: p.displayName }),
+						label: t('pipelinq', '{name} — Card', {
+							name: p.displayName,
+						}),
 						provider: 'adyen',
 						method: 'card',
 					})
 				} else if (p.name === 'stripe') {
 					opts.push({
 						value: 'stripe:card',
-						label: t('pipelinq', '{name} — Card / Wallet', { name: p.displayName }),
+						label: t('pipelinq', '{name} — Card / Wallet', {
+							name: p.displayName,
+						}),
 						provider: 'stripe',
 						method: 'card',
 					})
@@ -150,7 +171,7 @@ export default {
 			return idx === -1 ? combined : combined.slice(idx + 1)
 		},
 		onSelect(value) {
-			const combined = (value && typeof value === 'object') ? value.value : value
+			const combined = value && typeof value === 'object' ? value.value : value
 			const providerName = this.providerOf(combined)
 			const paymentMethod = this.methodOf(combined)
 			this.$emit('update:modelValue', combined)

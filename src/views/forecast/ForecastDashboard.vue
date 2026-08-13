@@ -29,28 +29,46 @@
 		<template v-else>
 			<div class="forecast-summary">
 				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{ t('pipelinq', 'Quota') }}</span>
-					<span class="forecast-summary__value">{{ formatMoney(summary.quota) }}</span>
+					<span class="forecast-summary__label">{{
+						t('pipelinq', 'Quota')
+					}}</span>
+					<span class="forecast-summary__value">{{
+						formatMoney(summary.quota)
+					}}</span>
 				</div>
 				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{ t('pipelinq', 'Closed Won') }}</span>
-					<span class="forecast-summary__value">{{ formatMoney(summary.closedWon) }}</span>
+					<span class="forecast-summary__label">{{
+						t('pipelinq', 'Closed Won')
+					}}</span>
+					<span class="forecast-summary__value">{{
+						formatMoney(summary.closedWon)
+					}}</span>
 				</div>
 				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{ t('pipelinq', 'Committed') }}</span>
-					<span class="forecast-summary__value">{{ formatMoney(summary.commit) }}</span>
+					<span class="forecast-summary__label">{{
+						t('pipelinq', 'Committed')
+					}}</span>
+					<span class="forecast-summary__value">{{
+						formatMoney(summary.commit)
+					}}</span>
 				</div>
 				<div class="forecast-summary__metric">
-					<span class="forecast-summary__label">{{ t('pipelinq', 'Gap to close') }}</span>
-					<span class="forecast-summary__value">{{ formatMoney(summary.gap) }}</span>
+					<span class="forecast-summary__label">{{
+						t('pipelinq', 'Gap to close')
+					}}</span>
+					<span class="forecast-summary__value">{{
+						formatMoney(summary.gap)
+					}}</span>
 				</div>
 			</div>
 
 			<div class="forecast-progress" :aria-label="progressLabel">
 				<div class="forecast-progress__bar">
-					<div class="forecast-progress__seg forecast-progress__seg--closed"
+					<div
+						class="forecast-progress__seg forecast-progress__seg--closed"
 						:style="{ width: pct(summary.closedWon) + '%' }" />
-					<div class="forecast-progress__seg forecast-progress__seg--commit"
+					<div
+						class="forecast-progress__seg forecast-progress__seg--commit"
 						:style="{ width: pct(summary.commit) + '%' }" />
 				</div>
 				<span class="forecast-progress__label">{{ progressLabel }}</span>
@@ -72,10 +90,14 @@
 					<tr v-for="row in rows" :key="row.owner_id">
 						<td>{{ row.owner_id }}</td>
 						<td>
-							<span :class="{ 'forecast-table__overridden': hasOverride(row) }">
+							<span
+								:class="{
+									'forecast-table__overridden': hasOverride(row),
+								}">
 								{{ formatMoney(row.commit) }}
 							</span>
-							<span v-if="hasOverride(row)"
+							<span
+								v-if="hasOverride(row)"
 								class="forecast-table__badge"
 								:title="overrideTitle(row)">
 								▼ {{ t('pipelinq', 'override') }}
@@ -84,7 +106,9 @@
 						<td>{{ formatMoney(row.best_case) }}</td>
 						<td>{{ formatMoney(row.pipeline) }}</td>
 						<td>{{ formatMoney(row.closed_won) }}</td>
-						<td>{{ row.quota === null ? '—' : formatMoney(row.quota) }}</td>
+						<td>
+							{{ row.quota === null ? '—' : formatMoney(row.quota) }}
+						</td>
 						<td>
 							<NcButton variant="tertiary" @click="openOverride(row)">
 								{{ t('pipelinq', 'Override') }}
@@ -94,9 +118,15 @@
 				</tbody>
 			</table>
 
-			<NcEmptyContent v-else
+			<NcEmptyContent
+				v-else
 				:name="t('pipelinq', 'No snapshots yet')"
-				:description="t('pipelinq', 'Forecast snapshots are generated every Monday. Check back after the next run.')" />
+				:description="
+					t(
+						'pipelinq',
+						'Forecast snapshots are generated every Monday. Check back after the next run.',
+					)
+				" />
 		</template>
 
 		<ForecastOverrideModal
@@ -112,14 +142,32 @@
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcEmptyContent,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+} from '@nextcloud/vue'
 import ForecastOverrideModal from '../../modals/ForecastOverrideModal.vue'
 import { fetchSnapshots, csvExportUrl } from '../../services/forecastApi.js'
-import { projectedAttainment, gapToQuota, isAtRisk, attainmentPercent } from '../../services/forecastMath.js'
+import {
+	projectedAttainment,
+	gapToQuota,
+	isAtRisk,
+	attainmentPercent,
+} from '../../services/forecastMath.js'
 
 export default {
 	name: 'ForecastDashboard',
-	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcSelect, ForecastOverrideModal },
+	components: {
+		NcButton,
+		NcEmptyContent,
+		NcLoadingIcon,
+		NcNoteCard,
+		NcSelect,
+		ForecastOverrideModal,
+	},
 	data() {
 		return {
 			loading: false,
@@ -142,7 +190,11 @@ export default {
 			return this.selectedLevel?.id || 'team'
 		},
 		childLevel() {
-			return { company: 'division', division: 'team', team: 'rep', rep: 'rep' }[this.level] || 'rep'
+			return (
+				{ company: 'division', division: 'team', team: 'rep', rep: 'rep' }[
+					this.level
+				] || 'rep'
+			)
 		},
 		periodId() {
 			const now = new Date()
@@ -155,15 +207,30 @@ export default {
 			const closedWon = this.sum('closed_won')
 			const quota = this.sum('quota')
 			const projected = projectedAttainment(closedWon, commit, bestCase)
-			return { commit, bestCase, closedWon, quota, projected, gap: gapToQuota(quota, projected) }
+			return {
+				commit,
+				bestCase,
+				closedWon,
+				quota,
+				projected,
+				gap: gapToQuota(quota, projected),
+			}
 		},
 		atRisk() {
-			return isAtRisk(this.summary.projected, this.summary.quota, this.daysRemaining)
+			return isAtRisk(
+				this.summary.projected,
+				this.summary.quota,
+				this.daysRemaining,
+			)
 		},
 		atRiskMessage() {
-			const pct = 100 - attainmentPercent(this.summary.projected, this.summary.quota)
-			return t('pipelinq', 'This team is {gap}% below quota with {days} days to close. Action recommended.',
-				{ gap: pct, days: this.daysRemaining })
+			const pct =
+				100 - attainmentPercent(this.summary.projected, this.summary.quota)
+			return t(
+				'pipelinq',
+				'This team is {gap}% below quota with {days} days to close. Action recommended.',
+				{ gap: pct, days: this.daysRemaining },
+			)
 		},
 		progressLabel() {
 			const onTrack = this.summary.closedWon + this.summary.commit
@@ -200,7 +267,10 @@ export default {
 		async loadSnapshots() {
 			this.loading = true
 			try {
-				const data = await fetchSnapshots({ periodId: this.periodId, level: this.childLevel })
+				const data = await fetchSnapshots({
+					periodId: this.periodId,
+					level: this.childLevel,
+				})
 				this.rows = data.snapshots || []
 			} catch (error) {
 				this.rows = []
@@ -216,44 +286,118 @@ export default {
 			this.loadSnapshots()
 		},
 		exportCsv() {
-			window.location.href = csvExportUrl({ periodId: this.periodId, level: this.childLevel })
+			window.location.href = csvExportUrl({
+				periodId: this.periodId,
+				level: this.childLevel,
+			})
 		},
 	},
 }
 </script>
 
 <style scoped>
-.forecast-dashboard { padding: 20px; max-width: 1200px; margin: 0 auto; }
+.forecast-dashboard {
+	padding: 20px;
+	max-width: 1200px;
+	margin: 0 auto;
+}
 
-.forecast-dashboard__header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.forecast-dashboard__header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 12px;
+}
 
-.forecast-dashboard__controls { display: flex; gap: 12px; align-items: flex-end; }
+.forecast-dashboard__controls {
+	display: flex;
+	gap: 12px;
+	align-items: flex-end;
+}
 
-.forecast-dashboard__atrisk { margin: 16px 0; }
+.forecast-dashboard__atrisk {
+	margin: 16px 0;
+}
 
-.forecast-summary { display: flex; gap: 24px; flex-wrap: wrap; margin: 20px 0; }
+.forecast-summary {
+	display: flex;
+	gap: 24px;
+	flex-wrap: wrap;
+	margin: 20px 0;
+}
 
-.forecast-summary__metric { display: flex; flex-direction: column; }
+.forecast-summary__metric {
+	display: flex;
+	flex-direction: column;
+}
 
-.forecast-summary__label { color: var(--color-text-maxcontrast); font-size: 0.85em; }
+.forecast-summary__label {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.85em;
+}
 
-.forecast-summary__value { font-size: 1.4em; font-weight: 600; }
+.forecast-summary__value {
+	font-size: 1.4em;
+	font-weight: 600;
+}
 
-.forecast-progress { margin: 16px 0 24px; }
+.forecast-progress {
+	margin: 16px 0 24px;
+}
 
-.forecast-progress__bar { display: flex; height: 20px; border-radius: 10px; overflow: hidden; background: var(--color-background-dark); }
+.forecast-progress__bar {
+	display: flex;
+	height: 20px;
+	border-radius: 10px;
+	overflow: hidden;
+	background: var(--color-background-dark);
+}
 
-.forecast-progress__seg--closed { background: var(--color-success); }
+.forecast-progress__seg--closed {
+	background: var(--color-success);
+}
 
-.forecast-progress__seg--commit { background: var(--color-primary-element); opacity: 0.7; background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.25) 4px, rgba(255,255,255,0.25) 8px); }
+.forecast-progress__seg--commit {
+	background: var(--color-primary-element);
+	opacity: 0.7;
+	background-image: repeating-linear-gradient(
+		45deg,
+		transparent,
+		transparent 4px,
+		rgba(255, 255, 255, 0.25) 4px,
+		rgba(255, 255, 255, 0.25) 8px
+	);
+}
 
-.forecast-progress__label { display: block; margin-top: 6px; color: var(--color-text-maxcontrast); }
+.forecast-progress__label {
+	display: block;
+	margin-top: 6px;
+	color: var(--color-text-maxcontrast);
+}
 
-.forecast-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.forecast-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 12px;
+}
 
-.forecast-table th, .forecast-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--color-border); }
+.forecast-table th,
+.forecast-table td {
+	text-align: left;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--color-border);
+}
 
-.forecast-table__overridden { color: var(--color-error); font-weight: 600; }
+.forecast-table__overridden {
+	color: var(--color-error);
+	font-weight: 600;
+}
 
-.forecast-table__badge { margin-left: 6px; font-size: 0.8em; color: var(--color-error); cursor: help; }
+.forecast-table__badge {
+	margin-left: 6px;
+	font-size: 0.8em;
+	color: var(--color-error);
+	cursor: help;
+}
 </style>

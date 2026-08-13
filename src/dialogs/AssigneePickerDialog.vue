@@ -9,9 +9,7 @@
   - inside its parent (ADR-004); it was extracted out of PipelineCard.vue.
   -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Assign user')"
-		@closing="$emit('close')">
+	<NcDialog :name="t('pipelinq', 'Assign user')" @closing="$emit('close')">
 		<NcSelect
 			v-model="picked"
 			:options="options"

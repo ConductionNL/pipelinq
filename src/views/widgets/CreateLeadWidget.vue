@@ -1,18 +1,26 @@
 <template>
 	<div class="create-lead-widget">
 		<div v-if="!success" class="widget-form">
-			<NcTextField v-model="form.title"
+			<NcTextField
+				v-model="form.title"
 				:label="t('pipelinq', 'Title')"
-				:placeholder="t('pipelinq', 'Lead title (required) — press Enter for quick add')"
+				:placeholder="
+					t(
+						'pipelinq',
+						'Lead title (required) — press Enter for quick add',
+					)
+				"
 				:error="submitted && !form.title"
 				@keyup.enter="onQuickAdd" />
 
-			<ClientAutocomplete :value="selectedClient"
+			<ClientAutocomplete
+				:value="selectedClient"
 				:placeholder="t('pipelinq', 'Search client...')"
 				:label="t('pipelinq', 'Client')"
 				@input="onClientSelected" />
 
-			<NcSelect v-model="form.pipeline"
+			<NcSelect
+				v-model="form.pipeline"
 				:options="pipelineOptions"
 				:input-label="t('pipelinq', 'Pipeline')"
 				:placeholder="t('pipelinq', 'Pipeline')"
@@ -20,21 +28,25 @@
 				track-by="id"
 				input-id="lead-pipeline" />
 
-			<NcTextField v-model="form.value"
+			<NcTextField
+				v-model="form.value"
 				:label="t('pipelinq', 'Value')"
 				:placeholder="t('pipelinq', 'Estimated value (EUR)')"
 				type="number" />
 
-			<NcSelect v-model="form.source"
+			<NcSelect
+				v-model="form.source"
 				:options="sourceOptions"
 				:input-label="t('pipelinq', 'Source')"
 				:placeholder="t('pipelinq', 'Source')"
 				input-id="lead-source" />
 
-			<NcButton variant="primary"
-				:disabled="submitting"
-				@click="onSubmit">
-				{{ submitting ? t('pipelinq', 'Creating...') : t('pipelinq', 'Create lead') }}
+			<NcButton variant="primary" :disabled="submitting" @click="onSubmit">
+				{{
+					submitting
+						? t('pipelinq', 'Creating...')
+						: t('pipelinq', 'Create lead')
+				}}
 			</NcButton>
 		</div>
 
@@ -136,9 +148,13 @@ export default {
 			if (!this.config?.pipeline) return
 			try {
 				const typeConfig = this.config.pipeline
-				const url = generateUrl('/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
-					+ '?_limit=50')
+				const url = generateUrl(
+					'/apps/openregister/api/objects/'
+						+ typeConfig.register
+						+ '/'
+						+ typeConfig.schema
+						+ '?_limit=50',
+				)
 
 				const response = await fetch(url, {
 					headers: {
@@ -167,7 +183,9 @@ export default {
 		getFirstStage(pipeline) {
 			const stages = pipeline?.stages || []
 			if (stages.length === 0) return { name: '', order: 1 }
-			const sorted = [...stages].sort((a, b) => (a.order || 0) - (b.order || 0))
+			const sorted = [...stages].sort(
+				(a, b) => (a.order || 0) - (b.order || 0),
+			)
 			return sorted[0]
 		},
 		/**
@@ -214,13 +232,18 @@ export default {
 					body.value = parseFloat(this.form.value) || 0
 				}
 				if (this.form.source) {
-					body.source = typeof this.form.source === 'object'
-						? this.form.source.id
-						: this.form.source
+					body.source =
+						typeof this.form.source === 'object'
+							? this.form.source.id
+							: this.form.source
 				}
 
-				const url = generateUrl('/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema)
+				const url = generateUrl(
+					'/apps/openregister/api/objects/'
+						+ typeConfig.register
+						+ '/'
+						+ typeConfig.schema,
+				)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -249,7 +272,8 @@ export default {
 		resetForm() {
 			this.form = {
 				title: '',
-				pipeline: this.pipelineOptions.length > 0 ? this.pipelineOptions[0] : null,
+				pipeline:
+					this.pipelineOptions.length > 0 ? this.pipelineOptions[0] : null,
 				value: '',
 				source: null,
 			}

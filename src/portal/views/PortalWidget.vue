@@ -42,7 +42,10 @@ export default {
 	methods: {
 		postResize() {
 			if (this.isEmbedded && this.$refs.root) {
-				window.parent.postMessage({ type: 'portal:resize', height: this.$refs.root.scrollHeight }, '*')
+				window.parent.postMessage(
+					{ type: 'portal:resize', height: this.$refs.root.scrollHeight },
+					'*',
+				)
 			}
 		},
 		onLogout() {

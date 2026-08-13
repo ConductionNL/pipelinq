@@ -5,7 +5,14 @@
 <template>
 	<div class="loyalty-enrollment">
 		<h2>{{ t('pipelinq', 'Loyalty enrollment') }}</h2>
-		<p>{{ t('pipelinq', 'Enroll a customer in a loyalty programme. Customer opt-in is mandatory under AVG/GDPR.') }}</p>
+		<p>
+			{{
+				t(
+					'pipelinq',
+					'Enroll a customer in a loyalty programme. Customer opt-in is mandatory under AVG/GDPR.',
+				)
+			}}
+		</p>
 
 		<form @submit.prevent="enroll">
 			<NcTextField
@@ -26,12 +33,18 @@
 
 			<label class="loyalty-enrollment__opt-in">
 				<NcCheckboxRadioSwitch v-model="optInAccepted">
-					{{ t('pipelinq', 'I agree to store my loyalty data and contact me with offers') }}
+					{{
+						t(
+							'pipelinq',
+							'I agree to store my loyalty data and contact me with offers',
+						)
+					}}
 				</NcCheckboxRadioSwitch>
 			</label>
 
 			<p class="loyalty-enrollment__terms">
-				<a v-if="termsUrl"
+				<a
+					v-if="termsUrl"
 					:href="termsUrl"
 					target="_blank"
 					rel="noopener noreferrer">
@@ -45,7 +58,11 @@
 		</form>
 
 		<NcNoteCard v-if="result" type="success">
-			{{ t('pipelinq', 'Account created: {accountId}', { accountId: resultId }) }}
+			{{
+				t('pipelinq', 'Account created: {accountId}', {
+					accountId: resultId,
+				})
+			}}
 		</NcNoteCard>
 	</div>
 </template>
@@ -62,7 +79,13 @@ import { showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'LoyaltyAccountCreation',
-	components: { NcButton, NcCheckboxRadioSwitch, NcNoteCard, NcSelect, NcTextField },
+	components: {
+		NcButton,
+		NcCheckboxRadioSwitch,
+		NcNoteCard,
+		NcSelect,
+		NcTextField,
+	},
 	data() {
 		return {
 			klantId: '',
@@ -75,7 +98,11 @@ export default {
 	},
 	computed: {
 		programmeOptions() {
-			return this.programmes.map(p => ({ id: p.id, label: p.naam || p.id, termsUrl: p.termsUrl }))
+			return this.programmes.map((p) => ({
+				id: p.id,
+				label: p.naam || p.id,
+				termsUrl: p.termsUrl,
+			}))
 		},
 		termsUrl() {
 			return this.selectedProgramme && this.selectedProgramme.termsUrl
@@ -87,7 +114,11 @@ export default {
 			if (!this.result) {
 				return ''
 			}
-			return (this.result['@self'] && this.result['@self'].id) || this.result.accountId || ''
+			return (
+				(this.result['@self'] && this.result['@self'].id)
+				|| this.result.accountId
+				|| ''
+			)
 		},
 	},
 	mounted() {
@@ -97,10 +128,13 @@ export default {
 		async loadProgrammes() {
 			try {
 				const response = await axios.get(
-					generateUrl('/apps/openregister/api/objects/pipelinq/loyaltyProgramme?_limit=200'),
+					generateUrl(
+						'/apps/openregister/api/objects/pipelinq/loyaltyProgramme?_limit=200',
+					),
 				)
-				const list = (response.data && (response.data.results || response.data)) || []
-				this.programmes = list.map(p => ({
+				const list =
+					(response.data && (response.data.results || response.data)) || []
+				this.programmes = list.map((p) => ({
 					id: p['@self']?.id || p.id || p.programmeId,
 					naam: p.naam,
 					termsUrl: p.termsUrl,
@@ -129,7 +163,9 @@ export default {
 					lastActivityDate: new Date().toISOString(),
 				}
 				const response = await axios.post(
-					generateUrl('/apps/openregister/api/objects/pipelinq/klantLoyaltyAccount'),
+					generateUrl(
+						'/apps/openregister/api/objects/pipelinq/klantLoyaltyAccount',
+					),
 					payload,
 				)
 				this.result = response.data

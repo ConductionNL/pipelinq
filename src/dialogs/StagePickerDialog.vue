@@ -9,9 +9,7 @@
   - inside its parent (ADR-004); it was extracted out of PipelineCard.vue.
   -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Move to stage')"
-		@closing="$emit('close')">
+	<NcDialog :name="t('pipelinq', 'Move to stage')" @closing="$emit('close')">
 		<div class="dialog-list">
 			<NcButton
 				v-for="stage in stages"

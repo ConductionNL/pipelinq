@@ -6,7 +6,10 @@
 		:icon="FileDocument"
 		variant="primary"
 		horizontal
-		:route="{ name: 'Tickets', query: { ticketType: 'request', status: 'open' } }" />
+		:route="{
+			name: 'Tickets',
+			query: { ticketType: 'request', status: 'open' },
+		}" />
 </template>
 
 <script>
@@ -35,7 +38,7 @@ export default {
 			try {
 				const requests = await getRequests()
 				this.count = requests.filter(
-					r => r.status === 'new' || r.status === 'in_progress',
+					(r) => r.status === 'new' || r.status === 'in_progress',
 				).length
 			} catch (err) {
 				console.error('OpenRequestsKpiWidget fetch error:', err)

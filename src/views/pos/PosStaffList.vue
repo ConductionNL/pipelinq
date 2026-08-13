@@ -37,7 +37,13 @@
 					<tr v-for="row in staff" :key="row.id">
 						<td>{{ row.displayName }}</td>
 						<td>{{ roleName(row.posRole) }}</td>
-						<td>{{ row.isActive === false ? t('pipelinq', 'No') : t('pipelinq', 'Yes') }}</td>
+						<td>
+							{{
+								row.isActive === false
+									? t('pipelinq', 'No')
+									: t('pipelinq', 'Yes')
+							}}
+						</td>
 						<td>{{ row.lastLoginAt || '—' }}</td>
 						<td>
 							<NcButton @click="edit(row)">
@@ -82,7 +88,9 @@ export default {
 				const response = await axios.get(url)
 				this.staff = response?.data?.staff || []
 			} catch (error) {
-				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to load staff')
+				this.errorMessage =
+					error?.response?.data?.error
+					|| t('pipelinq', 'Failed to load staff')
 			} finally {
 				this.loading = false
 			}

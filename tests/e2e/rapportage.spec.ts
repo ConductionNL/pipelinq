@@ -7,7 +7,6 @@ import { test, expect } from '@playwright/test'
 import { openApp, navClick } from './helpers/pipelinq'
 
 test.describe('Rapportage (Reporting)', () => {
-
 	test.beforeEach(async ({ page }) => {
 		// The contactmomenten Reporting Dashboard (KPI cards) lives at the
 		// `/rapportage/contactmomenten` page (manifest id RapportageContactmomenten
@@ -29,7 +28,9 @@ test.describe('Rapportage (Reporting)', () => {
 	 *
 	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
 	 */
-	test('REQ-CR-001: rapportage dashboard loads with KPI cards', async ({ page }) => {
+	test('REQ-CR-001: rapportage dashboard loads with KPI cards', async ({
+		page,
+	}) => {
 		// Retargeted onto the declarative dashboard that replaced the bespoke
 		// RapportageDashboard.vue (change `pipelinq-dashboards-declarative`).
 		// The old assertions named that component's private CSS — `.kpi-grid`,
@@ -44,12 +45,21 @@ test.describe('Rapportage (Reporting)', () => {
 		).toBeVisible({ timeout: 15000 })
 
 		// The `period` pageFilter replaced the hand-rolled date-range selector.
-		await expect(page.getByText('Period').first()).toBeVisible({ timeout: 10000 })
+		await expect(page.getByText('Period').first()).toBeVisible({
+			timeout: 10000,
+		})
 
 		// The four headline KPIs, by the labels the manifest declares for them.
 		const content = page.locator('#content-vue')
-		for (const kpi of ['Total Contacts', 'FCR %', 'Avg Handling Time', 'SLA Compliance']) {
-			await expect(content.getByText(kpi).first()).toBeVisible({ timeout: 10000 })
+		for (const kpi of [
+			'Total Contacts',
+			'FCR %',
+			'Avg Handling Time',
+			'SLA Compliance',
+		]) {
+			await expect(content.getByText(kpi).first()).toBeVisible({
+				timeout: 10000,
+			})
 		}
 	})
 
@@ -88,7 +98,9 @@ test.describe('Rapportage (Reporting)', () => {
 		await navClick(page, 'Agent Performance', /rapportage\/agents/)
 
 		await expect(
-			page.getByRole('heading', { name: /Agent Performance|Agentprestaties/i }),
+			page.getByRole('heading', {
+				name: /Agent Performance|Agentprestaties/i,
+			}),
 		).toBeVisible({ timeout: 10000 })
 	})
 
@@ -106,7 +118,9 @@ test.describe('Rapportage (Reporting)', () => {
 		await page.goto('/apps/pipelinq/#/rapportage/agents')
 		await page.reload()
 		await expect(
-			page.getByRole('heading', { name: /Agent Performance|Agentprestaties/i }),
+			page.getByRole('heading', {
+				name: /Agent Performance|Agentprestaties/i,
+			}),
 		).toBeVisible({ timeout: 15000 })
 	})
 })

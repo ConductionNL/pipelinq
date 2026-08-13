@@ -47,7 +47,10 @@ export default {
 	components: { PortalSessionWarning },
 	data() {
 		return {
-			branding: { displayName: t('pipelinq', 'Customer portal'), brandPrimaryColor: '#21468B' },
+			branding: {
+				displayName: t('pipelinq', 'Customer portal'),
+				brandPrimaryColor: '#21468B',
+			},
 			isB2b: false,
 			embedded: window.self !== window.top,
 		}
@@ -77,10 +80,16 @@ export default {
 		applyBranding() {
 			const root = document.documentElement
 			if (this.branding.brandPrimaryColor) {
-				root.style.setProperty('--portal-brand-primary', this.branding.brandPrimaryColor)
+				root.style.setProperty(
+					'--portal-brand-primary',
+					this.branding.brandPrimaryColor,
+				)
 			}
 			if (this.branding.brandSecondaryColor) {
-				root.style.setProperty('--portal-brand-secondary', this.branding.brandSecondaryColor)
+				root.style.setProperty(
+					'--portal-brand-secondary',
+					this.branding.brandSecondaryColor,
+				)
 			}
 		},
 		async logout() {
@@ -111,8 +120,8 @@ export default {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	border-bottom: 2px solid var(--portal-brand-primary, #21468B);
-	padding-bottom: .5rem;
+	border-bottom: 2px solid var(--portal-brand-primary, #21468b);
+	padding-bottom: 0.5rem;
 	margin-bottom: 1rem;
 }
 
@@ -130,7 +139,7 @@ export default {
 .portal-field input,
 .portal-field select,
 .portal-field textarea {
-	padding: .5rem;
+	padding: 0.5rem;
 	border: 1px solid var(--color-border, #999);
 	border-radius: 4px;
 }
@@ -143,16 +152,16 @@ export default {
 .portal-table th,
 .portal-table td {
 	text-align: left;
-	padding: .5rem;
+	padding: 0.5rem;
 	border-bottom: 1px solid var(--color-border, #ddd);
 }
 
 .portal-button-primary {
-	background: var(--portal-brand-primary, #21468B);
+	background: var(--portal-brand-primary, #21468b);
 	color: #fff;
 	border: none;
 	border-radius: 4px;
-	padding: .5rem 1rem;
+	padding: 0.5rem 1rem;
 	cursor: pointer;
 }
 
@@ -161,22 +170,26 @@ export default {
 	color: #fff;
 	border: none;
 	border-radius: 4px;
-	padding: .5rem 1rem;
+	padding: 0.5rem 1rem;
 	cursor: pointer;
 }
 
 .portal-button-link {
 	background: none;
 	border: none;
-	color: var(--portal-brand-primary, #21468B);
+	color: var(--portal-brand-primary, #21468b);
 	text-decoration: underline;
 	cursor: pointer;
 	padding: 0;
 }
 
-.portal-error { color: #b00020; }
+.portal-error {
+	color: #b00020;
+}
 
-.portal-success { color: #1a7f37; }
+.portal-success {
+	color: #1a7f37;
+}
 
 .portal-session-warning {
 	position: fixed;
@@ -184,16 +197,18 @@ export default {
 	left: 50%;
 	transform: translateX(-50%);
 	background: #fff;
-	border: 2px solid var(--portal-brand-primary, #21468B);
+	border: 2px solid var(--portal-brand-primary, #21468b);
 	border-radius: 8px;
 	padding: 1rem;
-	box-shadow: 0 2px 8px rgba(0,0,0,.2);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .portal-app :focus-visible {
-	outline: 2px solid var(--portal-brand-primary, #21468B);
+	outline: 2px solid var(--portal-brand-primary, #21468b);
 	outline-offset: 2px;
 }
 
-.portal-app--embedded .portal-header { display: none; }
+.portal-app--embedded .portal-header {
+	display: none;
+}
 </style>

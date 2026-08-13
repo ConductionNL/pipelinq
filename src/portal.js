@@ -27,7 +27,9 @@ const router = createRouter({
 installPortalGuard(router)
 
 document.addEventListener('DOMContentLoaded', () => {
-	const mount = document.getElementById('pipelinq-portal') || document.body.appendChild(document.createElement('div'))
+	const mount =
+		document.getElementById('pipelinq-portal')
+		|| document.body.appendChild(document.createElement('div'))
 	mount.id = 'pipelinq-portal'
 	const app = createApp(PortalApp)
 	// Vue 3 has no `Vue.prototype`; `app.config.globalProperties` is the

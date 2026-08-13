@@ -18,9 +18,7 @@
 			</template>
 			{{ t('pipelinq', 'New Client') }}
 		</NcButton>
-		<NcButton
-			:aria-label="t('pipelinq', 'Refresh dashboard')"
-			@click="refresh">
+		<NcButton :aria-label="t('pipelinq', 'Refresh dashboard')" @click="refresh">
 			<template #icon>
 				<Refresh :size="20" :class="{ 'icon-spinning': refreshing }" />
 			</template>
@@ -146,8 +144,12 @@ export default {
 }
 
 @keyframes spin {
-	from { transform: rotate(0deg); }
-	to { transform: rotate(360deg); }
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

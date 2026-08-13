@@ -62,26 +62,34 @@ async function openAdminSettings(page: Page): Promise<void> {
 }
 
 // ── src/views/pos/PosStaffList.vue ───────────────────────────────────────────
-test('PosStaffList: the POS staff admin section mounts src/views/pos/PosStaffList.vue', async ({ page }) => {
+test('PosStaffList: the POS staff admin section mounts src/views/pos/PosStaffList.vue', async ({
+	page,
+}) => {
 	await openAdminSettings(page)
 
 	// Precondition: PosStaffManager rendered at all (isAdmin && isConfigured).
-	await expect(page.getByRole('heading', { name: 'POS staff' }).first())
-		.toBeVisible({ timeout: 20000 })
+	await expect(
+		page.getByRole('heading', { name: 'POS staff' }).first(),
+	).toBeVisible({ timeout: 20000 })
 
 	// PosStaffList reads `/api/pos/staff` with plain axios rather than through
 	// the object store, and its root + header sit above the loading `v-if`, so
 	// both render whether the fetch succeeds, fails or returns nothing.
 	const list = page.locator('.pos-staff-list')
 	await expect(list).toBeVisible({ timeout: 15000 })
-	await expect(list.getByRole('button', { name: 'New staff member' })).toBeVisible()
+	await expect(
+		list.getByRole('button', { name: 'New staff member' }),
+	).toBeVisible()
 })
 
 // ── src/views/pos/PosStaffForm.vue ───────────────────────────────────────────
-test('PosStaffForm: the POS staff create dialog mounts src/views/pos/PosStaffForm.vue', async ({ page }) => {
+test('PosStaffForm: the POS staff create dialog mounts src/views/pos/PosStaffForm.vue', async ({
+	page,
+}) => {
 	await openAdminSettings(page)
-	await expect(page.getByRole('heading', { name: 'POS staff' }).first())
-		.toBeVisible({ timeout: 20000 })
+	await expect(
+		page.getByRole('heading', { name: 'POS staff' }).first(),
+	).toBeVisible({ timeout: 20000 })
 
 	const list = page.locator('.pos-staff-list')
 	await expect(list).toBeVisible({ timeout: 15000 })
@@ -93,37 +101,51 @@ test('PosStaffForm: the POS staff create dialog mounts src/views/pos/PosStaffFor
 	await expect(form).toBeVisible({ timeout: 15000 })
 	// `staffId` is '' on the create path, so `isNew` is true and the form's own
 	// header reads "New staff member" — proof the CREATE branch mounted.
-	await expect(form.getByRole('heading', { name: 'New staff member' })).toBeVisible()
+	await expect(
+		form.getByRole('heading', { name: 'New staff member' }),
+	).toBeVisible()
 	await expect(form.locator('.pos-staff-form__fields')).toBeVisible()
 })
 
 // ── src/views/pos/PosRoleList.vue ────────────────────────────────────────────
-test('PosRoleList: the POS roles admin section mounts src/views/pos/PosRoleList.vue', async ({ page }) => {
+test('PosRoleList: the POS roles admin section mounts src/views/pos/PosRoleList.vue', async ({
+	page,
+}) => {
 	await openAdminSettings(page)
 
-	await expect(page.getByRole('heading', { name: 'POS roles' }).first())
-		.toBeVisible({ timeout: 20000 })
+	await expect(
+		page.getByRole('heading', { name: 'POS roles' }).first(),
+	).toBeVisible({ timeout: 20000 })
 
 	// PosRoleList is nothing but a CnIndexPage, and the admin page hosts several
 	// of them — so identify THIS one by the title its own component passes.
 	// CnIndexPage's root div and CnPageHeader's <h1> are both unconditional, so
 	// this holds even when the `posRole` collection fetch comes back empty.
-	const roleIndex = page
-		.locator('[data-testid="cn-index-page"]')
-		.filter({ has: page.locator('[data-testid="cn-page-title"]', { hasText: 'POS roles' }) })
+	const roleIndex = page.locator('[data-testid="cn-index-page"]').filter({
+		has: page.locator('[data-testid="cn-page-title"]', {
+			hasText: 'POS roles',
+		}),
+	})
 	await expect(roleIndex).toHaveCount(1, { timeout: 15000 })
 	await expect(roleIndex.first()).toBeVisible()
 })
 
 // ── src/views/pos/PosRoleForm.vue ────────────────────────────────────────────
-test('PosRoleForm: the POS role create dialog mounts src/views/pos/PosRoleForm.vue', async ({ page }) => {
+test('PosRoleForm: the POS role create dialog mounts src/views/pos/PosRoleForm.vue', async ({
+	page,
+}) => {
 	await openAdminSettings(page)
-	await expect(page.getByRole('heading', { name: 'POS roles' }).first())
-		.toBeVisible({ timeout: 20000 })
+	await expect(
+		page.getByRole('heading', { name: 'POS roles' }).first(),
+	).toBeVisible({ timeout: 20000 })
 
 	const roleIndex = page
 		.locator('[data-testid="cn-index-page"]')
-		.filter({ has: page.locator('[data-testid="cn-page-title"]', { hasText: 'POS roles' }) })
+		.filter({
+			has: page.locator('[data-testid="cn-page-title"]', {
+				hasText: 'POS roles',
+			}),
+		})
 		.first()
 	await expect(roleIndex).toBeVisible({ timeout: 15000 })
 

@@ -8,16 +8,17 @@
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Reschedule booking')"
-		@closing="$emit('cancel')">
+	<NcDialog :name="t('pipelinq', 'Reschedule booking')" @closing="$emit('cancel')">
 		<div class="reschedule-form">
 			<div class="form-group">
-				<label for="new-start-at">{{ t('pipelinq', 'New start time') }}</label>
-				<input id="new-start-at"
+				<label for="new-start-at">{{
+					t('pipelinq', 'New start time')
+				}}</label>
+				<input
+					id="new-start-at"
 					v-model="newStartAt"
 					type="datetime-local"
-					:aria-label="t('pipelinq', 'New start time')">
+					:aria-label="t('pipelinq', 'New start time')" />
 			</div>
 			<p v-if="error" class="error-text">
 				{{ error }}
@@ -52,7 +53,10 @@ export default {
 	},
 	computed: {
 		isValid() {
-			return !!this.newStartAt && this.newStartAt !== this.formatForInput(this.currentStartAt)
+			return (
+				!!this.newStartAt
+				&& this.newStartAt !== this.formatForInput(this.currentStartAt)
+			)
 		},
 	},
 	methods: {

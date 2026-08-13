@@ -24,11 +24,16 @@ async function gotoExportJobs(page: Page) {
 	await openApp(page)
 	await page.goto('/apps/pipelinq/#/export/jobs')
 	await page.reload()
-	await page.locator('#content-vue').waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
+	await page
+		.locator('#content-vue')
+		.waitFor({ state: 'visible', timeout: 10000 })
+		.catch(() => {})
 }
 
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-ui-shell
-test('BI export jobs: ExportJobs mounts from the sidebar with its index chrome', async ({ page }) => {
+test('BI export jobs: ExportJobs mounts from the sidebar with its index chrome', async ({
+	page,
+}) => {
 	await gotoExportJobs(page)
 
 	await assertNoHardError(page)
@@ -36,7 +41,9 @@ test('BI export jobs: ExportJobs mounts from the sidebar with its index chrome',
 })
 
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-ui-list
-test('BI export jobs: jobs surface renders without a registration error', async ({ page }) => {
+test('BI export jobs: jobs surface renders without a registration error', async ({
+	page,
+}) => {
 	// store.js slug-fallback registration (commit a53bc8c5) registers "exportJob"
 	// against the canonical OR schema slug when the app-config numeric id is empty,
 	// so the collection fetch resolves: the index renders its schema-driven jobs
@@ -47,7 +54,9 @@ test('BI export jobs: jobs surface renders without a registration error', async 
 	await gotoExportJobs(page)
 	const content = page.locator('#content-vue')
 	await expect(
-		content.locator('table, .cn-data-table').first()
+		content
+			.locator('table, .cn-data-table')
+			.first()
 			.or(content.getByText(/No items found/i).first()),
 	).toBeVisible()
 	expect(errors().filter((e) => /exportJob.*not registered/i.test(e))).toEqual([])

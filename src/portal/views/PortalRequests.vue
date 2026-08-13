@@ -6,10 +6,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 	<div class="portal-requests">
 		<h1>{{ t('pipelinq', 'My requests') }}</h1>
 
-		<p v-if="error"
-			id="portal-requests-error"
-			role="alert"
-			class="portal-error">
+		<p v-if="error" id="portal-requests-error" role="alert" class="portal-error">
 			{{ error }}
 		</p>
 
@@ -49,7 +46,8 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			<p>{{ detail.body }}</p>
 			<ul>
 				<li v-for="(note, i) in detail.notes" :key="i">
-					<strong>{{ note.author }}</strong>: {{ note.message }}
+					<strong>{{ note.author }}</strong
+					>: {{ note.message }}
 				</li>
 			</ul>
 			<form v-if="detail.canReply" @submit.prevent="sendReply">
@@ -71,7 +69,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 					type="text"
 					required
 					:aria-describedby="error ? 'portal-requests-error' : null"
-					:aria-invalid="error ? 'true' : null">
+					:aria-invalid="error ? 'true' : null" />
 			</div>
 			<div class="portal-field">
 				<label for="portal-body">{{ t('pipelinq', 'Message') }}</label>
@@ -82,13 +80,17 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 					:aria-describedby="error ? 'portal-requests-error' : null"
 					:aria-invalid="error ? 'true' : null" />
 			</div>
-			<p v-if="submitMessage"
+			<p
+				v-if="submitMessage"
 				role="status"
 				aria-live="polite"
 				class="portal-success">
 				{{ submitMessage }}
 			</p>
-			<button type="submit" :disabled="submitting" class="portal-button-primary">
+			<button
+				type="submit"
+				:disabled="submitting"
+				class="portal-button-primary">
 				{{ t('pipelinq', 'Submit request') }}
 			</button>
 		</form>
@@ -133,7 +135,10 @@ export default {
 		},
 		async sendReply() {
 			try {
-				this.detail = await portalApi.replyRequest(this.detail.id, this.replyText)
+				this.detail = await portalApi.replyRequest(
+					this.detail.id,
+					this.replyText,
+				)
 				this.replyText = ''
 				await this.load()
 			} catch (e) {
@@ -151,17 +156,25 @@ export default {
 					categoryId: this.form.categoryId,
 					attachments: [],
 				})
-				this.submitMessage = t('pipelinq', 'Your request has been submitted ({id}). Expected response: {eta}.', {
-					id: result.requestId,
-					eta: result.estimatedResponseTime,
-				})
+				this.submitMessage = t(
+					'pipelinq',
+					'Your request has been submitted ({id}). Expected response: {eta}.',
+					{
+						id: result.requestId,
+						eta: result.estimatedResponseTime,
+					},
+				)
 				this.form.subject = ''
 				this.form.body = ''
 				await this.load()
 			} catch (e) {
-				this.error = e.errorCode === 'rateLimited'
-					? t('pipelinq', 'Please wait 60 minutes before submitting another request.')
-					: (e.message || t('pipelinq', 'Could not submit the request.'))
+				this.error =
+					e.errorCode === 'rateLimited'
+						? t(
+								'pipelinq',
+								'Please wait 60 minutes before submitting another request.',
+							)
+						: e.message || t('pipelinq', 'Could not submit the request.')
 			} finally {
 				this.submitting = false
 			}

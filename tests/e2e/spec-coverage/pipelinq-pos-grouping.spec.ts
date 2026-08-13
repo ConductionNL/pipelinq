@@ -62,7 +62,7 @@ import {
  * the same run — already navigates to this page as `Returns`, which is the
  * corroborating measurement that the English string is what the nav paints.
  */
-const POS_CHILDREN: Array<{ label: string, url: RegExp }> = [
+const POS_CHILDREN: Array<{ label: string; url: RegExp }> = [
 	{ label: 'Kassabon', url: /#\/pos$/ },
 	{ label: 'Returns', url: /#\/pos\/refunds/ },
 	{ label: 'Cash drawer', url: /#\/pos\/shifts/ },
@@ -75,14 +75,16 @@ async function isFlatTopLevelEntry(page: Page, label: string): Promise<boolean> 
 	// grouped leaf sits one <ul> deeper, inside its group's collapsible <li>.
 	const top = page.locator(
 		'#app-navigation-vue > ul > li > a.app-navigation-entry-link, '
-		+ '#app-navigation-vue nav > ul > li > a.app-navigation-entry-link',
+			+ '#app-navigation-vue nav > ul > li > a.app-navigation-entry-link',
 	)
 	const match = top.filter({ hasText: new RegExp(`^\\s*${label}\\s*$`) })
 	return (await match.count()) > 0
 }
 
 // @e2e openspec/specs/pipelinq-pos-grouping/spec.md#point-of-sale-group-renders-with-its-runtime-children
-test('the till runtime leaves are grouped under one "Point of Sale" entry', async ({ page }) => {
+test('the till runtime leaves are grouped under one "Point of Sale" entry', async ({
+	page,
+}) => {
 	await openApp(page)
 
 	// A single top-level "Point of Sale" entry, and it is a GROUP (no route of
@@ -95,7 +97,10 @@ test('the till runtime leaves are grouped under one "Point of Sale" entry', asyn
 	// Each runtime child is reachable through the group…
 	for (const { label } of POS_CHILDREN) {
 		const leaf = await revealNavEntry(page, label)
-		await expect(leaf, `"${label}" must be reachable under Point of Sale`).toBeVisible({ timeout: 10000 })
+		await expect(
+			leaf,
+			`"${label}" must be reachable under Point of Sale`,
+		).toBeVisible({ timeout: 10000 })
 	}
 
 	// …and none of them is ALSO painted as a flat top-level entry, which is the
@@ -111,13 +116,18 @@ test('the till runtime leaves are grouped under one "Point of Sale" entry', asyn
 })
 
 // @e2e openspec/specs/pipelinq-pos-grouping/spec.md#children-navigate-to-their-existing-routes
-test('every Point of Sale child navigates to its existing route', async ({ page }) => {
+test('every Point of Sale child navigates to its existing route', async ({
+	page,
+}) => {
 	test.setTimeout(90000)
 	await openApp(page)
 
 	for (const { label, url } of POS_CHILDREN) {
 		await navClick(page, label, url)
-		await expect(nextcloudErrorPage(page), `"${label}" landed on Nextcloud error chrome`).toHaveCount(0)
+		await expect(
+			nextcloudErrorPage(page),
+			`"${label}" landed on Nextcloud error chrome`,
+		).toHaveCount(0)
 		await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
 	}
 
@@ -136,7 +146,9 @@ test('every Point of Sale child navigates to its existing route', async ({ page 
  * them here would assert a route the product retired on purpose.
  */
 // @e2e openspec/specs/pipelinq-pos-grouping/spec.md#deep-links-resolve-after-regrouping
-test('every regrouped POS and product route still resolves by deep link', async ({ page }) => {
+test('every regrouped POS and product route still resolves by deep link', async ({
+	page,
+}) => {
 	test.setTimeout(120000)
 	await openApp(page)
 
@@ -156,8 +168,14 @@ test('every regrouped POS and product route still resolves by deep link', async 
 
 		// The route resolved to a real page component: the app shell is mounted,
 		// Nextcloud served no error chrome, and the SPA did not bounce elsewhere.
-		await expect(page.locator('#content-vue'), `${route} did not mount`).toBeVisible({ timeout: 20000 })
-		await expect(nextcloudErrorPage(page), `${route} produced Nextcloud error chrome`).toHaveCount(0)
+		await expect(
+			page.locator('#content-vue'),
+			`${route} did not mount`,
+		).toBeVisible({ timeout: 20000 })
+		await expect(
+			nextcloudErrorPage(page),
+			`${route} produced Nextcloud error chrome`,
+		).toHaveCount(0)
 		// Asserted with a PREDICATE, not a pattern. Building a regex by escaping
 		// only `/` leaves `.`, `?`, `+` and friends live as metacharacters — a
 		// latent false pass, because `.` matching any character would let a
@@ -166,8 +184,11 @@ test('every regrouped POS and product route still resolves by deep link', async 
 		// history: what must survive the mount is the HASH, and comparing the
 		// whole URL string would pass on a path-shaped match while vue-router had
 		// quietly redirected to `/`.
-		await expect(page, `${route} was redirected away`)
-			.toHaveURL((u) => new URL(String(u)).hash.endsWith(route))
-		await expect(page.locator('#content-vue')).not.toContainText('Internal Server Error')
+		await expect(page, `${route} was redirected away`).toHaveURL((u) =>
+			new URL(String(u)).hash.endsWith(route),
+		)
+		await expect(page.locator('#content-vue')).not.toContainText(
+			'Internal Server Error',
+		)
 	}
 })

@@ -3,11 +3,14 @@ SPDX-License-Identifier: EUPL-1.2
 SPDX-FileCopyrightText: 2026 Conduction B.V.
 -->
 <template>
-	<div v-if="visible"
+	<div
+		v-if="visible"
 		class="portal-session-warning"
 		role="alert"
 		aria-live="polite">
-		<span>{{ t('pipelinq', 'Your session expires in {seconds} seconds.', { seconds }) }}</span>
+		<span>{{
+			t('pipelinq', 'Your session expires in {seconds} seconds.', { seconds })
+		}}</span>
 		<button class="portal-button-link" @click="logout">
 			{{ t('pipelinq', 'Log out') }}
 		</button>
@@ -18,7 +21,13 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 </template>
 
 <script>
-import { portalApi, getExpiry, setToken, getToken, clearToken } from '../portalApi.js'
+import {
+	portalApi,
+	getExpiry,
+	setToken,
+	getToken,
+	clearToken,
+} from '../portalApi.js'
 
 const WARN_AT_SECONDS = 60
 

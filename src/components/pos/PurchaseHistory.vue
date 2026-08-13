@@ -40,7 +40,11 @@
 						<td>{{ row.itemCount || 0 }}</td>
 						<td>€{{ formatMoney(row.total) }}</td>
 						<td>
-							<span :class="['purchase-history__tender', tenderClass(row.tenderType)]">
+							<span
+								:class="[
+									'purchase-history__tender',
+									tenderClass(row.tenderType),
+								]">
 								{{ tenderLabel(row.tenderType) }}
 							</span>
 						</td>
@@ -128,7 +132,9 @@ export default {
 		 * @return {string} The CSS class.
 		 */
 		tenderClass(tender) {
-			return tender === 'onAccount' ? 'purchase-history__tender--on-account' : ''
+			return tender === 'onAccount'
+				? 'purchase-history__tender--on-account'
+				: ''
 		},
 	},
 }

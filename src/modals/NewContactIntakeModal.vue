@@ -73,7 +73,9 @@ export default {
 	},
 	computed: {
 		valid() {
-			return this.form.name.trim().length > 1 && this.form.phone.trim().length > 1
+			return (
+				this.form.name.trim().length > 1 && this.form.phone.trim().length > 1
+			)
 		},
 	},
 	methods: {

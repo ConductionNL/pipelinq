@@ -6,16 +6,22 @@
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Cancel booking')"
-		@closing="$emit('cancel')">
+	<NcDialog :name="t('pipelinq', 'Cancel booking')" @closing="$emit('cancel')">
 		<div class="cancel-form">
 			<p>
-				{{ t('pipelinq', 'Staff cancellations always skip the cancellation charge.') }}
+				{{
+					t(
+						'pipelinq',
+						'Staff cancellations always skip the cancellation charge.',
+					)
+				}}
 			</p>
 			<div class="form-group">
-				<label for="cancel-reason">{{ t('pipelinq', 'Reason (optional)') }}</label>
-				<textarea id="cancel-reason"
+				<label for="cancel-reason">{{
+					t('pipelinq', 'Reason (optional)')
+				}}</label>
+				<textarea
+					id="cancel-reason"
 					v-model="reason"
 					rows="3"
 					:aria-label="t('pipelinq', 'Cancellation reason')" />

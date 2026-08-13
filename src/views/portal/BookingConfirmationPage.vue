@@ -4,10 +4,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 -->
 <template>
 	<div class="booking-confirmation">
-		<div v-if="loading"
-			class="booking-state"
-			role="status"
-			aria-live="polite">
+		<div v-if="loading" class="booking-state" role="status" aria-live="polite">
 			{{ t('pipelinq', 'Loading…') }}
 		</div>
 
@@ -18,7 +15,10 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<div v-else-if="booking" class="booking-confirmation-card">
 			<h1>{{ t('pipelinq', 'Your booking is confirmed') }}</h1>
 
-			<p v-if="depositPending" class="booking-banner booking-banner--warning" role="status">
+			<p
+				v-if="depositPending"
+				class="booking-banner booking-banner--warning"
+				role="status">
 				{{ t('pipelinq', 'Awaiting payment') }}
 				<span v-if="booking.paymentStatus"> — {{ paymentStatusLabel }}</span>
 			</p>
@@ -54,12 +54,18 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			</dl>
 
 			<div class="booking-actions">
-				<a v-if="booking.rescheduleUrl"
+				<a
+					v-if="booking.rescheduleUrl"
 					:href="booking.rescheduleUrl"
-					class="booking-link">{{ t('pipelinq', 'Reschedule') }}</a>
-				<a v-if="booking.cancelUrl"
+					class="booking-link"
+					>{{ t('pipelinq', 'Reschedule') }}</a
+				>
+				<a
+					v-if="booking.cancelUrl"
 					:href="booking.cancelUrl"
-					class="booking-link booking-link--danger">{{ t('pipelinq', 'Cancel') }}</a>
+					class="booking-link booking-link--danger"
+					>{{ t('pipelinq', 'Cancel') }}</a
+				>
 			</div>
 		</div>
 	</div>
@@ -84,7 +90,9 @@ export default {
 		 * @return {string} The booking id.
 		 */
 		bookingId() {
-			return this.$route && this.$route.params ? this.$route.params.bookingId : ''
+			return this.$route && this.$route.params
+				? this.$route.params.bookingId
+				: ''
 		},
 		/**
 		 * Whether a deposit payment is still pending.
@@ -95,9 +103,11 @@ export default {
 			if (!this.booking) {
 				return false
 			}
-			return this.booking.depositRequired === true
+			return (
+				this.booking.depositRequired === true
 				&& this.booking.paymentStatus !== 'paid'
 				&& this.booking.status !== 'confirmed'
+			)
 		},
 		/**
 		 * The "email sent" notice with the customer email interpolated.
@@ -106,7 +116,11 @@ export default {
 		 */
 		emailNotice() {
 			const email = this.booking ? this.booking.email : ''
-			return this.t('pipelinq', 'A confirmation email has been sent to {email}.', { email })
+			return this.t(
+				'pipelinq',
+				'A confirmation email has been sent to {email}.',
+				{ email },
+			)
 		},
 		/**
 		 * Whether the booking carries a price.
@@ -125,7 +139,10 @@ export default {
 			const cur = (this.booking && this.booking.currency) || 'EUR'
 			const amount = Number(this.booking ? this.booking.price : 0)
 			try {
-				return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur }).format(amount)
+				return new Intl.NumberFormat(undefined, {
+					style: 'currency',
+					currency: cur,
+				}).format(amount)
 			} catch (e) {
 				return amount + ' ' + cur
 			}
@@ -173,10 +190,14 @@ export default {
 			try {
 				this.booking = await fetchBooking(this.bookingId)
 			} catch (e) {
-				const status = e && e.response ? e.response.status : (e && e.status)
-				this.error = status === 404
-					? this.t('pipelinq', 'This booking could not be found.')
-					: this.t('pipelinq', 'Something went wrong. Please try again.')
+				const status = e && e.response ? e.response.status : e && e.status
+				this.error =
+					status === 404
+						? this.t('pipelinq', 'This booking could not be found.')
+						: this.t(
+								'pipelinq',
+								'Something went wrong. Please try again.',
+							)
 			} finally {
 				this.loading = false
 			}

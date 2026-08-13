@@ -11,9 +11,7 @@
   - a modal must never be written inline inside its parent (ADR-004).
   -->
 <template>
-	<NcDialog :name="dialogTitle"
-		size="normal"
-		@closing="$emit('done')">
+	<NcDialog :name="dialogTitle" size="normal" @closing="$emit('done')">
 		<PosRoleForm :id="roleId" @done="$emit('done')" />
 	</NcDialog>
 </template>

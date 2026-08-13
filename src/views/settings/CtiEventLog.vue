@@ -10,7 +10,12 @@
 <template>
 	<NcSettingsSection
 		:name="t('pipelinq', 'CTI webhook event log')"
-		:description="t('pipelinq', 'Last 30 days of inbound webhook events grouped by platform.')">
+		:description="
+			t(
+				'pipelinq',
+				'Last 30 days of inbound webhook events grouped by platform.',
+			)
+		">
 		<div class="cti-event-log__filters">
 			<NcSelect
 				v-model="filters.platform"
@@ -46,7 +51,9 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="row in events" :key="row.id || row.uuid || row.received_at">
+				<tr
+					v-for="row in events"
+					:key="row.id || row.uuid || row.received_at">
 					<td>{{ row.received_at }}</td>
 					<td>{{ row.platform }}</td>
 					<td>{{ row.event_type }}</td>
@@ -61,7 +68,9 @@
 				</tr>
 				<tr v-if="!events.length">
 					<td colspan="7" class="cti-event-log__empty">
-						{{ t('pipelinq', 'No webhook events in the selected range.') }}
+						{{
+							t('pipelinq', 'No webhook events in the selected range.')
+						}}
 					</td>
 				</tr>
 			</tbody>
@@ -84,7 +93,13 @@ import { getEventLog } from '../../services/ctiApi.js'
 
 export default {
 	name: 'CtiEventLog',
-	components: { CtiPayloadDialog, NcButton, NcLoadingIcon, NcSelect, NcSettingsSection },
+	components: {
+		CtiPayloadDialog,
+		NcButton,
+		NcLoadingIcon,
+		NcSelect,
+		NcSettingsSection,
+	},
 	data() {
 		return {
 			events: [],
@@ -105,7 +120,15 @@ export default {
 			]
 		},
 		eventTypeOptions() {
-			return ['ringing', 'answered', 'ended', 'abandoned', 'transferred', 'presence', 'recording'].map((v) => ({ value: v, label: v }))
+			return [
+				'ringing',
+				'answered',
+				'ended',
+				'abandoned',
+				'transferred',
+				'presence',
+				'recording',
+			].map((v) => ({ value: v, label: v }))
 		},
 	},
 	watch: {
@@ -127,7 +150,11 @@ export default {
 				const data = await getEventLog(this.filters)
 				this.events = (data && data.events) || []
 			} catch (e) {
-				showError(t('pipelinq', 'Failed to load event log: {error}', { error: e.message || 'network error' }))
+				showError(
+					t('pipelinq', 'Failed to load event log: {error}', {
+						error: e.message || 'network error',
+					}),
+				)
 			} finally {
 				this.loading = false
 			}

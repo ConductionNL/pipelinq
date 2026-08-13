@@ -65,7 +65,11 @@
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Bookable') }}</label>
-					<span>{{ resourceData.bookable ? t('pipelinq', 'Yes') : t('pipelinq', 'No') }}</span>
+					<span>{{
+						resourceData.bookable
+							? t('pipelinq', 'Yes')
+							: t('pipelinq', 'No')
+					}}</span>
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Max concurrent') }}</label>
@@ -146,7 +150,11 @@
 import { NcButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { computed } from 'vue'
-import { CnDetailPage, CnDetailCard, useObjectSubscription } from '@conduction/nextcloud-vue'
+import {
+	CnDetailPage,
+	CnDetailCard,
+	useObjectSubscription,
+} from '@conduction/nextcloud-vue'
 import ResourceForm from './ResourceForm.vue'
 import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -176,9 +184,15 @@ export default {
 	 */
 	setup(props) {
 		const objectStore = useObjectStore()
-		const liveObjectId = computed(() => (props.id && props.id !== 'new' ? props.id : null))
+		const liveObjectId = computed(() =>
+			props.id && props.id !== 'new' ? props.id : null,
+		)
 		useObjectSubscription(objectStore, 'resource', liveObjectId, {
-			enabled: computed(() => Boolean(liveObjectId.value && objectStore.objectTypeRegistry?.resource)),
+			enabled: computed(() =>
+				Boolean(
+					liveObjectId.value && objectStore.objectTypeRegistry?.resource,
+				),
+			),
 		})
 		return {}
 	},
@@ -206,10 +220,14 @@ export default {
 			return this.objectStore.getObject('resource', this.resourceId) || {}
 		},
 		workingHours() {
-			return Array.isArray(this.resourceData.workingHours) ? this.resourceData.workingHours : []
+			return Array.isArray(this.resourceData.workingHours)
+				? this.resourceData.workingHours
+				: []
 		},
 		vacations() {
-			return Array.isArray(this.resourceData.vacations) ? this.resourceData.vacations : []
+			return Array.isArray(this.resourceData.vacations)
+				? this.resourceData.vacations
+				: []
 		},
 		skillsLabel() {
 			const skills = this.resourceData.skills || []
@@ -235,13 +253,18 @@ export default {
 			const saved = await this.objectStore.saveObject('resource', formData)
 			if (!saved) {
 				const error = this.objectStore.getError?.('resource')
-				showError(error?.message || t('pipelinq', 'Failed to save resource.'))
+				showError(
+					error?.message || t('pipelinq', 'Failed to save resource.'),
+				)
 				return
 			}
 			showSuccess(t('pipelinq', 'Resource saved.'))
 			await this.invalidateAvailability(saved.id || formData.id)
 			if (this.isNew) {
-				this.$router.push({ name: 'ResourceDetail', params: { id: saved.id } })
+				this.$router.push({
+					name: 'ResourceDetail',
+					params: { id: saved.id },
+				})
 			} else {
 				await this.objectStore.fetchObject('resource', this.resourceId)
 				this.editing = false
@@ -256,12 +279,17 @@ export default {
 		},
 		async confirmDelete() {
 			this.showDelete = false
-			const ok = await this.objectStore.deleteObject('resource', this.resourceId)
+			const ok = await this.objectStore.deleteObject(
+				'resource',
+				this.resourceId,
+			)
 			if (ok) {
 				this.$router.push({ name: 'Resources' })
 			} else {
 				const error = this.objectStore.getError?.('resource')
-				showError(error?.message || t('pipelinq', 'Failed to delete resource.'))
+				showError(
+					error?.message || t('pipelinq', 'Failed to delete resource.'),
+				)
 			}
 		},
 		/**
@@ -273,13 +301,19 @@ export default {
 		async invalidateAvailability(resourceId) {
 			if (!resourceId) return
 			try {
-				const cached = await this.objectStore.fetchCollection('availabilityCache', {
-					resourceId,
-					_limit: 200,
-				})
-				for (const row of (cached || [])) {
+				const cached = await this.objectStore.fetchCollection(
+					'availabilityCache',
+					{
+						resourceId,
+						_limit: 200,
+					},
+				)
+				for (const row of cached || []) {
 					try {
-						await this.objectStore.deleteObject('availabilityCache', row.id)
+						await this.objectStore.deleteObject(
+							'availabilityCache',
+							row.id,
+						)
 					} catch {
 						// per-row failure tolerated
 					}
@@ -332,7 +366,8 @@ export default {
 	border-collapse: collapse;
 }
 
-.viewTable th, .viewTable td {
+.viewTable th,
+.viewTable td {
 	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);

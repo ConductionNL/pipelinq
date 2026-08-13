@@ -4,7 +4,11 @@
 import { createApp, h, markRaw } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { setActivePinia } from 'pinia'
-import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
+import {
+	translate as t,
+	translatePlural as n,
+	loadTranslations,
+} from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { loadState } from '@nextcloud/initial-state'
 import axios from '@nextcloud/axios'
@@ -79,7 +83,10 @@ try {
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
 	// eslint-disable-next-line no-console
-	console.warn('[pipelinq] registerTranslations failed; falling back to English', e)
+	console.warn(
+		'[pipelinq] registerTranslations failed; falling back to English',
+		e,
+	)
 }
 
 // Fire-and-forget translation load. Some Nextcloud installs (including
@@ -94,7 +101,10 @@ function tryLoadTranslations() {
 	try {
 		const result = loadTranslations('pipelinq', () => {})
 		if (result && typeof result.then === 'function') {
-			result.then(() => {}, () => {})
+			result.then(
+				() => {},
+				() => {},
+			)
 		}
 	} catch {
 		// no-op
@@ -136,8 +146,13 @@ function seedDashboardAppConfig(manifest) {
 }
 
 const fragmentCtx = require.context('./manifest.d/', false, /\.json$/)
-const fragments = fragmentCtx.keys().sort().map((key) => fragmentCtx(key))
-const mergedManifest = seedDashboardAppConfig(buildManifest(bundledManifest, fragments, menuLayout))
+const fragments = fragmentCtx
+	.keys()
+	.sort()
+	.map((key) => fragmentCtx(key))
+const mergedManifest = seedDashboardAppConfig(
+	buildManifest(bundledManifest, fragments, menuLayout),
+)
 
 /**
  * Build the vue-router config from the manifest. Each manifest page
@@ -196,15 +211,29 @@ async function loadPersistedOverrides(manifest) {
 			generateUrl('/apps/openbuild/api/app-overrides/pipelinq'),
 			{ timeout: 8000 },
 		)
-		if (data !== null && typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length > 0) {
-			const { manifest: merged, orphanedDeltaPaths } = mergeManifestDelta(manifest, data)
+		if (
+			data !== null
+			&& typeof data === 'object'
+			&& !Array.isArray(data)
+			&& Object.keys(data).length > 0
+		) {
+			const { manifest: merged, orphanedDeltaPaths } = mergeManifestDelta(
+				manifest,
+				data,
+			)
 			if (orphanedDeltaPaths.length > 0) {
-				console.warn('[pipelinq] Manifest override has orphaned delta paths (base changed since the edit):', orphanedDeltaPaths)
+				console.warn(
+					'[pipelinq] Manifest override has orphaned delta paths (base changed since the edit):',
+					orphanedDeltaPaths,
+				)
 			}
 			return merged
 		}
 	} catch (error) {
-		console.warn('[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.', error)
+		console.warn(
+			'[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.',
+			error,
+		)
 	}
 	return manifest
 }
@@ -246,11 +275,12 @@ function mountApp(manifest) {
 	// nesting is silently ignored, which would leave CnAppRoot with no manifest
 	// at all (blank shell, no error).
 	const app = createApp({
-		render: () => h(App, {
-			manifest,
-			registry: registryProp,
-			pageTypes: pageTypesProp,
-		}),
+		render: () =>
+			h(App, {
+				manifest,
+				registry: registryProp,
+				pageTypes: pageTypesProp,
+			}),
 	})
 	// Vue 3 has no global `Vue.mixin` / `Vue.use`; both are per-app-instance.
 	// Pinia is a normal plugin now — `PiniaVuePlugin` was Vue-2 only.

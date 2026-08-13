@@ -13,14 +13,18 @@ import { test, expect } from '@playwright/test'
 import { openApp, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
 
 // @e2e commercial-dashboard::commercial-dashboard-renders-kpis-and-charts
-test('Commercial dashboard: KPI strip + sales charts render on the landing page', async ({ page }) => {
+test('Commercial dashboard: KPI strip + sales charts render on the landing page', async ({
+	page,
+}) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
 
 	const content = page.locator('#content-vue')
 
 	// The six commercial KPI cards.
-	await expect(content.getByText('Revenue', { exact: true }).first()).toBeVisible({ timeout: 15000 })
+	await expect(content.getByText('Revenue', { exact: true }).first()).toBeVisible({
+		timeout: 15000,
+	})
 	await expect(content.getByText('Won Value').first()).toBeVisible()
 	await expect(content.getByText('Win Rate').first()).toBeVisible()
 	await expect(content.getByText('Avg Deal Size').first()).toBeVisible()
@@ -34,14 +38,18 @@ test('Commercial dashboard: KPI strip + sales charts render on the landing page'
 	await expect(content.getByText('Deals closing soon').first()).toBeVisible()
 
 	// At least one ApexCharts svg has mounted from a commercial chart.
-	await expect(content.locator('svg.apexcharts-svg').first()).toBeVisible({ timeout: 15000 })
+	await expect(content.locator('svg.apexcharts-svg').first()).toBeVisible({
+		timeout: 15000,
+	})
 
 	await assertNoHardError(page)
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
 // @e2e commercial-dashboard::operational-widgets-reachable-after-the-split
-test('Operational dashboard: previous widgets remain reachable from the nav', async ({ page }) => {
+test('Operational dashboard: previous widgets remain reachable from the nav', async ({
+	page,
+}) => {
 	await openApp(page)
 
 	// Deep-link the OperationalDashboard via the SPA hash (`/operational`); a
@@ -51,7 +59,9 @@ test('Operational dashboard: previous widgets remain reachable from the nav', as
 
 	const content = page.locator('#content-vue')
 	// Operational KPIs/panels that used to live on the old Dashboard.
-	await expect(content.getByText('Lead Conversion Rate').first()).toBeVisible({ timeout: 15000 })
+	await expect(content.getByText('Lead Conversion Rate').first()).toBeVisible({
+		timeout: 15000,
+	})
 	await expect(content.getByText('Avg Request Resolution').first()).toBeVisible()
 	await expect(content.getByText('Open Requests').first()).toBeVisible()
 	await expect(content.getByText('Requests by Status').first()).toBeVisible()
@@ -98,7 +108,9 @@ test('Operational dashboard: previous widgets remain reachable from the nav', as
  * exceed a row height and fails here.
  */
 // @e2e commercial-dashboard::charts-sit-directly-below-the-kpi-rows
-test('Commercial dashboard: the charts start on the row below the KPI tiles', async ({ page }) => {
+test('Commercial dashboard: the charts start on the row below the KPI tiles', async ({
+	page,
+}) => {
 	await openApp(page)
 
 	const content = page.locator('#content-vue')
@@ -116,16 +128,23 @@ test('Commercial dashboard: the charts start on the row below the KPI tiles', as
 	await expect(firstChart).toBeVisible({ timeout: 15000 })
 	// The chart's own canvas has to have painted, or the group box is a
 	// skeleton and the geometry below describes the loading state.
-	await expect(firstChart.locator('svg.apexcharts-svg').first()).toBeVisible({ timeout: 15000 })
+	await expect(firstChart.locator('svg.apexcharts-svg').first()).toBeVisible({
+		timeout: 15000,
+	})
 
 	const kpiBox = await lastKpi.boundingBox()
 	const chartBox = await firstChart.boundingBox()
 	expect(kpiBox, 'the avg-deal-size KPI tile has no bounding box').not.toBeNull()
-	expect(chartBox, 'the revenue-over-time chart has no bounding box').not.toBeNull()
+	expect(
+		chartBox,
+		'the revenue-over-time chart has no bounding box',
+	).not.toBeNull()
 
 	// Below, not beside — otherwise the gap arithmetic would be measuring two
 	// columns and would pass for the wrong reason.
-	expect(chartBox.y, 'the chart is not below the KPI band').toBeGreaterThan(kpiBox.y)
+	expect(chartBox.y, 'the chart is not below the KPI band').toBeGreaterThan(
+		kpiBox.y,
+	)
 
 	// `avg-deal-size` is declared `gridY: 2, gridHeight: 2` and
 	// `revenue-over-time` is `gridY: 4`, so the chart begins on the row

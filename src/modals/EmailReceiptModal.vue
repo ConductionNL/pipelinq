@@ -20,12 +20,17 @@
 
 			<p class="receipt-modal__recipient">
 				{{ t('pipelinq', 'The receipt is sent to the linked customer:') }}
-				<strong>{{ recipient || t('pipelinq', 'No customer email linked') }}</strong>
+				<strong>{{
+					recipient || t('pipelinq', 'No customer email linked')
+				}}</strong>
 			</p>
 
 			<ReceiptPreviewPane :content="previewText" :loading="previewLoading" />
 
-			<p v-if="statusMessage" class="receipt-modal__status" :class="statusClass">
+			<p
+				v-if="statusMessage"
+				class="receipt-modal__status"
+				:class="statusClass">
 				{{ statusMessage }}
 			</p>
 		</div>
@@ -33,7 +38,8 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton variant="primary"
+			<NcButton
+				variant="primary"
 				:disabled="sending || !recipient"
 				@click="send">
 				{{ t('pipelinq', 'Send') }}
@@ -84,7 +90,10 @@ export default {
 		 * @return {Array} The options.
 		 */
 		templateOptions() {
-			return this.templates.map(tpl => ({ id: tpl.id, label: tpl.name || tpl.id }))
+			return this.templates.map((tpl) => ({
+				id: tpl.id,
+				label: tpl.name || tpl.id,
+			}))
 		},
 		/**
 		 * CSS class for the status message.
@@ -109,10 +118,19 @@ export default {
 			this.previewLoading = true
 			this.statusMessage = ''
 			try {
-				const params = this.selectedTemplate ? `?template=${encodeURIComponent(this.selectedTemplate.id)}` : ''
+				const params = this.selectedTemplate
+					? `?template=${encodeURIComponent(this.selectedTemplate.id)}`
+					: ''
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/preview${params}`),
-					{ headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } },
+					generateUrl(
+						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/preview${params}`,
+					),
+					{
+						headers: {
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+					},
 				)
 				const data = await response.json().catch(() => ({}))
 				if (response.ok && data.receipt) {
@@ -135,7 +153,9 @@ export default {
 					body.template = this.selectedTemplate.id
 				}
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/email`),
+					generateUrl(
+						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/email`,
+					),
 					{
 						method: 'POST',
 						headers: {
@@ -149,12 +169,21 @@ export default {
 				const data = await response.json().catch(() => ({}))
 				if (!response.ok) {
 					this.statusType = 'error'
-					this.statusMessage = data.error || t('pipelinq', 'Error sending receipt: {error}', { error: '' })
+					this.statusMessage =
+						data.error
+						|| t('pipelinq', 'Error sending receipt: {error}', {
+							error: '',
+						})
 					return
 				}
 				if (data.receipt && data.receipt.status === 'failed') {
 					this.statusType = 'error'
-					this.statusMessage = data.receipt.error || t('pipelinq', 'Mail delivery failed (no SMTP relay configured).')
+					this.statusMessage =
+						data.receipt.error
+						|| t(
+							'pipelinq',
+							'Mail delivery failed (no SMTP relay configured).',
+						)
 					return
 				}
 				this.statusType = 'success'
@@ -162,7 +191,11 @@ export default {
 				this.$emit('sent', data.receipt)
 			} catch (e) {
 				this.statusType = 'error'
-				this.statusMessage = t('pipelinq', 'Error sending receipt: {error}', { error: e.message })
+				this.statusMessage = t(
+					'pipelinq',
+					'Error sending receipt: {error}',
+					{ error: e.message },
+				)
 			} finally {
 				this.sending = false
 			}

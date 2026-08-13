@@ -10,7 +10,12 @@
 	<div>
 		<CnIndexPage
 			:title="t('pipelinq', 'POS roles')"
-			:description="t('pipelinq', 'Permission matrix for cashiers, supervisors and managers')"
+			:description="
+				t(
+					'pipelinq',
+					'Permission matrix for cashiers, supervisors and managers',
+				)
+			"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
@@ -51,7 +56,13 @@ export default {
 	},
 	computed: {
 		visibleColumns() {
-			return ['name', 'canVoid', 'maxDiscountPercent', 'canRefund', 'canNoSale']
+			return [
+				'name',
+				'canVoid',
+				'maxDiscountPercent',
+				'canRefund',
+				'canNoSale',
+			]
 		},
 	},
 	methods: {

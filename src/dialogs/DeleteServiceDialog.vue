@@ -6,11 +6,15 @@
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Delete service')"
-		@closing="$emit('cancel')">
+	<NcDialog :name="t('pipelinq', 'Delete service')" @closing="$emit('cancel')">
 		<p>
-			{{ t('pipelinq', 'Are you sure you want to delete "{name}"? Future bookings using this service will be left orphaned.', { name }) }}
+			{{
+				t(
+					'pipelinq',
+					'Are you sure you want to delete "{name}"? Future bookings using this service will be left orphaned.',
+					{ name },
+				)
+			}}
 		</p>
 		<template #actions>
 			<NcButton @click="$emit('cancel')">

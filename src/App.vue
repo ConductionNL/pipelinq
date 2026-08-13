@@ -53,7 +53,11 @@ import { reactive } from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
-import { CnAppRoot, CnObjectSidebar, builtinIntegrations } from '@conduction/nextcloud-vue'
+import {
+	CnAppRoot,
+	CnObjectSidebar,
+	builtinIntegrations,
+} from '@conduction/nextcloud-vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 
@@ -190,7 +194,10 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async persistManifestDelta(delta) {
-			await axios.put(generateUrl('/apps/openbuild/api/app-overrides/pipelinq'), delta)
+			await axios.put(
+				generateUrl('/apps/openbuild/api/app-overrides/pipelinq'),
+				delta,
+			)
 		},
 		/**
 		 * Translate function passed down to CnAppRoot / CnAppNav /

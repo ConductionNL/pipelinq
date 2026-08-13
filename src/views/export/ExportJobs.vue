@@ -6,7 +6,12 @@
 	<div>
 		<CnIndexPage
 			:title="t('pipelinq', 'BI export jobs')"
-			:description="t('pipelinq', 'Scheduled exports of pipelinq data to a data warehouse or BI tool')"
+			:description="
+				t(
+					'pipelinq',
+					'Scheduled exports of pipelinq data to a data warehouse or BI tool',
+				)
+			"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
@@ -24,11 +29,21 @@
 			@view="openJob"
 			@page-changed="onPageChange">
 			<template #row-actions="{ row }">
-				<NcButton variant="tertiary" :disabled="busyId === row.id" @click.stop="testRun(row)">
+				<NcButton
+					variant="tertiary"
+					:disabled="busyId === row.id"
+					@click.stop="testRun(row)">
 					{{ t('pipelinq', 'Test run') }}
 				</NcButton>
-				<NcButton variant="tertiary" :disabled="busyId === row.id" @click.stop="toggleEnabled(row)">
-					{{ row.enabled ? t('pipelinq', 'Disable') : t('pipelinq', 'Enable') }}
+				<NcButton
+					variant="tertiary"
+					:disabled="busyId === row.id"
+					@click.stop="toggleEnabled(row)">
+					{{
+						row.enabled
+							? t('pipelinq', 'Disable')
+							: t('pipelinq', 'Enable')
+					}}
 				</NcButton>
 			</template>
 		</CnIndexPage>
@@ -74,7 +89,14 @@ export default {
 		 * @return {Array<string>} The column keys.
 		 */
 		visibleColumns() {
-			return ['name', 'destinationId', 'format', 'mode', 'scheduleCron', 'enabled']
+			return [
+				'name',
+				'destinationId',
+				'format',
+				'mode',
+				'scheduleCron',
+				'enabled',
+			]
 		},
 	},
 	methods: {

@@ -22,9 +22,16 @@ export async function clickToDial(targetNumber, extension) {
 	return data
 }
 
-export async function submitDisposition(contactmomentId, { subject, outcome, notes }) {
+export async function submitDisposition(
+	contactmomentId,
+	{ subject, outcome, notes },
+) {
 	const { data } = await axios.post(
-		base('/api/cti/contactmoment/' + encodeURIComponent(contactmomentId) + '/disposition'),
+		base(
+			'/api/cti/contactmoment/'
+				+ encodeURIComponent(contactmomentId)
+				+ '/disposition',
+		),
 		{ subject, outcome, notes },
 	)
 	return data
@@ -32,7 +39,11 @@ export async function submitDisposition(contactmomentId, { subject, outcome, not
 
 export async function attachRecording(contactmomentId, recordingUrl, expiresAt) {
 	const { data } = await axios.post(
-		base('/api/cti/contactmoment/' + encodeURIComponent(contactmomentId) + '/recording'),
+		base(
+			'/api/cti/contactmoment/'
+				+ encodeURIComponent(contactmomentId)
+				+ '/recording',
+		),
 		{ recordingUrl, expiresAt },
 	)
 	return data

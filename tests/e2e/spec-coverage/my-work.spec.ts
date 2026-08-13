@@ -33,20 +33,26 @@ test('my work page accessible from navigation', async ({ page }) => {
 test('my work page loads without error', async ({ page }) => {
 	await page.goto('/apps/pipelinq/my-work')
 	await page.waitForTimeout(1000)
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/my-work/spec.md#quick-action-buttons-displayed
 test('my work page main content renders', async ({ page }) => {
 	await page.goto('/apps/pipelinq/my-work')
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
+	await expect(
+		page.locator('#app-content, .app-content, main').first(),
+	).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/my-work/spec.md#manual-refresh
 test('my work page renders without uncaught errors', async ({ page }) => {
 	await page.goto('/apps/pipelinq/my-work')
 	await page.waitForLoadState('domcontentloaded').catch(() => {})
-	await expect(page.locator('body')).not.toContainText('Uncaught Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Uncaught Error', {
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/my-work/spec.md#display-personal-kpi-tiles
@@ -55,7 +61,9 @@ test('my work navigation entry in sidebar', async ({ page }) => {
 	// Scope to the app sidebar: an unscoped getByText('My Work') would also
 	// match the widget heading in the page body, so it could pass while the nav
 	// entry is missing.
-	await expect(await revealNavEntry(page, 'My Work')).toBeVisible({ timeout: 10000 })
+	await expect(await revealNavEntry(page, 'My Work')).toBeVisible({
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/my-work/spec.md#view-assigned-leads--requests-and-tasks (V1)

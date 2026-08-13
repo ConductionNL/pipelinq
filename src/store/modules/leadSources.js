@@ -29,7 +29,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 			try {
 				const response = await fetch(API_BASE, { headers: headers() })
 				if (!response.ok) {
-					throw new Error(`Failed to fetch lead sources (${response.status})`)
+					throw new Error(
+						`Failed to fetch lead sources (${response.status})`,
+					)
 				}
 				const data = await response.json()
 				this.tags = data.tags || []
