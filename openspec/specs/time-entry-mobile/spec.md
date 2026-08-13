@@ -1,8 +1,18 @@
 ---
-status: done
+status: not-implemented
 ---
 
 # time-entry-mobile Specification
+
+> **Not implemented in pipelinq.** The front matter said `status: done`; nothing
+> here is built. `TimerMobile.vue`, `useOfflineTimer` and `useSyncQueue` — named
+> by the scenarios below — do not exist in `src/`, there is no `.webmanifest`
+> anywhere in the tree, and there is no IndexedDB buffer or sync queue. The only
+> time-related code in this app is the WIP hand-off to Shillinq
+> (`lib/Controller/TimeEntryWipController.php`,
+> `lib/Service/TimeBillingHandoffService.php`), which is a different capability;
+> `lib/Settings/register.d/90-time-wip.json:17` records that "capture
+> (timer/grid) is owned by OpenRegister's time-tracker leaf per ADR-022".
 
 ## Purpose
 Provides a mobile, installable PWA timer that captures hours offline and submits them to the OpenRegister time-tracker leaf rather than a Pipelinq schema. The mobile-specific layer is limited to a PWA shell, an IndexedDB offline buffer, and a sync queue that idempotently flushes buffered captures to the leaf on reconnect, renders responsively with touch-sized controls, and attaches optional GPS as leaf capture metadata.
@@ -14,6 +24,7 @@ leaf's capture endpoints; Pipelinq SHALL NOT introduce or extend a `timeEntry`
 schema for the mobile path (hydra ADR-022).
 
 #### Scenario: Buffered entries submit to the leaf on reconnect
+@e2e exclude not implemented: no offline buffer or sync queue exists in src/ — nothing renders for a browser to drive. Re-tag when a mobile timer is built here.
 
 - **GIVEN** a user starts/pauses/stops the timer on a mobile browser with no
   network
@@ -31,6 +42,7 @@ buffer, and a sync queue; it SHALL NOT contain a parallel timer engine or
 capture data model.
 
 #### Scenario: Offline buffer + sync queue wrap the leaf capture action
+@e2e exclude not implemented: TimerMobile.vue, useOfflineTimer and useSyncQueue named by this scenario do not exist anywhere in src/. Re-tag when a mobile timer is built here.
 
 - **GIVEN** the mobile timer view `TimerMobile.vue`
 - **WHEN** the user records time offline
@@ -45,6 +57,7 @@ The mobile timer view SHALL render without horizontal scrolling at 375 px and
 768 px and provide touch targets of at least 48×48 px.
 
 #### Scenario: Responsive, installable mobile timer
+@e2e exclude not implemented: there is no PWA manifest in the tree and no mobile timer view to size. Re-tag when a mobile timer is built here.
 
 - **GIVEN** the PWA manifest and `TimerMobile.vue`
 - **WHEN** loaded on a mobile viewport ≤768 px or in `standalone` display mode
@@ -58,6 +71,7 @@ When GPS is granted, the captured location SHALL be attached to the leaf capture
 as metadata; Pipelinq SHALL NOT add a schema field for it.
 
 #### Scenario: GPS attaches to the leaf capture
+@e2e exclude not implemented: there is no capture path to attach coordinates to; GPS capture exists nowhere in src/. Re-tag when a mobile timer is built here.
 
 - **GIVEN** the user has granted location permission and GPS capture is enabled
 - **WHEN** the timer starts

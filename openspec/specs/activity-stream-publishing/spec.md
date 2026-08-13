@@ -21,6 +21,7 @@ is a legitimate first-party API and MUST NOT be flagged by gate-27 Rule E.
 **Feature tier**: MVP
 
 #### Scenario: Lifecycle activity is published through IManager
+@e2e exclude no pipelinq surface renders this: publication goes through OCP\Activity\IManager and the stream is rendered by Nextcloud's own Activity app. ActivityServiceTest asserts the event fields and the publish() call for all eight lifecycle events (created/assigned/stage-changed/status-changed/note-added/deal-lost/request, plus the exception path).
 
 - WHEN a tracked pipelinq object (lead or request) is created, assigned,
   changes stage/status, gains a note, or a deal is won or lost
@@ -31,6 +32,7 @@ is a legitimate first-party API and MUST NOT be flagged by gate-27 Rule E.
   same content and affected-user visibility as before this change
 
 #### Scenario: Gate-27 does not flag the first-party Activity API
+@e2e exclude assertion about a static checker, not about runtime behaviour: the subject is gate-27 in conduction/hydra-gates, verified by running that gate. There is no browser surface, and no product behaviour, for an e2e test to observe.
 
 - WHEN the gate-27 detector scans `lib/Service/ActivityService.php`
 - THEN it MUST NOT report any `phantom-foundation-call` finding for

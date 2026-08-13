@@ -267,6 +267,75 @@ test.describe('Blast performance dashboard', () => {
 	})
 
 	/*
+	 * THE OTHER SIDE OF THE SAME BRANCH.
+	 * The sibling above pins the pending branch (both arms under
+	 * AB_MIN_DELIVERED). This one pins the branch the requirement is actually
+	 * named for: both arms over 500 delivered AND both sent more than
+	 * AB_MIN_ELAPSED_MS ago, so `eligible` is true, `chiSquarePValue()` runs
+	 * and a verdict is rendered.
+	 *
+	 * The click rates are deliberately far apart (10% vs 2% over 600 delivered)
+	 * so the chi-square result is not borderline — a test that could flip
+	 * between the two verdict strings on a rounding change would be pinning the
+	 * arithmetic, not the branch. The assertion therefore accepts either
+	 * verdict literal for the "displays accordingly" clause, and separately
+	 * asserts the significant-variant class, which is what distinguishes this
+	 * branch from the pending one.
+	 */
+	// @e2e openspec/specs/marketing-analytics/spec.md#significance-test-once-n500-and-24h-elapsed
+	test('the A/B tab computes a p-value once both arms clear 500 delivered and 24h', async ({ page }) => {
+		await openApp(page)
+		const { segmentId, templateId } = await seededFks(page)
+
+		const stamp = Date.now()
+		const parentName = `E2E gate19 A/B significant parent ${stamp}`
+		// 30h ago: past AB_MIN_ELAPSED_MS (24h) for both arms, so the elapsed
+		// clause of the scenario is exercised rather than assumed.
+		const base = { channel: 'email', status: 'sent', segmentId, templateId, sentAt: isoHoursAgo(30) }
+
+		const parentId = await mintBlast(page, {
+			...base,
+			name: parentName,
+			totals: { queued: 0, sent: 640, delivered: 600, bounced: 40, opened: 300, clicked: 60, unsubscribed: 0, complained: 0 },
+		})
+		const variantId = await mintBlast(page, {
+			...base,
+			name: `E2E gate19 A/B significant variant ${stamp}`,
+			abVariantOf: parentId,
+			totals: { queued: 0, sent: 640, delivered: 600, bounced: 40, opened: 300, clicked: 12, unsubscribed: 0, complained: 0 },
+		})
+
+		try {
+			await gotoHash(page, '/blasts/performance')
+
+			const dash = page.locator('.performance-dashboard')
+			await expect(dash.getByRole('heading', { name: 'Blast performance' })).toBeVisible({ timeout: 20000 })
+			await dash.getByRole('tab', { name: /A\/B/i }).click()
+
+			const card = dash.locator('.performance-dashboard__ab-card')
+				.filter({ hasText: parentName })
+				.first()
+			await expect(card).toBeVisible({ timeout: 20000 })
+
+			// The pending notice must be GONE — that is the discriminator against
+			// the sibling test, and it is what a threshold regression would break.
+			await expect(card.locator('.performance-dashboard__ab-pending')).toHaveCount(0)
+
+			const verdict = card.locator('.performance-dashboard__ab-verdict')
+			await expect(verdict).toBeVisible()
+			await expect(verdict).toContainText(/significantly higher|Not significant/i)
+
+			// A p-value was actually computed and rendered, not merely a label.
+			await expect(verdict.locator('.performance-dashboard__ab-pvalue')).toContainText(/^p = /)
+
+			await assertNoHardError(page)
+		} finally {
+			await api(page, 'DELETE', `${OR}/blast/${variantId}`)
+			await api(page, 'DELETE', `${OR}/blast/${parentId}`)
+		}
+	})
+
+	/*
 	 * SAME SLUG-VS-UUID MISMATCH AS THE A/B TAB, ON A DIFFERENT JOIN.
 	 * `fetchAttributionRows()` calls `GET /api/blasts/:id/attribution` with
 	 * `blast.id || blast.uuid || blast.slug` — the UUID — and
