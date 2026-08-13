@@ -153,7 +153,10 @@ export default {
 				return 0
 			}
 			if (Array.isArray(node.children)) {
-				return node.children.reduce((sum, child) => sum + this.countLeaves(child), 0)
+				return node.children.reduce(
+					(sum, child) => sum + this.countLeaves(child),
+					0,
+				)
 			}
 			return node.field ? 1 : 0
 		},
@@ -187,7 +190,10 @@ export default {
 			}
 			this.estimating = true
 			this.estimateError = false
-			this.estimateTimer = setTimeout(() => this.runEstimate(), DEBOUNCE_ESTIMATE_MS)
+			this.estimateTimer = setTimeout(
+				() => this.runEstimate(),
+				DEBOUNCE_ESTIMATE_MS,
+			)
 		},
 		/**
 		 * Perform the size estimate by posting the current rules to the
@@ -201,11 +207,12 @@ export default {
 					entityType: this.entityType,
 					rules: this.tree,
 				})
-				this.estimatedSize = typeof data?.estimatedSize === 'number'
-					? data.estimatedSize
-					: typeof data?.size === 'number'
-						? data.size
-						: 0
+				this.estimatedSize =
+					typeof data?.estimatedSize === 'number'
+						? data.estimatedSize
+						: typeof data?.size === 'number'
+							? data.size
+							: 0
 				this.estimateError = false
 			} catch (_e) {
 				this.estimateError = true
@@ -222,7 +229,10 @@ export default {
 			if (this.validateTimer) {
 				clearTimeout(this.validateTimer)
 			}
-			this.validateTimer = setTimeout(() => this.runValidate(), DEBOUNCE_VALIDATE_MS)
+			this.validateTimer = setTimeout(
+				() => this.runValidate(),
+				DEBOUNCE_VALIDATE_MS,
+			)
 		},
 		/**
 		 * Validate the current rule tree against the server-side SegmentService
@@ -243,7 +253,8 @@ export default {
 					rules: this.tree,
 				})
 				if (data?.valid === false) {
-					this.validationError = data?.error || this.t('pipelinq', 'Invalid rules.')
+					this.validationError =
+						data?.error || this.t('pipelinq', 'Invalid rules.')
 					this.errors = data?.fieldErrors || {}
 					this.$emit('validity-change', false)
 				} else {
@@ -251,7 +262,9 @@ export default {
 				}
 			} catch (e) {
 				const response = e?.response?.data
-				this.validationError = response?.error || this.t('pipelinq', 'Could not validate rules.')
+				this.validationError =
+					response?.error
+					|| this.t('pipelinq', 'Could not validate rules.')
 				this.errors = response?.fieldErrors || {}
 				this.$emit('validity-change', false)
 			}

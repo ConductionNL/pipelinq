@@ -25,7 +25,8 @@
 		<NcLoadingIcon :size="24" />
 	</div>
 	<div v-else-if="hasContent" class="contract-invoicing-section">
-		<NcButton v-if="showSendButton"
+		<NcButton
+			v-if="showSendButton"
 			variant="primary"
 			:disabled="busy"
 			@click="sendToInvoicing">
@@ -40,7 +41,9 @@
 				<span class="contract-invoicing-section__reference-label">
 					{{ t('pipelinq', 'Invoice reference') }}
 				</span>
-				<code class="contract-invoicing-section__reference-value">{{ lastInvoiceReference }}</code>
+				<code class="contract-invoicing-section__reference-value">{{
+					lastInvoiceReference
+				}}</code>
 				<NcButton variant="tertiary" @click="copyReference">
 					{{ t('pipelinq', 'Copy') }}
 				</NcButton>
@@ -93,7 +96,8 @@ export default {
 				return this.contractId
 			}
 			const ctx = this.cnSectionContext
-			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
+			const bag =
+				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
 		/** Shown only when an ns#Invoice implementer exists AND the contract is active. */
@@ -126,7 +130,10 @@ export default {
 			this.loading = true
 			try {
 				const { data } = await axios.get(
-					generateUrl('/apps/pipelinq/api/handoff/contract/{id}/availability', { id: this.resolvedId }),
+					generateUrl(
+						'/apps/pipelinq/api/handoff/contract/{id}/availability',
+						{ id: this.resolvedId },
+					),
 				)
 				this.availability = {
 					available: !!data.available,
@@ -149,7 +156,10 @@ export default {
 			this.busy = true
 			try {
 				const { data } = await axios.post(
-					generateUrl('/apps/pipelinq/api/handoff/contract/{id}/send-to-invoicing', { id: this.resolvedId }),
+					generateUrl(
+						'/apps/pipelinq/api/handoff/contract/{id}/send-to-invoicing',
+						{ id: this.resolvedId },
+					),
 					{},
 				)
 				this.lastInvoiceReference = data.invoiceReference || ''
@@ -157,13 +167,32 @@ export default {
 				this.$emit('sent', { invoiceReference: this.lastInvoiceReference })
 			} catch (err) {
 				const body = (err && err.response && err.response.data) || {}
-				if (body.status === 'invalid-status' || body.status === 'not-available') {
-					showError(t('pipelinq', 'Sending to invoicing is no longer available for this contract.'))
+				if (
+					body.status === 'invalid-status'
+					|| body.status === 'not-available'
+				) {
+					showError(
+						t(
+							'pipelinq',
+							'Sending to invoicing is no longer available for this contract.',
+						),
+					)
 					await this.loadAvailability()
 				} else if (body.status === 'handoff-failed') {
-					showError(t('pipelinq', 'Could not send this contract to invoicing: {reason}', { reason: body.reason || t('pipelinq', 'unknown error') }))
+					showError(
+						t(
+							'pipelinq',
+							'Could not send this contract to invoicing: {reason}',
+							{
+								reason:
+									body.reason || t('pipelinq', 'unknown error'),
+							},
+						),
+					)
 				} else {
-					showError(t('pipelinq', 'Could not send this contract to invoicing.'))
+					showError(
+						t('pipelinq', 'Could not send this contract to invoicing.'),
+					)
 				}
 			} finally {
 				this.busy = false

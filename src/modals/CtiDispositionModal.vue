@@ -52,7 +52,13 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcDialog,
+	NcSelect,
+	NcTextArea,
+	NcTextField,
+} from '@nextcloud/vue'
 
 const OUTCOMES = [
 	{ value: 'resolved', label: 'Resolved' },
@@ -83,10 +89,15 @@ export default {
 	},
 	computed: {
 		outcomeOptions() {
-			return OUTCOMES.map((o) => ({ value: o.value, label: t('pipelinq', o.label) }))
+			return OUTCOMES.map((o) => ({
+				value: o.value,
+				label: t('pipelinq', o.label),
+			}))
 		},
 		valid() {
-			return this.form.subject.trim().length > 0 && this.form.outcome.length > 0
+			return (
+				this.form.subject.trim().length > 0 && this.form.outcome.length > 0
+			)
 		},
 	},
 	methods: {

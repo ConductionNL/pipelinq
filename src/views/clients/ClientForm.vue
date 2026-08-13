@@ -11,7 +11,12 @@
 				:helper-text="errors.name"
 				:maxlength="255"
 				data-testid="client-name-input"
-				@update:model-value="v => { form.name = v; validateField('name') }" />
+				@update:model-value="
+					(v) => {
+						form.name = v
+						validateField('name')
+					}
+				" />
 		</div>
 
 		<div class="form-row">
@@ -41,7 +46,12 @@
 					:helper-text="errors.email"
 					type="email"
 					data-testid="client-email-input"
-					@update:model-value="v => { form.email = v; validateField('email') }" />
+					@update:model-value="
+						(v) => {
+							form.email = v
+							validateField('email')
+						}
+					" />
 			</div>
 		</div>
 
@@ -56,7 +66,12 @@
 					:error="!!errors.phone"
 					:helper-text="errors.phone"
 					data-testid="client-phone-input"
-					@update:model-value="v => { form.phone = v; validateField('phone') }" />
+					@update:model-value="
+						(v) => {
+							form.phone = v
+							validateField('phone')
+						}
+					" />
 			</div>
 			<div class="form-group">
 				<label for="client-website">{{ t('pipelinq', 'Website') }}</label>
@@ -68,7 +83,12 @@
 					:error="!!errors.website"
 					:helper-text="errors.website"
 					data-testid="client-website-input"
-					@update:model-value="v => { form.website = v; validateField('website') }" />
+					@update:model-value="
+						(v) => {
+							form.website = v
+							validateField('website')
+						}
+					" />
 			</div>
 		</div>
 
@@ -80,19 +100,21 @@
 				:label="t('pipelinq', 'Address')"
 				:model-value="form.address"
 				data-testid="client-address-input"
-				@update:model-value="v => form.address = v" />
+				@update:model-value="(v) => (form.address = v)" />
 		</div>
 
 		<div class="form-group">
 			<label for="client-notes">{{ t('pipelinq', 'Notes') }}</label>
-			<textarea id="client-notes"
+			<textarea
+				id="client-notes"
 				v-model="form.notes"
 				rows="3"
 				data-testid="client-notes-input" />
 		</div>
 
 		<div v-if="showActions" class="client-form__actions">
-			<NcButton variant="primary"
+			<NcButton
+				variant="primary"
 				:disabled="!isValid"
 				data-testid="client-form-save"
 				@click="onSave">
@@ -170,7 +192,7 @@ export default {
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
 			const hasType = !!this.form.type
-			const noErrors = Object.values(this.errors).every(e => !e)
+			const noErrors = Object.values(this.errors).every((e) => !e)
 			return hasName && hasType && noErrors
 		},
 	},
@@ -220,43 +242,46 @@ export default {
 		 */
 		validateField(field) {
 			switch (field) {
-			case 'name':
-				if (!this.form.name.trim()) {
-					this.errors.name = t('pipelinq', 'Name is required')
-				} else if (this.form.name.length > 255) {
-					this.errors.name = t('pipelinq', 'Name must be at most 255 characters')
-				} else {
-					this.errors.name = ''
-				}
-				break
-			case 'type':
-				if (!this.form.type) {
-					this.errors.type = t('pipelinq', 'Type is required')
-				} else {
-					this.errors.type = ''
-				}
-				break
-			case 'email':
-				if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
-					this.errors.email = t('pipelinq', 'Invalid email format')
-				} else {
-					this.errors.email = ''
-				}
-				break
-			case 'phone':
-				if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
-					this.errors.phone = t('pipelinq', 'Invalid phone format')
-				} else {
-					this.errors.phone = ''
-				}
-				break
-			case 'website':
-				if (this.form.website && !URL_REGEX.test(this.form.website)) {
-					this.errors.website = t('pipelinq', 'Invalid URL format')
-				} else {
-					this.errors.website = ''
-				}
-				break
+				case 'name':
+					if (!this.form.name.trim()) {
+						this.errors.name = t('pipelinq', 'Name is required')
+					} else if (this.form.name.length > 255) {
+						this.errors.name = t(
+							'pipelinq',
+							'Name must be at most 255 characters',
+						)
+					} else {
+						this.errors.name = ''
+					}
+					break
+				case 'type':
+					if (!this.form.type) {
+						this.errors.type = t('pipelinq', 'Type is required')
+					} else {
+						this.errors.type = ''
+					}
+					break
+				case 'email':
+					if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
+						this.errors.email = t('pipelinq', 'Invalid email format')
+					} else {
+						this.errors.email = ''
+					}
+					break
+				case 'phone':
+					if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
+						this.errors.phone = t('pipelinq', 'Invalid phone format')
+					} else {
+						this.errors.phone = ''
+					}
+					break
+				case 'website':
+					if (this.form.website && !URL_REGEX.test(this.form.website)) {
+						this.errors.website = t('pipelinq', 'Invalid URL format')
+					} else {
+						this.errors.website = ''
+					}
+					break
 			}
 		},
 		/**

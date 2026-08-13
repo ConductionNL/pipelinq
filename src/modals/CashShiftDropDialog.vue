@@ -14,7 +14,11 @@
 				type="number"
 				:label="t('pipelinq', 'Amount (€)')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Enter an amount greater than zero') : ''" />
+				:helper-text="
+					showError
+						? t('pipelinq', 'Enter an amount greater than zero')
+						: ''
+				" />
 			<NcSelect
 				v-model="reason"
 				:options="reasonOptions"
@@ -66,7 +70,10 @@ export default {
 		 */
 		reasonOptions() {
 			return [
-				{ id: 'manager-deposit', label: t('pipelinq', 'Cash drop to manager') },
+				{
+					id: 'manager-deposit',
+					label: t('pipelinq', 'Cash drop to manager'),
+				},
 				{ id: 'bank-run', label: t('pipelinq', 'Bank run') },
 				{ id: 'security-removal', label: t('pipelinq', 'Security removal') },
 				{ id: 'other', label: t('pipelinq', 'Other') },

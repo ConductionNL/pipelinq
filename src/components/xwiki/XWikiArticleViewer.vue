@@ -12,7 +12,8 @@
 			<NcButton variant="tertiary" @click="$emit('back')">
 				{{ t('pipelinq', 'Back') }}
 			</NcButton>
-			<a v-if="store.currentArticle && store.currentArticle.url"
+			<a
+				v-if="store.currentArticle && store.currentArticle.url"
 				class="xwiki-article-viewer__open"
 				:href="store.currentArticle.url"
 				target="_blank"
@@ -29,7 +30,9 @@
 				{{ store.currentArticle.title }}
 			</h3>
 			<!-- eslint-disable-next-line vue/no-v-html -->
-			<div class="xwiki-article-viewer__content" v-html="store.currentArticle.content" />
+			<div
+				class="xwiki-article-viewer__content"
+				v-html="store.currentArticle.content" />
 		</div>
 	</div>
 </template>

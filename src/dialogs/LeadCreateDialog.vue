@@ -9,7 +9,7 @@
 			ref="form"
 			:show-actions="false"
 			@save="onSave"
-			@update:valid="v => (valid = v)" />
+			@update:valid="(v) => (valid = v)" />
 		<template #actions>
 			<NcButton data-testid="lead-create-cancel" @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
@@ -72,7 +72,9 @@ export default {
 					this.$emit('created', result.id)
 				} else {
 					const error = this.objectStore.getError('lead')
-					showError(error?.message || t('pipelinq', 'Failed to create lead.'))
+					showError(
+						error?.message || t('pipelinq', 'Failed to create lead.'),
+					)
 				}
 			} finally {
 				this.saving = false

@@ -16,10 +16,14 @@
 				<div class="product-revenue__info">
 					<span class="product-revenue__name">{{ item.name }}</span>
 					<span class="product-revenue__count">
-						{{ t('pipelinq', '{count} leads', { count: item.leadCount }) }}
+						{{
+							t('pipelinq', '{count} leads', { count: item.leadCount })
+						}}
 					</span>
 				</div>
-				<span class="product-revenue__value">{{ formatCurrency(item.totalValue) }}</span>
+				<span class="product-revenue__value">{{
+					formatCurrency(item.totalValue)
+				}}</span>
 			</div>
 		</div>
 	</div>
@@ -67,7 +71,9 @@ export default {
 				}
 
 				// Fetch all lead products
-				const lpUrl = generateUrl(`/apps/openregister/api/objects/${config.leadProduct.register}/${config.leadProduct.schema}?_limit=500`)
+				const lpUrl = generateUrl(
+					`/apps/openregister/api/objects/${config.leadProduct.register}/${config.leadProduct.schema}?_limit=500`,
+				)
 				const lpResponse = await fetch(lpUrl, {
 					headers: {
 						'Content-Type': 'application/json',
@@ -94,7 +100,12 @@ export default {
 					if (!productId) continue
 					const total = Number(item.total) || 0
 					if (!productMap[productId]) {
-						productMap[productId] = { productId, totalValue: 0, leadCount: 0, leads: new Set() }
+						productMap[productId] = {
+							productId,
+							totalValue: 0,
+							leadCount: 0,
+							leads: new Set(),
+						}
 					}
 					productMap[productId].totalValue += total
 					if (item.lead) {
@@ -116,8 +127,12 @@ export default {
 				// Fetch product names
 				for (const entry of sorted) {
 					try {
-						const product = await this.objectStore.fetchObject('product', entry.productId)
-						entry.name = product?.name || t('pipelinq', 'Unknown Product')
+						const product = await this.objectStore.fetchObject(
+							'product',
+							entry.productId,
+						)
+						entry.name =
+							product?.name || t('pipelinq', 'Unknown Product')
 					} catch {
 						entry.name = t('pipelinq', 'Unknown Product')
 					}

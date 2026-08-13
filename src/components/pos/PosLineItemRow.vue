@@ -123,7 +123,7 @@ export default {
 		 * @return {Array<object>} The select options.
 		 */
 		productOptions() {
-			return this.products.map(p => ({
+			return this.products.map((p) => ({
 				id: p.id,
 				label: p.sku ? `${p.name} (${p.sku})` : p.name,
 				name: p.name,
@@ -137,7 +137,9 @@ export default {
 		 * @return {object|null} The option.
 		 */
 		selectedProduct() {
-			return this.productOptions.find(o => o.id === this.local.product) || null
+			return (
+				this.productOptions.find((o) => o.id === this.local.product) || null
+			)
 		},
 		/**
 		 * Available VAT rate options.
@@ -157,7 +159,10 @@ export default {
 		 * @return {object} The option.
 		 */
 		selectedTaxRate() {
-			return this.taxRateOptions.find(o => o.id === Number(this.local.taxRate)) || this.taxRateOptions[2]
+			return (
+				this.taxRateOptions.find((o) => o.id === Number(this.local.taxRate))
+				|| this.taxRateOptions[2]
+			)
 		},
 		/**
 		 * Server-mirroring computed taxAmount + lineTotal for display.
@@ -199,7 +204,10 @@ export default {
 		 * Emit the recomputed line to the parent.
 		 */
 		emitUpdate() {
-			this.$emit('update:line', recalculateLine({ ...this.line, ...this.local }, this.priceMode))
+			this.$emit(
+				'update:line',
+				recalculateLine({ ...this.line, ...this.local }, this.priceMode),
+			)
 		},
 	},
 }

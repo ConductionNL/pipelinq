@@ -91,7 +91,12 @@ export default {
 				)
 				this.stats = response?.data || {}
 			} catch (e) {
-				showError(t('pipelinq', 'Failed to load lead analytics. Please try again.'))
+				showError(
+					t(
+						'pipelinq',
+						'Failed to load lead analytics. Please try again.',
+					),
+				)
 				this.stats = {}
 			} finally {
 				this.loading = false
@@ -129,6 +134,8 @@ export default {
 	font-weight: 600;
 }
 @media (max-width: 1024px) {
-	.lead-analytics__grid { grid-template-columns: 1fr; }
+	.lead-analytics__grid {
+		grid-template-columns: 1fr;
+	}
 }
 </style>

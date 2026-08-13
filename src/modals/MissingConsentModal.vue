@@ -1,8 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<NcModal :name="t('pipelinq', 'Missing consent')"
-		@close="$emit('cancel')">
+	<NcModal :name="t('pipelinq', 'Missing consent')" @close="$emit('cancel')">
 		<div class="missing-consent">
 			<h2 class="missing-consent__title">
 				{{ t('pipelinq', 'Missing consent') }}
@@ -11,9 +10,16 @@
 				{{ summary }}
 			</p>
 			<ul v-if="contacts.length > 0" class="missing-consent__list">
-				<li v-for="(contact, idx) in displayContacts" :key="contact.id || idx">
+				<li
+					v-for="(contact, idx) in displayContacts"
+					:key="contact.id || idx">
 					<span class="missing-consent__name">
-						{{ contact.name || contact.email || contact.phone || t('pipelinq', 'Unknown contact') }}
+						{{
+							contact.name
+							|| contact.email
+							|| contact.phone
+							|| t('pipelinq', 'Unknown contact')
+						}}
 					</span>
 					<span v-if="contact.reason" class="missing-consent__reason">
 						{{ contact.reason }}
@@ -21,7 +27,14 @@
 				</li>
 			</ul>
 			<p v-if="hiddenCount > 0" class="missing-consent__more">
-				{{ n('pipelinq', '%n more contact not shown', '%n more contacts not shown', hiddenCount) }}
+				{{
+					n(
+						'pipelinq',
+						'%n more contact not shown',
+						'%n more contacts not shown',
+						hiddenCount,
+					)
+				}}
 			</p>
 
 			<div class="missing-consent__actions">
@@ -84,9 +97,10 @@ export default {
 		 * @return {string}
 		 */
 		summary() {
-			const channel = this.channel === 'sms'
-				? this.t('pipelinq', 'SMS')
-				: this.t('pipelinq', 'email')
+			const channel =
+				this.channel === 'sms'
+					? this.t('pipelinq', 'SMS')
+					: this.t('pipelinq', 'email')
 			return this.n(
 				'pipelinq',
 				'%n contact in this segment is missing {channel} consent. Choose how to proceed.',

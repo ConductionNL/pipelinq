@@ -43,10 +43,7 @@
 				</NcButton>
 			</p>
 
-			<p
-				v-else-if="!hasSearched"
-				class="customer-lookup__state"
-				role="status">
+			<p v-else-if="!hasSearched" class="customer-lookup__state" role="status">
 				{{ t('pipelinq', 'Type at least two characters to search.') }}
 			</p>
 
@@ -77,7 +74,12 @@
 						<span
 							v-if="row.doNotContact"
 							class="customer-lookup__badge"
-							:title="t('pipelinq', 'This customer does not wish to be contacted.')">
+							:title="
+								t(
+									'pipelinq',
+									'This customer does not wish to be contacted.',
+								)
+							">
 							🔒 {{ row.doNotContactBadge }}
 						</span>
 					</div>

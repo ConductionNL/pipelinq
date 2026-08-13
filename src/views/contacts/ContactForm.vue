@@ -32,7 +32,12 @@
 				:error="!!errors.name"
 				:helper-text="errors.name"
 				:maxlength="255"
-				@update:model-value="v => { form.name = v; validateField('name') }" />
+				@update:model-value="
+					(v) => {
+						form.name = v
+						validateField('name')
+					}
+				" />
 		</div>
 
 		<div class="form-group">
@@ -44,7 +49,7 @@
 				:options="clientOptions"
 				:placeholder="t('pipelinq', 'Search for a client...')"
 				label="name"
-				:reduce="c => c.id"
+				:reduce="(c) => c.id"
 				@search="searchClients"
 				@update:model-value="validateField('client')" />
 			<p v-if="errors.client" class="field-error">
@@ -60,7 +65,7 @@
 					label-outside
 					:label="t('pipelinq', 'Role')"
 					:model-value="form.role"
-					@update:model-value="v => form.role = v" />
+					@update:model-value="(v) => (form.role = v)" />
 			</div>
 			<div class="form-group">
 				<label for="contact-email">{{ t('pipelinq', 'Email') }}</label>
@@ -72,7 +77,12 @@
 					:error="!!errors.email"
 					:helper-text="errors.email"
 					type="email"
-					@update:model-value="v => { form.email = v; validateField('email') }" />
+					@update:model-value="
+						(v) => {
+							form.email = v
+							validateField('email')
+						}
+					" />
 			</div>
 		</div>
 
@@ -85,7 +95,12 @@
 				:model-value="form.phone"
 				:error="!!errors.phone"
 				:helper-text="errors.phone"
-				@update:model-value="v => { form.phone = v; validateField('phone') }" />
+				@update:model-value="
+					(v) => {
+						form.phone = v
+						validateField('phone')
+					}
+				" />
 		</div>
 
 		<div class="contact-form__actions">
@@ -156,7 +171,7 @@ export default {
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
 			const hasClient = !!this.selectedClient
-			const noErrors = Object.values(this.errors).every(e => !e)
+			const noErrors = Object.values(this.errors).every((e) => !e)
 			return hasName && hasClient && noErrors
 		},
 	},
@@ -214,19 +229,30 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-44
 		 */
 		async loadInitialClients() {
-			const clients = await this.objectStore.fetchCollection('client', { _limit: 50 })
-			this.clientOptions = (clients || []).map(c => ({ id: c.id, name: c.name || c.id }))
+			const clients = await this.objectStore.fetchCollection('client', {
+				_limit: 50,
+			})
+			this.clientOptions = (clients || []).map((c) => ({
+				id: c.id,
+				name: c.name || c.id,
+			}))
 		},
 		/**
 		 * @param clientId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-41
 		 */
 		async ensureClientInOptions(clientId) {
-			if (!this.clientOptions.find(c => c.id === clientId)) {
+			if (!this.clientOptions.find((c) => c.id === clientId)) {
 				try {
-					const client = await this.objectStore.fetchObject('client', clientId)
+					const client = await this.objectStore.fetchObject(
+						'client',
+						clientId,
+					)
 					if (client) {
-						this.clientOptions.push({ id: client.id, name: client.name || client.id })
+						this.clientOptions.push({
+							id: client.id,
+							name: client.name || client.id,
+						})
 					}
 				} catch {
 					// Client not found
@@ -241,11 +267,17 @@ export default {
 			clearTimeout(this.searchTimeout)
 			this.searchTimeout = setTimeout(async () => {
 				if (query.length > 0) {
-					const results = await this.objectStore.fetchCollection('client', {
-						_search: query,
-						_limit: 20,
-					})
-					this.clientOptions = (results || []).map(c => ({ id: c.id, name: c.name || c.id }))
+					const results = await this.objectStore.fetchCollection(
+						'client',
+						{
+							_search: query,
+							_limit: 20,
+						},
+					)
+					this.clientOptions = (results || []).map((c) => ({
+						id: c.id,
+						name: c.name || c.id,
+					}))
 				} else {
 					await this.loadInitialClients()
 				}
@@ -257,34 +289,34 @@ export default {
 		 */
 		validateField(field) {
 			switch (field) {
-			case 'name':
-				if (!this.form.name.trim()) {
-					this.errors.name = t('pipelinq', 'Name is required')
-				} else {
-					this.errors.name = ''
-				}
-				break
-			case 'client':
-				if (!this.selectedClient) {
-					this.errors.client = t('pipelinq', 'Client is required')
-				} else {
-					this.errors.client = ''
-				}
-				break
-			case 'email':
-				if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
-					this.errors.email = t('pipelinq', 'Invalid email format')
-				} else {
-					this.errors.email = ''
-				}
-				break
-			case 'phone':
-				if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
-					this.errors.phone = t('pipelinq', 'Invalid phone format')
-				} else {
-					this.errors.phone = ''
-				}
-				break
+				case 'name':
+					if (!this.form.name.trim()) {
+						this.errors.name = t('pipelinq', 'Name is required')
+					} else {
+						this.errors.name = ''
+					}
+					break
+				case 'client':
+					if (!this.selectedClient) {
+						this.errors.client = t('pipelinq', 'Client is required')
+					} else {
+						this.errors.client = ''
+					}
+					break
+				case 'email':
+					if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
+						this.errors.email = t('pipelinq', 'Invalid email format')
+					} else {
+						this.errors.email = ''
+					}
+					break
+				case 'phone':
+					if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
+						this.errors.phone = t('pipelinq', 'Invalid phone format')
+					} else {
+						this.errors.phone = ''
+					}
+					break
 			}
 		},
 		/**

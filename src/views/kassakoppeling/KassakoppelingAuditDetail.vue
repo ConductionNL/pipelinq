@@ -46,7 +46,10 @@
 			<div class="info-grid">
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Action') }}</label>
-					<span :class="['action-badge', `action-badge--${actionClass}`]">{{ actionLabel }}</span>
+					<span
+						:class="['action-badge', `action-badge--${actionClass}`]"
+						>{{ actionLabel }}</span
+					>
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Operator') }}</label>
@@ -66,7 +69,11 @@
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Exported on') }}</label>
-					<span>{{ entry.exportedAt ? formatTimestamp(entry.exportedAt) : t('pipelinq', 'Not yet exported') }}</span>
+					<span>{{
+						entry.exportedAt
+							? formatTimestamp(entry.exportedAt)
+							: t('pipelinq', 'Not yet exported')
+					}}</span>
 				</div>
 			</div>
 		</CnDetailCard>
@@ -75,7 +82,11 @@
 			<div class="info-grid">
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Number of items') }}</label>
-					<span>{{ entry.itemCount !== undefined && entry.itemCount !== null ? entry.itemCount : '—' }}</span>
+					<span>{{
+						entry.itemCount !== undefined && entry.itemCount !== null
+							? entry.itemCount
+							: '—'
+					}}</span>
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'VAT amount') }}</label>
@@ -88,16 +99,26 @@
 			</div>
 		</CnDetailCard>
 
-		<CnDetailCard v-if="entry.transactionUuid" :title="t('pipelinq', 'Linked transaction')">
+		<CnDetailCard
+			v-if="entry.transactionUuid"
+			:title="t('pipelinq', 'Linked transaction')">
 			<p>
 				<router-link
 					data-testid="kassakoppeling-audit-transaction-link"
-					:to="{ name: 'PosTransactionDetail', params: { id: entry.transactionUuid } }">
+					:to="{
+						name: 'PosTransactionDetail',
+						params: { id: entry.transactionUuid },
+					}">
 					{{ entry.transactionUuid }}
 				</router-link>
 			</p>
 			<p class="kk-audit-detail__hint">
-				{{ t('pipelinq', 'Click to open the linked POS transaction. When the transaction has been deleted, only the UUID reference remains visible.') }}
+				{{
+					t(
+						'pipelinq',
+						'Click to open the linked POS transaction. When the transaction has been deleted, only the UUID reference remains visible.',
+					)
+				}}
 			</p>
 		</CnDetailCard>
 
@@ -105,12 +126,18 @@
 			<div class="info-grid">
 				<div class="info-field info-field--wide">
 					<label>{{ t('pipelinq', 'Algorithm') }}</label>
-					<span><code>HMAC-SHA256</code> ({{ t('pipelinq', 'key on the server') }})</span>
+					<span
+						><code>HMAC-SHA256</code> ({{
+							t('pipelinq', 'key on the server')
+						}})</span
+					>
 				</div>
 				<div class="info-field info-field--wide">
 					<label>{{ t('pipelinq', 'Signature') }}</label>
 					<div class="hash-row">
-						<code data-testid="kassakoppeling-audit-signature">{{ truncate(entry.signature) }}</code>
+						<code data-testid="kassakoppeling-audit-signature">{{
+							truncate(entry.signature)
+						}}</code>
 						<NcButton @click="copy(entry.signature, 'signature')">
 							{{ t('pipelinq', 'Copy') }}
 						</NcButton>
@@ -119,7 +146,9 @@
 				<div class="info-field info-field--wide">
 					<label>{{ t('pipelinq', 'Current hash') }}</label>
 					<div class="hash-row">
-						<code data-testid="kassakoppeling-audit-current-hash">{{ truncate(entry.currentHash) }}</code>
+						<code data-testid="kassakoppeling-audit-current-hash">{{
+							truncate(entry.currentHash)
+						}}</code>
 						<NcButton @click="copy(entry.currentHash, 'currentHash')">
 							{{ t('pipelinq', 'Copy') }}
 						</NcButton>
@@ -128,7 +157,9 @@
 				<div class="info-field info-field--wide">
 					<label>{{ t('pipelinq', 'Previous hash') }}</label>
 					<div class="hash-row">
-						<code data-testid="kassakoppeling-audit-previous-hash">{{ truncate(entry.previousHash) }}</code>
+						<code data-testid="kassakoppeling-audit-previous-hash">{{
+							truncate(entry.previousHash)
+						}}</code>
 						<NcButton @click="copy(entry.previousHash, 'previousHash')">
 							{{ t('pipelinq', 'Copy') }}
 						</NcButton>
@@ -210,7 +241,10 @@ export default {
 		 * @return {string} The label.
 		 */
 		actionLabel() {
-			return t('pipelinq', ACTION_LABELS[this.entry.action] || this.entry.action || '—')
+			return t(
+				'pipelinq',
+				ACTION_LABELS[this.entry.action] || this.entry.action || '—',
+			)
 		},
 		/**
 		 * Action CSS class suffix.
@@ -255,12 +289,21 @@ export default {
 		 */
 		verifyDescription() {
 			if (this.entry.verified === true) {
-				return t('pipelinq', 'The HMAC-SHA256 signature and the SHA-256 chain hash match the stored values. The entry has not been modified since creation.')
+				return t(
+					'pipelinq',
+					'The HMAC-SHA256 signature and the SHA-256 chain hash match the stored values. The entry has not been modified since creation.',
+				)
 			}
 			if (this.entry.verified === false) {
-				return t('pipelinq', 'The signature or the chain hash does not match. This may indicate manual modification of the entry or a rotation of the secret key without re-signing.')
+				return t(
+					'pipelinq',
+					'The signature or the chain hash does not match. This may indicate manual modification of the entry or a rotation of the secret key without re-signing.',
+				)
 			}
-			return t('pipelinq', 'The entry has not been verified yet. Click "Verify signature" to recompute the HMAC and chain hash live.')
+			return t(
+				'pipelinq',
+				'The entry has not been verified yet. Click "Verify signature" to recompute the HMAC and chain hash live.',
+			)
 		},
 		/**
 		 * Human readable result of the verify action.
@@ -271,8 +314,12 @@ export default {
 			if (!this.chainResult) {
 				return ''
 			}
-			const sig = this.chainResult.signatureValid ? t('pipelinq', 'signature valid') : t('pipelinq', 'signature invalid')
-			const hash = this.chainResult.hashValid ? t('pipelinq', 'chain hash valid') : t('pipelinq', 'chain hash invalid')
+			const sig = this.chainResult.signatureValid
+				? t('pipelinq', 'signature valid')
+				: t('pipelinq', 'signature invalid')
+			const hash = this.chainResult.hashValid
+				? t('pipelinq', 'chain hash valid')
+				: t('pipelinq', 'chain hash invalid')
 			return `${sig}, ${hash}`
 		},
 	},
@@ -289,10 +336,15 @@ export default {
 			}
 			this.loading = true
 			try {
-				const url = generateUrl(`/apps/pipelinq/api/kassakoppeling/audit/${this.entryId}`)
+				const url = generateUrl(
+					`/apps/pipelinq/api/kassakoppeling/audit/${this.entryId}`,
+				)
 				const response = await fetch(url, {
 					method: 'GET',
-					headers: { Accept: 'application/json', requesttoken: OC.requestToken },
+					headers: {
+						Accept: 'application/json',
+						requesttoken: OC.requestToken,
+					},
 				})
 				if (!response.ok) {
 					showError(t('pipelinq', 'Audit entry not found.'))
@@ -317,7 +369,9 @@ export default {
 			}
 			this.busy = true
 			try {
-				const url = generateUrl(`/apps/pipelinq/api/kassakoppeling/audit/${this.entryId}/verify`)
+				const url = generateUrl(
+					`/apps/pipelinq/api/kassakoppeling/audit/${this.entryId}/verify`,
+				)
 				const response = await fetch(url, {
 					method: 'POST',
 					headers: {
@@ -343,7 +397,12 @@ export default {
 				if (data.verified === true) {
 					showSuccess(t('pipelinq', 'Signature verified.'))
 				} else {
-					showError(t('pipelinq', 'Verification failed — entry may have been tampered with.'))
+					showError(
+						t(
+							'pipelinq',
+							'Verification failed — entry may have been tampered with.',
+						),
+					)
 				}
 			} catch (e) {
 				showError(t('pipelinq', 'Verification failed.'))
@@ -383,7 +442,10 @@ export default {
 		formatEur(cents) {
 			const value = Number.isFinite(Number(cents)) ? Number(cents) / 100 : 0
 			try {
-				return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(value)
+				return new Intl.NumberFormat('nl-NL', {
+					style: 'currency',
+					currency: 'EUR',
+				}).format(value)
 			} catch (e) {
 				return `€ ${value.toFixed(2)}`
 			}

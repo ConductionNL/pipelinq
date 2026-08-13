@@ -6,7 +6,12 @@
 	<div>
 		<CnIndexPage
 			:title="t('pipelinq', 'Cash drawer')"
-			:description="t('pipelinq', 'Manage cash shifts: opening float, drops, blind counting and reconciliation')"
+			:description="
+				t(
+					'pipelinq',
+					'Manage cash shifts: opening float, drops, blind counting and reconciliation',
+				)
+			"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
@@ -66,7 +71,15 @@ export default {
 		 * @return {Array<string>} The column keys.
 		 */
 		visibleColumns() {
-			return ['reference', 'drawer', 'operator', 'floatAmount', 'status', 'floatAt', 'closedAt']
+			return [
+				'reference',
+				'drawer',
+				'operator',
+				'floatAmount',
+				'status',
+				'floatAt',
+				'closedAt',
+			]
 		},
 	},
 	methods: {

@@ -13,7 +13,8 @@ const BASE = generateUrl('/apps/pipelinq/api/xwiki')
 
 const headers = () => ({
 	'Content-Type': 'application/json',
-	requesttoken: typeof OC !== 'undefined' && OC.requestToken ? OC.requestToken : '',
+	requesttoken:
+		typeof OC !== 'undefined' && OC.requestToken ? OC.requestToken : '',
 	'OCS-APIREQUEST': 'true',
 })
 
@@ -52,7 +53,8 @@ export const useXwikiStore = defineStore('xwiki', {
 		status: null,
 	}),
 	getters: {
-		hasArticles: (state) => Array.isArray(state.articles) && state.articles.length > 0,
+		hasArticles: (state) =>
+			Array.isArray(state.articles) && state.articles.length > 0,
 	},
 	actions: {
 		/**
@@ -66,7 +68,9 @@ export const useXwikiStore = defineStore('xwiki', {
 			this.error = null
 			this.searchQuery = params.q || ''
 			try {
-				const response = await fetch(BASE + '/search' + qs(params), { headers: headers() })
+				const response = await fetch(BASE + '/search' + qs(params), {
+					headers: headers(),
+				})
 				if (!response.ok) {
 					throw new Error(`xWiki search failed (${response.status})`)
 				}
@@ -93,7 +97,10 @@ export const useXwikiStore = defineStore('xwiki', {
 			this.loading = true
 			this.error = null
 			try {
-				const response = await fetch(BASE + '/pages' + qs({ space, ...extra }), { headers: headers() })
+				const response = await fetch(
+					BASE + '/pages' + qs({ space, ...extra }),
+					{ headers: headers() },
+				)
 				if (!response.ok) {
 					throw new Error(`xWiki pages failed (${response.status})`)
 				}
@@ -122,7 +129,9 @@ export const useXwikiStore = defineStore('xwiki', {
 			try {
 				const w = encodeURIComponent(wiki || 'xwiki')
 				const p = encodeURIComponent(page)
-				const response = await fetch(`${BASE}/page/${w}/${p}`, { headers: headers() })
+				const response = await fetch(`${BASE}/page/${w}/${p}`, {
+					headers: headers(),
+				})
 				if (!response.ok) {
 					throw new Error(`xWiki page failed (${response.status})`)
 				}
@@ -144,7 +153,9 @@ export const useXwikiStore = defineStore('xwiki', {
 		 */
 		async checkStatus() {
 			try {
-				const response = await fetch(BASE + '/status', { headers: headers() })
+				const response = await fetch(BASE + '/status', {
+					headers: headers(),
+				})
 				if (!response.ok) {
 					throw new Error(`xWiki status failed (${response.status})`)
 				}

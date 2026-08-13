@@ -15,7 +15,10 @@
 		<!-- Quick actions menu (top-right) — kept off the keyboard tab-order
 		     for the card itself; CnRowActions handles its own focus.        -->
 		<div class="pipeline-card__menu" @click.stop>
-			<NcActions :force-menu="true" :inline="0" :aria-label="t('pipelinq', 'Card actions')">
+			<NcActions
+				:force-menu="true"
+				:inline="0"
+				:aria-label="t('pipelinq', 'Card actions')">
 				<NcActionButton @click="openMoveMenu">
 					<template #icon>
 						<ArrowRightThick :size="18" />
@@ -45,7 +48,8 @@
 			<span class="pipeline-card__title">
 				{{ item.title }}
 			</span>
-			<span v-if="item.priority && item.priority !== 'normal'"
+			<span
+				v-if="item.priority && item.priority !== 'normal'"
 				class="priority-indicator"
 				:class="'priority--' + item.priority"
 				:title="getPriorityLabel(item.priority)" />
@@ -58,10 +62,20 @@
 			<span v-if="daysAge > 0" class="aging-badge" :class="agingClass">
 				{{ agingLabel }} {{ t('pipelinq', 'in stage') }}
 			</span>
-			<span v-if="isStaleItem" class="stale-badge" :title="t('pipelinq', 'No activity for over {days} days', { days: staleThreshold })">
+			<span
+				v-if="isStaleItem"
+				class="stale-badge"
+				:title="
+					t('pipelinq', 'No activity for over {days} days', {
+						days: staleThreshold,
+					})
+				">
 				{{ daysAge }}d {{ t('pipelinq', 'stale') }}
 			</span>
-			<span v-if="item.expectedCloseDate" class="card-date" :class="{ 'card-date--overdue': isOverdue }">
+			<span
+				v-if="item.expectedCloseDate"
+				class="card-date"
+				:class="{ 'card-date--overdue': isOverdue }">
 				<ClockAlert v-if="isOverdue" :size="14" class="card-date__icon" />
 				{{ formatDate(item.expectedCloseDate) }}
 			</span>
@@ -101,12 +115,25 @@ import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
 import StagePickerDialog from '../../dialogs/StagePickerDialog.vue'
 import AssigneePickerDialog from '../../dialogs/AssigneePickerDialog.vue'
 import PriorityPickerDialog from '../../dialogs/PriorityPickerDialog.vue'
-import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
-import { getDaysAge, getAgingClass, formatAge, getStaleThreshold, resolveObjectType } from '../../services/pipelineUtils.js'
+import {
+	getPriorityLabel,
+	getPriorityColor,
+	getStatusLabel,
+} from '../../services/requestStatus.js'
+import {
+	getDaysAge,
+	getAgingClass,
+	formatAge,
+	getStaleThreshold,
+	resolveObjectType,
+} from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 // eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
-import { formatNumber, formatDate as formatLocaleDate } from '../../services/localeUtils.js'
+import {
+	formatNumber,
+	formatDate as formatLocaleDate,
+} from '../../services/localeUtils.js'
 
 // Module-level user cache shared across all PipelineCard instances
 let usersCache = null
@@ -203,16 +230,22 @@ export default {
 		isOverdue() {
 			if (this.entityType === 'lead') {
 				if (!this.item.expectedCloseDate) return false
-				if (this.item.status === 'won' || this.item.status === 'lost') return false
+				if (this.item.status === 'won' || this.item.status === 'lost')
+					return false
 				// Cards in stages flagged isClosed never show overdue
-				const currentStage = this.stages.find(s => s.name === this.item.stage)
+				const currentStage = this.stages.find(
+					(s) => s.name === this.item.stage,
+				)
 				if (currentStage && currentStage.isClosed) return false
 				return new Date(this.item.expectedCloseDate) < new Date()
 			}
 			if (this.entityType === 'request') {
 				// `requestedAt` became `occurredAt` on the ticket supertype.
 				if (!this.item.occurredAt) return false
-				const daysSince = Math.floor((Date.now() - new Date(this.item.occurredAt).getTime()) / 86400000)
+				const daysSince = Math.floor(
+					(Date.now() - new Date(this.item.occurredAt).getTime())
+						/ 86400000,
+				)
 				return daysSince > 30
 			}
 			return false
@@ -249,7 +282,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
 		 */
 		stageOptions() {
-			return this.stages.map(s => s.name)
+			return this.stages.map((s) => s.name)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
@@ -354,12 +387,21 @@ export default {
 			try {
 				const updated = this.buildSavePayload()
 				updated[this.columnProperty] = newStage
-				const targetStage = this.stages.find(s => s.name === newStage)
-				if (targetStage && typeof targetStage.order === 'number' && this.columnProperty === 'stage') {
+				const targetStage = this.stages.find((s) => s.name === newStage)
+				if (
+					targetStage
+					&& typeof targetStage.order === 'number'
+					&& this.columnProperty === 'stage'
+				) {
 					updated.stageOrder = targetStage.order
 				}
-				await this.objectStore.saveObject(this.resolvedType.objectType, updated)
-				showSuccess(t('pipelinq', 'Lead moved to {stage}', { stage: newStage }))
+				await this.objectStore.saveObject(
+					this.resolvedType.objectType,
+					updated,
+				)
+				showSuccess(
+					t('pipelinq', 'Lead moved to {stage}', { stage: newStage }),
+				)
 				this.$emit('refresh')
 			} catch (e) {
 				this.selectedStage = this.currentColumnValue
@@ -376,7 +418,10 @@ export default {
 			try {
 				const updated = this.buildSavePayload()
 				updated.assignee = newAssignee || ''
-				await this.objectStore.saveObject(this.resolvedType.objectType, updated)
+				await this.objectStore.saveObject(
+					this.resolvedType.objectType,
+					updated,
+				)
 				showSuccess(t('pipelinq', 'Assignee updated'))
 				this.$emit('refresh')
 			} catch (e) {
@@ -448,7 +493,10 @@ export default {
 			try {
 				const updated = this.buildSavePayload()
 				updated.priority = priority
-				await this.objectStore.saveObject(this.resolvedType.objectType, updated)
+				await this.objectStore.saveObject(
+					this.resolvedType.objectType,
+					updated,
+				)
 				showSuccess(t('pipelinq', 'Priority updated'))
 				this.$emit('refresh')
 			} catch (e) {

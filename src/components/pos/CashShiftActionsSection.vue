@@ -26,12 +26,11 @@
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
 			<section v-if="canDrop || canCount" class="cash-shift-section__actions">
-				<NcButton v-if="canDrop"
-					:disabled="busy"
-					@click="showDrop = true">
+				<NcButton v-if="canDrop" :disabled="busy" @click="showDrop = true">
 					{{ t('pipelinq', 'Remove cash') }}
 				</NcButton>
-				<NcButton v-if="canCount"
+				<NcButton
+					v-if="canCount"
 					variant="primary"
 					:disabled="busy"
 					@click="showCount = true">
@@ -58,19 +57,27 @@
 						<span>{{ percentageLabel }}</span>
 					</div>
 					<div class="info-field info-field--wide">
-						<span :class="['cash-shift-section__tolerance', toleranceClass]">
+						<span
+							:class="[
+								'cash-shift-section__tolerance',
+								toleranceClass,
+							]">
 							{{ toleranceLabel }}
 						</span>
 					</div>
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Reconciliation') }}</label>
-						<CnStatusBadge :status="diff.status" :label="diffStatusLabel" />
+						<CnStatusBadge
+							:status="diff.status"
+							:label="diffStatusLabel" />
 					</div>
 					<div v-if="diff.approvedBy" class="info-field">
 						<label>{{ t('pipelinq', 'Reviewed by') }}</label>
 						<span>{{ diff.approvedBy }}</span>
 					</div>
-					<div v-if="diff.rejectionReason" class="info-field info-field--wide">
+					<div
+						v-if="diff.rejectionReason"
+						class="info-field info-field--wide">
 						<label>{{ t('pipelinq', 'Rejection reason') }}</label>
 						<span>{{ diff.rejectionReason }}</span>
 					</div>
@@ -79,7 +86,10 @@
 					<NcButton variant="primary" :disabled="busy" @click="approve">
 						{{ t('pipelinq', 'Approve') }}
 					</NcButton>
-					<NcButton variant="error" :disabled="busy" @click="showReject = true">
+					<NcButton
+						variant="error"
+						:disabled="busy"
+						@click="showReject = true">
 						{{ t('pipelinq', 'Reject') }}
 					</NcButton>
 				</div>
@@ -165,7 +175,8 @@ export default {
 				return this.shiftId
 			}
 			const ctx = this.cnSectionContext
-			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
+			const bag =
+				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
 		status() {
@@ -183,7 +194,9 @@ export default {
 		 * @return {boolean} Whether to show manager-only actions.
 		 */
 		isManager() {
-			return typeof window.OC?.isUserAdmin === 'function' ? window.OC.isUserAdmin() : false
+			return typeof window.OC?.isUserAdmin === 'function'
+				? window.OC.isUserAdmin()
+				: false
 		},
 		canDrop() {
 			return this.status === 'open'
@@ -192,7 +205,11 @@ export default {
 			return this.status === 'open'
 		},
 		canReconcile() {
-			return this.diff?.status === 'pending' && this.status === 'closed' && this.isManager
+			return (
+				this.diff?.status === 'pending'
+				&& this.status === 'closed'
+				&& this.isManager
+			)
 		},
 		/**
 		 * Human label for the diff percentage (N/A when undefined).
@@ -200,7 +217,10 @@ export default {
 		 * @return {string} The percentage label.
 		 */
 		percentageLabel() {
-			if (this.diff?.diffPercentage === null || this.diff?.diffPercentage === undefined) {
+			if (
+				this.diff?.diffPercentage === null
+				|| this.diff?.diffPercentage === undefined
+			) {
 				return t('pipelinq', 'N/A (expected amount is €0)')
 			}
 			return `${this.diff.diffPercentage}%`
@@ -235,14 +255,25 @@ export default {
 			}
 			this.loading = true
 			try {
-				this.shift = await this.objectStore.fetchObject('cashShift', this.resolvedId) || {}
+				this.shift =
+					(await this.objectStore.fetchObject(
+						'cashShift',
+						this.resolvedId,
+					)) || {}
 
-				await this.objectStore.fetchCollection('cashDiff', { shift: this.resolvedId, _limit: 100 })
-				const diffs = (this.objectStore.getCollection('cashDiff')?.results || [])
-					.filter(d => d.shift === this.resolvedId)
+				await this.objectStore.fetchCollection('cashDiff', {
+					shift: this.resolvedId,
+					_limit: 100,
+				})
+				const diffs = (
+					this.objectStore.getCollection('cashDiff')?.results || []
+				).filter((d) => d.shift === this.resolvedId)
 				this.diff = this.latestDiff(diffs)
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Could not load cash shift.'))
+				showError(
+					err?.response?.data?.error
+						|| t('pipelinq', 'Could not load cash shift.'),
+				)
 			} finally {
 				this.loading = false
 			}
@@ -257,7 +288,7 @@ export default {
 			if (diffs.length === 0) {
 				return null
 			}
-			const pending = diffs.find(d => d.status === 'pending')
+			const pending = diffs.find((d) => d.status === 'pending')
 			if (pending) {
 				return pending
 			}
@@ -275,7 +306,9 @@ export default {
 			this.busy = true
 			try {
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/pos-shifts/${this.resolvedId}/${path}`),
+					generateUrl(
+						`/apps/pipelinq/api/pos-shifts/${this.resolvedId}/${path}`,
+					),
 					{
 						method: 'POST',
 						headers: {
@@ -307,7 +340,11 @@ export default {
 		 * @param {object} payload The drop payload (amount, reason).
 		 */
 		async recordDrop(payload) {
-			const ok = await this.lifecycle('drop', payload, t('pipelinq', 'Drop recorded.'))
+			const ok = await this.lifecycle(
+				'drop',
+				payload,
+				t('pipelinq', 'Drop recorded.'),
+			)
 			if (ok) {
 				this.showDrop = false
 			}
@@ -318,7 +355,11 @@ export default {
 		 * @param {object} payload The count payload (amount, notes).
 		 */
 		async recordCount(payload) {
-			const ok = await this.lifecycle('count', payload, t('pipelinq', 'Count recorded.'))
+			const ok = await this.lifecycle(
+				'count',
+				payload,
+				t('pipelinq', 'Count recorded.'),
+			)
 			if (ok) {
 				this.showCount = false
 			}
@@ -327,7 +368,11 @@ export default {
 		 * Approve the pending variance (manager only).
 		 */
 		approve() {
-			this.lifecycle('diff/approve', { diffId: this.diff?.id }, t('pipelinq', 'Cash difference approved.'))
+			this.lifecycle(
+				'diff/approve',
+				{ diffId: this.diff?.id },
+				t('pipelinq', 'Cash difference approved.'),
+			)
 		},
 		/**
 		 * Reject the pending variance with a reason (manager only).
@@ -335,7 +380,11 @@ export default {
 		 * @param {string} reason The rejection reason.
 		 */
 		async reject(reason) {
-			const ok = await this.lifecycle('diff/reject', { diffId: this.diff?.id, reason }, t('pipelinq', 'Cash difference rejected.'))
+			const ok = await this.lifecycle(
+				'diff/reject',
+				{ diffId: this.diff?.id, reason },
+				t('pipelinq', 'Cash difference rejected.'),
+			)
 			if (ok) {
 				this.showReject = false
 			}

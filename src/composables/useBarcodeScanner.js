@@ -103,7 +103,7 @@ export function createHidBufferReducer(options = {}) {
 		const time = event.time
 
 		// Drop a stale partial buffer after an idle gap.
-		if (lastTime !== 0 && (time - lastTime) > idleResetMs) {
+		if (lastTime !== 0 && time - lastTime > idleResetMs) {
 			reset()
 		}
 
@@ -118,7 +118,8 @@ export function createHidBufferReducer(options = {}) {
 			// Require the burst to be fast on average — guards against a human
 			// typing then pressing Enter being read as a scan.
 			if (burstIntervals.length > 0) {
-				const avg = burstIntervals.reduce((a, b) => a + b, 0) / burstIntervals.length
+				const avg =
+					burstIntervals.reduce((a, b) => a + b, 0) / burstIntervals.length
 				if (avg > maxIntervalMs) {
 					return null
 				}
@@ -147,7 +148,9 @@ export function createHidBufferReducer(options = {}) {
  * @return {object} Reactive state + camera controls.
  */
 export function useBarcodeScanner(onScan) {
-	const supported = ref(typeof window !== 'undefined' && 'BarcodeDetector' in window)
+	const supported = ref(
+		typeof window !== 'undefined' && 'BarcodeDetector' in window,
+	)
 	const scanning = ref(false)
 	const videoEl = ref(null)
 
@@ -250,7 +253,9 @@ export function useBarcodeScanner(onScan) {
 		if (!supported.value || scanning.value) {
 			return
 		}
-		stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+		stream = await navigator.mediaDevices.getUserMedia({
+			video: { facingMode: 'environment' },
+		})
 		scanning.value = true
 		// eslint-disable-next-line no-undef
 		detector = new BarcodeDetector({ formats: BARCODE_FORMATS })

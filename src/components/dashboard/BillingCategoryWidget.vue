@@ -19,7 +19,12 @@
 	<NcEmptyContent
 		v-if="!loading && !hasData"
 		:name="t('pipelinq', 'No hours recorded')"
-		:description="t('pipelinq', 'When approved time entries are present, hours will be shown per billing category here.')" />
+		:description="
+			t(
+				'pipelinq',
+				'When approved time entries are present, hours will be shown per billing category here.',
+			)
+		" />
 
 	<CnChartWidget
 		v-else
@@ -61,7 +66,7 @@ export default {
 		 */
 		categoryIndex() {
 			const idx = {}
-			for (const c of (this.billingCategoryStore.categories || [])) {
+			for (const c of this.billingCategoryStore.categories || []) {
 				if (c.id) idx[c.id] = c
 				if (c['@self']?.uuid) idx[c['@self'].uuid] = c
 				if (c['@self']?.slug) idx[c['@self'].slug] = c
@@ -83,7 +88,8 @@ export default {
 			}
 			const result = []
 			for (const [key, hours] of totals.entries()) {
-				const cat = key !== UNCATEGORIZED_KEY ? this.categoryIndex[key] : null
+				const cat =
+					key !== UNCATEGORIZED_KEY ? this.categoryIndex[key] : null
 				result.push({
 					key,
 					label: cat ? cat.name : t('pipelinq', 'Uncategorized'),
@@ -94,16 +100,16 @@ export default {
 			return result
 		},
 		labels() {
-			return this.buckets.map(b => b.label)
+			return this.buckets.map((b) => b.label)
 		},
 		series() {
-			return this.buckets.map(b => b.hours)
+			return this.buckets.map((b) => b.hours)
 		},
 		colors() {
-			return this.buckets.map(b => b.color)
+			return this.buckets.map((b) => b.color)
 		},
 		hasData() {
-			return this.buckets.some(b => b.hours > 0)
+			return this.buckets.some((b) => b.hours > 0)
 		},
 	},
 	async mounted() {
@@ -122,9 +128,13 @@ export default {
 				const { objectStore } = await initializeStores()
 				const config = objectStore.objectTypeRegistry
 				if (config.timeEntry) {
-					const url = generateUrl('/apps/openregister/api/objects/'
-						+ config.timeEntry.register + '/'
-						+ config.timeEntry.schema + '?_limit=500')
+					const url = generateUrl(
+						'/apps/openregister/api/objects/'
+							+ config.timeEntry.register
+							+ '/'
+							+ config.timeEntry.schema
+							+ '?_limit=500',
+					)
 					const response = await fetch(url, {
 						headers: {
 							'Content-Type': 'application/json',
@@ -154,10 +164,20 @@ export default {
 			const bucket = this.buckets[index]
 			if (!bucket) return
 			if (bucket.key === UNCATEGORIZED_KEY) {
-				this.$router.push({ path: '/time-entries', query: { billingCategory: 'null' } }).catch(() => {})
+				this.$router
+					.push({
+						path: '/time-entries',
+						query: { billingCategory: 'null' },
+					})
+					.catch(() => {})
 				return
 			}
-			this.$router.push({ path: '/time-entries', query: { billingCategory: bucket.key } }).catch(() => {})
+			this.$router
+				.push({
+					path: '/time-entries',
+					query: { billingCategory: bucket.key },
+				})
+				.catch(() => {})
 		},
 	},
 }

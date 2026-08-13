@@ -16,17 +16,19 @@ export function initializeStores() {
 	if (initPromise) {
 		return initPromise
 	}
-	initPromise = doInitializeStores().then((result) => {
-		// fetchSettings() only flips `initialized` on success; on a failed load
-		// it stays false. Drop the cached promise then so the next caller retries.
-		if (!result.settingsStore.isInitialized) {
+	initPromise = doInitializeStores()
+		.then((result) => {
+			// fetchSettings() only flips `initialized` on success; on a failed load
+			// it stays false. Drop the cached promise then so the next caller retries.
+			if (!result.settingsStore.isInitialized) {
+				initPromise = null
+			}
+			return result
+		})
+		.catch((error) => {
 			initPromise = null
-		}
-		return result
-	}).catch((error) => {
-		initPromise = null
-		throw error
-	})
+			throw error
+		})
 	return initPromise
 }
 

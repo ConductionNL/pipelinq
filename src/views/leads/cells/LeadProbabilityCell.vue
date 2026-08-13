@@ -11,7 +11,9 @@
 				class="lead-prob-cell__badge"
 				:aria-label="t('pipelinq', 'Low probability')">
 				<AlertCircleOutline :size="14" class="lead-prob-cell__badge-icon" />
-				<span class="lead-prob-cell__badge-label">{{ t('pipelinq', 'Low') }}</span>
+				<span class="lead-prob-cell__badge-label">{{
+					t('pipelinq', 'Low')
+				}}</span>
 			</span>
 		</template>
 	</span>
@@ -53,7 +55,12 @@ export default {
 		 * @return {boolean}
 		 */
 		isEmpty() {
-			return this.value === null || this.value === undefined || this.value === '' || Number.isNaN(Number(this.value))
+			return (
+				this.value === null
+				|| this.value === undefined
+				|| this.value === ''
+				|| Number.isNaN(Number(this.value))
+			)
 		},
 		/**
 		 * Probability as a rounded integer percentage.

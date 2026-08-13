@@ -22,8 +22,14 @@
 					{{ article.title }}
 				</div>
 				<div class="xwiki-article-list__meta">
-					<span v-if="article.space" class="xwiki-article-list__space">{{ article.space }}</span>
-					<span v-if="article.modified" class="xwiki-article-list__modified">{{ formatDate(article.modified) }}</span>
+					<span v-if="article.space" class="xwiki-article-list__space">{{
+						article.space
+					}}</span>
+					<span
+						v-if="article.modified"
+						class="xwiki-article-list__modified"
+						>{{ formatDate(article.modified) }}</span
+					>
 				</div>
 			</li>
 		</ul>

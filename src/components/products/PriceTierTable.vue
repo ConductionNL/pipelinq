@@ -14,14 +14,19 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="(tier, index) in rows" :key="index" class="viewTableRow">
+					<tr
+						v-for="(tier, index) in rows"
+						:key="index"
+						class="viewTableRow">
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'From quantity')"
 								:label-visible="false"
 								:model-value="String(tier.minQuantity)"
 								type="number"
-								@update:model-value="v => updateTier(index, 'minQuantity', v)" />
+								@update:model-value="
+									(v) => updateTier(index, 'minQuantity', v)
+								" />
 						</td>
 						<td>
 							<NcTextField
@@ -29,17 +34,24 @@
 								:label-visible="false"
 								:model-value="String(tier.unitPrice)"
 								type="number"
-								@update:model-value="v => updateTier(index, 'unitPrice', v)" />
+								@update:model-value="
+									(v) => updateTier(index, 'unitPrice', v)
+								" />
 						</td>
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'Label')"
 								:label-visible="false"
 								:model-value="tier.label || ''"
-								@update:model-value="v => updateTier(index, 'label', v)" />
+								@update:model-value="
+									(v) => updateTier(index, 'label', v)
+								" />
 						</td>
 						<td class="price-tier-table__actions-col">
-							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove tier')" @click="removeTier(index)">
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('pipelinq', 'Remove tier')"
+								@click="removeTier(index)">
 								<template #icon>
 									<Delete :size="20" />
 								</template>
@@ -110,9 +122,11 @@ export default {
 		 * Load tiers from the product, sorted ascending by minQuantity.
 		 */
 		loadRows() {
-			const tiers = Array.isArray(this.product.priceTiers) ? this.product.priceTiers : []
+			const tiers = Array.isArray(this.product.priceTiers)
+				? this.product.priceTiers
+				: []
 			this.rows = tiers
-				.map(t => ({
+				.map((t) => ({
 					minQuantity: Number(t.minQuantity) || 1,
 					unitPrice: Number(t.unitPrice) || 0,
 					label: t.label || '',
@@ -137,8 +151,15 @@ export default {
 		 * Append an empty tier row.
 		 */
 		addTier() {
-			const nextQty = this.rows.length > 0 ? Math.max(...this.rows.map(r => r.minQuantity)) + 1 : 1
-			this.rows.push({ minQuantity: nextQty, unitPrice: Number(this.product.unitPrice) || 0, label: '' })
+			const nextQty =
+				this.rows.length > 0
+					? Math.max(...this.rows.map((r) => r.minQuantity)) + 1
+					: 1
+			this.rows.push({
+				minQuantity: nextQty,
+				unitPrice: Number(this.product.unitPrice) || 0,
+				label: '',
+			})
 		},
 		/**
 		 * Remove a tier row.
@@ -154,7 +175,7 @@ export default {
 		async save() {
 			this.saving = true
 			const sorted = [...this.rows]
-				.filter(r => r.minQuantity >= 1)
+				.filter((r) => r.minQuantity >= 1)
 				.sort((a, b) => a.minQuantity - b.minQuantity)
 			try {
 				const result = await this.objectStore.saveObject('product', {

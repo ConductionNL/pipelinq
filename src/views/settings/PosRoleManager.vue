@@ -13,11 +13,18 @@
   - instead of routing to a detail page and the form opens in a dialog.
   -->
 <template>
-	<NcSettingsSection :name="t('pipelinq', 'POS roles')"
-		:description="t('pipelinq', 'Permission sets a cashier can hold at the register — voiding, refunds, opening the cash drawer.')">
+	<NcSettingsSection
+		:name="t('pipelinq', 'POS roles')"
+		:description="
+			t(
+				'pipelinq',
+				'Permission sets a cashier can hold at the register — voiding, refunds, opening the cash drawer.',
+			)
+		">
 		<PosRoleList :key="reloadKey" @edit="openRole" @create="openNew" />
 
-		<PosRoleFormDialog v-if="dialogOpen"
+		<PosRoleFormDialog
+			v-if="dialogOpen"
 			:role-id="editingId"
 			@done="closeDialog" />
 	</NcSettingsSection>

@@ -31,8 +31,9 @@ import { test, expect } from '@playwright/test'
 const PORTAL_BASE = '/apps/pipelinq/portal/'
 
 test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
-
-	test('login page exposes correct landmarks, headings and labelled inputs', async ({ page }) => {
+	test('login page exposes correct landmarks, headings and labelled inputs', async ({
+		page,
+	}) => {
 		await page.goto(PORTAL_BASE + '#/login')
 
 		// The portal SPA is served via TemplateResponse::RENDER_AS_PUBLIC, which
@@ -61,14 +62,19 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 
 		const passwordInput = page.locator('#portal-password')
 		await expect(passwordInput).toHaveAttribute('type', 'password')
-		await expect(passwordInput).toHaveAttribute('autocomplete', 'current-password')
+		await expect(passwordInput).toHaveAttribute(
+			'autocomplete',
+			'current-password',
+		)
 		await expect(page.locator('label[for="portal-password"]')).toHaveCount(1)
 
 		// Submit button has an accessible name (WCAG 4.1.2).
 		await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible()
 	})
 
-	test('login form announces errors and associates them with the input', async ({ page }) => {
+	test('login form announces errors and associates them with the input', async ({
+		page,
+	}) => {
 		await page.goto(PORTAL_BASE + '#/login')
 
 		// Submit with empty/invalid credentials to surface the error region.
@@ -93,7 +99,9 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 		)
 	})
 
-	test('skip-link receives focus first and targets the main landmark', async ({ page }) => {
+	test('skip-link receives focus first and targets the main landmark', async ({
+		page,
+	}) => {
 		await page.goto(PORTAL_BASE + '#/login')
 
 		const portal = page.locator('.portal-app')
@@ -103,7 +111,9 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 		// main content" link before it, so we focus into the portal and assert
 		// its own bypass-block link receives focus). WCAG 2.4.1.
 		await portal.locator('.portal-skip-link').focus()
-		const focused = await page.evaluate(() => document.activeElement?.className || '')
+		const focused = await page.evaluate(
+			() => document.activeElement?.className || '',
+		)
 		expect(focused).toContain('portal-skip-link')
 
 		// Skip-link href targets the <main id="portal-main-content"> landmark.
@@ -116,7 +126,9 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 		await expect(main).toHaveAttribute('tabindex', '-1')
 	})
 
-	test('password-reset page is keyboard accessible and labelled', async ({ page }) => {
+	test('password-reset page is keyboard accessible and labelled', async ({
+		page,
+	}) => {
 		await page.goto(PORTAL_BASE + '#/password-reset')
 
 		// Scope to the portal root — NC's public guest chrome adds its own <h1>.
@@ -127,7 +139,9 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 		await expect(page.locator('label[for="portal-reset-email"]')).toHaveCount(1)
 
 		// Submit button has an accessible name.
-		await expect(page.getByRole('button', { name: /send reset link/i })).toBeVisible()
+		await expect(
+			page.getByRole('button', { name: /send reset link/i }),
+		).toBeVisible()
 	})
 
 	test('session-timeout warning carries a live-region role', async ({ page }) => {
@@ -153,7 +167,6 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 })
 
 test.describe('Customer portal — visible focus indicator', () => {
-
 	test('focus-visible style is loaded for the portal shell', async ({ page }) => {
 		await page.goto(PORTAL_BASE + '#/login')
 

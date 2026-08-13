@@ -69,14 +69,21 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Schema snapshots')">
-			<div v-for="(snap, index) in snapshots" :key="index" class="run-snapshot">
+			<div
+				v-for="(snap, index) in snapshots"
+				:key="index"
+				class="run-snapshot">
 				<strong>{{ snap.pipelinqSchemaName }}</strong>
-				<ul v-if="snap.comparedToPrevious && snap.comparedToPrevious.length" class="run-drift">
+				<ul
+					v-if="snap.comparedToPrevious && snap.comparedToPrevious.length"
+					class="run-drift">
 					<li v-for="(change, ci) in snap.comparedToPrevious" :key="ci">
 						{{ change }}
 					</li>
 				</ul>
-				<span v-else class="run-nodrift">{{ t('pipelinq', 'No schema changes detected') }}</span>
+				<span v-else class="run-nodrift">{{
+					t('pipelinq', 'No schema changes detected')
+				}}</span>
 			</div>
 			<p v-if="!snapshots.length" class="run-empty">
 				{{ t('pipelinq', 'No schema snapshots') }}
@@ -150,7 +157,9 @@ export default {
 		 * @return {Array<object>} The manifest entries.
 		 */
 		manifest() {
-			return Array.isArray(this.run.fileManifestJson) ? this.run.fileManifestJson : []
+			return Array.isArray(this.run.fileManifestJson)
+				? this.run.fileManifestJson
+				: []
 		},
 		/**
 		 * The human-readable status label.
@@ -158,7 +167,10 @@ export default {
 		 * @return {string} The label.
 		 */
 		statusLabel() {
-			return this.t('pipelinq', STATUS_LABELS[this.run.status] || this.run.status || 'Unknown')
+			return this.t(
+				'pipelinq',
+				STATUS_LABELS[this.run.status] || this.run.status || 'Unknown',
+			)
 		},
 		/**
 		 * The status badge severity.

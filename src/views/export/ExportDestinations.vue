@@ -6,7 +6,12 @@
 	<div>
 		<CnIndexPage
 			:title="t('pipelinq', 'Export destinations')"
-			:description="t('pipelinq', 'Data-warehouse and object-storage targets for BI exports')"
+			:description="
+				t(
+					'pipelinq',
+					'Data-warehouse and object-storage targets for BI exports',
+				)
+			"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
@@ -24,7 +29,10 @@
 			@view="openDestination"
 			@page-changed="onPageChange">
 			<template #row-actions="{ row }">
-				<NcButton variant="tertiary" :disabled="busyId === row.id" @click.stop="testConnection(row)">
+				<NcButton
+					variant="tertiary"
+					:disabled="busyId === row.id"
+					@click.stop="testConnection(row)">
 					{{ t('pipelinq', 'Test connection') }}
 				</NcButton>
 			</template>
@@ -64,7 +72,13 @@ export default {
 		 * @return {Array<string>} The column keys.
 		 */
 		visibleColumns() {
-			return ['name', 'type', 'connectorSourceId', 'validationStatus', 'lastValidatedAt']
+			return [
+				'name',
+				'type',
+				'connectorSourceId',
+				'validationStatus',
+				'lastValidatedAt',
+			]
 		},
 	},
 	methods: {
@@ -88,7 +102,10 @@ export default {
 		 * @param {object} row The clicked row.
 		 */
 		openDestination(row) {
-			this.$router.push({ name: 'ExportDestinationDetail', params: { id: row.id } })
+			this.$router.push({
+				name: 'ExportDestinationDetail',
+				params: { id: row.id },
+			})
 		},
 		/**
 		 * Start a new destination.

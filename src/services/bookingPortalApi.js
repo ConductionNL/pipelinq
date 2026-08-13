@@ -24,7 +24,9 @@ const base = '/apps/pipelinq/portal'
  */
 export async function fetchServices() {
 	const response = await axios.get(generateUrl(base + '/services'))
-	return Array.isArray(response.data) ? response.data : (response.data.services || [])
+	return Array.isArray(response.data)
+		? response.data
+		: response.data.services || []
 }
 
 /**
@@ -49,7 +51,7 @@ export async function fetchAvailability(serviceId, date) {
 	const response = await axios.get(generateUrl(base + '/availability'), {
 		params: { serviceId, date },
 	})
-	return Array.isArray(response.data) ? response.data : (response.data.slots || [])
+	return Array.isArray(response.data) ? response.data : response.data.slots || []
 }
 
 /**
@@ -70,6 +72,8 @@ export async function submitBooking(payload) {
  * @return {Promise<object>} The booking summary.
  */
 export async function fetchBooking(bookingId) {
-	const response = await axios.get(generateUrl(base + '/booking/' + encodeURIComponent(bookingId)))
+	const response = await axios.get(
+		generateUrl(base + '/booking/' + encodeURIComponent(bookingId)),
+	)
 	return response.data
 }

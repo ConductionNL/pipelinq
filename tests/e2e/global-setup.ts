@@ -34,18 +34,22 @@ function ensureBundleBuilt(): void {
 		return
 	}
 	// eslint-disable-next-line no-console
-	console.log(`[playwright globalSetup] bundle missing at ${BUNDLE_PATH}; running 'npm run build' once…`)
+	console.log(
+		`[playwright globalSetup] bundle missing at ${BUNDLE_PATH}; running 'npm run build' once…`,
+	)
 	execSync('npm run build', { cwd: APP_ROOT, stdio: 'inherit' })
 }
 
 async function ensureNextcloudReachable(baseURL: string): Promise<void> {
 	const ctx = await request.newContext()
 	try {
-		const res = await ctx.get(`${baseURL}/status.php`, { failOnStatusCode: false })
+		const res = await ctx.get(`${baseURL}/status.php`, {
+			failOnStatusCode: false,
+		})
 		if (!res.ok()) {
 			throw new Error(
-				`Nextcloud status.php returned ${res.status()} at ${baseURL}. ` +
-				'Make sure the docker container is running and reachable.',
+				`Nextcloud status.php returned ${res.status()} at ${baseURL}. `
+					+ 'Make sure the docker container is running and reachable.',
 			)
 		}
 		const body = await res.json().catch(() => ({}))
@@ -83,7 +87,10 @@ async function assertAppBoots(page: import('@playwright/test').Page): Promise<vo
 	})
 	page.on('pageerror', (err) => consoleErrors.push(`pageerror: ${err.message}`))
 
-	for (const route of ['/index.php/apps/pipelinq/', '/index.php/apps/pipelinq/#/clients']) {
+	for (const route of [
+		'/index.php/apps/pipelinq/',
+		'/index.php/apps/pipelinq/#/clients',
+	]) {
 		consoleErrors.length = 0
 		await page.goto(route, { waitUntil: 'domcontentloaded' })
 		try {
@@ -95,12 +102,12 @@ async function assertAppBoots(page: import('@playwright/test').Page): Promise<vo
 		} catch {
 			throw new Error(
 				`[boot gate] The Pipelinq Vue app did not mount on ${route}. `
-				+ 'The bundle loaded but rendered nothing — this is a bootstrap '
-				+ 'failure, not a test failure, and running the suite against it '
-				+ 'would produce a wall of meaningless red.\n'
-				+ (consoleErrors.length
-					? `Console errors:\n  ${consoleErrors.slice(0, 10).join('\n  ')}`
-					: 'No console errors were captured.'),
+					+ 'The bundle loaded but rendered nothing — this is a bootstrap '
+					+ 'failure, not a test failure, and running the suite against it '
+					+ 'would produce a wall of meaningless red.\n'
+					+ (consoleErrors.length
+						? `Console errors:\n  ${consoleErrors.slice(0, 10).join('\n  ')}`
+						: 'No console errors were captured.'),
 			)
 		}
 	}
@@ -110,10 +117,11 @@ async function globalSetup(config: FullConfig): Promise<void> {
 	// The `?? 'http://localhost:8080'` literal that used to close this chain is
 	// gone — it silently pointed the suite at the SHARED dev container whenever
 	// the environment was unset. resolveBaseUrl() throws instead.
-	const baseURL = (config.projects[0]?.use?.baseURL as string | undefined)
-		?? resolveBaseUrl()
+	const baseURL =
+		(config.projects[0]?.use?.baseURL as string | undefined) ?? resolveBaseUrl()
 	const user = process.env.ADMIN_USER ?? process.env.NC_ADMIN_USER ?? 'admin'
-	const password = process.env.ADMIN_PASSWORD ?? process.env.NC_ADMIN_PASS ?? 'admin'
+	const password =
+		process.env.ADMIN_PASSWORD ?? process.env.NC_ADMIN_PASS ?? 'admin'
 
 	ensureBundleBuilt()
 	await ensureNextcloudReachable(baseURL)
@@ -133,8 +141,8 @@ async function globalSetup(config: FullConfig): Promise<void> {
 	const currentUrl = page.url()
 	if (/\/login(\?|$|\/)/.test(currentUrl)) {
 		throw new Error(
-			`Login appears to have failed — still on ${currentUrl}. ` +
-			'Check ADMIN_USER / ADMIN_PASSWORD (defaults admin/admin).',
+			`Login appears to have failed — still on ${currentUrl}. `
+				+ 'Check ADMIN_USER / ADMIN_PASSWORD (defaults admin/admin).',
 		)
 	}
 

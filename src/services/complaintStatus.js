@@ -224,15 +224,15 @@ export function getSlaIndicator(slaDeadline, status) {
  */
 export function getSlaColor(indicator) {
 	switch (indicator) {
-	case 'met':
-	case 'on_track':
-		return '#46ba61'
-	case 'approaching':
-		return '#e9a400'
-	case 'overdue':
-		return '#e9322d'
-	default:
-		return 'var(--color-text-maxcontrast)'
+		case 'met':
+		case 'on_track':
+			return '#46ba61'
+		case 'approaching':
+			return '#e9a400'
+		case 'overdue':
+			return '#e9322d'
+		default:
+			return 'var(--color-text-maxcontrast)'
 	}
 }
 

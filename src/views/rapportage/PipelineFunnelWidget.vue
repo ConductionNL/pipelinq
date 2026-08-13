@@ -15,13 +15,20 @@
 				:input-label="t('pipelinq', 'Pipeline')"
 				label="label"
 				track-by="value"
-				@update:model-value="$emit('pipeline-change', selectedPipeline ? selectedPipeline.value : null)" />
+				@update:model-value="
+					$emit(
+						'pipeline-change',
+						selectedPipeline ? selectedPipeline.value : null,
+					)
+				" />
 		</div>
 
 		<NcEmptyContent
 			v-if="!filteredData.length"
 			:name="t('pipelinq', 'No pipeline data')"
-			:description="t('pipelinq', 'There are no leads in this pipeline yet.')" />
+			:description="
+				t('pipelinq', 'There are no leads in this pipeline yet.')
+			" />
 
 		<CnChartWidget
 			v-else
@@ -60,17 +67,21 @@ export default {
 			return Array.isArray(this.data) ? this.data : []
 		},
 		categories() {
-			return this.filteredData.map(row => row.stage)
+			return this.filteredData.map((row) => row.stage)
 		},
 		series() {
 			return [
 				{
 					name: t('pipelinq', 'Total value'),
-					data: this.filteredData.map(row => Math.round(row.totalValue || 0)),
+					data: this.filteredData.map((row) =>
+						Math.round(row.totalValue || 0),
+					),
 				},
 				{
 					name: t('pipelinq', 'Weighted value'),
-					data: this.filteredData.map(row => Math.round(row.weightedValue || 0)),
+					data: this.filteredData.map((row) =>
+						Math.round(row.weightedValue || 0),
+					),
 				},
 			]
 		},

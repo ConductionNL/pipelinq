@@ -9,12 +9,23 @@
 		size="normal"
 		@closing="$emit('close')">
 		<div class="pos-refund-reject">
-			<p>{{ t('pipelinq', 'This will reject the refund. Enter a reason for the rejection.') }}</p>
+			<p>
+				{{
+					t(
+						'pipelinq',
+						'This will reject the refund. Enter a reason for the rejection.',
+					)
+				}}
+			</p>
 			<NcTextArea
 				v-model="reason"
 				:label="t('pipelinq', 'Rejection reason')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Enter a reason for the rejection') : ''" />
+				:helper-text="
+					showError
+						? t('pipelinq', 'Enter a reason for the rejection')
+						: ''
+				" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">

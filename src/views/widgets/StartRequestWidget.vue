@@ -1,39 +1,46 @@
 <template>
 	<div class="start-request-widget">
 		<div v-if="!success" class="widget-form">
-			<NcTextField v-model="form.title"
+			<NcTextField
+				v-model="form.title"
 				:label="t('pipelinq', 'Title')"
 				:placeholder="t('pipelinq', 'Request title (required)')"
 				:error="submitted && !form.title"
 				@keyup.enter="onSubmit" />
 
-			<ClientAutocomplete :value="selectedClient"
+			<ClientAutocomplete
+				:value="selectedClient"
 				:placeholder="t('pipelinq', 'Search client...')"
 				:label="t('pipelinq', 'Client')"
 				@input="onClientSelected" />
 
-			<NcSelect v-model="form.category"
+			<NcSelect
+				v-model="form.category"
 				:options="categoryOptions"
 				:input-label="t('pipelinq', 'Category')"
 				:placeholder="t('pipelinq', 'Category')"
 				input-id="request-category" />
 
-			<NcSelect v-model="form.priority"
+			<NcSelect
+				v-model="form.priority"
 				:options="priorityOptions"
 				:input-label="t('pipelinq', 'Priority')"
 				:placeholder="t('pipelinq', 'Priority')"
 				input-id="request-priority" />
 
-			<NcSelect v-model="form.channel"
+			<NcSelect
+				v-model="form.channel"
 				:options="channelOptions"
 				:input-label="t('pipelinq', 'Channel')"
 				:placeholder="t('pipelinq', 'Channel')"
 				input-id="request-channel" />
 
-			<NcButton variant="primary"
-				:disabled="submitting"
-				@click="onSubmit">
-				{{ submitting ? t('pipelinq', 'Creating...') : t('pipelinq', 'Create request') }}
+			<NcButton variant="primary" :disabled="submitting" @click="onSubmit">
+				{{
+					submitting
+						? t('pipelinq', 'Creating...')
+						: t('pipelinq', 'Create request')
+				}}
 			</NcButton>
 		</div>
 
@@ -162,9 +169,10 @@ export default {
 					ticketType: 'request',
 					title: this.form.title,
 					status: 'new',
-					priority: typeof this.form.priority === 'object'
-						? this.form.priority.id
-						: (this.form.priority || 'normal'),
+					priority:
+						typeof this.form.priority === 'object'
+							? this.form.priority.id
+							: this.form.priority || 'normal',
 					occurredAt: new Date().toISOString(),
 				}
 
@@ -172,18 +180,24 @@ export default {
 					body.client = this.selectedClient.id
 				}
 				if (this.form.category) {
-					body.category = typeof this.form.category === 'object'
-						? this.form.category.id || this.form.category.label
-						: this.form.category
+					body.category =
+						typeof this.form.category === 'object'
+							? this.form.category.id || this.form.category.label
+							: this.form.category
 				}
 				if (this.form.channel) {
-					body.channel = typeof this.form.channel === 'object'
-						? this.form.channel.id
-						: this.form.channel
+					body.channel =
+						typeof this.form.channel === 'object'
+							? this.form.channel.id
+							: this.form.channel
 				}
 
-				const url = generateUrl('/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema)
+				const url = generateUrl(
+					'/apps/openregister/api/objects/'
+						+ typeConfig.register
+						+ '/'
+						+ typeConfig.schema,
+				)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -210,7 +224,12 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-56
 		 */
 		resetForm() {
-			this.form = { title: '', category: null, priority: 'normal', channel: null }
+			this.form = {
+				title: '',
+				category: null,
+				priority: 'normal',
+				channel: null,
+			}
 			this.selectedClient = null
 			this.submitted = false
 			this.success = false
@@ -226,10 +245,19 @@ export default {
 				// Narrow the shared `ticket` supertype to request-tickets so complaints
 				// and contactmomenten don't show up as "recent requests".
 				const typeConfig = this.config.ticket
-				const params = new URLSearchParams({ ticketType: 'request', _limit: '3', _order: 'desc' })
-				const url = generateUrl('/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
-					+ '?' + params.toString())
+				const params = new URLSearchParams({
+					ticketType: 'request',
+					_limit: '3',
+					_order: 'desc',
+				})
+				const url = generateUrl(
+					'/apps/openregister/api/objects/'
+						+ typeConfig.register
+						+ '/'
+						+ typeConfig.schema
+						+ '?'
+						+ params.toString(),
+				)
 
 				const response = await fetch(url, {
 					headers: {

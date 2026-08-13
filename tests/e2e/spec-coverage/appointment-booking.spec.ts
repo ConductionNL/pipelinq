@@ -64,23 +64,33 @@ async function gotoHash(page: Page, hash: string): Promise<void> {
 }
 
 // @e2e openspec/specs/appointment-booking/spec.md#service-list-shows-all-services-with-filters
-test('Services: the admin service catalogue index renders its list surface', async ({ page }) => {
+test('Services: the admin service catalogue index renders its list surface', async ({
+	page,
+}) => {
 	await openApp(page)
 	await navClick(page, 'Services', /\/services/)
 
 	const content = page.locator('#content-vue')
-	await expect(content.getByRole('heading', { name: 'Services' }).first()).toBeVisible()
+	await expect(
+		content.getByRole('heading', { name: 'Services' }).first(),
+	).toBeVisible()
 	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible()
 	// Tolerates both a populated and an empty register — the assertion is that
 	// the schema-driven data surface mounted, not that a particular row exists.
 	await expect(
-		content.locator('table, .cn-data-table, [data-testid="cn-data-table"], .empty-content, [data-testid="cn-empty-state"]').first(),
+		content
+			.locator(
+				'table, .cn-data-table, [data-testid="cn-data-table"], .empty-content, [data-testid="cn-empty-state"]',
+			)
+			.first(),
 	).toBeVisible({ timeout: 15000 })
 	await assertNoHardError(page)
 })
 
 // @e2e openspec/specs/appointment-booking/spec.md#service-detail-allows-editing-all-fields
-test('Services: "New service" opens the ServiceDetail form with editable fields', async ({ page }) => {
+test('Services: "New service" opens the ServiceDetail form with editable fields', async ({
+	page,
+}) => {
 	await openApp(page)
 	await navClick(page, 'Services', /\/services/)
 
@@ -92,10 +102,18 @@ test('Services: "New service" opens the ServiceDetail form with editable fields'
 
 	// ServiceDetail renders the ServiceForm branch for id === 'new'
 	// (src/views/bookings/ServiceDetail.vue, `v-if="editing || isNew"`).
-	await expect(page.locator('#content-vue').getByRole('heading', { name: 'New service' }).first())
-		.toBeVisible({ timeout: 15000 })
-	await expect(page.locator('#content-vue').locator('input, .input-field__input, textarea').first())
-		.toBeVisible({ timeout: 10000 })
+	await expect(
+		page
+			.locator('#content-vue')
+			.getByRole('heading', { name: 'New service' })
+			.first(),
+	).toBeVisible({ timeout: 15000 })
+	await expect(
+		page
+			.locator('#content-vue')
+			.locator('input, .input-field__input, textarea')
+			.first(),
+	).toBeVisible({ timeout: 10000 })
 	await assertNoHardError(page)
 })
 
@@ -144,7 +162,10 @@ test.describe('Booking admin surfaces (seeded)', () => {
 
 		// --- the client, via the contact-first "New Client" dialog on the
 		// Dashboard (openApp lands there; the dialog is a Dashboard headerAction).
-		await fxPage.getByRole('button', { name: /New Client/i }).first().click()
+		await fxPage
+			.getByRole('button', { name: /New Client/i })
+			.first()
+			.click()
 		const dialog = fxPage.locator('[data-testid="client-create-dialog"]').first()
 		await expect(dialog).toBeVisible({ timeout: 15000 })
 		await dialog.locator('[data-testid="client-name-input"]').fill(CUSTOMER_NAME)
@@ -156,8 +177,12 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		// like this one, and failed asserting the Identity widget's fields. That
 		// test now selects a populated client, and this fixture no longer leaves a
 		// half-filled row for anyone else to trip over.
-		await dialog.locator('[data-testid="client-email-input"]').fill('gate19-booking@example.test')
-		await dialog.locator('[data-testid="client-phone-input"]').fill('+31 20 000 0000')
+		await dialog
+			.locator('[data-testid="client-email-input"]')
+			.fill('gate19-booking@example.test')
+		await dialog
+			.locator('[data-testid="client-phone-input"]')
+			.fill('+31 20 000 0000')
 		await dialog.locator('[data-testid="client-type-select"]').click()
 		// NcSelect teleports its dropdown, so the option is matched page-wide, and
 		// it is awaited rather than clicked blind — the list is populated
@@ -171,8 +196,13 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		await dialog.locator('[data-testid="client-form-save"]').click()
 		await expect(dialog).toBeHidden({ timeout: 20000 })
 
-		const created = (await fx.list('client', { _limit: 5, name: CUSTOMER_NAME }))[0]
-		expect(created, 'the seeded client must be readable back from OpenRegister').toBeTruthy()
+		const created = (
+			await fx.list('client', { _limit: 5, name: CUSTOMER_NAME })
+		)[0]
+		expect(
+			created,
+			'the seeded client must be readable back from OpenRegister',
+		).toBeTruthy()
 		customerId = String(created.id || created['@self']?.id)
 		fx.track('client', customerId)
 
@@ -190,12 +220,16 @@ test.describe('Booking admin surfaces (seeded)', () => {
 	})
 
 	// @e2e openspec/specs/appointment-booking/spec.md#bookings-section-shows-empty-state-if-none-exist
-	test('a customer with no bookings gets an empty state, not an error', async ({ page }) => {
+	test('a customer with no bookings gets an empty state, not an error', async ({
+		page,
+	}) => {
 		await openApp(page)
 		await gotoHash(page, `/clients/${customerId}`)
 
 		const content = page.locator('#content-vue')
-		await expect(content.getByText('No bookings for this customer.')).toBeVisible({ timeout: 20000 })
+		await expect(
+			content.getByText('No bookings for this customer.'),
+		).toBeVisible({ timeout: 20000 })
 		// The failure branch renders `.bookings-card__state--error` instead, so a
 		// broken fetch cannot pass itself off as "this customer has no bookings".
 		await expect(content.locator('.bookings-card__state--error')).toHaveCount(0)
@@ -203,18 +237,32 @@ test.describe('Booking admin surfaces (seeded)', () => {
 	})
 
 	// @e2e openspec/specs/appointment-booking/spec.md#bookings-visible-on-customer-detail
-	test('the Customer detail page lists that customer\'s bookings, future first', async ({ page }) => {
+	test("the Customer detail page lists that customer's bookings, future first", async ({
+		page,
+	}) => {
 		// Two future + one past: the card sorts upcoming ascending, then past
 		// descending (BookingsCard.sortedBookings).
 		const future = await fx.create('booking', {
-			customerId, serviceId, startAt: hoursFromNow(48), endAt: hoursFromNow(49), status: 'confirmed',
+			customerId,
+			serviceId,
+			startAt: hoursFromNow(48),
+			endAt: hoursFromNow(49),
+			status: 'confirmed',
 		})
 		futureBookingId = String(future.id || future['@self']?.id)
 		await fx.create('booking', {
-			customerId, serviceId, startAt: hoursFromNow(72), endAt: hoursFromNow(73), status: 'pending-deposit',
+			customerId,
+			serviceId,
+			startAt: hoursFromNow(72),
+			endAt: hoursFromNow(73),
+			status: 'pending-deposit',
 		})
 		const past = await fx.create('booking', {
-			customerId, serviceId, startAt: hoursFromNow(-48), endAt: hoursFromNow(-47), status: 'confirmed',
+			customerId,
+			serviceId,
+			startAt: hoursFromNow(-48),
+			endAt: hoursFromNow(-47),
+			status: 'confirmed',
 		})
 		pastBookingId = String(past.id || past['@self']?.id)
 
@@ -233,7 +281,9 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		// Future-first: the two upcoming rows precede the past one, and the
 		// upcoming pair is itself ascending (+48h confirmed before +72h pending).
 		await expect(rows.nth(0).locator('.status-badge')).toHaveText(/Confirmed/)
-		await expect(rows.nth(1).locator('.status-badge')).toHaveText(/Awaiting deposit/)
+		await expect(rows.nth(1).locator('.status-badge')).toHaveText(
+			/Awaiting deposit/,
+		)
 		await expect(rows.nth(2).locator('.status-badge')).toHaveText(/Confirmed/)
 
 		await assertNoHardError(page)
@@ -250,18 +300,28 @@ test.describe('Booking admin surfaces (seeded)', () => {
 	 * actions is rendered in its own time window.
 	 */
 	// @e2e openspec/specs/appointment-booking/spec.md#booking-detail-shows-status-actions
-	test('Booking detail exposes its time-window-gated status actions', async ({ page }) => {
+	test('Booking detail exposes its time-window-gated status actions', async ({
+		page,
+	}) => {
 		await openApp(page)
 		const content = page.locator('#content-vue')
 
 		await gotoHash(page, `/bookings/${futureBookingId}`)
-		await expect(content.getByRole('button', { name: 'Reschedule' })).toBeVisible({ timeout: 25000 })
-		await expect(content.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible()
+		await expect(
+			content.getByRole('button', { name: 'Reschedule' }),
+		).toBeVisible({ timeout: 25000 })
+		await expect(
+			content.getByRole('button', { name: 'Cancel', exact: true }),
+		).toBeVisible()
 		await assertNoHardError(page)
 
 		await gotoHash(page, `/bookings/${pastBookingId}`)
-		await expect(content.getByRole('button', { name: 'Mark completed' })).toBeVisible({ timeout: 25000 })
-		await expect(content.getByRole('button', { name: 'Mark no-show' })).toBeVisible()
+		await expect(
+			content.getByRole('button', { name: 'Mark completed' }),
+		).toBeVisible({ timeout: 25000 })
+		await expect(
+			content.getByRole('button', { name: 'Mark no-show' }),
+		).toBeVisible()
 		await assertNoHardError(page)
 	})
 })
@@ -279,10 +339,15 @@ test.describe('Public booking portal (no Nextcloud login)', () => {
 	const BOOKING_ROUTE = '/apps/pipelinq/portal/#/book/haircut-simple'
 
 	// @e2e openspec/specs/appointment-booking/spec.md#customer-books-without-login
-	test('the booking portal is served to an anonymous visitor', async ({ page }) => {
+	test('the booking portal is served to an anonymous visitor', async ({
+		page,
+	}) => {
 		const response = await page.goto(BOOKING_ROUTE)
 		expect(response, 'the public portal produced no response').not.toBeNull()
-		expect(response?.status(), 'the booking portal must be publicly served').toBe(200)
+		expect(
+			response?.status(),
+			'the booking portal must be publicly served',
+		).toBe(200)
 
 		// Nextcloud never asked for credentials and never bounced to the login
 		// page — the whole point of the scenario.
@@ -290,11 +355,15 @@ test.describe('Public booking portal (no Nextcloud login)', () => {
 		await expect(page).not.toHaveURL(/\/login/)
 
 		// The booking portal component itself mounted.
-		await expect(page.locator('.booking-portal')).toHaveCount(1, { timeout: 15000 })
+		await expect(page.locator('.booking-portal')).toHaveCount(1, {
+			timeout: 15000,
+		})
 	})
 
 	// @e2e openspec/specs/appointment-booking/spec.md#portal-is-wcag-21-aa-accessible
-	test('the booking portal exposes a bypass-block link and a live region', async ({ page }) => {
+	test('the booking portal exposes a bypass-block link and a live region', async ({
+		page,
+	}) => {
 		await page.goto(BOOKING_ROUTE)
 
 		const portal = page.locator('.booking-portal')
@@ -311,7 +380,10 @@ test.describe('Public booking portal (no Nextcloud login)', () => {
 		// (WCAG 4.1.3 Status Messages). Written as an `or` so the assertion
 		// stays true whichever branch the data takes.
 		await expect(
-			portal.locator('.booking-layout').or(portal.locator('[role="status"], [role="alert"]')).first(),
+			portal
+				.locator('.booking-layout')
+				.or(portal.locator('[role="status"], [role="alert"]'))
+				.first(),
 		).toBeVisible({ timeout: 15000 })
 	})
 })

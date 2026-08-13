@@ -21,24 +21,35 @@
 						v-for="(variant, index) in variants"
 						:key="index"
 						class="viewTableRow"
-						:class="{ 'product-variant-panel__row--highlight': variant.sku === highlightSku }">
+						:class="{
+							'product-variant-panel__row--highlight':
+								variant.sku === highlightSku,
+						}">
 						<td>{{ variant.sku }}</td>
 						<td>{{ variant.name || '-' }}</td>
 						<td>{{ attributesLabel(variant.attributes) }}</td>
 						<td>{{ formatCurrency(variant.unitPrice) }}</td>
 						<td>{{ variant.barcode || '-' }}</td>
 						<td>
-							<span class="status-badge" :class="'status--' + (variant.status || 'active')">
+							<span
+								class="status-badge"
+								:class="'status--' + (variant.status || 'active')">
 								{{ variant.status || 'active' }}
 							</span>
 						</td>
 						<td class="product-variant-panel__actions-col">
-							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Edit variant')" @click="openEdit(index)">
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('pipelinq', 'Edit variant')"
+								@click="openEdit(index)">
 								<template #icon>
 									<Pencil :size="20" />
 								</template>
 							</NcButton>
-							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove variant')" @click="removeVariant(index)">
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('pipelinq', 'Remove variant')"
+								@click="removeVariant(index)">
 								<template #icon>
 									<Delete :size="20" />
 								</template>
@@ -114,10 +125,12 @@ export default {
 			return useObjectStore()
 		},
 		editingVariant() {
-			return this.editingIndex !== null ? this.variants[this.editingIndex] : null
+			return this.editingIndex !== null
+				? this.variants[this.editingIndex]
+				: null
 		},
 		variantSkus() {
-			return this.variants.map(v => v.sku)
+			return this.variants.map((v) => v.sku)
 		},
 	},
 	watch: {
@@ -133,8 +146,10 @@ export default {
 		 * Deep-clone the product's variants into editable state.
 		 */
 		loadVariants() {
-			const raw = Array.isArray(this.product.variants) ? this.product.variants : []
-			this.variants = raw.map(v => ({
+			const raw = Array.isArray(this.product.variants)
+				? this.product.variants
+				: []
+			this.variants = raw.map((v) => ({
 				sku: v.sku || '',
 				name: v.name || '',
 				attributes: { ...(v.attributes || {}) },
