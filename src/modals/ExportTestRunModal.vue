@@ -29,7 +29,10 @@
 						{{ destination }}
 					</li>
 					<li v-if="downloadUrl">
-						<a :href="downloadUrl" :download="downloadName" rel="noopener">
+						<a
+							:href="downloadUrl"
+							:download="downloadName"
+							rel="noopener">
 							{{ t('pipelinq', 'Download sample file') }}
 						</a>
 					</li>
@@ -48,10 +51,10 @@
 			</NcNoteCard>
 		</div>
 		<template #actions>
-			<NcButton :disabled="busy" type="tertiary" @click="rerun">
+			<NcButton :disabled="busy" variant="tertiary" @click="rerun">
 				{{ t('pipelinq', 'Run again') }}
 			</NcButton>
-			<NcButton type="primary" @click="$emit('close')">
+			<NcButton variant="primary" @click="$emit('close')">
 				{{ t('pipelinq', 'Close') }}
 			</NcButton>
 		</template>
@@ -144,7 +147,9 @@ export default {
 			if (this.result === null) {
 				return 'export-test-sample'
 			}
-			return this.result.filename || this.result.fileName || 'export-test-sample'
+			return (
+				this.result.filename || this.result.fileName || 'export-test-sample'
+			)
 		},
 		/**
 		 * The format reported in the result, for context.
@@ -184,7 +189,10 @@ export default {
 				const data = await exportApi.testRun(this.jobId)
 				this.result = data || { success: false, errors: ['No response'] }
 			} catch (e) {
-				this.result = { success: false, errors: [e.message || 'Test run failed'] }
+				this.result = {
+					success: false,
+					errors: [e.message || 'Test run failed'],
+				}
 			} finally {
 				this.busy = false
 				this.$emit('completed', this.result)

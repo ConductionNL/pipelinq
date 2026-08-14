@@ -27,22 +27,20 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for PipelinqScannableServices.
  */
-class PipelinqScannableServicesTest extends TestCase
-{
+class PipelinqScannableServicesTest extends TestCase {
 
-    /**
-     * getScannableServiceClasses() declares exactly the two classes carrying
-     * `#[McpTool]`-attributed methods.
-     *
-     * @return void
-     */
-    public function testGetScannableServiceClassesDeclaresLeadAndTicketServices(): void
-    {
-        $classes = (new PipelinqScannableServices())->getScannableServiceClasses();
+	/**
+	 * getScannableServiceClasses() declares exactly the two classes carrying
+	 * `#[McpTool]`-attributed methods.
+	 *
+	 * @return void
+	 */
+	public function testGetScannableServiceClassesDeclaresLeadAndTicketServices(): void {
+		$classes = (new PipelinqScannableServices())->getScannableServiceClasses();
 
-        $this->assertSame(
-            expected: [LeadService::class, TicketService::class],
-            actual: $classes
-        );
-    }//end testGetScannableServiceClassesDeclaresLeadAndTicketServices()
+		$this->assertSame(
+			expected: [LeadService::class, TicketService::class],
+			actual: $classes
+		);
+	}//end testGetScannableServiceClassesDeclaresLeadAndTicketServices()
 }//end class

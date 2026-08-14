@@ -4,79 +4,98 @@
 -->
 <template>
 	<CnDetailPage
-		:title="isEdit ? t('pipelinq', 'Edit export job') : t('pipelinq', 'New export job')"
+		:title="
+			isEdit
+				? t('pipelinq', 'Edit export job')
+				: t('pipelinq', 'New export job')
+		"
 		:loading="loading"
 		@back="goBack">
 		<CnDetailCard :title="t('pipelinq', 'Export job')">
 			<div class="export-form">
+				<NcTextField v-model="model.name" :label="t('pipelinq', 'Name')" />
 				<NcTextField
-					:value.sync="model.name"
-					:label="t('pipelinq', 'Name')" />
-				<NcTextField
-					:value.sync="model.description"
+					v-model="model.description"
 					:label="t('pipelinq', 'Description')" />
 				<NcSelect
-					:value="selectedSchemas"
+					:model-value="selectedSchemas"
 					:options="schemaOptions"
 					:input-label="t('pipelinq', 'Source schemas')"
 					:placeholder="t('pipelinq', 'Choose schemas to export…')"
 					label="label"
 					:multiple="true"
 					:keep-open="true"
-					@input="onSchemasSelect" />
+					@update:model-value="onSchemasSelect" />
 				<NcSelect
-					:value="selectedDestination"
+					:model-value="selectedDestination"
 					:options="destinationOptions"
 					:input-label="t('pipelinq', 'Destination')"
 					:placeholder="t('pipelinq', 'Choose a destination…')"
 					label="label"
 					:clearable="false"
-					@input="(o) => model.destinationId = o ? o.id : ''" />
+					@update:model-value="
+						(o) => (model.destinationId = o ? o.id : '')
+					" />
 				<NcSelect
-					:value="selectedFormat"
+					:model-value="selectedFormat"
 					:options="formatOptions"
 					:input-label="t('pipelinq', 'Format')"
 					label="label"
 					:clearable="false"
-					@input="(o) => model.format = o ? o.id : 'csv'" />
+					@update:model-value="(o) => (model.format = o ? o.id : 'csv')" />
 				<NcSelect
-					:value="selectedMode"
+					:model-value="selectedMode"
 					:options="modeOptions"
 					:input-label="t('pipelinq', 'Mode')"
 					label="label"
 					:clearable="false"
-					@input="(o) => model.mode = o ? o.id : 'full'" />
+					@update:model-value="(o) => (model.mode = o ? o.id : 'full')" />
 				<NcTextField
 					v-if="model.mode === 'incremental'"
-					:value.sync="model.incrementalWatermarkColumn"
+					v-model="model.incrementalWatermarkColumn"
 					:label="t('pipelinq', 'Watermark column')"
-					:helper-text="t('pipelinq', 'Column used to detect changed rows (e.g. updatedAt)')" />
+					:helper-text="
+						t(
+							'pipelinq',
+							'Column used to detect changed rows (e.g. updatedAt)',
+						)
+					" />
 				<NcTextField
-					:value.sync="model.scheduleCron"
+					v-model="model.scheduleCron"
 					:label="t('pipelinq', 'Schedule (cron)')"
 					:placeholder="'0 2 * * *'" />
 				<NcTextField
-					:value.sync="model.rowFilterExpression"
+					v-model="model.rowFilterExpression"
 					:label="t('pipelinq', 'Row filter (optional)')"
 					placeholder="status = 'open'" />
 				<NcTextField
-					:value.sync="allowlistText"
-					:label="t('pipelinq', 'Column allowlist (optional, comma-separated)')"
-					:helper-text="t('pipelinq', 'Limit exported columns to minimise PII; leave empty to export all columns')" />
+					v-model="allowlistText"
+					:label="
+						t('pipelinq', 'Column allowlist (optional, comma-separated)')
+					"
+					:helper-text="
+						t(
+							'pipelinq',
+							'Limit exported columns to minimise PII; leave empty to export all columns',
+						)
+					" />
 			</div>
 
 			<template #actions>
 				<NcButton
 					v-if="isEdit"
-					type="tertiary"
+					variant="tertiary"
 					:disabled="busy"
 					@click="openTestRunModal">
 					{{ t('pipelinq', 'Test run') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="busy || !model.name" @click="save">
+				<NcButton
+					variant="primary"
+					:disabled="busy || !model.name"
+					@click="save">
 					{{ t('pipelinq', 'Save') }}
 				</NcButton>
-				<NcButton type="secondary" @click="goBack">
+				<NcButton variant="secondary" @click="goBack">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
 			</template>
@@ -180,7 +199,9 @@ export default {
 		 * @return {Array<object>} The selected options.
 		 */
 		selectedSchemas() {
-			return this.schemaOptions.filter((o) => (this.model.sourceSchemas || []).includes(o.id))
+			return this.schemaOptions.filter((o) =>
+				(this.model.sourceSchemas || []).includes(o.id),
+			)
 		},
 		/**
 		 * Destination dropdown options.
@@ -190,7 +211,10 @@ export default {
 		destinationOptions() {
 			return this.destinations.map((d) => ({
 				id: d.id,
-				label: d.validationStatus === 'valid' ? `${d.name} (${d.type})` : `${d.name} (${d.type} — ${this.t('pipelinq', 'unverified')})`,
+				label:
+					d.validationStatus === 'valid'
+						? `${d.name} (${d.type})`
+						: `${d.name} (${d.type} — ${this.t('pipelinq', 'unverified')})`,
 			}))
 		},
 		/**
@@ -199,7 +223,11 @@ export default {
 		 * @return {object|null} The option.
 		 */
 		selectedDestination() {
-			return this.destinationOptions.find((o) => o.id === this.model.destinationId) || null
+			return (
+				this.destinationOptions.find(
+					(o) => o.id === this.model.destinationId,
+				) || null
+			)
 		},
 		/**
 		 * Format options.
@@ -223,7 +251,13 @@ export default {
 		 * @return {Array<object>} The options.
 		 */
 		modeOptions() {
-			return MODES.map((id) => ({ id, label: this.t('pipelinq', id === 'full' ? 'Full refresh' : 'Incremental') }))
+			return MODES.map((id) => ({
+				id,
+				label: this.t(
+					'pipelinq',
+					id === 'full' ? 'Full refresh' : 'Incremental',
+				),
+			}))
 		},
 		/**
 		 * The selected mode option.
@@ -246,8 +280,12 @@ export default {
 		 */
 		async loadDestinations() {
 			try {
-				await this.objectStore.fetchCollection('exportDestination', { _limit: 200 })
-				this.destinations = this.objectStore.getCollection('exportDestination')?.results || []
+				await this.objectStore.fetchCollection('exportDestination', {
+					_limit: 200,
+				})
+				this.destinations =
+					this.objectStore.getCollection('exportDestination')?.results
+					|| []
 			} catch (e) {
 				this.destinations = []
 			}
@@ -258,10 +296,15 @@ export default {
 		async load() {
 			this.loading = true
 			try {
-				const existing = await this.objectStore.fetchObject('exportJob', this.jobId)
+				const existing = await this.objectStore.fetchObject(
+					'exportJob',
+					this.jobId,
+				)
 				if (existing) {
 					this.model = { ...this.model, ...existing }
-					this.allowlistText = (this.model.columnAllowlist || []).join(', ')
+					this.allowlistText = (this.model.columnAllowlist || []).join(
+						', ',
+					)
 				}
 			} catch (e) {
 				showError(this.t('pipelinq', 'Could not load the job'))
@@ -294,7 +337,10 @@ export default {
 		async save() {
 			this.busy = true
 			try {
-				const payload = { ...this.model, columnAllowlist: this.parsedAllowlist() }
+				const payload = {
+					...this.model,
+					columnAllowlist: this.parsedAllowlist(),
+				}
 				if (this.isEdit) {
 					payload.id = this.jobId
 				}

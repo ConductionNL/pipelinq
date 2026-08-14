@@ -14,11 +14,18 @@
   - instead of routing to a detail page and the form opens in a dialog.
   -->
 <template>
-	<NcSettingsSection :name="t('pipelinq', 'POS staff')"
-		:description="t('pipelinq', 'Cashiers who can sign in at the register, and the POS role each one holds.')">
+	<NcSettingsSection
+		:name="t('pipelinq', 'POS staff')"
+		:description="
+			t(
+				'pipelinq',
+				'Cashiers who can sign in at the register, and the POS role each one holds.',
+			)
+		">
 		<PosStaffList :key="reloadKey" @edit="openStaff" @create="openNew" />
 
-		<PosStaffFormDialog v-if="dialogOpen"
+		<PosStaffFormDialog
+			v-if="dialogOpen"
 			:staff-id="editingId"
 			@done="closeDialog" />
 	</NcSettingsSection>

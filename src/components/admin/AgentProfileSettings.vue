@@ -2,7 +2,9 @@
 <template>
 	<NcSettingsSection
 		:name="t('pipelinq', 'Agent Profiles')"
-		:description="t('pipelinq', 'Assign skills and configure routing for agents')">
+		:description="
+			t('pipelinq', 'Assign skills and configure routing for agents')
+		">
 		<NcLoadingIcon v-if="loading" />
 
 		<div v-else class="agent-settings">
@@ -10,17 +12,29 @@
 				<div v-if="editingId !== profile.id" class="agent-item__display">
 					<div class="agent-item__info">
 						<span class="agent-name">{{ profile.userId }}</span>
-						<span v-if="profile.isAvailable === false" class="unavailable-tag">{{ t('pipelinq', 'Unavailable') }}</span>
+						<span
+							v-if="profile.isAvailable === false"
+							class="unavailable-tag"
+							>{{ t('pipelinq', 'Unavailable') }}</span
+						>
 						<span class="agent-meta">
-							{{ getSkillNames(profile).join(', ') || t('pipelinq', 'No skills') }}
-							· {{ t('pipelinq', 'max {n} items', { n: profile.maxConcurrent || 10 }) }}
+							{{
+								getSkillNames(profile).join(', ')
+								|| t('pipelinq', 'No skills')
+							}}
+							·
+							{{
+								t('pipelinq', 'max {n} items', {
+									n: profile.maxConcurrent || 10,
+								})
+							}}
 						</span>
 					</div>
 					<div class="agent-item__actions">
 						<NcButton @click="startEdit(profile)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton type="error" @click="deleteProfile(profile)">
+						<NcButton variant="error" @click="deleteProfile(profile)">
 							{{ t('pipelinq', 'Delete') }}
 						</NcButton>
 					</div>
@@ -28,29 +42,50 @@
 
 				<div v-else class="agent-item__edit">
 					<div class="edit-field">
-						<label>{{ t('pipelinq', 'User ID') }}</label>
-						<input v-model="editForm.userId" type="text" :disabled="!!editForm.id">
+						<label for="agent-edit-user-id">{{
+							t('pipelinq', 'User ID')
+						}}</label>
+						<input
+							id="agent-edit-user-id"
+							v-model="editForm.userId"
+							type="text"
+							:disabled="!!editForm.id" />
 					</div>
 					<div class="edit-field">
 						<label>{{ t('pipelinq', 'Skills') }}</label>
 						<div class="skill-checkboxes">
-							<label v-for="skill in allSkills" :key="skill.id" class="skill-checkbox">
+							<label
+								v-for="skill in allSkills"
+								:key="skill.id"
+								class="skill-checkbox">
 								<input
 									type="checkbox"
-									:checked="(editForm.skills || []).includes(skill.id)"
-									@change="toggleSkill(skill.id, $event.target.checked)">
+									:checked="
+										(editForm.skills || []).includes(skill.id)
+									"
+									@change="
+										toggleSkill(skill.id, $event.target.checked)
+									" />
 								{{ skill.title }}
 							</label>
 						</div>
 					</div>
 					<div class="edit-row">
 						<div class="edit-field">
-							<label>{{ t('pipelinq', 'Max concurrent items') }}</label>
-							<input v-model.number="editForm.maxConcurrent" type="number" min="1">
+							<label for="agent-edit-max-concurrent">{{
+								t('pipelinq', 'Max concurrent items')
+							}}</label>
+							<input
+								id="agent-edit-max-concurrent"
+								v-model.number="editForm.maxConcurrent"
+								type="number"
+								min="1" />
 						</div>
 						<div class="edit-field">
 							<label>
-								<input v-model="editForm.isAvailable" type="checkbox">
+								<input
+									v-model="editForm.isAvailable"
+									type="checkbox" />
 								{{ t('pipelinq', 'Available for routing') }}
 							</label>
 						</div>
@@ -59,7 +94,7 @@
 						<NcButton @click="cancelEdit">
 							{{ t('pipelinq', 'Cancel') }}
 						</NcButton>
-						<NcButton type="primary" @click="saveEdit">
+						<NcButton variant="primary" @click="saveEdit">
 							{{ t('pipelinq', 'Save') }}
 						</NcButton>
 					</div>
@@ -140,9 +175,9 @@ export default {
 		getSkillNames(profile) {
 			if (!profile.skills || !this.allSkills.length) return []
 			return profile.skills
-				.map(id => this.allSkills.find(s => s.id === id))
+				.map((id) => this.allSkills.find((s) => s.id === id))
 				.filter(Boolean)
-				.map(s => s.title)
+				.map((s) => s.title)
 		},
 		/**
 		 * @param profile
@@ -199,7 +234,13 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		async deleteProfile(profile) {
-			if (confirm(t('pipelinq', 'Delete agent profile for "{userId}"?', { userId: profile.userId }))) {
+			if (
+				confirm(
+					t('pipelinq', 'Delete agent profile for "{userId}"?', {
+						userId: profile.userId,
+					}),
+				)
+			) {
 				await this.profilesStore.deleteProfile(profile.id)
 			}
 		},

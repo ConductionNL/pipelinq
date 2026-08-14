@@ -23,8 +23,16 @@ describe('recurringRevenue', () => {
 	it('computes MRR and ARR over active+expiring contracts only', () => {
 		const contracts = [
 			{ status: 'active', billingInterval: 'monthly', valuePerInterval: 750 },
-			{ status: 'active', billingInterval: 'quarterly', valuePerInterval: 3000 },
-			{ status: 'expiring', billingInterval: 'annual', valuePerInterval: 12000 },
+			{
+				status: 'active',
+				billingInterval: 'quarterly',
+				valuePerInterval: 3000,
+			},
+			{
+				status: 'expiring',
+				billingInterval: 'annual',
+				valuePerInterval: 12000,
+			},
 			{ status: 'active', billingInterval: 'one-off', valuePerInterval: 5000 },
 			{ status: 'draft', billingInterval: 'monthly', valuePerInterval: 999 },
 			{ status: 'churned', billingInterval: 'monthly', valuePerInterval: 999 },
@@ -35,9 +43,24 @@ describe('recurringRevenue', () => {
 
 	it('computes per-client MRR', () => {
 		const contracts = [
-			{ status: 'active', clientRef: 'c1', billingInterval: 'monthly', valuePerInterval: 750 },
-			{ status: 'active', clientRef: 'c1', billingInterval: 'annual', valuePerInterval: 12000 },
-			{ status: 'active', clientRef: 'c2', billingInterval: 'monthly', valuePerInterval: 500 },
+			{
+				status: 'active',
+				clientRef: 'c1',
+				billingInterval: 'monthly',
+				valuePerInterval: 750,
+			},
+			{
+				status: 'active',
+				clientRef: 'c1',
+				billingInterval: 'annual',
+				valuePerInterval: 12000,
+			},
+			{
+				status: 'active',
+				clientRef: 'c2',
+				billingInterval: 'monthly',
+				valuePerInterval: 500,
+			},
 		]
 		expect(computeClientMrr(contracts, 'c1')).toBe(1750)
 		expect(computeClientMrr(contracts, 'c2')).toBe(500)

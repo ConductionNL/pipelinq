@@ -52,140 +52,135 @@ use Throwable;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
  */
-class MessagingWebhookController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest        $request         Request.
-     * @param WhatsAppAdapter $whatsAppAdapter WhatsApp adapter.
-     * @param SmsAdapter      $smsAdapter      SMS adapter.
-     * @param LoggerInterface $logger          Logger.
-     *
-     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
-     */
-    public function __construct(
-        IRequest $request,
-        private WhatsAppAdapter $whatsAppAdapter,
-        private SmsAdapter $smsAdapter,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class MessagingWebhookController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request Request.
+	 * @param WhatsAppAdapter $whatsAppAdapter WhatsApp adapter.
+	 * @param SmsAdapter $smsAdapter SMS adapter.
+	 * @param LoggerInterface $logger Logger.
+	 *
+	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+	 */
+	public function __construct(
+		IRequest $request,
+		private WhatsAppAdapter $whatsAppAdapter,
+		private SmsAdapter $smsAdapter,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * POST /api/messaging-webhooks/whatsapp/{providerId}.
-     *
-     * @param string $providerId channelProvider UUID.
-     *
-     * @return JSONResponse Outcome.
-     *
-     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
-     */
-    #[PublicPage]
-    #[NoCSRFRequired]
-    public function whatsapp(string $providerId): JSONResponse
-    {
-        $rawBody   = $this->readRawBody();
-        $signature = (string) $this->request->getHeader('X-Hub-Signature-256');
+	/**
+	 * POST /api/messaging-webhooks/whatsapp/{providerId}.
+	 *
+	 * @param string $providerId channelProvider UUID.
+	 *
+	 * @return JSONResponse Outcome.
+	 *
+	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	public function whatsapp(string $providerId): JSONResponse {
+		$rawBody = $this->readRawBody();
+		$signature = (string)$this->request->getHeader('X-Hub-Signature-256');
 
-        try {
-            $result = $this->whatsAppAdapter->handleInboundWebhook(
-                rawBody: $rawBody,
-                signature: $signature,
-                providerId: $providerId,
-            );
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                'MessagingWebhookController.whatsapp: processing failed',
-                ['providerId' => $providerId, 'exception' => $e->getMessage()]
-            );
-            return new JSONResponse(['error' => 'processingFailed'], Http::STATUS_INTERNAL_SERVER_ERROR);
-        }
+		try {
+			$result = $this->whatsAppAdapter->handleInboundWebhook(
+				rawBody: $rawBody,
+				signature: $signature,
+				providerId: $providerId,
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'MessagingWebhookController.whatsapp: processing failed',
+				['providerId' => $providerId, 'exception' => $e->getMessage()]
+			);
+			return new JSONResponse(['error' => 'processingFailed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 
-        return $this->respondForResult(result: $result);
-    }//end whatsapp()
+		return $this->respondForResult(result: $result);
+	}//end whatsapp()
 
-    /**
-     * POST /api/messaging-webhooks/sms/{providerId}.
-     *
-     * @param string $providerId channelProvider UUID.
-     *
-     * @return JSONResponse Outcome.
-     *
-     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
-     */
-    #[PublicPage]
-    #[NoCSRFRequired]
-    public function sms(string $providerId): JSONResponse
-    {
-        $rawBody      = $this->readRawBody();
-        $signatureRaw = $this->request->getHeader('X-Twilio-Signature');
-        if ($signatureRaw === '') {
-            $signatureRaw = $this->request->getHeader('messagebird-signature');
-        }
+	/**
+	 * POST /api/messaging-webhooks/sms/{providerId}.
+	 *
+	 * @param string $providerId channelProvider UUID.
+	 *
+	 * @return JSONResponse Outcome.
+	 *
+	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	public function sms(string $providerId): JSONResponse {
+		$rawBody = $this->readRawBody();
+		$signatureRaw = $this->request->getHeader('X-Twilio-Signature');
+		if ($signatureRaw === '') {
+			$signatureRaw = $this->request->getHeader('messagebird-signature');
+		}
 
-        if ($signatureRaw === '') {
-            $signatureRaw = $this->request->getHeader('X-Cmcom-Signature');
-        }
+		if ($signatureRaw === '') {
+			$signatureRaw = $this->request->getHeader('X-Cmcom-Signature');
+		}
 
-        $signature = (string) $signatureRaw;
+		$signature = (string)$signatureRaw;
 
-        try {
-            $result = $this->smsAdapter->handleInboundWebhook(
-                rawBody: $rawBody,
-                signature: $signature,
-                providerId: $providerId,
-            );
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                'MessagingWebhookController.sms: processing failed',
-                ['providerId' => $providerId, 'exception' => $e->getMessage()]
-            );
-            return new JSONResponse(['error' => 'processingFailed'], Http::STATUS_INTERNAL_SERVER_ERROR);
-        }
+		try {
+			$result = $this->smsAdapter->handleInboundWebhook(
+				rawBody: $rawBody,
+				signature: $signature,
+				providerId: $providerId,
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'MessagingWebhookController.sms: processing failed',
+				['providerId' => $providerId, 'exception' => $e->getMessage()]
+			);
+			return new JSONResponse(['error' => 'processingFailed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 
-        return $this->respondForResult(result: $result);
-    }//end sms()
+		return $this->respondForResult(result: $result);
+	}//end sms()
 
-    /**
-     * Translate an adapter result into an HTTP response.
-     *
-     * - `received` → 200 OK.
-     * - `invalidSignature` → 400 BAD_REQUEST (pipelinq Hydra gate
-     *   for webhook signature failures).
-     * - everything else → 422 UNPROCESSABLE_ENTITY.
-     *
-     * @param array<string, mixed> $result Adapter result.
-     *
-     * @return JSONResponse Response.
-     */
-    private function respondForResult(array $result): JSONResponse
-    {
-        $status = (string) ($result['status'] ?? '');
-        if ($status === 'received') {
-            return new JSONResponse($result, Http::STATUS_OK);
-        }
+	/**
+	 * Translate an adapter result into an HTTP response.
+	 *
+	 * - `received` → 200 OK.
+	 * - `invalidSignature` → 400 BAD_REQUEST (pipelinq Hydra gate
+	 *   for webhook signature failures).
+	 * - everything else → 422 UNPROCESSABLE_ENTITY.
+	 *
+	 * @param array<string, mixed> $result Adapter result.
+	 *
+	 * @return JSONResponse Response.
+	 */
+	private function respondForResult(array $result): JSONResponse {
+		$status = (string)($result['status'] ?? '');
+		if ($status === 'received') {
+			return new JSONResponse($result, Http::STATUS_OK);
+		}
 
-        if ($status === 'invalidSignature') {
-            return new JSONResponse(['error' => 'invalidSignature'], Http::STATUS_BAD_REQUEST);
-        }
+		if ($status === 'invalidSignature') {
+			return new JSONResponse(['error' => 'invalidSignature'], Http::STATUS_BAD_REQUEST);
+		}
 
-        return new JSONResponse($result, Http::STATUS_UNPROCESSABLE_ENTITY);
-    }//end respondForResult()
+		return new JSONResponse($result, Http::STATUS_UNPROCESSABLE_ENTITY);
+	}//end respondForResult()
 
-    /**
-     * Read the raw request body (Stream → string).
-     *
-     * @return string Raw body or empty.
-     */
-    private function readRawBody(): string
-    {
-        $body = file_get_contents('php://input');
-        if ($body === false) {
-            return '';
-        }
+	/**
+	 * Read the raw request body (Stream → string).
+	 *
+	 * @return string Raw body or empty.
+	 */
+	private function readRawBody(): string {
+		$body = file_get_contents('php://input');
+		if ($body === false) {
+			return '';
+		}
 
-        return $body;
-    }//end readRawBody()
+		return $body;
+	}//end readRawBody()
 }//end class

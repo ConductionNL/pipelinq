@@ -21,16 +21,18 @@
 		<table v-else class="channel-comparison__table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Channel') }}</th>
-					<th>{{ t('pipelinq', 'Total') }}</th>
-					<th>{{ t('pipelinq', 'FCR Rate') }}</th>
-					<th>{{ t('pipelinq', 'SLA') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Channel') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Total') }}</th>
+					<th scope="col">{{ t('pipelinq', 'FCR Rate') }}</th>
+					<th scope="col">{{ t('pipelinq', 'SLA') }}</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr v-for="row in channelRows" :key="row.channel">
 					<td class="channel-comparison__name">
-						<span class="channel-comparison__dot" :style="{ background: row.color }" />
+						<span
+							class="channel-comparison__dot"
+							:style="{ background: row.color }" />
 						{{ row.channel }}
 					</td>
 					<td>{{ row.total }}</td>
@@ -105,26 +107,39 @@ export default {
 			this.loading = true
 			try {
 				const [channelsResp, slaResp] = await Promise.all([
-					axios.get(generateUrl('/apps/pipelinq/api/rapportage/channels'), {
-						params: { period: this.effectivePeriod, granularity: this.effectiveGranularity },
-					}),
+					axios.get(
+						generateUrl('/apps/pipelinq/api/rapportage/channels'),
+						{
+							params: {
+								period: this.effectivePeriod,
+								granularity: this.effectiveGranularity,
+							},
+						},
+					),
 					axios.get(generateUrl('/apps/pipelinq/api/rapportage/sla')),
 				])
 				const distribution = channelsResp.data.distribution ?? {}
 				const slaTargets = slaResp.data.targets ?? {}
-				this.channelRows = Object.entries(distribution).map(([channel, total]) => {
-					const target = slaTargets[channel]?.target_percent ?? 90
-					const compliance = total > 0 ? target : 0
-					const status = compliance >= target ? 'green' : (compliance >= target - 5 ? 'orange' : 'red')
-					return {
-						channel,
-						total,
-						fcrRate: 0,
-						slaCompliance: compliance,
-						slaStatus: status,
-						color: CHANNEL_COLORS[channel] ?? CHANNEL_COLORS.unknown,
-					}
-				})
+				this.channelRows = Object.entries(distribution).map(
+					([channel, total]) => {
+						const target = slaTargets[channel]?.target_percent ?? 90
+						const compliance = total > 0 ? target : 0
+						const status =
+							compliance >= target
+								? 'green'
+								: compliance >= target - 5
+									? 'orange'
+									: 'red'
+						return {
+							channel,
+							total,
+							fcrRate: 0,
+							slaCompliance: compliance,
+							slaStatus: status,
+							color: CHANNEL_COLORS[channel] ?? CHANNEL_COLORS.unknown,
+						}
+					},
+				)
 			} catch {
 				this.channelRows = []
 			} finally {
@@ -136,14 +151,58 @@ export default {
 </script>
 
 <style scoped>
-.channel-comparison h3 { margin: 0 0 12px; font-weight: 600; }
-.channel-comparison__table { width: 100%; border-collapse: collapse; }
-.channel-comparison__table th, .channel-comparison__table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--color-border); }
-.channel-comparison__table th { font-weight: 600; font-size: 0.85em; color: var(--color-text-lighter); text-transform: uppercase; }
-.channel-comparison__name { display: flex; align-items: center; gap: 8px; }
-.channel-comparison__dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-.channel-comparison__sla--green { color: var(--color-success); }
-.channel-comparison__sla--orange { color: var(--color-warning); }
-.channel-comparison__sla--red { color: #e53e3e; }
-.channel-comparison__empty { padding: 40px; text-align: center; color: var(--color-text-lighter); }
+.channel-comparison h3 {
+	margin: 0 0 12px;
+	font-weight: 600;
+}
+
+.channel-comparison__table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.channel-comparison__table th,
+.channel-comparison__table td {
+	padding: 10px 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.channel-comparison__table th {
+	font-weight: 600;
+	font-size: 0.85em;
+	color: var(--color-text-lighter);
+	text-transform: uppercase;
+}
+
+.channel-comparison__name {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.channel-comparison__dot {
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.channel-comparison__sla--green {
+	color: var(--color-success);
+}
+
+.channel-comparison__sla--orange {
+	color: var(--color-warning);
+}
+
+.channel-comparison__sla--red {
+	color: #e53e3e;
+}
+
+.channel-comparison__empty {
+	padding: 40px;
+	text-align: center;
+	color: var(--color-text-lighter);
+}
 </style>

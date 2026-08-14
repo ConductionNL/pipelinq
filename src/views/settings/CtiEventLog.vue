@@ -10,7 +10,12 @@
 <template>
 	<NcSettingsSection
 		:name="t('pipelinq', 'CTI webhook event log')"
-		:description="t('pipelinq', 'Last 30 days of inbound webhook events grouped by platform.')">
+		:description="
+			t(
+				'pipelinq',
+				'Last 30 days of inbound webhook events grouped by platform.',
+			)
+		">
 		<div class="cti-event-log__filters">
 			<NcSelect
 				v-model="filters.platform"
@@ -26,7 +31,7 @@
 				label="label"
 				:reduce="(o) => o.value"
 				clearable />
-			<NcButton type="primary" :disabled="loading" @click="reload">
+			<NcButton variant="primary" :disabled="loading" @click="reload">
 				<template v-if="loading" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
@@ -36,17 +41,19 @@
 		<table class="cti-event-log__table" data-testid="cti-event-log-table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Received at') }}</th>
-					<th>{{ t('pipelinq', 'Platform') }}</th>
-					<th>{{ t('pipelinq', 'Event type') }}</th>
-					<th>{{ t('pipelinq', 'Call ID') }}</th>
-					<th>{{ t('pipelinq', 'Signature') }}</th>
-					<th>{{ t('pipelinq', 'Error') }}</th>
-					<th class="cti-event-log__actions" />
+					<th scope="col">{{ t('pipelinq', 'Received at') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Platform') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Event type') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Call ID') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Signature') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Error') }}</th>
+					<th scope="col" class="cti-event-log__actions" />
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="row in events" :key="row.id || row.uuid || row.received_at">
+				<tr
+					v-for="row in events"
+					:key="row.id || row.uuid || row.received_at">
 					<td>{{ row.received_at }}</td>
 					<td>{{ row.platform }}</td>
 					<td>{{ row.event_type }}</td>
@@ -54,26 +61,24 @@
 					<td>{{ row.signature_valid ? '✓' : '✗' }}</td>
 					<td>{{ row.processing_error || '' }}</td>
 					<td class="cti-event-log__actions">
-						<NcButton type="tertiary" @click="viewPayload(row)">
+						<NcButton variant="tertiary" @click="viewPayload(row)">
 							{{ t('pipelinq', 'View payload') }}
 						</NcButton>
 					</td>
 				</tr>
 				<tr v-if="!events.length">
 					<td colspan="7" class="cti-event-log__empty">
-						{{ t('pipelinq', 'No webhook events in the selected range.') }}
+						{{
+							t('pipelinq', 'No webhook events in the selected range.')
+						}}
 					</td>
 				</tr>
 			</tbody>
 		</table>
-		<NcDialog
+		<CtiPayloadDialog
 			v-if="payloadRow"
-			:name="t('pipelinq', 'Webhook payload')"
-			:open="!!payloadRow"
-			size="large"
-			@closing="payloadRow = null">
-			<pre class="cti-event-log__pre">{{ pretty(payloadRow.payload_json) }}</pre>
-		</NcDialog>
+			:payload="payloadRow.payload_json"
+			@close="payloadRow = null" />
 		<p class="cti-event-log__note">
 			{{ t('pipelinq', 'Showing events from the last 30 days.') }}
 		</p>
@@ -81,13 +86,20 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcSelect, NcSettingsSection } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcSelect, NcSettingsSection } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import CtiPayloadDialog from '../../dialogs/CtiPayloadDialog.vue'
 import { getEventLog } from '../../services/ctiApi.js'
 
 export default {
 	name: 'CtiEventLog',
-	components: { NcButton, NcDialog, NcLoadingIcon, NcSelect, NcSettingsSection },
+	components: {
+		CtiPayloadDialog,
+		NcButton,
+		NcLoadingIcon,
+		NcSelect,
+		NcSettingsSection,
+	},
 	data() {
 		return {
 			events: [],
@@ -108,7 +120,15 @@ export default {
 			]
 		},
 		eventTypeOptions() {
-			return ['ringing', 'answered', 'ended', 'abandoned', 'transferred', 'presence', 'recording'].map((v) => ({ value: v, label: v }))
+			return [
+				'ringing',
+				'answered',
+				'ended',
+				'abandoned',
+				'transferred',
+				'presence',
+				'recording',
+			].map((v) => ({ value: v, label: v }))
 		},
 	},
 	watch: {
@@ -130,20 +150,17 @@ export default {
 				const data = await getEventLog(this.filters)
 				this.events = (data && data.events) || []
 			} catch (e) {
-				showError(t('pipelinq', 'Failed to load event log: {error}', { error: e.message || 'network error' }))
+				showError(
+					t('pipelinq', 'Failed to load event log: {error}', {
+						error: e.message || 'network error',
+					}),
+				)
 			} finally {
 				this.loading = false
 			}
 		},
 		viewPayload(row) {
 			this.payloadRow = row
-		},
-		pretty(value) {
-			try {
-				return JSON.stringify(value, null, 2)
-			} catch (e) {
-				return String(value)
-			}
 		},
 	},
 }
@@ -156,31 +173,29 @@ export default {
 	align-items: flex-end;
 	margin-bottom: 12px;
 }
+
 .cti-event-log__table {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .cti-event-log__table th,
 .cti-event-log__table td {
 	padding: 6px 12px;
 	border-bottom: 1px solid var(--color-border);
 	text-align: left;
 }
+
 .cti-event-log__actions {
 	text-align: right;
 }
-.cti-event-log__pre {
-	max-height: 480px;
-	overflow: auto;
-	background: var(--color-background-hover);
-	padding: 12px;
-	border-radius: 4px;
-}
+
 .cti-event-log__empty {
 	text-align: center;
 	color: var(--color-text-maxcontrast);
 	padding: 12px;
 }
+
 .cti-event-log__note {
 	margin-top: 8px;
 	font-style: italic;

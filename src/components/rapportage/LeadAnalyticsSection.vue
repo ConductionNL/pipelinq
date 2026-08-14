@@ -91,7 +91,12 @@ export default {
 				)
 				this.stats = response?.data || {}
 			} catch (e) {
-				showError(t('pipelinq', 'Failed to load lead analytics. Please try again.'))
+				showError(
+					t(
+						'pipelinq',
+						'Failed to load lead analytics. Please try again.',
+					),
+				)
 				this.stats = {}
 			} finally {
 				this.loading = false
@@ -116,17 +121,21 @@ export default {
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 16px;
 }
+
 .lead-analytics__cell {
 	background: var(--color-main-background);
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large);
 	padding: 16px;
 }
+
 .lead-analytics__cell h3 {
 	margin: 0 0 12px;
 	font-weight: 600;
 }
 @media (max-width: 1024px) {
-	.lead-analytics__grid { grid-template-columns: 1fr; }
+	.lead-analytics__grid {
+		grid-template-columns: 1fr;
+	}
 }
 </style>

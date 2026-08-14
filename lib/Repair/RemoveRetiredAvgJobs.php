@@ -41,69 +41,66 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/avg-consume-or-workflow/specs/avg-local-surface-retirement/spec.md
  */
-class RemoveRetiredAvgJobs implements IRepairStep
-{
-    /**
-     * Fully-qualified class names of the retired jobs to unregister.
-     *
-     * @var array<int, string>
-     */
-    private const RETIRED_JOBS = [
-        'OCA\\Pipelinq\\BackgroundJob\\AvgDeadlineTrackerJob',
-        'OCA\\Pipelinq\\BackgroundJob\\AvgDpiaPatternDetectionJob',
-        'OCA\\Pipelinq\\BackgroundJob\\AvgRetentionJob',
-        'OCA\\Pipelinq\\BackgroundJob\\AvgCollectEvidenceJob',
-    ];
+class RemoveRetiredAvgJobs implements IRepairStep {
+	/**
+	 * Fully-qualified class names of the retired jobs to unregister.
+	 *
+	 * @var array<int, string>
+	 */
+	private const RETIRED_JOBS = [
+		'OCA\\Pipelinq\\BackgroundJob\\AvgDeadlineTrackerJob',
+		'OCA\\Pipelinq\\BackgroundJob\\AvgDpiaPatternDetectionJob',
+		'OCA\\Pipelinq\\BackgroundJob\\AvgRetentionJob',
+		'OCA\\Pipelinq\\BackgroundJob\\AvgCollectEvidenceJob',
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param IJobList        $jobList The Nextcloud background-job list.
-     * @param LoggerInterface $logger  The logger.
-     */
-    public function __construct(
-        private readonly IJobList $jobList,
-        private readonly LoggerInterface $logger,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IJobList $jobList The Nextcloud background-job list.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private readonly IJobList $jobList,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Get the name of this repair step.
-     *
-     * @return string The repair step name.
-     *
-     * @spec openspec/changes/avg-consume-or-workflow/specs/avg-local-surface-retirement/spec.md
-     */
-    public function getName(): string
-    {
-        return 'Unregister retired AVG/DSAR background jobs from oc_jobs (ADR-047 Phase-3)';
-    }//end getName()
+	/**
+	 * Get the name of this repair step.
+	 *
+	 * @return string The repair step name.
+	 *
+	 * @spec openspec/changes/avg-consume-or-workflow/specs/avg-local-surface-retirement/spec.md
+	 */
+	public function getName(): string {
+		return 'Unregister retired AVG/DSAR background jobs from oc_jobs (ADR-047 Phase-3)';
+	}//end getName()
 
-    /**
-     * Run the repair step.
-     *
-     * @param IOutput $output The output interface.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/avg-consume-or-workflow/specs/avg-local-surface-retirement/spec.md
-     */
-    public function run(IOutput $output): void
-    {
-        foreach (self::RETIRED_JOBS as $jobClass) {
-            try {
-                // The job classes are deleted, so they are no longer loadable as
-                // class-string<IJob>; remove() accepts the bare class name to purge
-                // the orphaned oc_jobs row (phpstan ignore in phpstan.neon).
-                $this->jobList->remove($jobClass);
-                $output->info('Unregistered retired AVG job: '.$jobClass);
-            } catch (\Throwable $e) {
-                $output->warning('Failed to unregister '.$jobClass.': '.$e->getMessage());
-                $this->logger->warning(
-                    'Pipelinq: failed to unregister retired AVG job',
-                    ['job' => $jobClass, 'exception' => $e->getMessage()]
-                );
-            }
-        }
-    }//end run()
+	/**
+	 * Run the repair step.
+	 *
+	 * @param IOutput $output The output interface.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/avg-consume-or-workflow/specs/avg-local-surface-retirement/spec.md
+	 */
+	public function run(IOutput $output): void {
+		foreach (self::RETIRED_JOBS as $jobClass) {
+			try {
+				// The job classes are deleted, so they are no longer loadable as
+				// class-string<IJob>; remove() accepts the bare class name to purge
+				// the orphaned oc_jobs row (phpstan ignore in phpstan.neon).
+				$this->jobList->remove($jobClass);
+				$output->info('Unregistered retired AVG job: ' . $jobClass);
+			} catch (\Throwable $e) {
+				$output->warning('Failed to unregister ' . $jobClass . ': ' . $e->getMessage());
+				$this->logger->warning(
+					'Pipelinq: failed to unregister retired AVG job',
+					['job' => $jobClass, 'exception' => $e->getMessage()]
+				);
+			}
+		}
+	}//end run()
 }//end class

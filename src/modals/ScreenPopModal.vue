@@ -15,15 +15,21 @@
 		@closing="$emit('close')">
 		<div class="screen-pop">
 			<p class="screen-pop__intro">
-				{{ t('pipelinq', 'Multiple contacts match {number}. Select one to open, or create a new contact.', { number: e164 || rawNumber }) }}
+				{{
+					t(
+						'pipelinq',
+						'Multiple contacts match {number}. Select one to open, or create a new contact.',
+						{ number: e164 || rawNumber },
+					)
+				}}
 			</p>
 			<table class="screen-pop__table" data-testid="screen-pop-matches">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Name') }}</th>
-						<th>{{ t('pipelinq', 'Client') }}</th>
-						<th>{{ t('pipelinq', 'Type') }}</th>
-						<th class="screen-pop__actions" />
+						<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Client') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Type') }}</th>
+						<th scope="col" class="screen-pop__actions" />
 					</tr>
 				</thead>
 				<tbody>
@@ -32,7 +38,9 @@
 						<td>{{ match.clientName || match.organisation || '—' }}</td>
 						<td>{{ match._matchType || 'contact' }}</td>
 						<td class="screen-pop__actions">
-							<NcButton type="primary" @click="$emit('select', match)">
+							<NcButton
+								variant="primary"
+								@click="$emit('select', match)">
 								{{ t('pipelinq', 'Select') }}
 							</NcButton>
 						</td>
@@ -44,7 +52,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="secondary" @click="$emit('intake')">
+			<NcButton variant="secondary" @click="$emit('intake')">
 				{{ t('pipelinq', 'New contact') }}
 			</NcButton>
 		</template>

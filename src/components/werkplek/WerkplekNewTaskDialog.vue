@@ -75,9 +75,18 @@ export default {
 					widget: 'select',
 					required: true,
 					enum: [
-						{ value: 'terugbelverzoek', label: this.t('pipelinq', 'Callback') },
-						{ value: 'opvolgtaak', label: this.t('pipelinq', 'Follow-up') },
-						{ value: 'informatievraag', label: this.t('pipelinq', 'Information') },
+						{
+							value: 'terugbelverzoek',
+							label: this.t('pipelinq', 'Callback'),
+						},
+						{
+							value: 'opvolgtaak',
+							label: this.t('pipelinq', 'Follow-up'),
+						},
+						{
+							value: 'informatievraag',
+							label: this.t('pipelinq', 'Information'),
+						},
 					],
 				},
 				{
@@ -141,18 +150,37 @@ export default {
 			const payload = {
 				...values,
 				clientId: this.clientId,
-				contactMomentSummary: this.contactMomentSummary || values.description || '',
+				contactMomentSummary:
+					this.contactMomentSummary || values.description || '',
 				status: 'open',
 			}
 			try {
 				const result = await this.objectStore.saveObject('task', payload)
 				if (!result) {
-					try { showError(this.t('pipelinq', 'Could not create task. Please try again.')) } catch { /* no-op */ }
+					try {
+						showError(
+							this.t(
+								'pipelinq',
+								'Could not create task. Please try again.',
+							),
+						)
+					} catch {
+						/* no-op */
+					}
 					return
 				}
 				this.$emit('saved', result)
 			} catch (e) {
-				try { showError(this.t('pipelinq', 'Could not create task. Please try again.')) } catch { /* no-op */ }
+				try {
+					showError(
+						this.t(
+							'pipelinq',
+							'Could not create task. Please try again.',
+						),
+					)
+				} catch {
+					/* no-op */
+				}
 				// eslint-disable-next-line no-console
 				console.warn('[WerkplekNewTaskDialog] save failed', e)
 			}

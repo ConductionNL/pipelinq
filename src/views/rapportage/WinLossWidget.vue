@@ -18,13 +18,15 @@
 				:input-label="t('pipelinq', 'Date range')"
 				label="label"
 				track-by="value"
-				@input="onRangeChange" />
+				@update:model-value="onRangeChange" />
 		</div>
 
 		<NcEmptyContent
 			v-if="!hasData"
 			:name="t('pipelinq', 'No closed deals')"
-			:description="t('pipelinq', 'No won or lost leads in the selected range.')" />
+			:description="
+				t('pipelinq', 'No won or lost leads in the selected range.')
+			" />
 
 		<template v-else>
 			<CnStatsBlock :stats="statsCards" />
@@ -60,18 +62,33 @@ export default {
 		hasData() {
 			const won = this.data?.wonCount || 0
 			const lost = this.data?.lostCount || 0
-			return (won + lost) > 0
+			return won + lost > 0
 		},
 		pieSeries() {
 			return [this.data?.wonCount || 0, this.data?.lostCount || 0]
 		},
 		statsCards() {
 			return [
-				{ label: t('pipelinq', 'Win rate'), value: `${(this.data?.winRate || 0)}%` },
+				{
+					label: t('pipelinq', 'Win rate'),
+					value: `${this.data?.winRate || 0}%`,
+				},
 				{ label: t('pipelinq', 'Won'), value: this.data?.wonCount || 0 },
 				{ label: t('pipelinq', 'Lost'), value: this.data?.lostCount || 0 },
-				{ label: t('pipelinq', 'Avg won deal value'), value: (this.data?.avgWonValue || 0) > 0 ? `EUR ${(this.data.avgWonValue).toLocaleString('nl-NL')}` : '—' },
-				{ label: t('pipelinq', 'Avg days to close'), value: (this.data?.avgDaysToClose || 0) > 0 ? `${this.data.avgDaysToClose}d` : '—' },
+				{
+					label: t('pipelinq', 'Avg won deal value'),
+					value:
+						(this.data?.avgWonValue || 0) > 0
+							? `EUR ${this.data.avgWonValue.toLocaleString('nl-NL')}`
+							: '—',
+				},
+				{
+					label: t('pipelinq', 'Avg days to close'),
+					value:
+						(this.data?.avgDaysToClose || 0) > 0
+							? `${this.data.avgDaysToClose}d`
+							: '—',
+				},
 			]
 		},
 		rangeOptions() {
@@ -84,7 +101,8 @@ export default {
 		},
 	},
 	mounted() {
-		this.selectedRange = this.rangeOptions.find(o => o.value === 'all') || this.rangeOptions[0]
+		this.selectedRange =
+			this.rangeOptions.find((o) => o.value === 'all') || this.rangeOptions[0]
 	},
 	methods: {
 		/**
@@ -105,7 +123,7 @@ export default {
 			if (value === '30d') from.setDate(now.getDate() - 30)
 			else if (value === '90d') from.setDate(now.getDate() - 90)
 			else if (value === '12m') from.setMonth(now.getMonth() - 12)
-			const fmt = d => d.toISOString().slice(0, 10)
+			const fmt = (d) => d.toISOString().slice(0, 10)
 			this.$emit('range-change', { from: fmt(from), to: fmt(now) })
 		},
 	},

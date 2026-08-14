@@ -12,7 +12,13 @@
 			<NcButton @click="goBack">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
-			<h2>{{ isNew ? t('pipelinq', 'New staff member') : (form.displayName || t('pipelinq', 'Staff member')) }}</h2>
+			<h2>
+				{{
+					isNew
+						? t('pipelinq', 'New staff member')
+						: form.displayName || t('pipelinq', 'Staff member')
+				}}
+			</h2>
 		</div>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
@@ -36,14 +42,16 @@
 					label="label" />
 				<NcTextField
 					v-model="form.pin"
-					:label="isNew ? t('pipelinq', 'PIN (required, 4–6 digits)') : t('pipelinq', 'New PIN (optional, 4–6 digits)')"
+					:label="
+						isNew
+							? t('pipelinq', 'PIN (required, 4–6 digits)')
+							: t('pipelinq', 'New PIN (optional, 4–6 digits)')
+					"
 					type="password"
 					inputmode="numeric"
 					maxlength="6"
 					autocomplete="new-password" />
-				<NcCheckboxRadioSwitch
-					v-model="form.isActive"
-					type="switch">
+				<NcCheckboxRadioSwitch v-model="form.isActive" type="switch">
 					{{ t('pipelinq', 'Active') }}
 				</NcCheckboxRadioSwitch>
 				<p v-if="errorMessage" class="pos-staff-form__error" role="alert">
@@ -52,28 +60,55 @@
 			</div>
 
 			<div class="pos-staff-form__actions">
-				<NcButton type="primary" :disabled="saving || !canSave" @click="save">
+				<NcButton
+					variant="primary"
+					:disabled="saving || !canSave"
+					@click="save">
 					{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 				</NcButton>
-				<NcButton v-if="!isNew"
+				<NcButton
+					v-if="!isNew"
 					:disabled="saving"
-					type="error"
+					variant="error"
 					@click="confirmDelete">
 					{{ t('pipelinq', 'Delete') }}
 				</NcButton>
 			</div>
 		</template>
+		<ConfirmDialog
+			v-if="showDeleteConfirm"
+			:name="t('pipelinq', 'Delete staff member')"
+			:message="
+				t('pipelinq', 'Delete this staff member? This cannot be undone.')
+			"
+			:confirm-label="t('pipelinq', 'Delete')"
+			@confirm="performDelete"
+			@cancel="showDeleteConfirm = false" />
 	</div>
 </template>
 
 <script>
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 
 export default {
 	name: 'PosStaffForm',
-	components: { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcSelect, NcTextField },
+	components: {
+		ConfirmDialog,
+		NcButton,
+		NcCheckboxRadioSwitch,
+		NcLoadingIcon,
+		NcSelect,
+		NcTextField,
+	},
 	props: {
 		id: { type: String, default: '' },
 	},
@@ -90,6 +125,7 @@ export default {
 			loading: false,
 			saving: false,
 			errorMessage: '',
+			showDeleteConfirm: false,
 		}
 	},
 	computed: {
@@ -106,7 +142,11 @@ export default {
 			if (this.isNew && !/^\d{4,6}$/.test(this.form.pin)) {
 				return false
 			}
-			if (!this.isNew && this.form.pin !== '' && !/^\d{4,6}$/.test(this.form.pin)) {
+			if (
+				!this.isNew
+				&& this.form.pin !== ''
+				&& !/^\d{4,6}$/.test(this.form.pin)
+			) {
 				return false
 			}
 			return true
@@ -131,7 +171,9 @@ export default {
 		async load() {
 			this.loading = true
 			try {
-				const url = generateUrl('/apps/pipelinq/api/pos/staff/{id}', { id: this.id })
+				const url = generateUrl('/apps/pipelinq/api/pos/staff/{id}', {
+					id: this.id,
+				})
 				const response = await axios.get(url)
 				const staff = response?.data?.staff || {}
 				this.form.displayName = staff.displayName || ''
@@ -140,7 +182,9 @@ export default {
 				this.form.isActive = staff.isActive !== false
 				this.form.pin = ''
 			} catch (error) {
-				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to load staff')
+				this.errorMessage =
+					error?.response?.data?.error
+					|| t('pipelinq', 'Failed to load staff')
 			} finally {
 				this.loading = false
 			}
@@ -151,7 +195,9 @@ export default {
 			try {
 				const url = this.isNew
 					? generateUrl('/apps/pipelinq/api/pos/staff')
-					: generateUrl('/apps/pipelinq/api/pos/staff/{id}', { id: this.id })
+					: generateUrl('/apps/pipelinq/api/pos/staff/{id}', {
+							id: this.id,
+						})
 				const method = this.isNew ? 'post' : 'put'
 				const payload = {
 					displayName: this.form.displayName,
@@ -165,24 +211,44 @@ export default {
 				await axios[method](url, payload)
 				this.$emit('done')
 			} catch (error) {
-				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to save staff')
+				this.errorMessage =
+					error?.response?.data?.error
+					|| t('pipelinq', 'Failed to save staff')
 			} finally {
 				this.saving = false
 			}
 		},
-		async confirmDelete() {
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('pipelinq', 'Delete this staff member? This cannot be undone.'))) {
-				return
-			}
+		/**
+		 * Open the delete confirmation.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
+		 */
+		confirmDelete() {
+			this.showDeleteConfirm = true
+		},
+		/**
+		 * Delete the staff member once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.4
+		 */
+		async performDelete() {
+			this.showDeleteConfirm = false
 			this.saving = true
 			this.errorMessage = ''
 			try {
-				const url = generateUrl('/apps/pipelinq/api/pos/staff/{id}', { id: this.id })
+				const url = generateUrl('/apps/pipelinq/api/pos/staff/{id}', {
+					id: this.id,
+				})
 				await axios.delete(url)
 				this.$emit('done')
 			} catch (error) {
-				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to delete staff')
+				this.errorMessage =
+					error?.response?.data?.error
+					|| t('pipelinq', 'Failed to delete staff')
 			} finally {
 				this.saving = false
 			}

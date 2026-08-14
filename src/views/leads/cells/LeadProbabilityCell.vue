@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/customer-360/tasks.md#task-6.2 -->
+<!-- @spec openspec/specs/lead-scoring-win-probability/spec.md#requirement-win-probability-is-surfaced-on-the-pipeline-list-and-deal-detail -->
 <template>
 	<span class="lead-prob-cell">
 		<span v-if="isEmpty" class="lead-prob-cell__dash">—</span>
@@ -11,7 +11,9 @@
 				class="lead-prob-cell__badge"
 				:aria-label="t('pipelinq', 'Low probability')">
 				<AlertCircleOutline :size="14" class="lead-prob-cell__badge-icon" />
-				<span class="lead-prob-cell__badge-label">{{ t('pipelinq', 'Low') }}</span>
+				<span class="lead-prob-cell__badge-label">{{
+					t('pipelinq', 'Low')
+				}}</span>
 			</span>
 		</template>
 	</span>
@@ -53,7 +55,12 @@ export default {
 		 * @return {boolean}
 		 */
 		isEmpty() {
-			return this.value === null || this.value === undefined || this.value === '' || Number.isNaN(Number(this.value))
+			return (
+				this.value === null
+				|| this.value === undefined
+				|| this.value === ''
+				|| Number.isNaN(Number(this.value))
+			)
 		},
 		/**
 		 * Probability as a rounded integer percentage.

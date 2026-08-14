@@ -17,19 +17,20 @@
 					v-model="localQuery"
 					type="search"
 					class="xwiki-widget__search-input"
+					:aria-label="t('pipelinq', 'Search knowledge base')"
 					:placeholder="t('pipelinq', 'Search knowledge base')"
-					@input="onSearchInput">
+					@input="onSearchInput" />
 			</div>
 		</header>
-		<div v-if="store.available === false && store.status !== null" class="xwiki-widget__unavailable">
+		<div
+			v-if="store.available === false && store.status !== null"
+			class="xwiki-widget__unavailable">
 			{{ t('pipelinq', 'xWiki integration unavailable') }}
 		</div>
 		<NcLoadingIcon v-else-if="store.loading" />
-		<XWikiArticleList
-			v-else
-			:articles="visibleArticles"
-			@select="onSelect" />
-		<a v-if="hasMore"
+		<XWikiArticleList v-else :articles="visibleArticles" @select="onSelect" />
+		<a
+			v-if="hasMore"
 			class="xwiki-widget__more"
 			href="#"
 			@click.prevent="$emit('view-more')">

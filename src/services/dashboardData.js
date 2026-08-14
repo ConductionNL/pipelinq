@@ -12,7 +12,7 @@
 // (5 min). Call `invalidateDashboardData()` to force a refetch (used
 // by the "Refresh" header action).
 
-import Vue from 'vue'
+import { reactive } from 'vue'
 import { generateUrl } from '@nextcloud/router'
 import { initializeStores } from '../store/store.js'
 
@@ -23,7 +23,8 @@ const cache = new Map()
 // (via dashboardRefreshMixin) and refetch when it bumps. This replaces the
 // old route-query-bump remount trick, which never fired because CnAppRoot's
 // <router-view> is not path-keyed so the widgets never remounted.
-const refreshSignal = Vue.observable({ token: 0 })
+// `reactive()` is Vue 3's replacement for `Vue.observable`.
+const refreshSignal = reactive({ token: 0 })
 
 /**
  * The reactive refresh signal. Read `.token` inside a computed to make a
@@ -48,9 +49,13 @@ function buildUrl(typeConfig, params = {}) {
 		if (value === undefined || value === null || value === '') continue
 		queryParams.set(key, value)
 	}
-	return generateUrl('/apps/openregister/api/objects/'
-		+ typeConfig.register + '/' + typeConfig.schema
-		+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
+	return generateUrl(
+		'/apps/openregister/api/objects/'
+			+ typeConfig.register
+			+ '/'
+			+ typeConfig.schema
+			+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
+	)
 }
 
 /**
@@ -94,10 +99,10 @@ async function fetchRaw(type, params = {}) {
 function cached(key, fetcher) {
 	const entry = cache.get(key)
 	const now = Date.now()
-	if (entry && (now - entry.timestamp) < CACHE_TTL_MS) {
+	if (entry && now - entry.timestamp < CACHE_TTL_MS) {
 		return entry.promise
 	}
-	const promise = fetcher().catch(err => {
+	const promise = fetcher().catch((err) => {
 		// On error, drop the cache so the next mount retries.
 		cache.delete(key)
 		throw err
@@ -121,10 +126,12 @@ export function getLeads() {
  * @return {Promise<Array>} The request-type ticket records.
  */
 export function getRequests() {
-	return cached('ticket:request', () => fetchRaw('ticket', {
-		ticketType: 'request',
-		_limit: 500,
-	}))
+	return cached('ticket:request', () =>
+		fetchRaw('ticket', {
+			ticketType: 'request',
+			_limit: 500,
+		}),
+	)
 }
 
 /**
@@ -153,10 +160,12 @@ export function getContracts() {
  * @return {Promise<Array>} The complaint-type ticket records.
  */
 export function getComplaints() {
-	return cached('ticket:complaint', () => fetchRaw('ticket', {
-		ticketType: 'complaint',
-		_limit: 500,
-	}))
+	return cached('ticket:complaint', () =>
+		fetchRaw('ticket', {
+			ticketType: 'complaint',
+			_limit: 500,
+		}),
+	)
 }
 
 /**
@@ -172,10 +181,12 @@ export function getClients() {
 export function getMyLeads() {
 	const uid = window.OC?.getCurrentUser?.()?.uid
 	if (!uid) return Promise.resolve([])
-	return cached('lead:mine', () => fetchRaw('lead', {
-		assignee: uid,
-		_limit: 200,
-	}))
+	return cached('lead:mine', () =>
+		fetchRaw('lead', {
+			assignee: uid,
+			_limit: 200,
+		}),
+	)
 }
 
 /**
@@ -188,11 +199,13 @@ export function getMyLeads() {
 export function getMyRequests() {
 	const uid = window.OC?.getCurrentUser?.()?.uid
 	if (!uid) return Promise.resolve([])
-	return cached('ticket:request:mine', () => fetchRaw('ticket', {
-		ticketType: 'request',
-		assignee: uid,
-		_limit: 200,
-	}))
+	return cached('ticket:request:mine', () =>
+		fetchRaw('ticket', {
+			ticketType: 'request',
+			assignee: uid,
+			_limit: 200,
+		}),
+	)
 }
 
 /**
@@ -222,8 +235,12 @@ async function fetchAppJson(path) {
  * @spec openspec/specs/dashboard/spec.md
  */
 export function getAnalyticsOverview(period) {
-	return cached('analytics:overview:' + period,
-		() => fetchAppJson('/apps/pipelinq/api/analytics/overview?period=' + encodeURIComponent(period)))
+	return cached('analytics:overview:' + period, () =>
+		fetchAppJson(
+			'/apps/pipelinq/api/analytics/overview?period='
+				+ encodeURIComponent(period),
+		),
+	)
 }
 
 /**
@@ -236,8 +253,12 @@ export function getAnalyticsOverview(period) {
  * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export function getCommercialOverview(period) {
-	return cached('analytics:commercial:' + period,
-		() => fetchAppJson('/apps/pipelinq/api/analytics/commercial?period=' + encodeURIComponent(period)))
+	return cached('analytics:commercial:' + period, () =>
+		fetchAppJson(
+			'/apps/pipelinq/api/analytics/commercial?period='
+				+ encodeURIComponent(period),
+		),
+	)
 }
 
 /**
@@ -249,9 +270,14 @@ export function getCommercialOverview(period) {
  * @spec openspec/specs/dashboard/spec.md
  */
 export function getAnalyticsTrend(metric, period) {
-	return cached('analytics:trend:' + metric + ':' + period,
-		() => fetchAppJson('/apps/pipelinq/api/analytics/trends?metric=' + encodeURIComponent(metric)
-			+ '&period=' + encodeURIComponent(period)))
+	return cached('analytics:trend:' + metric + ':' + period, () =>
+		fetchAppJson(
+			'/apps/pipelinq/api/analytics/trends?metric='
+				+ encodeURIComponent(metric)
+				+ '&period='
+				+ encodeURIComponent(period),
+		),
+	)
 }
 
 /**

@@ -8,49 +8,61 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<form @submit.prevent="save">
 			<div class="portal-field">
 				<label for="portal-name">{{ t('pipelinq', 'Name') }}</label>
-				<input id="portal-name" v-model="form.displayName" type="text">
+				<input id="portal-name" v-model="form.displayName" type="text" />
 			</div>
 			<div class="portal-field">
 				<label for="portal-phone">{{ t('pipelinq', 'Phone') }}</label>
-				<input id="portal-phone" v-model="form.phone" type="tel">
+				<input
+					id="portal-phone"
+					v-model="form.phone"
+					type="tel"
+					autocomplete="tel" />
 			</div>
 			<div class="portal-field">
 				<label for="portal-address">{{ t('pipelinq', 'Address') }}</label>
-				<input id="portal-address" v-model="form.address" type="text">
+				<input
+					id="portal-address"
+					v-model="form.address"
+					type="text"
+					autocomplete="street-address" />
 			</div>
 			<div v-if="form.accountType === 'b2b'" class="portal-field">
 				<label for="portal-jobtitle">{{ t('pipelinq', 'Job title') }}</label>
-				<input id="portal-jobtitle" v-model="form.jobTitle" type="text">
+				<input id="portal-jobtitle" v-model="form.jobTitle" type="text" />
 			</div>
 			<div class="portal-field">
 				<label for="portal-locale">{{ t('pipelinq', 'Language') }}</label>
 				<select id="portal-locale" v-model="form.locale">
-					<option value="nl">
-						Nederlands
-					</option>
-					<option value="en">
-						English
-					</option>
-					<option value="de">
-						Deutsch
-					</option>
-					<option value="fr">
-						Français
-					</option>
+					<option value="nl">Nederlands</option>
+					<option value="en">English</option>
+					<option value="de">Deutsch</option>
+					<option value="fr">Français</option>
 				</select>
 			</div>
 			<div class="portal-field">
-				<label for="portal-change-email">{{ t('pipelinq', 'Email address') }}</label>
-				<input id="portal-change-email" v-model="form.email" type="email">
-				<small v-if="pendingEmail">{{ t('pipelinq', 'A verification link has been sent to {email}.', { email: pendingEmail }) }}</small>
+				<label for="portal-change-email">{{
+					t('pipelinq', 'Email address')
+				}}</label>
+				<input
+					id="portal-change-email"
+					v-model="form.email"
+					type="email"
+					autocomplete="email" />
+				<small v-if="pendingEmail">{{
+					t('pipelinq', 'A verification link has been sent to {email}.', {
+						email: pendingEmail,
+					})
+				}}</small>
 			</div>
-			<p v-if="message"
+			<p
+				v-if="message"
 				role="status"
 				aria-live="polite"
 				class="portal-success">
 				{{ message }}
 			</p>
-			<p v-if="error"
+			<p
+				v-if="error"
 				id="portal-profile-error"
 				role="alert"
 				class="portal-error">
@@ -70,7 +82,15 @@ export default {
 	name: 'PortalProfile',
 	data() {
 		return {
-			form: { displayName: '', phone: '', address: '', jobTitle: '', locale: 'nl', email: '', accountType: 'b2c' },
+			form: {
+				displayName: '',
+				phone: '',
+				address: '',
+				jobTitle: '',
+				locale: 'nl',
+				email: '',
+				accountType: 'b2c',
+			},
 			pendingEmail: '',
 			message: '',
 			error: '',
@@ -105,7 +125,8 @@ export default {
 				this.pendingEmail = updated.pendingEmail || ''
 				this.message = t('pipelinq', 'Your details have been saved.')
 			} catch (e) {
-				this.error = e.message || t('pipelinq', 'Could not save your details.')
+				this.error =
+					e.message || t('pipelinq', 'Could not save your details.')
 			}
 		},
 	},

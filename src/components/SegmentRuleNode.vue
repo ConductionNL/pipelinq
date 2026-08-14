@@ -4,14 +4,15 @@
 	<div class="rule-node" :style="indentStyle">
 		<div v-if="isGroup" class="rule-node__group">
 			<div class="rule-node__group-header">
-				<NcSelect :value="groupOperatorOption"
+				<NcSelect
+					:model-value="groupOperatorOption"
 					:options="groupOperators"
 					:input-label="t('pipelinq', 'Combine with')"
 					label="label"
 					:clearable="false"
 					class="rule-node__op-select"
-					@input="onGroupOperatorChange" />
-				<NcButton type="tertiary" @click="$emit('remove')">
+					@update:model-value="onGroupOperatorChange" />
+				<NcButton variant="tertiary" @click="$emit('remove')">
 					<template #icon>
 						<Delete :size="18" />
 					</template>
@@ -19,7 +20,8 @@
 				</NcButton>
 			</div>
 
-			<SegmentRuleNode v-for="(child, index) in node.children"
+			<SegmentRuleNode
+				v-for="(child, index) in node.children"
 				:key="index"
 				:node="child"
 				:depth="depth + 1"
@@ -32,13 +34,13 @@
 				@validate-leaf="$emit('validate-leaf')" />
 
 			<div class="rule-node__group-actions">
-				<NcButton type="secondary" @click="addCondition">
+				<NcButton variant="secondary" @click="addCondition">
 					<template #icon>
 						<Plus :size="18" />
 					</template>
 					{{ t('pipelinq', 'Add condition') }}
 				</NcButton>
-				<NcButton type="tertiary" @click="addGroup">
+				<NcButton variant="tertiary" @click="addGroup">
 					<template #icon>
 						<Plus :size="18" />
 					</template>
@@ -48,44 +50,55 @@
 		</div>
 
 		<div v-else class="rule-node__leaf">
-			<NcSelect :value="fieldOption"
+			<NcSelect
+				:model-value="fieldOption"
 				:options="fieldOptions"
 				:input-label="t('pipelinq', 'Field')"
 				label="label"
 				:clearable="false"
 				class="rule-node__field"
-				@input="onFieldChange" />
-			<NcSelect :value="operatorOption"
+				@update:model-value="onFieldChange" />
+			<NcSelect
+				:model-value="operatorOption"
 				:options="operatorOptions"
 				:input-label="t('pipelinq', 'Operator')"
 				label="label"
 				:clearable="false"
 				class="rule-node__operator"
-				@input="onOperatorChange" />
+				@update:model-value="onOperatorChange" />
 			<div class="rule-node__value-wrap">
 				<label class="rule-node__value-label">
 					{{ t('pipelinq', 'Value') }}
 				</label>
-				<input v-if="valueInputType === 'number'"
+				<input
+					v-if="valueInputType === 'number'"
 					:value="node.value"
 					type="number"
 					class="rule-node__value"
+					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
-					@blur="$emit('validate-leaf')">
-				<input v-else-if="valueInputType === 'date'"
+					@blur="$emit('validate-leaf')" />
+				<input
+					v-else-if="valueInputType === 'date'"
 					:value="node.value"
 					type="date"
 					class="rule-node__value"
+					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
-					@blur="$emit('validate-leaf')">
-				<input v-else
+					@blur="$emit('validate-leaf')" />
+				<input
+					v-else
 					:value="node.value"
 					type="text"
 					class="rule-node__value"
+					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
-					@blur="$emit('validate-leaf')">
+					@blur="$emit('validate-leaf')" />
 			</div>
-			<NcButton type="tertiary" @click="$emit('remove')">
+			<NcButton
+				variant="tertiary"
+				:aria-label="t('pipelinq', 'Remove rule')"
+				@click="$emit('remove')">
 				<template #icon>
 					<Delete :size="18" />
 				</template>
@@ -119,9 +132,7 @@ const OPERATORS_BY_TYPE = {
 		{ value: 'lt', label: 'Less than' },
 		{ value: 'lte', label: 'Less than or equal' },
 	],
-	boolean: [
-		{ value: 'eq', label: 'Is true / false' },
-	],
+	boolean: [{ value: 'eq', label: 'Is true / false' }],
 	date: [
 		{ value: 'before', label: 'Before' },
 		{ value: 'after', label: 'After' },
@@ -190,7 +201,10 @@ export default {
 		 * @return {object}
 		 */
 		groupOperatorOption() {
-			return this.groupOperators.find((o) => o.value === this.node.type) || this.groupOperators[0]
+			return (
+				this.groupOperators.find((o) => o.value === this.node.type)
+				|| this.groupOperators[0]
+			)
 		},
 		/**
 		 * Indentation style based on nesting depth.
@@ -222,8 +236,12 @@ export default {
 		 * @return {Array<{value:string,label:string}>}
 		 */
 		operatorOptions() {
-			const list = OPERATORS_BY_TYPE[this.fieldType] || OPERATORS_BY_TYPE.string
-			return list.map((o) => ({ value: o.value, label: this.t('pipelinq', o.label) }))
+			const list =
+				OPERATORS_BY_TYPE[this.fieldType] || OPERATORS_BY_TYPE.string
+			return list.map((o) => ({
+				value: o.value,
+				label: this.t('pipelinq', o.label),
+			}))
 		},
 		/**
 		 * Selected operator option.
@@ -231,7 +249,10 @@ export default {
 		 * @return {object|null}
 		 */
 		operatorOption() {
-			return this.operatorOptions.find((o) => o.value === this.node.operator) || null
+			return (
+				this.operatorOptions.find((o) => o.value === this.node.operator)
+				|| null
+			)
 		},
 		/**
 		 * Native input type for the value field, derived from field type.
@@ -290,7 +311,10 @@ export default {
 		 * Append a blank leaf condition to this group.
 		 */
 		addCondition() {
-			const children = [...this.node.children, { field: '', operator: 'eq', value: '' }]
+			const children = [
+				...this.node.children,
+				{ field: '', operator: 'eq', value: '' },
+			]
 			this.emitChange({ ...this.node, children })
 		},
 		/**
@@ -315,7 +339,9 @@ export default {
 		 */
 		onFieldChange(option) {
 			const value = option?.value || ''
-			const list = OPERATORS_BY_TYPE[option?.type || 'string'] || OPERATORS_BY_TYPE.string
+			const list =
+				OPERATORS_BY_TYPE[option?.type || 'string']
+				|| OPERATORS_BY_TYPE.string
 			this.emitChange({ ...this.node, field: value, operator: list[0].value })
 			this.$emit('validate-leaf')
 		},

@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <template>
@@ -6,12 +6,19 @@
 		class="pipeline-card"
 		:class="{ 'pipeline-card--overdue': isOverdue }"
 		draggable="true"
+		role="button"
+		tabindex="0"
 		@dragstart="onDragStart"
-		@click="$emit('open', item)">
+		@click="$emit('open', item)"
+		@keydown.enter.prevent="$emit('open', item)"
+		@keydown.space.prevent="$emit('open', item)">
 		<!-- Quick actions menu (top-right) — kept off the keyboard tab-order
 		     for the card itself; CnRowActions handles its own focus.        -->
 		<div class="pipeline-card__menu" @click.stop>
-			<NcActions :force-menu="true" :inline="0" :aria-label="t('pipelinq', 'Card actions')">
+			<NcActions
+				:force-menu="true"
+				:inline="0"
+				:aria-label="t('pipelinq', 'Card actions')">
 				<NcActionButton @click="openMoveMenu">
 					<template #icon>
 						<ArrowRightThick :size="18" />
@@ -41,7 +48,8 @@
 			<span class="pipeline-card__title">
 				{{ item.title }}
 			</span>
-			<span v-if="item.priority && item.priority !== 'normal'"
+			<span
+				v-if="item.priority && item.priority !== 'normal'"
 				class="priority-indicator"
 				:class="'priority--' + item.priority"
 				:title="getPriorityLabel(item.priority)" />
@@ -54,75 +62,78 @@
 			<span v-if="daysAge > 0" class="aging-badge" :class="agingClass">
 				{{ agingLabel }} {{ t('pipelinq', 'in stage') }}
 			</span>
-			<span v-if="isStaleItem" class="stale-badge" :title="t('pipelinq', 'No activity for over {days} days', { days: staleThreshold })">
+			<span
+				v-if="isStaleItem"
+				class="stale-badge"
+				:title="
+					t('pipelinq', 'No activity for over {days} days', {
+						days: staleThreshold,
+					})
+				">
 				{{ daysAge }}d {{ t('pipelinq', 'stale') }}
 			</span>
-			<span v-if="item.expectedCloseDate" class="card-date" :class="{ 'card-date--overdue': isOverdue }">
+			<span
+				v-if="item.expectedCloseDate"
+				class="card-date"
+				:class="{ 'card-date--overdue': isOverdue }">
 				<ClockAlert v-if="isOverdue" :size="14" class="card-date__icon" />
 				{{ formatDate(item.expectedCloseDate) }}
 			</span>
 		</div>
 
-		<!-- Sub-menus rendered as dialogs when activated; keep markup compact. -->
-		<NcDialog
+		<!-- Sub-menus rendered as dialogs when activated; each lives in its own
+		     file under src/dialogs/ per ADR-004 (modal-isolation). -->
+		<StagePickerDialog
 			v-if="moveMenuOpen"
-			:name="t('pipelinq', 'Move to stage')"
-			@closing="moveMenuOpen = false">
-			<div class="dialog-list">
-				<NcButton
-					v-for="stage in stages"
-					:key="stage.name"
-					type="secondary"
-					class="dialog-list__item"
-					@click="onPickStage(stage)">
-					{{ stage.name }}
-				</NcButton>
-			</div>
-		</NcDialog>
+			:stages="stages"
+			@close="moveMenuOpen = false"
+			@select="onPickStage" />
 
-		<NcDialog
+		<AssigneePickerDialog
 			v-if="assignMenuOpen"
-			:name="t('pipelinq', 'Assign user')"
-			@closing="assignMenuOpen = false">
-			<NcSelect
-				v-model="pickedAssignee"
-				:options="userOptions"
-				:clearable="true"
-				:input-label="t('pipelinq', 'Assignee')"
-				@input="onPickAssignee" />
-		</NcDialog>
+			:options="userOptions"
+			:assignee="pickedAssignee"
+			@close="assignMenuOpen = false"
+			@select="onPickAssignee" />
 
-		<NcDialog
+		<PriorityPickerDialog
 			v-if="priorityMenuOpen"
-			:name="t('pipelinq', 'Set priority')"
-			@closing="priorityMenuOpen = false">
-			<div class="dialog-list">
-				<NcButton
-					v-for="p in priorityOptions"
-					:key="p.value"
-					:type="item.priority === p.value ? 'primary' : 'secondary'"
-					class="dialog-list__item"
-					@click="onPickPriority(p.value)">
-					{{ p.label }}
-				</NcButton>
-			</div>
-		</NcDialog>
+			:options="priorityOptions"
+			:current="item.priority"
+			@close="priorityMenuOpen = false"
+			@select="onPickPriority" />
 	</div>
 </template>
 
 <script>
-import { NcSelect, NcActions, NcActionButton, NcButton, NcDialog } from '@nextcloud/vue'
+import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import ArrowRightThick from 'vue-material-design-icons/ArrowRightThick.vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import Flag from 'vue-material-design-icons/Flag.vue'
 import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
-import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
-import { getDaysAge, getAgingClass, formatAge, getStaleThreshold, resolveObjectType } from '../../services/pipelineUtils.js'
+import StagePickerDialog from '../../dialogs/StagePickerDialog.vue'
+import AssigneePickerDialog from '../../dialogs/AssigneePickerDialog.vue'
+import PriorityPickerDialog from '../../dialogs/PriorityPickerDialog.vue'
+import {
+	getPriorityLabel,
+	getPriorityColor,
+	getStatusLabel,
+} from '../../services/requestStatus.js'
+import {
+	getDaysAge,
+	getAgingClass,
+	formatAge,
+	getStaleThreshold,
+	resolveObjectType,
+} from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 // eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
-import { formatNumber, formatDate as formatLocaleDate } from '../../services/localeUtils.js'
+import {
+	formatNumber,
+	formatDate as formatLocaleDate,
+} from '../../services/localeUtils.js'
 
 // Module-level user cache shared across all PipelineCard instances
 let usersCache = null
@@ -130,11 +141,11 @@ let usersCache = null
 export default {
 	name: 'PipelineCard',
 	components: {
-		NcSelect,
 		NcActions,
 		NcActionButton,
-		NcButton,
-		NcDialog,
+		StagePickerDialog,
+		AssigneePickerDialog,
+		PriorityPickerDialog,
 		ArrowRightThick,
 		AccountPlus,
 		Flag,
@@ -219,16 +230,22 @@ export default {
 		isOverdue() {
 			if (this.entityType === 'lead') {
 				if (!this.item.expectedCloseDate) return false
-				if (this.item.status === 'won' || this.item.status === 'lost') return false
+				if (this.item.status === 'won' || this.item.status === 'lost')
+					return false
 				// Cards in stages flagged isClosed never show overdue
-				const currentStage = this.stages.find(s => s.name === this.item.stage)
+				const currentStage = this.stages.find(
+					(s) => s.name === this.item.stage,
+				)
 				if (currentStage && currentStage.isClosed) return false
 				return new Date(this.item.expectedCloseDate) < new Date()
 			}
 			if (this.entityType === 'request') {
 				// `requestedAt` became `occurredAt` on the ticket supertype.
 				if (!this.item.occurredAt) return false
-				const daysSince = Math.floor((Date.now() - new Date(this.item.occurredAt).getTime()) / 86400000)
+				const daysSince = Math.floor(
+					(Date.now() - new Date(this.item.occurredAt).getTime())
+						/ 86400000,
+				)
 				return daysSince > 30
 			}
 			return false
@@ -265,7 +282,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
 		 */
 		stageOptions() {
-			return this.stages.map(s => s.name)
+			return this.stages.map((s) => s.name)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
@@ -370,12 +387,21 @@ export default {
 			try {
 				const updated = this.buildSavePayload()
 				updated[this.columnProperty] = newStage
-				const targetStage = this.stages.find(s => s.name === newStage)
-				if (targetStage && typeof targetStage.order === 'number' && this.columnProperty === 'stage') {
+				const targetStage = this.stages.find((s) => s.name === newStage)
+				if (
+					targetStage
+					&& typeof targetStage.order === 'number'
+					&& this.columnProperty === 'stage'
+				) {
 					updated.stageOrder = targetStage.order
 				}
-				await this.objectStore.saveObject(this.resolvedType.objectType, updated)
-				showSuccess(t('pipelinq', 'Lead moved to {stage}', { stage: newStage }))
+				await this.objectStore.saveObject(
+					this.resolvedType.objectType,
+					updated,
+				)
+				showSuccess(
+					t('pipelinq', 'Lead moved to {stage}', { stage: newStage }),
+				)
 				this.$emit('refresh')
 			} catch (e) {
 				this.selectedStage = this.currentColumnValue
@@ -392,7 +418,10 @@ export default {
 			try {
 				const updated = this.buildSavePayload()
 				updated.assignee = newAssignee || ''
-				await this.objectStore.saveObject(this.resolvedType.objectType, updated)
+				await this.objectStore.saveObject(
+					this.resolvedType.objectType,
+					updated,
+				)
 				showSuccess(t('pipelinq', 'Assignee updated'))
 				this.$emit('refresh')
 			} catch (e) {
@@ -464,7 +493,10 @@ export default {
 			try {
 				const updated = this.buildSavePayload()
 				updated.priority = priority
-				await this.objectStore.saveObject(this.resolvedType.objectType, updated)
+				await this.objectStore.saveObject(
+					this.resolvedType.objectType,
+					updated,
+				)
 				showSuccess(t('pipelinq', 'Priority updated'))
 				this.$emit('refresh')
 			} catch (e) {
@@ -499,6 +531,7 @@ export default {
 
 <style scoped>
 .pipeline-card {
+	position: relative;
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
 	padding: 8px;
@@ -508,10 +541,6 @@ export default {
 
 .pipeline-card:hover {
 	background: var(--color-background-hover);
-}
-
-.pipeline-card {
-	position: relative;
 }
 
 .pipeline-card--overdue {
@@ -538,18 +567,6 @@ export default {
 .card-date__icon {
 	margin-right: 2px;
 	vertical-align: middle;
-}
-
-.dialog-list {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding: 12px;
-}
-
-.dialog-list__item {
-	width: 100%;
-	justify-content: flex-start;
 }
 
 .pipeline-card__row {
@@ -685,5 +702,11 @@ export default {
 
 .quick-select :deep(.vs__selected) {
 	font-size: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pipeline-card {
+		transition: none;
+	}
 }
 </style>

@@ -22,6 +22,7 @@ The system MUST register a `contract` schema in the pipelinq register with contr
 
 #### Scenario: Semantic kind declaration present
 
+- @e2e exclude asserts a STATIC DECLARATION in a register fragment, not a runtime behaviour: `lib/Settings/register.d/96-contract-renewal.json:30` carries `"https://openregister.app/ns#Contract"` in the ADR-051 dialect form (verified). Nothing a user can do in a browser changes what that file declares, and the declaration is imported verbatim — so an e2e test would be re-reading the same JSON through a longer pipe. Enforced mechanically instead by the register import and by hydra gate-54 (`relation-dialect`), both of which run on every PR.
 - WHEN the registered `contract` schema is inspected
 - THEN it MUST carry the `ns#Contract` implements declaration in the ADR-051 dialect form
 
@@ -208,6 +209,7 @@ The system MUST provide a "Send to invoicing" action on an `active` contract tha
 
 #### Scenario: Failed handoff leaves the contract untouched
 
+- @e2e exclude fault injection — the GIVEN is "an implementer whose target creation fails", and there is no way to make the handoff engine throw from a browser against a live instance without breaking the instance for every other spec in the suite. Covered by `SemanticHandoffServiceTest::testHandoffFailsOnEngineThrow` (the engine raises mid-handoff) and `::testHandoffFailsWhenEngineAbsent` (no implementer bound at all); both were opened and confirmed. The rollback invariant they assert — the contract row is left unchanged — is a service-layer property with no distinct UI surface beyond the generic error the user sees.
 - GIVEN an implementer whose target creation fails
 - WHEN the handoff is triggered
 - THEN the contract MUST remain unchanged and the failure MUST be reported to the user

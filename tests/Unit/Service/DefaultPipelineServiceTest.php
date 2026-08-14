@@ -29,46 +29,43 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for DefaultPipelineService.
  */
-class DefaultPipelineServiceTest extends TestCase
-{
-    /**
-     * Test createDefaultPipelines skips when register not configured.
-     *
-     * @return void
-     */
-    public function testSkipsWhenNotConfigured(): void
-    {
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturn('');
+class DefaultPipelineServiceTest extends TestCase {
+	/**
+	 * Test createDefaultPipelines skips when register not configured.
+	 *
+	 * @return void
+	 */
+	public function testSkipsWhenNotConfigured(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('');
 
-        $container = $this->createMock(ContainerInterface::class);
-        $stageData = new PipelineStageData();
-        $logger    = $this->createMock(LoggerInterface::class);
+		$container = $this->createMock(ContainerInterface::class);
+		$stageData = new PipelineStageData();
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $logger->expects($this->once())->method('warning');
+		$logger->expects($this->once())->method('warning');
 
-        $service = new DefaultPipelineService($appConfig, $container, $stageData, $logger);
-        $service->createDefaultPipelines();
-    }//end testSkipsWhenNotConfigured()
+		$service = new DefaultPipelineService($appConfig, $container, $stageData, $logger);
+		$service->createDefaultPipelines();
+	}//end testSkipsWhenNotConfigured()
 
-    /**
-     * Test createDefaultPipelines catches exceptions.
-     *
-     * @return void
-     */
-    public function testCatchesExceptions(): void
-    {
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturn('1');
+	/**
+	 * Test createDefaultPipelines catches exceptions.
+	 *
+	 * @return void
+	 */
+	public function testCatchesExceptions(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('1');
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willThrowException(new \RuntimeException('Not found'));
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willThrowException(new \RuntimeException('Not found'));
 
-        $stageData = new PipelineStageData();
-        $logger    = $this->createMock(LoggerInterface::class);
-        $logger->expects($this->once())->method('error');
+		$stageData = new PipelineStageData();
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error');
 
-        $service = new DefaultPipelineService($appConfig, $container, $stageData, $logger);
-        $service->createDefaultPipelines();
-    }//end testCatchesExceptions()
+		$service = new DefaultPipelineService($appConfig, $container, $stageData, $logger);
+		$service->createDefaultPipelines();
+	}//end testCatchesExceptions()
 }//end class

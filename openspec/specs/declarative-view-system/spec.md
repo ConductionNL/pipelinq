@@ -103,6 +103,8 @@ page MUST apply a declarative default multi-key sort by `type` then `name`.
 
 #### Scenario: BillingCategories renders with swatch and type-then-name sort
 
+@e2e exclude the `/billing-categories` page no longer exists to render — `src/menu-layout.json#_removalsNote` records that nav-ia-cleanup dropped the "Reports & Compliance" group "and its sole child 'Billing categories' … only the nav entry and its three pages go", and `src/manifest.json` accordingly declares no BillingCategories page. The surviving `billingCategory` surface is the "Hours by billing category" widget on the Operational dashboard, asserted end-to-end by `tests/e2e/spec-coverage/billing-categories.spec.ts`.
+
 - GIVEN the user opens the Pipelinq app
 - WHEN they navigate to the BillingCategories route `/billing-categories`
 - THEN the page MUST render a table of `billingCategory` objects whose `name`

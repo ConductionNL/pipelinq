@@ -10,11 +10,15 @@
 		@closing="$emit('close')">
 		<div class="cash-shift-drop">
 			<NcTextField
-				:value.sync="amount"
+				v-model="amount"
 				type="number"
 				:label="t('pipelinq', 'Amount (€)')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Enter an amount greater than zero') : ''" />
+				:helper-text="
+					showError
+						? t('pipelinq', 'Enter an amount greater than zero')
+						: ''
+				" />
 			<NcSelect
 				v-model="reason"
 				:options="reasonOptions"
@@ -26,7 +30,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="submitting" @click="submit">
+			<NcButton variant="primary" :disabled="submitting" @click="submit">
 				{{ t('pipelinq', 'Record') }}
 			</NcButton>
 		</template>
@@ -66,7 +70,10 @@ export default {
 		 */
 		reasonOptions() {
 			return [
-				{ id: 'manager-deposit', label: t('pipelinq', 'Cash drop to manager') },
+				{
+					id: 'manager-deposit',
+					label: t('pipelinq', 'Cash drop to manager'),
+				},
 				{ id: 'bank-run', label: t('pipelinq', 'Bank run') },
 				{ id: 'security-removal', label: t('pipelinq', 'Security removal') },
 				{ id: 'other', label: t('pipelinq', 'Other') },

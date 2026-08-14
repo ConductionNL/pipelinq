@@ -9,6 +9,8 @@ Enforces lawful-basis consent and anti-spam rules before a marketing blast can b
 ## Requirements
 ### Requirement: Blast Cannot Send Without Lawful Basis
 
+@e2e exclude the preflight runs inside ComplianceService against a whole segment's ConsentRecords and returns a machine-readable missing-contacts list to the caller; the send it gates dispatches through openconnector, which the CI instance does not install (.github/workflows/code-quality.yml pins `additional-apps` to openregister only), so no browser run can reach the blocked-send state. Asserted by tests/Unit/Service/ComplianceServiceTest.php (testCheckSegmentComplianceMissingContacts, testCheckSegmentComplianceAllCompliant, testHasConsentForChannelImportedNotSatisfying, testPreflightBlastReturnsValidWhenAllChecksPass), tests/Unit/Service/BlastServiceTest.php (testSendBlastQueuesCompliantSkipsNonCompliant, testSendBlastFailsClosedWhenComplianceUnavailable) and tests/Integration/BlastWorkflowTest.php (testAllCompliantSegmentQueuesAllMembers).
+
 A Blast SHALL NOT be sent to any Contact that lacks a ConsentRecord for the
 target channel with lawful-basis set. The system SHALL block the send and
 offer remediation options.
@@ -52,6 +54,8 @@ if either is missing.
 - **THEN** the unsubscribe-token and physical-address validations SHALL NOT apply
 
 ### Requirement: Consent Withdrawal Propagates
+
+@e2e exclude withdrawal arrives over a provider webhook (`POST /api/blast-webhooks/{sendgrid,ses,twilio}`, signature-verified) and its effect is a ConsentRecord field plus a status flip on already-queued BlastDelivery rows — none of which any pipelinq screen renders, and there is no UI affordance that withdraws consent. Asserted by tests/Unit/Service/ComplianceServiceTest.php (testRecordConsentWithdrawalUpdatesRecordAndTransitionsDeliveries, testRecordConsentWithdrawalKeepsFirstWithdrawalTimestamp, testRecordConsentWithdrawalCreatesAuditLedgerWhenNoRecordExists, testHasConsentForChannelWithdrawnConsent, testHasConsentForChannelActiveConsent, testHasConsentForChannelNoRecordReturnsFalse) and end to end by tests/Integration/BlastWorkflowTest.php (testWithdrawalTransitionsQueuedDeliveriesEndToEnd).
 
 When an unsubscribe or hard bounce occurs, the system SHALL withdraw the
 ConsentRecord via `recordConsentWithdrawal()` and cause queued deliveries

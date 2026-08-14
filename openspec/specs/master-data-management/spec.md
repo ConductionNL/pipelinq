@@ -64,6 +64,8 @@ The system MUST support probabilistic duplicate detection via the `normalized` a
 **Feature tier**: MVP
 **Handoff**: Primary path is OpenRegister `findDuplicates()`; Jaro-Winkler/TF-IDF retained only as the OR-unavailable fallback.
 
+`@e2e exclude` all three scenarios describe OpenRegister's detector, not a pipelinq surface. Matching is executed by OR from the `x-openregister-dedup` annotation on the `masterEntity` schema (`lib/Settings/register.d/90-master-data-management.json`: matchRules on `goldenRecord.kvkNumber` (exact, 0.4), `goldenRecord.email` (exact, 0.3), `goldenRecord.name` (normalized 0.2 + levenshtein 0.1), `threshold: 0.7`). Pipelinq ships no detector and no stewardship-queue screen: `DuplicateDetectionService` and `StringSimilarity` return no match under `lib/`, and `src/manifest.d/90-master-data-management.json` declares `"menu": []` / `"pages": []`, so a browser has nothing to drive. NOTE — the third scenario's in-process Jaro-Winkler/TF-IDF fallback was NOT retained (the spec makes it a MAY); there is no app-side code path left to exercise. Candidate generation, the threshold cut-off and the stewardship queue are owned + e2e-tested by OpenRegister.
+
 #### Scenario: Name similarity fuzzy match
 
 - GIVEN two Master Entities "Jansens Bouw BV" and "Jansen's Bouw B.V." sharing a natural key
@@ -158,11 +160,15 @@ Downstream synchronization MUST be fulfilled entirely by OpenRegister's `Webhook
 - THEN it MUST call `WebhookService::dispatchEvent` with the sync envelope (targetSystem, changeType, masterEntity, payload)
 - AND no `syncQueueItem` object MUST be created anywhere
 
+`@e2e exclude` in-process event fan-out with no rendered surface — the trigger is OpenRegister's `ObjectsMergedEvent` (fired inside OR's merge engine, which pipelinq hosts no UI for) and the assertion is about the argument handed to `WebhookService::dispatchEvent` plus the ABSENCE of a `syncQueueItem` row; neither is observable in a browser. Asserted by tests/Unit/Listener/ObjectsMergedSyncListenerTest.php (testMergeEventDispatchesDownstreamSync — five per-target envelopes with `changeType = merge`, the survivor's golden record, and `assertArrayNotHasKey('syncQueueItem', …)`; testReversalEventUsesReverseMergeChangeType).
+
 #### Scenario: Retry is OR's job
 
 - GIVEN a downstream delivery that fails
 - WHEN OR's `WebhookRetryJob` next runs
 - THEN the retry MUST be driven by OR's webhook log (`next_retry_at`), with zero pipelinq retry code involved
+
+`@e2e exclude` a cron path inside another app — the retry is OpenRegister's `WebhookRetryJob` reading OR's own webhook log, which a browser session can neither schedule nor read. The pipelinq half of the claim ("zero pipelinq retry code involved") is a code-absence assertion: `MdmSyncQueueProcessorJob`, `MdmOpenRegisterSyncJob`, `MdmHardDeleteConfirmationJob` and `SyncQueueService` have no class definition anywhere under `lib/` — the names survive only in retirement comments — and `lib/BackgroundJob/` contains no MDM job at all.
 
 #### Scenario: OR absent
 
@@ -199,6 +205,8 @@ The system MUST log an audit trail for every merge and every gold-record attribu
 **Feature tier**: MVP
 **Handoff**: Covered by OpenRegister built-in audit-trail field on every schema instance (10-year retention is platform-default).
 
+`@e2e exclude` cross-app surface owned by OpenRegister — the audit trail is OR's platform-level per-object log, written by OR's merge engine and by the `x-openregister-survivorship` recompute on save, and rendered in OpenRegister's own object history. Both scenarios also depend on acts a browser cannot perform against pipelinq: performing a merge (OR hosts the merge wizard; pipelinq's `MergeService` is deleted and `src/manifest.d/90-master-data-management.json` declares `"menu": []` / `"pages": []`, so the app exposes no MDM screen at all) and a trust-tier recomputation on a source-record update (materialised by OR's `SurvivorshipRecomputeListener`, not by pipelinq — no `MasterEntityService` or `SourceRecordChangedListener` class exists under `lib/`, the former surviving only in re-homing comments in `lib/Service/Mdm/MdmObjectRepository.php`). Retention is a platform default, not app behaviour.
+
 #### Scenario: Merge audit log
 
 - GIVEN a merge of account A into B performed by steward "alice" on 2026-05-22
@@ -219,6 +227,8 @@ The system MUST correctly execute AVG right-of-deletion: Master Entity soft-dele
 
 **Feature tier**: MVP
 **Handoff**: Covered by existing `avg-verzoeken-workflow` change (separate openspec change in this repo).
+
+`@e2e exclude` the app-side AVG / right-of-deletion workflow no longer exists in pipelinq, so there is no surface to drive: `consume-or-dsar` (ADR-047 Phase 3) removed every `avgVerzoek#*` / `avgEvidence#*` / `avgRedaction#*` / `avgDenial#*` / `avgBundle#*` and `mdmAvgWorkflow#*` route (see the block comment in `appinfo/routes.php`, which registers none of them), and `AVGWorkflowService` — named by the second scenario as `AVGWorkflowService::approveAndExecuteRightOfDeletion()` — returns no match anywhere under `lib/` or `src/`. DSAR is executed by OpenRegister's case engine (`/apps/openregister/avg`, `/api/gdpr/*`) and covered by OR's own suite; pipelinq only contributes evidence (`PipelinqEvidenceSourceProvider`, asserted by tests/Unit/Service/PipelinqEvidenceSourceProviderTest.php) and a one-time migration of legacy `avgVerzoek` objects into OR `dataSubjectRequest` cases (`lib/Repair/MigrateAvgVerzoekenToOrDsar.php`, asserted by tests/Unit/Repair/MigrateAvgVerzoekenToOrDsarTest.php: testMapsFullVerzoek, testErasureIsNotFiledAsAccess, testIdempotentRerun). The third scenario ("an auditor reviews the trail 1 year later") is additionally not a same-session observation.
 
 #### Scenario: Initiate right-of-deletion
 
@@ -284,6 +294,8 @@ The system MUST keep the OpenRegister schema instances (contact, account, produc
 - THEN the corresponding OpenRegister `account` object MUST be updated with the new phone value and `masterEntityRef = <masterId>`
 - AND no background polling job MUST be involved
 
+`@e2e exclude` in-process event path with no rendered surface — the trigger is OpenRegister's `ObjectsMergedEvent` and the assertion is about the STORED shape of the projected OR object (`masterEntityRef`, `isMasterRecord`, the copied golden-record field). Pipelinq hosts no MDM screen that renders a master entity or its projection (`src/manifest.d/90-master-data-management.json` declares `"menu": []` / `"pages": []`), so a browser cannot reach either end of it. Asserted by tests/Unit/Listener/ObjectsMergedSyncListenerTest.php (testMergeEventProjectsGoldenRecord — one canonical `contact` object written with `masterEntityRef = survivor` and `isMasterRecord = true`; testOrAbsentDegradesGracefully proves the projection runs off the event, not off a poller).
+
 #### Scenario: Pre-merge OR records marked as merged
 
 - GIVEN two OR `account` objects are merged into one Master Entity
@@ -298,6 +310,8 @@ The system MUST provide a wizard for data stewards to resolve attribute conflict
 
 **Feature tier**: MVP
 **Handoff**: Deferred — UI wizard tracked for a future change once the trust-configuration schema lands.
+
+`@e2e exclude` the wizard both scenarios drive does not exist in this app and by REQ-MDM-013 must not: `MdmConflictResolutionModal` and `MdmMergeWizardModal` return no match under `src/`, `src/registry.js` registers neither, and `src/manifest.d/90-master-data-management.json` declares `"menu": []` / `"pages": []` — there is no route, nav entry or control a browser could open. The steward conflict-resolution surface is hosted by OpenRegister (`mdm-conflict-resolution-ui`) against the `x-openregister-survivorship` annotation, and the persistent rule the second scenario creates is a row in OR's `trust-configuration` register, seeded by `lib/Repair/SeedTrustConfigurationRows.php` (asserted by tests/Unit/Repair/SeedTrustConfigurationRowsTest.php: testSeedsThreeRows, testSecondRunIsIdempotent, testNoOpWhenOpenRegisterMissing).
 
 #### Scenario: Resolve VAT number conflict
 
@@ -368,11 +382,15 @@ A repair step MUST drain pre-existing non-terminal `syncQueueItem` rows exactly 
 - THEN exactly three dispatches MUST go through `WebhookService::dispatchEvent`
 - AND all three rows MUST be marked `drained`; the delivered row is skipped
 
+`@e2e exclude` a one-shot `IRepairStep` (`lib/Repair/DrainMdmSyncQueue.php`), which runs during `occ upgrade` / app enable and is neither triggerable nor observable from a browser session — and its subject, the legacy `syncQueueItem` rows, is a retired schema no pipelinq screen has ever rendered. Asserted by tests/Unit/Repair/DrainMdmSyncQueueTest.php (testPendingRowsDrainedOnceDeliveredSkipped — exactly three `WebhookService::dispatchEvent` calls, the delivered row skipped, all three marked `drained`).
+
 #### Scenario: Idempotent re-run
 
 - GIVEN a completed drain
 - WHEN the repair step runs again
 - THEN zero dispatches MUST occur and the summary MUST report all rows skipped
+
+`@e2e exclude` same one-shot `IRepairStep` path as above — re-running a repair step and counting its dispatches has no browser surface, and the "summary" is `IOutput` text written to the `occ` console. Asserted by tests/Unit/Repair/DrainMdmSyncQueueTest.php (testIdempotentRerun; testEmptyQueueNoOp covers the no-rows case).
 
 #### Scenario: Failed hand-off blocks schema removal
 
@@ -380,4 +398,6 @@ A repair step MUST drain pre-existing non-terminal `syncQueueItem` rows exactly 
 - WHEN the drain completes
 - THEN the row MUST remain non-terminal and be listed in the repair output
 - AND the `syncQueueItem` schema MUST NOT be removed until a clean drain is achieved
+
+`@e2e exclude` a fault-injection path on a one-shot `IRepairStep` — the scenario requires a dispatch that THROWS, which cannot be provoked from a browser, and its outcome (the row left non-terminal plus a line in the `occ` repair output) is not rendered anywhere. Asserted by tests/Unit/Repair/DrainMdmSyncQueueTest.php (testFailedHandOffStaysPending; testOrAbsentLeavesRowsInPlace covers the OpenRegister-absent variant).
 

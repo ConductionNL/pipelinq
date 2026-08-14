@@ -2,7 +2,7 @@
 	<div class="lead-products">
 		<div class="lead-products__header">
 			<h3>{{ t('pipelinq', 'Products') }}</h3>
-			<NcButton type="secondary" @click="showAddDialog = true">
+			<NcButton variant="secondary" @click="showAddDialog = true">
 				{{ t('pipelinq', 'Add Product') }}
 			</NcButton>
 		</div>
@@ -18,13 +18,13 @@
 				<table class="viewTable">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Product') }}</th>
-							<th>{{ t('pipelinq', 'Qty') }}</th>
-							<th>{{ t('pipelinq', 'Unit Price') }}</th>
-							<th>{{ t('pipelinq', 'Discount') }}</th>
-							<th>{{ t('pipelinq', 'Total') }}</th>
-							<th>{{ t('pipelinq', 'Notes') }}</th>
-							<th />
+							<th scope="col">{{ t('pipelinq', 'Product') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Qty') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Unit Price') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Discount') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Total') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Notes') }}</th>
+							<th scope="col" />
 						</tr>
 					</thead>
 					<tbody>
@@ -36,7 +36,12 @@
 									type="number"
 									min="1"
 									class="inline-input inline-input--qty"
-									@change="updateLineItem(item)">
+									:aria-label="
+										t('pipelinq', 'Quantity for {product}', {
+											product: getProductName(item.product),
+										})
+									"
+									@change="updateLineItem(item)" />
 							</td>
 							<td>
 								<input
@@ -45,7 +50,12 @@
 									min="0"
 									step="0.01"
 									class="inline-input inline-input--price"
-									@change="updateLineItem(item)">
+									:aria-label="
+										t('pipelinq', 'Unit price for {product}', {
+											product: getProductName(item.product),
+										})
+									"
+									@change="updateLineItem(item)" />
 							</td>
 							<td>
 								<input
@@ -54,7 +64,12 @@
 									min="0"
 									step="0.01"
 									class="inline-input inline-input--discount"
-									@change="updateLineItem(item)">
+									:aria-label="
+										t('pipelinq', 'Discount for {product}', {
+											product: getProductName(item.product),
+										})
+									"
+									@change="updateLineItem(item)" />
 							</td>
 							<td class="total-cell">
 								{{ formatCurrency(calculateTotal(item)) }}
@@ -65,10 +80,17 @@
 									type="text"
 									class="inline-input inline-input--notes"
 									:placeholder="t('pipelinq', 'Notes...')"
-									@change="updateNotes(item)">
+									:aria-label="
+										t('pipelinq', 'Notes for {product}', {
+											product: getProductName(item.product),
+										})
+									"
+									@change="updateNotes(item)" />
 							</td>
 							<td>
-								<NcButton type="tertiary" @click="removeLineItem(item)">
+								<NcButton
+									variant="tertiary"
+									@click="removeLineItem(item)">
 									{{ t('pipelinq', 'Remove') }}
 								</NcButton>
 							</td>
@@ -91,22 +113,33 @@
 
 			<!-- Auto-calc hint -->
 			<div v-if="hasManualOverride" class="auto-calc-hint">
-				{{ t('pipelinq', 'Lead value is manually set to {manual}. Calculated total: {calculated}.', {
-					manual: formatCurrency(leadValue),
-					calculated: formatCurrency(grandTotal),
-				}) }}
-				<NcButton type="tertiary" @click="$emit('sync-value', grandTotal)">
+				{{
+					t(
+						'pipelinq',
+						'Lead value is manually set to {manual}. Calculated total: {calculated}.',
+						{
+							manual: formatCurrency(leadValue),
+							calculated: formatCurrency(grandTotal),
+						},
+					)
+				}}
+				<NcButton
+					variant="tertiary"
+					@click="$emit('sync-value', grandTotal)">
 					{{ t('pipelinq', 'Use calculated value') }}
 				</NcButton>
 			</div>
 		</div>
 
 		<!-- Add product dialog -->
-		<div v-if="showAddDialog" class="create-overlay" @click.self="showAddDialog = false">
+		<div v-if="showAddDialog" class="create-overlay">
 			<div class="create-dialog">
 				<div class="create-dialog__header">
 					<h3>{{ t('pipelinq', 'Add Product') }}</h3>
-					<NcButton type="tertiary" @click="showAddDialog = false">
+					<NcButton
+						variant="tertiary"
+						:aria-label="t('pipelinq', 'Close')"
+						@click="showAddDialog = false">
 						✕
 					</NcButton>
 				</div>
@@ -119,38 +152,55 @@
 							:aria-label-combobox="t('pipelinq', 'Product')"
 							:placeholder="t('pipelinq', 'Search products...')"
 							label="name"
-							:reduce="opt => opt.id"
-							@input="onProductSelect" />
+							:reduce="(opt) => opt.id"
+							@update:model-value="onProductSelect" />
 					</div>
 					<div class="form-row">
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Quantity') }}</label>
 							<NcTextField
-								:value="String(addForm.quantity)"
+								id="lead-product-quantity"
+								:label="t('pipelinq', 'Quantity')"
+								:model-value="String(addForm.quantity)"
 								type="number"
-								@update:value="v => addForm.quantity = Number(v)" />
+								@update:model-value="
+									(v) => (addForm.quantity = Number(v))
+								" />
 						</div>
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Unit Price') }}</label>
 							<NcTextField
-								:value="String(addForm.unitPrice)"
+								id="lead-product-unit-price"
+								:label="t('pipelinq', 'Unit Price')"
+								:model-value="String(addForm.unitPrice)"
 								type="number"
-								@update:value="v => addForm.unitPrice = Number(v)" />
+								@update:model-value="
+									(v) => (addForm.unitPrice = Number(v))
+								" />
 						</div>
 						<div class="form-group">
-							<label>{{ t('pipelinq', 'Discount') }}</label>
 							<NcTextField
-								:value="String(addForm.discount)"
+								id="lead-product-discount"
+								:label="t('pipelinq', 'Discount')"
+								:model-value="String(addForm.discount)"
 								type="number"
-								@update:value="v => addForm.discount = Number(v)" />
+								@update:model-value="
+									(v) => (addForm.discount = Number(v))
+								" />
 						</div>
 					</div>
 					<div class="form-group">
-						<label>{{ t('pipelinq', 'Notes') }}</label>
-						<textarea v-model="addForm.notes" rows="2" />
+						<label for="lead-product-notes">{{
+							t('pipelinq', 'Notes')
+						}}</label>
+						<textarea
+							id="lead-product-notes"
+							v-model="addForm.notes"
+							rows="2" />
 					</div>
 					<div class="form-actions">
-						<NcButton type="primary" :disabled="!addForm.product" @click="addLineItem">
+						<NcButton
+							variant="primary"
+							:disabled="!addForm.product"
+							@click="addLineItem">
 							{{ t('pipelinq', 'Add') }}
 						</NcButton>
 						<NcButton @click="showAddDialog = false">
@@ -214,16 +264,19 @@ export default {
 		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-1.1
 		 */
 		productOptions() {
-			return this.products.map(p => ({
+			return this.products.map((p) => ({
 				id: p.id,
-				name: p.sku ? `${p.name || p.id} (${p.sku})` : (p.name || p.id),
+				name: p.sku ? `${p.name || p.id} (${p.sku})` : p.name || p.id,
 			}))
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-15
 		 */
 		grandTotal() {
-			return this.lineItems.reduce((sum, item) => sum + this.calculateTotal(item), 0)
+			return this.lineItems.reduce(
+				(sum, item) => sum + this.calculateTotal(item),
+				0,
+			)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-16
@@ -251,7 +304,7 @@ export default {
 					}),
 					this.objectStore.fetchCollection('product', { _limit: 200 }),
 				])
-				this.lineItems = (items || []).map(item => ({ ...item }))
+				this.lineItems = (items || []).map((item) => ({ ...item }))
 				this.products = prods || []
 			} catch {
 				this.lineItems = []
@@ -265,7 +318,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-14
 		 */
 		getProductName(productId) {
-			const product = this.products.find(p => p.id === productId)
+			const product = this.products.find((p) => p.id === productId)
 			return product?.name || productId || '-'
 		},
 		/**
@@ -276,14 +329,14 @@ export default {
 			const qty = Number(item.quantity) || 0
 			const price = Number(item.unitPrice) || 0
 			const discount = Number(item.discount) || 0
-			return (qty * price) * (1 - discount / 100)
+			return qty * price * (1 - discount / 100)
 		},
 		/**
 		 * @param productId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-18
 		 */
 		onProductSelect(productId) {
-			const product = this.products.find(p => p.id === productId)
+			const product = this.products.find((p) => p.id === productId)
 			if (product) {
 				this.addForm.unitPrice = Number(product.unitPrice) || 0
 			}

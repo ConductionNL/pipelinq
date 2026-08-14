@@ -4,43 +4,52 @@
 -->
 <template>
 	<CnDetailPage
-		:title="isEdit ? t('pipelinq', 'Edit destination') : t('pipelinq', 'New destination')"
+		:title="
+			isEdit
+				? t('pipelinq', 'Edit destination')
+				: t('pipelinq', 'New destination')
+		"
 		:loading="loading"
 		@back="goBack">
 		<CnDetailCard :title="t('pipelinq', 'Destination')">
 			<div class="export-form">
-				<NcTextField
-					:value.sync="model.name"
-					:label="t('pipelinq', 'Name')" />
+				<NcTextField v-model="model.name" :label="t('pipelinq', 'Name')" />
 				<NcSelect
-					:value="selectedType"
+					:model-value="selectedType"
 					:options="typeOptions"
 					:input-label="t('pipelinq', 'Type')"
 					:placeholder="t('pipelinq', 'Choose a destination type…')"
 					label="label"
 					:clearable="false"
-					@input="(o) => model.type = o ? o.id : ''" />
+					@update:model-value="(o) => (model.type = o ? o.id : '')" />
 				<NcTextField
-					:value.sync="model.connectorSourceId"
+					v-model="model.connectorSourceId"
 					:label="t('pipelinq', 'OpenConnector source ID')"
-					:helper-text="t('pipelinq', 'The OpenConnector source that holds the warehouse credentials')" />
+					:helper-text="
+						t(
+							'pipelinq',
+							'The OpenConnector source that holds the warehouse credentials',
+						)
+					" />
 				<NcTextField
-					:value.sync="model.pathTemplate"
+					v-model="model.pathTemplate"
 					:label="t('pipelinq', 'Path template')"
 					:placeholder="'exports/{schema}/{partition}'" />
 				<NcSelect
-					:value="selectedCompression"
+					:model-value="selectedCompression"
 					:options="compressionOptions"
 					:input-label="t('pipelinq', 'Compression')"
 					label="label"
 					:clearable="false"
-					@input="(o) => model.compression = o ? o.id : 'none'" />
+					@update:model-value="
+						(o) => (model.compression = o ? o.id : 'none')
+					" />
 				<NcTextField
-					:value.sync="model.namingConvention"
+					v-model="model.namingConvention"
 					:label="t('pipelinq', 'Naming convention')"
 					:placeholder="'{schema}_{run_id}_{timestamp}'" />
 				<NcCheckboxRadioSwitch
-					:checked.sync="model.encryptionEnabled"
+					v-model="model.encryptionEnabled"
 					type="switch">
 					{{ t('pipelinq', 'Encryption at rest') }}
 				</NcCheckboxRadioSwitch>
@@ -49,15 +58,18 @@
 			<template #actions>
 				<NcButton
 					v-if="isEdit"
-					type="tertiary"
+					variant="tertiary"
 					:disabled="busy"
 					@click="testConnection">
 					{{ t('pipelinq', 'Test connection') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="busy || !model.name" @click="save">
+				<NcButton
+					variant="primary"
+					:disabled="busy || !model.name"
+					@click="save">
 					{{ t('pipelinq', 'Save') }}
 				</NcButton>
-				<NcButton type="secondary" @click="goBack">
+				<NcButton variant="secondary" @click="goBack">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
 			</template>
@@ -66,7 +78,12 @@
 </template>
 
 <script>
-import { NcButton, NcTextField, NcSelect, NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcTextField,
+	NcSelect,
+	NcCheckboxRadioSwitch,
+} from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -120,7 +137,12 @@ export default {
 		 * @return {string|null} The destination UUID.
 		 */
 		destinationId() {
-			return this.exportDestinationId || this.id || this.$route?.params?.id || null
+			return (
+				this.exportDestinationId
+				|| this.id
+				|| this.$route?.params?.id
+				|| null
+			)
 		},
 		/**
 		 * Whether the form is editing an existing destination.
@@ -160,7 +182,10 @@ export default {
 		 * @return {object|null} The option.
 		 */
 		selectedCompression() {
-			return this.compressionOptions.find((o) => o.id === this.model.compression) || null
+			return (
+				this.compressionOptions.find((o) => o.id === this.model.compression)
+				|| null
+			)
 		},
 	},
 	async mounted() {
@@ -175,7 +200,10 @@ export default {
 		async load() {
 			this.loading = true
 			try {
-				const existing = await this.objectStore.fetchObject('exportDestination', this.destinationId)
+				const existing = await this.objectStore.fetchObject(
+					'exportDestination',
+					this.destinationId,
+				)
 				if (existing) {
 					this.model = { ...this.model, ...existing }
 				}

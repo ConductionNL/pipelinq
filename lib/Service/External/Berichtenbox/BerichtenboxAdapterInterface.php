@@ -79,51 +79,50 @@ namespace OCA\Pipelinq\Service\External\Berichtenbox;
  *
  * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
  */
-interface BerichtenboxAdapterInterface
-{
-    /**
-     * Dispatch a Berichtenbox message envelope to Logius.
-     *
-     * @param array<string,mixed> $message BBK 1.7-shaped envelope —
-     *                                     conversationId, sender,
-     *                                     recipientBsn, subject, body,
-     *                                     attachments[], priority,
-     *                                     correlationId.
-     *
-     * @return BerichtenboxResult The dispatch outcome (status +
-     *                            Logius-side kenmerk).
-     */
-    public function dispatchMessage(array $message): BerichtenboxResult;
+interface BerichtenboxAdapterInterface {
+	/**
+	 * Dispatch a Berichtenbox message envelope to Logius.
+	 *
+	 * @param array<string,mixed> $message BBK 1.7-shaped envelope —
+	 *                                     conversationId, sender,
+	 *                                     recipientBsn, subject, body,
+	 *                                     attachments[], priority,
+	 *                                     correlationId.
+	 *
+	 * @return BerichtenboxResult The dispatch outcome (status +
+	 *                            Logius-side kenmerk).
+	 */
+	public function dispatchMessage(array $message): BerichtenboxResult;
 
-    /**
-     * Verify an inbound Logius delivery-receipt webhook signature +
-     * payload.
-     *
-     * @param string               $rawBody Raw request body (signature
-     *                                      is computed over the
-     *                                      verbatim bytes).
-     * @param array<string,string> $headers Request headers (Logius
-     *                                      signature is in
-     *                                      `X-Logius-Signature`).
-     *
-     * @return BerichtenboxResult The verification outcome.
-     */
-    public function verifyDeliveryWebhook(string $rawBody, array $headers): BerichtenboxResult;
+	/**
+	 * Verify an inbound Logius delivery-receipt webhook signature +
+	 * payload.
+	 *
+	 * @param string $rawBody Raw request body (signature
+	 *                        is computed over the
+	 *                        verbatim bytes).
+	 * @param array<string,string> $headers Request headers (Logius
+	 *                                      signature is in
+	 *                                      `X-Logius-Signature`).
+	 *
+	 * @return BerichtenboxResult The verification outcome.
+	 */
+	public function verifyDeliveryWebhook(string $rawBody, array $headers): BerichtenboxResult;
 
-    /**
-     * Check whether a BSN has an active Berichtenbox mailbox.
-     *
-     * @param string $bsn 9-digit Burgerservicenummer.
-     *
-     * @return BerichtenboxResult The mailbox-status outcome.
-     */
-    public function checkMailbox(string $bsn): BerichtenboxResult;
+	/**
+	 * Check whether a BSN has an active Berichtenbox mailbox.
+	 *
+	 * @param string $bsn 9-digit Burgerservicenummer.
+	 *
+	 * @return BerichtenboxResult The mailbox-status outcome.
+	 */
+	public function checkMailbox(string $bsn): BerichtenboxResult;
 
-    /**
-     * Whether the adapter is dormant — i.e. wired but not contacting
-     * Logius.
-     *
-     * @return bool TRUE when the adapter is a log-only stub.
-     */
-    public function isDormant(): bool;
+	/**
+	 * Whether the adapter is dormant — i.e. wired but not contacting
+	 * Logius.
+	 *
+	 * @return bool TRUE when the adapter is a log-only stub.
+	 */
+	public function isDormant(): bool;
 }//end interface

@@ -45,66 +45,64 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
  */
-class WorklistController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest        $request         The HTTP request.
-     * @param WorklistService $worklistService Worklist union service.
-     * @param IUserSession    $userSession     Active user session.
-     * @param LoggerInterface $logger          Logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private WorklistService $worklistService,
-        private IUserSession $userSession,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class WorklistController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The HTTP request.
+	 * @param WorklistService $worklistService Worklist union service.
+	 * @param IUserSession $userSession Active user session.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private WorklistService $worklistService,
+		private IUserSession $userSession,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * GET /api/worklist/mine.
-     *
-     * The current user's worklist: union of leads + requests assigned to
-     * the session user (assignee scoping is applied server-side; callers
-     * cannot request another user's worklist). Optional `?limit=` caps
-     * the returned rows (the dashboard widget uses 5) while `total`,
-     * `leadCount` and `requestCount` always reflect the full union.
-     * Invalid limit -> 400. OpenRegister outage -> 500 with a static
-     * message.
-     *
-     * @return JSONResponse The worklist payload, or an error envelope.
-     *
-     * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
-     */
-    #[NoAdminRequired]
-    public function mine(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
-        }
+	/**
+	 * GET /api/worklist/mine.
+	 *
+	 * The current user's worklist: union of leads + requests assigned to
+	 * the session user (assignee scoping is applied server-side; callers
+	 * cannot request another user's worklist). Optional `?limit=` caps
+	 * the returned rows (the dashboard widget uses 5) while `total`,
+	 * `leadCount` and `requestCount` always reflect the full union.
+	 * Invalid limit -> 400. OpenRegister outage -> 500 with a static
+	 * message.
+	 *
+	 * @return JSONResponse The worklist payload, or an error envelope.
+	 *
+	 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
+	 */
+	#[NoAdminRequired]
+	public function mine(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['message' => 'Unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
 
-        $limitParam = $this->request->getParam('limit', '');
-        $limit      = null;
-        if ($limitParam !== '' && $limitParam !== null) {
-            if (is_string($limitParam) === false || ctype_digit($limitParam) === false || ((int) $limitParam) < 1) {
-                return new JSONResponse(['message' => 'Invalid limit'], Http::STATUS_BAD_REQUEST);
-            }
+		$limitParam = $this->request->getParam('limit', '');
+		$limit = null;
+		if ($limitParam !== '' && $limitParam !== null) {
+			if (is_string($limitParam) === false || ctype_digit($limitParam) === false || ((int)$limitParam) < 1) {
+				return new JSONResponse(['message' => 'Invalid limit'], Http::STATUS_BAD_REQUEST);
+			}
 
-            $limit = (int) $limitParam;
-        }
+			$limit = (int)$limitParam;
+		}
 
-        try {
-            return new JSONResponse($this->worklistService->getMine(userId: $user->getUID(), limit: $limit));
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                message: '[WorklistController] mine failed',
-                context: ['error' => $e->getMessage()]
-            );
-            return new JSONResponse(['message' => 'Worklist unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
-        }//end try
-    }//end mine()
+		try {
+			return new JSONResponse($this->worklistService->getMine(userId: $user->getUID(), limit: $limit));
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				message: '[WorklistController] mine failed',
+				context: ['error' => $e->getMessage()]
+			);
+			return new JSONResponse(['message' => 'Worklist unavailable'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}//end try
+	}//end mine()
 }//end class

@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Playwright globalSetup — logs into Nextcloud once and persists the
  * resulting cookie jar / localStorage to `tests/e2e/.auth/user.json`.
@@ -17,6 +17,7 @@ import { execSync } from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs'
 import { STORAGE_STATE } from './helpers/auth'
+import { resolveBaseUrl } from './base-url'
 
 const APP_ROOT = path.resolve(__dirname, '..', '..')
 const BUNDLE_PATH = path.join(APP_ROOT, 'js', 'pipelinq-main.js')
@@ -33,18 +34,22 @@ function ensureBundleBuilt(): void {
 		return
 	}
 	// eslint-disable-next-line no-console
-	console.log(`[playwright globalSetup] bundle missing at ${BUNDLE_PATH}; running 'npm run build' once…`)
+	console.log(
+		`[playwright globalSetup] bundle missing at ${BUNDLE_PATH}; running 'npm run build' once…`,
+	)
 	execSync('npm run build', { cwd: APP_ROOT, stdio: 'inherit' })
 }
 
 async function ensureNextcloudReachable(baseURL: string): Promise<void> {
 	const ctx = await request.newContext()
 	try {
-		const res = await ctx.get(`${baseURL}/status.php`, { failOnStatusCode: false })
+		const res = await ctx.get(`${baseURL}/status.php`, {
+			failOnStatusCode: false,
+		})
 		if (!res.ok()) {
 			throw new Error(
-				`Nextcloud status.php returned ${res.status()} at ${baseURL}. ` +
-				'Make sure the docker container is running and reachable.',
+				`Nextcloud status.php returned ${res.status()} at ${baseURL}. `
+					+ 'Make sure the docker container is running and reachable.',
 			)
 		}
 		const body = await res.json().catch(() => ({}))
@@ -58,13 +63,65 @@ async function ensureNextcloudReachable(baseURL: string): Promise<void> {
 	}
 }
 
+/**
+ * Cheap gate on the expensive step: prove the Vue app actually MOUNTS on two
+ * routes before the suite is allowed to run.
+ *
+ * A whole class of bootstrap failures — a `@nextcloud/*` package left on its
+ * Vue-2 major, a lazy chunk answered with `text/html` by NC's PHP router, a
+ * frozen-export mutation, a dead router catch-all — produces an EMPTY SHELL on
+ * every route while npm, ESLint, webpack and a byte-verified deploy all stay
+ * clean. On scholiq that shape cost 37 minutes of e2e running against a bundle
+ * that never booted. HTTP 200 is not evidence; only rendered app content is.
+ *
+ * Two routes, not one, because a router misconfiguration renders the shell fine
+ * at `/` and nothing anywhere else.
+ *
+ * @param page An authenticated page.
+ * @throws {Error} When the app fails to mount, with the console errors attached.
+ */
+async function assertAppBoots(page: import('@playwright/test').Page): Promise<void> {
+	const consoleErrors: string[] = []
+	page.on('console', (msg) => {
+		if (msg.type() === 'error') consoleErrors.push(msg.text())
+	})
+	page.on('pageerror', (err) => consoleErrors.push(`pageerror: ${err.message}`))
+
+	for (const route of [
+		'/index.php/apps/pipelinq/',
+		'/index.php/apps/pipelinq/#/clients',
+	]) {
+		consoleErrors.length = 0
+		await page.goto(route, { waitUntil: 'domcontentloaded' })
+		try {
+			// The app's own mount host, with rendered children. `#pipelinq-app`
+			// alone is served by the PHP template even when the bundle is dead —
+			// requiring a child element is what makes this a MOUNT assertion
+			// rather than an HTTP one.
+			await page.waitForSelector('#pipelinq-app > *', { timeout: 45_000 })
+		} catch {
+			throw new Error(
+				`[boot gate] The Pipelinq Vue app did not mount on ${route}. `
+					+ 'The bundle loaded but rendered nothing — this is a bootstrap '
+					+ 'failure, not a test failure, and running the suite against it '
+					+ 'would produce a wall of meaningless red.\n'
+					+ (consoleErrors.length
+						? `Console errors:\n  ${consoleErrors.slice(0, 10).join('\n  ')}`
+						: 'No console errors were captured.'),
+			)
+		}
+	}
+}
+
 async function globalSetup(config: FullConfig): Promise<void> {
-	const baseURL = (config.projects[0]?.use?.baseURL as string | undefined)
-		?? process.env.NEXTCLOUD_URL
-		?? process.env.NC_BASE_URL
-		?? 'http://localhost:8080'
+	// The `?? 'http://localhost:8080'` literal that used to close this chain is
+	// gone — it silently pointed the suite at the SHARED dev container whenever
+	// the environment was unset. resolveBaseUrl() throws instead.
+	const baseURL =
+		(config.projects[0]?.use?.baseURL as string | undefined) ?? resolveBaseUrl()
 	const user = process.env.ADMIN_USER ?? process.env.NC_ADMIN_USER ?? 'admin'
-	const password = process.env.ADMIN_PASSWORD ?? process.env.NC_ADMIN_PASS ?? 'admin'
+	const password =
+		process.env.ADMIN_PASSWORD ?? process.env.NC_ADMIN_PASS ?? 'admin'
 
 	ensureBundleBuilt()
 	await ensureNextcloudReachable(baseURL)
@@ -84,12 +141,13 @@ async function globalSetup(config: FullConfig): Promise<void> {
 	const currentUrl = page.url()
 	if (/\/login(\?|$|\/)/.test(currentUrl)) {
 		throw new Error(
-			`Login appears to have failed — still on ${currentUrl}. ` +
-			'Check ADMIN_USER / ADMIN_PASSWORD (defaults admin/admin).',
+			`Login appears to have failed — still on ${currentUrl}. `
+				+ 'Check ADMIN_USER / ADMIN_PASSWORD (defaults admin/admin).',
 		)
 	}
 
 	await context.storageState({ path: STORAGE_STATE })
+	await assertAppBoots(page)
 	await browser.close()
 }
 

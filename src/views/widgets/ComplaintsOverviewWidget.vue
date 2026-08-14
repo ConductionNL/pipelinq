@@ -1,5 +1,18 @@
 <template>
-	<div class="complaints-widget" @click="$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })">
+	<div
+		class="complaints-widget"
+		role="button"
+		tabindex="0"
+		:aria-label="t('pipelinq', 'Open complaints')"
+		@click="
+			$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })
+		"
+		@keydown.enter.prevent="
+			$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })
+		"
+		@keydown.space.prevent="
+			$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })
+		">
 		<div v-if="loading" class="widget-loading">
 			{{ t('pipelinq', 'Loading...') }}
 		</div>
@@ -17,11 +30,11 @@
 			</div>
 			<div class="widget-breakdown">
 				<span v-if="newCount > 0" class="breakdown-item">
-					<span class="breakdown-dot" style="background: #0082c9;" />
+					<span class="breakdown-dot" style="background: #0082c9" />
 					{{ newCount }} {{ t('pipelinq', 'new') }}
 				</span>
 				<span v-if="inProgressCount > 0" class="breakdown-item">
-					<span class="breakdown-dot" style="background: #e9a400;" />
+					<span class="breakdown-dot" style="background: #e9a400" />
 					{{ inProgressCount }} {{ t('pipelinq', 'in progress') }}
 				</span>
 			</div>
@@ -47,7 +60,9 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-17
 		 */
 		openComplaints() {
-			return this.complaints.filter(c => c.status === 'new' || c.status === 'in_progress')
+			return this.complaints.filter(
+				(c) => c.status === 'new' || c.status === 'in_progress',
+			)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-19
@@ -59,20 +74,20 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-16
 		 */
 		newCount() {
-			return this.complaints.filter(c => c.status === 'new').length
+			return this.complaints.filter((c) => c.status === 'new').length
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-15
 		 */
 		inProgressCount() {
-			return this.complaints.filter(c => c.status === 'in_progress').length
+			return this.complaints.filter((c) => c.status === 'in_progress').length
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-18
 		 */
 		overdueCount() {
 			const now = new Date()
-			return this.openComplaints.filter(c => {
+			return this.openComplaints.filter((c) => {
 				if (!c.slaDeadline) return false
 				return new Date(c.slaDeadline) < now
 			}).length

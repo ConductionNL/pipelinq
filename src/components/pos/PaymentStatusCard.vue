@@ -13,7 +13,9 @@
 	<div class="payment-status-card">
 		<header class="payment-status-card__header">
 			<h3>{{ t('pipelinq', 'Payment') }}</h3>
-			<span :class="statusClass" class="payment-status-card__badge">{{ statusLabel }}</span>
+			<span :class="statusClass" class="payment-status-card__badge">{{
+				statusLabel
+			}}</span>
 		</header>
 		<dl class="payment-status-card__grid">
 			<template v-if="provider">
@@ -35,40 +37,42 @@
 		<div v-if="hasActions" class="payment-status-card__actions">
 			<NcButton
 				v-if="status === 'pending'"
-				type="primary"
+				variant="primary"
 				:disabled="busy"
 				@click="onCapture">
 				{{ t('pipelinq', 'Complete') }}
 			</NcButton>
 			<NcButton
 				v-if="canRefund"
-				type="warning"
+				variant="warning"
 				:disabled="busy"
 				@click="onRefund">
 				{{ t('pipelinq', 'Reverse') }}
 			</NcButton>
 			<NcButton
 				v-if="status === 'failed'"
-				type="secondary"
+				variant="secondary"
 				:disabled="busy"
 				@click="onRetry">
 				{{ t('pipelinq', 'Try again') }}
 			</NcButton>
 		</div>
+		<ReversalReasonDialog
+			v-if="showReversalDialog"
+			@confirm="performRefund"
+			@cancel="showReversalDialog = false" />
 	</div>
 </template>
 
 <script>
 import { NcButton } from '@nextcloud/vue'
+import ReversalReasonDialog from '../../dialogs/ReversalReasonDialog.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import {
-	capturePayment,
-	refundPayment,
-} from '../../services/posPaymentApi.js'
+import { capturePayment, refundPayment } from '../../services/posPaymentApi.js'
 
 export default {
 	name: 'PaymentStatusCard',
-	components: { NcButton },
+	components: { NcButton, ReversalReasonDialog },
 	props: {
 		transaction: {
 			type: Object,
@@ -82,6 +86,7 @@ export default {
 	data() {
 		return {
 			busy: false,
+			showReversalDialog: false,
 		}
 	},
 	computed: {
@@ -139,35 +144,76 @@ export default {
 			}
 		},
 		canRefund() {
-			return this.isManager && (this.status === 'settled' || this.status === 'captured')
+			return (
+				this.isManager
+				&& (this.status === 'settled' || this.status === 'captured')
+			)
 		},
 		hasActions() {
-			return this.status === 'pending' || this.status === 'failed' || this.canRefund
+			return (
+				this.status === 'pending'
+				|| this.status === 'failed'
+				|| this.canRefund
+			)
 		},
 	},
 	methods: {
 		async onCapture() {
 			this.busy = true
 			try {
-				const result = await capturePayment(this.transaction.id || this.transaction['@self']?.id)
+				const result = await capturePayment(
+					this.transaction.id || this.transaction['@self']?.id,
+				)
 				this.$emit('updated', result.transaction || result)
 				showSuccess(t('pipelinq', 'Payment completed.'))
 			} catch (e) {
-				showError(t('pipelinq', 'Completion failed: {error}', { error: e.message || 'onbekend' }))
+				showError(
+					t('pipelinq', 'Completion failed: {error}', {
+						error: e.message || 'onbekend',
+					}),
+				)
 			} finally {
 				this.busy = false
 			}
 		},
-		async onRefund() {
-			const reason = window.prompt(t('pipelinq', 'Reason for reversal?'))
-			if (!reason) return
+		/**
+		 * Open the reversal-reason dialog.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
+		onRefund() {
+			this.showReversalDialog = true
+		},
+		/**
+		 * Reverse the payment with the reason the dialog collected.
+		 *
+		 * @param {string} reason Why the payment is being reversed.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
+		async performRefund(reason) {
+			this.showReversalDialog = false
+			if (!reason) {
+				return
+			}
 			this.busy = true
 			try {
-				const result = await refundPayment(this.transaction.id || this.transaction['@self']?.id, reason)
+				const result = await refundPayment(
+					this.transaction.id || this.transaction['@self']?.id,
+					reason,
+				)
 				this.$emit('updated', result.transaction || result)
 				showSuccess(t('pipelinq', 'Payment reversed.'))
 			} catch (e) {
-				showError(t('pipelinq', 'Reversal failed: {error}', { error: e.message || 'onbekend' }))
+				showError(
+					t('pipelinq', 'Reversal failed: {error}', {
+						error: e.message || 'onbekend',
+					}),
+				)
 			} finally {
 				this.busy = false
 			}
@@ -189,58 +235,71 @@ export default {
 	flex-direction: column;
 	gap: 12px;
 }
+
 .payment-status-card__header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 }
+
 .payment-status-card__header h3 {
 	margin: 0;
 	font-size: 1.05em;
 }
+
 .payment-status-card__badge {
 	font-size: 0.85em;
 	padding: 4px 10px;
 	border-radius: var(--border-radius);
 	background-color: var(--color-background-hover);
 }
+
 .payment-status-card__badge--settled {
 	background-color: var(--color-success);
 	color: var(--color-main-background);
 }
+
 .payment-status-card__badge--captured {
 	background-color: var(--color-primary-element-light);
 	color: var(--color-main-text);
 }
+
 .payment-status-card__badge--pending {
 	background-color: var(--color-warning);
 	color: var(--color-main-background);
 }
+
 .payment-status-card__badge--failed {
 	background-color: var(--color-error);
 	color: var(--color-main-background);
 }
+
 .payment-status-card__badge--refunded {
 	background-color: var(--color-background-darker);
 	color: var(--color-main-text);
 }
+
 .payment-status-card__grid {
 	display: grid;
 	grid-template-columns: max-content 1fr;
 	gap: 4px 12px;
 	margin: 0;
 }
+
 .payment-status-card__grid dt {
 	font-weight: 600;
 }
+
 .payment-status-card__grid dd {
 	margin: 0;
 }
+
 .payment-status-card__session {
 	font-family: monospace;
 	font-size: 0.9em;
 	word-break: break-all;
 }
+
 .payment-status-card__actions {
 	display: flex;
 	gap: 8px;

@@ -14,14 +14,12 @@ namespace Doctrine\DBAL;
 /**
  * Stub for Doctrine\DBAL\ArrayParameterType.
  */
-final class ArrayParameterType
-{
-    public const INTEGER = 101;
-    public const STRING  = 102;
-    public const BINARY  = 103;
-    public const ASCII   = 104;
+final class ArrayParameterType {
+	public const INTEGER = 101;
+	public const STRING = 102;
+	public const BINARY = 103;
+	public const ASCII = 104;
 
-    private function __construct()
-    {
-    }
+	private function __construct() {
+	}
 }

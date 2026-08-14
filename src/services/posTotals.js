@@ -76,7 +76,15 @@ export function recalculateLine(line, priceMode = null) {
 	const quantity = Math.max(0, Number(line.quantity) || 0)
 	const unitPrice = Math.max(0, Number(line.unitPrice) || 0)
 	const discount = Math.min(100, Math.max(0, Number(line.discount) || 0))
-	const taxRate = Math.min(100, Math.max(0, line.taxRate === undefined || line.taxRate === null ? 21 : Number(line.taxRate)))
+	const taxRate = Math.min(
+		100,
+		Math.max(
+			0,
+			line.taxRate === undefined || line.taxRate === null
+				? 21
+				: Number(line.taxRate),
+		),
+	)
 	const mode = normalizePriceMode(priceMode ?? line.priceMode ?? null)
 
 	const amount = quantity * unitPrice * (1 - discount / 100)
@@ -126,7 +134,8 @@ export function computeTotals(lines, priceMode = null) {
 	for (const raw of lines || []) {
 		const line = recalculateLine(raw, mode)
 		const grossNoDisc = line.quantity * line.unitPrice
-		const netNoDisc = mode === 'incl' ? grossNoDisc / (1 + line.taxRate / 100) : grossNoDisc
+		const netNoDisc =
+			mode === 'incl' ? grossNoDisc / (1 + line.taxRate / 100) : grossNoDisc
 
 		subtotal += line.net
 		discountTotal += netNoDisc - line.net
@@ -141,8 +150,12 @@ export function computeTotals(lines, priceMode = null) {
 	}
 
 	const sorted = Object.values(byRate).sort((a, b) => a.rate - b.rate)
-	const taxBreakdown = sorted.map(entry => ({ rate: entry.rate, base: money(entry.base), tax: money(entry.tax) }))
-	const invoiceBreakdown = sorted.map(entry => ({
+	const taxBreakdown = sorted.map((entry) => ({
+		rate: entry.rate,
+		base: money(entry.base),
+		tax: money(entry.tax),
+	}))
+	const invoiceBreakdown = sorted.map((entry) => ({
 		rate: entry.rate,
 		base: money(entry.base),
 		tax: money(entry.tax),

@@ -26,11 +26,11 @@
 			<table v-else class="purchase-history__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Date') }}</th>
-						<th>{{ t('pipelinq', 'Reference') }}</th>
-						<th>{{ t('pipelinq', 'Items') }}</th>
-						<th>{{ t('pipelinq', 'Total') }}</th>
-						<th>{{ t('pipelinq', 'Tender') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Date') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Reference') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Items') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Total') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Tender') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -40,7 +40,11 @@
 						<td>{{ row.itemCount || 0 }}</td>
 						<td>€{{ formatMoney(row.total) }}</td>
 						<td>
-							<span :class="['purchase-history__tender', tenderClass(row.tenderType)]">
+							<span
+								:class="[
+									'purchase-history__tender',
+									tenderClass(row.tenderType),
+								]">
 								{{ tenderLabel(row.tenderType) }}
 							</span>
 						</td>
@@ -128,7 +132,9 @@ export default {
 		 * @return {string} The CSS class.
 		 */
 		tenderClass(tender) {
-			return tender === 'onAccount' ? 'purchase-history__tender--on-account' : ''
+			return tender === 'onAccount'
+				? 'purchase-history__tender--on-account'
+				: ''
 		},
 	},
 }

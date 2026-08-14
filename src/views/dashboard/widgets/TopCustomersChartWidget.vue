@@ -50,11 +50,11 @@ export default {
 		},
 		/** @return {Array<string>} Customer names. */
 		chartLabels() {
-			return (this.trend?.series || []).map(pt => pt.date)
+			return (this.trend?.series || []).map((pt) => pt.date)
 		},
 		/** @return {Array<object>} Single revenue series. */
 		chartSeries() {
-			const values = (this.trend?.series || []).map(pt => pt.value)
+			const values = (this.trend?.series || []).map((pt) => pt.value)
 			return [{ name: this.t('pipelinq', 'Revenue'), data: values }]
 		},
 		/** @return {object} Horizontal bar options with euro axis. */
@@ -62,8 +62,8 @@ export default {
 			return {
 				plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
 				dataLabels: { enabled: false },
-				xaxis: { labels: { formatter: value => formatEurCompact(value) } },
-				tooltip: { y: { formatter: value => formatEur(value, 2) } },
+				xaxis: { labels: { formatter: (value) => formatEurCompact(value) } },
+				tooltip: { y: { formatter: (value) => formatEur(value, 2) } },
 			}
 		},
 	},
@@ -74,7 +74,10 @@ export default {
 		async load() {
 			this.error = null
 			try {
-				this.trend = await getAnalyticsTrend('top-customers', this.period) || { series: [] }
+				this.trend = (await getAnalyticsTrend(
+					'top-customers',
+					this.period,
+				)) || { series: [] }
 			} catch (err) {
 				console.error('TopCustomersChartWidget fetch error:', err)
 				this.error = this.t('pipelinq', 'Could not load analytics data.')

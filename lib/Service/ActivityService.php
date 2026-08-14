@@ -43,298 +43,297 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/pipelinq-or-lifecycle-notification/tasks.md#task-3.2
  */
-class ActivityService
-{
-    /**
-     * Constructor.
-     *
-     * @param IManager        $activityManager The activity manager.
-     * @param IUserSession    $userSession     The user session.
-     * @param LoggerInterface $logger          The logger.
-     */
-    public function __construct(
-        private IManager $activityManager,
-        private IUserSession $userSession,
-        private LoggerInterface $logger,
-    ) {
-    }//end __construct()
+class ActivityService {
+	/**
+	 * Constructor.
+	 *
+	 * @param IManager $activityManager The activity manager.
+	 * @param IUserSession $userSession The user session.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private IManager $activityManager,
+		private IUserSession $userSession,
+		private LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Publish a created event for a lead or request.
-     *
-     * @param string  $entityType   The entity type.
-     * @param string  $title        The entity title.
-     * @param string  $objectId     The object ID.
-     * @param ?string $affectedUser The affected user or null.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
-     */
-    public function publishCreated(
-        string $entityType,
-        string $title,
-        string $objectId,
-        ?string $affectedUser=null
-    ): void {
-        $type = 'lead_created';
-        if ($entityType === 'request') {
-            $type = 'request_created';
-        }
+	/**
+	 * Publish a created event for a lead or request.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $title The entity title.
+	 * @param string $objectId The object ID.
+	 * @param ?string $affectedUser The affected user or null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
+	 */
+	public function publishCreated(
+		string $entityType,
+		string $title,
+		string $objectId,
+		?string $affectedUser = null,
+	): void {
+		$type = 'lead_created';
+		if ($entityType === 'request') {
+			$type = 'request_created';
+		}
 
-        $this->publish(
-            subject: $type,
-            type: 'pipelinq_assignment',
-            parameters: [
-                'title'      => $title,
-                'entityType' => $entityType,
-            ],
-            objectType: $entityType,
-            objectId: $objectId,
-            affectedUser: $affectedUser
-        );
-    }//end publishCreated()
+		$this->publish(
+			subject: $type,
+			type: 'pipelinq_assignment',
+			parameters: [
+				'title' => $title,
+				'entityType' => $entityType,
+			],
+			objectType: $entityType,
+			objectId: $objectId,
+			affectedUser: $affectedUser
+		);
+	}//end publishCreated()
 
-    /**
-     * Publish an assignment event for a lead or request.
-     *
-     * @param string $entityType  The entity type.
-     * @param string $title       The entity title.
-     * @param string $newAssignee The newly assigned user.
-     * @param string $objectId    The object ID.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
-     */
-    public function publishAssigned(
-        string $entityType,
-        string $title,
-        string $newAssignee,
-        string $objectId
-    ): void {
-        $type = 'lead_assigned';
-        if ($entityType === 'request') {
-            $type = 'request_assigned';
-        }
+	/**
+	 * Publish an assignment event for a lead or request.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $title The entity title.
+	 * @param string $newAssignee The newly assigned user.
+	 * @param string $objectId The object ID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
+	 */
+	public function publishAssigned(
+		string $entityType,
+		string $title,
+		string $newAssignee,
+		string $objectId,
+	): void {
+		$type = 'lead_assigned';
+		if ($entityType === 'request') {
+			$type = 'request_assigned';
+		}
 
-        $this->publish(
-            subject: $type,
-            type: 'pipelinq_assignment',
-            parameters: [
-                'title'      => $title,
-                'entityType' => $entityType,
-                'assignee'   => $newAssignee,
-            ],
-            objectType: $entityType,
-            objectId: $objectId,
-            affectedUser: $newAssignee
-        );
-    }//end publishAssigned()
+		$this->publish(
+			subject: $type,
+			type: 'pipelinq_assignment',
+			parameters: [
+				'title' => $title,
+				'entityType' => $entityType,
+				'assignee' => $newAssignee,
+			],
+			objectType: $entityType,
+			objectId: $objectId,
+			affectedUser: $newAssignee
+		);
+	}//end publishAssigned()
 
-    /**
-     * Publish a stage change event for a lead.
-     *
-     * @param string  $title        The entity title.
-     * @param string  $newStage     The new stage name.
-     * @param string  $objectId     The object ID.
-     * @param ?string $affectedUser The affected user or null.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
-     */
-    public function publishStageChanged(
-        string $title,
-        string $newStage,
-        string $objectId,
-        ?string $affectedUser=null
-    ): void {
-        $this->publish(
-            subject: 'lead_stage_changed',
-            type: 'pipelinq_stage_status',
-            parameters: [
-                'title' => $title,
-                'stage' => $newStage,
-            ],
-            objectType: 'lead',
-            objectId: $objectId,
-            affectedUser: $affectedUser
-        );
-    }//end publishStageChanged()
+	/**
+	 * Publish a stage change event for a lead.
+	 *
+	 * @param string $title The entity title.
+	 * @param string $newStage The new stage name.
+	 * @param string $objectId The object ID.
+	 * @param ?string $affectedUser The affected user or null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
+	 */
+	public function publishStageChanged(
+		string $title,
+		string $newStage,
+		string $objectId,
+		?string $affectedUser = null,
+	): void {
+		$this->publish(
+			subject: 'lead_stage_changed',
+			type: 'pipelinq_stage_status',
+			parameters: [
+				'title' => $title,
+				'stage' => $newStage,
+			],
+			objectType: 'lead',
+			objectId: $objectId,
+			affectedUser: $affectedUser
+		);
+	}//end publishStageChanged()
 
-    /**
-     * Publish a status change event for a request.
-     *
-     * @param string  $title        The entity title.
-     * @param string  $newStatus    The new status name.
-     * @param string  $objectId     The object ID.
-     * @param ?string $affectedUser The affected user or null.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
-     */
-    public function publishStatusChanged(
-        string $title,
-        string $newStatus,
-        string $objectId,
-        ?string $affectedUser=null
-    ): void {
-        $this->publish(
-            subject: 'request_status_changed',
-            type: 'pipelinq_stage_status',
-            parameters: [
-                'title'  => $title,
-                'status' => $newStatus,
-            ],
-            objectType: 'request',
-            objectId: $objectId,
-            affectedUser: $affectedUser
-        );
-    }//end publishStatusChanged()
+	/**
+	 * Publish a status change event for a request.
+	 *
+	 * @param string $title The entity title.
+	 * @param string $newStatus The new status name.
+	 * @param string $objectId The object ID.
+	 * @param ?string $affectedUser The affected user or null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
+	 */
+	public function publishStatusChanged(
+		string $title,
+		string $newStatus,
+		string $objectId,
+		?string $affectedUser = null,
+	): void {
+		$this->publish(
+			subject: 'request_status_changed',
+			type: 'pipelinq_stage_status',
+			parameters: [
+				'title' => $title,
+				'status' => $newStatus,
+			],
+			objectType: 'request',
+			objectId: $objectId,
+			affectedUser: $affectedUser
+		);
+	}//end publishStatusChanged()
 
-    /**
-     * Publish a note added event.
-     *
-     * @param string  $entityType   The entity type.
-     * @param string  $entityTitle  The entity title.
-     * @param string  $objectId     The object ID.
-     * @param ?string $affectedUser The affected user or null.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
-     */
-    public function publishNoteAdded(
-        string $entityType,
-        string $entityTitle,
-        string $objectId,
-        ?string $affectedUser=null
-    ): void {
-        $this->publish(
-            subject: 'note_added',
-            type: 'pipelinq_notes',
-            parameters: [
-                'title'      => $entityTitle,
-                'entityType' => $entityType,
-            ],
-            objectType: $entityType,
-            objectId: $objectId,
-            affectedUser: $affectedUser
-        );
-    }//end publishNoteAdded()
+	/**
+	 * Publish a note added event.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $entityTitle The entity title.
+	 * @param string $objectId The object ID.
+	 * @param ?string $affectedUser The affected user or null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-must-capture-all-interaction-types
+	 */
+	public function publishNoteAdded(
+		string $entityType,
+		string $entityTitle,
+		string $objectId,
+		?string $affectedUser = null,
+	): void {
+		$this->publish(
+			subject: 'note_added',
+			type: 'pipelinq_notes',
+			parameters: [
+				'title' => $entityTitle,
+				'entityType' => $entityType,
+			],
+			objectType: $entityType,
+			objectId: $objectId,
+			affectedUser: $affectedUser
+		);
+	}//end publishNoteAdded()
 
-    /**
-     * Publish a deal won event.
-     *
-     * @param string  $title        The lead title.
-     * @param string  $value        The deal value.
-     * @param string  $objectId     The object ID.
-     * @param ?string $affectedUser The affected user or null.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/notifications-activity/spec.md
-     */
-    public function publishDealWon(
-        string $title,
-        string $value,
-        string $objectId,
-        ?string $affectedUser=null
-    ): void {
-        $this->publish(
-            subject: 'lead_won',
-            type: 'pipelinq_deals',
-            parameters: [
-                'title' => $title,
-                'value' => $value,
-            ],
-            objectType: 'lead',
-            objectId: $objectId,
-            affectedUser: $affectedUser
-        );
-    }//end publishDealWon()
+	/**
+	 * Publish a deal won event.
+	 *
+	 * @param string $title The lead title.
+	 * @param string $value The deal value.
+	 * @param string $objectId The object ID.
+	 * @param ?string $affectedUser The affected user or null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/notifications-activity/spec.md
+	 */
+	public function publishDealWon(
+		string $title,
+		string $value,
+		string $objectId,
+		?string $affectedUser = null,
+	): void {
+		$this->publish(
+			subject: 'lead_won',
+			type: 'pipelinq_deals',
+			parameters: [
+				'title' => $title,
+				'value' => $value,
+			],
+			objectType: 'lead',
+			objectId: $objectId,
+			affectedUser: $affectedUser
+		);
+	}//end publishDealWon()
 
-    /**
-     * Publish a deal lost event.
-     *
-     * @param string  $title        The lead title.
-     * @param string  $objectId     The object ID.
-     * @param ?string $affectedUser The affected user or null.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-1
-     */
-    public function publishDealLost(
-        string $title,
-        string $objectId,
-        ?string $affectedUser=null
-    ): void {
-        $this->publish(
-            subject: 'lead_lost',
-            type: 'pipelinq_deals',
-            parameters: [
-                'title' => $title,
-            ],
-            objectType: 'lead',
-            objectId: $objectId,
-            affectedUser: $affectedUser
-        );
-    }//end publishDealLost()
+	/**
+	 * Publish a deal lost event.
+	 *
+	 * @param string $title The lead title.
+	 * @param string $objectId The object ID.
+	 * @param ?string $affectedUser The affected user or null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/reverse-2026-05-26-be-activity-notify/tasks.md#task-1
+	 */
+	public function publishDealLost(
+		string $title,
+		string $objectId,
+		?string $affectedUser = null,
+	): void {
+		$this->publish(
+			subject: 'lead_lost',
+			type: 'pipelinq_deals',
+			parameters: [
+				'title' => $title,
+			],
+			objectType: 'lead',
+			objectId: $objectId,
+			affectedUser: $affectedUser
+		);
+	}//end publishDealLost()
 
-    /**
-     * Publish an activity event.
-     *
-     * @param string  $subject      The activity subject.
-     * @param string  $type         The activity type.
-     * @param array   $parameters   The activity parameters.
-     * @param string  $objectType   The object type.
-     * @param string  $objectId     The object ID.
-     * @param ?string $affectedUser The affected user or null.
-     *
-     * @return void
-     */
-    private function publish(
-        string $subject,
-        string $type,
-        array $parameters,
-        string $objectType,
-        string $objectId,
-        ?string $affectedUser=null
-    ): void {
-        try {
-            $currentUser = $this->userSession->getUser();
-            $author      = '';
-            if ($currentUser !== null) {
-                $author = $currentUser->getUID();
-            }
+	/**
+	 * Publish an activity event.
+	 *
+	 * @param string $subject The activity subject.
+	 * @param string $type The activity type.
+	 * @param array $parameters The activity parameters.
+	 * @param string $objectType The object type.
+	 * @param string $objectId The object ID.
+	 * @param ?string $affectedUser The affected user or null.
+	 *
+	 * @return void
+	 */
+	private function publish(
+		string $subject,
+		string $type,
+		array $parameters,
+		string $objectType,
+		string $objectId,
+		?string $affectedUser = null,
+	): void {
+		try {
+			$currentUser = $this->userSession->getUser();
+			$author = '';
+			if ($currentUser !== null) {
+				$author = $currentUser->getUID();
+			}
 
-            $event = $this->activityManager->generateEvent();
-            $event->setApp(Application::APP_ID)
-                ->setType($type)
-                ->setAuthor($author)
-                ->setTimestamp(time())
-                ->setSubject(subject: $subject, parameters: $parameters)
-                ->setObject(objectType: $objectType, objectId: (int) $objectId, objectName: $parameters['title'] ?? '');
+			$event = $this->activityManager->generateEvent();
+			$event->setApp(Application::APP_ID)
+				->setType($type)
+				->setAuthor($author)
+				->setTimestamp(time())
+				->setSubject(subject: $subject, parameters: $parameters)
+				->setObject(objectType: $objectType, objectId: (int)$objectId, objectName: $parameters['title'] ?? '');
 
-            if ($affectedUser !== null && $affectedUser !== '') {
-                $event->setAffectedUser($affectedUser);
-            } else if ($author !== '') {
-                $event->setAffectedUser($author);
-            }
+			if ($affectedUser !== null && $affectedUser !== '') {
+				$event->setAffectedUser($affectedUser);
+			} elseif ($author !== '') {
+				$event->setAffectedUser($author);
+			}
 
-            $this->activityManager->publish($event);
-        } catch (\Exception $e) {
-            $this->logger->error(
-                    'Failed to publish Pipelinq activity',
-                    [
-                        'subject'   => $subject,
-                        'type'      => $type,
-                        'exception' => $e->getMessage(),
-                    ]
-                    );
-        }//end try
-    }//end publish()
+			$this->activityManager->publish($event);
+		} catch (\Exception $e) {
+			$this->logger->error(
+				'Failed to publish Pipelinq activity',
+				[
+					'subject' => $subject,
+					'type' => $type,
+					'exception' => $e->getMessage(),
+				]
+			);
+		}//end try
+	}//end publish()
 }//end class

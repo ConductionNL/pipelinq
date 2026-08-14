@@ -8,7 +8,9 @@
 			class="werkplek-queue-filter__item"
 			:class="{ 'werkplek-queue-filter__item--active': !selectedQueue }"
 			@click="select('')">
-			<span class="werkplek-queue-filter__label">{{ t('pipelinq', 'All queues') }}</span>
+			<span class="werkplek-queue-filter__label">{{
+				t('pipelinq', 'All queues')
+			}}</span>
 			<span class="werkplek-queue-filter__count">{{ totalCount }}</span>
 		</button>
 		<button
@@ -16,12 +18,19 @@
 			:key="q.slug || q.id"
 			type="button"
 			class="werkplek-queue-filter__item"
-			:class="{ 'werkplek-queue-filter__item--active': selectedQueue === (q.slug || q.id) }"
+			:class="{
+				'werkplek-queue-filter__item--active':
+					selectedQueue === (q.slug || q.id),
+			}"
 			@click="select(q.slug || q.id)">
 			<span class="werkplek-queue-filter__label">{{ q.title }}</span>
-			<span class="werkplek-queue-filter__count">{{ queueCounts[q.slug] || 0 }}</span>
+			<span class="werkplek-queue-filter__count">{{
+				queueCounts[q.slug] || 0
+			}}</span>
 		</button>
-		<p v-if="!loading && queues.length === 0" class="werkplek-queue-filter__empty">
+		<p
+			v-if="!loading && queues.length === 0"
+			class="werkplek-queue-filter__empty">
 			{{ t('pipelinq', 'No queues configured') }}
 		</p>
 	</div>
@@ -64,7 +73,7 @@ export default {
 		workspaceCtx() {
 			const c = this.cnWorkspaceContext
 			if (!c) return null
-			return (typeof c === 'object' && 'value' in c) ? c.value : c
+			return typeof c === 'object' && 'value' in c ? c.value : c
 		},
 		/** Currently-selected queue slug/id (empty = all). */
 		selectedQueue() {
@@ -72,7 +81,10 @@ export default {
 		},
 		/** Sum of open-request counts across queues. */
 		totalCount() {
-			return Object.values(this.queueCounts).reduce((a, b) => a + (Number(b) || 0), 0)
+			return Object.values(this.queueCounts).reduce(
+				(a, b) => a + (Number(b) || 0),
+				0,
+			)
 		},
 	},
 
@@ -90,7 +102,9 @@ export default {
 		async fetchQueues() {
 			this.loading = true
 			try {
-				const res = await axios.get(generateUrl('/apps/pipelinq/api/kcc-werkplek/state'))
+				const res = await axios.get(
+					generateUrl('/apps/pipelinq/api/kcc-werkplek/state'),
+				)
 				const data = res.data || {}
 				this.queues = Array.isArray(data.queues) ? data.queues : []
 				this.queueCounts = data.queueCounts || {}
@@ -107,9 +121,9 @@ export default {
 		 * Write the chosen queue into the workspace context so the list widgets
 		 * react. Empty string clears the filter.
 		 *
-		 * Vue 2.7's Options-API `inject` auto-unwraps the page's provided `ref({})`,
+		 * The Options-API `inject` auto-unwraps the page's provided `ref({})`,
 		 * so `cnWorkspaceContext` is the plain reactive object here; write the key
-		 * in place with `$set`. The `.value` branch supports a raw-ref holder.
+		 * in place. The `.value` branch supports a raw-ref holder.
 		 *
 		 * @param {string} value Queue slug/id, or '' for all.
 		 */
@@ -117,10 +131,13 @@ export default {
 			const holder = this.cnWorkspaceContext
 			if (!holder || typeof holder !== 'object') return
 			if ('value' in holder) {
-				holder.value = { ...(holder.value || {}), selectedQueue: value || '' }
+				holder.value = {
+					...(holder.value || {}),
+					selectedQueue: value || '',
+				}
 				return
 			}
-			this.$set(holder, 'selectedQueue', value || '')
+			holder.selectedQueue = value || ''
 		},
 	},
 }

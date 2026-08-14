@@ -25,7 +25,10 @@
 			</NcButton>
 		</template>
 
-		<div v-if="loading && items.length === 0" class="communication-history__loading" role="status">
+		<div
+			v-if="loading && items.length === 0"
+			class="communication-history__loading"
+			role="status">
 			<NcLoadingIcon :size="32" />
 			<span class="communication-history__loading-text">
 				{{ t('pipelinq', 'Loading communication history...') }}
@@ -75,11 +78,7 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
-import {
-	CnDetailCard,
-	CnDataTable,
-	CnPagination,
-} from '@conduction/nextcloud-vue'
+import { CnDetailCard, CnDataTable, CnPagination } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 /**
@@ -115,7 +114,8 @@ export default {
 		entityType: {
 			type: String,
 			required: true,
-			validator: (value) => ['client', 'contact', 'lead', 'request'].includes(value),
+			validator: (value) =>
+				['client', 'contact', 'lead', 'request'].includes(value),
 		},
 		/**
 		 * The OpenRegister UUID of the entity being viewed.
@@ -301,6 +301,10 @@ export default {
 	font-size: var(--default-font-size, 14px);
 }
 
+/* These used the Vue-2 spelling of the deep selector. Vue 3's SFC compiler
+   expects the `:deep(…)` form below; stylelint rejected the old one as an
+   unknown pseudo-element (`selector-pseudo-element-no-unknown`), which is what
+   surfaced it. */
 :deep(.communication-history__row) {
 	cursor: pointer;
 }

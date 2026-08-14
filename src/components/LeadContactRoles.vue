@@ -10,29 +10,37 @@
 			<table class="viewTable">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Contact') }}</th>
-						<th>{{ t('pipelinq', 'Role') }}</th>
-						<th>{{ t('pipelinq', 'Notes') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'Contact') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Role') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Notes') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="role in sortedContactRoles" :key="role.id" class="viewTableRow">
+					<tr
+						v-for="role in sortedContactRoles"
+						:key="role.id"
+						class="viewTableRow">
 						<td>
 							<router-link
 								class="contact-link"
-								:to="{ name: 'ContactDetail', params: { id: role.toContact } }">
+								:to="{
+									name: 'ContactDetail',
+									params: { id: role.toContact },
+								}">
 								{{ getEntityName(role.toContact) }}
 							</router-link>
 						</td>
 						<td>
-							<span class="role-badge" :class="'role-badge--' + role.type">
+							<span
+								class="role-badge"
+								:class="'role-badge--' + role.type">
 								{{ getRoleLabel(role.type) }}
 							</span>
 						</td>
 						<td>{{ role.notes || '-' }}</td>
 						<td class="role-actions" @click.stop>
-							<NcButton type="tertiary" @click="removeRole(role)">
+							<NcButton variant="tertiary" @click="removeRole(role)">
 								{{ t('pipelinq', 'Remove') }}
 							</NcButton>
 						</td>
@@ -42,65 +50,25 @@
 		</div>
 
 		<div class="lead-contact-roles__footer">
-			<NcButton type="secondary" @click="showAddDialog = true">
+			<NcButton variant="secondary" @click="showAddDialog = true">
 				{{ t('pipelinq', 'Add contact role') }}
 			</NcButton>
 		</div>
 
 		<!-- Add role dialog -->
-		<div v-if="showAddDialog" class="create-overlay" @click.self="showAddDialog = false">
-			<div class="create-dialog">
-				<div class="create-dialog__header">
-					<h3>{{ t('pipelinq', 'Add contact role') }}</h3>
-					<NcButton type="tertiary" @click="showAddDialog = false">
-						&times;
-					</NcButton>
-				</div>
-				<div class="create-dialog__body">
-					<div class="form-group">
-						<label>{{ t('pipelinq', 'Contact') }} *</label>
-						<NcSelect
-							v-model="addForm.toContact"
-							:options="contactOptions"
-							:aria-label-combobox="t('pipelinq', 'Contact')"
-							:placeholder="t('pipelinq', 'Search contacts...')"
-							label="name"
-							:reduce="opt => opt.id"
-							@search="searchContacts" />
-					</div>
-					<div class="form-group">
-						<label>{{ t('pipelinq', 'Role') }} *</label>
-						<NcSelect
-							v-model="addForm.type"
-							:options="roleOptions"
-							:aria-label-combobox="t('pipelinq', 'Role')"
-							:placeholder="t('pipelinq', 'Select role...')"
-							label="label"
-							:reduce="opt => opt.value" />
-					</div>
-					<div class="form-group">
-						<label>{{ t('pipelinq', 'Notes') }}</label>
-						<textarea v-model="addForm.notes" rows="2" />
-					</div>
-					<div class="form-actions">
-						<NcButton
-							type="primary"
-							:disabled="!addForm.toContact || !addForm.type"
-							@click="addRole">
-							{{ t('pipelinq', 'Add') }}
-						</NcButton>
-						<NcButton @click="showAddDialog = false">
-							{{ t('pipelinq', 'Cancel') }}
-						</NcButton>
-					</div>
-				</div>
-			</div>
-		</div>
+		<AddContactRoleDialog
+			v-if="showAddDialog"
+			:contact-options="contactOptions"
+			:role-options="roleOptions"
+			@search-contacts="searchContacts"
+			@submit="addRole"
+			@cancel="showAddDialog = false" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import AddContactRoleDialog from '../dialogs/AddContactRoleDialog.vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -116,9 +84,9 @@ const CRM_ROLES = [
 export default {
 	name: 'LeadContactRoles',
 	components: {
+		AddContactRoleDialog,
 		NcButton,
 		NcLoadingIcon,
-		NcSelect,
 	},
 	props: {
 		leadId: {
@@ -134,11 +102,6 @@ export default {
 			showAddDialog: false,
 			contactOptions: [],
 			searchTimeout: null,
-			addForm: {
-				toContact: null,
-				type: null,
-				notes: '',
-			},
 		}
 	},
 	computed: {
@@ -159,8 +122,8 @@ export default {
 		 */
 		sortedContactRoles() {
 			return [...this.contactRoles].sort((a, b) => {
-				const aOrder = CRM_ROLES.find(r => r.value === a.type)?.order || 99
-				const bOrder = CRM_ROLES.find(r => r.value === b.type)?.order || 99
+				const aOrder = CRM_ROLES.find((r) => r.value === a.type)?.order || 99
+				const bOrder = CRM_ROLES.find((r) => r.value === b.type)?.order || 99
 				return aOrder - bOrder
 			})
 		},
@@ -175,11 +138,14 @@ export default {
 		async fetchRoles() {
 			this.loading = true
 			try {
-				const items = await this.objectStore.fetchCollection('relationship', {
-					_limit: 50,
-					fromContact: this.leadId,
-					category: 'CRM Rol',
-				})
+				const items = await this.objectStore.fetchCollection(
+					'relationship',
+					{
+						_limit: 50,
+						fromContact: this.leadId,
+						category: 'CRM Rol',
+					},
+				)
 				this.contactRoles = items || []
 				for (const role of this.contactRoles) {
 					if (role.toContact && !this.entityNameCache[role.toContact]) {
@@ -198,14 +164,17 @@ export default {
 		 */
 		async loadEntityName(entityId) {
 			try {
-				const entity = await this.objectStore.fetchObject('contact', entityId)
+				const entity = await this.objectStore.fetchObject(
+					'contact',
+					entityId,
+				)
 				if (entity) {
-					this.$set(this.entityNameCache, entityId, entity.name || entityId)
+					this.entityNameCache[entityId] = entity.name || entityId
 				} else {
-					this.$set(this.entityNameCache, entityId, t('pipelinq', '[Deleted]'))
+					this.entityNameCache[entityId] = t('pipelinq', '[Deleted]')
 				}
 			} catch {
-				this.$set(this.entityNameCache, entityId, entityId)
+				this.entityNameCache[entityId] = entityId
 			}
 		},
 		getEntityName(entityId) {
@@ -216,7 +185,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
 		 */
 		getRoleLabel(roleType) {
-			const role = CRM_ROLES.find(r => r.value === roleType)
+			const role = CRM_ROLES.find((r) => r.value === roleType)
 			return role ? role.label : roleType
 		},
 		/**
@@ -233,8 +202,14 @@ export default {
 			}
 			this.searchTimeout = setTimeout(async () => {
 				try {
-					const contacts = await this.objectStore.fetchCollection('contact', { _search: query, _limit: 10 })
-					this.contactOptions = (contacts || []).map(c => ({ id: c.id, name: c.name || c.id }))
+					const contacts = await this.objectStore.fetchCollection(
+						'contact',
+						{ _search: query, _limit: 10 },
+					)
+					this.contactOptions = (contacts || []).map((c) => ({
+						id: c.id,
+						name: c.name || c.id,
+					}))
 				} catch {
 					this.contactOptions = []
 				}
@@ -243,27 +218,26 @@ export default {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-1
 		 */
-		async addRole() {
-			if (!this.addForm.toContact || !this.addForm.type) {
+		async addRole(form) {
+			if (!form || !form.toContact || !form.type) {
 				return
 			}
 
 			try {
 				await this.objectStore.saveObject('relationship', {
 					fromContact: this.leadId,
-					toContact: this.addForm.toContact,
+					toContact: form.toContact,
 					fromType: 'lead',
 					toType: 'contact',
-					type: this.addForm.type,
-					inverseType: this.addForm.type,
+					type: form.type,
+					inverseType: form.type,
 					category: 'CRM Rol',
-					notes: this.addForm.notes || '',
+					notes: form.notes || '',
 					strength: 'medium',
 				})
 
 				showSuccess(t('pipelinq', 'Contact role added'))
 				this.showAddDialog = false
-				this.addForm = { toContact: null, type: null, notes: '' }
 				await this.fetchRoles()
 			} catch (e) {
 				showError(e.message || t('pipelinq', 'Failed to add contact role'))
@@ -283,7 +257,9 @@ export default {
 				showSuccess(t('pipelinq', 'Contact role removed'))
 				await this.fetchRoles()
 			} catch (e) {
-				showError(e.message || t('pipelinq', 'Failed to remove contact role'))
+				showError(
+					e.message || t('pipelinq', 'Failed to remove contact role'),
+				)
 			}
 		},
 	},
@@ -445,5 +421,11 @@ export default {
 	display: flex;
 	gap: 8px;
 	margin-top: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.viewTableRow {
+		transition: none;
+	}
 }
 </style>

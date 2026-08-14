@@ -20,7 +20,7 @@
 					</template>
 					{{ t('pipelinq', 'Refresh') }}
 				</NcButton>
-				<NcButton type="primary" @click="createNew">
+				<NcButton variant="primary" @click="createNew">
 					<template #icon>
 						<Plus :size="20" />
 					</template>
@@ -31,16 +31,18 @@
 
 		<NcLoadingIcon v-if="loading" :size="32" />
 
-		<table v-else-if="tenderTypes.length > 0" class="pos-tender-type-list__table">
+		<table
+			v-else-if="tenderTypes.length > 0"
+			class="pos-tender-type-list__table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Name') }}</th>
-					<th>{{ t('pipelinq', 'Code') }}</th>
-					<th>{{ t('pipelinq', 'GL account') }}</th>
-					<th>{{ t('pipelinq', 'Flags') }}</th>
-					<th>{{ t('pipelinq', 'Active') }}</th>
-					<th>{{ t('pipelinq', 'Sort') }}</th>
-					<th class="pos-tender-type-list__col-actions">
+					<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Code') }}</th>
+					<th scope="col">{{ t('pipelinq', 'GL account') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Flags') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Active') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Sort') }}</th>
+					<th scope="col" class="pos-tender-type-list__col-actions">
 						{{ t('pipelinq', 'Actions') }}
 					</th>
 				</tr>
@@ -48,18 +50,36 @@
 			<tbody>
 				<tr v-for="type in tenderTypes" :key="type.id || type.code">
 					<td>{{ type.name }}</td>
-					<td><code>{{ type.code }}</code></td>
+					<td>
+						<code>{{ type.code }}</code>
+					</td>
 					<td>{{ type.glAccount }}</td>
 					<td>
-						<span v-if="type.requiresReference" class="pos-tender-type-list__flag">{{ t('pipelinq', 'Ref') }}</span>
-						<span v-if="type.requiresPin" class="pos-tender-type-list__flag">{{ t('pipelinq', 'PIN') }}</span>
-						<span v-if="type.allowsChange" class="pos-tender-type-list__flag">{{ t('pipelinq', 'Change') }}</span>
+						<span
+							v-if="type.requiresReference"
+							class="pos-tender-type-list__flag"
+							>{{ t('pipelinq', 'Ref') }}</span
+						>
+						<span
+							v-if="type.requiresPin"
+							class="pos-tender-type-list__flag"
+							>{{ t('pipelinq', 'PIN') }}</span
+						>
+						<span
+							v-if="type.allowsChange"
+							class="pos-tender-type-list__flag"
+							>{{ t('pipelinq', 'Change') }}</span
+						>
 					</td>
 					<td>
-						<span v-if="type.isActive" class="pos-tender-type-list__badge pos-tender-type-list__badge--on">
+						<span
+							v-if="type.isActive"
+							class="pos-tender-type-list__badge pos-tender-type-list__badge--on">
 							{{ t('pipelinq', 'Active') }}
 						</span>
-						<span v-else class="pos-tender-type-list__badge pos-tender-type-list__badge--off">
+						<span
+							v-else
+							class="pos-tender-type-list__badge pos-tender-type-list__badge--off">
 							{{ t('pipelinq', 'Inactive') }}
 						</span>
 					</td>
@@ -73,7 +93,7 @@
 							</template>
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton type="error" @click="deleteType(type)">
+						<NcButton variant="error" @click="deleteType(type)">
 							<template #icon>
 								<Delete :size="20" />
 							</template>
@@ -97,6 +117,13 @@
 			:tender-type="editingType"
 			@close="onFormClose"
 			@saved="onFormSaved" />
+		<ConfirmDialog
+			v-if="pendingDeleteType"
+			:name="t('pipelinq', 'Delete tender type')"
+			:message="deleteTypeMessage"
+			:confirm-label="t('pipelinq', 'Delete')"
+			@confirm="performDeleteType"
+			@cancel="pendingDeleteType = null" />
 	</div>
 </template>
 
@@ -110,10 +137,20 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import PosTenderTypeFormDialog from '../../modals/PosTenderTypeFormDialog.vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 
 export default {
 	name: 'PosTenderTypeList',
-	components: { NcButton, NcLoadingIcon, Refresh, Plus, Pencil, Delete, PosTenderTypeFormDialog },
+	components: {
+		ConfirmDialog,
+		NcButton,
+		NcLoadingIcon,
+		Refresh,
+		Plus,
+		Pencil,
+		Delete,
+		PosTenderTypeFormDialog,
+	},
 	data() {
 		return {
 			tenderTypes: [],
@@ -121,10 +158,33 @@ export default {
 			showForm: false,
 			editingType: null,
 			errorMessage: '',
+			pendingDeleteType: null,
 		}
 	},
 	async mounted() {
 		await this.refresh()
+	},
+	computed: {
+		/**
+		 * Built here rather than inline in the template so the t() key stays
+		 * byte-identical to the one the old window.confirm used. Escaping the
+		 * quotes as &quot; in the attribute would have minted a NEW key and
+		 * orphaned every existing translation of this string.
+		 *
+		 * @return {string} The confirmation message.
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 */
+		deleteTypeMessage() {
+			if (!this.pendingDeleteType) {
+				return ''
+			}
+			return t(
+				'pipelinq',
+				'Delete tender type "{name}"? Active tenders referencing this type block deletion.',
+				{ name: this.pendingDeleteType.name },
+			)
+		},
 	},
 	methods: {
 		async refresh() {
@@ -134,11 +194,13 @@ export default {
 				const url = generateUrl('/apps/pipelinq/api/pos/tender-types')
 				const response = await axios.get(url)
 				const results = response?.data?.results || []
-				this.tenderTypes = results.slice().sort(
-					(a, b) => (a.sortOrder || 0) - (b.sortOrder || 0),
-				)
+				this.tenderTypes = results
+					.slice()
+					.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 			} catch (error) {
-				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to load tender types')
+				this.errorMessage =
+					error?.response?.data?.error
+					|| t('pipelinq', 'Failed to load tender types')
 			} finally {
 				this.loading = false
 			}
@@ -147,23 +209,56 @@ export default {
 			this.editingType = null
 			this.showForm = true
 		},
+		/**
+		 * Open the edit form for a tender type.
+		 *
+		 * @param {object} type The tender type to edit.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 */
 		editType(type) {
 			this.editingType = { ...type }
 			this.showForm = true
 		},
-		async deleteType(type) {
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('pipelinq', 'Delete tender type "{name}"? Active tenders referencing this type block deletion.', { name: type.name }))) {
+		/**
+		 * Open the delete confirmation for a tender type.
+		 *
+		 * @param {object} type The tender type to delete.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 */
+		deleteType(type) {
+			this.pendingDeleteType = type
+		},
+		/**
+		 * Delete the pending tender type once the dialog confirms.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/pos-split-tender/tasks.md#8.1
+		 */
+		async performDeleteType() {
+			const type = this.pendingDeleteType
+			this.pendingDeleteType = null
+			if (!type) {
 				return
 			}
 			try {
 				const id = this.idOf(type)
-				const url = generateUrl('/apps/pipelinq/api/pos/tender-types/{id}', { id })
+				const url = generateUrl('/apps/pipelinq/api/pos/tender-types/{id}', {
+					id,
+				})
 				await axios.delete(url)
 				showSuccess(t('pipelinq', 'Tender type deleted'))
 				await this.refresh()
 			} catch (error) {
-				const msg = error?.response?.data?.error || t('pipelinq', 'Failed to delete tender type')
+				const msg =
+					error?.response?.data?.error
+					|| t('pipelinq', 'Failed to delete tender type')
 				showError(msg)
 			}
 		},

@@ -53,450 +53,516 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Tests the orchestrator.
  */
-class BerichtenboxServiceTest extends TestCase
-{
-    /**
-     * Captured saveObject payloads keyed by schema.
-     *
-     * @var array<int, array>
-     */
-    private array $savedMessages = [];
+class BerichtenboxServiceTest extends TestCase {
+	/**
+	 * Captured saveObject payloads keyed by schema.
+	 *
+	 * @var array<int, array>
+	 */
+	private array $savedMessages = [];
 
-    /**
-     * Build a real EncryptionService with a deterministic secret.
-     *
-     * @return EncryptionService
-     */
-    private function realEncryption(): EncryptionService
-    {
-        $config = $this->createMock(IConfig::class);
-        $config->method('getSystemValue')->willReturn('berichtenbox-service-test-secret');
-        return new EncryptionService(
-            $config,
-            $this->createMock(LoggerInterface::class)
-        );
-    }//end realEncryption()
+	/**
+	 * Build a real EncryptionService with a deterministic secret.
+	 *
+	 * @return EncryptionService
+	 */
+	private function realEncryption(): EncryptionService {
+		$config = $this->createMock(IConfig::class);
+		$config->method('getSystemValue')->willReturn('berichtenbox-service-test-secret');
+		return new EncryptionService(
+			$config,
+			$this->createMock(LoggerInterface::class)
+		);
+	}//end realEncryption()
 
-    /**
-     * Configure $appConfig stub returns.
-     *
-     * @return IAppConfig
-     */
-    private function appConfigStub(): IAppConfig
-    {
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturnCallback(
-            static function (string $app, string $key, string $default=''): string {
-                return match ($key) {
-                    'register'                    => 'reg-1',
-                    'berichtenboxMessage_schema'  => 'sch-msg',
-                    'berichtenboxReply_schema'    => 'sch-reply',
-                    'berichtenboxTemplate_schema' => 'sch-tpl',
-                    'ticket_schema'               => 'sch-ticket',
-                    'mailboxResolution_schema'    => 'sch-mr',
-                    'tenant_id'                   => 'tenant-a',
-                    'tenant_display_name'         => 'Gemeente Amsterdam',
-                    default                       => $default,
-                };
-            }
-        );
-        return $appConfig;
-    }//end appConfigStub()
+	/**
+	 * Configure $appConfig stub returns.
+	 *
+	 * @return IAppConfig
+	 */
+	private function appConfigStub(): IAppConfig {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = ''): string {
+				return match ($key) {
+					'register' => 'reg-1',
+					'berichtenboxMessage_schema' => 'sch-msg',
+					'berichtenboxReply_schema' => 'sch-reply',
+					'berichtenboxTemplate_schema' => 'sch-tpl',
+					'ticket_schema' => 'sch-ticket',
+					'mailboxResolution_schema' => 'sch-mr',
+					'tenant_id' => 'tenant-a',
+					'tenant_display_name' => 'Gemeente Amsterdam',
+					// A provisioned tenant HAS PKI-overheid material. Leaving
+					// these at '' made every dispatch test exercise the
+					// unsigned-request path without saying so.
+					'pki_cert' => '--pki-cert-pem--',
+					'pki_key' => '--pki-key-pem--',
+					default => $default,
+				};
+			}
+		);
+		return $appConfig;
+	}//end appConfigStub()
 
-    /**
-     * Stub the unified ticket resolver (unify-ticket-supertype): the inbound
-     * reply now writes a `ticket` with `ticketType: contactmoment` instead of a
-     * `contactmoment_schema` object.
-     *
-     * @return TicketService
-     */
-    private function ticketServiceStub(): TicketService
-    {
-        $ticketService = $this->createMock(TicketService::class);
-        $ticketService->method('isConfigured')->willReturn(true);
-        $ticketService->method('getRegisterId')->willReturn('reg-1');
-        $ticketService->method('getSchemaId')->willReturn('sch-ticket');
-        return $ticketService;
-    }//end ticketServiceStub()
+	/**
+	 * Stub the unified ticket resolver (unify-ticket-supertype): the inbound
+	 * reply now writes a `ticket` with `ticketType: contactmoment` instead of a
+	 * `contactmoment_schema` object.
+	 *
+	 * @return TicketService
+	 */
+	private function ticketServiceStub(): TicketService {
+		$ticketService = $this->createMock(TicketService::class);
+		$ticketService->method('isConfigured')->willReturn(true);
+		$ticketService->method('getRegisterId')->willReturn('reg-1');
+		$ticketService->method('getSchemaId')->willReturn('sch-ticket');
+		return $ticketService;
+	}//end ticketServiceStub()
 
-    /**
-     * Build an ObjectService that captures every save in $savedMessages.
-     *
-     * @return ObjectService
-     */
-    private function captureObjectService(): ObjectService
-    {
-        $this->savedMessages = [];
-        $service = $this->createMock(ObjectService::class);
-        $service->method('saveObject')->willReturnCallback(
-            function (...$args) {
-                foreach ($args as $arg) {
-                    if (is_array($arg) === true) {
-                        $this->savedMessages[] = $arg;
-                        return $arg;
-                    }
-                }
-                return [];
-            }
-        );
-        $service->method('findAll')->willReturn([]);
-        return $service;
-    }//end captureObjectService()
+	/**
+	 * Build an ObjectService that captures every save in $savedMessages.
+	 *
+	 * @return ObjectService
+	 */
+	private function captureObjectService(): ObjectService {
+		$this->savedMessages = [];
+		$service = $this->createMock(ObjectService::class);
+		$service->method('saveObject')->willReturnCallback(
+			function (...$args) {
+				foreach ($args as $arg) {
+					if (is_array($arg) === true) {
+						$this->savedMessages[] = $arg;
+						return $arg;
+					}
+				}
+				return [];
+			}
+		);
+		$service->method('findAll')->willReturn([]);
+		return $service;
+	}//end captureObjectService()
 
-    /**
-     * Build the SUT.
-     *
-     * @param ObjectService          $objectService Object service.
-     * @param MailboxResolver        $resolver      Resolver.
-     * @param LogiusConnector        $logius        Connector.
-     * @param EmailFallbackSender    $email         Email fallback.
-     * @param DeliveryAuditLogger    $audit         Audit logger.
-     *
-     * @return BerichtenboxService
-     */
-    private function buildService(
-        ObjectService $objectService,
-        MailboxResolver $resolver,
-        LogiusConnector $logius,
-        EmailFallbackSender $email,
-        DeliveryAuditLogger $audit
-    ): BerichtenboxService {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($objectService);
-        $container->method('has')->willReturn(false);
+	/**
+	 * Build the SUT.
+	 *
+	 * @param ObjectService $objectService Object service.
+	 * @param MailboxResolver $resolver Resolver.
+	 * @param LogiusConnector $logius Connector.
+	 * @param EmailFallbackSender $email Email fallback.
+	 * @param DeliveryAuditLogger $audit Audit logger.
+	 *
+	 * @return BerichtenboxService
+	 */
+	private function buildService(
+		ObjectService $objectService,
+		MailboxResolver $resolver,
+		LogiusConnector $logius,
+		EmailFallbackSender $email,
+		DeliveryAuditLogger $audit,
+		?IAppConfig $appConfig = null,
+	): BerichtenboxService {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$container->method('has')->willReturn(false);
 
-        return new BerichtenboxService(
-            $container,
-            $this->appConfigStub(),
-            $this->realEncryption(),
-            new TemplateRenderer($this->createMock(LoggerInterface::class)),
-            $resolver,
-            $logius,
-            $email,
-            $audit,
-            new DutchHolidayCalendar(),
-            $this->ticketServiceStub(),
-            $this->createMock(LoggerInterface::class)
-        );
-    }//end buildService()
+		return new BerichtenboxService(
+			$container,
+			($appConfig ?? $this->appConfigStub()),
+			$this->realEncryption(),
+			new TemplateRenderer($this->createMock(LoggerInterface::class)),
+			$resolver,
+			$logius,
+			$email,
+			$audit,
+			new DutchHolidayCalendar(),
+			$this->ticketServiceStub(),
+			$this->createMock(LoggerInterface::class)
+		);
+	}//end buildService()
 
-    /**
-     * queueOutboundMessage encrypts BSN and writes a queued row.
-     *
-     * @return void
-     */
-    public function testQueueOutboundMessageEncryptsBsnAndLogs(): void
-    {
-        $audit = $this->createMock(DeliveryAuditLogger::class);
-        $audit->expects($this->once())
-            ->method('logQueued');
-        $audit->method('hashPayload')->willReturn('hash');
-        $audit->method('calculateRetentionUntil')->willReturn(new \DateTimeImmutable('+10 years'));
+	/**
+	 * queueOutboundMessage encrypts BSN and writes a queued row.
+	 *
+	 * @return void
+	 */
+	public function testQueueOutboundMessageEncryptsBsnAndLogs(): void {
+		$audit = $this->createMock(DeliveryAuditLogger::class);
+		$audit->expects($this->once())
+			->method('logQueued');
+		$audit->method('hashPayload')->willReturn('hash');
+		$audit->method('calculateRetentionUntil')->willReturn(new \DateTimeImmutable('+10 years'));
 
-        $logius = $this->createMock(LogiusConnector::class);
-        $logius->method('newUuidV4')->willReturn('11111111-1111-4111-8111-111111111111');
+		$logius = $this->createMock(LogiusConnector::class);
+		$logius->method('newUuidV4')->willReturn('11111111-1111-4111-8111-111111111111');
 
-        $resolver = $this->createMock(MailboxResolver::class);
-        $email    = $this->createMock(EmailFallbackSender::class);
-        $service  = $this->buildService(
-            $this->captureObjectService(),
-            $resolver,
-            $logius,
-            $email,
-            $audit
-        );
+		$resolver = $this->createMock(MailboxResolver::class);
+		$email = $this->createMock(EmailFallbackSender::class);
+		$service = $this->buildService(
+			$this->captureObjectService(),
+			$resolver,
+			$logius,
+			$email,
+			$audit
+		);
 
-        $result = $service->queueOutboundMessage(
-            'Z-2026-1',
-            'cm-1',
-            'afgehandeld',
-            '123456789',
-            null,
-            ['zaaktype' => 'paspoort']
-        );
+		$result = $service->queueOutboundMessage(
+			'Z-2026-1',
+			'cm-1',
+			'afgehandeld',
+			'123456789',
+			null,
+			['zaaktype' => 'paspoort']
+		);
 
-        $this->assertIsArray($result);
-        // BSN never persisted as plaintext.
-        foreach ($this->savedMessages as $row) {
-            if (isset($row['bsn']) === true) {
-                $this->assertNotSame('123456789', $row['bsn']);
-            }
-        }
-        // bsnHash is HMAC hex (64 chars).
-        $found = array_filter($this->savedMessages, fn ($r) => isset($r['bsnHash']) === true);
-        $this->assertNotEmpty($found);
-        $firstRow = array_values($found)[0];
-        $this->assertSame(64, strlen($firstRow['bsnHash']));
-        $this->assertSame('queued', $firstRow['deliveryStatus']);
-    }//end testQueueOutboundMessageEncryptsBsnAndLogs()
+		$this->assertIsArray($result);
+		// BSN never persisted as plaintext.
+		foreach ($this->savedMessages as $row) {
+			if (isset($row['bsn']) === true) {
+				$this->assertNotSame('123456789', $row['bsn']);
+			}
+		}
+		// bsnHash is HMAC hex (64 chars).
+		$found = array_filter($this->savedMessages, fn ($r) => isset($r['bsnHash']) === true);
+		$this->assertNotEmpty($found);
+		$firstRow = array_values($found)[0];
+		$this->assertSame(64, strlen($firstRow['bsnHash']));
+		$this->assertSame('queued', $firstRow['deliveryStatus']);
+	}//end testQueueOutboundMessageEncryptsBsnAndLogs()
 
-    /**
-     * dispatchOne with available mailbox calls Logius and marks sent.
-     *
-     * @return void
-     */
-    public function testDispatchOneToBerichtenbox(): void
-    {
-        $resolver = $this->createMock(MailboxResolver::class);
-        $resolver->method('resolve')->willReturn([
-            'mailboxAvailable' => true,
-            'optedOut'         => false,
-            'resolvedAt'       => '2026-06-01T00:00:00Z',
-            'expiresAt'        => '2026-06-02T00:00:00Z',
-            'bsnHash'          => str_repeat('a', 64),
-            'source'           => 'cache',
-        ]);
-        $logius = $this->createMock(LogiusConnector::class);
-        $logius->expects($this->once())
-            ->method('sendMessage')
-            ->willReturn(['logiusMessageId' => 'logius-99', 'raw' => []]);
+	/**
+	 * dispatchOne with available mailbox calls Logius and marks sent.
+	 *
+	 * @return void
+	 */
+	public function testDispatchOneToBerichtenbox(): void {
+		$resolver = $this->createMock(MailboxResolver::class);
+		$resolver->method('resolve')->willReturn([
+			'mailboxAvailable' => true,
+			'optedOut' => false,
+			'resolvedAt' => '2026-06-01T00:00:00Z',
+			'expiresAt' => '2026-06-02T00:00:00Z',
+			'bsnHash' => str_repeat('a', 64),
+			'source' => 'cache',
+		]);
+		$logius = $this->createMock(LogiusConnector::class);
+		$logius->expects($this->once())
+			->method('sendMessage')
+			->willReturn(['logiusMessageId' => 'logius-99', 'raw' => []]);
 
-        $audit = $this->createMock(DeliveryAuditLogger::class);
-        $audit->expects($this->once())->method('logSent');
-        $audit->method('hashPayload')->willReturn('hash');
+		$audit = $this->createMock(DeliveryAuditLogger::class);
+		$audit->expects($this->once())->method('logSent');
+		$audit->method('hashPayload')->willReturn('hash');
 
-        $email = $this->createMock(EmailFallbackSender::class);
-        $email->expects($this->never())->method('send');
+		$email = $this->createMock(EmailFallbackSender::class);
+		$email->expects($this->never())->method('send');
 
-        $service = $this->buildService(
-            $this->captureObjectService(),
-            $resolver,
-            $logius,
-            $email,
-            $audit
-        );
+		$service = $this->buildService(
+			$this->captureObjectService(),
+			$resolver,
+			$logius,
+			$email,
+			$audit
+		);
 
-        $encryption = $this->realEncryption();
-        $cipher = $encryption->encrypt('123456789', 'tenant-a');
+		$encryption = $this->realEncryption();
+		$cipher = $encryption->encrypt('123456789', 'tenant-a');
 
-        $service->dispatchOne([
-            'uuid'    => 'msg-1',
-            'bsn'     => $cipher,
-            'bsnHash' => $encryption->hashBsn('123456789', 'tenant-a'),
-            'subject' => 'X',
-            'body'    => '<p>x</p>',
-            'deliveryStatus' => 'queued',
-            'retryCount' => 0,
-        ]);
+		$service->dispatchOne([
+			'uuid' => 'msg-1',
+			'bsn' => $cipher,
+			'bsnHash' => $encryption->hashBsn('123456789', 'tenant-a'),
+			'subject' => 'X',
+			'body' => '<p>x</p>',
+			'deliveryStatus' => 'queued',
+			'retryCount' => 0,
+		]);
 
-        // Last saveMessages row should be sent.
-        $sentRows = array_filter($this->savedMessages, fn ($r) => ($r['deliveryStatus'] ?? '') === 'sent');
-        $this->assertNotEmpty($sentRows);
-        $this->assertSame('logius-99', array_values($sentRows)[0]['logiusMessageId']);
-    }//end testDispatchOneToBerichtenbox()
+		// Last saveMessages row should be sent.
+		$sentRows = array_filter($this->savedMessages, fn ($r) => ($r['deliveryStatus'] ?? '') === 'sent');
+		$this->assertNotEmpty($sentRows);
+		$this->assertSame('logius-99', array_values($sentRows)[0]['logiusMessageId']);
+	}//end testDispatchOneToBerichtenbox()
 
-    /**
-     * dispatchOne with no mailbox + email available → fallback path.
-     *
-     * @return void
-     */
-    public function testDispatchOneFallbackEmailWhenNoMailbox(): void
-    {
-        $resolver = $this->createMock(MailboxResolver::class);
-        $resolver->method('resolve')->willReturn([
-            'mailboxAvailable' => false,
-            'optedOut'         => false,
-            'resolvedAt'       => '2026-06-01T00:00:00Z',
-            'expiresAt'        => '2026-06-02T00:00:00Z',
-            'bsnHash'          => str_repeat('a', 64),
-            'source'           => 'logius',
-        ]);
-        $logius = $this->createMock(LogiusConnector::class);
-        $logius->expects($this->never())->method('sendMessage');
+	/**
+	 * dispatchOne fails CLOSED when the tenant PKI-overheid cert/key is absent.
+	 *
+	 * An empty `pki_key` does not stop the dispatch by itself: LogiusConnector
+	 * ::signRequest() falls back to `base64(sha256(body))`, a keyless digest,
+	 * and the message would still leave the instance carrying a plaintext BSN
+	 * with request signing silently deactivated. The dispatch must be refused
+	 * and routed to the retry/fail path instead.
+	 *
+	 * @return void
+	 */
+	public function testDispatchOneRefusesWhenPkiMaterialMissing(): void {
+		$resolver = $this->createMock(MailboxResolver::class);
+		$resolver->method('resolve')->willReturn([
+			'mailboxAvailable' => true,
+			'optedOut' => false,
+			'resolvedAt' => '2026-06-01T00:00:00Z',
+			'expiresAt' => '2026-06-02T00:00:00Z',
+			'bsnHash' => str_repeat('a', 64),
+			'source' => 'cache',
+		]);
 
-        $email = $this->createMock(EmailFallbackSender::class);
-        $email->expects($this->once())
-            ->method('send')
-            ->with($this->isType('array'), 'burger@example.nl', false)
-            ->willReturn(true);
+		// The connector must never be reached on an unprovisioned tenant.
+		$logius = $this->createMock(LogiusConnector::class);
+		$logius->expects($this->never())->method('sendMessage');
 
-        $audit = $this->createMock(DeliveryAuditLogger::class);
-        $audit->expects($this->once())->method('logFallback');
-        $audit->method('hashPayload')->willReturn('hash');
+		$audit = $this->createMock(DeliveryAuditLogger::class);
+		$audit->expects($this->never())->method('logSent');
+		$audit->method('hashPayload')->willReturn('hash');
 
-        $service = $this->buildService(
-            $this->captureObjectService(),
-            $resolver,
-            $logius,
-            $email,
-            $audit
-        );
+		$email = $this->createMock(EmailFallbackSender::class);
 
-        $encryption = $this->realEncryption();
-        $cipher = $encryption->encrypt('123456789', 'tenant-a');
+		// Same stub, minus the PKI material.
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = ''): string {
+				return match ($key) {
+					'register' => 'reg-1',
+					'berichtenboxMessage_schema' => 'sch-msg',
+					'tenant_id' => 'tenant-a',
+					'pki_cert', 'pki_key' => '',
+					default => $default,
+				};
+			}
+		);
 
-        $service->dispatchOne([
-            'uuid'         => 'msg-2',
-            'bsn'          => $cipher,
-            'bsnHash'      => $encryption->hashBsn('123456789', 'tenant-a'),
-            'burgerEmail'  => 'burger@example.nl',
-            'subject'      => 'X',
-            'body'         => '<p>x</p>',
-            'deliveryStatus' => 'queued',
-            'retryCount'   => 0,
-        ]);
+		$service = $this->buildService(
+			$this->captureObjectService(),
+			$resolver,
+			$logius,
+			$email,
+			$audit,
+			$appConfig
+		);
 
-        $fbRows = array_filter($this->savedMessages, fn ($r) => ($r['deliveryStatus'] ?? '') === 'fallback-emailed');
-        $this->assertNotEmpty($fbRows);
-        $this->assertSame('burger@example.nl', array_values($fbRows)[0]['fallbackEmail']);
-    }//end testDispatchOneFallbackEmailWhenNoMailbox()
+		$encryption = $this->realEncryption();
 
-    /**
-     * dispatchOne with Logius failure re-queues with backoff up to MAX_RETRIES.
-     *
-     * @return void
-     */
-    public function testDispatchOneRetryOnLogiusFailure(): void
-    {
-        $resolver = $this->createMock(MailboxResolver::class);
-        $resolver->method('resolve')->willReturn([
-            'mailboxAvailable' => true,
-            'optedOut'         => false,
-            'resolvedAt'       => '2026-06-01T00:00:00Z',
-            'expiresAt'        => '2026-06-02T00:00:00Z',
-            'bsnHash'          => str_repeat('a', 64),
-            'source'           => 'cache',
-        ]);
-        $logius = $this->createMock(LogiusConnector::class);
-        $logius->method('sendMessage')->willThrowException(new \RuntimeException('rate limit'));
+		$service->dispatchOne([
+			'uuid' => 'msg-nopki',
+			'bsn' => $encryption->encrypt('123456789', 'tenant-a'),
+			'bsnHash' => $encryption->hashBsn('123456789', 'tenant-a'),
+			'subject' => 'X',
+			'body' => '<p>x</p>',
+			'deliveryStatus' => 'queued',
+			'retryCount' => 0,
+		]);
 
-        $audit = $this->createMock(DeliveryAuditLogger::class);
-        $audit->expects($this->once())->method('logFailed');
-        $audit->method('hashPayload')->willReturn('hash');
+		$sentRows = array_filter($this->savedMessages, fn ($r) => ($r['deliveryStatus'] ?? '') === 'sent');
+		$this->assertEmpty($sentRows, 'No message may be marked sent without tenant PKI material.');
+	}//end testDispatchOneRefusesWhenPkiMaterialMissing()
 
-        $service = $this->buildService(
-            $this->captureObjectService(),
-            $resolver,
-            $logius,
-            $this->createMock(EmailFallbackSender::class),
-            $audit
-        );
+	/**
+	 * dispatchOne with no mailbox + email available → fallback path.
+	 *
+	 * @return void
+	 */
+	public function testDispatchOneFallbackEmailWhenNoMailbox(): void {
+		$resolver = $this->createMock(MailboxResolver::class);
+		$resolver->method('resolve')->willReturn([
+			'mailboxAvailable' => false,
+			'optedOut' => false,
+			'resolvedAt' => '2026-06-01T00:00:00Z',
+			'expiresAt' => '2026-06-02T00:00:00Z',
+			'bsnHash' => str_repeat('a', 64),
+			'source' => 'logius',
+		]);
+		$logius = $this->createMock(LogiusConnector::class);
+		$logius->expects($this->never())->method('sendMessage');
 
-        $encryption = $this->realEncryption();
-        $cipher = $encryption->encrypt('123456789', 'tenant-a');
+		$email = $this->createMock(EmailFallbackSender::class);
+		$email->expects($this->once())
+			->method('send')
+			->with($this->isType('array'), 'burger@example.nl', false)
+			->willReturn(true);
 
-        $service->dispatchOne([
-            'uuid'    => 'msg-3',
-            'bsn'     => $cipher,
-            'bsnHash' => $encryption->hashBsn('123456789', 'tenant-a'),
-            'subject' => 'X',
-            'body'    => '<p>x</p>',
-            'deliveryStatus' => 'queued',
-            'retryCount' => 0,
-        ]);
+		$audit = $this->createMock(DeliveryAuditLogger::class);
+		$audit->expects($this->once())->method('logFallback');
+		$audit->method('hashPayload')->willReturn('hash');
 
-        // Should be re-queued with retryCount=1 + nextRetryAt set.
-        $queuedRows = array_filter(
-            $this->savedMessages,
-            fn ($r) => (($r['deliveryStatus'] ?? '') === 'queued' && ($r['retryCount'] ?? 0) === 1)
-        );
-        $this->assertNotEmpty($queuedRows);
-        $row = array_values($queuedRows)[0];
-        $this->assertNotEmpty($row['nextRetryAt'] ?? '');
-    }//end testDispatchOneRetryOnLogiusFailure()
+		$service = $this->buildService(
+			$this->captureObjectService(),
+			$resolver,
+			$logius,
+			$email,
+			$audit
+		);
 
-    /**
-     * dispatchOne with retryCount at MAX_RETRIES marks failed (no further retry).
-     *
-     * @return void
-     */
-    public function testDispatchOneHardFailureAfterMaxRetries(): void
-    {
-        $resolver = $this->createMock(MailboxResolver::class);
-        $resolver->method('resolve')->willReturn([
-            'mailboxAvailable' => true,
-            'optedOut'         => false,
-            'resolvedAt'       => '2026-06-01T00:00:00Z',
-            'expiresAt'        => '2026-06-02T00:00:00Z',
-            'bsnHash'          => str_repeat('a', 64),
-            'source'           => 'cache',
-        ]);
-        $logius = $this->createMock(LogiusConnector::class);
-        $logius->method('sendMessage')->willThrowException(new \RuntimeException('still failing'));
+		$encryption = $this->realEncryption();
+		$cipher = $encryption->encrypt('123456789', 'tenant-a');
 
-        $audit = $this->createMock(DeliveryAuditLogger::class);
-        $audit->method('hashPayload')->willReturn('hash');
+		$service->dispatchOne([
+			'uuid' => 'msg-2',
+			'bsn' => $cipher,
+			'bsnHash' => $encryption->hashBsn('123456789', 'tenant-a'),
+			'burgerEmail' => 'burger@example.nl',
+			'subject' => 'X',
+			'body' => '<p>x</p>',
+			'deliveryStatus' => 'queued',
+			'retryCount' => 0,
+		]);
 
-        $service = $this->buildService(
-            $this->captureObjectService(),
-            $resolver,
-            $logius,
-            $this->createMock(EmailFallbackSender::class),
-            $audit
-        );
+		$fbRows = array_filter($this->savedMessages, fn ($r) => ($r['deliveryStatus'] ?? '') === 'fallback-emailed');
+		$this->assertNotEmpty($fbRows);
+		$this->assertSame('burger@example.nl', array_values($fbRows)[0]['fallbackEmail']);
+	}//end testDispatchOneFallbackEmailWhenNoMailbox()
 
-        $encryption = $this->realEncryption();
-        $cipher = $encryption->encrypt('123456789', 'tenant-a');
+	/**
+	 * dispatchOne with Logius failure re-queues with backoff up to MAX_RETRIES.
+	 *
+	 * @return void
+	 */
+	public function testDispatchOneRetryOnLogiusFailure(): void {
+		$resolver = $this->createMock(MailboxResolver::class);
+		$resolver->method('resolve')->willReturn([
+			'mailboxAvailable' => true,
+			'optedOut' => false,
+			'resolvedAt' => '2026-06-01T00:00:00Z',
+			'expiresAt' => '2026-06-02T00:00:00Z',
+			'bsnHash' => str_repeat('a', 64),
+			'source' => 'cache',
+		]);
+		$logius = $this->createMock(LogiusConnector::class);
+		$logius->method('sendMessage')->willThrowException(new \RuntimeException('rate limit'));
 
-        $service->dispatchOne([
-            'uuid'    => 'msg-4',
-            'bsn'     => $cipher,
-            'bsnHash' => $encryption->hashBsn('123456789', 'tenant-a'),
-            'subject' => 'X',
-            'body'    => '<p>x</p>',
-            'deliveryStatus' => 'queued',
-            'retryCount' => BerichtenboxService::MAX_RETRIES,
-        ]);
+		$audit = $this->createMock(DeliveryAuditLogger::class);
+		$audit->expects($this->once())->method('logFailed');
+		$audit->method('hashPayload')->willReturn('hash');
 
-        $failedRows = array_filter(
-            $this->savedMessages,
-            fn ($r) => ($r['deliveryStatus'] ?? '') === 'failed'
-        );
-        $this->assertNotEmpty($failedRows);
-    }//end testDispatchOneHardFailureAfterMaxRetries()
+		$service = $this->buildService(
+			$this->captureObjectService(),
+			$resolver,
+			$logius,
+			$this->createMock(EmailFallbackSender::class),
+			$audit
+		);
 
-    /**
-     * handleReadReceipt sets readAt + flips status.
-     *
-     * @return void
-     */
-    public function testHandleReadReceipt(): void
-    {
-        $objectService = $this->createMock(ObjectService::class);
-        $objectService->method('findAll')->willReturn([[
-            'uuid'           => 'msg-5',
-            'logiusMessageId' => 'logius-77',
-            'body'           => '<p>x</p>',
-            'deliveryStatus' => 'sent',
-        ]]);
-        $captured = [];
-        $objectService->method('saveObject')->willReturnCallback(
-            static function (...$args) use (&$captured) {
-                foreach ($args as $arg) {
-                    if (is_array($arg) === true) {
-                        $captured[] = $arg;
-                        return $arg;
-                    }
-                }
-                return [];
-            }
-        );
+		$encryption = $this->realEncryption();
+		$cipher = $encryption->encrypt('123456789', 'tenant-a');
 
-        $audit = $this->createMock(DeliveryAuditLogger::class);
-        $audit->expects($this->once())->method('logRead');
-        $audit->method('hashPayload')->willReturn('hash');
+		$service->dispatchOne([
+			'uuid' => 'msg-3',
+			'bsn' => $cipher,
+			'bsnHash' => $encryption->hashBsn('123456789', 'tenant-a'),
+			'subject' => 'X',
+			'body' => '<p>x</p>',
+			'deliveryStatus' => 'queued',
+			'retryCount' => 0,
+		]);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($objectService);
-        $container->method('has')->willReturn(false);
+		// Should be re-queued with retryCount=1 + nextRetryAt set.
+		$queuedRows = array_filter(
+			$this->savedMessages,
+			fn ($r) => (($r['deliveryStatus'] ?? '') === 'queued' && ($r['retryCount'] ?? 0) === 1)
+		);
+		$this->assertNotEmpty($queuedRows);
+		$row = array_values($queuedRows)[0];
+		$this->assertNotEmpty($row['nextRetryAt'] ?? '');
+	}//end testDispatchOneRetryOnLogiusFailure()
 
-        $service = new BerichtenboxService(
-            $container,
-            $this->appConfigStub(),
-            $this->realEncryption(),
-            new TemplateRenderer($this->createMock(LoggerInterface::class)),
-            $this->createMock(MailboxResolver::class),
-            $this->createMock(LogiusConnector::class),
-            $this->createMock(EmailFallbackSender::class),
-            $audit,
-            new DutchHolidayCalendar(),
-            $this->ticketServiceStub(),
-            $this->createMock(LoggerInterface::class)
-        );
+	/**
+	 * dispatchOne with retryCount at MAX_RETRIES marks failed (no further retry).
+	 *
+	 * @return void
+	 */
+	public function testDispatchOneHardFailureAfterMaxRetries(): void {
+		$resolver = $this->createMock(MailboxResolver::class);
+		$resolver->method('resolve')->willReturn([
+			'mailboxAvailable' => true,
+			'optedOut' => false,
+			'resolvedAt' => '2026-06-01T00:00:00Z',
+			'expiresAt' => '2026-06-02T00:00:00Z',
+			'bsnHash' => str_repeat('a', 64),
+			'source' => 'cache',
+		]);
+		$logius = $this->createMock(LogiusConnector::class);
+		$logius->method('sendMessage')->willThrowException(new \RuntimeException('still failing'));
 
-        $updated = $service->handleReadReceipt('logius-77', '2026-06-01T12:00:00Z');
-        $this->assertTrue($updated);
-        $readRows = array_filter($captured, fn ($r) => ($r['deliveryStatus'] ?? '') === 'read');
-        $this->assertNotEmpty($readRows);
-    }//end testHandleReadReceipt()
+		$audit = $this->createMock(DeliveryAuditLogger::class);
+		$audit->method('hashPayload')->willReturn('hash');
+
+		$service = $this->buildService(
+			$this->captureObjectService(),
+			$resolver,
+			$logius,
+			$this->createMock(EmailFallbackSender::class),
+			$audit
+		);
+
+		$encryption = $this->realEncryption();
+		$cipher = $encryption->encrypt('123456789', 'tenant-a');
+
+		$service->dispatchOne([
+			'uuid' => 'msg-4',
+			'bsn' => $cipher,
+			'bsnHash' => $encryption->hashBsn('123456789', 'tenant-a'),
+			'subject' => 'X',
+			'body' => '<p>x</p>',
+			'deliveryStatus' => 'queued',
+			'retryCount' => BerichtenboxService::MAX_RETRIES,
+		]);
+
+		$failedRows = array_filter(
+			$this->savedMessages,
+			fn ($r) => ($r['deliveryStatus'] ?? '') === 'failed'
+		);
+		$this->assertNotEmpty($failedRows);
+	}//end testDispatchOneHardFailureAfterMaxRetries()
+
+	/**
+	 * handleReadReceipt sets readAt + flips status.
+	 *
+	 * @return void
+	 */
+	public function testHandleReadReceipt(): void {
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->method('findAll')->willReturn([[
+			'uuid' => 'msg-5',
+			'logiusMessageId' => 'logius-77',
+			'body' => '<p>x</p>',
+			'deliveryStatus' => 'sent',
+		]]);
+		$captured = [];
+		$objectService->method('saveObject')->willReturnCallback(
+			static function (...$args) use (&$captured) {
+				foreach ($args as $arg) {
+					if (is_array($arg) === true) {
+						$captured[] = $arg;
+						return $arg;
+					}
+				}
+				return [];
+			}
+		);
+
+		$audit = $this->createMock(DeliveryAuditLogger::class);
+		$audit->expects($this->once())->method('logRead');
+		$audit->method('hashPayload')->willReturn('hash');
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$container->method('has')->willReturn(false);
+
+		$service = new BerichtenboxService(
+			$container,
+			$this->appConfigStub(),
+			$this->realEncryption(),
+			new TemplateRenderer($this->createMock(LoggerInterface::class)),
+			$this->createMock(MailboxResolver::class),
+			$this->createMock(LogiusConnector::class),
+			$this->createMock(EmailFallbackSender::class),
+			$audit,
+			new DutchHolidayCalendar(),
+			$this->ticketServiceStub(),
+			$this->createMock(LoggerInterface::class)
+		);
+
+		$updated = $service->handleReadReceipt('logius-77', '2026-06-01T12:00:00Z');
+		$this->assertTrue($updated);
+		$readRows = array_filter($captured, fn ($r) => ($r['deliveryStatus'] ?? '') === 'read');
+		$this->assertNotEmpty($readRows);
+	}//end testHandleReadReceipt()
 }//end class

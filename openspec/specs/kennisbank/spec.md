@@ -451,6 +451,8 @@ versioning SHALL be provided by xWiki via the OpenRegister xwiki leaf
 
 #### Scenario: Bespoke kennisbank and schemas are removed
 
+`@e2e exclude` structural code/schema-absence assertion, verified by inspection rather than by a browser — a deleted view has no page to load. Confirmed: `src/views/kennisbank/`, `src/components/kennisbank/` and `src/store/modules/kennisbank.js` do not exist; no `Kennisbank*` class (service, controller or background job) exists under `lib/`; `appinfo/routes.php` registers no `kennisbank#*` / `publicKennisbank#*` route; and `lib/Settings/pipelinq_register.json` defines none of `kennisartikel`, `kenniscategorie`, `kennisfeedback` among its 27 schemas. MISMATCH REPORTED, NOT FIXED — three legacy register fragments (`lib/Settings/register.d/40-pos-cash-management.json`, `50-pos-end-of-day-bookkeeping.json`, `60-pos-split-tender.json`) still NAME those three retired slugs in `components.registers.pipelinq.schemas[]`, and that list is union-merged, so the register membership list still carries three names that resolve to no schema definition.
+
 - **GIVEN** the migrate-kennisbank-to-xwiki-leaf change is applied
 - **THEN** `src/views/kennisbank/`, `src/components/kennisbank/`,
   `src/store/modules/kennisbank.js`, the Markdown editor, and the kennisbank
@@ -460,6 +462,8 @@ versioning SHALL be provided by xWiki via the OpenRegister xwiki leaf
 - **AND** page authoring SHALL live in xWiki.
 
 #### Scenario: The bespoke xwiki-integration change is superseded
+
+`@e2e exclude` a "SHALL NOT be built" code-absence assertion — there is no rendered surface that reveals whether a class was built, so this is a static inspection, not an e2e observation. MISMATCH REPORTED, NOT FIXED — the assertion does NOT currently hold: `lib/Controller/XWikiController.php` (routed as `xWiki#search|pages|page|status` in `appinfo/routes.php`), `lib/Service/XWikiService.php`, `src/components/xwiki/XWikiWidget.vue` and `src/components/xwiki/XWikiSidebarTab.vue` all still exist and are registered in `src/registry.js`, and `src/manifest.json` still exposes app-local `xwiki_direct_url` settings. The later `pipelinq-xwiki-through-or` change made `XWikiService::search()` prefer OpenRegister's OpenConnector-routed `/apps/openregister/api/integrations/xwiki/search` and fall back to the app-local proxy, so the hand-rolled path is retained deliberately as the fallback rather than deleted. The retained proxy's own behaviour is asserted by tests/Unit/Controller/XWikiControllerTest.php and tests/Unit/Service/XWikiServiceTest.php.
 
 - **GIVEN** the older `xwiki-integration` change (hand-rolled proxy + widget +
   sidebar + app-local settings)
@@ -476,6 +480,8 @@ The `client`, `lead`, and `request` schemas SHALL declare `xwiki` in
 
 #### Scenario: xWiki tab and widget appear on CRM objects
 
+`@e2e exclude` the scenario's own GIVEN is an external system the CI instance does not provision: `tests/e2e/ci-seed.sh` installs pipelinq + openregister only, so `openconnector` is absent, no `xwiki` source is configured, and no xWiki server is reachable from the runner — the leaf cannot register, and linking a page by URL then rendering its breadcrumb / last-modified / text preview requires live xWiki content that cannot exist. MISMATCH REPORTED, NOT FIXED — independently of provisioning, the leaf tab is not placed either: the `ClientDetail` and `LeadDetail` `config.sidebar.tabs[]` in `src/manifest.json` declare only the `audit` ("History") tab, and `TicketDetail` (which absorbed `request`) declares no sidebar at all. The graceful-degradation half of this surface — what the app actually shows when xWiki is unreachable — IS covered end-to-end by tests/e2e/spec-coverage/kennisbank.spec.ts.
+
 - **GIVEN** `openconnector` is installed with an `xwiki` source configured and
   the xwiki leaf is registered
 - **WHEN** a user opens a `client`, `lead`, or `request` detail page
@@ -489,6 +495,8 @@ The xwiki leaf's tab and widget SHALL be surfaced through `src/manifest.json`
 (ADR-024), and `openconnector` SHALL be declared as a dependency.
 
 #### Scenario: Manifest places tab/widget and declares dependency
+
+`@e2e exclude` a static manifest-content assertion ("GIVEN Pipelinq's `src/manifest.json` THEN it SHALL include …") — a toolchain check on a JSON file, machine-validated in CI by `npm run check:manifest` (`scripts/check-manifest.js`), not an observation of rendered output. Verifiable by parsing: `dependencies[]` DOES include `openconnector` (optional), and the `OperationalDashboard` page declares the widget `{"id": "xwiki-knowledge", "type": "integration", "integrationId": "xwiki", "title": "Knowledge base"}` plus its layout slot. MISMATCH REPORTED, NOT FIXED — the sidebar half is absent: no `client` / `lead` / `request` detail page declares the xwiki leaf tab in `config.sidebar.tabs[]` (ClientDetail and LeadDetail declare only `audit`; TicketDetail declares no sidebar).
 
 - **GIVEN** Pipelinq's `src/manifest.json`
 - **THEN** the client/lead/request detail pages' `sidebar` config SHALL include
@@ -505,6 +513,8 @@ changes.
 
 #### Scenario: Tenant without xWiki uses collectives
 
+`@e2e exclude` a deployment-substitution claim about a THIRD app the CI instance does not install — the `integration-collectives` leaf lives in OpenRegister and needs the Nextcloud `collectives` app, and `tests/e2e/ci-seed.sh` provisions pipelinq + openregister only, so neither leaf can be registered and there is nothing to swap between. The pipelinq-side half of the claim is a code ABSENCE ("no pipelinq-side wiki code SHALL be required"), which no browser reveals; substituting one leaf for another is covered by OpenRegister's own leaf suite.
+
 - **GIVEN** a tenant with no xWiki instance
 - **WHEN** they prefer NC-native knowledge
 - **THEN** the collectives leaf MAY be substituted (same tab/widget/reference
@@ -518,6 +528,8 @@ by this change and SHALL be documented as a separate follow-up (ADR-032 bounded
 scope).
 
 #### Scenario: Follow-up is recorded, not silently dropped
+
+`@e2e exclude` a process/documentation artefact, not runtime behaviour — "a follow-up tracking item SHALL be recorded" is satisfied by a written record, and the record exists: `openspec/changes/archive/2026-06-14-migrate-kennisbank-to-xwiki-leaf/tasks.md` §4 "Follow-up flag" (task 4.1 "Record the existing-content migration as a separate follow-up", spec_ref pointing at this requirement) and `proposal.md`. The other half — legacy `kennisartikel` / `kenniscategorie` / `kennisfeedback` objects "left in place" — is a NON-action on rows of three retired schemas that no pipelinq screen has rendered since the migration, so a browser has no view in which their continued existence could show.
 
 - **GIVEN** existing `kennisartikel` / `kenniscategorie` / `kennisfeedback`
   objects

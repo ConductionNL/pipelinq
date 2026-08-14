@@ -5,7 +5,7 @@
 	<div class="werkplek-header-actions">
 		<WerkplekAgentStatus
 			:is-available="isAvailable"
-			@update:isAvailable="isAvailable = $event" />
+			@update:is-available="isAvailable = $event" />
 	</div>
 </template>
 
@@ -46,7 +46,9 @@ export default {
 		 */
 		async fetchAvailability() {
 			try {
-				const res = await axios.get(generateUrl('/apps/pipelinq/api/kcc-werkplek/state'))
+				const res = await axios.get(
+					generateUrl('/apps/pipelinq/api/kcc-werkplek/state'),
+				)
 				const profile = (res.data && res.data.agentProfile) || {}
 				this.isAvailable = Boolean(profile.isAvailable)
 			} catch (e) {

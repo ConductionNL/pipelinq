@@ -16,10 +16,13 @@
 				label="label"
 				:disabled="locked"
 				:clearable="false"
-				@input="onChange" />
-			<span v-if="locked"
+				@update:model-value="onChange" />
+			<span
+				v-if="locked"
 				class="lead-forecast-tab__lock"
-				:title="t('pipelinq', 'Reopen the deal to change the forecast category')">
+				:title="
+					t('pipelinq', 'Reopen the deal to change the forecast category')
+				">
 				🔒
 			</span>
 		</div>
@@ -38,10 +41,10 @@
 			<table>
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'When') }}</th>
-						<th>{{ t('pipelinq', 'From') }}</th>
-						<th>{{ t('pipelinq', 'To') }}</th>
-						<th>{{ t('pipelinq', 'By') }}</th>
+						<th scope="col">{{ t('pipelinq', 'When') }}</th>
+						<th scope="col">{{ t('pipelinq', 'From') }}</th>
+						<th scope="col">{{ t('pipelinq', 'To') }}</th>
+						<th scope="col">{{ t('pipelinq', 'By') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -131,8 +134,11 @@ export default {
 			if (!id) {
 				return
 			}
-			if (id === 'commit' && this.dealValue > COMMIT_THRESHOLD
-				&& this.justification.trim().length < 10) {
+			if (
+				id === 'commit'
+				&& this.dealValue > COMMIT_THRESHOLD
+				&& this.justification.trim().length < 10
+			) {
 				this.pending = id
 				this.showJustification = true
 				return
@@ -149,7 +155,9 @@ export default {
 			this.showJustification = false
 			this.pending = null
 			// Revert the selector to the persisted value.
-			this.selected = this.toOption(this.objectData?.forecast_category || 'pipeline')
+			this.selected = this.toOption(
+				this.objectData?.forecast_category || 'pipeline',
+			)
 		},
 		persist(category, justification) {
 			this.$emit('update', {
@@ -162,11 +170,38 @@ export default {
 </script>
 
 <style scoped>
-.lead-forecast-tab { padding: 12px 0; }
-.lead-forecast-tab__row { display: flex; align-items: center; gap: 8px; }
-.lead-forecast-tab__lock { font-size: 1.2em; cursor: help; }
-.lead-forecast-tab__justification { margin-top: 12px; }
-.lead-forecast-tab__history { margin-top: 16px; }
-.lead-forecast-tab__history table { width: 100%; border-collapse: collapse; }
-.lead-forecast-tab__history th, .lead-forecast-tab__history td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--color-border); }
+.lead-forecast-tab {
+	padding: 12px 0;
+}
+
+.lead-forecast-tab__row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.lead-forecast-tab__lock {
+	font-size: 1.2em;
+	cursor: help;
+}
+
+.lead-forecast-tab__justification {
+	margin-top: 12px;
+}
+
+.lead-forecast-tab__history {
+	margin-top: 16px;
+}
+
+.lead-forecast-tab__history table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.lead-forecast-tab__history th,
+.lead-forecast-tab__history td {
+	text-align: left;
+	padding: 6px 8px;
+	border-bottom: 1px solid var(--color-border);
+}
 </style>

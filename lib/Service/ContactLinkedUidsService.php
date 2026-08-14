@@ -29,112 +29,118 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for finding already-linked contact UIDs.
  */
-class ContactLinkedUidsService
-{
-    /**
-     * Constructor.
-     *
-     * @param IAppConfig         $appConfig The app config.
-     * @param ContainerInterface $container The container.
-     * @param LoggerInterface    $logger    The logger.
-     */
-    public function __construct(
-        private IAppConfig $appConfig,
-        private ContainerInterface $container,
-        private LoggerInterface $logger,
-    ) {
-    }//end __construct()
+class ContactLinkedUidsService {
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $appConfig The app config.
+	 * @param ContainerInterface $container The container.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private IAppConfig $appConfig,
+		private ContainerInterface $container,
+		private LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Get all contactsUid values from existing Pipelinq clients and contacts.
-     *
-     * @return array The linked contact UIDs.
-     * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-1
-     */
-    public function getLinkedContactsUids(): array
-    {
-        $uids          = [];
-        $objectService = $this->getObjectService();
-        $registerId    = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+	/**
+	 * Get all contactsUid values from existing Pipelinq clients and contacts.
+	 *
+	 * @return array The linked contact UIDs.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-1
+	 */
+	public function getLinkedContactsUids(): array {
+		$uids = [];
+		$objectService = $this->getObjectService();
+		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 
-        foreach (['client', 'contact'] as $type) {
-            $typeUids = $this->getLinkedUidsForType(
-                objectService: $objectService,
-                registerId: $registerId,
-                type: $type
-            );
-            $uids     = array_merge($uids, $typeUids);
-        }//end foreach
+		// Fail closed on an unconfigured register. getLinkedUidsForType() below
+		// already refuses on '', so this returns the same empty result; stating
+		// it here makes the refusal local to the read instead of resting on a
+		// callee that a later change could relax.
+		if ($registerId === '') {
+			$this->logger->warning(
+				'Pipelinq: app-config "register" is not configured; returning no linked contact UIDs'
+			);
+			return [];
+		}
 
-        return $uids;
-    }//end getLinkedContactsUids()
+		foreach (['client', 'contact'] as $type) {
+			$typeUids = $this->getLinkedUidsForType(
+				objectService: $objectService,
+				registerId: $registerId,
+				type: $type
+			);
+			$uids = array_merge($uids, $typeUids);
+		}//end foreach
 
-    /**
-     * Get linked contactsUid values for a specific object type.
-     *
-     * @param object $objectService The object service.
-     * @param string $registerId    The register ID.
-     * @param string $type          The object type (client or contact).
-     *
-     * @return array The linked UIDs for this type.
-     */
-    private function getLinkedUidsForType(object $objectService, string $registerId, string $type): array
-    {
-        $schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$type}_schema", '');
-        if ($registerId === '' || $schemaId === '') {
-            return [];
-        }
+		return $uids;
+	}//end getLinkedContactsUids()
 
-        $uids = [];
+	/**
+	 * Get linked contactsUid values for a specific object type.
+	 *
+	 * @param object $objectService The object service.
+	 * @param string $registerId The register ID.
+	 * @param string $type The object type (client or contact).
+	 *
+	 * @return array The linked UIDs for this type.
+	 */
+	private function getLinkedUidsForType(object $objectService, string $registerId, string $type): array {
+		$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$type}_schema", '');
+		if ($registerId === '' || $schemaId === '') {
+			return [];
+		}
 
-        try {
-            $objects = $objectService->findAll(
-                ['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500]
-            );
+		$uids = [];
 
-            foreach ($objects as $obj) {
-                $data = $this->serializeResult(result: $obj);
-                if (empty($data['contactsUid']) === false) {
-                    $uids[] = $data['contactsUid'];
-                }
-            }
-        } catch (\Exception $e) {
-            $this->logger->debug(
-                'Pipelinq: Failed to fetch linked UIDs for '.$type,
-                ['exception' => $e->getMessage()]
-            );
-        }
+		try {
+			$objects = $objectService->findAll(
+				['filters' => ['register' => $registerId, 'schema' => $schemaId], 'limit' => 500]
+			);
 
-        return $uids;
-    }//end getLinkedUidsForType()
+			foreach ($objects as $obj) {
+				$data = $this->serializeResult(result: $obj);
+				if (empty($data['contactsUid']) === false) {
+					$uids[] = $data['contactsUid'];
+				}
+			}
+		} catch (\Exception $e) {
+			$this->logger->debug(
+				'Pipelinq: Failed to fetch linked UIDs for ' . $type,
+				['exception' => $e->getMessage()]
+			);
+		}
 
-    /**
-     * Serialize an object or array result to an array.
-     *
-     * @param mixed $result The result to serialize.
-     *
-     * @return array The serialized result.
-     */
-    private function serializeResult(mixed $result): array
-    {
-        if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-            return $result->jsonSerialize();
-        }
+		return $uids;
+	}//end getLinkedUidsForType()
 
-        if (is_array($result) === true) {
-            return $result;
-        }
+	/**
+	 * Serialize an object or array result to an array.
+	 *
+	 * @param mixed $result The result to serialize.
+	 *
+	 * @return array The serialized result.
+	 */
+	private function serializeResult(mixed $result): array {
+		if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+			return $result->jsonSerialize();
+		}
 
-        return [];
-    }//end serializeResult()
+		if (is_array($result) === true) {
+			return $result;
+		}
 
-    /**
-     * Get the OpenRegister ObjectService via the container.
-     *
-     * @return object The object service.
-     */
-    private function getObjectService(): object
-    {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-    }//end getObjectService()
+		return [];
+	}//end serializeResult()
+
+	/**
+	 * Get the OpenRegister ObjectService via the container.
+	 *
+	 * @return object The object service.
+	 */
+	private function getObjectService(): object {
+		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+	}//end getObjectService()
 }//end class

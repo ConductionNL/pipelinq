@@ -25,18 +25,26 @@
 				:input-label="t('pipelinq', 'Tender type')"
 				label="name"
 				track-by="code"
-				:reduce="option => idOf(option)"
+				:reduce="(option) => idOf(option)"
 				:placeholder="t('pipelinq', 'Select a tender type')" />
 
 			<NcTextField
 				v-model.number="amount"
 				type="number"
 				:label="t('pipelinq', 'Amount (EUR)')"
-				:placeholder="suggestedAmount > 0 ? formatEur(suggestedAmount) : '0.00'"
+				:placeholder="
+					suggestedAmount > 0 ? formatEur(suggestedAmount) : '0.00'
+				"
 				step="0.01"
 				min="0.01" />
-			<NcButton v-if="suggestedAmount > 0 && amount !== suggestedAmount" @click="amount = suggestedAmount">
-				{{ t('pipelinq', 'Use remaining: {amount}', { amount: formatEur(suggestedAmount) }) }}
+			<NcButton
+				v-if="suggestedAmount > 0 && amount !== suggestedAmount"
+				@click="amount = suggestedAmount">
+				{{
+					t('pipelinq', 'Use remaining: {amount}', {
+						amount: formatEur(suggestedAmount),
+					})
+				}}
 			</NcButton>
 
 			<NcTextField
@@ -46,16 +54,28 @@
 				:placeholder="t('pipelinq', 'Card auth code, voucher serial, ...')"
 				required />
 
-			<div v-if="selectedType && selectedType.allowsChange && amount > transactionTotal" class="add-tender__change">
-				{{ t('pipelinq', 'Change due: {change}', { change: formatEur(amount - transactionTotal) }) }}
+			<div
+				v-if="
+					selectedType
+					&& selectedType.allowsChange
+					&& amount > transactionTotal
+				"
+				class="add-tender__change">
+				{{
+					t('pipelinq', 'Change due: {change}', {
+						change: formatEur(amount - transactionTotal),
+					})
+				}}
 			</div>
 
 			<div class="add-tender__totals">
 				<div>
-					<strong>{{ t('pipelinq', 'Transaction total:') }}</strong> {{ formatEur(transactionTotal) }}
+					<strong>{{ t('pipelinq', 'Transaction total:') }}</strong>
+					{{ formatEur(transactionTotal) }}
 				</div>
 				<div v-if="remaining > 0">
-					<strong>{{ t('pipelinq', 'Remaining:') }}</strong> {{ formatEur(remaining) }}
+					<strong>{{ t('pipelinq', 'Remaining:') }}</strong>
+					{{ formatEur(remaining) }}
 				</div>
 			</div>
 
@@ -67,7 +87,10 @@
 			<NcButton :disabled="saving" @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="saving || !canSubmit" @click="submit">
+			<NcButton
+				variant="primary"
+				:disabled="saving || !canSubmit"
+				@click="submit">
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Add tender') }}
 			</NcButton>
 		</template>
@@ -117,7 +140,10 @@ export default {
 			if (!this.selected) {
 				return null
 			}
-			return this.tenderTypes.find(type => this.idOf(type) === this.selected) || null
+			return (
+				this.tenderTypes.find((type) => this.idOf(type) === this.selected)
+				|| null
+			)
 		},
 		requiresReference() {
 			return !!this.selectedType?.requiresReference
@@ -164,7 +190,9 @@ export default {
 				showSuccess(t('pipelinq', 'Tender added'))
 				this.$emit('added')
 			} catch (error) {
-				const msg = error?.response?.data?.error || t('pipelinq', 'Failed to add tender')
+				const msg =
+					error?.response?.data?.error
+					|| t('pipelinq', 'Failed to add tender')
 				this.errorMessage = msg
 				showError(msg)
 			} finally {

@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <!--
@@ -49,11 +49,15 @@
 </template>
 
 <script>
-import Vue from 'vue'
+import { reactive } from 'vue'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
-import { CnAppRoot, CnObjectSidebar, builtinIntegrations } from '@conduction/nextcloud-vue'
+import {
+	CnAppRoot,
+	CnObjectSidebar,
+	builtinIntegrations,
+} from '@conduction/nextcloud-vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 
@@ -71,7 +75,8 @@ export default {
 	provide() {
 		return {
 			// Channel for CnDetailPage → host-rendered CnObjectSidebar.
-			// Vue.observable makes the plain object reactive for Vue 2.
+			// `reactive()` (Vue 3's replacement for `Vue.observable`) makes the
+			// plain object reactive, so injected consumers track its mutations.
 			objectSidebarState: this.objectSidebarState,
 			// Legacy channel — kept so bespoke index views (CnIndexPage
 			// wrappers) continue to inject it.
@@ -113,7 +118,7 @@ export default {
 
 	data() {
 		return {
-			objectSidebarState: Vue.observable({
+			objectSidebarState: reactive({
 				active: false,
 				open: true,
 				objectType: '',
@@ -126,7 +131,7 @@ export default {
 				tabs: undefined,
 			}),
 			// Legacy channel for bespoke index views.
-			sidebarState: Vue.observable({
+			sidebarState: reactive({
 				active: false,
 				open: true,
 				schema: null,
@@ -153,8 +158,8 @@ export default {
 		 * manifest column references (ADR-036).
 		 *
 		 * @return {Record<string, object>}
-		 * @spec openspec/changes/customer-360/tasks.md#task-6.1
-		 * @spec openspec/changes/customer-360/tasks.md#task-6.2
+		 * @spec openspec/specs/customer-360/spec.md
+		 * @spec openspec/specs/lead-scoring-win-probability/spec.md#requirement-win-probability-is-surfaced-on-the-pipeline-list-and-deal-detail
 		 */
 		cellWidgets() {
 			return {
@@ -189,7 +194,10 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async persistManifestDelta(delta) {
-			await axios.put(generateUrl('/apps/openbuild/api/app-overrides/pipelinq'), delta)
+			await axios.put(
+				generateUrl('/apps/openbuild/api/app-overrides/pipelinq'),
+				delta,
+			)
 		},
 		/**
 		 * Translate function passed down to CnAppRoot / CnAppNav /

@@ -42,7 +42,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!valid" @click="submit">
+			<NcButton variant="primary" :disabled="!valid" @click="submit">
 				{{ t('pipelinq', 'Create contact') }}
 			</NcButton>
 		</template>
@@ -73,7 +73,9 @@ export default {
 	},
 	computed: {
 		valid() {
-			return this.form.name.trim().length > 1 && this.form.phone.trim().length > 1
+			return (
+				this.form.name.trim().length > 1 && this.form.phone.trim().length > 1
+			)
 		},
 	},
 	methods: {

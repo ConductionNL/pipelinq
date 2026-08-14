@@ -4,9 +4,9 @@
 // REQ-CR-001: Reporting dashboard loads with KPI cards visible.
 // @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
 import { test, expect } from '@playwright/test'
+import { openApp, navClick } from './helpers/pipelinq'
 
 test.describe('Rapportage (Reporting)', () => {
-
 	test.beforeEach(async ({ page }) => {
 		// The contactmomenten Reporting Dashboard (KPI cards) lives at the
 		// `/rapportage/contactmomenten` page (manifest id RapportageContactmomenten
@@ -28,54 +28,79 @@ test.describe('Rapportage (Reporting)', () => {
 	 *
 	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
 	 */
-	test('REQ-CR-001: rapportage dashboard loads with KPI cards', async ({ page }) => {
-		// Page heading should be visible.
+	test('REQ-CR-001: rapportage dashboard loads with KPI cards', async ({
+		page,
+	}) => {
+		// Retargeted onto the declarative dashboard that replaced the bespoke
+		// RapportageDashboard.vue (change `pipelinq-dashboards-declarative`).
+		// The old assertions named that component's private CSS — `.kpi-grid`,
+		// `.kpi-card`, `.date-range-selector` — none of which exist anywhere in
+		// src/ any more, so they could only ever fail. The page is now
+		// `type: "dashboard"` in src/manifest.json (id RapportageContactmomenten)
+		// and that manifest entry is the contract asserted here.
+
+		// Manifest `title` renders as the page heading.
 		await expect(
-			page.getByRole('heading', { name: /Reporting Dashboard|Rapportagedashboard/i }),
+			page.getByRole('heading', { name: 'Contact reporting' }).first(),
 		).toBeVisible({ timeout: 15000 })
 
-		// Date range selector buttons.
-		const dateButtons = page.locator('.date-range-selector .button-vue, .date-range-selector button')
-		await expect(dateButtons.first()).toBeVisible({ timeout: 10000 })
+		// The `period` pageFilter replaced the hand-rolled date-range selector.
+		await expect(page.getByText('Period').first()).toBeVisible({
+			timeout: 10000,
+		})
 
-		// KPI grid container should be in the DOM.
-		const kpiGrid = page.locator('.kpi-grid')
-		await expect(kpiGrid).toBeVisible({ timeout: 10000 })
-
-		// Four KPI cards present.
-		const kpiCards = kpiGrid.locator('.kpi-card')
-		await expect(kpiCards).toHaveCount(4)
+		// The four headline KPIs, by the labels the manifest declares for them.
+		const content = page.locator('#content-vue')
+		for (const kpi of [
+			'Total Contacts',
+			'FCR %',
+			'Avg Handling Time',
+			'SLA Compliance',
+		]) {
+			await expect(content.getByText(kpi).first()).toBeVisible({
+				timeout: 10000,
+			})
+		}
 	})
 
+	/*
+	 * pipelinq#687 — FIXED 2026-08-06 by giving the orphan pages a way in.
+	 *
+	 * These two tests were correct and deliberately left red: `/rapportage/channels`
+	 * (ChannelAnalyticsView) and `/rapportage/agents` (AgentPerformanceView) —
+	 * and `/rapportage/contactmomenten` with them — were routed, built and
+	 * rendering, with NO menu entry, no in-page link and no deepLinks
+	 * registration. The only way to reach them was to type the hash by hand.
+	 *
+	 * They also asserted against `.rapportage-links`, a container from the
+	 * bespoke RapportageDashboard.vue that the `pipelinq-dashboards-declarative`
+	 * change deleted — the same class of stale selector the sibling test above
+	 * already documents. So the old assertion could not have passed even if the
+	 * buttons had existed.
+	 *
+	 * The fix is a navigation fix, not a test fix: src/manifest.json now declares
+	 * menu entries for all three reporting pages and src/menu-layout.json
+	 * relocates them under `Rapportage`, so "Reporting" is a group carrying its
+	 * own sub-reports. The tests below assert what they always meant to assert —
+	 * a user can get there — through the sidebar rather than a deleted button.
+	 */
 	test('rapportage page navigates to channel analytics', async ({ page }) => {
-		// Wait for the dashboard to render.
-		await expect(page.locator('.rapportage-links')).toBeVisible({ timeout: 15000 })
+		await openApp(page)
+		await navClick(page, 'Channel Analytics', /rapportage\/channels/)
 
-		// Click Channel Analytics button.
-		const channelBtn = page.getByRole('button', { name: /Channel Analytics|Kanaalanalyse/i })
-		await expect(channelBtn).toBeVisible()
-		await channelBtn.click()
-
-		// The manifest-driven SPA router can rewrite the URL on in-app
-		// navigation, so assert the channel analytics view rendered instead.
 		await expect(
 			page.getByRole('heading', { name: /Channel Analytics|Kanaalanalyse/i }),
 		).toBeVisible({ timeout: 10000 })
 	})
 
 	test('rapportage page navigates to agent performance', async ({ page }) => {
-		// Wait for the dashboard to render.
-		await expect(page.locator('.rapportage-links')).toBeVisible({ timeout: 15000 })
+		await openApp(page)
+		await navClick(page, 'Agent Performance', /rapportage\/agents/)
 
-		// Click Agent Performance button.
-		const agentBtn = page.getByRole('button', { name: /Agent Performance|Agentprestaties/i })
-		await expect(agentBtn).toBeVisible()
-		await agentBtn.click()
-
-		// The manifest-driven SPA router can rewrite the URL on in-app
-		// navigation, so assert the agent performance view rendered instead.
 		await expect(
-			page.getByRole('heading', { name: /Agent Performance|Agentprestaties/i }),
+			page.getByRole('heading', {
+				name: /Agent Performance|Agentprestaties/i,
+			}),
 		).toBeVisible({ timeout: 10000 })
 	})
 
@@ -93,7 +118,9 @@ test.describe('Rapportage (Reporting)', () => {
 		await page.goto('/apps/pipelinq/#/rapportage/agents')
 		await page.reload()
 		await expect(
-			page.getByRole('heading', { name: /Agent Performance|Agentprestaties/i }),
+			page.getByRole('heading', {
+				name: /Agent Performance|Agentprestaties/i,
+			}),
 		).toBeVisible({ timeout: 15000 })
 	})
 })

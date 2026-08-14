@@ -29,51 +29,59 @@
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
 			<section v-if="hasActions" class="pos-tx-section__actions">
-				<NcButton v-if="canEdit" type="secondary" @click="edit">
+				<NcButton v-if="canEdit" variant="secondary" @click="edit">
 					{{ t('pipelinq', 'Edit') }}
 				</NcButton>
-				<NcButton v-if="canConfirm"
-					type="primary"
+				<NcButton
+					v-if="canConfirm"
+					variant="primary"
 					:disabled="busy || lineCount === 0"
 					@click="confirm">
 					{{ t('pipelinq', 'Confirm') }}
 				</NcButton>
-				<NcButton v-if="canPark"
-					type="secondary"
+				<NcButton
+					v-if="canPark"
+					variant="secondary"
 					:disabled="busy"
 					@click="park">
 					{{ t('pipelinq', 'Park') }}
 				</NcButton>
-				<NcButton v-if="canResume"
-					type="primary"
+				<NcButton
+					v-if="canResume"
+					variant="primary"
 					:disabled="busy"
 					@click="resume">
 					{{ t('pipelinq', 'Resume') }}
 				</NcButton>
-				<NcButton v-if="canSettle"
-					type="primary"
+				<NcButton
+					v-if="canSettle"
+					variant="primary"
 					:disabled="busy"
 					@click="settle">
 					{{ t('pipelinq', 'Check out') }}
 				</NcButton>
-				<NcButton v-if="canRegisterReturn"
-					type="secondary"
+				<NcButton
+					v-if="canRegisterReturn"
+					variant="secondary"
 					@click="registerReturn">
 					{{ t('pipelinq', 'Register refund') }}
 				</NcButton>
-				<NcButton v-if="canRefund"
-					type="error"
+				<NcButton
+					v-if="canRefund"
+					variant="error"
 					:disabled="busy"
 					@click="showRefund = true">
 					{{ t('pipelinq', 'Reverse') }}
 				</NcButton>
-				<NcButton v-if="canIssueReceipt"
-					type="secondary"
+				<NcButton
+					v-if="canIssueReceipt"
+					variant="secondary"
 					@click="showPrint = true">
 					{{ t('pipelinq', 'Print Receipt') }}
 				</NcButton>
-				<NcButton v-if="canIssueReceipt"
-					type="secondary"
+				<NcButton
+					v-if="canIssueReceipt"
+					variant="secondary"
 					@click="showEmail = true">
 					{{ t('pipelinq', 'Email Receipt') }}
 				</NcButton>
@@ -93,9 +101,7 @@
 					@changed="onTenderChanged" />
 			</CnDetailCard>
 
-			<CnDetailCard
-				v-if="hasPaymentInfo"
-				:title="t('pipelinq', 'Payment')">
+			<CnDetailCard v-if="hasPaymentInfo" :title="t('pipelinq', 'Payment')">
 				<PaymentStatusCard
 					:transaction="transaction"
 					:is-manager="canRefund"
@@ -185,7 +191,8 @@ export default {
 				return this.transactionId
 			}
 			const ctx = this.cnSectionContext
-			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
+			const bag =
+				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
 		status() {
@@ -205,7 +212,9 @@ export default {
 		 * @return {boolean} Whether to show manager-only actions.
 		 */
 		isManager() {
-			return typeof window.OC?.isUserAdmin === 'function' ? window.OC.isUserAdmin() : false
+			return typeof window.OC?.isUserAdmin === 'function'
+				? window.OC.isUserAdmin()
+				: false
 		},
 		canEdit() {
 			return ['draft', 'parked'].includes(this.status)
@@ -250,10 +259,12 @@ export default {
 		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
 		 */
 		hasPaymentInfo() {
-			return !!(this.transaction.paymentProvider
+			return !!(
+				this.transaction.paymentProvider
 				|| this.transaction.paymentSessionId
 				|| this.transaction.paymentStatus
-				|| this.transaction.paymentMethod)
+				|| this.transaction.paymentMethod
+			)
 		},
 		/**
 		 * Whether any action button is visible for the current status.
@@ -261,8 +272,16 @@ export default {
 		 * @return {boolean}
 		 */
 		hasActions() {
-			return this.canEdit || this.canConfirm || this.canPark || this.canResume
-				|| this.canSettle || this.canRegisterReturn || this.canRefund || this.canIssueReceipt
+			return (
+				this.canEdit
+				|| this.canConfirm
+				|| this.canPark
+				|| this.canResume
+				|| this.canSettle
+				|| this.canRegisterReturn
+				|| this.canRefund
+				|| this.canIssueReceipt
+			)
 		},
 	},
 	watch: {
@@ -283,15 +302,27 @@ export default {
 			}
 			this.loading = true
 			try {
-				this.transaction = await this.objectStore.fetchObject('posTransaction', this.resolvedId) || {}
-				await this.objectStore.fetchCollection('posTransactionLine', { transaction: this.resolvedId, _limit: 500 })
-				const rows = this.objectStore.getCollection('posTransactionLine')?.results || []
+				this.transaction =
+					(await this.objectStore.fetchObject(
+						'posTransaction',
+						this.resolvedId,
+					)) || {}
+				await this.objectStore.fetchCollection('posTransactionLine', {
+					transaction: this.resolvedId,
+					_limit: 500,
+				})
+				const rows =
+					this.objectStore.getCollection('posTransactionLine')?.results
+					|| []
 				this.lines = rows
-					.filter(l => l.transaction === this.resolvedId)
+					.filter((l) => l.transaction === this.resolvedId)
 					.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 				await this.loadReceiptTemplates()
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Could not load transaction.'))
+				showError(
+					err?.response?.data?.error
+						|| t('pipelinq', 'Could not load transaction.'),
+				)
 			} finally {
 				this.loading = false
 			}
@@ -301,9 +332,15 @@ export default {
 		 */
 		async loadReceiptTemplates() {
 			try {
-				await this.objectStore.fetchCollection('receiptTemplate', { status: 'active', _limit: 100 })
-				const rows = this.objectStore.getCollection('receiptTemplate')?.results || []
-				this.receiptTemplates = rows.filter(tpl => (tpl.status || 'active') === 'active')
+				await this.objectStore.fetchCollection('receiptTemplate', {
+					status: 'active',
+					_limit: 100,
+				})
+				const rows =
+					this.objectStore.getCollection('receiptTemplate')?.results || []
+				this.receiptTemplates = rows.filter(
+					(tpl) => (tpl.status || 'active') === 'active',
+				)
 			} catch (e) {
 				this.receiptTemplates = []
 			}
@@ -318,10 +355,16 @@ export default {
 			await this.load()
 		},
 		edit() {
-			this.$router.push({ name: 'PosTransactionEdit', params: { id: this.resolvedId } })
+			this.$router.push({
+				name: 'PosTransactionEdit',
+				params: { id: this.resolvedId },
+			})
 		},
 		registerReturn() {
-			this.$router.push({ name: 'PosRefundNewFromTransaction', params: { transactionId: this.resolvedId } })
+			this.$router.push({
+				name: 'PosRefundNewFromTransaction',
+				params: { transactionId: this.resolvedId },
+			})
 		},
 		/**
 		 * Call a lifecycle action endpoint and reload.
@@ -335,7 +378,9 @@ export default {
 			this.busy = true
 			try {
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.resolvedId}/${action}`),
+					generateUrl(
+						`/apps/pipelinq/api/pos-transactions/${this.resolvedId}/${action}`,
+					),
 					{
 						method: 'POST',
 						headers: {
@@ -379,7 +424,11 @@ export default {
 		 * @param {string} reason The refund reason.
 		 */
 		async refund(reason) {
-			const ok = await this.lifecycle('refund', { reason }, t('pipelinq', 'Transaction refunded.'))
+			const ok = await this.lifecycle(
+				'refund',
+				{ reason },
+				t('pipelinq', 'Transaction refunded.'),
+			)
 			if (ok) {
 				this.showRefund = false
 			}
@@ -394,6 +443,7 @@ export default {
 	flex-direction: column;
 	gap: 16px;
 }
+
 .pos-tx-section__actions {
 	display: flex;
 	flex-wrap: wrap;

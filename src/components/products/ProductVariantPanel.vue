@@ -7,13 +7,13 @@
 			<table class="viewTable">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'SKU') }}</th>
-						<th>{{ t('pipelinq', 'Name') }}</th>
-						<th>{{ t('pipelinq', 'Attributes') }}</th>
-						<th>{{ t('pipelinq', 'Price') }}</th>
-						<th>{{ t('pipelinq', 'Barcode') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
-						<th class="product-variant-panel__actions-col" />
+						<th scope="col">{{ t('pipelinq', 'SKU') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Attributes') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Price') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Barcode') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
+						<th scope="col" class="product-variant-panel__actions-col" />
 					</tr>
 				</thead>
 				<tbody>
@@ -21,24 +21,35 @@
 						v-for="(variant, index) in variants"
 						:key="index"
 						class="viewTableRow"
-						:class="{ 'product-variant-panel__row--highlight': variant.sku === highlightSku }">
+						:class="{
+							'product-variant-panel__row--highlight':
+								variant.sku === highlightSku,
+						}">
 						<td>{{ variant.sku }}</td>
 						<td>{{ variant.name || '-' }}</td>
 						<td>{{ attributesLabel(variant.attributes) }}</td>
 						<td>{{ formatCurrency(variant.unitPrice) }}</td>
 						<td>{{ variant.barcode || '-' }}</td>
 						<td>
-							<span class="status-badge" :class="'status--' + (variant.status || 'active')">
+							<span
+								class="status-badge"
+								:class="'status--' + (variant.status || 'active')">
 								{{ variant.status || 'active' }}
 							</span>
 						</td>
 						<td class="product-variant-panel__actions-col">
-							<NcButton type="tertiary" :aria-label="t('pipelinq', 'Edit variant')" @click="openEdit(index)">
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('pipelinq', 'Edit variant')"
+								@click="openEdit(index)">
 								<template #icon>
 									<Pencil :size="20" />
 								</template>
 							</NcButton>
-							<NcButton type="tertiary" :aria-label="t('pipelinq', 'Remove variant')" @click="removeVariant(index)">
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('pipelinq', 'Remove variant')"
+								@click="removeVariant(index)">
 								<template #icon>
 									<Delete :size="20" />
 								</template>
@@ -56,7 +67,7 @@
 				</template>
 				{{ t('pipelinq', 'Add variant') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="saving" @click="save">
+			<NcButton variant="primary" :disabled="saving" @click="save">
 				{{ t('pipelinq', 'Save variants') }}
 			</NcButton>
 		</div>
@@ -114,10 +125,12 @@ export default {
 			return useObjectStore()
 		},
 		editingVariant() {
-			return this.editingIndex !== null ? this.variants[this.editingIndex] : null
+			return this.editingIndex !== null
+				? this.variants[this.editingIndex]
+				: null
 		},
 		variantSkus() {
-			return this.variants.map(v => v.sku)
+			return this.variants.map((v) => v.sku)
 		},
 	},
 	watch: {
@@ -133,8 +146,10 @@ export default {
 		 * Deep-clone the product's variants into editable state.
 		 */
 		loadVariants() {
-			const raw = Array.isArray(this.product.variants) ? this.product.variants : []
-			this.variants = raw.map(v => ({
+			const raw = Array.isArray(this.product.variants)
+				? this.product.variants
+				: []
+			this.variants = raw.map((v) => ({
 				sku: v.sku || '',
 				name: v.name || '',
 				attributes: { ...(v.attributes || {}) },

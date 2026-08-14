@@ -16,15 +16,19 @@
 				:placeholder="t('pipelinq', 'Select template')"
 				label="label"
 				:clearable="false"
-				@input="loadPreview" />
+				@update:model-value="loadPreview" />
 
 			<p v-if="printerDevice" class="receipt-modal__device">
-				{{ t('pipelinq', 'Configured printer:') }} <strong>{{ printerDevice }}</strong>
+				{{ t('pipelinq', 'Configured printer:') }}
+				<strong>{{ printerDevice }}</strong>
 			</p>
 
 			<ReceiptPreviewPane :content="previewText" :loading="previewLoading" />
 
-			<p v-if="statusMessage" class="receipt-modal__status" :class="statusClass">
+			<p
+				v-if="statusMessage"
+				class="receipt-modal__status"
+				:class="statusClass">
 				{{ statusMessage }}
 			</p>
 		</div>
@@ -32,9 +36,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary"
-				:disabled="printing"
-				@click="print">
+			<NcButton variant="primary" :disabled="printing" @click="print">
 				{{ t('pipelinq', 'Print') }}
 			</NcButton>
 		</template>
@@ -83,7 +85,10 @@ export default {
 		 * @return {Array} The options.
 		 */
 		templateOptions() {
-			return this.templates.map(tpl => ({ id: tpl.id, label: tpl.name || tpl.id }))
+			return this.templates.map((tpl) => ({
+				id: tpl.id,
+				label: tpl.name || tpl.id,
+			}))
 		},
 		/**
 		 * CSS class for the status message.
@@ -108,10 +113,19 @@ export default {
 			this.previewLoading = true
 			this.statusMessage = ''
 			try {
-				const params = this.selectedTemplate ? `?template=${encodeURIComponent(this.selectedTemplate.id)}` : ''
+				const params = this.selectedTemplate
+					? `?template=${encodeURIComponent(this.selectedTemplate.id)}`
+					: ''
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/preview${params}`),
-					{ headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } },
+					generateUrl(
+						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/preview${params}`,
+					),
+					{
+						headers: {
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+					},
 				)
 				const data = await response.json().catch(() => ({}))
 				if (response.ok && data.receipt) {
@@ -138,7 +152,9 @@ export default {
 					body.template = this.selectedTemplate.id
 				}
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/print`),
+					generateUrl(
+						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/print`,
+					),
 					{
 						method: 'POST',
 						headers: {
@@ -152,16 +168,25 @@ export default {
 				const data = await response.json().catch(() => ({}))
 				if (!response.ok) {
 					this.statusType = 'error'
-					this.statusMessage = data.error || t('pipelinq', 'Error printing receipt: {error}', { error: '' })
+					this.statusMessage =
+						data.error
+						|| t('pipelinq', 'Error printing receipt: {error}', {
+							error: '',
+						})
 					return
 				}
-				this.printerDevice = (data.receipt && data.receipt.printerDevice) || ''
+				this.printerDevice =
+					(data.receipt && data.receipt.printerDevice) || ''
 				this.statusType = 'success'
 				this.statusMessage = t('pipelinq', 'Receipt sent to printer')
 				this.$emit('printed', data.receipt)
 			} catch (e) {
 				this.statusType = 'error'
-				this.statusMessage = t('pipelinq', 'Error printing receipt: {error}', { error: e.message })
+				this.statusMessage = t(
+					'pipelinq',
+					'Error printing receipt: {error}',
+					{ error: e.message },
+				)
 			} finally {
 				this.printing = false
 			}

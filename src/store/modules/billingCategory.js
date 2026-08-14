@@ -32,23 +32,31 @@ export const useBillingCategoryStore = defineStore('billingCategory', {
 		 * @param {object} state The store state.
 		 * @return {Array<object>} Active category records.
 		 */
-		activeCategories: (state) => state.categories.filter(c => c.isActive !== false),
+		activeCategories: (state) =>
+			state.categories.filter((c) => c.isActive !== false),
 		/**
 		 * The default category for new time entries, if any.
 		 *
 		 * @param {object} state The store state.
 		 * @return {object|null} The default category or null.
 		 */
-		defaultCategory: (state) => state.categories.find(c => c.isDefault === true && c.isActive !== false) || null,
+		defaultCategory: (state) =>
+			state.categories.find(
+				(c) => c.isDefault === true && c.isActive !== false,
+			) || null,
 		/**
 		 * Look up a category by id, slug or uuid.
 		 *
 		 * @param {object} state The store state.
 		 * @return {Function} (key) => category|undefined
 		 */
-		getCategoryById: (state) => (key) => state.categories.find(c => c.id === key
-			|| c['@self']?.slug === key
-			|| c['@self']?.uuid === key),
+		getCategoryById: (state) => (key) =>
+			state.categories.find(
+				(c) =>
+					c.id === key
+					|| c['@self']?.slug === key
+					|| c['@self']?.uuid === key,
+			),
 	},
 	actions: {
 		/**
@@ -64,7 +72,9 @@ export const useBillingCategoryStore = defineStore('billingCategory', {
 			this.error = null
 			try {
 				const objectStore = useObjectStore()
-				const result = await objectStore.fetchCollection('billingCategory', { _limit: 200 })
+				const result = await objectStore.fetchCollection('billingCategory', {
+					_limit: 200,
+				})
 				this.categories = result || []
 			} catch (error) {
 				this.error = error.message
@@ -116,7 +126,7 @@ export const useBillingCategoryStore = defineStore('billingCategory', {
 				const objectStore = useObjectStore()
 				const success = await objectStore.deleteObject('billingCategory', id)
 				if (success) {
-					this.categories = this.categories.filter(c => c.id !== id)
+					this.categories = this.categories.filter((c) => c.id !== id)
 				}
 				return success
 			} catch (error) {

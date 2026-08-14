@@ -13,7 +13,12 @@
 <template>
 	<NcSettingsSection
 		:name="t('pipelinq', 'Email matching')"
-		:description="t('pipelinq', 'Periodically link Nextcloud Mail messages to your CRM clients, contacts, leads and requests. The mail itself stays in Nextcloud Mail — Pipelinq only stores the link via the OpenRegister email integration.')">
+		:description="
+			t(
+				'pipelinq',
+				'Periodically link Nextcloud Mail messages to your CRM clients, contacts, leads and requests. The mail itself stays in Nextcloud Mail — Pipelinq only stores the link via the OpenRegister email integration.',
+			)
+		">
 		<NcLoadingIcon v-if="loading" :size="24" />
 
 		<div v-else class="sync-settings">
@@ -27,13 +32,18 @@
 					label="label"
 					data-testid="sync-email-account" />
 				<p class="sync-settings__hint">
-					{{ t('pipelinq', 'Choose which Nextcloud Mail account the matcher reads from. Leaving this empty disables matching.') }}
+					{{
+						t(
+							'pipelinq',
+							'Choose which Nextcloud Mail account the matcher reads from. Leaving this empty disables matching.',
+						)
+					}}
 				</p>
 			</div>
 
 			<div class="sync-settings__field">
 				<NcCheckboxRadioSwitch
-					:checked.sync="form.enabled"
+					v-model="form.enabled"
 					type="switch"
 					data-testid="sync-email-enabled">
 					{{ t('pipelinq', 'Enable email matching for this account') }}
@@ -41,29 +51,38 @@
 			</div>
 
 			<div class="sync-settings__field">
-				<label for="sync-email-exclude">{{ t('pipelinq', 'Excluded addresses (comma separated)') }}</label>
+				<label for="sync-email-exclude">{{
+					t('pipelinq', 'Excluded addresses (comma separated)')
+				}}</label>
 				<input
 					id="sync-email-exclude"
 					v-model="form.excludedText"
 					type="text"
 					autocomplete="off"
 					data-testid="sync-email-exclude"
-					:placeholder="t('pipelinq', 'noreply@example.org, mailer@example.org')">
+					:placeholder="
+						t('pipelinq', 'noreply@example.org, mailer@example.org')
+					" />
 				<p class="sync-settings__hint">
-					{{ t('pipelinq', 'Messages with these sender or recipient addresses are skipped by the matcher.') }}
+					{{
+						t(
+							'pipelinq',
+							'Messages with these sender or recipient addresses are skipped by the matcher.',
+						)
+					}}
 				</p>
 			</div>
 
 			<div class="sync-settings__actions">
 				<NcButton
-					type="primary"
+					variant="primary"
 					:disabled="saving"
 					data-testid="sync-email-save"
 					@click="save">
 					{{ t('pipelinq', 'Save settings') }}
 				</NcButton>
 				<NcButton
-					type="secondary"
+					variant="secondary"
 					:disabled="triggering"
 					data-testid="sync-email-trigger"
 					@click="trigger">
@@ -108,7 +127,13 @@
 </template>
 
 <script>
-import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcSelect, NcSettingsSection } from '@conduction/nextcloud-vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcSelect,
+	NcSettingsSection,
+} from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 
@@ -139,9 +164,7 @@ export default {
 				scanned: 0,
 				error: null,
 			},
-			accountOptions: [
-				{ id: 0, label: this.t('pipelinq', 'None') },
-			],
+			accountOptions: [{ id: 0, label: this.t('pipelinq', 'None') }],
 		}
 	},
 	async created() {
@@ -161,7 +184,9 @@ export default {
 				const settings = settingsResp.data || {}
 				this.form.account = Number(settings.account) || 0
 				this.form.enabled = settings.enabled === true
-				const excluded = Array.isArray(settings.excludedAddresses) ? settings.excludedAddresses : []
+				const excluded = Array.isArray(settings.excludedAddresses)
+					? settings.excludedAddresses
+					: []
 				this.form.excludedText = excluded.join(', ')
 
 				const statusData = statusResp.data || {}
@@ -178,11 +203,19 @@ export default {
 				if (this.form.account > 0) {
 					this.accountOptions = [
 						{ id: 0, label: this.t('pipelinq', 'None') },
-						{ id: this.form.account, label: this.t('pipelinq', 'Account #{id}', { id: this.form.account }) },
+						{
+							id: this.form.account,
+							label: this.t('pipelinq', 'Account #{id}', {
+								id: this.form.account,
+							}),
+						},
 					]
 				}
 			} catch (err) {
-				this.statusMessage = this.t('pipelinq', 'Could not load matching settings.')
+				this.statusMessage = this.t(
+					'pipelinq',
+					'Could not load matching settings.',
+				)
 				this.statusError = true
 			} finally {
 				this.loading = false
@@ -198,8 +231,8 @@ export default {
 			try {
 				const excluded = (this.form.excludedText || '')
 					.split(/[,;\s]+/)
-					.map(s => s.trim())
-					.filter(s => s.length > 0)
+					.map((s) => s.trim())
+					.filter((s) => s.length > 0)
 				const payload = {
 					account: Number(this.form.account) || 0,
 					enabled: !!this.form.enabled,
@@ -212,11 +245,16 @@ export default {
 				const settings = resp.data || {}
 				this.form.account = Number(settings.account) || 0
 				this.form.enabled = settings.enabled === true
-				const excludedOut = Array.isArray(settings.excludedAddresses) ? settings.excludedAddresses : []
+				const excludedOut = Array.isArray(settings.excludedAddresses)
+					? settings.excludedAddresses
+					: []
 				this.form.excludedText = excludedOut.join(', ')
 				this.statusMessage = this.t('pipelinq', 'Matching settings saved.')
 			} catch (err) {
-				this.statusMessage = this.t('pipelinq', 'Could not save matching settings.')
+				this.statusMessage = this.t(
+					'pipelinq',
+					'Could not save matching settings.',
+				)
 				this.statusError = true
 			} finally {
 				this.saving = false
@@ -230,13 +268,21 @@ export default {
 			this.statusMessage = ''
 			this.statusError = false
 			try {
-				const resp = await axios.post(generateUrl('/apps/pipelinq/api/sync/email/trigger'))
+				const resp = await axios.post(
+					generateUrl('/apps/pipelinq/api/sync/email/trigger'),
+				)
 				const result = resp.data || {}
 				const linked = Number(result.linked) || 0
 				const scanned = Number(result.scanned) || 0
-				this.statusMessage = this.t('pipelinq', '{linked} new links created across {scanned} messages.', { linked, scanned })
+				this.statusMessage = this.t(
+					'pipelinq',
+					'{linked} new links created across {scanned} messages.',
+					{ linked, scanned },
+				)
 				// Reload the status block.
-				const statusResp = await axios.get(generateUrl('/apps/pipelinq/api/sync/email/status'))
+				const statusResp = await axios.get(
+					generateUrl('/apps/pipelinq/api/sync/email/status'),
+				)
 				const statusData = statusResp.data || {}
 				this.status = {
 					lastRunAt: statusData.lastRunAt || null,
@@ -245,7 +291,10 @@ export default {
 					error: statusData.error || null,
 				}
 			} catch (err) {
-				this.statusMessage = this.t('pipelinq', 'Could not run the matching job.')
+				this.statusMessage = this.t(
+					'pipelinq',
+					'Could not run the matching job.',
+				)
 				this.statusError = true
 			} finally {
 				this.triggering = false

@@ -1,45 +1,106 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
- * Gate-19 behavioral e2e coverage for the Complaints index page (/complaints).
- * Maps to openspec/specs/klachtenregistratie/spec.md.
+ * Gate-19 behavioral e2e coverage for klachtenregistratie
+ * (openspec/specs/klachtenregistratie/spec.md).
+ *
+ * RETARGETED 2026-08-06 — there is no `/complaints` page and no "Complaints"
+ * sidebar entry any more. The `unify-ticket-supertype` change replaced the
+ * separate Requests / Complaints / Contactmomenten pages with ONE index over
+ * the `ticket` schema (src/manifest.json, page id `Tickets`, route `/tickets`),
+ * and each former page is now a `quickFilters[]` tab narrowing that same list
+ * on the `ticketType` discriminator.
+ *
+ * The old spec navigated to a sidebar entry labelled "Complaints" and waited
+ * 10s for it to attach. Nothing renders that label, so all three tests failed
+ * inside the navigation helper — which read as a helper bug rather than as the
+ * surface having MOVED. These tests drive the surface that exists.
  */
 import { test, expect } from '@playwright/test'
-import { openApp, navClick, trackPipelinqErrors, assertNoHardError, dismissSupportDialog } from '../helpers/pipelinq'
+import {
+	openApp,
+	navClick,
+	clickQuickFilter,
+	trackPipelinqErrors,
+	assertNoHardError,
+	dismissSupportDialog,
+} from '../helpers/pipelinq'
 
 // @e2e openspec/specs/klachtenregistratie/spec.md#complaints-index
-test('Complaints: navigates from sidebar and shows index surface', async ({ page }) => {
+test('Complaints: reachable as a ticket-type tab on the Tickets workspace', async ({
+	page,
+}) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
-	await navClick(page, 'Complaints', /\/complaints/)
+	await navClick(page, 'Tickets', /\/tickets/)
 
-	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Complaints' }).first()).toBeVisible()
+	await expect(
+		page
+			.locator('#content-vue')
+			.getByRole('heading', { name: 'Tickets' })
+			.first(),
+	).toBeVisible()
 	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible()
+
+	// The complaint subtype is a first-class tab on the shared index.
+	await clickQuickFilter(page, 'Complaints')
+
 	await assertNoHardError(page)
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
 // @e2e openspec/specs/klachtenregistratie/spec.md#complaints-list-table
-test('Complaints: list table and primary actions render', async ({ page }) => {
+test('Complaints: the tab narrows the list to complaint tickets', async ({
+	page,
+}) => {
 	await openApp(page)
-	await navClick(page, 'Complaints', /\/complaints/)
+	await navClick(page, 'Tickets', /\/tickets/)
+	await clickQuickFilter(page, 'Complaints')
 
 	const content = page.locator('#content-vue')
-	await expect(content.getByRole('button', { name: 'Add Complaint' })).toBeVisible()
-	await expect(content.locator('table, .cn-data-table, [data-testid="cn-data-table"]').first()).toBeVisible()
+	await expect(content.getByRole('button', { name: 'Add Ticket' })).toBeVisible()
+	await expect(
+		content
+			.locator('table, .cn-data-table, [data-testid="cn-data-table"]')
+			.first(),
+	).toBeVisible()
+
+	// The demo seed writes three complaint tickets (lib/Settings/demo_seed_data.json
+	// `complaints`), so the filtered list is genuinely populated — and it is the
+	// FILTER that is under test here, not merely that a table exists: the
+	// ticketType column is first in the manifest, so every visible cell in it
+	// must read "complaint".
+	// Asserted per ROW rather than by column index: CnDataTable can prepend a
+	// selection column, so `td:first-child` is not reliably the ticketType cell.
+	const rows = content.locator('table tbody tr')
+	await expect(rows.first()).toBeVisible()
+	const count = await rows.count()
+	expect(
+		count,
+		'the Complaints tab must show at least one seeded complaint',
+	).toBeGreaterThan(0)
+	for (let i = 0; i < count; i++) {
+		await expect(rows.nth(i)).toContainText(/complaint/i)
+	}
 })
 
 // @e2e openspec/specs/klachtenregistratie/spec.md#complaints-create-modal
-test('Complaints: Add Complaint opens a create modal with a form', async ({ page }) => {
+test('Complaints: Add Ticket opens a create modal with a form', async ({ page }) => {
 	await openApp(page)
-	await navClick(page, 'Complaints', /\/complaints/)
+	await navClick(page, 'Tickets', /\/tickets/)
+	await clickQuickFilter(page, 'Complaints')
 	await dismissSupportDialog(page)
 
-	await page.locator('#content-vue').getByRole('button', { name: 'Add Complaint' }).click()
+	await page
+		.locator('#content-vue')
+		.getByRole('button', { name: 'Add Ticket' })
+		.click()
 	const modal = page.locator('.modal-container, [role="dialog"]').first()
 	await expect(modal).toBeVisible({ timeout: 10000 })
-	await expect(modal.locator('input, .input-field__input, textarea').first()).toBeVisible()
+	await expect(
+		modal.locator('input, .input-field__input, textarea').first(),
+	).toBeVisible()
 })
 
 /*

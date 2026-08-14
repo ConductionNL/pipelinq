@@ -17,7 +17,12 @@
 			<div>
 				<h2>{{ t('pipelinq', 'Cash register audit log') }}</h2>
 				<p class="kassakoppeling-audit-list__subtitle">
-					{{ t('pipelinq', 'Immutable, cryptographically signed record of every register action for Belastingdienst audits.') }}
+					{{
+						t(
+							'pipelinq',
+							'Immutable, cryptographically signed record of every register action for Belastingdienst audits.',
+						)
+					}}
 				</p>
 			</div>
 			<div class="kassakoppeling-audit-list__actions">
@@ -30,7 +35,7 @@
 				</NcButton>
 				<NcButton
 					v-if="isAdmin"
-					type="primary"
+					variant="primary"
 					data-testid="kassakoppeling-audit-export"
 					@click="showExport = true">
 					<template #icon>
@@ -41,40 +46,48 @@
 			</div>
 		</div>
 
-		<div class="kassakoppeling-audit-list__filters" data-testid="kassakoppeling-audit-filters">
+		<div
+			class="kassakoppeling-audit-list__filters"
+			data-testid="kassakoppeling-audit-filters">
 			<div class="filter-cell">
 				<label for="kk-filter-from">{{ t('pipelinq', 'From') }}</label>
 				<input
 					id="kk-filter-from"
 					v-model="filters.from"
 					type="date"
-					:aria-label="t('pipelinq', 'Filter from date')">
+					:aria-label="t('pipelinq', 'Filter from date')" />
 			</div>
 			<div class="filter-cell">
-				<label for="kk-filter-to">{{ t('pipelinq', 'Up to and including') }}</label>
+				<label for="kk-filter-to">{{
+					t('pipelinq', 'Up to and including')
+				}}</label>
 				<input
 					id="kk-filter-to"
 					v-model="filters.to"
 					type="date"
-					:aria-label="t('pipelinq', 'Filter to date')">
+					:aria-label="t('pipelinq', 'Filter to date')" />
 			</div>
 			<div class="filter-cell">
-				<label for="kk-filter-register">{{ t('pipelinq', 'Register') }}</label>
+				<label for="kk-filter-register">{{
+					t('pipelinq', 'Register')
+				}}</label>
 				<input
 					id="kk-filter-register"
 					v-model="filters.registerNumber"
 					type="text"
 					:placeholder="t('pipelinq', 'e.g. REG-001')"
-					:aria-label="t('pipelinq', 'Filter by register number')">
+					:aria-label="t('pipelinq', 'Filter by register number')" />
 			</div>
 			<div class="filter-cell">
-				<label for="kk-filter-operator">{{ t('pipelinq', 'Operator') }}</label>
+				<label for="kk-filter-operator">{{
+					t('pipelinq', 'Operator')
+				}}</label>
 				<input
 					id="kk-filter-operator"
 					v-model="filters.operatorId"
 					type="text"
 					:placeholder="t('pipelinq', 'e.g. user_john')"
-					:aria-label="t('pipelinq', 'Filter by operator')">
+					:aria-label="t('pipelinq', 'Filter by operator')" />
 			</div>
 			<div class="filter-cell">
 				<label for="kk-filter-action">{{ t('pipelinq', 'Action') }}</label>
@@ -113,21 +126,34 @@
 			<NcLoadingIcon :size="32" :title="t('pipelinq', 'Load audit log')" />
 		</div>
 
-		<div v-else-if="entries.length === 0" class="kassakoppeling-audit-list__empty">
-			<p>{{ t('pipelinq', 'No audit entries found for the selected filters.') }}</p>
+		<div
+			v-else-if="entries.length === 0"
+			class="kassakoppeling-audit-list__empty">
+			<p>
+				{{
+					t('pipelinq', 'No audit entries found for the selected filters.')
+				}}
+			</p>
 		</div>
 
-		<table v-else class="kassakoppeling-audit-list__table" data-testid="kassakoppeling-audit-table">
+		<table
+			v-else
+			class="kassakoppeling-audit-list__table"
+			data-testid="kassakoppeling-audit-table">
 			<thead>
 				<tr>
-					<th>{{ t('pipelinq', 'Time') }}</th>
-					<th>{{ t('pipelinq', 'Operator') }}</th>
-					<th>{{ t('pipelinq', 'Register') }}</th>
-					<th>{{ t('pipelinq', 'Action') }}</th>
-					<th class="num">
+					<th scope="col">{{ t('pipelinq', 'Time') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Operator') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Register') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Action') }}</th>
+					<th scope="col" class="num">
 						{{ t('pipelinq', 'Amount') }}
 					</th>
-					<th>{{ t('pipelinq', 'Verification') }}</th>
+					<th scope="col">{{ t('pipelinq', 'Verification') }}</th>
+					<!-- Chevron affordance column: presentational only, so it stays
+					     empty and carries no accessible name. `scope="col"` still
+					     declares the association direction — WCAG 2.2 AA SC 1.3.1. -->
+					<th scope="col" class="chevron-col" />
 				</tr>
 			</thead>
 			<tbody>
@@ -141,7 +167,11 @@
 					<td>{{ entry.operatorId || '—' }}</td>
 					<td>{{ entry.registerNumber || '—' }}</td>
 					<td>
-						<span :class="['action-badge', `action-badge--${actionClass(entry.action)}`]">
+						<span
+							:class="[
+								'action-badge',
+								`action-badge--${actionClass(entry.action)}`,
+							]">
 							{{ actionLabel(entry.action) }}
 						</span>
 					</td>
@@ -149,9 +179,18 @@
 						{{ formatEur(entry.amount) }}
 					</td>
 					<td>
-						<span :class="['verify-badge', `verify-badge--${verifyClass(entry.verified)}`]">
+						<span
+							:class="[
+								'verify-badge',
+								`verify-badge--${verifyClass(entry.verified)}`,
+							]">
 							{{ verifyLabel(entry.verified) }}
 						</span>
+					</td>
+					<td class="chevron-col">
+						<ChevronRight
+							:size="20"
+							class="kassakoppeling-audit-list__chevron" />
 					</td>
 				</tr>
 			</tbody>
@@ -162,9 +201,16 @@
 				{{ t('pipelinq', 'Previous') }}
 			</NcButton>
 			<span class="page-info">
-				{{ t('pipelinq', 'Page {current} of {total}', { current: page, total: totalPages }) }}
+				{{
+					t('pipelinq', 'Page {current} of {total}', {
+						current: page,
+						total: totalPages,
+					})
+				}}
 			</span>
-			<NcButton :disabled="page === totalPages" @click="page = Math.min(totalPages, page + 1)">
+			<NcButton
+				:disabled="page === totalPages"
+				@click="page = Math.min(totalPages, page + 1)">
 				{{ t('pipelinq', 'Next') }}
 			</NcButton>
 		</div>
@@ -183,6 +229,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import Download from 'vue-material-design-icons/Download.vue'
+import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 import BelastingdienstExportDialog from '../../dialogs/BelastingdienstExportDialog.vue'
 
 const PAGE_SIZE = 25
@@ -208,6 +255,7 @@ export default {
 		NcLoadingIcon,
 		Refresh,
 		Download,
+		ChevronRight,
 		BelastingdienstExportDialog,
 	},
 	data() {
@@ -233,7 +281,9 @@ export default {
 		 * @return {boolean} Whether the user is admin.
 		 */
 		isAdmin() {
-			return typeof window.OC?.isUserAdmin === 'function' ? window.OC.isUserAdmin() : false
+			return typeof window.OC?.isUserAdmin === 'function'
+				? window.OC.isUserAdmin()
+				: false
 		},
 		/**
 		 * Entries displayed in descending chronological order.
@@ -242,7 +292,11 @@ export default {
 		 */
 		sortedEntries() {
 			const copy = this.entries.slice()
-			copy.sort((left, right) => String(right.timestamp || '').localeCompare(String(left.timestamp || '')))
+			copy.sort((left, right) =>
+				String(right.timestamp || '').localeCompare(
+					String(left.timestamp || ''),
+				),
+			)
 			return copy
 		},
 		/**
@@ -289,7 +343,9 @@ export default {
 				if (this.filters.action) {
 					params.set('action', this.filters.action)
 				}
-				const url = generateUrl(`/apps/pipelinq/api/kassakoppeling/audit?${params.toString()}`)
+				const url = generateUrl(
+					`/apps/pipelinq/api/kassakoppeling/audit?${params.toString()}`,
+				)
 				const response = await fetch(url, {
 					method: 'GET',
 					headers: {
@@ -375,7 +431,10 @@ export default {
 		formatEur(cents) {
 			const value = Number.isFinite(Number(cents)) ? Number(cents) / 100 : 0
 			try {
-				return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(value)
+				return new Intl.NumberFormat('nl-NL', {
+					style: 'currency',
+					currency: 'EUR',
+				}).format(value)
 			} catch (e) {
 				return `€ ${value.toFixed(2)}`
 			}
@@ -441,14 +500,21 @@ export default {
 					to: payload.to,
 					format: payload.format,
 				})
-				const url = generateUrl(`/apps/pipelinq/api/kassakoppeling/audit/export?${params.toString()}`)
+				const url = generateUrl(
+					`/apps/pipelinq/api/kassakoppeling/audit/export?${params.toString()}`,
+				)
 				const response = await fetch(url, {
 					method: 'GET',
 					headers: { requesttoken: OC.requestToken },
 				})
 				if (!response.ok) {
 					if (response.status === 403) {
-						showError(t('pipelinq', 'Only administrators may export to the Belastingdienst.'))
+						showError(
+							t(
+								'pipelinq',
+								'Only administrators may export to the Belastingdienst.',
+							),
+						)
 					} else {
 						showError(t('pipelinq', 'Belastingdienst export failed.'))
 					}
@@ -457,7 +523,9 @@ export default {
 				const blob = await response.blob()
 				const disposition = response.headers.get('Content-Disposition') || ''
 				const matched = disposition.match(/filename="?([^";]+)"?/)
-				const filename = matched ? matched[1] : `kassakoppeling-export-${payload.from}-to-${payload.to}.${payload.format}`
+				const filename = matched
+					? matched[1]
+					: `kassakoppeling-export-${payload.from}-to-${payload.to}.${payload.format}`
 				const objectUrl = window.URL.createObjectURL(blob)
 				const link = document.createElement('a')
 				link.href = objectUrl
@@ -560,7 +628,8 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.kassakoppeling-audit-list__row {
+.kassakoppeling-audit-list__row,
+.kassakoppeling-audit-list__row td {
 	cursor: pointer;
 }
 
@@ -577,6 +646,16 @@ export default {
 	text-align: right;
 }
 
+.kassakoppeling-audit-list__table .chevron-col {
+	width: 1%;
+	padding-inline: 4px;
+}
+
+.kassakoppeling-audit-list__chevron {
+	display: block;
+	color: var(--color-text-maxcontrast);
+}
+
 .action-badge,
 .verify-badge {
 	display: inline-block;
@@ -588,17 +667,17 @@ export default {
 
 .action-badge--sale {
 	background: var(--color-success);
-	color: var(--color-main-background);
+	color: var(--color-success-text);
 }
 
 .action-badge--void {
 	background: var(--color-error);
-	color: var(--color-main-background);
+	color: var(--color-error-text);
 }
 
 .action-badge--refund {
 	background: var(--color-warning);
-	color: var(--color-main-text);
+	color: var(--color-warning-text);
 }
 
 .action-badge--no-sale,
@@ -609,12 +688,12 @@ export default {
 
 .verify-badge--ok {
 	background: var(--color-success);
-	color: var(--color-main-background);
+	color: var(--color-success-text);
 }
 
 .verify-badge--fail {
 	background: var(--color-error);
-	color: var(--color-main-background);
+	color: var(--color-error-text);
 }
 
 .verify-badge--pending {

@@ -10,21 +10,30 @@
 		@closing="$emit('close')">
 		<div class="commit-justification">
 			<p class="commit-justification__intro">
-				{{ t('pipelinq', 'Why are you confident in this deal? (e.g. decision-maker engaged, contract draft signed)') }}
+				{{
+					t(
+						'pipelinq',
+						'Why are you confident in this deal? (e.g. decision-maker engaged, contract draft signed)',
+					)
+				}}
 			</p>
 			<NcTextArea
 				v-model="reason"
 				:label="t('pipelinq', 'Justification')"
 				:placeholder="t('pipelinq', 'Why are you confident in this deal?')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Please enter at least 10 characters.') : ''"
+				:helper-text="
+					showError
+						? t('pipelinq', 'Please enter at least 10 characters.')
+						: ''
+				"
 				rows="4" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!valid" @click="save">
+			<NcButton variant="primary" :disabled="!valid" @click="save">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>

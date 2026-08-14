@@ -40,143 +40,130 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-008
  */
-class ZgwCoexistenceValidatorTest extends TestCase
-{
-    /**
-     * Build a register-access mock that returns the supplied tables.
-     *
-     * @param array<string, array<int, array<string, mixed>>> $tables Schema-keyed rows.
-     *
-     * @return ZgwRegisterAccess
-     */
-    private function registerAccessWith(array $tables): ZgwRegisterAccess
-    {
-        $mock = $this->createMock(ZgwRegisterAccess::class);
-        $mock->method('findAll')->willReturnCallback(
-            static function (string $schema, array $filters) use ($tables): array {
-                $rows = $tables[$schema] ?? [];
-                $code = (string) ($filters['gemeenteCode'] ?? '');
-                if ($code === '') {
-                    return $rows;
-                }
-                return array_values(array_filter($rows, static function (array $row) use ($code): bool {
-                    return (string) ($row['gemeenteCode'] ?? '') === $code;
-                }));
-            }
-        );
-        return $mock;
-    }//end registerAccessWith()
+class ZgwCoexistenceValidatorTest extends TestCase {
+	/**
+	 * Build a register-access mock that returns the supplied tables.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $tables Schema-keyed rows.
+	 *
+	 * @return ZgwRegisterAccess
+	 */
+	private function registerAccessWith(array $tables): ZgwRegisterAccess {
+		$mock = $this->createMock(ZgwRegisterAccess::class);
+		$mock->method('findAll')->willReturnCallback(
+			static function (string $schema, array $filters) use ($tables): array {
+				$rows = $tables[$schema] ?? [];
+				$code = (string)($filters['gemeenteCode'] ?? '');
+				if ($code === '') {
+					return $rows;
+				}
+				return array_values(array_filter($rows, static function (array $row) use ($code): bool {
+					return (string)($row['gemeenteCode'] ?? '') === $code;
+				}));
+			}
+		);
+		return $mock;
+	}//end registerAccessWith()
 
+	/**
+	 * Test: both write paths active → DoubleWritePathException.
+	 *
+	 * @return void
+	 */
+	public function testBothWritePathsActiveRaises(): void {
+		$registers = $this->registerAccessWith([
+			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
+				['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => false],
+			],
+			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
+				['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'on'],
+			],
+		]);
 
-    /**
-     * Test: both write paths active → DoubleWritePathException.
-     *
-     * @return void
-     */
-    public function testBothWritePathsActiveRaises(): void
-    {
-        $registers = $this->registerAccessWith([
-            ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-                ['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => false],
-            ],
-            ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
-                ['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'on'],
-            ],
-        ]);
+		$logger = $this->createMock(LoggerInterface::class);
+		$validator = new ZgwCoexistenceValidator($registers, $logger);
 
-        $logger    = $this->createMock(LoggerInterface::class);
-        $validator = new ZgwCoexistenceValidator($registers, $logger);
+		$this->expectException(DoubleWritePathException::class);
+		$validator->validateWritePath('0637');
+	}//end testBothWritePathsActiveRaises()
 
-        $this->expectException(DoubleWritePathException::class);
-        $validator->validateWritePath('0637');
-    }//end testBothWritePathsActiveRaises()
+	/**
+	 * Test: only ZGW write path active → passes.
+	 *
+	 * @return void
+	 */
+	public function testZgwOnlyWritePathPasses(): void {
+		$registers = $this->registerAccessWith([
+			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
+				['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => false],
+			],
+			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
+				['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'off'],
+			],
+		]);
 
+		$validator = new ZgwCoexistenceValidator($registers, $this->createMock(LoggerInterface::class));
+		$validator->validateWritePath('0637');
+		self::assertTrue(true, 'validateWritePath did not throw');
+	}//end testZgwOnlyWritePathPasses()
 
-    /**
-     * Test: only ZGW write path active → passes.
-     *
-     * @return void
-     */
-    public function testZgwOnlyWritePathPasses(): void
-    {
-        $registers = $this->registerAccessWith([
-            ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-                ['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => false],
-            ],
-            ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
-                ['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'off'],
-            ],
-        ]);
+	/**
+	 * Test: read-only ZGW + write-off StUF → both paths considered read; passes.
+	 *
+	 * @return void
+	 */
+	public function testBothReadOnlyPasses(): void {
+		$registers = $this->registerAccessWith([
+			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
+				['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => true],
+			],
+			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
+				['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'off'],
+			],
+		]);
 
-        $validator = new ZgwCoexistenceValidator($registers, $this->createMock(LoggerInterface::class));
-        $validator->validateWritePath('0637');
-        self::assertTrue(true, 'validateWritePath did not throw');
-    }//end testZgwOnlyWritePathPasses()
+		$validator = new ZgwCoexistenceValidator($registers, $this->createMock(LoggerInterface::class));
+		$validator->validateWritePath('0637');
+		self::assertTrue(true);
+	}//end testBothReadOnlyPasses()
 
+	/**
+	 * Test: empty gemeente code skips validation (defensive).
+	 *
+	 * @return void
+	 */
+	public function testEmptyGemeenteCodeSkipsValidation(): void {
+		$validator = new ZgwCoexistenceValidator(
+			$this->createMock(ZgwRegisterAccess::class),
+			$this->createMock(LoggerInterface::class)
+		);
+		$validator->validateWritePath('');
+		self::assertTrue(true);
+	}//end testEmptyGemeenteCodeSkipsValidation()
 
-    /**
-     * Test: read-only ZGW + write-off StUF → both paths considered read; passes.
-     *
-     * @return void
-     */
-    public function testBothReadOnlyPasses(): void
-    {
-        $registers = $this->registerAccessWith([
-            ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-                ['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => true],
-            ],
-            ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
-                ['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'off'],
-            ],
-        ]);
+	/**
+	 * Test: DoubleWritePathException carries the conflicting endpoint ids.
+	 *
+	 * @return void
+	 */
+	public function testExceptionCarriesConflictingIds(): void {
+		$registers = $this->registerAccessWith([
+			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
+				['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => false],
+			],
+			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
+				['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'on'],
+			],
+		]);
 
-        $validator = new ZgwCoexistenceValidator($registers, $this->createMock(LoggerInterface::class));
-        $validator->validateWritePath('0637');
-        self::assertTrue(true);
-    }//end testBothReadOnlyPasses()
-
-
-    /**
-     * Test: empty gemeente code skips validation (defensive).
-     *
-     * @return void
-     */
-    public function testEmptyGemeenteCodeSkipsValidation(): void
-    {
-        $validator = new ZgwCoexistenceValidator(
-            $this->createMock(ZgwRegisterAccess::class),
-            $this->createMock(LoggerInterface::class)
-        );
-        $validator->validateWritePath('');
-        self::assertTrue(true);
-    }//end testEmptyGemeenteCodeSkipsValidation()
-
-
-    /**
-     * Test: DoubleWritePathException carries the conflicting endpoint ids.
-     *
-     * @return void
-     */
-    public function testExceptionCarriesConflictingIds(): void
-    {
-        $registers = $this->registerAccessWith([
-            ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-                ['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => false],
-            ],
-            ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
-                ['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'on'],
-            ],
-        ]);
-
-        $validator = new ZgwCoexistenceValidator($registers, $this->createMock(LoggerInterface::class));
-        try {
-            $validator->validateWritePath('0637');
-            self::fail('expected DoubleWritePathException');
-        } catch (DoubleWritePathException $e) {
-            self::assertContains('zgw:zgw-zo', $e->conflictEndpointIds);
-            self::assertContains('stuf:stuf-zo', $e->conflictEndpointIds);
-        }
-    }//end testExceptionCarriesConflictingIds()
-
+		$validator = new ZgwCoexistenceValidator($registers, $this->createMock(LoggerInterface::class));
+		try {
+			$validator->validateWritePath('0637');
+			self::fail('expected DoubleWritePathException');
+		} catch (DoubleWritePathException $e) {
+			self::assertContains('zgw:zgw-zo', $e->conflictEndpointIds);
+			self::assertContains('stuf:stuf-zo', $e->conflictEndpointIds);
+		}
+	}//end testExceptionCarriesConflictingIds()
 
 }//end class

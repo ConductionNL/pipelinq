@@ -4,6 +4,12 @@ on:
   push:
     branches: [main, development, feature/**, bugfix/**, hotfix/**]
   pull_request:
+    # `synchronize` — a push to an open PR — was missing. Without it the quality
+    # suite runs ONCE, when the PR is opened, and every commit after that merges
+    # unchecked while the PR still shows the first run's green tick. A green
+    # check here described code that no longer existed. opencatalogi and
+    # openregister fixed the identical defect on their copies of this workflow.
+    types: [opened, reopened, synchronize]
     branches: [main, beta, development]
   workflow_dispatch:
   # Weekly smoke-test cron (pipelinq-quality-phpstan-burndown, Phase 5). A
@@ -14,11 +20,85 @@ on:
   schedule:
     - cron: "0 6 * * 1"
 
+# Deduplicating a `push` run against the `pull_request` run for the SAME head
+# ref is the point of this block, and for a feature branch it is exactly right:
+# two runs of identical jobs, one of them wasted.
+#
+# It is wrong for `main` and `development`, because the push run there is NOT a
+# duplicate — it is the only carrier of the push-only jobs: "Coverage Baseline
+# Check" (`github.event_name == 'push'`), "SBOM" and "Features Extract". And
+# those two branches always have an open PR whose `head_ref` IS the branch
+# name: the standing "Release: merge development into beta" (#13 here).
+# `github.head_ref` on that PR run and `github.ref_name` on the push run both
+# render `development`, so both landed in the identical group
+# `quality-development`, and `cancel-in-progress` killed whichever started
+# first — always the push run, by a few seconds.
+#
+# Measured on this repo: 12 of the last 20 `development` push runs were
+# cancelled within ~100s of starting — e.g. 31050057822 (6s), 31049983041
+# (38s), 31036452228 (5s), 31040464974 (80s). That duration is the
+# discriminator: the shared workflow's `timeout-minutes: 45` cancellation lands
+# at 45m16s–45m28s, so these are concurrency kills.
+#
+# On the surviving PR run "Coverage Baseline Check" reports `skipped`, which is
+# CORRECT for a pull_request event and renders exactly like a pass. So the gate
+# appears on both runs and executes on neither — a dead gate of the
+# permanently-pending shape.
+#
+# Suffixing only the default-branch push keeps feature-branch dedup untouched
+# (`quality-feature/x` for both events, exactly as before) and gives the two
+# default branches' push runs a lane of their own.
+#
+# Proven in openconnector#1158: its first-ever completed `development` push run
+# (31048998594) executed Coverage Baseline Check, SBOM and Features Extract.
+concurrency:
+  group: quality-${{ github.head_ref || github.ref_name }}${{ (github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'development')) && '-push' || '' }}
+  cancel-in-progress: true
+
+# Permission CEILING for the called quality pipeline. GitHub statically
+# validates the called workflow's declared job permissions against this
+# grant — even for jobs that are disabled — so it must cover the maximum
+# any nested job declares: journeydoc-capture (contents+actions write),
+# update-baseline / features-extract (contents write), and the Quality
+# Report PR comment (issues / pull-requests write).
+permissions:
+  contents: write
+  actions: write
+  issues: write
+  pull-requests: write
+
 jobs:
   quality:
+    # A branch's FIRST push carries `github.event.created == true` and is
+    # skipped entirely by this guard — without it, that push looks like CI ran
+    # when it ran nothing at all.
+    if: github.event_name != 'push' || github.event.created != true
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
+      # Pinned, because the shared workflow's DEFAULT is '["stable31", "stable32"]'
+      # and stable31 CANNOT WORK here. `additional-apps` below installs
+      # openregister, which declares min-version="32" (its
+      # lib/ContextChat/ContentProvider.php implements
+      # OCP\ContextChat\IContentProvider, absent from core before NC32). On NC31
+      # the install step logs
+      #   App "Open Register" cannot be installed because it is not compatible
+      #   with this version of the server.
+      # and then continues, because the enable failure is only a ::warning::. The
+      # run therefore proceeded without its data layer and every
+      # /apps/openregister/... call returned Nextcloud's HTML 404 page.
+      #
+      # Order matters as much as membership: newman, playwright and
+      # journeydoc-capture all check out `fromJSON(nextcloud-test-refs)[0]` as
+      # their single server, so with the inherited default those three jobs ran
+      # entirely on the version openregister cannot load.
+      #
+      # THE LIST IS THE WHOLE DECLARED RANGE. appinfo/info.xml declares
+      # <nextcloud min-version="32" max-version="34"/>, so 32, 33 and 34 each get
+      # a leg. Adopting NC 34 by REPLACING the list left 32 and 33 advertised to
+      # the App Store with no job touching them — the declared floor became the
+      # untested end, which is the same drift as never testing 34, reversed.
+      nextcloud-test-refs: '["stable34", "stable32", "stable33"]'
       # Strict static-analysis gate suite (composer check:strict equivalent).
       # These mirror the shared-workflow defaults (all true) but are pinned
       # here explicitly so the strict-gate posture is self-documenting and
@@ -31,19 +111,288 @@ jobs:
       enable-frontend: true
       enable-eslint: true
       enable-sbom: true
+      # Run the Hydra mechanical quality gates against this PR's diff.
+      #
+      # This tier has never executed in this repository. `enable-hydra-gates`
+      # defaults to false, so `quality / Hydra Gates` has been SKIPPED on every
+      # run here — and a skipped job is neither a pass nor a failure in the
+      # Quality Report rollup, so its absence has been indistinguishable from
+      # its success.
+      #
+      # Measured before switching on, not assumed. Running the v1.0.1 package
+      # locally against this repo's most recent merged PR diff reported ALL
+      # GATES PASSED (58 of 61 reporting; 4, 24 and 33 have no prerequisite
+      # here). The whole-tree audit does show 8 gate-61 (listener-work-placement)
+      # registrations carrying inherited debt — that is a real work-list, but
+      # gate-61 is diff-scoped in both full and scoped runs, so it reports zero
+      # on untouched trees and will not block unrelated PRs.
+      #
+      # No count is written here on purpose: the number of gates depends on the
+      # package version in use and the number that run depends on this repo's
+      # diff and toolchain. The package prints both (`COVERAGE: N of M`) in the
+      # job log. See https://github.com/ConductionNL/.github/tree/main/hydra-gates
+      enable-hydra-gates: true
+      # No `hydra-gates-ref` here on purpose. The shared workflow defaults it
+      # to @main, and this workflow is itself consumed at @main, so the two
+      # sides move together and a gate fix reaches this repo without a commit
+      # in this repo. A pin is a silent expiry date: 22 repos sat on v1.0.1 and
+      # 16 gates were dead fleet-wide while every one reported PASS (.github#159),
+      # and a default flipped at @main later reached those old runners and made
+      # them red on gates they had no subject matter for (.github#173).
+      # To hold this repo still for a specific reason, set the input explicitly
+      # and say why — it is still honoured. To roll back for everyone, revert on
+      # ConductionNL/.github main.
+      #
+      # THIRD CAUSE, and the one that is failing this repo RIGHT NOW
+      # (.github#177): quality.yml@main began executing three gate helpers BY
+      # NAME — check_spec_anchors.py, check_form_labels.py and
+      # check_license_triangle.py — which exist in NO tag before v1.5.0.
+      # Verified by DIRECTORY LISTING of each tag, not by per-file lookups:
+      # those answered "present" uniformly across v1.0.0..v1.5.0, and the
+      # uniformity across independent inputs was the tell that the instrument
+      # was wrong. So the Hydra Gates job here fails at "Verify the pinned gates
+      # package satisfies this workflow", before a single gate runs, with the
+      # workflow's own words: "This is NOT a code-quality finding about your
+      # repository." Removing the pin is the repair.
+      #
+      # Unpinning also picks up v1.5.1's push scoping (.github#179): on a push to
+      # `development`, `origin/development` IS `HEAD`, so the diff was empty by
+      # construction — <= v1.4.0 passed over it (permanently green) and v1.5.0
+      # refused with exit 99 (permanently red). The scope is now
+      # `github.event.before...HEAD`, what the push actually changed.
+      # `enable-axe` deliberately NOT set: it produces the report gate-33
+      # consumes, and a vanilla Nextcloud already carries serious/critical axe
+      # violations, so enabling it here would mix "this repo has a defect" with
+      # "core does". Separate change. gate-33 reports SKIPPED meanwhile.
       enable-phpunit: true
-      # Newman: tests/newman/pipelinq-api.postman_collection.json doesn't pass
-      # against a freshly-installed NC yet — the CRM endpoints need the
-      # OpenRegister registers/schemas seeded (the disable/enable repair cycle
-      # alone isn't enough). Re-enable once the collection has a working seed
-      # path. PHPUnit (the unit suite) runs and is green.
-      enable-newman: false
+      # ── Integration Tests (Newman) ───────────────────────────────────────
+      #
+      # This sat at `false`, and the recorded reason had partly expired. It
+      # read: "the CRM endpoints need the OpenRegister registers/schemas seeded
+      # (the disable/enable repair cycle alone isn't enough). Re-enable once the
+      # collection has a working seed path." The shared workflow has since grown
+      # a `newman-seed-command` input, and this repo has since grown
+      # `tests/e2e/ci-seed.sh` — which forces the register import, completes
+      # first-time setup, seeds the demo dataset and verifies each of those. The
+      # seed path the comment was waiting for exists. The disable/enable cycle
+      # it describes is not what runs any more.
+      #
+      # That was the hypothesis. It was checked against a real freshly-installed
+      # NC 32.0.13 + openregister@development instance (pgsql, matching the
+      # `database` default this job's services block keys on — the CRM seed
+      # CANNOT run on sqlite: OpenRegister's schema creation queries
+      # `information_schema.columns` and fails with "no such table"). Three
+      # further blockers turned up that the recorded reason did not mention, all
+      # of them real, none of them a seeding gap:
+      #
+      #   1. TWO REQUESTS POINTED AT ROUTES THAT DO NOT EXIST.
+      #      `/api/lead-sources` and `/api/request-channels` — the routes are
+      #      `/api/settings/lead-sources` and `/api/settings/request-channels`.
+      #      The wrong paths did not 404: pipelinq's SPA catch-all
+      #      (`dashboard#page /{path}`) answered HTTP 200 text/html, so the
+      #      status assertion PASSED and only the JSON assertion failed, with a
+      #      parse error pointing at the body rather than at the URL.
+      #
+      #   2. THE 403 TEST RAN AS THE ADMIN.
+      #      `PUT /api/rapportage/sla — non-admin → 403` referenced
+      #      `{{nonAdminUsername}}` / `{{nonAdminPassword}}`, which NOTHING
+      #      defined. Newman keeps one cookie jar per host; the header
+      #      authenticated nobody, Nextcloud used the admin session already in
+      #      the jar, and the call returned HTTP 200. The test asserting that a
+      #      non-admin is refused was performing the admin write. Measured, in
+      #      both directions: with the jar cleared and real credentials the same
+      #      call is 403. The collection now provisions a genuine second
+      #      identity, clears the jar before every request, and ASSERTS the
+      #      caller via /ocs/v2.php/cloud/user instead of trusting the status.
+      #
+      #   3. `POST /api/settings` WROTE A LITERAL {"register": "1"}, and it
+      #      SUCCEEDED — repointing the app away from its own register (14 on a
+      #      fresh install) for the remainder of the run AND for every
+      #      collection Newman ran afterwards, since all three run in one pass
+      #      against one instance. It now writes back the value GET /settings
+      #      reported, and a following request reads it back.
+      #
+      # Evidence for switching this on, measured on that instance with the same
+      # command shape this job uses (`cd tests/newman`, loop over
+      # *.postman_collection.json, `--environment`):
+      #
+      #   outbound-messaging   4 requests, 10 assertions, 0 failed
+      #   pipelinq-api        25 requests, 50 assertions, 0 failed
+      #   semantic-handoff     3 requests,  6 assertions, 0 failed
+      #
+      # Nothing was deleted, skipped or loosened to get there; the collection
+      # grew 4 requests and 10 assertions. The suite is proven able to FAIL:
+      # run without the generated environment (unseeded ids) newman exits 1.
+      #
+      # NOT WIDENED to include tests/integration/*.postman_collection.json, and
+      # that is a decision rather than an oversight — see the note below the
+      # seed command.
+      enable-newman: true
       newman-collection-path: "tests/newman"
+      # Generated by the seed, not committed. The values are per-instance (the
+      # OpenRegister register id and the seeded contact / request-ticket /
+      # contract object ids), and the collections take them as INPUT: their
+      # committed defaults are the empty string, which does not 404 — the path
+      # collapses to `/api/messaging/preflight/`, the SPA catch-all answers 200
+      # text/html, and every test script dies on
+      # `JSONError: Unexpected token '<'`. Twelve assertions failed that way.
+      #
+      # If the file is missing the shared workflow warns and falls back to
+      # `--env-var base_url=… admin_user=… admin_password=…` — three names none
+      # of these collections use — so a missing seed shows up as a loud red run,
+      # not as a quiet pass.
+      newman-environment-path: "tests/newman/ci.postman_environment.json"
+      # Reuses tests/e2e/ci-seed.sh for the shared provisioning rather than
+      # reimplementing it, then adds the three things only an API run needs: the
+      # non-admin identity, the discovered object ids, and the environment file.
+      # It VERIFIES every id against the endpoint that will consume it before
+      # writing anything, so a bad seed fails here instead of surfacing as a
+      # dozen misleading JSON parse errors minutes later.
+      #
+      # It sets PIPELINQ_SEED_BUNDLE_GATE=off for the nested e2e seed. That gate
+      # asserts the served `pipelinq-main` bundle is really JavaScript, which
+      # only a job that renders the app has a stake in — and this job has no
+      # "Build app frontend" step at all (checkout → setup-php → install NC →
+      # composer install → app:enable → `php -S` → seed → newman). Left armed it
+      # would fail the seed, and the job, for a reason no API assertion depends
+      # on. The Playwright path keeps the gate.
+      #
+      # cwd for this step is the Nextcloud server root.
+      newman-seed-command: 'bash apps/pipelinq/tests/newman/ci-seed.sh'
+      # ── E2E browser tests ────────────────────────────────────────────────
+      # `playwright-test-path` does double duty in the shared workflow:
+      #   1. it is the directory the "Validate Playwright tests exist" step
+      #      counts *.spec.ts in;
+      #   2. it is the FIRST place the run step looks for a config —
+      #      `${playwright-test-path}/playwright.config.ts`, falling back to
+      #      the repo root only if that file is absent.
+      # We ship tests/e2e/playwright.config.ts precisely so lookup (2) hits it.
+      # The run step passes no `--project`, so the root config would run all
+      # THREE of its projects — including `visual` (pixel baselines whose own
+      # header says a CI Linux runner cannot byte-match them) and `docs-capture`
+      # (screenshot re-shoots, which have their own dedicated job). The
+      # tests/e2e config declares only the regression project, and writes its
+      # report to the app root where the upload step actually looks.
       enable-playwright: true
+      playwright-test-path: tests/e2e
       enable-playwright-coverage: true
-      playwright-coverage-threshold: 75
+      # RATCHET, not an aspiration. This was 75 while the number the workflow
+      # actually computed was 28% — and the gate emitted `::warning::` and
+      # returned zero, so the run went green anyway (ConductionNL/.github#189).
+      # The declared floor had never once been enforced, which is why it could
+      # sit 47 points above reality without anyone noticing.
+      #
+      # .github#189 makes the threshold enforce (`::error::` + non-zero exit)
+      # AND replaces the metric: it is no longer
+      # `count(test() calls) / count(scenario headings)` — two totals that were
+      # never compared to each other — but real per-scenario matching against
+      # `@e2e` references, in gate-19's dialect.
+      #
+      # Measured on this repo at 51476e2 with the shipped program:
+      #   2659 scenarios found, 2140 @e2e-excluded (with reasons), 519
+      #   enforceable, 116 covered by an @e2e reference => 22%.
+      #
+      # So 20 is the floor we can actually hold today, with two points of slack.
+      # Left at 75 this repo would have gone red on the merge of .github#189
+      # with no code change. Raise this as scenarios get annotated; it must only
+      # ever go up.
+      playwright-coverage-threshold: 20
       # Pin openregister to development: main lacks the react/async composer dep
       # that lib/Service/ObjectService.php (Async\await call) requires, so app:enable
       # fails with "Call to undefined function React\Async\await()" during seed.
+      # ⚠️ The org here is `ConductionNL`, not `Conduction` — the latter does not
+      # exist. With the wrong org the checkout prompts for credentials and exits
+      # 128, which took out all four PHPUnit legs AND the Playwright job: they
+      # had never executed a single test. A `uses:`-grep for the wrong org does
+      # NOT find this line, because the org name is embedded in a JSON input
+      # rather than a `uses:`. (Fixed concurrently in #671; same value.)
       additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
-      playwright-seed-command: 'php occ app:disable pipelinq && php occ app:enable pipelinq'
+      # The old seed was `php occ app:disable pipelinq && php occ app:enable
+      # pipelinq`. It reported success on every run and provisioned nothing
+      # reliable: the repair step it triggers runs with NO user session (OR RBAC
+      # can refuse it), swallows its own exception as "Non-fatal", and imports
+      # with `force: false` — which can advance the recorded version WITHOUT
+      # applying the register. `occ` still exits 0 either way.
+      #
+      # It also did nothing at all about the real blocker: pipelinq declares a
+      # REQUIRED first-time-setup step (reporting currency), and until it is met
+      # CnAppRoot REPLACES the entire shell with CnSetupWizard — no <main>, no
+      # nav — so all 111 failures were selector timeouts pointing at the wrong
+      # thing. The script forces the import, completes setup over the real admin
+      # API, and then verifies each of those separately.
+      # cwd for this step is the Nextcloud server root.
+      playwright-seed-command: 'bash apps/pipelinq/tests/e2e/ci-seed.sh'
+
+      # tests/integration/ IS NOT IN `newman-collection-path`, ON PURPOSE.
+      #
+      # Three more collections live there — navi (3 requests), analytics (6) and
+      # pipelinq (62) — and the configured path does not reach them. They were
+      # assessed against the same fresh instance rather than assumed dead:
+      #
+      #   * tests/integration/pipelinq.postman_collection.json HARDCODES one
+      #     deployment's OpenRegister ids as collection variables: register=16,
+      #     clientSchema=60, contactSchema=61, leadSchema=62, productSchema=66,
+      #     posTransactionSchema=434. A freshly installed instance issues
+      #     register=14, contact=18, ticket=44, contract=117 — different every
+      #     time. It cannot run on CI without being rewritten to discover its
+      #     ids. Its own README also documents three QUARANTINED tests that
+      #     assert the CURRENT failing status of known product bugs "so the
+      #     suite stays green"; those flip RED the day a bug is fixed, which is
+      #     a deliberate local signal and a terrible CI gate.
+      #
+      #   * navi and analytics both ship EMPTY baseUrl/username/password
+      #     defaults, and each contains an `auth: noauth` request asserting 401.
+      #     Run with correct variables they still fail — navi 1 of 7 assertions,
+      #     analytics 2 of 10 — all with the same cause: the unauthenticated
+      #     request goes to the SAME host as the authenticated ones, so Newman's
+      #     cookie jar supplies a live session and the "unauthenticated" call
+      #     returns 200. They are not superseded (nothing in tests/newman covers
+      #     /api/navi/query or /api/analytics/*) and they are worth adopting,
+      #     but they need the jar-isolation fix first. Widening the path today
+      #     would turn this job red on day one. Tracked as follow-up work rather
+      #     than folded in silently.
+      #
+      # Hydra Gates is NOT touched here — it was switched on in this repo
+      # concurrently with this change, and the comment there records that the
+      # package was run locally against the last merged diff first (ALL GATES
+      # PASSED, 58 of 61 reporting).
+
+      # ── Frontend Check legs ──────────────────────────────────────────────
+      # `frontend-checks` defaults to `[]`, and an empty list means the shared
+      # workflow emits NO "Frontend Check" job at all — so these three
+      # validators ran nowhere while the run still looked complete. All three
+      # are self-contained `node` scripts, which is what a leg has to be.
+      # Measured on this tree before enabling: ALL THREE PASS. They are enabled
+      # to keep them passing, not because they are currently broken —
+      # `check:vue-demi` in particular guards a dual-package hazard that fails
+      # silently at runtime rather than at build time.
+      # `test:unit` is NOT listed: "Frontend Tests (unit)" already runs it.
+      #
+      # `format` (prettier --check) is listed because the shared workflow has NO
+      # prettier job of its own — `quality.yml` runs eslint and stylelint and
+      # mentions prettier ZERO times. This repo already carries
+      # `@nextcloud/prettier-config` and a `format` script, so without this leg
+      # `npm run format` never runs outside a developer's editor and the tree
+      # drifts straight back out of format between merges — the same inert-
+      # formatter failure mode that made the old `.prettierrc` worth deleting.
+      # Centralising the config never stopped drift; the gate does.
+      # Measured on this tree before enabling: PASSES, 357 of 371 tracked
+      # frontend files in scope (docs/ and l10n/ excluded via .prettierignore /
+      # .gitignore, which prettier 3 also reads).
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format"]'
+
+      # ── Coverage ratchet ─────────────────────────────────────────────────
+      # `enable-coverage-guard` defaults to FALSE, which is why both
+      # "Coverage Baseline Protection" and "Coverage Baseline Check" have only
+      # ever reported `skipped`. It needs two inputs this repo did not have,
+      # both added in this commit: `scripts/coverage-guard.php` (byte-identical
+      # to openregister's) and `.coverage-baseline` = 45.36, this repo's own
+      # measured coverage (18708 of 41247 statements) read from clover.xml in
+      # the `coverage-report` artifact of run 30912733766.
+      enable-coverage-guard: true
+
+      # (Hydra Gates is already declared above, pinned to v1.0.1, by the change
+      # that enabled it concurrently with this one. Not re-declared here — a
+      # duplicate key in a `with:` block is accepted by every YAML parser
+      # involved, last-one-wins, and is precisely the kind of thing that reads
+      # as configured while being decided somewhere else in the file.)

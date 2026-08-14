@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Seeded-fixture helper for the DEEP, data-dependent workflow suite.
  *
@@ -112,7 +112,11 @@ export class FixtureSession {
 	 * Issue an authenticated OR API request from inside the browser context.
 	 * Runs in the page so `OC.requestToken` + the session cookie are present.
 	 */
-	private async apiFetch(method: string, path: string, body?: unknown): Promise<any> {
+	private async apiFetch(
+		method: string,
+		path: string,
+		body?: unknown,
+	): Promise<any> {
 		return await this.page.evaluate(
 			async ({ method, path, body }) => {
 				const res = await fetch(path, {
@@ -127,8 +131,17 @@ export class FixtureSession {
 				})
 				const text = await res.text()
 				let json: any = null
-				try { json = text ? JSON.parse(text) : null } catch { /* non-JSON */ }
-				return { ok: res.ok, status: res.status, json, text: text.slice(0, 300) }
+				try {
+					json = text ? JSON.parse(text) : null
+				} catch {
+					/* non-JSON */
+				}
+				return {
+					ok: res.ok,
+					status: res.status,
+					json,
+					text: text.slice(0, 300),
+				}
 			},
 			{ method, path, body },
 		)
@@ -143,7 +156,9 @@ export class FixtureSession {
 		await this.resolveRegister()
 		const res = await this.apiFetch('POST', this.url(schema), props)
 		if (!res.ok || !res.json) {
-			throw new Error(`fixture create(${schema}) failed: ${res.status} ${res.text}`)
+			throw new Error(
+				`fixture create(${schema}) failed: ${res.status} ${res.text}`,
+			)
 		}
 		const obj = res.json
 		const id = obj.id || obj['@self']?.id || obj.uuid
@@ -152,12 +167,21 @@ export class FixtureSession {
 	}
 
 	/** Fetch the collection for a schema with optional query params. */
-	async list(schema: string, params: Record<string, string | number> = {}): Promise<any[]> {
+	async list(
+		schema: string,
+		params: Record<string, string | number> = {},
+	): Promise<any[]> {
 		await this.resolveRegister()
 		const qs = new URLSearchParams()
 		for (const [k, v] of Object.entries(params)) qs.set(k, String(v))
-		const res = await this.apiFetch('GET', this.url(schema, qs.toString() ? `?${qs}` : ''))
-		if (!res.ok) throw new Error(`fixture list(${schema}) failed: ${res.status} ${res.text}`)
+		const res = await this.apiFetch(
+			'GET',
+			this.url(schema, qs.toString() ? `?${qs}` : ''),
+		)
+		if (!res.ok)
+			throw new Error(
+				`fixture list(${schema}) failed: ${res.status} ${res.text}`,
+			)
 		return res.json?.results || res.json || []
 	}
 
@@ -165,7 +189,10 @@ export class FixtureSession {
 	async get(schema: string, id: string): Promise<any> {
 		await this.resolveRegister()
 		const res = await this.apiFetch('GET', this.url(schema, id))
-		if (!res.ok) throw new Error(`fixture get(${schema}/${id}) failed: ${res.status} ${res.text}`)
+		if (!res.ok)
+			throw new Error(
+				`fixture get(${schema}/${id}) failed: ${res.status} ${res.text}`,
+			)
 		return res.json
 	}
 
@@ -174,14 +201,35 @@ export class FixtureSession {
 	 * app's own store.saveObject() uses (the manifest list does not expose an
 	 * in-UI edit path for these schemas). Merges `patch` onto the current object
 	 * and returns the updated object. Returns null on a non-2xx.
+	 *
+	 * INSTRUMENTED 2026-08-06. The non-2xx path used to return `null` silently,
+	 * and the only caller asserted `toBeTruthy()` on it — so a rejected write
+	 * reported as `Received: false` with no status, no body and no clue which
+	 * property the server objected to. It cost a full CI cycle to learn that
+	 * OpenRegister was refusing a write to a `readOnly` field. The status and
+	 * the first part of the body are now logged on every failure; the return
+	 * shape is unchanged so no caller has to change.
 	 */
-	async update(schema: string, id: string, patch: Record<string, unknown>): Promise<any | null> {
+	async update(
+		schema: string,
+		id: string,
+		patch: Record<string, unknown>,
+	): Promise<any | null> {
 		const current = await this.get(schema, id)
 		const merged = { ...current, ...patch, id }
 		// Strip OR-internal metadata so the PUT body mirrors a real edit payload.
 		delete (merged as any)['@self']
 		const res = await this.apiFetch('PUT', this.url(schema, id), merged)
-		return res.ok ? res.json : null
+		if (!res.ok) {
+			// eslint-disable-next-line no-console
+			console.error(
+				`[fixture] PUT ${this.url(schema, id)} -> ${res.status}`
+					+ ` | patched keys: ${Object.keys(patch).join(', ')}`
+					+ ` | body: ${String(res.text).slice(0, 400)}`,
+			)
+			return null
+		}
+		return res.json
 	}
 
 	/** Convenience: rename an object's `name` field. Returns true on success. */
@@ -201,7 +249,9 @@ export class FixtureSession {
 	/** Delete one object now (best-effort) and drop it from the tracked list. */
 	async remove(schema: string, id: string): Promise<void> {
 		await this.apiFetch('DELETE', this.url(schema, id)).catch(() => undefined)
-		const i = this.tracked.findIndex(t => t.schema === schema && t.id === String(id))
+		const i = this.tracked.findIndex(
+			(t) => t.schema === schema && t.id === String(id),
+		)
 		if (i >= 0) this.tracked.splice(i, 1)
 	}
 
@@ -213,10 +263,14 @@ export class FixtureSession {
 	 */
 	async cleanup(): Promise<void> {
 		for (const { schema, id } of [...this.tracked].reverse()) {
-			const res = await this.apiFetch('DELETE', this.url(schema, id)).catch(() => undefined)
+			const res = await this.apiFetch('DELETE', this.url(schema, id)).catch(
+				() => undefined,
+			)
 			if (!res || !res.ok) {
 				// eslint-disable-next-line no-console
-				console.warn(`[fixtures] cleanup failed for ${schema}/${id}: ${res?.status ?? 'no-response'}`)
+				console.warn(
+					`[fixtures] cleanup failed for ${schema}/${id}: ${res?.status ?? 'no-response'}`,
+				)
 			}
 		}
 		this.tracked.length = 0

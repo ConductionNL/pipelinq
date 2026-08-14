@@ -11,27 +11,32 @@
 		<div class="product-variant-dialog">
 			<NcTextField
 				:label="t('pipelinq', 'SKU')"
-				:value="form.sku"
+				:model-value="form.sku"
 				:error="!!skuError"
 				:helper-text="skuError"
-				@update:value="v => { form.sku = v; skuError = '' }" />
+				@update:model-value="
+					(v) => {
+						form.sku = v
+						skuError = ''
+					}
+				" />
 			<NcTextField
 				:label="t('pipelinq', 'Variant name')"
-				:value="form.name"
-				@update:value="v => form.name = v" />
+				:model-value="form.name"
+				@update:model-value="(v) => (form.name = v)" />
 			<NcTextField
 				:label="t('pipelinq', 'Attributes (e.g. maat=S, kleur=Wit)')"
-				:value="form.attributesText"
-				@update:value="v => form.attributesText = v" />
+				:model-value="form.attributesText"
+				@update:model-value="(v) => (form.attributesText = v)" />
 			<NcTextField
 				:label="t('pipelinq', 'Unit price')"
-				:value="form.unitPrice"
+				:model-value="form.unitPrice"
 				type="number"
-				@update:value="v => form.unitPrice = v" />
+				@update:model-value="(v) => (form.unitPrice = v)" />
 			<NcTextField
 				:label="t('pipelinq', 'Barcode (EAN/UPC)')"
-				:value="form.barcode"
-				@update:value="v => form.barcode = v" />
+				:model-value="form.barcode"
+				@update:model-value="(v) => (form.barcode = v)" />
 			<NcSelect
 				v-model="form.status"
 				input-id="variant-status"
@@ -43,7 +48,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" @click="submit">
+			<NcButton variant="primary" @click="submit">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
@@ -101,7 +106,10 @@ export default {
 				sku: this.variant.sku || '',
 				name: this.variant.name || '',
 				attributesText: this.attributesToText(this.variant.attributes),
-				unitPrice: this.variant.unitPrice !== undefined ? String(this.variant.unitPrice) : String(this.defaultPrice ?? 0),
+				unitPrice:
+					this.variant.unitPrice !== undefined
+						? String(this.variant.unitPrice)
+						: String(this.defaultPrice ?? 0),
 				barcode: this.variant.barcode || '',
 				status: this.variant.status || 'active',
 			}
@@ -118,7 +126,9 @@ export default {
 			if (!attributes || typeof attributes !== 'object') {
 				return ''
 			}
-			return Object.entries(attributes).map(([k, v]) => `${k}=${v}`).join(', ')
+			return Object.entries(attributes)
+				.map(([k, v]) => `${k}=${v}`)
+				.join(', ')
 		},
 		/**
 		 * Parse "key=value, key=value" text into an attributes map.
@@ -128,7 +138,7 @@ export default {
 		 */
 		textToAttributes(text) {
 			const result = {}
-			text.split(',').forEach(pair => {
+			text.split(',').forEach((pair) => {
 				const [k, ...rest] = pair.split('=')
 				const key = (k || '').trim()
 				const value = rest.join('=').trim()
@@ -148,9 +158,15 @@ export default {
 				return
 			}
 			const originalSku = this.variant ? this.variant.sku : null
-			const clash = this.existingSkus.some(s => s === sku && s !== originalSku)
+			const clash = this.existingSkus.some(
+				(s) => s === sku && s !== originalSku,
+			)
 			if (clash) {
-				this.skuError = t('pipelinq', 'SKU {sku} is already used by another variant', { sku })
+				this.skuError = t(
+					'pipelinq',
+					'SKU {sku} is already used by another variant',
+					{ sku },
+				)
 				return
 			}
 			this.$emit('save', {

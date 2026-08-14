@@ -1,20 +1,32 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 behavioral e2e coverage for the Forecast report page (/forecast).
  * Maps to openspec/changes/forecast-roll-up-and-categories/specs.md.
  */
 import { test, expect } from '@playwright/test'
-import { openApp, navClick, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
+import {
+	openApp,
+	navClick,
+	trackPipelinqErrors,
+	assertNoHardError,
+} from '../helpers/pipelinq'
 
 // @e2e openspec/changes/forecast-roll-up-and-categories/specs.md#forecast-page
-test('Forecast: navigates from sidebar and shows the forecast surface', async ({ page }) => {
+test('Forecast: navigates from sidebar and shows the forecast surface', async ({
+	page,
+}) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
 	await navClick(page, 'Forecast', /\/forecast/)
 
-	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Forecast' }).first()).toBeVisible()
+	await expect(
+		page
+			.locator('#content-vue')
+			.getByRole('heading', { name: 'Forecast' })
+			.first(),
+	).toBeVisible()
 	await assertNoHardError(page)
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
@@ -24,7 +36,9 @@ test('Forecast: exposes the Export CSV action', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Forecast', /\/forecast/)
 
-	await expect(page.locator('#content-vue').getByRole('button', { name: 'Export CSV' })).toBeVisible()
+	await expect(
+		page.locator('#content-vue').getByRole('button', { name: 'Export CSV' }),
+	).toBeVisible()
 })
 
 /*

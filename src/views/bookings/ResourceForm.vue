@@ -20,14 +20,19 @@
 	<div class="resource-form" data-testid="resource-form">
 		<div class="form-row">
 			<div class="form-group">
-				<label for="resource-name">{{ t('pipelinq', 'Name') }} *</label>
 				<NcTextField
 					id="resource-name"
-					:value="form.name"
+					:label="t('pipelinq', 'Name') + ' *'"
+					:model-value="form.name"
 					:error="!!errors.name"
 					:helper-text="errors.name"
 					:maxlength="255"
-					@update:value="v => { form.name = v; validateField('name') }" />
+					@update:model-value="
+						(v) => {
+							form.name = v
+							validateField('name')
+						}
+					" />
 			</div>
 			<div class="form-group">
 				<label for="resource-type">{{ t('pipelinq', 'Type') }} *</label>
@@ -36,7 +41,7 @@
 					input-id="resource-type"
 					:aria-label-combobox="t('pipelinq', 'Resource type')"
 					:options="typeOptions"
-					:reduce="o => o.value"
+					:reduce="(o) => o.value"
 					label="label" />
 			</div>
 		</div>
@@ -49,45 +54,54 @@
 					input-id="resource-status"
 					:aria-label-combobox="t('pipelinq', 'Status')"
 					:options="statusOptions"
-					:reduce="o => o.value"
+					:reduce="(o) => o.value"
 					label="label" />
 			</div>
 			<div class="form-group">
-				<label for="resource-max-concurrent">{{ t('pipelinq', 'Max concurrent bookings') }}</label>
 				<NcTextField
 					id="resource-max-concurrent"
+					:label="t('pipelinq', 'Max concurrent bookings')"
 					type="number"
-					:value="String(form.maxConcurrent ?? 1)"
-					@update:value="v => form.maxConcurrent = v === '' ? 1 : Math.max(1, Number(v))" />
+					:model-value="String(form.maxConcurrent ?? 1)"
+					@update:model-value="
+						(v) =>
+							(form.maxConcurrent =
+								v === '' ? 1 : Math.max(1, Number(v)))
+					" />
 			</div>
 			<div class="form-group toggle-group">
-				<input id="resource-bookable" v-model="form.bookable" type="checkbox">
-				<label for="resource-bookable">{{ t('pipelinq', 'Bookable') }}</label>
+				<input
+					id="resource-bookable"
+					v-model="form.bookable"
+					type="checkbox" />
+				<label for="resource-bookable">{{
+					t('pipelinq', 'Bookable')
+				}}</label>
 			</div>
 		</div>
 
 		<div class="form-group">
-			<label for="resource-skills">{{ t('pipelinq', 'Skills (comma-separated)') }}</label>
 			<NcTextField
 				id="resource-skills"
-				:value="skillsCsv"
-				@update:value="onSkillsInput" />
+				:label="t('pipelinq', 'Skills (comma-separated)')"
+				:model-value="skillsCsv"
+				@update:model-value="onSkillsInput" />
 		</div>
 
 		<div class="form-row">
 			<div class="form-group">
-				<label for="resource-user-id">{{ t('pipelinq', 'Nextcloud user ID (staff only)') }}</label>
 				<NcTextField
 					id="resource-user-id"
-					:value="form.userId || ''"
-					@update:value="v => form.userId = v" />
+					:label="t('pipelinq', 'Nextcloud user ID (staff only)')"
+					:model-value="form.userId || ''"
+					@update:model-value="(v) => (form.userId = v)" />
 			</div>
 			<div class="form-group">
-				<label for="resource-calendar-sync">{{ t('pipelinq', 'Calendar sync link (UUID)') }}</label>
 				<NcTextField
 					id="resource-calendar-sync"
-					:value="form.calendarSyncId || ''"
-					@update:value="v => form.calendarSyncId = v" />
+					:label="t('pipelinq', 'Calendar sync link (UUID)')"
+					:model-value="form.calendarSyncId || ''"
+					@update:model-value="(v) => (form.calendarSyncId = v)" />
 			</div>
 		</div>
 
@@ -96,10 +110,10 @@
 			<table class="hours-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Day') }}</th>
-						<th>{{ t('pipelinq', 'Open') }}</th>
-						<th>{{ t('pipelinq', 'Close') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'Day') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Open') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Close') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>
@@ -110,30 +124,32 @@
 								:input-id="`hours-day-${idx}`"
 								:aria-label-combobox="t('pipelinq', 'Day')"
 								:options="dayOptions"
-								:reduce="o => o.value"
+								:reduce="(o) => o.value"
 								label="label" />
 						</td>
 						<td>
-							<input :id="`hours-open-${idx}`"
+							<input
+								:id="`hours-open-${idx}`"
 								v-model="row.openTime"
 								type="time"
-								:aria-label="t('pipelinq', 'Open time')">
+								:aria-label="t('pipelinq', 'Open time')" />
 						</td>
 						<td>
-							<input :id="`hours-close-${idx}`"
+							<input
+								:id="`hours-close-${idx}`"
 								v-model="row.closeTime"
 								type="time"
-								:aria-label="t('pipelinq', 'Close time')">
+								:aria-label="t('pipelinq', 'Close time')" />
 						</td>
 						<td>
-							<NcButton type="tertiary" @click="removeHours(idx)">
+							<NcButton variant="tertiary" @click="removeHours(idx)">
 								&times;
 							</NcButton>
 						</td>
 					</tr>
 				</tbody>
 			</table>
-			<NcButton type="secondary" class="add-btn" @click="addHours">
+			<NcButton variant="secondary" class="add-btn" @click="addHours">
 				{{ t('pipelinq', 'Add working hours row') }}
 			</NcButton>
 			<p v-if="hoursError" class="error-text">
@@ -146,41 +162,46 @@
 			<table class="hours-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Start date') }}</th>
-						<th>{{ t('pipelinq', 'End date') }}</th>
-						<th>{{ t('pipelinq', 'Label') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'Start date') }}</th>
+						<th scope="col">{{ t('pipelinq', 'End date') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Label') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for="(row, idx) in form.vacations" :key="idx">
 						<td>
-							<input :id="`vac-start-${idx}`"
+							<input
+								:id="`vac-start-${idx}`"
 								v-model="row.startDate"
 								type="date"
-								:aria-label="t('pipelinq', 'Vacation start date')">
+								:aria-label="t('pipelinq', 'Vacation start date')" />
 						</td>
 						<td>
-							<input :id="`vac-end-${idx}`"
+							<input
+								:id="`vac-end-${idx}`"
 								v-model="row.endDate"
 								type="date"
-								:aria-label="t('pipelinq', 'Vacation end date')">
+								:aria-label="t('pipelinq', 'Vacation end date')" />
 						</td>
 						<td>
-							<input :id="`vac-label-${idx}`"
+							<input
+								:id="`vac-label-${idx}`"
 								v-model="row.label"
 								type="text"
-								:aria-label="t('pipelinq', 'Vacation label')">
+								:aria-label="t('pipelinq', 'Vacation label')" />
 						</td>
 						<td>
-							<NcButton type="tertiary" @click="removeVacation(idx)">
+							<NcButton
+								variant="tertiary"
+								@click="removeVacation(idx)">
 								&times;
 							</NcButton>
 						</td>
 					</tr>
 				</tbody>
 			</table>
-			<NcButton type="secondary" class="add-btn" @click="addVacation">
+			<NcButton variant="secondary" class="add-btn" @click="addVacation">
 				{{ t('pipelinq', 'Add vacation') }}
 			</NcButton>
 			<p v-if="vacationError" class="error-text">
@@ -189,7 +210,8 @@
 		</div>
 
 		<div class="resource-form__actions">
-			<NcButton type="primary"
+			<NcButton
+				variant="primary"
 				:disabled="!isValid"
 				data-testid="resource-form-save"
 				@click="onSave">
@@ -205,7 +227,15 @@
 <script>
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 
-const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+const DAYS = [
+	'monday',
+	'tuesday',
+	'wednesday',
+	'thursday',
+	'friday',
+	'saturday',
+	'sunday',
+]
 
 export default {
 	name: 'ResourceForm',
@@ -224,8 +254,14 @@ export default {
 		isValid() {
 			const hasName = (this.form.name || '').trim().length > 0
 			const hasType = !!this.form.type
-			const noErrors = Object.values(this.errors).every(e => !e)
-			return hasName && hasType && noErrors && !this.hoursError && !this.vacationError
+			const noErrors = Object.values(this.errors).every((e) => !e)
+			return (
+				hasName
+				&& hasType
+				&& noErrors
+				&& !this.hoursError
+				&& !this.vacationError
+			)
 		},
 		skillsCsv() {
 			return (this.form.skills || []).join(', ')
@@ -245,7 +281,7 @@ export default {
 			]
 		},
 		dayOptions() {
-			return DAYS.map(d => ({ value: d, label: t('pipelinq', d) }))
+			return DAYS.map((d) => ({ value: d, label: t('pipelinq', d) }))
 		},
 		/**
 		 * @return {string} Error text when any workingHours row has openTime
@@ -254,25 +290,26 @@ export default {
 		 * @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 		 */
 		hoursError() {
-			const bad = (this.form.workingHours || []).find(r => {
+			const bad = (this.form.workingHours || []).find((r) => {
 				if (!r.openTime || !r.closeTime) return false
 				return r.openTime >= r.closeTime
 			})
-			return bad
-				? t('pipelinq', 'Open time must be before close time.')
-				: ''
+			return bad ? t('pipelinq', 'Open time must be before close time.') : ''
 		},
 		/**
 		 * @return {string} Error text when any vacations row has startDate
 		 *  > endDate, empty otherwise.
 		 */
 		vacationError() {
-			const bad = (this.form.vacations || []).find(r => {
+			const bad = (this.form.vacations || []).find((r) => {
 				if (!r.startDate || !r.endDate) return false
 				return r.startDate > r.endDate
 			})
 			return bad
-				? t('pipelinq', 'Vacation start date must be on or before the end date.')
+				? t(
+						'pipelinq',
+						'Vacation start date must be on or before the end date.',
+					)
 				: ''
 		},
 	},
@@ -307,10 +344,10 @@ export default {
 				...data,
 				skills: Array.isArray(data.skills) ? [...data.skills] : [],
 				workingHours: Array.isArray(data.workingHours)
-					? data.workingHours.map(r => ({ ...r }))
+					? data.workingHours.map((r) => ({ ...r }))
 					: [],
 				vacations: Array.isArray(data.vacations)
-					? data.vacations.map(r => ({ ...r }))
+					? data.vacations.map((r) => ({ ...r }))
 					: [],
 			}
 			this.errors = { name: '' }
@@ -329,11 +366,15 @@ export default {
 		onSkillsInput(value) {
 			this.form.skills = (value || '')
 				.split(',')
-				.map(s => s.trim())
-				.filter(s => s.length > 0)
+				.map((s) => s.trim())
+				.filter((s) => s.length > 0)
 		},
 		addHours() {
-			this.form.workingHours.push({ day: 'monday', openTime: '09:00', closeTime: '17:00' })
+			this.form.workingHours.push({
+				day: 'monday',
+				openTime: '09:00',
+				closeTime: '17:00',
+			})
 		},
 		removeHours(idx) {
 			this.form.workingHours.splice(idx, 1)
@@ -350,12 +391,12 @@ export default {
 			}
 			const data = { ...this.form }
 			data.skills = [...(this.form.skills || [])]
-			data.workingHours = (this.form.workingHours || []).map(r => ({
+			data.workingHours = (this.form.workingHours || []).map((r) => ({
 				day: r.day,
 				openTime: r.openTime,
 				closeTime: r.closeTime,
 			}))
-			data.vacations = (this.form.vacations || []).map(r => ({
+			data.vacations = (this.form.vacations || []).map((r) => ({
 				startDate: r.startDate,
 				endDate: r.endDate,
 				label: r.label || '',
@@ -374,53 +415,68 @@ export default {
 	max-width: 960px;
 	padding: 0 4px;
 }
+
 .form-group {
 	margin-bottom: 16px;
 }
+
 .form-group label {
 	display: block;
 	margin-bottom: 4px;
 	font-weight: bold;
 }
+
 .form-row {
 	display: flex;
 	gap: 16px;
 	flex-wrap: wrap;
 }
+
 .form-row .form-group {
 	flex: 1 1 200px;
 }
+
 .toggle-group {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
+
 .toggle-group label {
 	margin: 0;
 	font-weight: normal;
 }
+
 .hours-table {
 	width: 100%;
 	border-collapse: collapse;
 }
-.hours-table th, .hours-table td {
+
+.hours-table th,
+.hours-table td {
 	padding: 6px;
 	border-bottom: 1px solid var(--color-border);
 }
-.hours-table input[type="time"], .hours-table input[type="date"], .hours-table input[type="text"] {
+
+.hours-table input[type='time'],
+.hours-table input[type='date'],
+.hours-table input[type='text'] {
 	width: 100%;
 	padding: 4px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 }
+
 .add-btn {
 	margin-top: 8px;
 }
+
 .error-text {
 	color: var(--color-error);
 	margin-top: 6px;
 	font-size: 13px;
 }
+
 .resource-form__actions {
 	display: flex;
 	gap: 12px;

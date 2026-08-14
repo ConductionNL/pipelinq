@@ -483,6 +483,8 @@ The Navi API MUST enforce Nextcloud authentication and MUST NOT expose data outs
 
 #### Scenario: Query scoped to user's data
 
+@e2e exclude proving isolation needs TWO Nextcloud users with disjoint OpenRegister ACLs; `tests/e2e/global-setup.ts` provisions a single account (ADMIN_USER, default `admin`) and the suite has no way to create a second. The reachable half — the endpoint refusing a caller with no session — is asserted end-to-end by the sibling scenario `unauthenticated-request-rejected` in `tests/e2e/spec-coverage/dashboard.spec.ts` (test "POST /api/navi/query is rejected with 401 and leaks nothing") and at unit level by `tests/Unit/Controller/NaviControllerTest.php::testQueryReturnsUnauthorizedWithoutSession`.
+
 - GIVEN the user is authenticated
 - WHEN NaviService dispatches OpenRegister queries
 - THEN all `ObjectService` calls MUST use the standard multi-tenancy context

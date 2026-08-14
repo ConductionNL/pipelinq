@@ -536,7 +536,7 @@ const registry = {
 	LeadAnalyticsSection: {
 		kind: 'section',
 		component: LeadAnalyticsSection,
-		_note: 'In-body lead-analytics surface (pipeline funnel + source table + aging donut + win/loss) for the declarative LeadAnalytics dashboard. Self-fetches /api/rapportage/pipeline-stats ONCE and distributes the four slices to the presentational child widgets, preserving the legacy view\'s in-widget filtering (funnel pipeline selector, win/loss date-range re-fetch). KEPT-IN-SECTION because the filters live INSIDE the widgets and the win/loss date-range derives dateFrom/dateTo no page-level period pageFilter can emit.',
+		_note: "In-body lead-analytics surface (pipeline funnel + source table + aging donut + win/loss) for the declarative LeadAnalytics dashboard. Self-fetches /api/rapportage/pipeline-stats ONCE and distributes the four slices to the presentational child widgets, preserving the legacy view's in-widget filtering (funnel pipeline selector, win/loss date-range re-fetch). KEPT-IN-SECTION because the filters live INSIDE the widgets and the win/loss date-range derives dateFrom/dateTo no page-level period pageFilter can emit.",
 	},
 	PipelineFunnelWidget: {
 		kind: 'widget',
@@ -729,7 +729,7 @@ const registry = {
 	MessagingConversationSection: {
 		kind: 'section',
 		component: MessagingConversationSection,
-		_note: 'Outbound WhatsApp/SMS conversation feed for a client or contact (outbound-messaging-provider-wiring). Self-fetches message/conversation rows by contactId + the composer preflight facts; on ClientDetail (no client-level FK on message/conversation) it resolves the client\'s linked contacts client-side and lets the agent pick which contact to converse with. Hosts the SendMessageModal composer.',
+		_note: "Outbound WhatsApp/SMS conversation feed for a client or contact (outbound-messaging-provider-wiring). Self-fetches message/conversation rows by contactId + the composer preflight facts; on ClientDetail (no client-level FK on message/conversation) it resolves the client's linked contacts client-side and lets the agent pick which contact to converse with. Hosts the SendMessageModal composer.",
 	},
 
 	// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit).

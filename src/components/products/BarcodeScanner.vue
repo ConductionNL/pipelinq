@@ -5,18 +5,21 @@
 				ref="field"
 				class="barcode-scanner__field"
 				:label="t('pipelinq', 'Scan barcode')"
-				:value="value"
+				:model-value="value"
 				:disabled="status === 'loading'"
-				@update:value="onInput"
+				@update:model-value="onInput"
 				@keydown.enter="emitManual" />
 
 			<div class="barcode-scanner__status" aria-live="polite">
 				<NcLoadingIcon v-if="status === 'loading'" :size="20" />
-				<Check v-else-if="status === 'found'" :size="20" class="barcode-scanner__icon--success" />
+				<Check
+					v-else-if="status === 'found'"
+					:size="20"
+					class="barcode-scanner__icon--success" />
 			</div>
 
 			<NcButton
-				type="tertiary"
+				variant="tertiary"
 				:aria-label="t('pipelinq', 'Submit barcode')"
 				:disabled="status === 'loading'"
 				@click="emitManual">
@@ -27,7 +30,7 @@
 
 			<NcButton
 				v-if="supported"
-				type="tertiary"
+				variant="tertiary"
 				:aria-label="t('pipelinq', 'Open camera')"
 				:disabled="status === 'loading'"
 				@click="onOpenCamera">
@@ -44,7 +47,10 @@
 			{{ errorMessage }}
 		</NcNoteCard>
 
-		<div v-if="scanning" class="barcode-scanner__overlay" @keydown.esc="onCloseCamera">
+		<div
+			v-if="scanning"
+			class="barcode-scanner__overlay"
+			@keydown.esc="onCloseCamera">
 			<video
 				ref="videoEl"
 				class="barcode-scanner__video"
@@ -69,7 +75,7 @@
 				{{ t('pipelinq', 'Aim at barcode…') }}
 			</p>
 			<NcButton
-				type="primary"
+				variant="primary"
 				class="barcode-scanner__close"
 				@click="onCloseCamera">
 				<template #icon>
@@ -121,9 +127,10 @@ export default {
 	},
 	emits: ['scan'],
 	setup(props, { emit }) {
-		const { supported, scanning, videoEl, startCamera, stopCamera } = useBarcodeScanner((barcode) => {
-			emit('scan', barcode)
-		})
+		const { supported, scanning, videoEl, startCamera, stopCamera } =
+			useBarcodeScanner((barcode) => {
+				emit('scan', barcode)
+			})
 		return { supported, scanning, videoEl, startCamera, stopCamera }
 	},
 	data() {

@@ -20,15 +20,15 @@ const REVENUE_STATUSES = ['active', 'expiring']
  */
 export function normalizeToMonthly(billingInterval, valuePerInterval) {
 	switch (billingInterval) {
-	case 'monthly':
-		return valuePerInterval
-	case 'quarterly':
-		return valuePerInterval / 3
-	case 'annual':
-		return valuePerInterval / 12
-	case 'one-off':
-	default:
-		return 0
+		case 'monthly':
+			return valuePerInterval
+		case 'quarterly':
+			return valuePerInterval / 3
+		case 'annual':
+			return valuePerInterval / 12
+		case 'one-off':
+		default:
+			return 0
 	}
 }
 
@@ -43,8 +43,16 @@ export function computeMrr(contracts) {
 		return 0
 	}
 	const mrr = contracts
-		.filter(c => REVENUE_STATUSES.includes(c.status ?? ''))
-		.reduce((sum, c) => sum + normalizeToMonthly(c.billingInterval ?? '', c.valuePerInterval ?? 0), 0)
+		.filter((c) => REVENUE_STATUSES.includes(c.status ?? ''))
+		.reduce(
+			(sum, c) =>
+				sum
+				+ normalizeToMonthly(
+					c.billingInterval ?? '',
+					c.valuePerInterval ?? 0,
+				),
+			0,
+		)
 	return Math.round(mrr * 100) / 100
 }
 
@@ -66,6 +74,8 @@ export function computeArr(contracts) {
  * @returns {number} The client's monthly recurring value.
  */
 export function computeClientMrr(contracts, clientRef) {
-	const clientContracts = (contracts ?? []).filter(c => (c.clientRef ?? '') === clientRef)
+	const clientContracts = (contracts ?? []).filter(
+		(c) => (c.clientRef ?? '') === clientRef,
+	)
 	return computeMrr(clientContracts)
 }

@@ -32,31 +32,28 @@ namespace OCA\Pipelinq\Adapter;
  *
  * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-01
  */
-class PostgresExportAdapter extends AbstractOpenConnectorSink
-{
-    /**
-     * The destination type slug.
-     *
-     * @return string The type ('postgres').
-     */
-    public function getType(): string
-    {
-        return 'postgres';
-    }//end getType()
+class PostgresExportAdapter extends AbstractOpenConnectorSink {
+	/**
+	 * The destination type slug.
+	 *
+	 * @return string The type ('postgres').
+	 */
+	public function getType(): string {
+		return 'postgres';
+	}//end getType()
 
-    /**
-     * Surface the COPY row count as the acknowledgement.
-     *
-     * @param array<string, mixed> $result The transfer result metadata.
-     *
-     * @return string The copy count (or a generic ack when absent).
-     */
-    protected function acknowledge(array $result): string
-    {
-        if (isset($result['copyCount']) === true) {
-            return 'COPY '.(string) $result['copyCount'];
-        }
+	/**
+	 * Surface the COPY row count as the acknowledgement.
+	 *
+	 * @param array<string, mixed> $result The transfer result metadata.
+	 *
+	 * @return string The copy count (or a generic ack when absent).
+	 */
+	protected function acknowledge(array $result): string {
+		if (isset($result['copyCount']) === true) {
+			return 'COPY ' . (string)$result['copyCount'];
+		}
 
-        return (string) ($result['path'] ?? '');
-    }//end acknowledge()
+		return (string)($result['path'] ?? '');
+	}//end acknowledge()
 }//end class

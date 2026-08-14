@@ -43,13 +43,13 @@ export default {
 		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		chartLabels() {
-			return (this.trend?.series || []).map(pt => pt.date)
+			return (this.trend?.series || []).map((pt) => pt.date)
 		},
 		/**
 		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		chartSeries() {
-			const values = (this.trend?.series || []).map(pt => pt.value)
+			const values = (this.trend?.series || []).map((pt) => pt.value)
 			return [{ name: this.t('pipelinq', 'Requests'), data: values }]
 		},
 	},
@@ -60,7 +60,10 @@ export default {
 		async load() {
 			this.error = null
 			try {
-				this.trend = await getAnalyticsTrend('requests-by-category', this.period) || { series: [] }
+				this.trend = (await getAnalyticsTrend(
+					'requests-by-category',
+					this.period,
+				)) || { series: [] }
 			} catch (err) {
 				console.error('RequestsByCategoryChartWidget fetch error:', err)
 				this.error = this.t('pipelinq', 'Could not load analytics data.')

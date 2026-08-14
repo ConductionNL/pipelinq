@@ -11,7 +11,7 @@
 			<CnStatusBadge :status="badgeStatus" :label="statusLabel" />
 			<NcButton
 				v-if="canRetry"
-				type="primary"
+				variant="primary"
 				:disabled="busy"
 				@click="retry">
 				{{ t('pipelinq', 'Retry') }}
@@ -44,11 +44,11 @@
 			<table v-if="manifest.length" class="run-table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Path') }}</th>
-						<th>{{ t('pipelinq', 'Size') }}</th>
-						<th>{{ t('pipelinq', 'Rows') }}</th>
-						<th>{{ t('pipelinq', 'SHA-256') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Path') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Size') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Rows') }}</th>
+						<th scope="col">{{ t('pipelinq', 'SHA-256') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -69,14 +69,21 @@
 		</CnDetailCard>
 
 		<CnDetailCard :title="t('pipelinq', 'Schema snapshots')">
-			<div v-for="(snap, index) in snapshots" :key="index" class="run-snapshot">
+			<div
+				v-for="(snap, index) in snapshots"
+				:key="index"
+				class="run-snapshot">
 				<strong>{{ snap.pipelinqSchemaName }}</strong>
-				<ul v-if="snap.comparedToPrevious && snap.comparedToPrevious.length" class="run-drift">
+				<ul
+					v-if="snap.comparedToPrevious && snap.comparedToPrevious.length"
+					class="run-drift">
 					<li v-for="(change, ci) in snap.comparedToPrevious" :key="ci">
 						{{ change }}
 					</li>
 				</ul>
-				<span v-else class="run-nodrift">{{ t('pipelinq', 'No schema changes detected') }}</span>
+				<span v-else class="run-nodrift">{{
+					t('pipelinq', 'No schema changes detected')
+				}}</span>
 			</div>
 			<p v-if="!snapshots.length" class="run-empty">
 				{{ t('pipelinq', 'No schema snapshots') }}
@@ -150,7 +157,9 @@ export default {
 		 * @return {Array<object>} The manifest entries.
 		 */
 		manifest() {
-			return Array.isArray(this.run.fileManifestJson) ? this.run.fileManifestJson : []
+			return Array.isArray(this.run.fileManifestJson)
+				? this.run.fileManifestJson
+				: []
 		},
 		/**
 		 * The human-readable status label.
@@ -158,7 +167,10 @@ export default {
 		 * @return {string} The label.
 		 */
 		statusLabel() {
-			return this.t('pipelinq', STATUS_LABELS[this.run.status] || this.run.status || 'Unknown')
+			return this.t(
+				'pipelinq',
+				STATUS_LABELS[this.run.status] || this.run.status || 'Unknown',
+			)
 		},
 		/**
 		 * The status badge severity.
@@ -230,38 +242,47 @@ export default {
 	grid-template-columns: max-content 1fr;
 	gap: 4px 16px;
 }
+
 .run-summary dt {
 	font-weight: bold;
 	color: var(--color-text-maxcontrast);
 }
+
 .run-error {
 	margin-top: 12px;
 	color: var(--color-error);
 }
+
 .run-table {
 	width: 100%;
 	border-collapse: collapse;
 }
+
 .run-table th,
 .run-table td {
 	text-align: left;
 	padding: 6px 8px;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .run-hash {
 	font-family: monospace;
 	font-size: 0.85em;
 	word-break: break-all;
 }
+
 .run-snapshot {
 	margin-bottom: 12px;
 }
+
 .run-drift {
 	margin: 4px 0 0 16px;
 }
+
 .run-nodrift {
 	color: var(--color-text-maxcontrast);
 }
+
 .run-empty {
 	color: var(--color-text-maxcontrast);
 }

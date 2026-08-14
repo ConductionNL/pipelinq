@@ -1,4 +1,4 @@
-<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- Copyright (C) 2026 Conduction B.V. -->
 
 <template>
@@ -13,9 +13,9 @@
 					label="label"
 					:input-label="t('pipelinq', 'Select pipeline')"
 					:placeholder="t('pipelinq', 'Select pipeline')"
-					:reduce="o => o.value"
+					:reduce="(o) => o.value"
 					class="pipeline-selector"
-					@input="onPipelineChange" />
+					@update:model-value="onPipelineChange" />
 				<NcSelect
 					v-if="hasMultipleSchemas"
 					v-model="showFilter"
@@ -24,16 +24,16 @@
 					:input-label="t('pipelinq', 'Filter by type')"
 					class="show-filter" />
 				<NcTextField
-					:value="searchQuery"
+					:model-value="searchQuery"
 					type="search"
 					label-outside
 					:placeholder="t('pipelinq', 'Search pipeline...')"
 					:aria-label="t('pipelinq', 'Search pipeline...')"
 					class="pipeline-search"
-					@update:value="v => searchQuery = v" />
+					@update:model-value="(v) => (searchQuery = v)" />
 				<div class="view-toggle">
 					<NcButton
-						:type="viewMode === 'kanban' ? 'primary' : 'tertiary'"
+						:variant="viewMode === 'kanban' ? 'primary' : 'tertiary'"
 						:aria-label="t('pipelinq', 'Kanban view')"
 						@click="viewMode = 'kanban'">
 						<template #icon>
@@ -41,7 +41,7 @@
 						</template>
 					</NcButton>
 					<NcButton
-						:type="viewMode === 'list' ? 'primary' : 'tertiary'"
+						:variant="viewMode === 'list' ? 'primary' : 'tertiary'"
 						:aria-label="t('pipelinq', 'List view')"
 						@click="viewMode = 'list'">
 						<template #icon>
@@ -50,7 +50,7 @@
 					</NcButton>
 				</div>
 				<NcButton
-					type="tertiary"
+					variant="tertiary"
 					:aria-label="t('pipelinq', 'Pipeline settings')"
 					@click="toggleSidebar">
 					<template #icon>
@@ -74,29 +74,48 @@
 				class="kanban-column"
 				@dragover.prevent
 				@drop="onDrop($event, stage)">
-				<div class="kanban-column__header" :style="stage.color ? { borderTopColor: stage.color } : {}">
+				<div
+					class="kanban-column__header"
+					:style="stage.color ? { borderTopColor: stage.color } : {}">
 					<div class="column-header-top">
 						<span class="column-title">{{ stage.name }}</span>
-						<span class="column-count">{{ getStageItems(stage.name).length }}</span>
+						<span class="column-count">{{
+							getStageItems(stage.name).length
+						}}</span>
 					</div>
 					<div v-if="hasTotals" class="column-value-wrapper">
 						<button
 							type="button"
 							class="column-value column-value--clickable"
-							:aria-label="t('pipelinq', 'Show product breakdown for {stage}', { stage: stage.name })"
-							:aria-expanded="String(expandedBreakdownStage === stage.name)"
+							:aria-label="
+								t('pipelinq', 'Show product breakdown for {stage}', {
+									stage: stage.name,
+								})
+							"
+							:aria-expanded="
+								String(expandedBreakdownStage === stage.name)
+							"
 							@click.stop="toggleStageBreakdown(stage.name)">
-							{{ selectedPipeline.totalsLabel || '' }} {{ getStageTotalValue(stage.name).toLocaleString() }}
+							{{ selectedPipeline.totalsLabel || '' }}
+							{{ getStageTotalValue(stage.name).toLocaleString() }}
 						</button>
 						<div
 							v-if="expandedBreakdownStage === stage.name"
 							class="stage-breakdown"
 							role="dialog"
-							:aria-label="t('pipelinq', 'Product breakdown for {stage}', { stage: stage.name })"
+							:aria-label="
+								t('pipelinq', 'Product breakdown for {stage}', {
+									stage: stage.name,
+								})
+							"
 							@click.stop>
 							<div class="stage-breakdown__header">
 								<span class="stage-breakdown__title">
-									{{ t('pipelinq', 'Top products in {stage}', { stage: stage.name }) }}
+									{{
+										t('pipelinq', 'Top products in {stage}', {
+											stage: stage.name,
+										})
+									}}
 								</span>
 								<button
 									type="button"
@@ -106,24 +125,46 @@
 									&times;
 								</button>
 							</div>
-							<div v-if="getStageBreakdown(stage.name).items.length === 0" class="stage-breakdown__empty">
-								{{ t('pipelinq', 'No product breakdown available for this stage') }}
+							<div
+								v-if="
+									getStageBreakdown(stage.name).items.length === 0
+								"
+								class="stage-breakdown__empty">
+								{{
+									t(
+										'pipelinq',
+										'No product breakdown available for this stage',
+									)
+								}}
 							</div>
 							<ul v-else class="stage-breakdown__list">
 								<li
-									v-for="entry in getStageBreakdown(stage.name).items"
+									v-for="entry in getStageBreakdown(stage.name)
+										.items"
 									:key="entry.product"
 									class="stage-breakdown__row">
-									<span class="stage-breakdown__name">{{ entry.name }}</span>
-									<span class="stage-breakdown__count">{{ entry.count }}&times;</span>
+									<span class="stage-breakdown__name">{{
+										entry.name
+									}}</span>
+									<span class="stage-breakdown__count"
+										>{{ entry.count }}&times;</span
+									>
 									<span class="stage-breakdown__total">
-										{{ selectedPipeline.totalsLabel || '' }} {{ entry.total.toLocaleString() }}
+										{{ selectedPipeline.totalsLabel || '' }}
+										{{ entry.total.toLocaleString() }}
 									</span>
 								</li>
 								<li
-									v-if="getStageBreakdown(stage.name).remaining > 0"
+									v-if="
+										getStageBreakdown(stage.name).remaining > 0
+									"
 									class="stage-breakdown__more">
-									{{ t('pipelinq', 'and {count} more', { count: getStageBreakdown(stage.name).remaining }) }}
+									{{
+										t('pipelinq', 'and {count} more', {
+											count: getStageBreakdown(stage.name)
+												.remaining,
+										})
+									}}
 								</li>
 							</ul>
 						</div>
@@ -149,12 +190,27 @@
 					:key="stage.name"
 					class="kanban-closed-column"
 					:class="{ expanded: expandedClosed === stage.name }"
+					role="button"
+					tabindex="0"
+					:aria-expanded="expandedClosed === stage.name"
+					:aria-label="
+						t('pipelinq', 'Toggle closed stage {name}', {
+							name: stage.name,
+						})
+					"
 					@click="toggleClosedStage(stage.name)"
+					@keydown.enter.prevent="toggleClosedStage(stage.name)"
+					@keydown.space.prevent="toggleClosedStage(stage.name)"
 					@dragover.prevent
 					@drop="onDrop($event, stage)">
 					<span class="closed-title">{{ stage.name.toUpperCase() }}</span>
-					<span class="closed-count">{{ getStageItems(stage.name).length }}</span>
-					<div v-if="expandedClosed === stage.name" class="closed-items" @click.stop>
+					<span class="closed-count">{{
+						getStageItems(stage.name).length
+					}}</span>
+					<div
+						v-if="expandedClosed === stage.name"
+						class="closed-items"
+						@click.stop>
 						<PipelineCard
 							v-for="item in getStageItems(stage.name)"
 							:key="item.id"
@@ -174,37 +230,82 @@
 			<table class="list-table">
 				<thead>
 					<tr>
-						<th class="sortable" @click="toggleSort('title')">
+						<th
+							scope="col"
+							class="sortable"
+							@click="toggleSort('title')">
 							{{ t('pipelinq', 'Title') }}
-							<span v-if="sortBy === 'title'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+							<span v-if="sortBy === 'title'" class="sort-indicator">{{
+								sortDir === 'asc' ? '▲' : '▼'
+							}}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('schemaSlug')">
+						<th
+							scope="col"
+							class="sortable"
+							@click="toggleSort('schemaSlug')">
 							{{ t('pipelinq', 'Type') }}
-							<span v-if="sortBy === 'schemaSlug'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+							<span
+								v-if="sortBy === 'schemaSlug'"
+								class="sort-indicator"
+								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
+							>
 						</th>
-						<th class="sortable" @click="toggleSort('stage')">
+						<th
+							scope="col"
+							class="sortable"
+							@click="toggleSort('stage')">
 							{{ t('pipelinq', 'Stage') }}
-							<span v-if="sortBy === 'stage'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+							<span v-if="sortBy === 'stage'" class="sort-indicator">{{
+								sortDir === 'asc' ? '▲' : '▼'
+							}}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('assignee')">
+						<th
+							scope="col"
+							class="sortable"
+							@click="toggleSort('assignee')">
 							{{ t('pipelinq', 'Assignee') }}
-							<span v-if="sortBy === 'assignee'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+							<span
+								v-if="sortBy === 'assignee'"
+								class="sort-indicator"
+								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
+							>
 						</th>
-						<th class="sortable" @click="toggleSort('value')">
+						<th
+							scope="col"
+							class="sortable"
+							@click="toggleSort('value')">
 							{{ t('pipelinq', 'Value') }}
-							<span v-if="sortBy === 'value'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+							<span v-if="sortBy === 'value'" class="sort-indicator">{{
+								sortDir === 'asc' ? '▲' : '▼'
+							}}</span>
 						</th>
-						<th class="sortable" @click="toggleSort('dueDate')">
+						<th
+							scope="col"
+							class="sortable"
+							@click="toggleSort('dueDate')">
 							{{ t('pipelinq', 'Due Date') }}
-							<span v-if="sortBy === 'dueDate'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+							<span
+								v-if="sortBy === 'dueDate'"
+								class="sort-indicator"
+								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
+							>
 						</th>
-						<th class="sortable" @click="toggleSort('priority')">
+						<th
+							scope="col"
+							class="sortable"
+							@click="toggleSort('priority')">
 							{{ t('pipelinq', 'Priority') }}
-							<span v-if="sortBy === 'priority'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+							<span
+								v-if="sortBy === 'priority'"
+								class="sort-indicator"
+								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
+							>
 						</th>
-						<th class="sortable" @click="toggleSort('age')">
+						<th scope="col" class="sortable" @click="toggleSort('age')">
 							{{ t('pipelinq', 'Age') }}
-							<span v-if="sortBy === 'age'" class="sort-indicator">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+							<span v-if="sortBy === 'age'" class="sort-indicator">{{
+								sortDir === 'asc' ? '▲' : '▼'
+							}}</span>
 						</th>
 					</tr>
 				</thead>
@@ -222,7 +323,9 @@
 							</span>
 						</td>
 						<td>
-							<span class="entity-badge" :class="'badge--' + item._schemaSlug">
+							<span
+								class="entity-badge"
+								:class="'badge--' + item._schemaSlug">
 								{{ item._schemaSlug.toUpperCase().slice(0, 4) }}
 							</span>
 						</td>
@@ -230,20 +333,29 @@
 						<td>{{ item.assignee || '—' }}</td>
 						<td>
 							<span v-if="getItemTotalsValue(item) !== null">
-								{{ selectedPipeline.totalsLabel || '' }} {{ Number(getItemTotalsValue(item)).toLocaleString() }}
+								{{ selectedPipeline.totalsLabel || '' }}
+								{{
+									Number(getItemTotalsValue(item)).toLocaleString()
+								}}
 							</span>
 							<span v-else>&#x2014;</span>
 						</td>
 						<td :class="{ 'overdue-date': isItemOverdue(item) }">
-							{{ formatDate(item.expectedCloseDate || item.occurredAt) }}
+							{{
+								formatDate(item.expectedCloseDate || item.occurredAt)
+							}}
 						</td>
 						<td>
-							<span v-if="item.priority" :style="{ color: getPriorityColor(item.priority) }">
+							<span
+								v-if="item.priority"
+								:style="{ color: getPriorityColor(item.priority) }">
 								{{ getPriorityLabel(item.priority) }}
 							</span>
 						</td>
 						<td>
-							<span class="aging-badge" :class="getItemAgingClass(item)">
+							<span
+								class="aging-badge"
+								:class="getItemAgingClass(item)">
 								{{ getItemAgeLabel(item) }}
 							</span>
 						</td>
@@ -266,7 +378,13 @@ import PipelineCard from './PipelineCard.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 import { initializeStores } from '../../store/store.js'
 import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
-import { getDaysAge, isStale, getAgingClass, formatAge, resolveObjectType } from '../../services/pipelineUtils.js'
+import {
+	getDaysAge,
+	isStale,
+	getAgingClass,
+	formatAge,
+	resolveObjectType,
+} from '../../services/pipelineUtils.js'
 import { formatDate } from '../../services/localeUtils.js'
 
 export default {
@@ -352,7 +470,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-22
 		 */
 		pipelineSelectOptions() {
-			return this.pipelines.map(p => ({
+			return this.pipelines.map((p) => ({
 				value: p.id,
 				label: p.title,
 			}))
@@ -362,7 +480,9 @@ export default {
 		 */
 		selectedPipeline() {
 			if (!this.selectedPipelineId) return null
-			return this.pipelines.find(p => p.id === this.selectedPipelineId) || null
+			return (
+				this.pipelines.find((p) => p.id === this.selectedPipelineId) || null
+			)
 		},
 		/**
 		 * The registered object types the selected pipeline renders, used
@@ -380,7 +500,7 @@ export default {
 			if (!pipeline) return []
 			let slugs = []
 			if (pipeline.propertyMappings && pipeline.propertyMappings.length > 0) {
-				slugs = pipeline.propertyMappings.map(m => m.schemaSlug)
+				slugs = pipeline.propertyMappings.map((m) => m.schemaSlug)
 			} else if (pipeline.entityType === 'both') {
 				slugs = ['lead', 'request']
 			} else if (pipeline.entityType) {
@@ -405,7 +525,7 @@ export default {
 			return this.propertyMappings.length > 1
 		},
 		hasTotals() {
-			return this.propertyMappings.some(m => m.totalsProperty)
+			return this.propertyMappings.some((m) => m.totalsProperty)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-27
@@ -415,7 +535,10 @@ export default {
 			for (const mapping of this.propertyMappings) {
 				options.push({
 					id: mapping.schemaSlug,
-					label: mapping.schemaSlug.charAt(0).toUpperCase() + mapping.schemaSlug.slice(1) + 's',
+					label:
+						mapping.schemaSlug.charAt(0).toUpperCase()
+						+ mapping.schemaSlug.slice(1)
+						+ 's',
 				})
 			}
 			return options
@@ -425,19 +548,21 @@ export default {
 		 */
 		sortedStages() {
 			if (!this.selectedPipeline?.stages) return []
-			return [...this.selectedPipeline.stages].sort((a, b) => a.order - b.order)
+			return [...this.selectedPipeline.stages].sort(
+				(a, b) => a.order - b.order,
+			)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-21
 		 */
 		openStages() {
-			return this.sortedStages.filter(s => !s.isClosed)
+			return this.sortedStages.filter((s) => !s.isClosed)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-3
 		 */
 		closedStages() {
-			return this.sortedStages.filter(s => s.isClosed)
+			return this.sortedStages.filter((s) => s.isClosed)
 		},
 		/**
 		 * Schema-filtered merged array of all pipeline items; no search applied.
@@ -448,7 +573,7 @@ export default {
 			let result = this.items
 			const filter = this.showFilter?.id || this.showFilter || 'all'
 			if (filter !== 'all') {
-				result = result.filter(i => i._schemaSlug === filter)
+				result = result.filter((i) => i._schemaSlug === filter)
 			}
 			return result
 		},
@@ -461,7 +586,9 @@ export default {
 		filteredItems() {
 			if (!this.searchQuery.trim()) return this.allItems
 			const query = this.searchQuery.trim().toLowerCase()
-			return this.allItems.filter(i => (i.title || '').toLowerCase().includes(query))
+			return this.allItems.filter((i) =>
+				(i.title || '').toLowerCase().includes(query),
+			)
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
@@ -472,40 +599,40 @@ export default {
 			items.sort((a, b) => {
 				let valA, valB
 				switch (this.sortBy) {
-				case 'title':
-					valA = (a.title || '').toLowerCase()
-					valB = (b.title || '').toLowerCase()
-					break
-				case 'schemaSlug':
-					valA = a._schemaSlug
-					valB = b._schemaSlug
-					break
-				case 'stage':
-					valA = (this.getItemColumnValue(a) || '').toLowerCase()
-					valB = (this.getItemColumnValue(b) || '').toLowerCase()
-					break
-				case 'assignee':
-					valA = (a.assignee || '').toLowerCase()
-					valB = (b.assignee || '').toLowerCase()
-					break
-				case 'value':
-					valA = Number(a.value) || 0
-					valB = Number(b.value) || 0
-					break
-				case 'dueDate':
-					valA = a.expectedCloseDate || a.occurredAt || ''
-					valB = b.expectedCloseDate || b.occurredAt || ''
-					break
-				case 'priority':
-					valA = priorityOrder[a.priority] ?? 2
-					valB = priorityOrder[b.priority] ?? 2
-					break
-				case 'age':
-					valA = getDaysAge(a)
-					valB = getDaysAge(b)
-					break
-				default:
-					return 0
+					case 'title':
+						valA = (a.title || '').toLowerCase()
+						valB = (b.title || '').toLowerCase()
+						break
+					case 'schemaSlug':
+						valA = a._schemaSlug
+						valB = b._schemaSlug
+						break
+					case 'stage':
+						valA = (this.getItemColumnValue(a) || '').toLowerCase()
+						valB = (this.getItemColumnValue(b) || '').toLowerCase()
+						break
+					case 'assignee':
+						valA = (a.assignee || '').toLowerCase()
+						valB = (b.assignee || '').toLowerCase()
+						break
+					case 'value':
+						valA = Number(a.value) || 0
+						valB = Number(b.value) || 0
+						break
+					case 'dueDate':
+						valA = a.expectedCloseDate || a.occurredAt || ''
+						valB = b.expectedCloseDate || b.occurredAt || ''
+						break
+					case 'priority':
+						valA = priorityOrder[a.priority] ?? 2
+						valB = priorityOrder[b.priority] ?? 2
+						break
+					case 'age':
+						valA = getDaysAge(a)
+						valB = getDaysAge(b)
+						break
+					default:
+						return 0
 				}
 				if (valA < valB) return this.sortDir === 'asc' ? -1 : 1
 				if (valA > valB) return this.sortDir === 'asc' ? 1 : -1
@@ -560,7 +687,8 @@ export default {
 		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 
 		if (this.pipelines.length > 0) {
-			const defaultPipeline = this.pipelines.find(p => p.isDefault) || this.pipelines[0]
+			const defaultPipeline =
+				this.pipelines.find((p) => p.isDefault) || this.pipelines[0]
 			this.selectedPipelineId = defaultPipeline.id
 			await this.fetchPipelineItems()
 		}
@@ -570,7 +698,7 @@ export default {
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-2
 	 */
-	beforeDestroy() {
+	beforeUnmount() {
 		clearTimeout(this.liveRefetchTimer)
 		this.releaseLiveSubscriptions()
 		if (this.pipelineSidebarState) {
@@ -619,7 +747,10 @@ export default {
 					handles.push(await store.subscribe(type))
 				}
 			} catch (e) {
-				console.warn('[PipelineBoard] live subscription failed:', e?.message ?? e)
+				console.warn(
+					'[PipelineBoard] live subscription failed:',
+					e?.message ?? e,
+				)
 			}
 			if (this.liveEpoch !== epoch) {
 				// Released while awaiting (pipeline switch / destroy) — drop
@@ -702,7 +833,10 @@ export default {
 		},
 
 		getMappingForItem(item) {
-			return this.propertyMappings.find(m => m.schemaSlug === item._schemaSlug) || null
+			return (
+				this.propertyMappings.find((m) => m.schemaSlug === item._schemaSlug)
+				|| null
+			)
 		},
 
 		/**
@@ -739,10 +873,15 @@ export default {
 		 */
 		getStageItems(stageName) {
 			return this.filteredItems
-				.filter(item => {
+				.filter((item) => {
 					const colValue = this.getItemColumnValue(item)
 					if (colValue === stageName) return true
-					if (!colValue && this.openStages.length > 0 && this.openStages[0].name === stageName) return true
+					if (
+						!colValue
+						&& this.openStages.length > 0
+						&& this.openStages[0].name === stageName
+					)
+						return true
 					return false
 				})
 				.sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0))
@@ -801,10 +940,12 @@ export default {
 		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.1
 		 */
 		async fetchLeadProductsForStages() {
-			const leadIds = new Set(this.items
-				.filter(i => i._schemaSlug === 'lead')
-				.map(i => i.id)
-				.filter(Boolean))
+			const leadIds = new Set(
+				this.items
+					.filter((i) => i._schemaSlug === 'lead')
+					.map((i) => i.id)
+					.filter(Boolean),
+			)
 
 			if (leadIds.size === 0) {
 				this.leadProductsByLead = {}
@@ -816,12 +957,15 @@ export default {
 				// Bulk fetch — filter client-side by leadId so we only emit one
 				// network call per board load. Backend `findAll` parameter for
 				// arrays is not contractually stable across OR versions.
-				const lpCollection = await this.objectStore.fetchCollection('leadProduct', {
-					_limit: 500,
-				})
+				const lpCollection = await this.objectStore.fetchCollection(
+					'leadProduct',
+					{
+						_limit: 500,
+					},
+				)
 				const byLead = {}
 				const productIds = new Set()
-				for (const lp of (lpCollection || [])) {
+				for (const lp of lpCollection || []) {
 					if (!lp.lead || !leadIds.has(lp.lead)) continue
 					if (!byLead[lp.lead]) byLead[lp.lead] = []
 					byLead[lp.lead].push(lp)
@@ -830,11 +974,14 @@ export default {
 				this.leadProductsByLead = byLead
 
 				if (productIds.size > 0) {
-					const products = await this.objectStore.fetchCollection('product', {
-						_limit: 500,
-					})
+					const products = await this.objectStore.fetchCollection(
+						'product',
+						{
+							_limit: 500,
+						},
+					)
 					const names = {}
-					for (const p of (products || [])) {
+					for (const p of products || []) {
 						if (productIds.has(p.id)) {
 							names[p.id] = p.name || p.id
 						}
@@ -858,7 +1005,9 @@ export default {
 		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.2
 		 */
 		getStageBreakdown(stageName) {
-			const stageLeads = this.getStageItems(stageName).filter(i => i._schemaSlug === 'lead')
+			const stageLeads = this.getStageItems(stageName).filter(
+				(i) => i._schemaSlug === 'lead',
+			)
 			const aggregate = new Map()
 			for (const lead of stageLeads) {
 				const lineItems = this.leadProductsByLead[lead.id] || []
@@ -875,7 +1024,9 @@ export default {
 					aggregate.set(lp.product, current)
 				}
 			}
-			const sorted = Array.from(aggregate.values()).sort((a, b) => b.total - a.total)
+			const sorted = Array.from(aggregate.values()).sort(
+				(a, b) => b.total - a.total,
+			)
 			const top = sorted.slice(0, 5)
 			const remaining = Math.max(0, sorted.length - top.length)
 			return { items: top, remaining }
@@ -888,7 +1039,8 @@ export default {
 		 * @spec openspec/changes/lead-product-link/tasks.md#task-4.3
 		 */
 		toggleStageBreakdown(stageName) {
-			this.expandedBreakdownStage = this.expandedBreakdownStage === stageName ? null : stageName
+			this.expandedBreakdownStage =
+				this.expandedBreakdownStage === stageName ? null : stageName
 		},
 
 		/**
@@ -899,7 +1051,7 @@ export default {
 			const mappings = pipeline.propertyMappings || []
 			const promises = mappings.map(async (mapping) => {
 				const rawItems = await this.fetchSchemaItems(mapping.schemaSlug)
-				return rawItems.map(item => ({
+				return rawItems.map((item) => ({
 					...item,
 					_schemaSlug: mapping.schemaSlug,
 					_entityType: mapping.schemaSlug,
@@ -920,16 +1072,32 @@ export default {
 			let requests = []
 
 			if (et === 'lead' || et === 'both') {
-				promises.push(this.fetchSchemaItems('lead').then(items => { leads = items }))
+				promises.push(
+					this.fetchSchemaItems('lead').then((items) => {
+						leads = items
+					}),
+				)
 			}
 			if (et === 'request' || et === 'both') {
-				promises.push(this.fetchSchemaItems('request').then(items => { requests = items }))
+				promises.push(
+					this.fetchSchemaItems('request').then((items) => {
+						requests = items
+					}),
+				)
 			}
 
 			await Promise.all(promises)
 			this.items = [
-				...leads.map(l => ({ ...l, _schemaSlug: 'lead', _entityType: 'lead' })),
-				...requests.map(r => ({ ...r, _schemaSlug: 'request', _entityType: 'request' })),
+				...leads.map((l) => ({
+					...l,
+					_schemaSlug: 'lead',
+					_entityType: 'lead',
+				})),
+				...requests.map((r) => ({
+					...r,
+					_schemaSlug: 'request',
+					_entityType: 'request',
+				})),
 			]
 		},
 
@@ -976,8 +1144,12 @@ export default {
 		 */
 		async onDrop(event, targetStage) {
 			try {
-				const data = JSON.parse(event.dataTransfer.getData('application/json'))
-				const mapping = this.propertyMappings.find(m => m.schemaSlug === data._schemaSlug)
+				const data = JSON.parse(
+					event.dataTransfer.getData('application/json'),
+				)
+				const mapping = this.propertyMappings.find(
+					(m) => m.schemaSlug === data._schemaSlug,
+				)
 				const columnProp = mapping?.columnProperty || 'stage'
 
 				if (data[columnProp] === targetStage.name) return
@@ -989,7 +1161,9 @@ export default {
 				// Resolve the logical slug onto its registered object type; a
 				// request/complaint/contactmoment writes to `ticket` and must carry
 				// its ticketType discriminator (unify-ticket-supertype).
-				const { objectType, ticketType } = resolveObjectType(data._schemaSlug)
+				const { objectType, ticketType } = resolveObjectType(
+					data._schemaSlug,
+				)
 				if (ticketType) update.ticketType = ticketType
 
 				await this.objectStore.saveObject(objectType, update)
@@ -1004,7 +1178,8 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-31
 		 */
 		toggleClosedStage(stageName) {
-			this.expandedClosed = this.expandedClosed === stageName ? null : stageName
+			this.expandedClosed =
+				this.expandedClosed === stageName ? null : stageName
 		},
 
 		/**
@@ -1462,5 +1637,12 @@ export default {
 	padding: 40px;
 	text-align: center;
 	color: var(--color-text-maxcontrast);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.kanban-closed-column,
+	.list-row {
+		transition: none;
+	}
 }
 </style>

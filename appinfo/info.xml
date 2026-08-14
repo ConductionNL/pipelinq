@@ -52,7 +52,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.70</version>
+    <version>0.6.0</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -74,7 +74,26 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
     <dependencies>
         <php min-version="8.3"/>
-        <nextcloud min-version="28" max-version="34"/>
+        <!--
+        min-version is 32, NOT 28, because the OpenRegister dependency noted below is
+        HARD (src/manifest.json lists "openregister" as a required dependency; the
+        optional ones there carry "required": false), and OpenRegister cannot run
+        below Nextcloud 32: its lib/ContextChat/ContentProvider.php declares
+        `class ContentProvider implements IContentProvider` against
+        OCP\ContextChat\IContentProvider, and that interface first ships in core at
+        32.0.0 — verified absent at v29.0.0 / v30.0.0 / v31.0.0 and present at
+        v32.0.0. Because the reference is in the CLASS HEADER it is fatal at
+        autoload, not lazily degradable. All Pipelinq data is OpenRegister objects,
+        so on NC 28-31 this app cannot function. Declaring 28 advertised a range
+        this app cannot deliver. Same defect as openconnector#1173.
+
+        NOTE: OpenRegister's own appinfo/info.xml still declares min-version="28"
+        (canonical origin/development and origin/main, checked 2026-08-08). That
+        declaration is itself too low for the reason above; it is tracked in
+        OpenRegister, and this app does not depend on that value — the floor here
+        rests on the interface fact, not on OpenRegister's declaration.
+        -->
+        <nextcloud min-version="32" max-version="34"/>
         <!-- App dependency (not expressible in app-info.xsd): OpenRegister
              (all Pipelinq data — clients, contacts, leads, requests, contracts,
              contactmomenten — is stored as OpenRegister registers/schemas; see
@@ -134,6 +153,27 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar</step>
             <step>OCA\Pipelinq\Repair\RemoveLegacyPspKeys</step>
         </post-migration>
+        <!--
+            FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
+            `Installer::installAppLastSteps()` guards both the pre-migration and
+            post-migration blocks with `if ($previousVersion !== '')`, and only
+            `repair-steps/install` runs unconditionally afterwards. Until this block
+            existed a brand-new Pipelinq install ran NONE of the steps above, so
+            InitializeSettings never fired and the pipelinq register and schemas were
+            never imported. The step is annotated
+            `@spec openspec/specs/openregister-integration/spec.md#requirement-auto-configuration-on-install-repair-step`
+            — the spec said "on install"; the wiring never fired on install.
+
+            Only baseline-CREATING steps belong here. Everything else above operates
+            on data a fresh install does not have: the Normalise*/Unify*/Drain*/
+            InitSlaStatus steps rewrite existing rows, the Migrate*/Remove* steps are
+            one-way migrations, and IngestProductVendorMaster consumes a shillinq
+            export that a new instance has never received.
+        -->
+        <install>
+            <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+            <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+        </install>
     </repair-steps>
 
     <settings>

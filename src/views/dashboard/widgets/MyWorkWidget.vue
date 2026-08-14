@@ -12,7 +12,8 @@
 	per-row destination (ConductionNL/nextcloud-vue#91 Wave 2 gap).
 -->
 <template>
-	<CnDataTable :rows="items"
+	<CnDataTable
+		:rows="items"
 		:columns="columns"
 		:loading="!loaded"
 		:loading-text="t('pipelinq', 'Loading…')"
@@ -27,14 +28,17 @@
 			</span>
 		</template>
 		<template #column-dueDate="{ row }">
-			<span v-if="row.dueDate" class="my-work-due" :class="{ overdue: row.isOverdue }">
+			<span
+				v-if="row.dueDate"
+				class="my-work-due"
+				:class="{ overdue: row.isOverdue }">
 				{{ formatDate(row.dueDate) }}
 			</span>
 		</template>
 		<template #footer>
 			<NcButton
 				v-if="total > items.length"
-				type="tertiary"
+				variant="tertiary"
 				class="view-all-link"
 				@click="$router.push({ name: 'MyWork' })">
 				{{ t('pipelinq', 'View all ({count})', { count: total }) }}
@@ -108,7 +112,9 @@ export default {
 		async load() {
 			try {
 				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/worklist/mine?limit=' + WIDGET_LIMIT),
+					generateUrl(
+						'/apps/pipelinq/api/worklist/mine?limit=' + WIDGET_LIMIT,
+					),
 					{
 						headers: {
 							'Content-Type': 'application/json',
@@ -139,7 +145,9 @@ export default {
 		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 		 */
 		openItem(item) {
-			const raw = item.routeName || (item.entityType === 'lead' ? 'LeadDetail' : 'TicketDetail')
+			const raw =
+				item.routeName
+				|| (item.entityType === 'lead' ? 'LeadDetail' : 'TicketDetail')
 			const name = LEGACY_ROUTE_MAP[raw] || raw
 			this.$router.push({ name, params: { id: item.id } })
 		},

@@ -25,29 +25,39 @@
 		:sidebar="sidebarConfig"
 		:row-class="rowClassFor"
 		:items-filter="itemsFilter"
-		:row-click-to-view="true"
+		:row-click-to-view="false"
 		@row-click="openLead"
 		@view="openLead">
-		<template #header-extra>
+		<template #header-actions>
 			<div class="lead-list__filters">
 				<NcCheckboxRadioSwitch
 					v-model="showStaleOnly"
+					:aria-label="
+						t('pipelinq', 'Stale only (>{days}d)', {
+							days: staleThreshold,
+						})
+					"
 					type="checkbox">
-					{{ t('pipelinq', 'Stale only (>{days}d)', { days: staleThreshold }) }}
+					{{
+						t('pipelinq', 'Stale only (>{days}d)', {
+							days: staleThreshold,
+						})
+					}}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
 					v-model="hideClosed"
+					:aria-label="t('pipelinq', 'Hide closed')"
 					type="checkbox">
 					{{ t('pipelinq', 'Hide closed') }}
 				</NcCheckboxRadioSwitch>
 			</div>
 		</template>
 
-		<template #cell-expectedCloseDate="{ item }">
-			<span :class="{ 'overdue-cell': isLeadOverdue(item, stages) }">
-				{{ item.expectedCloseDate || '-' }}
-				<small v-if="isLeadOverdue(item, stages)" class="overdue-suffix">
-					{{ getOverdueDays(item, stages) }}d {{ t('pipelinq', 'late') }}
+		<template #column-expectedCloseDate="{ row }">
+			<span :class="{ 'overdue-cell': isLeadOverdue(row, stages) }">
+				{{ row.expectedCloseDate || '-' }}
+				<small v-if="isLeadOverdue(row, stages)" class="overdue-suffix">
+					{{ getOverdueDays(row, stages) }}d {{ t('pipelinq', 'late') }}
 				</small>
 			</span>
 		</template>
@@ -57,7 +67,12 @@
 <script>
 import { CnIndexPage } from '@conduction/nextcloud-vue'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
-import { getDaysAge, isLeadOverdue, getOverdueDays, getStaleThreshold } from '../../services/pipelineUtils.js'
+import {
+	getDaysAge,
+	isLeadOverdue,
+	getOverdueDays,
+	getStaleThreshold,
+} from '../../services/pipelineUtils.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -71,7 +86,14 @@ export default {
 		return {
 			register: 'pipelinq',
 			schema: 'lead',
-			columns: ['title', 'stage', 'status', 'priority', 'value', 'expectedCloseDate'],
+			columns: [
+				'title',
+				'stage',
+				'status',
+				'priority',
+				'value',
+				'expectedCloseDate',
+			],
 			showStaleOnly: false,
 			hideClosed: true,
 			stages: [],
@@ -142,8 +164,11 @@ export default {
 		 */
 		itemsFilter(items) {
 			if (!Array.isArray(items)) return []
-			return items.filter(item => {
-				if (this.hideClosed && (item.status === 'won' || item.status === 'lost')) {
+			return items.filter((item) => {
+				if (
+					this.hideClosed
+					&& (item.status === 'won' || item.status === 'lost')
+				) {
 					return false
 				}
 				if (this.showStaleOnly && getDaysAge(item) < this.staleThreshold) {
@@ -161,9 +186,13 @@ export default {
 		 */
 		async loadDefaultPipeline() {
 			try {
-				const pipelines = await this.objectStore.fetchCollection('pipeline', { _limit: 50 })
+				const pipelines = await this.objectStore.fetchCollection(
+					'pipeline',
+					{ _limit: 50 },
+				)
 				if (!Array.isArray(pipelines)) return
-				const defaultPipeline = pipelines.find(p => p.isDefault) || pipelines[0]
+				const defaultPipeline =
+					pipelines.find((p) => p.isDefault) || pipelines[0]
 				if (defaultPipeline && Array.isArray(defaultPipeline.stages)) {
 					this.stages = defaultPipeline.stages
 				}

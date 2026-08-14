@@ -30,235 +30,227 @@ use OCP\IUserSession;
  *
  * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-3
  */
-class ObjectEventDispatcher
-{
-    /**
-     * Constructor.
-     *
-     * @param NotificationService $notifyService   The notification service.
-     * @param ActivityService     $activityService The activity service.
-     * @param IUserSession        $userSession     The user session.
-     */
-    public function __construct(
-        private NotificationService $notifyService,
-        private ActivityService $activityService,
-        private IUserSession $userSession,
-    ) {
-    }//end __construct()
+class ObjectEventDispatcher {
+	/**
+	 * Constructor.
+	 *
+	 * @param NotificationService $notifyService The notification service.
+	 * @param ActivityService $activityService The activity service.
+	 * @param IUserSession $userSession The user session.
+	 */
+	public function __construct(
+		private NotificationService $notifyService,
+		private ActivityService $activityService,
+		private IUserSession $userSession,
+	) {
+	}//end __construct()
 
-    /**
-     * Dispatch creation events for a new entity.
-     *
-     * @param string $entityType The entity type.
-     * @param string $title      The entity title.
-     * @param string $objectId   The object ID.
-     * @param string $assignee   The assignee user ID.
-     *
-     * @return void
-     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-4
-     */
-    public function dispatchCreated(string $entityType, string $title, string $objectId, string $assignee): void
-    {
-        $this->activityService->publishCreated(
-            entityType: $entityType,
-            title: $title,
-            objectId: $objectId,
-            affectedUser: $this->nullIfEmpty(value: $assignee)
-        );
+	/**
+	 * Dispatch creation events for a new entity.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $title The entity title.
+	 * @param string $objectId The object ID.
+	 * @param string $assignee The assignee user ID.
+	 *
+	 * @return void
+	 * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-4
+	 */
+	public function dispatchCreated(string $entityType, string $title, string $objectId, string $assignee): void {
+		$this->activityService->publishCreated(
+			entityType: $entityType,
+			title: $title,
+			objectId: $objectId,
+			affectedUser: $this->nullIfEmpty(value: $assignee)
+		);
 
-        if ($assignee !== '') {
-            $author = $this->getCurrentUser();
-            $this->notifyService->notifyAssignment(
-                entityType: $entityType,
-                title: $title,
-                assigneeUserId: $assignee,
-                objectId: $objectId,
-                author: $author
-            );
-        }
-    }//end dispatchCreated()
+		if ($assignee !== '') {
+			$author = $this->getCurrentUser();
+			$this->notifyService->notifyAssignment(
+				entityType: $entityType,
+				title: $title,
+				assigneeUserId: $assignee,
+				objectId: $objectId,
+				author: $author
+			);
+		}
+	}//end dispatchCreated()
 
-    /**
-     * Dispatch assignee change events.
-     *
-     * @param string $entityType The entity type.
-     * @param string $title      The entity title.
-     * @param string $objectId   The object ID.
-     * @param string $assignee   The new assignee user ID.
-     *
-     * @return void
-     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-3
-     */
-    public function dispatchAssigneeChange(
-        string $entityType,
-        string $title,
-        string $objectId,
-        string $assignee,
-    ): void {
-        $this->activityService->publishAssigned(
-            entityType: $entityType,
-            title: $title,
-            newAssignee: $assignee,
-            objectId: $objectId
-        );
-        $this->notifyService->notifyAssignment(
-            entityType: $entityType,
-            title: $title,
-            assigneeUserId: $assignee,
-            objectId: $objectId,
-            author: $this->getCurrentUser()
-        );
-    }//end dispatchAssigneeChange()
+	/**
+	 * Dispatch assignee change events.
+	 *
+	 * @param string $entityType The entity type.
+	 * @param string $title The entity title.
+	 * @param string $objectId The object ID.
+	 * @param string $assignee The new assignee user ID.
+	 *
+	 * @return void
+	 * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-3
+	 */
+	public function dispatchAssigneeChange(
+		string $entityType,
+		string $title,
+		string $objectId,
+		string $assignee,
+	): void {
+		$this->activityService->publishAssigned(
+			entityType: $entityType,
+			title: $title,
+			newAssignee: $assignee,
+			objectId: $objectId
+		);
+		$this->notifyService->notifyAssignment(
+			entityType: $entityType,
+			title: $title,
+			assigneeUserId: $assignee,
+			objectId: $objectId,
+			author: $this->getCurrentUser()
+		);
+	}//end dispatchAssigneeChange()
 
-    /**
-     * Dispatch stage change events for a lead.
-     *
-     * @param string $title    The entity title.
-     * @param string $objectId The object ID.
-     * @param string $newStage The new stage name.
-     * @param string $assignee The current assignee.
-     *
-     * @return void
-     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-7
-     */
-    public function dispatchStageChange(string $title, string $objectId, string $newStage, string $assignee): void
-    {
-        $this->activityService->publishStageChanged(
-            title: $title,
-            newStage: $newStage,
-            objectId: $objectId,
-            affectedUser: $this->nullIfEmpty(value: $assignee)
-        );
+	/**
+	 * Dispatch stage change events for a lead.
+	 *
+	 * @param string $title The entity title.
+	 * @param string $objectId The object ID.
+	 * @param string $newStage The new stage name.
+	 * @param string $assignee The current assignee.
+	 *
+	 * @return void
+	 * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-7
+	 */
+	public function dispatchStageChange(string $title, string $objectId, string $newStage, string $assignee): void {
+		$this->activityService->publishStageChanged(
+			title: $title,
+			newStage: $newStage,
+			objectId: $objectId,
+			affectedUser: $this->nullIfEmpty(value: $assignee)
+		);
 
-        if ($assignee !== '') {
-            $this->notifyService->notifyStageChange(
-                title: $title,
-                newStage: $newStage,
-                assigneeUserId: $assignee,
-                objectId: $objectId,
-                author: $this->getCurrentUser()
-            );
-        }
-    }//end dispatchStageChange()
+		if ($assignee !== '') {
+			$this->notifyService->notifyStageChange(
+				title: $title,
+				newStage: $newStage,
+				assigneeUserId: $assignee,
+				objectId: $objectId,
+				author: $this->getCurrentUser()
+			);
+		}
+	}//end dispatchStageChange()
 
-    /**
-     * Dispatch status change events for a request.
-     *
-     * @param string $title     The entity title.
-     * @param string $objectId  The object ID.
-     * @param string $newStatus The new status name.
-     * @param string $assignee  The current assignee.
-     *
-     * @return void
-     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-8
-     */
-    public function dispatchStatusChange(string $title, string $objectId, string $newStatus, string $assignee): void
-    {
-        $this->activityService->publishStatusChanged(
-            title: $title,
-            newStatus: $newStatus,
-            objectId: $objectId,
-            affectedUser: $this->nullIfEmpty(value: $assignee)
-        );
+	/**
+	 * Dispatch status change events for a request.
+	 *
+	 * @param string $title The entity title.
+	 * @param string $objectId The object ID.
+	 * @param string $newStatus The new status name.
+	 * @param string $assignee The current assignee.
+	 *
+	 * @return void
+	 * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-8
+	 */
+	public function dispatchStatusChange(string $title, string $objectId, string $newStatus, string $assignee): void {
+		$this->activityService->publishStatusChanged(
+			title: $title,
+			newStatus: $newStatus,
+			objectId: $objectId,
+			affectedUser: $this->nullIfEmpty(value: $assignee)
+		);
 
-        if ($assignee !== '') {
-            $this->notifyService->notifyStatusChange(
-                title: $title,
-                newStatus: $newStatus,
-                assigneeUserId: $assignee,
-                objectId: $objectId,
-                author: $this->getCurrentUser()
-            );
-        }
-    }//end dispatchStatusChange()
+		if ($assignee !== '') {
+			$this->notifyService->notifyStatusChange(
+				title: $title,
+				newStatus: $newStatus,
+				assigneeUserId: $assignee,
+				objectId: $objectId,
+				author: $this->getCurrentUser()
+			);
+		}
+	}//end dispatchStatusChange()
 
-    /**
-     * Dispatch deal won events for a lead.
-     *
-     * @param string $title    The lead title.
-     * @param string $value    The deal value.
-     * @param string $objectId The object ID.
-     * @param string $assignee The current assignee.
-     *
-     * @return void
-     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-6
-     */
-    public function dispatchDealWon(string $title, string $value, string $objectId, string $assignee): void
-    {
-        $this->activityService->publishDealWon(
-            title: $title,
-            value: $value,
-            objectId: $objectId,
-            affectedUser: $this->nullIfEmpty(value: $assignee)
-        );
+	/**
+	 * Dispatch deal won events for a lead.
+	 *
+	 * @param string $title The lead title.
+	 * @param string $value The deal value.
+	 * @param string $objectId The object ID.
+	 * @param string $assignee The current assignee.
+	 *
+	 * @return void
+	 * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-6
+	 */
+	public function dispatchDealWon(string $title, string $value, string $objectId, string $assignee): void {
+		$this->activityService->publishDealWon(
+			title: $title,
+			value: $value,
+			objectId: $objectId,
+			affectedUser: $this->nullIfEmpty(value: $assignee)
+		);
 
-        if ($assignee !== '') {
-            $this->notifyService->notifyDealWon(
-                title: $title,
-                value: $value,
-                assigneeUserId: $assignee,
-                objectId: $objectId,
-                author: $this->getCurrentUser()
-            );
-        }
-    }//end dispatchDealWon()
+		if ($assignee !== '') {
+			$this->notifyService->notifyDealWon(
+				title: $title,
+				value: $value,
+				assigneeUserId: $assignee,
+				objectId: $objectId,
+				author: $this->getCurrentUser()
+			);
+		}
+	}//end dispatchDealWon()
 
-    /**
-     * Dispatch deal lost events for a lead.
-     *
-     * @param string $title    The lead title.
-     * @param string $objectId The object ID.
-     * @param string $assignee The current assignee.
-     *
-     * @return void
-     * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-5
-     */
-    public function dispatchDealLost(string $title, string $objectId, string $assignee): void
-    {
-        $this->activityService->publishDealLost(
-            title: $title,
-            objectId: $objectId,
-            affectedUser: $this->nullIfEmpty(value: $assignee)
-        );
+	/**
+	 * Dispatch deal lost events for a lead.
+	 *
+	 * @param string $title The lead title.
+	 * @param string $objectId The object ID.
+	 * @param string $assignee The current assignee.
+	 *
+	 * @return void
+	 * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-5
+	 */
+	public function dispatchDealLost(string $title, string $objectId, string $assignee): void {
+		$this->activityService->publishDealLost(
+			title: $title,
+			objectId: $objectId,
+			affectedUser: $this->nullIfEmpty(value: $assignee)
+		);
 
-        if ($assignee !== '') {
-            $this->notifyService->notifyDealLost(
-                title: $title,
-                assigneeUserId: $assignee,
-                objectId: $objectId,
-                author: $this->getCurrentUser()
-            );
-        }
-    }//end dispatchDealLost()
+		if ($assignee !== '') {
+			$this->notifyService->notifyDealLost(
+				title: $title,
+				assigneeUserId: $assignee,
+				objectId: $objectId,
+				author: $this->getCurrentUser()
+			);
+		}
+	}//end dispatchDealLost()
 
-    /**
-     * Return null if the value is empty, otherwise return the value.
-     *
-     * @param string $value The value to check.
-     *
-     * @return ?string The value or null.
-     */
-    private function nullIfEmpty(string $value): ?string
-    {
-        if ($value !== '') {
-            return $value;
-        }
+	/**
+	 * Return null if the value is empty, otherwise return the value.
+	 *
+	 * @param string $value The value to check.
+	 *
+	 * @return ?string The value or null.
+	 */
+	private function nullIfEmpty(string $value): ?string {
+		if ($value !== '') {
+			return $value;
+		}
 
-        return null;
-    }//end nullIfEmpty()
+		return null;
+	}//end nullIfEmpty()
 
-    /**
-     * Get the current user ID.
-     *
-     * @return string The current user ID or empty string.
-     */
-    private function getCurrentUser(): string
-    {
-        $user = $this->userSession->getUser();
-        if ($user !== null) {
-            return $user->getUID();
-        }
+	/**
+	 * Get the current user ID.
+	 *
+	 * @return string The current user ID or empty string.
+	 */
+	private function getCurrentUser(): string {
+		$user = $this->userSession->getUser();
+		if ($user !== null) {
+			return $user->getUID();
+		}
 
-        return '';
-    }//end getCurrentUser()
+		return '';
+	}//end getCurrentUser()
 }//end class

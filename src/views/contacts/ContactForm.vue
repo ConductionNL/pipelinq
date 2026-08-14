@@ -1,14 +1,43 @@
+<!--
+  - SPDX-License-Identifier: EUPL-1.2
+  - SPDX-FileCopyrightText: 2026 Conduction B.V.
+  -
+  - ContactForm — contact-person create/edit form.
+  -
+  - ⚠️ THIS COMPONENT IS CURRENTLY UNMOUNTABLE. It is the last file left in
+  - src/views/contacts/; its former siblings ContactList.vue and
+  - ContactDetail.vue were removed when contacts moved to the manifest renderer
+  - (`src/manifest.json` pages `Contacts` → /contacts and `ContactDetail` →
+  - /contacts/:id, both schema-driven, neither naming a component). Nothing
+  - imports this file: a repo-wide search for `ContactForm` outside the file
+  - itself returns only openspec prose, and `grep -rn "views/contacts/" src/`
+  - returns nothing at all. With no importer, no manifest entry and no router
+  - entry, no URL on any instance can render it — so there is no page for a
+  - Playwright test to navigate to, and no screen for a baseline to capture.
+  -
+  - The remedy is deletion or re-wiring, which is a product decision and is
+  - raised separately rather than taken here.
+  -
+  - @visual exclude unreachable: zero importers in src/, no manifest page and no router entry name this component, so it is never mounted on any instance and no e2e route exists to drive it
+  -->
 <template>
 	<div class="contact-form">
 		<div class="form-group">
 			<label for="contact-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
 				id="contact-name"
-				:value="form.name"
+				label-outside
+				:label="t('pipelinq', 'Name')"
+				:model-value="form.name"
 				:error="!!errors.name"
 				:helper-text="errors.name"
 				:maxlength="255"
-				@update:value="v => { form.name = v; validateField('name') }" />
+				@update:model-value="
+					(v) => {
+						form.name = v
+						validateField('name')
+					}
+				" />
 		</div>
 
 		<div class="form-group">
@@ -20,9 +49,9 @@
 				:options="clientOptions"
 				:placeholder="t('pipelinq', 'Search for a client...')"
 				label="name"
-				:reduce="c => c.id"
+				:reduce="(c) => c.id"
 				@search="searchClients"
-				@input="validateField('client')" />
+				@update:model-value="validateField('client')" />
 			<p v-if="errors.client" class="field-error">
 				{{ errors.client }}
 			</p>
@@ -33,18 +62,27 @@
 				<label for="contact-role">{{ t('pipelinq', 'Role') }}</label>
 				<NcTextField
 					id="contact-role"
-					:value="form.role"
-					@update:value="v => form.role = v" />
+					label-outside
+					:label="t('pipelinq', 'Role')"
+					:model-value="form.role"
+					@update:model-value="(v) => (form.role = v)" />
 			</div>
 			<div class="form-group">
 				<label for="contact-email">{{ t('pipelinq', 'Email') }}</label>
 				<NcTextField
 					id="contact-email"
-					:value="form.email"
+					label-outside
+					:label="t('pipelinq', 'Email')"
+					:model-value="form.email"
 					:error="!!errors.email"
 					:helper-text="errors.email"
 					type="email"
-					@update:value="v => { form.email = v; validateField('email') }" />
+					@update:model-value="
+						(v) => {
+							form.email = v
+							validateField('email')
+						}
+					" />
 			</div>
 		</div>
 
@@ -52,14 +90,21 @@
 			<label for="contact-phone">{{ t('pipelinq', 'Phone') }}</label>
 			<NcTextField
 				id="contact-phone"
-				:value="form.phone"
+				label-outside
+				:label="t('pipelinq', 'Phone')"
+				:model-value="form.phone"
 				:error="!!errors.phone"
 				:helper-text="errors.phone"
-				@update:value="v => { form.phone = v; validateField('phone') }" />
+				@update:model-value="
+					(v) => {
+						form.phone = v
+						validateField('phone')
+					}
+				" />
 		</div>
 
 		<div class="contact-form__actions">
-			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+			<NcButton variant="primary" :disabled="!isValid" @click="onSave">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 			<NcButton @click="$emit('cancel')">
@@ -126,7 +171,7 @@ export default {
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
 			const hasClient = !!this.selectedClient
-			const noErrors = Object.values(this.errors).every(e => !e)
+			const noErrors = Object.values(this.errors).every((e) => !e)
 			return hasName && hasClient && noErrors
 		},
 	},
@@ -184,19 +229,30 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-44
 		 */
 		async loadInitialClients() {
-			const clients = await this.objectStore.fetchCollection('client', { _limit: 50 })
-			this.clientOptions = (clients || []).map(c => ({ id: c.id, name: c.name || c.id }))
+			const clients = await this.objectStore.fetchCollection('client', {
+				_limit: 50,
+			})
+			this.clientOptions = (clients || []).map((c) => ({
+				id: c.id,
+				name: c.name || c.id,
+			}))
 		},
 		/**
 		 * @param clientId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-41
 		 */
 		async ensureClientInOptions(clientId) {
-			if (!this.clientOptions.find(c => c.id === clientId)) {
+			if (!this.clientOptions.find((c) => c.id === clientId)) {
 				try {
-					const client = await this.objectStore.fetchObject('client', clientId)
+					const client = await this.objectStore.fetchObject(
+						'client',
+						clientId,
+					)
 					if (client) {
-						this.clientOptions.push({ id: client.id, name: client.name || client.id })
+						this.clientOptions.push({
+							id: client.id,
+							name: client.name || client.id,
+						})
 					}
 				} catch {
 					// Client not found
@@ -211,11 +267,17 @@ export default {
 			clearTimeout(this.searchTimeout)
 			this.searchTimeout = setTimeout(async () => {
 				if (query.length > 0) {
-					const results = await this.objectStore.fetchCollection('client', {
-						_search: query,
-						_limit: 20,
-					})
-					this.clientOptions = (results || []).map(c => ({ id: c.id, name: c.name || c.id }))
+					const results = await this.objectStore.fetchCollection(
+						'client',
+						{
+							_search: query,
+							_limit: 20,
+						},
+					)
+					this.clientOptions = (results || []).map((c) => ({
+						id: c.id,
+						name: c.name || c.id,
+					}))
 				} else {
 					await this.loadInitialClients()
 				}
@@ -227,34 +289,34 @@ export default {
 		 */
 		validateField(field) {
 			switch (field) {
-			case 'name':
-				if (!this.form.name.trim()) {
-					this.errors.name = t('pipelinq', 'Name is required')
-				} else {
-					this.errors.name = ''
-				}
-				break
-			case 'client':
-				if (!this.selectedClient) {
-					this.errors.client = t('pipelinq', 'Client is required')
-				} else {
-					this.errors.client = ''
-				}
-				break
-			case 'email':
-				if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
-					this.errors.email = t('pipelinq', 'Invalid email format')
-				} else {
-					this.errors.email = ''
-				}
-				break
-			case 'phone':
-				if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
-					this.errors.phone = t('pipelinq', 'Invalid phone format')
-				} else {
-					this.errors.phone = ''
-				}
-				break
+				case 'name':
+					if (!this.form.name.trim()) {
+						this.errors.name = t('pipelinq', 'Name is required')
+					} else {
+						this.errors.name = ''
+					}
+					break
+				case 'client':
+					if (!this.selectedClient) {
+						this.errors.client = t('pipelinq', 'Client is required')
+					} else {
+						this.errors.client = ''
+					}
+					break
+				case 'email':
+					if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
+						this.errors.email = t('pipelinq', 'Invalid email format')
+					} else {
+						this.errors.email = ''
+					}
+					break
+				case 'phone':
+					if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
+						this.errors.phone = t('pipelinq', 'Invalid phone format')
+					} else {
+						this.errors.phone = ''
+					}
+					break
 			}
 		},
 		/**

@@ -30,39 +30,36 @@ use Psr\Container\ContainerInterface;
 /**
  * Tests for SettingsLoadService.
  */
-class SettingsLoadServiceTest extends TestCase
-{
-    /**
-     * Test loadSettings calls configuration service.
-     *
-     * @return void
-     */
-    public function testLoadSettingsCallsConfigurationService(): void
-    {
-        $appConfig  = $this->createMock(IAppConfig::class);
-        $appManager = $this->createMock(IAppManager::class);
-        $container  = $this->createMock(ContainerInterface::class);
-        $mapBuilder = new SettingsMapBuilder();
-        $fileLoader = $this->createMock(ConfigFileLoaderService::class);
+class SettingsLoadServiceTest extends TestCase {
+	/**
+	 * Test loadSettings calls configuration service.
+	 *
+	 * @return void
+	 */
+	public function testLoadSettingsCallsConfigurationService(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appManager = $this->createMock(IAppManager::class);
+		$container = $this->createMock(ContainerInterface::class);
+		$mapBuilder = new SettingsMapBuilder();
+		$fileLoader = $this->createMock(ConfigFileLoaderService::class);
 
-        $fileLoader->method('loadConfigurationFile')->willReturn(['key' => 'val']);
-        $fileLoader->method('ensureSourceType')->willReturnArgument(0);
-        $appManager->method('getAppVersion')->willReturn('1.0.0');
+		$fileLoader->method('loadConfigurationFile')->willReturn(['key' => 'val']);
+		$fileLoader->method('ensureSourceType')->willReturnArgument(0);
+		$appManager->method('getAppVersion')->willReturn('1.0.0');
 
-        $configService = new class {
-            public function importFromApp(string $appId, array $data, string $version, bool $force): array
-            {
-                return ['registers' => [], 'schemas' => [], 'views' => []];
-            }
-        };
+		$configService = new class {
+			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
+				return ['registers' => [], 'schemas' => [], 'views' => []];
+			}
+		};
 
-        $container->method('get')->willReturn($configService);
-        $appConfig->method('setValueString');
+		$container->method('get')->willReturn($configService);
+		$appConfig->method('setValueString');
 
-        $service = new SettingsLoadService($appConfig, $appManager, $container, $mapBuilder, $fileLoader);
-        $result  = $service->loadSettings();
+		$service = new SettingsLoadService($appConfig, $appManager, $container, $mapBuilder, $fileLoader);
+		$result = $service->loadSettings();
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('registers', $result);
-    }//end testLoadSettingsCallsConfigurationService()
+		$this->assertIsArray($result);
+		$this->assertArrayHasKey('registers', $result);
+	}//end testLoadSettingsCallsConfigurationService()
 }//end class

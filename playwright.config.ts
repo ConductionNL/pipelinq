@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 import path from 'path'
+import { resolveBaseUrl } from './tests/e2e/base-url'
 
 const STORAGE_STATE = path.join(__dirname, 'tests/e2e/.auth/user.json')
 
@@ -10,6 +11,17 @@ export default defineConfig({
 	fullyParallel: false,
 	retries: 1,
 	workers: 1,
+	// The shared quality.yml Playwright job is `timeout-minutes: 45`, and a job
+	// cancelled by that cap produces NO verdict: Playwright never prints its
+	// tally, the `if: failure()` trace upload never fires, and the
+	// `if: always()` report upload does not run on a cancelled job either — the
+	// run you most need to read is the one that leaves nothing behind, and it
+	// still renders as "fail" in `gh pr checks` while carrying no information.
+	// Runs cancelled at ~45m16s have been observed in this fleet. Measured
+	// overhead before `Run Playwright tests` starts is 2.0-2.4 min and the
+	// uploads after it take seconds, so 38m keeps ~7 min of margin while
+	// guaranteeing both a tally and the artifacts that explain it.
+	globalTimeout: 38 * 60_000,
 	reporter: [
 		['html', { open: 'never', outputFolder: 'tests/e2e/playwright-report' }],
 		['junit', { outputFile: 'tests/e2e/test-results/results.xml' }],
@@ -18,9 +30,17 @@ export default defineConfig({
 	globalSetup: './tests/e2e/global-setup.ts',
 
 	use: {
-		baseURL: process.env.NEXTCLOUD_URL || 'http://localhost:8080',
+		// Centralised and STRICT — see tests/e2e/base-url.ts. Never reintroduce a
+		// `|| 'http://localhost:8080'` fallback here: that silently retargets the
+		// whole suite at the SHARED dev container.
+		baseURL: resolveBaseUrl(),
 		storageState: STORAGE_STATE,
-		trace: 'on-first-retry',
+		// `on-first-retry` writes a trace only for the SECOND attempt. Every
+		// failure that reproduces identically on retry is fine, but a failure
+		// that does NOT reproduce — the ones worth a trace — leaves no record of
+		// the attempt that actually failed. `retain-on-failure` traces every
+		// attempt and keeps the ones that failed.
+		trace: 'retain-on-failure',
 		screenshot: 'only-on-failure',
 	},
 

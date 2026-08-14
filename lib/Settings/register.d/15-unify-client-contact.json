@@ -43,7 +43,7 @@
             "type": "string",
             "title": "Address",
             "description": "Denormalised read-only mirror of the NC contact postal address. The Nextcloud Contact is authoritative.",
-            "visible": false,
+            "visible": true,
             "readOnly": true,
             "x-pipelinq-denormalised": true
           },
@@ -52,7 +52,7 @@
             "title": "Website",
             "description": "Denormalised read-only mirror of the NC contact website (vCard URL). The Nextcloud Contact is authoritative.",
             "format": "uri",
-            "visible": false,
+            "visible": true,
             "readOnly": true,
             "x-pipelinq-denormalised": true
           },

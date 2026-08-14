@@ -13,11 +13,14 @@
 
 <template>
 	<div class="activity-timeline">
-		<div class="activity-timeline__filters" role="toolbar" :aria-label="t('pipelinq', 'Activity type filter')">
+		<div
+			class="activity-timeline__filters"
+			role="toolbar"
+			:aria-label="t('pipelinq', 'Activity type filter')">
 			<NcButton
 				v-for="option in filterOptions"
 				:key="option.value"
-				:type="activeFilter === option.value ? 'primary' : 'secondary'"
+				:variant="activeFilter === option.value ? 'primary' : 'secondary'"
 				:aria-pressed="activeFilter === option.value ? 'true' : 'false'"
 				class="activity-timeline__filter-btn"
 				@click="setFilter(option.value)">
@@ -30,7 +33,12 @@
 		<NcEmptyContent
 			v-else-if="items.length === 0 && !loading"
 			:name="t('pipelinq', 'No activities yet')"
-			:description="t('pipelinq', 'Activities will appear here once contactmomenten, tasks, emails or calendar entries are linked to this record.')">
+			:description="
+				t(
+					'pipelinq',
+					'Activities will appear here once contactmomenten, tasks, emails or calendar entries are linked to this record.',
+				)
+			">
 			<template #icon>
 				<TimelineTextOutline :size="64" />
 			</template>
@@ -47,22 +55,32 @@
 				</span>
 				<div class="activity-timeline__content">
 					<div class="activity-timeline__header">
-						<span class="activity-timeline__title">{{ item.title || t('pipelinq', '(no title)') }}</span>
-						<span class="activity-timeline__date">{{ formatDate(item.date) }}</span>
+						<span class="activity-timeline__title">{{
+							item.title || t('pipelinq', '(no title)')
+						}}</span>
+						<span class="activity-timeline__date">{{
+							formatDate(item.date)
+						}}</span>
 					</div>
-					<div v-if="item.description" class="activity-timeline__description">
+					<div
+						v-if="item.description"
+						class="activity-timeline__description">
 						{{ truncate(item.description) }}
 					</div>
 					<div class="activity-timeline__meta">
-						<span class="activity-timeline__type-label">{{ typeLabel(item.type) }}</span>
-						<span v-if="item.user" class="activity-timeline__user">{{ item.user }}</span>
+						<span class="activity-timeline__type-label">{{
+							typeLabel(item.type)
+						}}</span>
+						<span v-if="item.user" class="activity-timeline__user">{{
+							item.user
+						}}</span>
 					</div>
 				</div>
 			</li>
 		</ul>
 
 		<div v-if="page < pages && !loading" class="activity-timeline__load-more">
-			<NcButton type="secondary" @click="loadMore">
+			<NcButton variant="secondary" @click="loadMore">
 				{{ t('pipelinq', 'Load more') }}
 			</NcButton>
 		</div>
@@ -126,7 +144,10 @@ export default {
 		filterOptions() {
 			return [
 				{ value: 'all', label: this.t('pipelinq', 'All') },
-				{ value: 'contactmoment', label: this.t('pipelinq', 'Contact moments') },
+				{
+					value: 'contactmoment',
+					label: this.t('pipelinq', 'Contact moments'),
+				},
 				{ value: 'task', label: this.t('pipelinq', 'Tasks') },
 				{ value: 'email', label: this.t('pipelinq', 'Email') },
 				{ value: 'calendar', label: this.t('pipelinq', 'Calendar') },
@@ -181,7 +202,10 @@ export default {
 				if (this.activeFilter !== 'all') {
 					params['types[]'] = this.activeFilter
 				}
-				const response = await axios.get(generateUrl('/apps/pipelinq/api/timeline'), { params })
+				const response = await axios.get(
+					generateUrl('/apps/pipelinq/api/timeline'),
+					{ params },
+				)
 				const data = response.data || {}
 				const items = Array.isArray(data.items) ? data.items : []
 				if (page === 1) {
@@ -241,12 +265,18 @@ export default {
 		 */
 		typeLabel(type) {
 			switch (type) {
-			case 'contactmoment': return this.t('pipelinq', 'Contact moment')
-			case 'worklog': return this.t('pipelinq', 'Worklog')
-			case 'task': return this.t('pipelinq', 'Task')
-			case 'email': return this.t('pipelinq', 'Email')
-			case 'calendar': return this.t('pipelinq', 'Calendar')
-			default: return type
+				case 'contactmoment':
+					return this.t('pipelinq', 'Contact moment')
+				case 'worklog':
+					return this.t('pipelinq', 'Worklog')
+				case 'task':
+					return this.t('pipelinq', 'Task')
+				case 'email':
+					return this.t('pipelinq', 'Email')
+				case 'calendar':
+					return this.t('pipelinq', 'Calendar')
+				default:
+					return type
 			}
 		},
 		/**
@@ -279,7 +309,11 @@ export default {
 </script>
 
 <style scoped>
-.activity-timeline { display: flex; flex-direction: column; gap: 12px; }
+.activity-timeline {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
 
 .activity-timeline__filters {
 	display: flex;
@@ -288,7 +322,9 @@ export default {
 	padding-bottom: 6px;
 }
 
-.activity-timeline__filter-btn { font-size: 0.85em; }
+.activity-timeline__filter-btn {
+	font-size: 0.85em;
+}
 
 .activity-timeline__list {
 	display: flex;
@@ -308,15 +344,25 @@ export default {
 	background: var(--color-background-hover);
 }
 
-.activity-timeline__item--contactmoment { border-left-color: var(--color-primary-element); }
+.activity-timeline__item--contactmoment {
+	border-left-color: var(--color-primary-element);
+}
 
-.activity-timeline__item--task { border-left-color: var(--color-success); }
+.activity-timeline__item--task {
+	border-left-color: var(--color-success);
+}
 
-.activity-timeline__item--email { border-left-color: var(--color-warning); }
+.activity-timeline__item--email {
+	border-left-color: var(--color-warning);
+}
 
-.activity-timeline__item--calendar { border-left-color: var(--color-text-maxcontrast); }
+.activity-timeline__item--calendar {
+	border-left-color: var(--color-text-maxcontrast);
+}
 
-.activity-timeline__item--worklog { border-left-color: var(--color-info); }
+.activity-timeline__item--worklog {
+	border-left-color: var(--color-info);
+}
 
 .activity-timeline__icon {
 	width: 24px;
@@ -326,7 +372,10 @@ export default {
 	color: var(--color-text-lighter);
 }
 
-.activity-timeline__content { flex: 1; min-width: 0; }
+.activity-timeline__content {
+	flex: 1;
+	min-width: 0;
+}
 
 .activity-timeline__header {
 	display: flex;
@@ -361,7 +410,9 @@ export default {
 	margin-top: 4px;
 }
 
-.activity-timeline__type-label { font-weight: 600; }
+.activity-timeline__type-label {
+	font-weight: 600;
+}
 
 .activity-timeline__load-more {
 	display: flex;

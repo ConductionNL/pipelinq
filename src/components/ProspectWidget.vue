@@ -1,6 +1,14 @@
 <template>
 	<div class="prospect-widget">
-		<div class="prospect-widget__header" @click="expanded = !expanded">
+		<div
+			class="prospect-widget__header"
+			role="button"
+			tabindex="0"
+			:aria-expanded="expanded"
+			:aria-label="t('pipelinq', 'Toggle prospect discovery')"
+			@click="expanded = !expanded"
+			@keydown.enter.prevent="expanded = !expanded"
+			@keydown.space.prevent="expanded = !expanded">
 			<div class="prospect-widget__title">
 				<h3>{{ t('pipelinq', 'Prospect Discovery') }}</h3>
 				<span v-if="prospectStore.total > 0" class="prospect-count">
@@ -10,12 +18,14 @@
 			<div class="prospect-widget__actions">
 				<NcButton
 					v-if="expanded"
-					type="tertiary"
+					variant="tertiary"
 					:disabled="prospectStore.loading"
 					:aria-label="t('pipelinq', 'Refresh prospects')"
 					@click.stop="refresh">
 					<template #icon>
-						<Refresh :size="20" :class="{ 'icon-spinning': prospectStore.loading }" />
+						<Refresh
+							:size="20"
+							:class="{ 'icon-spinning': prospectStore.loading }" />
 					</template>
 				</NcButton>
 				<span class="expand-icon">{{ expanded ? '\u25B2' : '\u25BC' }}</span>
@@ -23,8 +33,14 @@
 		</div>
 
 		<!-- Collapsed preview -->
-		<div v-if="!expanded && prospectStore.prospects.length > 0" class="prospect-widget__preview">
-			{{ t('pipelinq', 'Top match: {name}', { name: prospectStore.prospects[0].tradeName }) }}
+		<div
+			v-if="!expanded && prospectStore.prospects.length > 0"
+			class="prospect-widget__preview">
+			{{
+				t('pipelinq', 'Top match: {name}', {
+					name: prospectStore.prospects[0].tradeName,
+				})
+			}}
 		</div>
 
 		<!-- Expanded content -->
@@ -32,8 +48,19 @@
 			<NcLoadingIcon v-if="prospectStore.loading" />
 
 			<!-- No ICP configured -->
-			<div v-else-if="prospectStore.error && prospectStore.error.includes('ICP')" class="prospect-widget__setup">
-				<p>{{ t('pipelinq', 'Configure your Ideal Customer Profile in admin settings to discover prospects.') }}</p>
+			<div
+				v-else-if="
+					prospectStore.error && prospectStore.error.includes('ICP')
+				"
+				class="prospect-widget__setup">
+				<p>
+					{{
+						t(
+							'pipelinq',
+							'Configure your Ideal Customer Profile in admin settings to discover prospects.',
+						)
+					}}
+				</p>
 			</div>
 
 			<!-- Error -->
@@ -45,8 +72,12 @@
 			</div>
 
 			<!-- No results -->
-			<div v-else-if="prospectStore.prospects.length === 0" class="prospect-widget__empty">
-				<p>{{ t('pipelinq', 'No prospects found matching your profile.') }}</p>
+			<div
+				v-else-if="prospectStore.prospects.length === 0"
+				class="prospect-widget__empty">
+				<p>
+					{{ t('pipelinq', 'No prospects found matching your profile.') }}
+				</p>
 			</div>
 
 			<!-- Prospect list -->
@@ -57,8 +88,14 @@
 					:prospect="prospect"
 					@create-lead="onCreateLead" />
 
-				<div v-if="prospectStore.cachedAt" class="prospect-widget__cache-info">
-					{{ t('pipelinq', 'Last updated: {time}', { time: formatTime(prospectStore.cachedAt) }) }}
+				<div
+					v-if="prospectStore.cachedAt"
+					class="prospect-widget__cache-info">
+					{{
+						t('pipelinq', 'Last updated: {time}', {
+							time: formatTime(prospectStore.cachedAt),
+						})
+					}}
 				</div>
 			</div>
 		</div>
@@ -112,9 +149,16 @@ export default {
 			if (result.error) {
 				showError(result.error)
 			} else {
-				showSuccess(t('pipelinq', 'Lead created from {name}', { name: prospect.tradeName }))
+				showSuccess(
+					t('pipelinq', 'Lead created from {name}', {
+						name: prospect.tradeName,
+					}),
+				)
 				if (result.lead?.id) {
-					this.$router.push({ name: 'LeadDetail', params: { id: result.lead.id } })
+					this.$router.push({
+						name: 'LeadDetail',
+						params: { id: result.lead.id },
+					})
 				}
 			}
 		},
@@ -125,7 +169,10 @@ export default {
 		formatTime(dateStr) {
 			if (!dateStr) return ''
 			try {
-				return new Date(dateStr).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
+				return new Date(dateStr).toLocaleTimeString('nl-NL', {
+					hour: '2-digit',
+					minute: '2-digit',
+				})
 			} catch {
 				return dateStr
 			}
@@ -219,7 +266,17 @@ export default {
 }
 
 @keyframes spin {
-	from { transform: rotate(0deg); }
-	to { transform: rotate(360deg); }
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.icon-spinning {
+		animation: none;
+	}
 }
 </style>

@@ -13,11 +13,11 @@
 			<table class="tax-breakdown__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Rate') }}</th>
-						<th class="num">
+						<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Base') }}
 						</th>
-						<th class="num">
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'VAT') }}
 						</th>
 					</tr>
@@ -46,14 +46,14 @@
 			<table class="tax-breakdown__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Rate') }}</th>
-						<th class="num">
+						<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Base') }}
 						</th>
-						<th class="num">
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'VAT') }}
 						</th>
-						<th>{{ t('pipelinq', 'Description') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -91,7 +91,9 @@ export default {
 		 * @return {Array<object>} The tax breakdown rows.
 		 */
 		taxBreakdown() {
-			return [...(this.transaction.taxBreakdown || [])].sort((a, b) => a.rate - b.rate)
+			return [...(this.transaction.taxBreakdown || [])].sort(
+				(a, b) => a.rate - b.rate,
+			)
 		},
 		/**
 		 * Per-rate GL posting rows. Falls back to deriving descriptions from the
@@ -104,7 +106,7 @@ export default {
 			if (Array.isArray(rows) && rows.length > 0) {
 				return [...rows].sort((a, b) => a.rate - b.rate)
 			}
-			return this.taxBreakdown.map(row => ({
+			return this.taxBreakdown.map((row) => ({
 				...row,
 				description: rateDescription(row.rate),
 			}))

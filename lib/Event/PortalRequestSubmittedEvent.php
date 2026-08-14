@@ -31,38 +31,35 @@ use OCP\EventDispatcher\Event;
 /**
  * Fired when a portal-submitted request is created.
  */
-class PortalRequestSubmittedEvent extends Event
-{
-    /**
-     * Constructor.
-     *
-     * @param string $requestId The created request id.
-     * @param string $tenantId  The tenant id.
-     */
-    public function __construct(
-        private string $requestId,
-        private string $tenantId,
-    ) {
-        parent::__construct();
-    }//end __construct()
+class PortalRequestSubmittedEvent extends Event {
+	/**
+	 * Constructor.
+	 *
+	 * @param string $requestId The created request id.
+	 * @param string $tenantId The tenant id.
+	 */
+	public function __construct(
+		private string $requestId,
+		private string $tenantId,
+	) {
+		parent::__construct();
+	}//end __construct()
 
-    /**
-     * The created request id.
-     *
-     * @return string The request id.
-     */
-    public function getRequestId(): string
-    {
-        return $this->requestId;
-    }//end getRequestId()
+	/**
+	 * The created request id.
+	 *
+	 * @return string The request id.
+	 */
+	public function getRequestId(): string {
+		return $this->requestId;
+	}//end getRequestId()
 
-    /**
-     * The tenant id.
-     *
-     * @return string The tenant id.
-     */
-    public function getTenantId(): string
-    {
-        return $this->tenantId;
-    }//end getTenantId()
+	/**
+	 * The tenant id.
+	 *
+	 * @return string The tenant id.
+	 */
+	public function getTenantId(): string {
+		return $this->tenantId;
+	}//end getTenantId()
 }//end class
