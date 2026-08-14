@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ReportingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -56,6 +57,7 @@ class ReportingController extends Controller {
 		IRequest $request,
 		private ReportingService $reportingService,
 		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $accessPolicy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -73,6 +75,11 @@ class ReportingController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Reporting aggregates across the customer base — a CRM capability.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		[$from, $to] = $this->resolvePeriodRange();
@@ -107,6 +114,11 @@ class ReportingController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Reporting aggregates across the customer base — a CRM capability.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		[$from, $to] = $this->resolvePeriodRange();
@@ -150,6 +162,11 @@ class ReportingController extends Controller {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
+		// Reporting aggregates across the customer base — a CRM capability.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
 		[$from, $to] = $this->resolvePeriodRange();
 
 		if ($from === '' || $to === '') {
@@ -181,6 +198,11 @@ class ReportingController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Reporting aggregates across the customer base — a CRM capability.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		try {
@@ -255,6 +277,11 @@ class ReportingController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Reporting aggregates across the customer base — a CRM capability.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		// CSV export requires OpenRegister data integration.

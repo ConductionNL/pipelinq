@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\BookingService;
 use OCP\AppFramework\Controller;
@@ -74,6 +75,7 @@ class BookingAdminController extends Controller {
 		private BookingService $bookings,
 		private AppointmentEmailService $emailService,
 		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $accessPolicy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
@@ -95,8 +97,15 @@ class BookingAdminController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function reschedule(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorised();
+		}
+
+		// Booking administration moves other people's appointments — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
 		}
 
 		$newStartAt = (string)$this->request->getParam('newStartAt', '');
@@ -149,8 +158,15 @@ class BookingAdminController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function markCompleted(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorised();
+		}
+
+		// Booking administration moves other people's appointments — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
 		}
 
 		return $this->run(
@@ -203,8 +219,15 @@ class BookingAdminController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function sendReminder(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorised();
+		}
+
+		// Booking administration moves other people's appointments — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
 		}
 
 		return $this->run(
@@ -229,8 +252,15 @@ class BookingAdminController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function confirmDeposit(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorised();
+		}
+
+		// Booking administration moves other people's appointments — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
 		}
 
 		$reason = (string)$this->request->getParam('reason', '');
