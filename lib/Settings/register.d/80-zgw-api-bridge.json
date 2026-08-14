@@ -164,7 +164,7 @@
             "maxLength": 256,
             "title": "User Representation"
           },
-          "tokenLifespanSeconden": {
+          "tokenLifespanSeconds": {
             "type": "integer",
             "description": "JWT lifetime in seconds (default 3600)",
             "default": 3600,
@@ -243,7 +243,7 @@
             },
             "title": "Kanalen"
           },
-          "latestOntvangenOn": {
+          "latestReceivedOn": {
             "type": "string",
             "format": "date-time",
             "description": "ISO 8601 timestamp of the last successfully processed NRC notification",
@@ -434,7 +434,7 @@
         "secretKluisRef": "vault://zgw/zoetermeer/client-secret",
         "userId": "pipelinq",
         "userRepresentation": "Pipelinq backend (Conduction)",
-        "tokenLifespanSeconden": 3600,
+        "tokenLifespanSeconds": 3600,
         "created": "2026-04-12T09:14:00+02:00"
       },
       {
@@ -448,7 +448,7 @@
         "secretKluisRef": "vault://zgw/amsterdam/client-secret",
         "userId": "pipelinq",
         "userRepresentation": "Pipelinq backend (Conduction)",
-        "tokenLifespanSeconden": 3600,
+        "tokenLifespanSeconds": 3600,
         "created": "2026-03-04T08:00:00+01:00"
       },
       {
@@ -462,7 +462,7 @@
         "secretKluisRef": "vault://zgw/utrecht/client-secret",
         "userId": "pipelinq",
         "userRepresentation": "Pipelinq backend (Conduction)",
-        "tokenLifespanSeconden": 1800,
+        "tokenLifespanSeconds": 1800,
         "created": "2026-04-29T11:45:00+02:00"
       },
       {
@@ -490,7 +490,7 @@
             "name": "catalogi"
           }
         ],
-        "latestOntvangenOn": "2026-05-21T08:44:13+02:00",
+        "latestReceivedOn": "2026-05-21T08:44:13+02:00",
         "actief": true
       },
       {
@@ -515,7 +515,7 @@
             "name": "besluiten"
           }
         ],
-        "latestOntvangenOn": "2026-06-04T14:08:12+02:00",
+        "latestReceivedOn": "2026-06-04T14:08:12+02:00",
         "actief": true
       },
       {

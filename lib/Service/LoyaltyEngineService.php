@@ -479,7 +479,7 @@ class LoyaltyEngineService {
 					'accountId' => $accountId,
 					'programmeId' => $programmeId,
 					'count' => (int)($ledgerEntry['count'] ?? 0),
-					'balansAfter' => (int)($ledgerEntry['balansAfter'] ?? 0),
+					'balanceAfter' => (int)($ledgerEntry['balanceAfter'] ?? 0),
 				]
 			);
 			$this->eventDispatcher->dispatchTyped($event);

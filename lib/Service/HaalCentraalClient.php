@@ -559,7 +559,7 @@ class HaalCentraalClient {
 			'geboorte.land',
 			'geslacht',
 			'residence',
-			'indicationGeheim',
+			'indicationSecret',
 		];
 	}//end getDefaultFields()
 
@@ -637,13 +637,13 @@ class HaalCentraalClient {
 			'initials' => (string)($name['initials'] ?? ''),
 			'namePrefix' => (string)($name['namePrefix'] ?? ''),
 			'surname' => (string)($name['surname'] ?? ''),
-			'nobiliaryTitel' => (string)($name['adellijkeTitelPredicaat'] ?? ''),
+			'nobiliaryTitle' => (string)($name['adellijkeTitelPredicaat'] ?? ''),
 			'dateOfBirth' => (string)($birth['datum']['datum'] ?? $birth['datum'] ?? ''),
 			'birthPlace' => $birthPlace,
 			'birthCountry' => $birthCountry,
 			'geslacht' => self::mapGeslacht(code: $geslacht),
 			'residence' => self::mapResidence(residence: $residence),
-			'indicationGeheim' => (string)($raw['indicationGeheim'] ?? '0'),
+			'indicationSecret' => (string)($raw['indicationSecret'] ?? '0'),
 			'bronsysteem' => 'HaalCentraal-BRP-v2.0',
 		];
 	}//end normalisePerson()

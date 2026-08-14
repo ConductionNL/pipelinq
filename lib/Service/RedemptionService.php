@@ -93,7 +93,7 @@ class RedemptionService {
 			'customerId' => $account['customerId'] ?? null,
 			'optionId' => $optionId,
 			'programmeId' => $option['programmeId'] ?? null,
-			'costInPunten' => $cost,
+			'costInPoints' => $cost,
 			'beloningCode' => $code,
 			'status' => 'gereserveerd',
 			'initiatedOn' => $now,
@@ -149,12 +149,12 @@ class RedemptionService {
 			throw new RuntimeException('Redemption option is not currently valid.');
 		}
 
-		$cost = (int)($option['costInPunten'] ?? 0);
+		$cost = (int)($option['costInPoints'] ?? 0);
 		if ((int)($account['currentBalance'] ?? 0) < $cost) {
 			throw new RuntimeException('Insufficient balance.');
 		}
 
-		$perCustomerLimit = $option['perCustomerLimiet'] ?? null;
+		$perCustomerLimit = $option['perCustomerLimit'] ?? null;
 		if ($perCustomerLimit !== null && (int)$perCustomerLimit > 0) {
 			$usedCount = $this->countUsedRedemptions(accountId: $accountId, optionId: $optionId);
 			if ($usedCount >= (int)$perCustomerLimit) {
@@ -214,7 +214,7 @@ class RedemptionService {
 		}
 
 		$redemption['status'] = 'gebruikt';
-		$redemption['gebruiktOn'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+		$redemption['usedOn'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
 		$redemption['posTransactionId'] = $posTransactionId;
 
 		return $this->persist(payload: $redemption, uuid: $redemptionId);
@@ -240,7 +240,7 @@ class RedemptionService {
 
 		if ((string)($redemption['status'] ?? '') === 'gereserveerd') {
 			$accountId = (string)($redemption['accountId'] ?? '');
-			$cost = (int)($redemption['costInPunten'] ?? 0);
+			$cost = (int)($redemption['costInPoints'] ?? 0);
 			if ($accountId !== '' && $cost > 0) {
 				$this->ledgerService->refundPoints(
 					accountId: $accountId,
@@ -319,7 +319,7 @@ class RedemptionService {
 			array_filter(
 				$options,
 				fn (array $option): bool => $this->isOptionValid(option: $option)
-					&& (int)($option['costInPunten'] ?? 0) <= $balance
+					&& (int)($option['costInPoints'] ?? 0) <= $balance
 			)
 		);
 	}//end getValidRedemptionOptions()

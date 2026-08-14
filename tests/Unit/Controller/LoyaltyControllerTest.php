@@ -335,8 +335,8 @@ class LoyaltyControllerTest extends TestCase {
 	 */
 	public function testGetAccountHistoryReturnsLedgerEntries(): void {
 		$entries = [
-			['type' => 'credit', 'count' => 100, 'balansAfter' => 100, 'timestamp' => '2026-01-01T00:00:00+00:00'],
-			['type' => 'debit', 'count' => -40, 'balansAfter' => 60, 'timestamp' => '2026-02-01T00:00:00+00:00'],
+			['type' => 'credit', 'count' => 100, 'balanceAfter' => 100, 'timestamp' => '2026-01-01T00:00:00+00:00'],
+			['type' => 'debit', 'count' => -40, 'balanceAfter' => 60, 'timestamp' => '2026-02-01T00:00:00+00:00'],
 		];
 
 		$ledgerService = $this->createMock(PointsLedgerService::class);
@@ -355,7 +355,7 @@ class LoyaltyControllerTest extends TestCase {
 		$this->assertCount(2, $data['entries']);
 		$this->assertSame('credit', $data['entries'][0]['type']);
 		$this->assertSame(-40, $data['entries'][1]['count']);
-		$this->assertSame(60, $data['entries'][1]['balansAfter']);
+		$this->assertSame(60, $data['entries'][1]['balanceAfter']);
 	}//end testGetAccountHistoryReturnsLedgerEntries()
 
 	/**
@@ -405,7 +405,7 @@ class LoyaltyControllerTest extends TestCase {
 
 		$ledgerService = $this->createMock(PointsLedgerService::class);
 		$ledgerService->method('getLedgerHistory')->willReturn(
-			[['type' => 'credit', 'count' => 98000, 'balansAfter' => 98000, 'timestamp' => '2026-01-01T00:00:00+00:00']]
+			[['type' => 'credit', 'count' => 98000, 'balanceAfter' => 98000, 'timestamp' => '2026-01-01T00:00:00+00:00']]
 		);
 
 		$controller = $this->buildController(
@@ -442,8 +442,8 @@ class LoyaltyControllerTest extends TestCase {
 			->with('acc-1', 'prog-1')
 			->willReturn(
 				[
-					['@self' => ['id' => 'opt-1'], 'name' => 'Free coffee', 'costInPunten' => 100],
-					['@self' => ['id' => 'opt-2'], 'name' => 'Free lunch', 'costInPunten' => 900],
+					['@self' => ['id' => 'opt-1'], 'name' => 'Free coffee', 'costInPoints' => 100],
+					['@self' => ['id' => 'opt-2'], 'name' => 'Free lunch', 'costInPoints' => 900],
 				]
 			);
 
@@ -456,7 +456,7 @@ class LoyaltyControllerTest extends TestCase {
 		$this->assertArrayHasKey('options', $data);
 		$this->assertCount(2, $data['options']);
 		$this->assertSame('Free coffee', $data['options'][0]['name']);
-		$this->assertSame(100, $data['options'][0]['costInPunten']);
+		$this->assertSame(100, $data['options'][0]['costInPoints']);
 	}//end testGetRedemptionOptionsReturnsAffordableOptions()
 
 	/**
@@ -498,7 +498,7 @@ class LoyaltyControllerTest extends TestCase {
 		$store->seed(
 			'redemptionOption_schema',
 			'opt-1',
-			['programmeId' => 'prog-1', 'name' => 'Free coffee', 'costInPunten' => 120]
+			['programmeId' => 'prog-1', 'name' => 'Free coffee', 'costInPoints' => 120]
 		);
 
 		$controller = $this->realRedemptionController($store);
@@ -508,7 +508,7 @@ class LoyaltyControllerTest extends TestCase {
 
 		$data = $response->getData();
 		$this->assertSame('gereserveerd', $data['status']);
-		$this->assertSame(120, $data['costInPunten']);
+		$this->assertSame(120, $data['costInPoints']);
 		$this->assertSame('acc-1', $data['accountId']);
 		$this->assertMatchesRegularExpression('/^RDM-[0-9A-F]{8}$/', (string)$data['beloningCode']);
 
@@ -534,7 +534,7 @@ class LoyaltyControllerTest extends TestCase {
 		$store->seed(
 			'redemptionOption_schema',
 			'opt-expensive',
-			['programmeId' => 'prog-1', 'name' => 'TV', 'costInPunten' => 5000]
+			['programmeId' => 'prog-1', 'name' => 'TV', 'costInPoints' => 5000]
 		);
 
 		$controller = $this->realRedemptionController($store);
@@ -566,7 +566,7 @@ class LoyaltyControllerTest extends TestCase {
 		$store->seed(
 			'redemptionOption_schema',
 			'opt-1',
-			['programmeId' => 'prog-1', 'name' => 'Free coffee', 'costInPunten' => 100]
+			['programmeId' => 'prog-1', 'name' => 'Free coffee', 'costInPoints' => 100]
 		);
 
 		$controller = $this->realRedemptionController($store);
@@ -615,7 +615,7 @@ class LoyaltyControllerTest extends TestCase {
 		$store->seed(
 			'redemptionOption_schema',
 			'opt-1',
-			['programmeId' => 'prog-1', 'name' => 'Free coffee', 'costInPunten' => 100]
+			['programmeId' => 'prog-1', 'name' => 'Free coffee', 'costInPoints' => 100]
 		);
 
 		$controller = $this->realRedemptionController($store);
@@ -649,7 +649,7 @@ class LoyaltyControllerTest extends TestCase {
 			[
 				'accountId' => 'acc-1',
 				'beloningCode' => 'RDM-DEADBEEF',
-				'costInPunten' => 100,
+				'costInPoints' => 100,
 				'status' => 'gereserveerd',
 				'validTo' => '2099-01-01T00:00:00+00:00',
 			]
@@ -664,7 +664,7 @@ class LoyaltyControllerTest extends TestCase {
 		$this->assertTrue($data['valid']);
 		$this->assertNull($data['reason']);
 		$this->assertSame('gereserveerd', $data['redemption']['status']);
-		$this->assertSame(100, $data['redemption']['costInPunten']);
+		$this->assertSame(100, $data['redemption']['costInPoints']);
 	}//end testLookupRedemptionCodeReturnsValidationShape()
 
 	/**
@@ -718,7 +718,7 @@ class LoyaltyControllerTest extends TestCase {
 			[
 				'accountId' => 'acc-1',
 				'beloningCode' => 'RDM-DEADBEEF',
-				'costInPunten' => 100,
+				'costInPoints' => 100,
 				'status' => 'gereserveerd',
 				'validTo' => '2099-01-01T00:00:00+00:00',
 			]
@@ -732,7 +732,7 @@ class LoyaltyControllerTest extends TestCase {
 		$data = $response->getData();
 		$this->assertSame('gebruikt', $data['status']);
 		$this->assertSame('pos-777', $data['posTransactionId']);
-		$this->assertArrayHasKey('gebruiktOn', $data);
+		$this->assertArrayHasKey('usedOn', $data);
 		$this->assertSame('gebruikt', $store->row('redemption_schema', 'rdm-1')['status']);
 	}//end testUseRedemptionCodeMarksTheCodeUsed()
 
@@ -750,7 +750,7 @@ class LoyaltyControllerTest extends TestCase {
 			[
 				'accountId' => 'acc-1',
 				'beloningCode' => 'RDM-DEADBEEF',
-				'costInPunten' => 100,
+				'costInPoints' => 100,
 				'status' => 'gereserveerd',
 				'validTo' => '2099-01-01T00:00:00+00:00',
 			]
@@ -780,7 +780,7 @@ class LoyaltyControllerTest extends TestCase {
 			[
 				'accountId' => 'acc-1',
 				'beloningCode' => 'RDM-EXPIRED0',
-				'costInPunten' => 100,
+				'costInPoints' => 100,
 				'status' => 'gereserveerd',
 				'validTo' => '2000-01-01T00:00:00+00:00',
 			]
@@ -899,7 +899,7 @@ class LoyaltyControllerTest extends TestCase {
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
 				'currentBalans' => 40.0,
 				'status' => 'active',
-				'vervaltOn' => '2099-01-01T00:00:00+00:00',
+				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
 		);
 
@@ -957,7 +957,7 @@ class LoyaltyControllerTest extends TestCase {
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
 				'currentBalans' => 40.0,
 				'status' => 'active',
-				'vervaltOn' => '2099-01-01T00:00:00+00:00',
+				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
 		);
 
@@ -996,7 +996,7 @@ class LoyaltyControllerTest extends TestCase {
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
 				'currentBalans' => 10.0,
 				'status' => 'active',
-				'vervaltOn' => '2099-01-01T00:00:00+00:00',
+				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
 		);
 
@@ -1032,7 +1032,7 @@ class LoyaltyControllerTest extends TestCase {
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
 				'currentBalans' => 10.0,
 				'status' => 'active',
-				'vervaltOn' => '2099-01-01T00:00:00+00:00',
+				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
 		);
 
@@ -1065,7 +1065,7 @@ class LoyaltyControllerTest extends TestCase {
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
 				'currentBalans' => 100.0,
 				'status' => 'active',
-				'vervaltOn' => '2099-01-01T00:00:00+00:00',
+				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
 		);
 
@@ -1100,7 +1100,7 @@ class LoyaltyControllerTest extends TestCase {
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
 				'currentBalans' => 40.0,
 				'status' => 'active',
-				'vervaltOn' => '2099-01-01T00:00:00+00:00',
+				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
 		);
 
@@ -1177,7 +1177,7 @@ class LoyaltyControllerTest extends TestCase {
 				'serial' => 'GC-00000042',
 				'currentBalans' => 50.0,
 				'status' => 'issued',
-				'vervaltOn' => '2099-01-01T00:00:00+00:00',
+				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
 		);
 
@@ -1224,7 +1224,7 @@ class LoyaltyControllerTest extends TestCase {
 				'serial' => 'GC-00000043',
 				'currentBalans' => 50.0,
 				'status' => 'blocked',
-				'vervaltOn' => '2099-01-01T00:00:00+00:00',
+				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
 		);
 
@@ -1282,7 +1282,7 @@ class LoyaltyControllerTest extends TestCase {
 			giftCardService: $giftCardService,
 			params: [
 				'initialBalance' => '50',
-				'uitgegevenIn' => 'Bram',
+				'issuedIn' => 'Bram',
 			]
 		);
 

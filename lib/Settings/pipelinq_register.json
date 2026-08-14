@@ -2942,9 +2942,9 @@
         "description": "Onveranderlijk resultaat van een 11-proef controle (RvIG-algoritme). Wordt aangemaakt bij elke validatie-poging (server-side audit). BSN wordt gemaskeerd opgeslagen (***XXXX*) — raw BSN gaat NOOIT in een bsnValidatie-object.",
         "required": [
           "ingevoerdBsn",
-          "isFormeelValid",
+          "isFormalValid",
           "validationMoment",
-          "geinitieerdBy"
+          "initiatedBy"
         ],
         "properties": {
           "ingevoerdBsn": {
@@ -2953,7 +2953,7 @@
             "maxLength": 16,
             "title": "BSN (masked)"
           },
-          "isFormeelValid": {
+          "isFormalValid": {
             "type": "boolean",
             "description": "Resultaat van 11-proef (true = pass, false = fail)",
             "title": "Formally valid",
@@ -2970,7 +2970,7 @@
             "format": "date-time",
             "title": "Validation timestamp"
           },
-          "geinitieerdBy": {
+          "initiatedBy": {
             "type": "string",
             "description": "Nextcloud user UID die de validatie initieerde",
             "maxLength": 128,
@@ -3047,7 +3047,7 @@
             "maxLength": 128,
             "title": "Requested by"
           },
-          "requestedNamens": {
+          "requestedOnBehalfOf": {
             "type": "string",
             "description": "Afdeling / rol (behandelaar-burgerzaken, behandelaar-avg)",
             "maxLength": 200,
@@ -3059,7 +3059,7 @@
             "format": "date-time",
             "title": "Request timestamp"
           },
-          "gekoppeldRequest": {
+          "linkedRequest": {
             "type": "string",
             "description": "UUID-referentie naar Pipelinq verzoek (request, complaint, etc.)",
             "format": "uuid",
@@ -3106,7 +3106,7 @@
             "visible": false,
             "title": "Haalcentraal Correlation ID"
           },
-          "responseBevatSecrecy": {
+          "responseContainsSecrecy": {
             "type": "boolean",
             "description": "Indicatie dat response indicatieGeheim=1 bevatte",
             "default": false,
@@ -3143,7 +3143,7 @@
           "dateOfBirth",
           "geslacht",
           "residence",
-          "indicationGeheim",
+          "indicationSecret",
           "fetchedOn",
           "bronsysteem",
           "lookupRequestId",
@@ -3181,7 +3181,7 @@
             "maxLength": 200,
             "title": "Family Name"
           },
-          "nobiliaryTitel": {
+          "nobiliaryTitle": {
             "type": "string",
             "description": "Baron, Gravin, etc.",
             "maxLength": 64,
@@ -3221,7 +3221,7 @@
             "description": "Adresgegevens (straat, huisnummer, postcode, woonplaats, land)",
             "title": "Residence Address"
           },
-          "indicationGeheim": {
+          "indicationSecret": {
             "type": "string",
             "description": "Geheimhouding-indicatie uit BRP — \"0\" (geen), \"1\" (geheimhouding gemeente)",
             "enum": [
@@ -3377,7 +3377,7 @@
             "maxLength": 128,
             "title": "HaalCentraal Correlation ID"
           },
-          "gekoppeldRequest": {
+          "linkedRequest": {
             "type": "string",
             "description": "UUID-referentie naar Pipelinq verzoek",
             "format": "uuid",
@@ -3460,7 +3460,7 @@
             },
             "title": "Restrictions"
           },
-          "localOpgevoerdBy": {
+          "localEnteredBy": {
             "type": "string",
             "description": "Nextcloud user UID van wie de opt-out lokaal registreerde",
             "maxLength": 128,
@@ -5169,13 +5169,13 @@
         "doelbinding": "Publieke taak — Wet BRP art. 3.3",
         "basis": "Publieke taak (AVG art. 6 lid 1 sub e)",
         "requestedBy": "demo:m.devries",
-        "requestedNamens": "behandelaar-burgerzaken",
+        "requestedOnBehalfOf": "behandelaar-burgerzaken",
         "requestMoment": "2026-08-14T09:23:45+00:00",
         "responseStatus": "geslaagd",
         "responseMoment": "2026-08-14T09:23:46+00:00",
         "responseDurationMs": 412,
         "haalcentraalCorrelationId": "hc-corr-7f3a9b2e",
-        "responseBevatSecrecy": false,
+        "responseContainsSecrecy": false,
         "responseInCache": false,
         "cacheExpiresOn": "2026-08-15T09:23:46+00:00"
       },
@@ -5191,7 +5191,7 @@
         "doelbinding": "Publieke taak — Wet BRP art. 3.3",
         "basis": "Publieke taak (AVG art. 6 lid 1 sub e)",
         "requestedBy": "demo:j.smith",
-        "requestedNamens": "behandelaar-burgerzaken",
+        "requestedOnBehalfOf": "behandelaar-burgerzaken",
         "requestMoment": "2026-08-14T10:15:22+00:00",
         "responseStatus": "niet-gevonden",
         "responseMoment": "2026-08-14T10:15:23+00:00",
@@ -5223,7 +5223,7 @@
           "woonplaats": "'s-Gravenhage",
           "land": "Nederland"
         },
-        "indicationGeheim": "0",
+        "indicationSecret": "0",
         "fetchedOn": "2026-08-14T09:23:46+00:00",
         "bronsysteem": "HaalCentraal-BRP-v2.0",
         "lookupRequestId": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e21",

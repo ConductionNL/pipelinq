@@ -31,8 +31,8 @@
 					inputmode="numeric"
 					maxlength="9"
 					:helper-text="bsnFeedback || ' '"
-					:success="validation.isFormeelValid"
-					:error="rawBsn.length > 0 && !validation.isFormeelValid" />
+					:success="validation.isFormalValid"
+					:error="rawBsn.length > 0 && !validation.isFormalValid" />
 				<NcButton
 					variant="primary"
 					data-testid="brp-lookup-button"
@@ -55,7 +55,7 @@
 			<div v-if="persoon" class="brp-panel__persoon" data-testid="brp-persoon">
 				<div class="brp-panel__persoon-header">
 					<span
-						v-if="persoon.indicationGeheim === '1'"
+						v-if="persoon.indicationSecret === '1'"
 						class="brp-panel__geheim-icon"
 						:title="t('pipelinq', 'Confidentiality active')">
 						🔒
@@ -77,7 +77,7 @@
 					<dd>{{ persoon.geslacht || '-' }}</dd>
 				</dl>
 				<div
-					v-if="persoon.indicationGeheim === '1' && !revealedAddress"
+					v-if="persoon.indicationSecret === '1' && !revealedAddress"
 					class="brp-panel__secret">
 					<span>[{{ t('pipelinq', 'SECRET') }}]</span>
 					<NcButton variant="tertiary" @click="revealAddress">
@@ -157,7 +157,7 @@ export default {
 			)
 		},
 		canLookup() {
-			return this.validation.isFormeelValid && this.lookupState !== 'loading'
+			return this.validation.isFormalValid && this.lookupState !== 'loading'
 		},
 		fullName() {
 			if (!this.persoon) return ''
@@ -170,7 +170,7 @@ export default {
 		},
 		address() {
 			if (!this.persoon) return null
-			if (this.persoon.indicationGeheim === '1' && !this.revealedAddress)
+			if (this.persoon.indicationSecret === '1' && !this.revealedAddress)
 				return null
 			if (this.revealedVerblijfplaats) return this.revealedVerblijfplaats
 			return this.persoon.residence || null
