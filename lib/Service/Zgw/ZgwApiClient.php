@@ -17,7 +17,7 @@
  *      Optimistic-locking 412 handling is delegated to the resource clients
  *      (e.g. ZrcClient) since the fresh-fetch step is resource-specific.
  *
- * Client secret retrieval: `$client->secretKluisRef` is a vault URI
+ * Client secret retrieval: `$client->secretVaultRef` is a vault URI
  * (`vault://...`); resolution is delegated to `IAppConfig` so the gemeente
  * IT team can use whatever vault backend OpenRegister has been wired with.
  * If the reference is unresolvable the client raises `ZgwException` rather
@@ -88,7 +88,7 @@ class ZgwApiClient {
 	 *   - iat                 = current Unix time (no skew compensation)
 	 *   - exp                 = iat + $expiresIn
 	 *
-	 * Signed HS256 with the secret resolved from `$client->secretKluisRef`.
+	 * Signed HS256 with the secret resolved from `$client->secretVaultRef`.
 	 *
 	 * @param array<string, mixed> $client ZgwClient record (assoc array).
 	 * @param int $expiresIn JWT lifetime (seconds); default 3600.
@@ -98,7 +98,7 @@ class ZgwApiClient {
 	 * @throws ZgwException When the vault reference cannot be resolved.
 	 */
 	public function mintJwt(array $client, int $expiresIn = 3600): string {
-		$secret = $this->resolveClientSecret(reference: (string)($client['secretKluisRef'] ?? ''));
+		$secret = $this->resolveClientSecret(reference: (string)($client['secretVaultRef'] ?? ''));
 		if ($secret === '') {
 			throw new ZgwException(
 				sprintf(

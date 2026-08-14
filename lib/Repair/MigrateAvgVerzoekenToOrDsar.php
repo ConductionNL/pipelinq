@@ -560,7 +560,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		$this->applyExtension(case: $case, request: $request, dueAt: $dueAt);
 
 		// Optional 1:1 string fields, copied only when present.
-		foreach (['afgerondOp' => 'closedAt', 'uitkomst' => 'outcome', 'retentionTo' => 'retainUntil'] as $src => $dst) {
+		foreach (['afgerondOp' => 'closedAt', 'outcome' => 'outcome', 'retentionTo' => 'retainUntil'] as $src => $dst) {
 			if (($request[$src] ?? '') !== '') {
 				$case[$dst] = (string)$request[$src];
 			}
@@ -621,7 +621,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		}
 
 		if ($status === 'afgerond') {
-			$outcome = (string)($request['uitkomst'] ?? '');
+			$outcome = (string)($request['outcome'] ?? '');
 			return (self::OUTCOME_TERMINAL_STATUS[$outcome] ?? 'closed');
 		}
 

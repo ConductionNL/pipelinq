@@ -178,7 +178,7 @@ class TierService {
 		$currentTier = $this->findRuleByUuid(programmeId: $programmeId, tierId: (string)$currentTierId);
 		$downgradePolicy = 'none';
 		if ($currentTier !== null) {
-			$downgradePolicy = (string)($currentTier['downgradeBeleid'] ?? 'none');
+			$downgradePolicy = (string)($currentTier['downgradePolicy'] ?? 'none');
 		}
 
 		if ($downgradePolicy === 'end_of_year' || $downgradePolicy === 'end_of_quarter') {
@@ -213,7 +213,7 @@ class TierService {
 	 */
 	public function handleTierUpgrade(string $accountId, array $newTier): void {
 		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-		$policy = (string)($newTier['downgradeBeleid'] ?? 'none');
+		$policy = (string)($newTier['downgradePolicy'] ?? 'none');
 		$valid = null;
 		if ($policy === 'end_of_year') {
 			$valid = $this->endOfPeriodTimestamp(policy: $policy);

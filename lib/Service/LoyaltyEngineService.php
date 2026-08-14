@@ -208,13 +208,13 @@ class LoyaltyEngineService {
 
 		$multiplier = $this->resolveTierMultiplier(account: $account, programmeId: $programmeId);
 
-		$formule = $rule['formule'] ?? [];
-		if (is_array($formule) === false) {
-			$formule = [];
+		$formula = $rule['formula'] ?? [];
+		if (is_array($formula) === false) {
+			$formula = [];
 		}
 
 		$rawPoints = $this->ruleEngine->calculatePoints(
-			formule: $formule,
+			formula: $formula,
 			amount: $context['amount'],
 			multiplier: $multiplier
 		);
@@ -348,7 +348,7 @@ class LoyaltyEngineService {
 			accountId: $accountId,
 			amount: $toAward,
 			ruleId: $this->extractUuid(object: $rule),
-			brondocument: [
+			sourceDocument: [
 				'transactionId' => $transaction['posTransactionId'] ?? null,
 				'amount' => $context['amount'],
 				'channel' => $context['channel'],

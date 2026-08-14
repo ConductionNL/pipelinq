@@ -264,8 +264,8 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 		$this->store = [
 			'40' => [
 				['id' => 'a', 'artikel' => 'art-17-wissing', 'status' => 'ingediend'],
-				['id' => 'b', 'artikel' => 'art-16-rectificatie', 'status' => 'afgerond', 'uitkomst' => 'geweigerd'],
-				['id' => 'd', 'artikel' => 'art-20-portabiliteit', 'status' => 'afgerond', 'uitkomst' => 'toegekend'],
+				['id' => 'b', 'artikel' => 'art-16-rectificatie', 'status' => 'afgerond', 'outcome' => 'geweigerd'],
+				['id' => 'd', 'artikel' => 'art-20-portabiliteit', 'status' => 'afgerond', 'outcome' => 'toegekend'],
 			],
 		];
 
@@ -404,7 +404,7 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 					'id' => 'v1',
 					'artikel' => 'art-15-inzage',
 					'status' => 'ingediend',
-					'uitkomst' => null,
+					'outcome' => null,
 				],
 			],
 		];
@@ -416,7 +416,7 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 
 		$marked = $this->markedSources[0];
 		self::assertSame('dsar-1', $marked['migratedTo']);
-		self::assertArrayNotHasKey('uitkomst', $marked, 'null properties must not be written back');
+		self::assertArrayNotHasKey('outcome', $marked, 'null properties must not be written back');
 	}//end testMarkerWriteBackStripsNulls()
 
 	/**

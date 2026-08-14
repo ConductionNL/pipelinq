@@ -139,7 +139,7 @@ class OptOutService {
 				'type' => 'geheimhouding-gemeente',
 				'source' => 'BRP',
 				'effectiveDate' => $today->format('Y-m-d'),
-				'beperkt' => ['commerciele-derden', 'kerkgenootschappen', 'derdeportalen'],
+				'limited' => ['commerciele-derden', 'kerkgenootschappen', 'derdeportalen'],
 			];
 			$this->getObjectService()->saveObject(
 				object: $object,
@@ -177,7 +177,7 @@ class OptOutService {
 				'type' => 'lokale-contact-opt-out',
 				'source' => 'lokaal',
 				'effectiveDate' => $today->format('Y-m-d'),
-				'beperkt' => ['commerciele-derden'],
+				'limited' => ['commerciele-derden'],
 				'localEnteredBy' => $actor,
 				'note' => $note,
 			];

@@ -557,7 +557,7 @@ class HaalCentraalClient {
 			'geboorte.datum',
 			'geboorte.plaats',
 			'geboorte.land',
-			'geslacht',
+			'gender',
 			'residence',
 			'indicationSecret',
 		];
@@ -611,12 +611,12 @@ class HaalCentraalClient {
 			$residence = $raw['residence'];
 		}
 
-		$geslacht = $raw['geslacht'] ?? '';
-		if (is_array($geslacht) === true) {
-			$geslacht = ($geslacht['code'] ?? '');
+		$gender = $raw['gender'] ?? '';
+		if (is_array($gender) === true) {
+			$gender = ($gender['code'] ?? '');
 		}
 
-		$geslacht = (string)$geslacht;
+		$gender = (string)$gender;
 
 		$birthPlace = $birth['plaats'] ?? '';
 		if (is_array($birthPlace) === true) {
@@ -641,10 +641,10 @@ class HaalCentraalClient {
 			'dateOfBirth' => (string)($birth['datum']['datum'] ?? $birth['datum'] ?? ''),
 			'birthPlace' => $birthPlace,
 			'birthCountry' => $birthCountry,
-			'geslacht' => self::mapGeslacht(code: $geslacht),
+			'gender' => self::mapGeslacht(code: $gender),
 			'residence' => self::mapResidence(residence: $residence),
 			'indicationSecret' => (string)($raw['indicationSecret'] ?? '0'),
-			'bronsysteem' => 'HaalCentraal-BRP-v2.0',
+			'sourceSystem' => 'HaalCentraal-BRP-v2.0',
 		];
 	}//end normalisePerson()
 

@@ -113,7 +113,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			if ($bsn === '') {
 				// Try the linked Contactmoment.
 				$bsn = $this->resolveBsnViaContactmoment(
-					contactmomentId: (string)($newData['contactmomentId'] ?? '')
+					interactionId: (string)($newData['interactionId'] ?? '')
 				);
 			}
 
@@ -127,7 +127,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 
 			$this->berichtenbox->queueOutboundMessage(
 				caseId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
-				contactmomentId: (string)($newData['contactmomentId'] ?? null),
+				interactionId: (string)($newData['interactionId'] ?? null),
 				status: $newStatus,
 				bsn: $bsn,
 				templateOverride: null,
@@ -218,12 +218,12 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 * schema through TicketService instead of the retired
 	 * `contactmoment_schema`.
 	 *
-	 * @param string $contactmomentId Contactmoment (ticket) uuid.
+	 * @param string $interactionId Contactmoment (ticket) uuid.
 	 *
 	 * @return string
 	 */
-	private function resolveBsnViaContactmoment(string $contactmomentId): string {
-		if ($contactmomentId === '') {
+	private function resolveBsnViaContactmoment(string $interactionId): string {
+		if ($interactionId === '') {
 			return '';
 		}
 
@@ -236,7 +236,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			$register = $this->ticketService->getRegisterId();
 			$schema = $this->ticketService->getSchemaId();
 
-			$row = $service->find(id: $contactmomentId, register: $register, schema: $schema);
+			$row = $service->find(id: $interactionId, register: $register, schema: $schema);
 			if ($row === null) {
 				return '';
 			}

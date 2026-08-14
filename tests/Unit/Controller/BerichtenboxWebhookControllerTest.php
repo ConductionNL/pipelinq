@@ -146,7 +146,7 @@ class BerichtenboxWebhookControllerTest extends TestCase {
 			->method('handleInboundReply')
 			->willReturn([
 				'uuid' => 'r-1',
-				'createdContactmomentId' => 'cm-1',
+				'createdInteractionId' => 'cm-1',
 			]);
 
 		$request = $this->createMock(IRequest::class);
@@ -159,7 +159,7 @@ class BerichtenboxWebhookControllerTest extends TestCase {
 		$response = $controller->inboundReply();
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$data = $response->getData();
-		$this->assertSame('cm-1', $data['contactmomentId']);
+		$this->assertSame('cm-1', $data['interactionId']);
 	}//end testInboundReplySuccess()
 
 	/**

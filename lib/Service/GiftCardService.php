@@ -93,8 +93,8 @@ class GiftCardService {
 			'programmeId' => $programmeId,
 			'serial' => $serial,
 			'pin' => $hash,
-			'initialeBalans' => $initialBalance,
-			'currentBalans' => $initialBalance,
+			'initialBalance' => $initialBalance,
+			'currentBalance' => $initialBalance,
 			'valuta' => 'EUR',
 			'status' => 'issued',
 			'issuedOn' => $now,
@@ -203,16 +203,16 @@ class GiftCardService {
 			throw new RuntimeException('Invalid PIN.');
 		}
 
-		$balance = (float)($card['currentBalans'] ?? 0);
+		$balance = (float)($card['currentBalance'] ?? 0);
 		$applied = min($amount, $balance);
 		$change = max(0.0, $amount - $applied);
 		$after = round($balance - $applied, 2);
 
-		$card['currentBalans'] = $after;
+		$card['currentBalance'] = $after;
 		$type = 'partial_redeem';
 		if ($after <= 0.0) {
 			$after = 0.0;
-			$card['currentBalans'] = 0.0;
+			$card['currentBalance'] = 0.0;
 			$card['status'] = 'depleted';
 			// When the requested amount equals the balance and consumes everything → type "redeem".
 			if (abs($applied - $balance) < 0.005 && $change === 0.0) {
@@ -262,9 +262,9 @@ class GiftCardService {
 			throw new RuntimeException('Gift card not found.');
 		}
 
-		$balance = (float)($card['currentBalans'] ?? 0);
+		$balance = (float)($card['currentBalance'] ?? 0);
 		$after = round($balance + $amount, 2);
-		$card['currentBalans'] = $after;
+		$card['currentBalance'] = $after;
 
 		if ((string)($card['status'] ?? '') === 'depleted' && $after > 0) {
 			$card['status'] = 'active';
@@ -305,7 +305,7 @@ class GiftCardService {
 			giftCardId: $giftCardId,
 			type: 'block',
 			amount: 0.0,
-			balanceAfter: (float)($card['currentBalans'] ?? 0),
+			balanceAfter: (float)($card['currentBalance'] ?? 0),
 			posTransactionId: null,
 			processedBy: 'gift-card-service'
 		);
@@ -341,7 +341,7 @@ class GiftCardService {
 		}
 
 		return [
-			'balance' => (float)($card['currentBalans'] ?? 0),
+			'balance' => (float)($card['currentBalance'] ?? 0),
 			'status' => (string)($card['status'] ?? 'issued'),
 			'expiryDate' => $card['expiresOn'] ?? null,
 		];
@@ -367,7 +367,7 @@ class GiftCardService {
 		if (in_array($status, ['blocked'], true) === true) {
 			return [
 				'valid' => false,
-				'balance' => (float)($card['currentBalans'] ?? 0),
+				'balance' => (float)($card['currentBalance'] ?? 0),
 				'expiryDate' => ($card['expiresOn'] ?? null),
 				'giftCardId' => $this->extractUuid(object: $card),
 				'reason' => 'Blocked',
@@ -379,7 +379,7 @@ class GiftCardService {
 		if ($expiresOn !== '' && $expiresOn < $now) {
 			return [
 				'valid' => false,
-				'balance' => (float)($card['currentBalans'] ?? 0),
+				'balance' => (float)($card['currentBalance'] ?? 0),
 				'expiryDate' => $expiresOn,
 				'giftCardId' => $this->extractUuid(object: $card),
 				'reason' => 'Expired',
@@ -397,7 +397,7 @@ class GiftCardService {
 
 		return [
 			'valid' => true,
-			'balance' => (float)($card['currentBalans'] ?? 0),
+			'balance' => (float)($card['currentBalance'] ?? 0),
 			'expiryDate' => $expiryDate,
 			'giftCardId' => $this->extractUuid(object: $card),
 			'reason' => null,

@@ -222,12 +222,12 @@ class BrpMonitorJob extends TimedJob {
 			}
 
 			$total++;
-			$uitkomst = (string)($arr['uitkomst'] ?? '');
-			if ($uitkomst === 'fout' || $uitkomst === 'timeout') {
+			$outcome = (string)($arr['outcome'] ?? '');
+			if ($outcome === 'fout' || $outcome === 'timeout') {
 				$errors++;
 			}
 
-			if ($uitkomst === 'geslaagd') {
+			if ($outcome === 'geslaagd') {
 				$hits++;
 			}
 		}//end foreach

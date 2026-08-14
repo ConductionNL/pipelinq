@@ -77,7 +77,7 @@ class ZgwApiClientTest extends TestCase {
 	public function testMintJwtCarriesAllRequiredClaims(): void {
 		$zgwClient = [
 			'clientIdentifier' => 'pipelinq-zoetermeer',
-			'secretKluisRef' => 'vault://zgw/zoetermeer/client-secret',
+			'secretVaultRef' => 'vault://zgw/zoetermeer/client-secret',
 			'userId' => 'pipelinq',
 			'userRepresentation' => 'Pipelinq backend (Conduction)',
 		];
@@ -110,7 +110,7 @@ class ZgwApiClientTest extends TestCase {
 		$this->expectException(ZgwException::class);
 		$this->client->mintJwt([
 			'clientIdentifier' => 'pipelinq-missing',
-			'secretKluisRef' => 'vault://zgw/nowhere/client-secret',
+			'secretVaultRef' => 'vault://zgw/nowhere/client-secret',
 			'userId' => 'pipelinq',
 			'userRepresentation' => 'Pipelinq backend',
 		]);
@@ -148,7 +148,7 @@ class ZgwApiClientTest extends TestCase {
 	public function testMintJwtClampsExpiryToSafeFloor(): void {
 		$zgwClient = [
 			'clientIdentifier' => 'pipelinq-zoetermeer',
-			'secretKluisRef' => 'vault://zgw/zoetermeer/client-secret',
+			'secretVaultRef' => 'vault://zgw/zoetermeer/client-secret',
 			'userId' => 'pipelinq',
 			'userRepresentation' => 'Pipelinq backend',
 		];
