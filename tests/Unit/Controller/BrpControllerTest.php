@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\BrpController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BrpCacheService;
 use OCA\Pipelinq\Service\BsnAuditService;
@@ -266,6 +267,7 @@ class BrpControllerTest extends TestCase {
 		return new BrpController(
 			$request,
 			$userSession,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$groupManager,
 			$l10n,
 			$appConfig,
@@ -848,6 +850,7 @@ class BrpControllerTest extends TestCase {
 		return new BrpController(
 			$request,
 			$userSession,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$groupManager,
 			$l10n,
 			$appConfig,

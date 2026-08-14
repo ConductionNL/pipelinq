@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\CtiController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Cti\Adapter\AsteriskAdapter;
 use OCA\Pipelinq\Service\Cti\Adapter\CallVoipAdapter;
 use OCA\Pipelinq\Service\Cti\Adapter\RingCentralAdapter;
@@ -134,6 +135,7 @@ class CtiControllerTest extends TestCase {
 			$this->request(),
 			$service,
 			$this->session($uid),
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$this->createMock(IGroupManager::class),
 			$this->createMock(LoggerInterface::class),
 		);

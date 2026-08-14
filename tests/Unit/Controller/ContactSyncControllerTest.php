@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ContactSyncController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContactDataBuilder;
 use OCA\Pipelinq\Service\ContactImportService;
 use OCA\Pipelinq\Service\ContactLinkedUidsService;
@@ -85,6 +86,7 @@ class ContactSyncControllerTest extends TestCase {
 			$this->request,
 			$this->syncService,
 			$userSession,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$l10n,
 			$logger,
 		);

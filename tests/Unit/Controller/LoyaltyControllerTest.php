@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\LoyaltyController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\GiftCardService;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
@@ -126,6 +127,7 @@ class LoyaltyControllerTest extends TestCase {
 			($redemptionService ?? $this->createMock(RedemptionService::class)),
 			($giftCardService ?? $this->createMock(GiftCardService::class)),
 			($programmeService ?? $this->createMock(LoyaltyProgrammeService::class)),
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$userSession,
 			$l10n
 		);

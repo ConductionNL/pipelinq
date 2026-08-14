@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ActivityTimelineController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ActivityTimelineService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
@@ -127,6 +128,7 @@ class ActivityTimelineControllerTest extends TestCase {
 			userSession: $this->userSession,
 			logger: $this->createMock(LoggerInterface::class),
 			container: $container,
+			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 	}//end buildController()
 
