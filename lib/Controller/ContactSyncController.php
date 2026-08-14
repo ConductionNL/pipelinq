@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -51,6 +52,7 @@ class ContactSyncController extends Controller {
 		IRequest $request,
 		private ContactSyncService $contactSyncService,
 		private IUserSession $userSession,
+		private CrmAccessPolicy $policy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
@@ -70,6 +72,12 @@ class ContactSyncController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Contact sync reaches address books and external directories — a CRM
+		// capability, not an any-authenticated-user one. Admins bypass.
+		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
 		$query = $this->request->getParam('q', '');
@@ -102,6 +110,12 @@ class ContactSyncController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Contact sync reaches address books and external directories — a CRM
+		// capability, not an any-authenticated-user one. Admins bypass.
+		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
 		$uid = $this->request->getParam('uid', '');
@@ -156,6 +170,12 @@ class ContactSyncController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
 		}
 
+		// Contact sync reaches address books and external directories — a CRM
+		// capability, not an any-authenticated-user one. Admins bypass.
+		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
+
 		$objectType = $this->request->getParam('objectType', 'client');
 		$object = $this->request->getParam('object', []);
 
@@ -194,6 +214,12 @@ class ContactSyncController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Contact sync reaches address books and external directories — a CRM
+		// capability, not an any-authenticated-user one. Admins bypass.
+		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
 		$objectType = $this->request->getParam('objectType', '');
