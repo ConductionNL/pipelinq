@@ -116,14 +116,14 @@ class OptOutService {
 	 * Creates the flag at most once: re-firing only updates `notitie`.
 	 *
 	 * @param string $rawBsn Raw BSN (caller MUST not log it).
-	 * @param string $indicationGeheim Value of BRP's indicatieGeheim ("0" = none, "1" = present).
+	 * @param string $indicationSecret Value of BRP's indicatieGeheim ("0" = none, "1" = present).
 	 *
 	 * @return bool True when an OptOutVlag was newly created / refreshed.
 	 *
 	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-01
 	 */
-	public function recordFromBrpResponse(string $rawBsn, string $indicationGeheim): bool {
-		if ($indicationGeheim !== '1') {
+	public function recordFromBrpResponse(string $rawBsn, string $indicationSecret): bool {
+		if ($indicationSecret !== '1') {
 			return false;
 		}
 
@@ -178,7 +178,7 @@ class OptOutService {
 				'source' => 'lokaal',
 				'effectiveDate' => $today->format('Y-m-d'),
 				'beperkt' => ['commerciele-derden'],
-				'localOpgevoerdBy' => $actor,
+				'localEnteredBy' => $actor,
 				'note' => $note,
 			];
 			$object = array_filter($object, static fn ($v) => $v !== null);

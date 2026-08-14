@@ -427,7 +427,7 @@ class PointsLedgerService {
 			'customerId' => $account['customerId'] ?? null,
 			'type' => $type,
 			'count' => $signedCount,
-			'balansAfter' => $newBalance,
+			'balanceAfter' => $newBalance,
 			'brondocument' => $brondocument,
 			'ruleId' => $ruleId,
 			'timestamp' => $now,

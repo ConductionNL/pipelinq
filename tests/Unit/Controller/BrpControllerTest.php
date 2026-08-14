@@ -97,7 +97,7 @@ class BrpControllerTest extends TestCase {
 		$person = [
 			'givenNames' => 'Jan',
 			'surname' => 'Jansen',
-			'indicationGeheim' => '0',
+			'indicationSecret' => '0',
 			'residence' => ['straat' => 'Hoofdstraat'],
 			'_correlationId' => 'corr-shared-xyz',
 			'_responseDurationMs' => 142,
@@ -138,7 +138,7 @@ class BrpControllerTest extends TestCase {
 	public function testLookupNullCorrelationIdNotPersisted(): void {
 		$person = [
 			'givenNames' => 'Jan',
-			'indicationGeheim' => '0',
+			'indicationSecret' => '0',
 			'_correlationId' => null,
 			'_responseDurationMs' => 9,
 			'_responseStatus' => 200,
@@ -209,7 +209,7 @@ class BrpControllerTest extends TestCase {
 
 		$validation = $this->createMock(BsnValidationService::class);
 		$validation->method('validate')->willReturn(
-			['isFormeelValid' => true, 'errorCode' => null, 'errorMessage' => null, 'maskedBsn' => '*****6782']
+			['isFormalValid' => true, 'errorCode' => null, 'errorMessage' => null, 'maskedBsn' => '*****6782']
 		);
 
 		$cacheService = $this->createMock(BrpCacheService::class);
@@ -727,7 +727,7 @@ class BrpControllerTest extends TestCase {
 				string $action = 'brp-lookup-uitgevoerd',
 				?int $responseCode = null,
 				?string $haalcentraalCorrelationId = null,
-				?string $gekoppeldRequest = null,
+				?string $linkedRequest = null,
 				?string $actorRole = null,
 				bool $vogScreening = false,
 			) use (&$recorded): string {
@@ -813,7 +813,7 @@ class BrpControllerTest extends TestCase {
 		$validation = $this->createMock(BsnValidationService::class);
 		$validation->method('validate')->willReturn(
 			[
-				'isFormeelValid' => $bsnValid,
+				'isFormalValid' => $bsnValid,
 				'errorCode' => null,
 				'errorMessage' => 'Ongeldig BSN.',
 				'maskedBsn' => '*****6782',

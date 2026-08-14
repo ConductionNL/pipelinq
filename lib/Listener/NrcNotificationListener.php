@@ -146,7 +146,7 @@ class NrcNotificationListener {
 	 */
 	private function markReceived(array $abonnement): void {
 		$uuid = (string)($abonnement['@self']['uuid'] ?? $abonnement['id'] ?? '');
-		$abonnement['latestOntvangenOn'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+		$abonnement['latestReceivedOn'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
 		$saveUuid = null;
 		if ($uuid !== '') {
 			$saveUuid = $uuid;

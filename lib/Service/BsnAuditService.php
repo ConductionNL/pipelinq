@@ -82,7 +82,7 @@ class BsnAuditService {
 	 * @param string $action Action enum value (default `brp-lookup-uitgevoerd`).
 	 * @param int|null $responseCode HTTP status from HaalCentraal (200, 404, 503).
 	 * @param string|null $haalcentraalCorrelationId Correlation ID for trace.
-	 * @param string|null $gekoppeldRequest UUID of linked Pipelinq verzoek.
+	 * @param string|null $linkedRequest UUID of linked Pipelinq verzoek.
 	 * @param string|null $actorRole Role of actor (behandelaar-burgerzaken).
 	 * @param bool $vogScreening VOG-screening flag for Justis.
 	 *
@@ -104,7 +104,7 @@ class BsnAuditService {
 		string $action = 'brp-lookup-uitgevoerd',
 		?int $responseCode = null,
 		?string $haalcentraalCorrelationId = null,
-		?string $gekoppeldRequest = null,
+		?string $linkedRequest = null,
 		?string $actorRole = null,
 		bool $vogScreening = false,
 	): string {
@@ -124,7 +124,7 @@ class BsnAuditService {
 			'ipAdres' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
 			'userAgent' => 'Pipelinq/' . (Application::APP_ID) . ' (Nextcloud)',
 			'haalcentraalCorrelationId' => $haalcentraalCorrelationId,
-			'gekoppeldRequest' => $gekoppeldRequest,
+			'linkedRequest' => $linkedRequest,
 			'vogScreening' => $vogScreening,
 			'retainUntil' => $retainUntil->format(DATE_ATOM),
 		];

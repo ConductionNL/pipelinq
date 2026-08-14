@@ -136,7 +136,7 @@ class BrpController extends Controller {
 		// Never echo back the raw BSN — only the masked variant.
 		return new JSONResponse(
 			[
-				'isFormeelValid' => $result['isFormeelValid'],
+				'isFormalValid' => $result['isFormalValid'],
 				'errorCode' => $result['errorCode'],
 				'errorMessage' => $result['errorMessage'],
 				'maskedBsn' => $result['maskedBsn'],
@@ -185,7 +185,7 @@ class BrpController extends Controller {
 		$verzoekreden = trim((string)$this->request->getParam('verzoekreden', ''));
 		$doelbinding = trim((string)$this->request->getParam('doelbinding', ''));
 		$basis = trim((string)$this->request->getParam('basis', ''));
-		$requestId = (string)$this->request->getParam('gekoppeldRequest', '');
+		$requestId = (string)$this->request->getParam('linkedRequest', '');
 		$contactId = (string)$this->request->getParam('gekoppeldContact', '');
 		$vogScreening = (bool)$this->request->getParam('vogScreening', false);
 
@@ -207,9 +207,9 @@ class BrpController extends Controller {
 		// 2) Permission check (REQ-BSN-005-03).
 		$actorRole = $this->resolveActorRole(actor: $actor);
 		if ($actorRole === null) {
-			$gekoppeldRequest = null;
+			$linkedRequest = null;
 			if ($requestId !== '') {
-				$gekoppeldRequest = $requestId;
+				$linkedRequest = $requestId;
 			}
 
 			$this->audit->recordLookup(
@@ -220,7 +220,7 @@ class BrpController extends Controller {
 				uitkomst: 'geweigerd-onbevoegd',
 				action: 'brp-lookup-geweigerd',
 				responseCode: 403,
-				gekoppeldRequest: $gekoppeldRequest,
+				linkedRequest: $linkedRequest,
 				vogScreening: $vogScreening,
 			);
 			return new JSONResponse(
@@ -235,7 +235,7 @@ class BrpController extends Controller {
 		// 3) BSN must pass 11-proef before any external call (defense-in-depth — the UI
 		// already validates, but a direct REST caller could skip the UI).
 		$validation = $this->validation->validate($rawBsn);
-		if ($validation['isFormeelValid'] === false) {
+		if ($validation['isFormalValid'] === false) {
 			return new JSONResponse(
 				[
 					'errorCode' => 'invalid-bsn',
@@ -292,7 +292,7 @@ class BrpController extends Controller {
 					// Record opt-out side-effect.
 					$this->optOut->recordFromBrpResponse(
 						$rawBsn,
-						(string)($person['indicationGeheim'] ?? '0')
+						(string)($person['indicationSecret'] ?? '0')
 					);
 				}//end if
 			} catch (HaalCentraalException $e) {
@@ -335,15 +335,15 @@ class BrpController extends Controller {
 			'doelbinding' => $doelbinding,
 			'basis' => $basis,
 			'requestedBy' => $actor,
-			'requestedNamens' => $actorRole,
+			'requestedOnBehalfOf' => $actorRole,
 			'requestMoment' => $now->format(DATE_ATOM),
-			'gekoppeldRequest' => $gekoppeldRequestRef,
+			'linkedRequest' => $gekoppeldRequestRef,
 			'gekoppeldContact' => $gekoppeldContactRef,
 			'responseStatus' => $uitkomst,
 			'responseMoment' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DATE_ATOM),
 			'responseDurationMs' => $responseDurationMs,
 			'haalcentraalCorrelationId' => $correlationId,
-			'responseBevatSecrecy' => $person !== null && (string)($person['indicationGeheim'] ?? '0') === '1',
+			'responseContainsSecrecy' => $person !== null && (string)($person['indicationSecret'] ?? '0') === '1',
 			'responseInCache' => $responseInCache,
 			'cacheExpiresOn' => $cacheExpiresOn,
 		];
@@ -366,7 +366,7 @@ class BrpController extends Controller {
 			uitkomst: $uitkomst,
 			responseCode: $responseCode,
 			haalcentraalCorrelationId: $correlationId,
-			gekoppeldRequest: $gekoppeldRequestRef,
+			linkedRequest: $gekoppeldRequestRef,
 			actorRole: $actorRole,
 			vogScreening: $vogScreening,
 		);
@@ -376,7 +376,7 @@ class BrpController extends Controller {
 			$this->stampContactWithVerifiedBsn(
 				contactId: $contactId,
 				brpPersonId: (string)($person['@self']['id'] ?? $person['id'] ?? ''),
-				secrecy: ((string)($person['indicationGeheim'] ?? '0')) === '1',
+				secrecy: ((string)($person['indicationSecret'] ?? '0')) === '1',
 			);
 		}
 
@@ -469,7 +469,7 @@ class BrpController extends Controller {
 			uitkomst: 'adres-onthuld',
 			action: 'brp-adres-onthuld',
 			responseCode: 200,
-			gekoppeldRequest: null,
+			linkedRequest: null,
 			actorRole: $this->resolveActorRole(actor: $actor),
 		);
 
@@ -509,7 +509,7 @@ class BrpController extends Controller {
 		$rawBsn = (string)$this->request->getParam('bsn', '');
 		$note = $this->request->getParam('note');
 		$validation = $this->validation->validate($rawBsn);
-		if ($validation['isFormeelValid'] === false) {
+		if ($validation['isFormalValid'] === false) {
 			return new JSONResponse(
 				[
 					'errorCode' => 'invalid-bsn',
