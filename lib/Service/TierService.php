@@ -121,7 +121,7 @@ class TierService {
 		$rules = $this->getTierRules(programmeId: $programmeId);
 		$matched = null;
 		foreach ($rules as $rule) {
-			$threshold = (float)($rule['drempelWaarde'] ?? 0);
+			$threshold = (float)($rule['thresholdValue'] ?? 0);
 			if ($lifetimePoints >= $threshold) {
 				$matched = $rule;
 			}
@@ -187,8 +187,8 @@ class TierService {
 			$this->accountService->setTier(
 				accountId: $accountId,
 				tierId: $currentTierId,
-				tierBehaaldOp: null,
-				tierGeldigTot: $end
+				tierAchievedOn: null,
+				tierValidTo: $end
 			);
 			return ['from' => $currentTierId, 'to' => $currentTierId, 'changed' => false];
 		}
@@ -222,8 +222,8 @@ class TierService {
 		$this->accountService->setTier(
 			accountId: $accountId,
 			tierId: $this->extractUuid(object: $newTier),
-			tierBehaaldOp: $now,
-			tierGeldigTot: $valid
+			tierAchievedOn: $now,
+			tierValidTo: $valid
 		);
 	}//end handleTierUpgrade()
 
@@ -240,8 +240,8 @@ class TierService {
 		$this->accountService->setTier(
 			accountId: $accountId,
 			tierId: $this->extractUuid(object: $newTier),
-			tierBehaaldOp: $now,
-			tierGeldigTot: null
+			tierAchievedOn: $now,
+			tierValidTo: null
 		);
 	}//end handleTierDowngrade()
 
@@ -279,7 +279,7 @@ class TierService {
 					'accountId' => $accountId,
 					'fromTierId' => $fromTierId,
 					'toTierId' => $this->extractUuid(object: $toTier),
-					'toTierNaam' => (string)($toTier['naam'] ?? ''),
+					'toTierNaam' => (string)($toTier['name'] ?? ''),
 					'benefits' => $toTier['benefits'] ?? [],
 				]
 			);

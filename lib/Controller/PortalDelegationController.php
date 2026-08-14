@@ -31,6 +31,7 @@ use OCA\Pipelinq\Service\Portal\PortalDelegationService;
 use OCA\Pipelinq\Service\Portal\PortalException;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -65,6 +66,7 @@ class PortalDelegationController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function index(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -84,6 +86,8 @@ class PortalDelegationController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	// Tight: a delegation grants another party access to this account.
+	#[AnonRateLimit(limit: 20, period: 60)]
 	public function create(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -123,6 +127,7 @@ class PortalDelegationController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 30, period: 60)]
 	public function destroy(string $id): JSONResponse {
 		return $this->guarded(
 			handler: function () use ($id): array {

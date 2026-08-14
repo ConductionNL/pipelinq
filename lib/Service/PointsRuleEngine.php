@@ -73,19 +73,19 @@ class PointsRuleEngine {
 				continue;
 			}
 
-			$conditie = $rule['conditie'] ?? [];
-			if (is_array($conditie) === false) {
-				$conditie = [];
+			$condition = $rule['condition'] ?? [];
+			if (is_array($condition) === false) {
+				$condition = [];
 			}
 
-			if ($this->evaluateCondition(conditie: $conditie, context: $context) === true) {
+			if ($this->evaluateCondition(condition: $condition, context: $context) === true) {
 				$matches[] = $rule;
 			}
 		}
 
 		usort(
 			$matches,
-			static fn (array $a, array $b): int => (int)($b['prioriteit'] ?? 1) <=> (int)($a['prioriteit'] ?? 1)
+			static fn (array $a, array $b): int => (int)($b['priority'] ?? 1) <=> (int)($a['priority'] ?? 1)
 		);
 
 		return $matches;
@@ -109,39 +109,39 @@ class PointsRuleEngine {
 	 * segment (string[]), dayOfWeek (string|string[]), timeRange ("HH:MM-HH:MM"),
 	 * channel (string|string[]).
 	 *
-	 * @param array<string, mixed> $conditie The conditie object.
+	 * @param array<string, mixed> $condition The conditie object.
 	 * @param array<string, mixed> $context Context: category, segment, channel, timestamp...
 	 *
 	 * @return bool True when conditions are met (or absent).
 	 *
 	 * @spec exclude phpmd mechanical refactor
 	 */
-	public function evaluateCondition(array $conditie, array $context): bool {
-		if ($conditie === []) {
+	public function evaluateCondition(array $condition, array $context): bool {
+		if ($condition === []) {
 			return true;
 		}
 
-		if ($this->passesExcludeCategory(conditie: $conditie, context: $context) === false) {
+		if ($this->passesExcludeCategory(condition: $condition, context: $context) === false) {
 			return false;
 		}
 
-		if ($this->passesCategory(conditie: $conditie, context: $context) === false) {
+		if ($this->passesCategory(condition: $condition, context: $context) === false) {
 			return false;
 		}
 
-		if ($this->passesSegment(conditie: $conditie, context: $context) === false) {
+		if ($this->passesSegment(condition: $condition, context: $context) === false) {
 			return false;
 		}
 
-		if ($this->passesChannel(conditie: $conditie, context: $context) === false) {
+		if ($this->passesChannel(condition: $condition, context: $context) === false) {
 			return false;
 		}
 
-		if ($this->passesDayOfWeek(conditie: $conditie, context: $context) === false) {
+		if ($this->passesDayOfWeek(condition: $condition, context: $context) === false) {
 			return false;
 		}
 
-		if ($this->passesTimeRange(conditie: $conditie, context: $context) === false) {
+		if ($this->passesTimeRange(condition: $condition, context: $context) === false) {
 			return false;
 		}
 
@@ -151,17 +151,17 @@ class PointsRuleEngine {
 	/**
 	 * Whether the excludeCategory condition (if present) allows the context category.
 	 *
-	 * @param array<string, mixed> $conditie The conditie object.
+	 * @param array<string, mixed> $condition The conditie object.
 	 * @param array<string, mixed> $context Evaluation context.
 	 *
 	 * @return bool
 	 */
-	private function passesExcludeCategory(array $conditie, array $context): bool {
-		if (isset($conditie['excludeCategory']) === false) {
+	private function passesExcludeCategory(array $condition, array $context): bool {
+		if (isset($condition['excludeCategory']) === false) {
 			return true;
 		}
 
-		$excluded = (array)$conditie['excludeCategory'];
+		$excluded = (array)$condition['excludeCategory'];
 		$contextCategory = (string)($context['category'] ?? '');
 		if ($contextCategory !== '' && in_array($contextCategory, $excluded, true) === true) {
 			return false;
@@ -173,17 +173,17 @@ class PointsRuleEngine {
 	/**
 	 * Whether the category condition (if present) matches the context category.
 	 *
-	 * @param array<string, mixed> $conditie The conditie object.
+	 * @param array<string, mixed> $condition The conditie object.
 	 * @param array<string, mixed> $context Evaluation context.
 	 *
 	 * @return bool
 	 */
-	private function passesCategory(array $conditie, array $context): bool {
-		if (isset($conditie['category']) === false) {
+	private function passesCategory(array $condition, array $context): bool {
+		if (isset($condition['category']) === false) {
 			return true;
 		}
 
-		$allowed = (array)$conditie['category'];
+		$allowed = (array)$condition['category'];
 		$contextCategory = (string)($context['category'] ?? '');
 		if ($contextCategory === '' || in_array($contextCategory, $allowed, true) === false) {
 			return false;
@@ -195,17 +195,17 @@ class PointsRuleEngine {
 	/**
 	 * Whether the segment condition (if present) matches the context segment.
 	 *
-	 * @param array<string, mixed> $conditie The conditie object.
+	 * @param array<string, mixed> $condition The conditie object.
 	 * @param array<string, mixed> $context Evaluation context.
 	 *
 	 * @return bool
 	 */
-	private function passesSegment(array $conditie, array $context): bool {
-		if (isset($conditie['segment']) === false) {
+	private function passesSegment(array $condition, array $context): bool {
+		if (isset($condition['segment']) === false) {
 			return true;
 		}
 
-		$allowed = (array)$conditie['segment'];
+		$allowed = (array)$condition['segment'];
 		$contextSegment = (string)($context['segment'] ?? '');
 		if ($contextSegment === '' || in_array($contextSegment, $allowed, true) === false) {
 			return false;
@@ -217,17 +217,17 @@ class PointsRuleEngine {
 	/**
 	 * Whether the channel condition (if present) matches the context channel.
 	 *
-	 * @param array<string, mixed> $conditie The conditie object.
+	 * @param array<string, mixed> $condition The conditie object.
 	 * @param array<string, mixed> $context Evaluation context.
 	 *
 	 * @return bool
 	 */
-	private function passesChannel(array $conditie, array $context): bool {
-		if (isset($conditie['channel']) === false) {
+	private function passesChannel(array $condition, array $context): bool {
+		if (isset($condition['channel']) === false) {
 			return true;
 		}
 
-		$allowed = (array)$conditie['channel'];
+		$allowed = (array)$condition['channel'];
 		$contextChannel = (string)($context['channel'] ?? '');
 		if ($contextChannel === '' || in_array($contextChannel, $allowed, true) === false) {
 			return false;
@@ -239,17 +239,17 @@ class PointsRuleEngine {
 	/**
 	 * Whether the dayOfWeek condition (if present) matches the context timestamp.
 	 *
-	 * @param array<string, mixed> $conditie The conditie object.
+	 * @param array<string, mixed> $condition The conditie object.
 	 * @param array<string, mixed> $context Evaluation context.
 	 *
 	 * @return bool
 	 */
-	private function passesDayOfWeek(array $conditie, array $context): bool {
-		if (isset($conditie['dayOfWeek']) === false) {
+	private function passesDayOfWeek(array $condition, array $context): bool {
+		if (isset($condition['dayOfWeek']) === false) {
 			return true;
 		}
 
-		$allowed = array_map('strtolower', (array)$conditie['dayOfWeek']);
+		$allowed = array_map('strtolower', (array)$condition['dayOfWeek']);
 		$day = $this->dayOfWeekFor(isoTimestamp: (string)($context['timestamp'] ?? ''));
 
 		return in_array($day, $allowed, true);
@@ -258,17 +258,17 @@ class PointsRuleEngine {
 	/**
 	 * Whether the timeRange condition (if present) matches the context timestamp.
 	 *
-	 * @param array<string, mixed> $conditie The conditie object.
+	 * @param array<string, mixed> $condition The conditie object.
 	 * @param array<string, mixed> $context Evaluation context.
 	 *
 	 * @return bool
 	 */
-	private function passesTimeRange(array $conditie, array $context): bool {
-		if (isset($conditie['timeRange']) === false) {
+	private function passesTimeRange(array $condition, array $context): bool {
+		if (isset($condition['timeRange']) === false) {
 			return true;
 		}
 
-		$timeRange = (string)$conditie['timeRange'];
+		$timeRange = (string)$condition['timeRange'];
 
 		return $this->isWithinTimeRange(timeRange: $timeRange, timestamp: (string)($context['timestamp'] ?? ''));
 	}//end passesTimeRange()
@@ -392,8 +392,8 @@ class PointsRuleEngine {
 			$effectiveTs = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
 		}
 
-		$from = (string)($rule['geldigVan'] ?? '');
-		$to = (string)($rule['geldigTot'] ?? '');
+		$from = (string)($rule['validFrom'] ?? '');
+		$to = (string)($rule['validTo'] ?? '');
 
 		if ($from !== '' && substr($effectiveTs, 0, 10) < substr($from, 0, 10)) {
 			return false;

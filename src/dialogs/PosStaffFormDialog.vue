@@ -11,9 +11,7 @@
   - a modal must never be written inline inside its parent (ADR-004).
   -->
 <template>
-	<NcDialog :name="dialogTitle"
-		size="normal"
-		@closing="$emit('done')">
+	<NcDialog :name="dialogTitle" size="normal" @closing="$emit('done')">
 		<PosStaffForm :id="staffId" @done="$emit('done')" />
 	</NcDialog>
 </template>
@@ -28,6 +26,7 @@ export default {
 		NcDialog,
 		PosStaffForm,
 	},
+
 	props: {
 		/**
 		 * The staff member to edit, or '' to create a new one.
@@ -37,6 +36,7 @@ export default {
 			default: '',
 		},
 	},
+
 	computed: {
 		/**
 		 * @return {string} Dialog heading, reflecting create vs edit.

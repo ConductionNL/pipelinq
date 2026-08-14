@@ -87,14 +87,14 @@ class PointsRuleEngineTest extends TestCase {
 
 	public function testEvaluateConditionEmptyConditionMatches(): void {
 		$this->assertTrue(
-			$this->engine->evaluateCondition(conditie: [], context: ['category' => 'food'])
+			$this->engine->evaluateCondition(condition: [], context: ['category' => 'food'])
 		);
 	}//end testEvaluateConditionEmptyConditionMatches()
 
 	public function testEvaluateConditionExcludeCategoryFiltersOut(): void {
 		$this->assertFalse(
 			$this->engine->evaluateCondition(
-				conditie: ['excludeCategory' => ['gift-card']],
+				condition: ['excludeCategory' => ['gift-card']],
 				context: ['category' => 'gift-card']
 			)
 		);
@@ -103,7 +103,7 @@ class PointsRuleEngineTest extends TestCase {
 	public function testEvaluateConditionIncludeCategoryMatches(): void {
 		$this->assertTrue(
 			$this->engine->evaluateCondition(
-				conditie: ['category' => ['food', 'drink']],
+				condition: ['category' => ['food', 'drink']],
 				context: ['category' => 'food']
 			)
 		);
@@ -113,13 +113,13 @@ class PointsRuleEngineTest extends TestCase {
 		// Pick a known Tuesday.
 		$this->assertTrue(
 			$this->engine->evaluateCondition(
-				conditie: ['dayOfWeek' => 'tuesday'],
+				condition: ['dayOfWeek' => 'tuesday'],
 				context: ['timestamp' => '2026-05-19T10:00:00Z']
 			)
 		);
 		$this->assertFalse(
 			$this->engine->evaluateCondition(
-				conditie: ['dayOfWeek' => 'tuesday'],
+				condition: ['dayOfWeek' => 'tuesday'],
 				context: ['timestamp' => '2026-05-20T10:00:00Z'] // Wednesday
 			)
 		);
@@ -128,13 +128,13 @@ class PointsRuleEngineTest extends TestCase {
 	public function testEvaluateConditionTimeRange(): void {
 		$this->assertTrue(
 			$this->engine->evaluateCondition(
-				conditie: ['timeRange' => '14:00-18:00'],
+				condition: ['timeRange' => '14:00-18:00'],
 				context: ['timestamp' => '2026-05-19T15:00:00Z']
 			)
 		);
 		$this->assertFalse(
 			$this->engine->evaluateCondition(
-				conditie: ['timeRange' => '14:00-18:00'],
+				condition: ['timeRange' => '14:00-18:00'],
 				context: ['timestamp' => '2026-05-19T13:00:00Z']
 			)
 		);
@@ -160,10 +160,10 @@ class PointsRuleEngineTest extends TestCase {
 
 	public function testGetHighestPriorityRuleReturnsFirst(): void {
 		$rules = [
-			['naam' => 'A', 'prioriteit' => 5],
-			['naam' => 'B', 'prioriteit' => 1],
+			['name' => 'A', 'priority' => 5],
+			['name' => 'B', 'priority' => 1],
 		];
-		$this->assertSame('A', $this->engine->getHighestPriorityRule($rules)['naam']);
+		$this->assertSame('A', $this->engine->getHighestPriorityRule($rules)['name']);
 		$this->assertNull($this->engine->getHighestPriorityRule([]));
 	}//end testGetHighestPriorityRuleReturnsFirst()
 }//end class

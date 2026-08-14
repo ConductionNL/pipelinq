@@ -160,7 +160,7 @@ class ZgwApiClient {
 		array $extraHeaders = [],
 		array $query = [],
 	): array {
-		$expiresIn = (int)($client['tokenLevensduurSeconden'] ?? 3600);
+		$expiresIn = (int)($client['tokenLifespanSeconds'] ?? 3600);
 		$jwt = $this->mintJwt(client: $client, expiresIn: $expiresIn);
 
 		$url = rtrim($componentUrl, '/') . '/' . ltrim($path, '/');

@@ -7,7 +7,7 @@
           "schema": "berichtenboxTemplate",
           "slug": "berichtenbox-paspoort-afgehandeld-nl"
         },
-        "zaaktype": "paspoortaanvraag",
+        "caseType": "paspoortaanvraag",
         "status": "afgehandeld",
         "language": "nl",
         "subject": "Uw paspoort is gereed - zaak {{zaakId}}",
@@ -21,7 +21,7 @@
           "schema": "berichtenboxTemplate",
           "slug": "berichtenbox-rijbewijs-in-behandeling-nl"
         },
-        "zaaktype": "rijbewijsaanvraag",
+        "caseType": "rijbewijsaanvraag",
         "status": "in-behandeling",
         "language": "nl",
         "subject": "Uw rijbewijsaanvraag is in behandeling - zaak {{zaakId}}",
@@ -35,7 +35,7 @@
           "schema": "berichtenboxTemplate",
           "slug": "berichtenbox-avg-inzage-meer-info-nl"
         },
-        "zaaktype": "avg-inzageverzoek",
+        "caseType": "avg-inzageverzoek",
         "status": "meer-info-nodig",
         "language": "nl",
         "subject": "Uw AVG-inzageverzoek - aanvullende informatie nodig",

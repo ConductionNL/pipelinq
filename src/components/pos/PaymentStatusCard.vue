@@ -13,7 +13,9 @@
 	<div class="payment-status-card">
 		<header class="payment-status-card__header">
 			<h3>{{ t('pipelinq', 'Payment') }}</h3>
-			<span :class="statusClass" class="payment-status-card__badge">{{ statusLabel }}</span>
+			<span :class="statusClass" class="payment-status-card__badge">{{
+				statusLabel
+			}}</span>
 		</header>
 		<dl class="payment-status-card__grid">
 			<template v-if="provider">
@@ -55,20 +57,18 @@
 				{{ t('pipelinq', 'Try again') }}
 			</NcButton>
 		</div>
-		<ReversalReasonDialog v-if="showReversalDialog"
+		<ReversalReasonDialog
+			v-if="showReversalDialog"
 			@confirm="performRefund"
 			@cancel="showReversalDialog = false" />
 	</div>
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import ReversalReasonDialog from '../../dialogs/ReversalReasonDialog.vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import {
-	capturePayment,
-	refundPayment,
-} from '../../services/posPaymentApi.js'
+import { capturePayment, refundPayment } from '../../services/posPaymentApi.js'
 
 export default {
 	name: 'PaymentStatusCard',
@@ -78,30 +78,37 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		isManager: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	data() {
 		return {
 			busy: false,
 			showReversalDialog: false,
 		}
 	},
+
 	computed: {
 		provider() {
 			return this.transaction.paymentProvider || ''
 		},
+
 		method() {
 			return this.transaction.paymentMethod || ''
 		},
+
 		sessionId() {
 			return this.transaction.paymentSessionId || ''
 		},
+
 		status() {
 			return this.transaction.paymentStatus || ''
 		},
+
 		providerLabel() {
 			const map = {
 				mollie: 'Mollie',
@@ -114,6 +121,7 @@ export default {
 			}
 			return map[this.provider] || this.provider
 		},
+
 		methodLabel() {
 			const map = {
 				ideal: 'iDEAL',
@@ -124,6 +132,7 @@ export default {
 			}
 			return map[this.method] || this.method
 		},
+
 		statusLabel() {
 			const map = {
 				pending: t('pipelinq', 'In progress'),
@@ -134,6 +143,7 @@ export default {
 			}
 			return map[this.status] || this.status || t('pipelinq', 'Unknown')
 		},
+
 		statusClass() {
 			return {
 				'payment-status-card__badge--settled': this.status === 'settled',
@@ -143,26 +153,43 @@ export default {
 				'payment-status-card__badge--refunded': this.status === 'refunded',
 			}
 		},
+
 		canRefund() {
-			return this.isManager && (this.status === 'settled' || this.status === 'captured')
+			return (
+				this.isManager
+				&& (this.status === 'settled' || this.status === 'captured')
+			)
 		},
+
 		hasActions() {
-			return this.status === 'pending' || this.status === 'failed' || this.canRefund
+			return (
+				this.status === 'pending'
+				|| this.status === 'failed'
+				|| this.canRefund
+			)
 		},
 	},
+
 	methods: {
 		async onCapture() {
 			this.busy = true
 			try {
-				const result = await capturePayment(this.transaction.id || this.transaction['@self']?.id)
+				const result = await capturePayment(
+					this.transaction.id || this.transaction['@self']?.id,
+				)
 				this.$emit('updated', result.transaction || result)
 				showSuccess(t('pipelinq', 'Payment completed.'))
 			} catch (e) {
-				showError(t('pipelinq', 'Completion failed: {error}', { error: e.message || 'onbekend' }))
+				showError(
+					t('pipelinq', 'Completion failed: {error}', {
+						error: e.message || 'onbekend',
+					}),
+				)
 			} finally {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Open the reversal-reason dialog.
 		 *
@@ -173,6 +200,7 @@ export default {
 		onRefund() {
 			this.showReversalDialog = true
 		},
+
 		/**
 		 * Reverse the payment with the reason the dialog collected.
 		 *
@@ -189,15 +217,23 @@ export default {
 			}
 			this.busy = true
 			try {
-				const result = await refundPayment(this.transaction.id || this.transaction['@self']?.id, reason)
+				const result = await refundPayment(
+					this.transaction.id || this.transaction['@self']?.id,
+					reason,
+				)
 				this.$emit('updated', result.transaction || result)
 				showSuccess(t('pipelinq', 'Payment reversed.'))
 			} catch (e) {
-				showError(t('pipelinq', 'Reversal failed: {error}', { error: e.message || 'onbekend' }))
+				showError(
+					t('pipelinq', 'Reversal failed: {error}', {
+						error: e.message || 'onbekend',
+					}),
+				)
 			} finally {
 				this.busy = false
 			}
 		},
+
 		onRetry() {
 			this.$emit('retry')
 		},

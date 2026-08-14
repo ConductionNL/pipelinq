@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -53,6 +54,7 @@ class TemplateController extends Controller {
 		IRequest $request,
 		private readonly ComplianceService $complianceService,
 		private readonly IUserSession $userSession,
+		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -69,8 +71,15 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Message templates carry customer-facing copy and compliance state —
+		// a CRM capability. Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$envelope = $this->complianceService->listTemplates(page: $page, limit: $limit);
@@ -107,8 +116,15 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Message templates carry customer-facing copy and compliance state —
+		// a CRM capability. Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$template = $this->complianceService->getTemplateById(templateId: $id);
@@ -130,8 +146,15 @@ class TemplateController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Message templates carry customer-facing copy and compliance state —
+		// a CRM capability. Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$patch = $this->collectTemplateBody();
@@ -201,6 +224,15 @@ class TemplateController extends Controller {
 	private function unauthorized(): JSONResponse {
 		return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 	}//end unauthorized()
+
+	/**
+	 * Deny a caller who is authenticated but not a CRM user.
+	 *
+	 * @return JSONResponse The 403 response.
+	 */
+	private function forbidden(): JSONResponse {
+		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+	}//end forbidden()
 
 	/**
 	 * Generic 404 response.

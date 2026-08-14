@@ -20,11 +20,11 @@
 		<!-- Subject → ticket.title -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.title"
+				:modelValue="form.title"
 				:label="t('pipelinq', 'Subject')"
 				:error="!!errors.title"
-				:helper-text="errors.title"
-				@update:model-value="v => form.title = v" />
+				:helperText="errors.title"
+				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
 		<!-- Channel + Outcome row -->
@@ -58,7 +58,7 @@
 				:aria-label-combobox="t('pipelinq', 'Client')"
 				:clearable="true"
 				label="label"
-				:reduce="o => o.value"
+				:reduce="(o) => o.value"
 				:placeholder="t('pipelinq', 'Select client')" />
 		</div>
 
@@ -71,32 +71,32 @@
 				:aria-label-combobox="t('pipelinq', 'Request')"
 				:clearable="true"
 				label="label"
-				:reduce="o => o.value"
+				:reduce="(o) => o.value"
 				:placeholder="t('pipelinq', 'Select request')" />
 		</div>
 
 		<!-- Summary → ticket.description -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.description"
+				:modelValue="form.description"
 				:label="t('pipelinq', 'Summary')"
-				@update:model-value="v => form.description = v" />
+				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
 		<!-- Duration -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.duration"
+				:modelValue="form.duration"
 				:label="t('pipelinq', 'Duration (e.g. PT5M, PT1H30M)')"
-				@update:model-value="v => form.duration = v" />
+				@update:modelValue="(v) => (form.duration = v)" />
 		</div>
 
 		<!-- Notes -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.notes"
+				:modelValue="form.notes"
 				:label="t('pipelinq', 'Notes')"
-				@update:model-value="v => form.notes = v" />
+				@update:modelValue="(v) => (form.notes = v)" />
 		</div>
 
 		<!-- Actions -->
@@ -104,7 +104,10 @@
 			<NcButton variant="tertiary" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton variant="primary" :disabled="!isValid || saving" @click="onSave">
+			<NcButton
+				variant="primary"
+				:disabled="!isValid || saving"
+				@click="onSave">
 				{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</div>
@@ -116,8 +119,8 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {
@@ -127,20 +130,24 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	props: {
 		clientId: {
 			type: String,
 			default: null,
 		},
+
 		requestId: {
 			type: String,
 			default: null,
 		},
+
 		inline: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	data() {
 		return {
 			// Ticket fields, written verbatim to the `ticket` schema on save.
@@ -154,6 +161,7 @@ export default {
 				duration: '',
 				notes: '',
 			},
+
 			// Request-type tickets for the "Request" (parent ticket) dropdown.
 			// Held locally rather than read from `objectStore.collections.ticket`,
 			// which is a shared, unnarrowed key any other ticket view may overwrite.
@@ -166,16 +174,19 @@ export default {
 				'social',
 				'brief',
 			],
+
 			outcomeOptions: [
 				'afgehandeld',
 				'doorverbonden',
 				'terugbelverzoek',
 				'vervolgactie',
 			],
+
 			saving: false,
 			errorMessage: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
@@ -183,30 +194,34 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-20
 		 */
 		clients() {
 			return this.objectStore.collections.client || []
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-19
 		 */
 		clientSelectOptions() {
-			return this.clients.map(c => ({
+			return this.clients.map((c) => ({
 				value: c.id,
 				label: c.name || c.id,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
 		 */
 		requestSelectOptions() {
-			return this.requests.map(r => ({
+			return this.requests.map((r) => ({
 				value: r.id,
 				label: r.title || r.id,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
 		 */
@@ -220,10 +235,12 @@ export default {
 			}
 			return errors
 		},
+
 		isValid() {
 			return this.form.title?.trim() && this.form.channel
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
 	 */
@@ -232,7 +249,10 @@ export default {
 			this.objectStore.fetchCollection('client', { _limit: 100 }),
 			// Request-type tickets only — the unified `ticket` schema is narrowed
 			// by its `ticketType` discriminator (unify-ticket-supertype).
-			this.objectStore.fetchCollection('ticket', { ticketType: 'request', _limit: 100 }),
+			this.objectStore.fetchCollection('ticket', {
+				ticketType: 'request',
+				_limit: 100,
+			}),
 		])
 		this.requests = requests || []
 
@@ -242,12 +262,13 @@ export default {
 		if (this.requestId) {
 			this.form.parentTicket = this.requestId
 			// If the request has a client, pre-fill that too
-			const req = this.requests.find(r => r.id === this.requestId)
+			const req = this.requests.find((r) => r.id === this.requestId)
 			if (req?.client && !this.clientId) {
 				this.form.client = req.client
 			}
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24
@@ -284,11 +305,14 @@ export default {
 					this.$emit('saved', result)
 				} else {
 					const error = this.objectStore.getError('ticket')
-					this.errorMessage = error?.message || t('pipelinq', 'Failed to save contactmoment')
+					this.errorMessage =
+						error?.message
+						|| t('pipelinq', 'Failed to save contactmoment')
 					showError(this.errorMessage)
 				}
 			} catch (error) {
-				this.errorMessage = error.message || t('pipelinq', 'Failed to save contactmoment')
+				this.errorMessage =
+					error.message || t('pipelinq', 'Failed to save contactmoment')
 				showError(this.errorMessage)
 			} finally {
 				this.saving = false

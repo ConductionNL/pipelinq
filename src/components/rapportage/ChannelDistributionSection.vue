@@ -21,7 +21,9 @@
 			</NcButton>
 		</div>
 		<NcLoadingIcon v-if="loading" :size="28" />
-		<div v-else-if="channelData.length === 0" class="channel-distribution__empty">
+		<div
+			v-else-if="channelData.length === 0"
+			class="channel-distribution__empty">
 			{{ t('pipelinq', 'No contact moments registered for this period') }}
 		</div>
 		<div v-else class="channel-distribution__bars">
@@ -35,7 +37,10 @@
 				<div class="channel-distribution__track">
 					<div
 						class="channel-distribution__fill"
-						:style="{ width: channel.percentage + '%', background: channel.color }" />
+						:style="{
+							width: channel.percentage + '%',
+							background: channel.color,
+						}" />
 				</div>
 				<div class="channel-distribution__count">
 					{{ channel.count }} ({{ channel.percentage }}%)
@@ -46,9 +51,9 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 const CHANNEL_COLORS = {
 	telefoon: '#4c84db',
@@ -66,16 +71,19 @@ export default {
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** Relative period token (today / week / month), from @workspace.period. */
 		period: { type: String, default: 'today' },
 	},
+
 	data() {
 		return {
 			loading: false,
 			channelData: [],
 		}
 	},
+
 	computed: {
 		effectivePeriod() {
 			if (this.period) return this.period
@@ -83,23 +91,30 @@ export default {
 			return (ctx && ctx.period) || 'today'
 		},
 	},
+
 	watch: {
 		effectivePeriod() {
 			this.fetchData()
 		},
 	},
+
 	mounted() {
 		this.fetchData()
 	},
+
 	methods: {
 		async fetchData() {
 			this.loading = true
 			try {
-				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/rapportage/channels'), {
-					params: { period: this.effectivePeriod },
-				})
+				const { data } = await axios.get(
+					generateUrl('/apps/pipelinq/api/rapportage/channels'),
+					{
+						params: { period: this.effectivePeriod },
+					},
+				)
 				const dist = data.distribution ?? {}
-				const totalContacts = Object.values(dist).reduce((s, c) => s + c, 0) || 1
+				const totalContacts =
+					Object.values(dist).reduce((s, c) => s + c, 0) || 1
 				this.channelData = Object.entries(dist).map(([name, count]) => ({
 					name,
 					count,
@@ -112,33 +127,77 @@ export default {
 				this.loading = false
 			}
 		},
+
 		exportCsv() {
-			window.location.href = generateUrl('/apps/pipelinq/api/rapportage/export')
+			window.location.href = generateUrl(
+				'/apps/pipelinq/api/rapportage/export',
+			)
 		},
 	},
 }
 </script>
 
 <style scoped>
-.channel-distribution { margin-bottom: 8px; }
+.channel-distribution {
+	margin-bottom: 8px;
+}
 
-.channel-distribution__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.channel-distribution__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+}
 
-.channel-distribution h3 { margin: 0; font-weight: 600; }
+.channel-distribution h3 {
+	margin: 0;
+	font-weight: 600;
+}
 
-.channel-distribution__bars { display: flex; flex-direction: column; gap: 8px; }
+.channel-distribution__bars {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
 
-.channel-distribution__bar { display: flex; align-items: center; gap: 12px; }
+.channel-distribution__bar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
 
-.channel-distribution__label { width: 100px; font-weight: 600; font-size: 0.9em; }
+.channel-distribution__label {
+	width: 100px;
+	font-weight: 600;
+	font-size: 0.9em;
+}
 
-.channel-distribution__track { flex: 1; height: 24px; background: var(--color-background-dark); border-radius: 12px; overflow: hidden; }
+.channel-distribution__track {
+	flex: 1;
+	height: 24px;
+	background: var(--color-background-dark);
+	border-radius: 12px;
+	overflow: hidden;
+}
 
-.channel-distribution__fill { height: 100%; border-radius: 12px; transition: width 0.3s; }
+.channel-distribution__fill {
+	height: 100%;
+	border-radius: 12px;
+	transition: width 0.3s;
+}
 
-.channel-distribution__count { width: 120px; text-align: right; font-size: 0.85em; color: var(--color-text-lighter); }
+.channel-distribution__count {
+	width: 120px;
+	text-align: right;
+	font-size: 0.85em;
+	color: var(--color-text-lighter);
+}
 
-.channel-distribution__empty { padding: 20px; text-align: center; color: var(--color-text-lighter); }
+.channel-distribution__empty {
+	padding: 20px;
+	text-align: center;
+	color: var(--color-text-lighter);
+}
 
 @media (prefers-reduced-motion: reduce) {
 	.channel-distribution__fill {

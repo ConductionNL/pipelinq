@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ActivityTimelineService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -61,6 +62,7 @@ class ActivityTimelineController extends Controller {
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private ContainerInterface $container,
+		private ObjectOwnerAccessPolicy $policy,
 	) {
 		// @PublicPage — DI constructor (not HTTP-routable). The actual auth
 		// posture for each endpoint lives on its own method attribute; this
@@ -87,19 +89,57 @@ class ActivityTimelineController extends Controller {
 	 *
 	 * @return bool Whether the object could be verified.
 	 */
-	private function objectExists(string $entityId): bool {
+	private function objectAccessible(string $entityId, string $userId): bool {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$object = $objectService->find($entityId, []);
-			return $object !== null;
+			if ($object === null) {
+				return false;
+			}
+
+			// EXISTENCE IS NOT AUTHORIZATION.
+			//
+			// This used to `return $object !== null`, which answers "does this
+			// id name something" — a question every authenticated caller can
+			// ask about every id in the instance. The find() above is also
+			// deliberately unscoped (no register, no schema), so it resolves
+			// across every magic table; that widens the reach of a bare
+			// existence check rather than narrowing it.
+			//
+			// `_rbac: true` is NOT the fix here: DEFAULT_CLOSED_WRITE_ACTIONS
+			// is ['create','update','delete'], so a READ returns true whatever
+			// the flag says (ConductionNL/.github#372). The decision has to be
+			// made by this app.
+			// ownerField is this app's convention for a timeline subject; when
+			// the schema has no such field mayAccess() falls through to the
+			// privileged-group check, which is the only answer available for
+			// the 23 of 27 schemas that record no owner at all.
+			// The object service is pulled from the container BY STRING, so
+			// this seam is untyped: OpenRegister's find() hands back an
+			// ObjectEntity, but nothing here can enforce that and a plain array
+			// is what several doubles (and older OR versions) return. Calling
+			// jsonSerialize() unconditionally fataled on the array shape, and
+			// the catch below turned that into a silent "deny" — a 404 that
+			// looked like an authorization decision and was really a type
+			// error.
+			$payload = $object;
+			if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+				$payload = $object->jsonSerialize();
+			}
+
+			return $this->policy->mayAccess(
+				uid: $userId,
+				object: is_array($payload) ? $payload : [],
+				ownerField: 'ownerId'
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				'ActivityTimelineController: could not verify object existence, denying',
+				'ActivityTimelineController: could not verify object access, denying',
 				['entityId' => $entityId, 'exception' => $e->getMessage()]
 			);
 			return false;
 		}
-	}//end objectExists()
+	}//end objectAccessible()
 
 	/**
 	 * Return the merged activity timeline for an entity.
@@ -129,7 +169,11 @@ class ActivityTimelineController extends Controller {
 			);
 		}
 
-		if ($this->objectExists(entityId: $entityId) === false) {
+		// 404 rather than 403 on purpose: a caller who may not see the entity
+		// must not be able to tell "exists but forbidden" from "does not
+		// exist", or the endpoint becomes an existence oracle over every id in
+		// the instance.
+		if ($this->objectAccessible(entityId: $entityId, userId: $user->getUID()) === false) {
 			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
 		}
 
@@ -188,7 +232,11 @@ class ActivityTimelineController extends Controller {
 			);
 		}
 
-		if ($this->objectExists(entityId: $entityId) === false) {
+		// 404 rather than 403 on purpose: a caller who may not see the entity
+		// must not be able to tell "exists but forbidden" from "does not
+		// exist", or the endpoint becomes an existence oracle over every id in
+		// the instance.
+		if ($this->objectAccessible(entityId: $entityId, userId: $user->getUID()) === false) {
 			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
 		}
 
@@ -245,7 +293,11 @@ class ActivityTimelineController extends Controller {
 			);
 		}
 
-		if ($this->objectExists(entityId: $entityId) === false) {
+		// 404 rather than 403 on purpose: a caller who may not see the entity
+		// must not be able to tell "exists but forbidden" from "does not
+		// exist", or the endpoint becomes an existence oracle over every id in
+		// the instance.
+		if ($this->objectAccessible(entityId: $entityId, userId: $user->getUID()) === false) {
 			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
 		}
 

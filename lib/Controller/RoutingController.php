@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\RoutingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -65,6 +66,7 @@ class RoutingController extends Controller {
 		IRequest $request,
 		private RoutingService $routingService,
 		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $accessPolicy,
 		private LoggerInterface $logger,
 	) {
 		// @PublicPage — DI constructor (not HTTP-routable). The class-level
@@ -94,6 +96,12 @@ class RoutingController extends Controller {
 				['message' => 'Authentication required'],
 				Http::STATUS_UNAUTHORIZED
 			);
+		}
+
+		// Routing suggestions read the assignment graph across the team — a
+		// CRM capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		$entityType = (string)$this->request->getParam('entityType', '');

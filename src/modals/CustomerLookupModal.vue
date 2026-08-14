@@ -21,7 +21,7 @@
 				:label="t('pipelinq', 'Search')"
 				:placeholder="t('pipelinq', 'Name, e-mail or phone')"
 				data-testid="customer-lookup-input"
-				@update:model-value="onSearchInput" />
+				@update:modelValue="onSearchInput" />
 
 			<div
 				v-if="loading"
@@ -43,10 +43,7 @@
 				</NcButton>
 			</p>
 
-			<p
-				v-else-if="!hasSearched"
-				class="customer-lookup__state"
-				role="status">
+			<p v-else-if="!hasSearched" class="customer-lookup__state" role="status">
 				{{ t('pipelinq', 'Type at least two characters to search.') }}
 			</p>
 
@@ -77,7 +74,12 @@
 						<span
 							v-if="row.doNotContact"
 							class="customer-lookup__badge"
-							:title="t('pipelinq', 'This customer does not wish to be contacted.')">
+							:title="
+								t(
+									'pipelinq',
+									'This customer does not wish to be contacted.',
+								)
+							">
 							🔒 {{ row.doNotContactBadge }}
 						</span>
 					</div>
@@ -111,6 +113,7 @@ export default {
 		NcLoadingIcon,
 		NcTextField,
 	},
+
 	emits: ['select', 'cancel'],
 	data() {
 		return {
@@ -122,6 +125,7 @@ export default {
 			debounceHandle: null,
 		}
 	},
+
 	mounted() {
 		this.$nextTick(() => {
 			const input = this.$refs.searchInput
@@ -130,11 +134,13 @@ export default {
 			}
 		})
 	},
+
 	beforeUnmount() {
 		if (this.debounceHandle) {
 			clearTimeout(this.debounceHandle)
 		}
 	},
+
 	methods: {
 		/**
 		 * Debounce the search call to avoid hammering the API while typing.
@@ -151,6 +157,7 @@ export default {
 			}
 			this.debounceHandle = setTimeout(() => this.runSearch(), DEBOUNCE_MS)
 		},
+
 		/**
 		 * Fire the search request.
 		 */
@@ -172,6 +179,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Emit the selected customer.
 		 *
@@ -180,6 +188,7 @@ export default {
 		onSelect(row) {
 			this.$emit('select', row)
 		},
+
 		/**
 		 * Close the modal without a selection.
 		 */

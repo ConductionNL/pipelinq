@@ -96,7 +96,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
 	 */
 	public function handle(Event $event): void {
-		if ($this->isZaakUpdate(event: $event) === false) {
+		if ($this->isCaseUpdate(event: $event) === false) {
 			return;
 		}
 
@@ -127,19 +127,19 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			if ($bsn === '') {
 				$this->logger->info(
 					'BerichtenboxZaakStatusListener: no BSN resolved, skipping.',
-					['zaakId' => (string)($newData['id'] ?? '')]
+					['caseId' => (string)($newData['id'] ?? '')]
 				);
 				return;
 			}
 
 			$this->berichtenbox->queueOutboundMessage(
-				zaakId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
+				caseId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
 				contactmomentId: (string)($newData['contactmomentId'] ?? null),
 				status: $newStatus,
 				bsn: $bsn,
 				templateOverride: null,
 				extraVariables: [
-					'zaaktype' => (string)($newData['zaaktype'] ?? ''),
+					'caseType' => (string)($newData['caseType'] ?? ''),
 					'language' => (string)($newData['language'] ?? 'nl'),
 				],
 				attachments: ($newData['attachments'] ?? [])
@@ -159,7 +159,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 *
 	 * @return bool
 	 */
-	private function isZaakUpdate(Event $event): bool {
+	private function isCaseUpdate(Event $event): bool {
 		$class = $event::class;
 		if (str_contains($class, 'ObjectUpdatedEvent') === false) {
 			return false;
@@ -183,12 +183,12 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			return false;
 		}
 
-		$zaakSchema = $this->appConfig->getValueString(
+		$caseSchema = $this->appConfig->getValueString(
 			Application::APP_ID,
 			'zaak_schema',
 			''
 		);
-		return ($schemaId === $zaakSchema && $zaakSchema !== '');
+		return ($schemaId === $caseSchema && $caseSchema !== '');
 	}//end isZaakUpdate()
 
 	/**

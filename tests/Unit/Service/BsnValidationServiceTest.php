@@ -60,7 +60,7 @@ class BsnValidationServiceTest extends TestCase {
 	public function testValidBsnPassesElfproef(): void {
 		foreach (['123456782', '111222333'] as $bsn) {
 			$result = $this->service->validate($bsn);
-			self::assertTrue($result['isFormeelGeldig'], "BSN $bsn should pass");
+			self::assertTrue($result['isFormalValid'], "BSN $bsn should pass");
 			self::assertNull($result['errorCode']);
 			self::assertSame(0, $result['elfproefScore']);
 		}
@@ -77,7 +77,7 @@ class BsnValidationServiceTest extends TestCase {
 		// 9-digit numerics that fail the 11-proef.
 		foreach (['123456789', '987654321'] as $bsn) {
 			$result = $this->service->validate($bsn);
-			self::assertFalse($result['isFormeelGeldig'], "BSN $bsn should fail");
+			self::assertFalse($result['isFormalValid'], "BSN $bsn should fail");
 			self::assertSame(BsnValidationService::ERROR_CHECKSUM, $result['errorCode']);
 		}
 	}//end testInvalidBsnFailsElfproef()
@@ -92,7 +92,7 @@ class BsnValidationServiceTest extends TestCase {
 	public function testNonNineDigitInputIsRejected(): void {
 		foreach (['12345678', '1234567890', '12345678a', 'abc'] as $bad) {
 			$result = $this->service->validate($bad);
-			self::assertFalse($result['isFormeelGeldig'], "Input '$bad' must be rejected");
+			self::assertFalse($result['isFormalValid'], "Input '$bad' must be rejected");
 			self::assertSame(BsnValidationService::ERROR_LENGTH, $result['errorCode']);
 		}
 	}//end testNonNineDigitInputIsRejected()
@@ -104,7 +104,7 @@ class BsnValidationServiceTest extends TestCase {
 	 */
 	public function testEmptyInputReturnsLengthError(): void {
 		$result = $this->service->validate('');
-		self::assertFalse($result['isFormeelGeldig']);
+		self::assertFalse($result['isFormalValid']);
 		self::assertSame(BsnValidationService::ERROR_LENGTH, $result['errorCode']);
 		self::assertSame('', $result['maskedBsn']);
 	}//end testEmptyInputReturnsLengthError()

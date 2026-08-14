@@ -1,9 +1,13 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <template>
-	<div class="routing-panel" role="region" :aria-label="t('pipelinq', 'Suggested agents')">
+	<div
+		class="routing-panel"
+		role="region"
+		:aria-label="t('pipelinq', 'Suggested agents')">
 		<div class="routing-panel__header">
 			<h4>{{ t('pipelinq', 'Suggested agents') }}</h4>
-			<NcButton v-if="!loading"
+			<NcButton
+				v-if="!loading"
 				:aria-label="t('pipelinq', 'Refresh')"
 				@click="loadSuggestions">
 				<template #icon>
@@ -28,10 +32,16 @@
 				:key="suggestion.userId"
 				class="agent-suggestion">
 				<div class="agent-suggestion__info">
-					<span class="agent-name">{{ suggestion.displayName || suggestion.userId }}</span>
+					<span class="agent-name">{{
+						suggestion.displayName || suggestion.userId
+					}}</span>
 					<span class="agent-workload" :title="workloadTitle(suggestion)">
-						<span aria-hidden="true">{{ workloadIcon(suggestion) }}</span>
-						{{ suggestion.workload }}/{{ suggestion.maxConcurrent || 10 }}
+						<span aria-hidden="true">{{
+							workloadIcon(suggestion)
+						}}</span>
+						{{ suggestion.workload }}/{{
+							suggestion.maxConcurrent || 10
+						}}
 						{{ t('pipelinq', 'items') }}
 					</span>
 					<div v-if="suggestion.matchedSkill" class="agent-skills">
@@ -39,7 +49,11 @@
 					</div>
 				</div>
 				<NcButton
-					:aria-label="t('pipelinq', 'Assign to {name}', { name: suggestion.displayName || suggestion.userId })"
+					:aria-label="
+						t('pipelinq', 'Assign to {name}', {
+							name: suggestion.displayName || suggestion.userId,
+						})
+					"
 					@click="assign(suggestion)">
 					{{ t('pipelinq', 'Assign') }}
 				</NcButton>
@@ -47,7 +61,8 @@
 		</div>
 
 		<div v-if="atCapacityCount > 0" class="routing-panel__note">
-			{{ atCapacityCount }} {{ t('pipelinq', 'matching agent(s) at capacity') }}
+			{{ atCapacityCount }}
+			{{ t('pipelinq', 'matching agent(s) at capacity') }}
 		</div>
 	</div>
 </template>
@@ -65,20 +80,24 @@ export default {
 		NcLoadingIcon,
 		Refresh,
 	},
+
 	props: {
 		requestId: {
 			type: String,
 			required: true,
 		},
+
 		category: {
 			type: String,
 			default: '',
 		},
+
 		entityType: {
 			type: String,
 			default: 'request',
 		},
 	},
+
 	emits: ['assigned'],
 	data() {
 		return {
@@ -88,6 +107,7 @@ export default {
 			errorMessage: '',
 		}
 	},
+
 	watch: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-4
@@ -95,6 +115,7 @@ export default {
 		requestId() {
 			this.loadSuggestions()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-2
 		 */
@@ -102,9 +123,11 @@ export default {
 			this.loadSuggestions()
 		},
 	},
+
 	mounted() {
 		this.loadSuggestions()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-3
@@ -124,7 +147,9 @@ export default {
 					},
 				})
 				const data = response.data || {}
-				this.suggestions = Array.isArray(data.suggestions) ? data.suggestions : []
+				this.suggestions = Array.isArray(data.suggestions)
+					? data.suggestions
+					: []
 				this.atCapacityCount = Number(data.atCapacity || 0)
 			} catch (error) {
 				console.error('Error loading routing suggestions:', error)

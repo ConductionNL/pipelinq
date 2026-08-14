@@ -40,7 +40,9 @@
 						<td>{{ row.itemCount || 0 }}</td>
 						<td>€{{ formatMoney(row.total) }}</td>
 						<td>
-							<span :class="['purchase-history__tender', tenderClass(row.tenderType)]">
+							<span
+								class="purchase-history__tender"
+								:class="[tenderClass(row.tenderType)]">
 								{{ tenderLabel(row.tenderType) }}
 							</span>
 						</td>
@@ -59,16 +61,19 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		defaultCollapsed: {
 			type: Boolean,
 			default: true,
 		},
 	},
+
 	data() {
 		return {
 			collapsed: this.defaultCollapsed,
 		}
 	},
+
 	methods: {
 		/**
 		 * Toggle the panel.
@@ -76,6 +81,7 @@ export default {
 		toggle() {
 			this.collapsed = !this.collapsed
 		},
+
 		/**
 		 * Format an ISO date to a Dutch locale day.
 		 *
@@ -96,6 +102,7 @@ export default {
 				return iso
 			}
 		},
+
 		/**
 		 * Format a money amount to two decimals.
 		 *
@@ -106,6 +113,7 @@ export default {
 			const num = typeof value === 'number' ? value : Number(value || 0)
 			return num.toFixed(2)
 		},
+
 		/**
 		 * Render a tender label for the i18n catalogue.
 		 *
@@ -121,6 +129,7 @@ export default {
 			}
 			return t('pipelinq', 'Cash')
 		},
+
 		/**
 		 * Visual class for the tender pill.
 		 *
@@ -128,7 +137,9 @@ export default {
 		 * @return {string} The CSS class.
 		 */
 		tenderClass(tender) {
-			return tender === 'onAccount' ? 'purchase-history__tender--on-account' : ''
+			return tender === 'onAccount'
+				? 'purchase-history__tender--on-account'
+				: ''
 		},
 	},
 }

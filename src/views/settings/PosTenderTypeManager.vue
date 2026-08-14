@@ -13,8 +13,14 @@
   - next to each other under names that say which is which.
   -->
 <template>
-	<NcSettingsSection :name="t('pipelinq', 'POS tender types')"
-		:description="t('pipelinq', 'How a customer can pay at the till — cash, pin, voucher — and the GL account each one posts to. Distinct from the payment providers above, which process the money.')">
+	<NcSettingsSection
+		:name="t('pipelinq', 'POS tender types')"
+		:description="
+			t(
+				'pipelinq',
+				'How a customer can pay at the till — cash, pin, voucher — and the GL account each one posts to. Distinct from the payment providers above, which process the money.',
+			)
+		">
 		<PosTenderTypeList />
 	</NcSettingsSection>
 </template>

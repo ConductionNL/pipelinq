@@ -51,7 +51,9 @@ const RETIRED_MDM_PATHS = [
 const LIVE_API_CONTROL = '/apps/pipelinq/api/xwiki/status'
 
 // @e2e openspec/specs/master-data-management/spec.md#no-pipelinq-read-api-routes-remain
-test('the retired /api/mdm/master read-API is not routed to any controller', async ({ page }) => {
+test('the retired /api/mdm/master read-API is not routed to any controller', async ({
+	page,
+}) => {
 	// Requests ride the authenticated browser context, so a 401 cannot be
 	// mistaken for "the route is gone".
 	await openApp(page)
@@ -74,11 +76,14 @@ test('the retired /api/mdm/master read-API is not routed to any controller', asy
 	 * either behaviour.
 	 */
 	const control = await page.request.get(LIVE_API_CONTROL)
-	expect(control.status(), 'positive control: a LIVE pipelinq API route must answer 200').toBe(200)
+	expect(
+		control.status(),
+		'positive control: a LIVE pipelinq API route must answer 200',
+	).toBe(200)
 	expect(
 		control.headers()['content-type'] ?? '',
 		'positive control: a routed JSONResponse must answer application/json — without this, '
-		+ '"no JSON here" below would be true of every URL on the instance and would prove nothing',
+			+ '"no JSON here" below would be true of every URL on the instance and would prove nothing',
 	).toContain('application/json')
 
 	for (const path of RETIRED_MDM_PATHS) {
@@ -93,8 +98,14 @@ test('the retired /api/mdm/master read-API is not routed to any controller', asy
 		// (lib/Settings/register.d/90-master-data-management.json) carry
 		// `masterId` + `goldenRecord`, so a surviving wrapper would show here.
 		const body = await response.text()
-		expect(body, `${path} must not return a master-entity projection`).not.toContain('"masterId"')
-		expect(body, `${path} must not return a master-entity projection`).not.toContain('"goldenRecord"')
+		expect(
+			body,
+			`${path} must not return a master-entity projection`,
+		).not.toContain('"masterId"')
+		expect(
+			body,
+			`${path} must not return a master-entity projection`,
+		).not.toContain('"goldenRecord"')
 	}
 
 	await assertNoHardError(page)

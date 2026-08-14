@@ -100,8 +100,8 @@ class SlaAttainmentService {
 
 		// For attainment we need the closed-met denominator too — query
 		// tracked objects with all targets met in the period.
-		$metCounts = $this->countMetObjectsInRange(start: $start, end: $end, policyFilter: $policyFilter);
-		$merged = $this->mergeMetCounts(accumulated: $accumulated, metCounts: $metCounts);
+		$withCounts = $this->countWithObjectsInRange(start: $start, end: $end, policyFilter: $policyFilter);
+		$merged = $this->mergeWithCounts(accumulated: $accumulated, withCounts: $withCounts);
 
 		$byTargetOut = $this->buildByTargetOut(byTarget: $merged['byTarget']);
 		$byGroup = $this->buildByGroup(groupAccum: $merged['groupAccum']);
@@ -186,23 +186,23 @@ class SlaAttainmentService {
 	 * Merge the closed-met tracked-object counts into the breached-event accumulation.
 	 *
 	 * @param array<string, mixed> $accumulated Breach-event accumulation (see accumulateBreachedEvents()).
-	 * @param array<string, mixed> $metCounts Met-object counts (see countMetObjectsInRange()).
+	 * @param array<string, mixed> $withCounts Met-object counts (see countMetObjectsInRange()).
 	 *
 	 * @return array{total: int, met: int, byTarget: array<string, mixed>, groupAccum: array<string, mixed>}
 	 */
-	private function mergeMetCounts(array $accumulated, array $metCounts): array {
+	private function mergeWithCounts(array $accumulated, array $withCounts): array {
 		$byTarget = $accumulated['byTarget'];
 		$groupAccum = $accumulated['groupAccum'];
 
-		foreach ($metCounts['byTarget'] as $kind => $count) {
+		foreach ($withCounts['byTarget'] as $kind => $count) {
 			$byTarget[$kind] = ($byTarget[$kind] ?? ['breached' => 0, 'met' => 0]);
 			$byTarget[$kind]['met'] = $count;
 		}
 
-		$met = $metCounts['total'];
-		$total = $accumulated['total'] + $metCounts['total'];
+		$with = $withCounts['total'];
+		$total = $accumulated['total'] + $withCounts['total'];
 
-		foreach ($metCounts['byGroup'] as $key => $entry) {
+		foreach ($withCounts['byGroup'] as $key => $entry) {
 			$groupAccum[$key] = ($groupAccum[$key] ?? ['name' => $entry['name'], 'total' => 0, 'breached' => 0, 'met' => 0]);
 			$groupAccum[$key]['total'] = ($groupAccum[$key]['total'] ?? 0) + $entry['total'];
 			$groupAccum[$key]['met'] = ($groupAccum[$key]['met'] ?? 0) + $entry['total'];
@@ -210,7 +210,7 @@ class SlaAttainmentService {
 
 		return [
 			'total' => $total,
-			'met' => $met,
+			'met' => $with,
 			'byTarget' => $byTarget,
 			'groupAccum' => $groupAccum,
 		];
@@ -226,14 +226,14 @@ class SlaAttainmentService {
 	private function buildByTargetOut(array $byTarget): array {
 		$byTargetOut = [];
 		foreach ($byTarget as $kind => $counts) {
-			$metCount = (int)$counts['met'];
-			$denom = ($counts['breached'] + $metCount);
-			$attainment = $this->ratio(numerator: $metCount, denominator: $denom);
+			$withCount = (int)$counts['met'];
+			$denom = ($counts['breached'] + $withCount);
+			$attainment = $this->ratio(numerator: $withCount, denominator: $denom);
 
 			$byTargetOut[$kind] = [
 				'attainment' => $attainment,
 				'breached' => $counts['breached'],
-				'met' => $metCount,
+				'met' => $withCount,
 			];
 		}
 
@@ -251,15 +251,15 @@ class SlaAttainmentService {
 		$byGroup = [];
 		foreach ($groupAccum as $key => $entry) {
 			$denom = (int)$entry['total'];
-			$metE = (int)($entry['met'] ?? 0);
-			$groupAttainment = $this->ratio(numerator: $metE, denominator: $denom);
+			$withE = (int)($entry['met'] ?? 0);
+			$groupAttainment = $this->ratio(numerator: $withE, denominator: $denom);
 
 			$byGroup[] = [
 				'groupKey' => (string)$key,
 				'groupName' => (string)($entry['name'] ?? $key),
 				'attainment' => $groupAttainment,
 				'total' => $denom,
-				'met' => $metE,
+				'met' => $withE,
 				'breached' => (int)$entry['breached'],
 			];
 		}
@@ -508,7 +508,7 @@ class SlaAttainmentService {
 	 *
 	 * @return array{total: int, byTarget: array<string, int>, byGroup: array<string, array<string, mixed>>} Counts.
 	 */
-	private function countMetObjectsInRange(
+	private function countWithObjectsInRange(
 		DateTimeInterface $start,
 		DateTimeInterface $end,
 		string $policyFilter,
@@ -520,7 +520,7 @@ class SlaAttainmentService {
 		// unprovisioned or OpenRegister is unavailable.
 		foreach ([TicketService::TYPE_REQUEST, TicketService::TYPE_COMPLAINT] as $ticketType) {
 			$rows = $this->ticketService->findByType($ticketType, [], 5000);
-			$accumulator = $this->accumulateMetRows(
+			$accumulator = $this->accumulateWithRows(
 				rows: $rows,
 				accumulator: $accumulator,
 				start: $start,
@@ -529,7 +529,7 @@ class SlaAttainmentService {
 			);
 		}
 
-		$accumulator = $this->accumulateMetRows(
+		$accumulator = $this->accumulateWithRows(
 			rows: $this->fetchCallbackRows(),
 			accumulator: $accumulator,
 			start: $start,
@@ -551,7 +551,7 @@ class SlaAttainmentService {
 	 *
 	 * @return array{total: int, byTarget: array<string, int>, byGroup: array<string, array<string, mixed>>} Counts.
 	 */
-	private function accumulateMetRows(
+	private function accumulateWithRows(
 		array $rows,
 		array $accumulator,
 		DateTimeInterface $start,
@@ -666,35 +666,35 @@ class SlaAttainmentService {
 	 * @return array{allMet: bool, touchedKey: bool, byTarget: array<string, int>}
 	 */
 	private function evaluateSlaTargets(array $slaStatus, DateTimeInterface $start, DateTimeInterface $end): array {
-		$allMet = true;
+		$allWith = true;
 		$touchedKey = false;
 		$byTarget = [];
 		foreach (($slaStatus['targets'] ?? []) as $target) {
 			$status = (string)($target['status'] ?? '');
 			if ($status !== SlaEngineService::STATUS_MET) {
-				$allMet = false;
+				$allWith = false;
 				continue;
 			}
 
-			$metAt = $target['metAt'] ?? '';
-			if ($metAt === '') {
+			$withAt = $target['withAt'] ?? '';
+			if ($withAt === '') {
 				continue;
 			}
 
 			try {
-				$metInstant = new DateTimeImmutable((string)$metAt);
+				$withInstant = new DateTimeImmutable((string)$withAt);
 			} catch (Throwable $e) {
 				continue;
 			}
 
-			if ($metInstant >= $start && $metInstant < $end) {
+			if ($withInstant >= $start && $withInstant < $end) {
 				$touchedKey = true;
 				$kind = (string)($target['kind'] ?? 'resolution');
 				$byTarget[$kind] = ($byTarget[$kind] ?? 0) + 1;
 			}
 		}//end foreach
 
-		return ['allMet' => $allMet, 'touchedKey' => $touchedKey, 'byTarget' => $byTarget];
+		return ['allMet' => $allWith, 'touchedKey' => $touchedKey, 'byTarget' => $byTarget];
 	}//end evaluateSlaTargets()
 
 	/**

@@ -1,8 +1,8 @@
+import { generateUrl } from '@nextcloud/router'
 /**
  * Agent Profiles store for Pipelinq — manages agent skill profiles via OpenRegister API.
  */
 import { defineStore } from 'pinia'
-import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from './object.js'
 
 export const useAgentProfilesStore = defineStore('agentProfiles', {
@@ -12,8 +12,10 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		error: null,
 	}),
 	getters: {
-		availableProfiles: (state) => state.profiles.filter(p => p.isAvailable !== false),
-		getProfileByUserId: (state) => (userId) => state.profiles.find(p => p.userId === userId),
+		availableProfiles: (state) =>
+			state.profiles.filter((p) => p.isAvailable !== false),
+		getProfileByUserId: (state) => (userId) =>
+			state.profiles.find((p) => p.userId === userId),
 	},
 	actions: {
 		/**
@@ -24,7 +26,9 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 			this.error = null
 			try {
 				const objectStore = useObjectStore()
-				const result = await objectStore.fetchCollection('agentProfile', { _limit: 200 })
+				const result = await objectStore.fetchCollection('agentProfile', {
+					_limit: 200,
+				})
 				this.profiles = result || []
 			} catch (error) {
 				this.error = error.message
@@ -68,7 +72,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 				const objectStore = useObjectStore()
 				const success = await objectStore.deleteObject('agentProfile', id)
 				if (success) {
-					this.profiles = this.profiles.filter(p => p.id !== id)
+					this.profiles = this.profiles.filter((p) => p.id !== id)
 				}
 				return success
 			} catch (error) {
@@ -97,7 +101,9 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 			const requestConfig = objectStore.objectTypeRegistry.ticket
 			if (requestConfig) {
 				try {
-					const url = generateUrl(`/apps/openregister/api/objects/${requestConfig.register}/${requestConfig.schema}?ticketType=request&assignee=${encodeURIComponent(userId)}&_limit=1`)
+					const url = generateUrl(
+						`/apps/openregister/api/objects/${requestConfig.register}/${requestConfig.schema}?ticketType=request&assignee=${encodeURIComponent(userId)}&_limit=1`,
+					)
 					const response = await fetch(url, {
 						headers: {
 							'Content-Type': 'application/json',
@@ -110,8 +116,8 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 						// Filter out terminal statuses client-side for accurate count
 						const results = data.results || data || []
 						count += results.filter
-							? (await this._countOpenRequests(requestConfig, userId))
-							: (data.total || 0)
+							? await this._countOpenRequests(requestConfig, userId)
+							: data.total || 0
 					}
 				} catch {
 					// Silently continue
@@ -122,7 +128,9 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 			const leadConfig = objectStore.objectTypeRegistry.lead
 			if (leadConfig) {
 				try {
-					const url = generateUrl(`/apps/openregister/api/objects/${leadConfig.register}/${leadConfig.schema}?assignee=${encodeURIComponent(userId)}&status=open&_limit=1`)
+					const url = generateUrl(
+						`/apps/openregister/api/objects/${leadConfig.register}/${leadConfig.schema}?assignee=${encodeURIComponent(userId)}&status=open&_limit=1`,
+					)
 					const response = await fetch(url, {
 						headers: {
 							'Content-Type': 'application/json',
@@ -153,7 +161,9 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		async _countOpenRequests(config, userId) {
 			const terminalStatuses = ['completed', 'rejected', 'converted']
 			try {
-				const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?ticketType=request&assignee=${encodeURIComponent(userId)}&_limit=200`)
+				const url = generateUrl(
+					`/apps/openregister/api/objects/${config.register}/${config.schema}?ticketType=request&assignee=${encodeURIComponent(userId)}&_limit=200`,
+				)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',
@@ -164,7 +174,8 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 				if (!response.ok) return 0
 				const data = await response.json()
 				const results = data.results || data || []
-				return results.filter(r => !terminalStatuses.includes(r.status)).length
+				return results.filter((r) => !terminalStatuses.includes(r.status))
+					.length
 			} catch {
 				return 0
 			}

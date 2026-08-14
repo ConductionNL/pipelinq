@@ -28,7 +28,12 @@
  * objects are tracked and removed via the OR object API in afterAll.
  */
 import { test, expect, Locator, Page } from '@playwright/test'
-import { openApp, navClick, dismissSupportDialog, openIndexSearch } from '../helpers/pipelinq'
+import {
+	openApp,
+	navClick,
+	dismissSupportDialog,
+	openIndexSearch,
+} from '../helpers/pipelinq'
 import { FixtureSession, TEST_PREFIX } from './helpers/fixtures'
 
 const NAME = `${TEST_PREFIX}-Acme Diensten BV`
@@ -41,7 +46,11 @@ async function pickOption(combo: Locator, text: string): Promise<void> {
 	await combo.click()
 	const page = combo.page()
 	await page.waitForTimeout(300)
-	await page.locator('li[role="option"], .vs__dropdown-option').filter({ hasText: text }).first().click()
+	await page
+		.locator('li[role="option"], .vs__dropdown-option')
+		.filter({ hasText: text })
+		.first()
+		.click()
 	await page.waitForTimeout(200)
 }
 
@@ -88,7 +97,9 @@ test.describe('Clients — full CRUD with persistence', () => {
 			const cleaner = new FixtureSession(page)
 			await openApp(page)
 			for (const name of [NAME, NAME_EDITED]) {
-				const rows = await cleaner.list('client', { _limit: 20, name }).catch(() => [])
+				const rows = await cleaner
+					.list('client', { _limit: 20, name })
+					.catch(() => [])
 				for (const r of rows) {
 					const id = r.id || r['@self']?.id
 					if (id) await cleaner.remove('client', id)
@@ -118,7 +129,9 @@ test.describe('Clients — full CRUD with persistence', () => {
 	// `config.fieldOverrides` that un-skip the schema-readOnly name/email/phone so
 	// they can be collected on create. See the dedicated generic-surface test
 	// below. This bespoke-flow journey remains the deep CRUD round-trip.
-	test('create → list → values → edit → delete round-trips real data', async ({ page }) => {
+	test('create → list → values → edit → delete round-trips real data', async ({
+		page,
+	}) => {
 		test.setTimeout(90000)
 		fx = new FixtureSession(page)
 		await openApp(page)
@@ -126,13 +139,19 @@ test.describe('Clients — full CRUD with persistence', () => {
 		// --- CREATE via the bespoke "New Client" dialog (Dashboard) -----------
 		// openApp lands on the Dashboard, whose header actions host "New Client".
 		await dismissSupportDialog(page)
-		await page.getByRole('button', { name: /New Client/i }).first().click()
+		await page
+			.getByRole('button', { name: /New Client/i })
+			.first()
+			.click()
 		const dialog = page.locator('[data-testid="client-create-dialog"]').first()
 		await expect(dialog).toBeVisible({ timeout: 10000 })
 
 		// NcTextField forwards data-testid onto the <input> element itself.
 		await dialog.locator('[data-testid="client-name-input"]').fill(NAME)
-		await pickOption(dialog.locator('[data-testid="client-type-select"]'), 'organi') // organization
+		await pickOption(
+			dialog.locator('[data-testid="client-type-select"]'),
+			'organi',
+		) // organization
 		await dialog.locator('[data-testid="client-email-input"]').fill(EMAIL)
 		await dialog.locator('[data-testid="client-phone-input"]').fill(PHONE)
 		await dialog.locator('[data-testid="client-form-save"]').click()
@@ -155,7 +174,10 @@ test.describe('Clients — full CRUD with persistence', () => {
 		await openClientsList(page)
 		await searchInList(page, NAME)
 		await expect(page.locator('.cn-index-page__empty')).toHaveCount(0)
-		const row = page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }).first()
+		const row = page
+			.locator('[data-testid="cn-object-row"]')
+			.filter({ hasText: NAME })
+			.first()
 		await expect(row).toBeVisible({ timeout: 10000 })
 		// The row renders the real entered values across its columns.
 		await expect(row).toContainText(EMAIL)
@@ -181,31 +203,54 @@ test.describe('Clients — full CRUD with persistence', () => {
 		// more valuable of the two claims and had no coverage at all.
 		const editId = createdId
 
-		const updated = await fx.update('client', editId, { lifecycleStage: 'customer', accountStatus: 'inactive' })
+		const updated = await fx.update('client', editId, {
+			lifecycleStage: 'customer',
+			accountStatus: 'inactive',
+		})
 		expect(updated, 'client-owned fields accepted by the OR API').not.toBeNull()
 		const persisted = await fx.get('client', editId)
-		expect(persisted.lifecycleStage, 'lifecycleStage persisted to OpenRegister').toBe('customer')
-		expect(persisted.accountStatus, 'accountStatus persisted to OpenRegister').toBe('inactive')
-		expect(persisted.name, 'the mirrored identity name is untouched by an owned-field edit').toBe(NAME)
+		expect(
+			persisted.lifecycleStage,
+			'lifecycleStage persisted to OpenRegister',
+		).toBe('customer')
+		expect(
+			persisted.accountStatus,
+			'accountStatus persisted to OpenRegister',
+		).toBe('inactive')
+		expect(
+			persisted.name,
+			'the mirrored identity name is untouched by an owned-field edit',
+		).toBe(NAME)
 		expect(persisted.email, 'email unchanged').toBe(EMAIL)
 
 		// The identity mirror is authoritative in the addressbook: a direct write
 		// must NOT silently take effect here.
 		await fx.apiUpdateName('client', editId, NAME_EDITED).catch(() => false)
 		const afterRename = await fx.get('client', editId)
-		expect(afterRename.name, 'client.name is a read-only mirror — the object API must not rename it').toBe(NAME)
+		expect(
+			afterRename.name,
+			'client.name is a read-only mirror — the object API must not rename it',
+		).toBe(NAME)
 
 		await openClientsList(page)
 		await searchInList(page, NAME)
-		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME })).toBeVisible({ timeout: 10000 })
+		await expect(
+			page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }),
+		).toBeVisible({ timeout: 10000 })
 
 		// --- DELETE: remove + assert the row is gone from the list ------------
 		await fx.remove('client', editId)
 		await openClientsList(page)
 		await searchInList(page, NAME)
-		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME })).toHaveCount(0)
-		const remaining = await fx.list('client', { _limit: 5, name: NAME }).catch(() => [])
-		expect(remaining.length, 'deleted client no longer returned by OR API').toBe(0)
+		await expect(
+			page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }),
+		).toHaveCount(0)
+		const remaining = await fx
+			.list('client', { _limit: 5, name: NAME })
+			.catch(() => [])
+		expect(remaining.length, 'deleted client no longer returned by OR API').toBe(
+			0,
+		)
 	})
 
 	/**
@@ -217,7 +262,9 @@ test.describe('Clients — full CRUD with persistence', () => {
 	 * and persist the client with contactsUid populated. @spec
 	 * openspec/specs/unify-client-contact/spec.md#REQ-PUCC-004
 	 */
-	test('generic "Add Client" list button creates contact-aware (201 + contactsUid)', async ({ page }) => {
+	test('generic "Add Client" list button creates contact-aware (201 + contactsUid)', async ({
+		page,
+	}) => {
 		test.setTimeout(90000)
 		fx = new FixtureSession(page)
 		await openApp(page)
@@ -229,21 +276,35 @@ test.describe('Clients — full CRUD with persistence', () => {
 
 		// Open the Clients list and click the generic CnIndexPage "Add Client".
 		await openClientsList(page)
-		await page.getByRole('button', { name: /Add Client/i }).first().click()
+		await page
+			.getByRole('button', { name: /Add Client/i })
+			.first()
+			.click()
 
 		// The generic CnFormDialog. fieldOverrides un-skip name/email/phone (which
 		// are schema-readOnly mirrors) so they can be collected on create.
-		const dialog = page.locator('.modal-container').filter({ hasText: /Create Client/i }).first()
+		const dialog = page
+			.locator('.modal-container')
+			.filter({ hasText: /Create Client/i })
+			.first()
 		await expect(dialog).toBeVisible({ timeout: 10000 })
 		await dialog.getByRole('textbox', { name: /^Name/i }).fill(GEN_NAME)
 		await dialog.getByRole('textbox', { name: /Email/i }).fill(GEN_EMAIL)
 		await dialog.getByRole('textbox', { name: /Phone/i }).fill(GEN_PHONE)
-		await pickOption(dialog.locator('.v-select').filter({ hasText: /Client type/i }).first(), 'organi')
+		await pickOption(
+			dialog
+				.locator('.v-select')
+				.filter({ hasText: /Client type/i })
+				.first(),
+			'organi',
+		)
 
 		// Submit and capture the contact-aware POST — it MUST hit the contacts-sync
 		// create endpoint (not a straight OR object POST) and return 201.
 		const createResp = page.waitForResponse(
-			(r) => /\/api\/contacts-sync\/create$/.test(r.url()) && r.request().method() === 'POST',
+			(r) =>
+				/\/api\/contacts-sync\/create$/.test(r.url())
+				&& r.request().method() === 'POST',
 			{ timeout: 15000 },
 		)
 		await dialog.getByRole('button', { name: /^Create$/i }).click()
@@ -251,24 +312,39 @@ test.describe('Clients — full CRUD with persistence', () => {
 		expect(resp.status(), 'contact-aware create returns 201').toBe(201)
 		const payload = await resp.json()
 		expect(payload.success).toBe(true)
-		expect(payload.object.contactsUid, 'required contactsUid populated by the contact-aware path').toBeTruthy()
+		expect(
+			payload.object.contactsUid,
+			'required contactsUid populated by the contact-aware path',
+		).toBeTruthy()
 
 		// Persistence (OR API): the client exists with the FK + entered mirror values.
 		const created = (await fx.list('client', { _limit: 5, name: GEN_NAME }))[0]
-		expect(created, 'generic-surface client persisted to OpenRegister').toBeTruthy()
+		expect(
+			created,
+			'generic-surface client persisted to OpenRegister',
+		).toBeTruthy()
 		const createdId = (created.id || created['@self']?.id) as string
 		fx.track('client', createdId)
-		expect(created.contactsUid, 'contactsUid persisted on the object').toBeTruthy()
+		expect(
+			created.contactsUid,
+			'contactsUid persisted on the object',
+		).toBeTruthy()
 		expect(created.name).toBe(GEN_NAME)
 		expect(created.email).toBe(GEN_EMAIL)
 		expect(created.phone).toBe(GEN_PHONE)
 
 		// A real vCard now backs it in the addressbook (resolvable by name).
 		const search = await page.evaluate(async (q) => {
-			const r = await fetch('/apps/pipelinq/api/contacts-sync/search?q=' + encodeURIComponent(q), { headers: { 'OCS-APIRequest': 'true' } })
+			const r = await fetch(
+				'/apps/pipelinq/api/contacts-sync/search?q=' + encodeURIComponent(q),
+				{ headers: { 'OCS-APIRequest': 'true' } },
+			)
 			return r.json()
 		}, GEN_NAME)
-		expect(search.results?.some((c: any) => c.uid === created.contactsUid), 'addressbook vCard exists with the linked uid').toBe(true)
+		expect(
+			search.results?.some((c: any) => c.uid === created.contactsUid),
+			'addressbook vCard exists with the linked uid',
+		).toBe(true)
 
 		await fx.remove('client', createdId)
 	})

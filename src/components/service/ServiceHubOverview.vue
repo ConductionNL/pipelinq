@@ -19,7 +19,12 @@
 				{{ t('pipelinq', 'Service') }}
 			</h2>
 			<p class="service-hub__hint" data-testid="service-hub-hint">
-				{{ t('pipelinq', 'Navigate to any Service area from here. All individual pages remain directly accessible by URL.') }}
+				{{
+					t(
+						'pipelinq',
+						'Navigate to any Service area from here. All individual pages remain directly accessible by URL.',
+					)
+				}}
 			</p>
 		</header>
 
@@ -65,13 +70,36 @@ export default {
 			 * `ticketType` query that preselects the matching subtype.
 			 */
 			cards: [
-				{ id: 'Requests', label: t('pipelinq', 'Requests'), route: 'Tickets', query: { ticketType: 'request' } },
+				{
+					id: 'Requests',
+					label: t('pipelinq', 'Requests'),
+					route: 'Tickets',
+					query: { ticketType: 'request' },
+				},
 				{ id: 'Tasks', label: t('pipelinq', 'Tasks'), route: 'Tasks' },
-				{ id: 'Contactmomenten', label: t('pipelinq', 'Contact moments'), route: 'Tickets', query: { ticketType: 'contactmoment' } },
-				{ id: 'Complaints', label: t('pipelinq', 'Complaints'), route: 'Tickets', query: { ticketType: 'complaint' } },
-				{ id: 'Projects', label: t('pipelinq', 'Projects'), route: 'Projects' },
+				{
+					id: 'Contactmomenten',
+					label: t('pipelinq', 'Contact moments'),
+					route: 'Tickets',
+					query: { ticketType: 'contactmoment' },
+				},
+				{
+					id: 'Complaints',
+					label: t('pipelinq', 'Complaints'),
+					route: 'Tickets',
+					query: { ticketType: 'complaint' },
+				},
+				{
+					id: 'Projects',
+					label: t('pipelinq', 'Projects'),
+					route: 'Projects',
+				},
 				{ id: 'MyWork', label: t('pipelinq', 'My Work'), route: 'MyWork' },
-				{ id: 'BookingsGroup', label: t('pipelinq', 'Appointments'), route: 'Bookings' },
+				{
+					id: 'BookingsGroup',
+					label: t('pipelinq', 'Appointments'),
+					route: 'Bookings',
+				},
 				{ id: 'Queues', label: t('pipelinq', 'Queues'), route: 'Queues' },
 			],
 		}

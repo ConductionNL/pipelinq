@@ -106,25 +106,25 @@ class NrcNotificationListener {
 
 		$this->markReceived(abonnement: $abonnement);
 
-		$kanaal = (string)($notification['kanaal'] ?? '');
+		$channel = (string)($notification['channel'] ?? '');
 		$resource = (string)($notification['resource'] ?? '');
-		$actie = (string)($notification['actie'] ?? '');
+		$action = (string)($notification['action'] ?? '');
 		try {
 			match (true) {
-				($kanaal === 'zaken' && $resource === 'zaak' && $actie === 'create')
-					=> $this->onZaakCreated(endpoint: $endpoint, notification: $notification),
-				($kanaal === 'zaken' && $resource === 'status' && $actie === 'create')
+				($channel === 'zaken' && $resource === 'zaak' && $action === 'create')
+					=> $this->onCaseCreated(endpoint: $endpoint, notification: $notification),
+				($channel === 'zaken' && $resource === 'status' && $action === 'create')
 					=> $this->onStatusCreated(endpoint: $endpoint, notification: $notification),
-				($kanaal === 'besluiten' && $resource === 'besluit' && $actie === 'create')
-					=> $this->onBesluitCreated(endpoint: $endpoint, notification: $notification),
-				($kanaal === 'catalogi')
+				($channel === 'besluiten' && $resource === 'besluit' && $action === 'create')
+					=> $this->onDecisionCreated(endpoint: $endpoint, notification: $notification),
+				($channel === 'catalogi')
 					=> $this->onCatalogiChange(endpoint: $endpoint, notification: $notification),
 				default => null,
 			};
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'ZGW NRC: dispatch handler threw',
-				['kanaal' => $kanaal, 'resource' => $resource, 'actie' => $actie, 'err' => $e->getMessage()]
+				['channel' => $channel, 'resource' => $resource, 'action' => $action, 'err' => $e->getMessage()]
 			);
 		}
 
@@ -132,7 +132,7 @@ class NrcNotificationListener {
 		if ($elapsedMs > self::TARGET_DISPATCH_MS) {
 			$this->logger->warning(
 				'ZGW NRC: dispatch exceeded 5s budget',
-				['kanaal' => $kanaal, 'resource' => $resource, 'actie' => $actie, 'ms' => $elapsedMs]
+				['channel' => $channel, 'resource' => $resource, 'action' => $action, 'ms' => $elapsedMs]
 			);
 		}
 	}//end dispatch()
@@ -146,7 +146,7 @@ class NrcNotificationListener {
 	 */
 	private function markReceived(array $abonnement): void {
 		$uuid = (string)($abonnement['@self']['uuid'] ?? $abonnement['id'] ?? '');
-		$abonnement['laatstOntvangenOp'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+		$abonnement['latestReceivedOn'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
 		$saveUuid = null;
 		if ($uuid !== '') {
 			$saveUuid = $uuid;
@@ -170,21 +170,21 @@ class NrcNotificationListener {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $endpoint keeps the uniform
 	 *  per-kanaal handler signature invoked from the dispatch() match table.
 	 */
-	private function onZaakCreated(array $endpoint, array $notification): void {
-		$zaakUrl = (string)($notification['hoofdObject'] ?? $notification['resourceUrl'] ?? '');
-		if ($zaakUrl === '') {
+	private function onCaseCreated(array $endpoint, array $notification): void {
+		$caseUrl = (string)($notification['hoofdObject'] ?? $notification['resourceUrl'] ?? '');
+		if ($caseUrl === '') {
 			return;
 		}
 
 		$existing = $this->registers->findAll(
 			ZgwRegisterAccess::SCHEMA_MAPPING,
-			['zgwUrl' => $zaakUrl]
+			['zgwUrl' => $caseUrl]
 		);
 		if ($existing !== []) {
 			return;
 		}
 
-		$this->logger->info('ZGW NRC: observed externally-created zaak', ['zaak' => $zaakUrl]);
+		$this->logger->info('ZGW NRC: observed externally-created zaak', ['zaak' => $caseUrl]);
 	}//end onZaakCreated()
 
 	/**
@@ -197,14 +197,14 @@ class NrcNotificationListener {
 	 */
 	private function onStatusCreated(array $endpoint, array $notification): void {
 		$statusUrl = (string)($notification['resourceUrl'] ?? '');
-		$zaakUrl = (string)($notification['hoofdObject'] ?? '');
-		if ($statusUrl === '' || $zaakUrl === '') {
+		$caseUrl = (string)($notification['hoofdObject'] ?? '');
+		if ($statusUrl === '' || $caseUrl === '') {
 			return;
 		}
 
 		$mappings = $this->registers->findAll(
 			ZgwRegisterAccess::SCHEMA_MAPPING,
-			['zgwUrl' => $zaakUrl]
+			['zgwUrl' => $caseUrl]
 		);
 		if ($mappings === []) {
 			return;
@@ -250,7 +250,7 @@ class NrcNotificationListener {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $endpoint keeps the uniform
 	 *  per-kanaal handler signature invoked from the dispatch() match table.
 	 */
-	private function onBesluitCreated(array $endpoint, array $notification): void {
+	private function onDecisionCreated(array $endpoint, array $notification): void {
 		$url = (string)($notification['resourceUrl'] ?? $notification['hoofdObject'] ?? '');
 		if ($url === '') {
 			return;
@@ -278,7 +278,7 @@ class NrcNotificationListener {
 	private function onCatalogiChange(array $endpoint, array $notification): void {
 		$resource = (string)($notification['resource'] ?? '*');
 		$resourceMap = [
-			'zaaktype' => ZtcClient::RESOURCE_ZAAKTYPE,
+			'caseType' => ZtcClient::RESOURCE_ZAAKTYPE,
 			'statustype' => ZtcClient::RESOURCE_STATUSTYPE,
 			'roltype' => ZtcClient::RESOURCE_ROLTYPE,
 			'resultaattype' => ZtcClient::RESOURCE_RESULTAATTYPE,

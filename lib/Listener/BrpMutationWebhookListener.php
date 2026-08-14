@@ -129,9 +129,9 @@ class BrpMutationWebhookListener {
 			verzoekreden: 'BRP mutation webhook',
 			doelbinding: 'Cache-consistentie (BRP mutatie)',
 			uitkomst: 'cache-invalidated',
-			actie: 'brp-cache-invalidated',
+			action: 'brp-cache-invalidated',
 			responseCode: 200,
-			actorRol: 'system',
+			actorRole: 'system',
 		);
 
 		$this->logger->info(

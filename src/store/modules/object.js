@@ -17,7 +17,13 @@
  *   1. Add useTenantContext to the named import below.
  *   2. Pass tenantContext: useTenantContext to the createObjectStore options.
  */
-import { createObjectStore, filesPlugin, auditTrailsPlugin, relationsPlugin, registerMappingPlugin } from '@conduction/nextcloud-vue'
+import {
+	auditTrailsPlugin,
+	createObjectStore,
+	filesPlugin,
+	registerMappingPlugin,
+	relationsPlugin,
+} from '@conduction/nextcloud-vue'
 
 export const useObjectStore = createObjectStore('object', {
 	plugins: [

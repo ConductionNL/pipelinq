@@ -8,7 +8,9 @@
 				:aria-label="t('pipelinq', 'Refresh prospects')"
 				@click="refresh">
 				<template #icon>
-					<Refresh :size="20" :class="{ 'icon-spinning': prospectStore.loading }" />
+					<Refresh
+						:size="20"
+						:class="{ 'icon-spinning': prospectStore.loading }" />
 				</template>
 				{{ t('pipelinq', 'Refresh') }}
 			</NcButton>
@@ -20,7 +22,12 @@
 		<NcEmptyContent
 			v-else-if="prospectStore.error && prospectStore.error.includes('ICP')"
 			:name="t('pipelinq', 'No Ideal Customer Profile configured')"
-			:description="t('pipelinq', 'Configure your Ideal Customer Profile in admin settings to discover prospects.')">
+			:description="
+				t(
+					'pipelinq',
+					'Configure your Ideal Customer Profile in admin settings to discover prospects.',
+				)
+			">
 			<template #icon>
 				<Magnify :size="20" />
 			</template>
@@ -40,7 +47,12 @@
 		<NcEmptyContent
 			v-else-if="sortedProspects.length === 0"
 			:name="t('pipelinq', 'No prospects found')"
-			:description="t('pipelinq', 'No companies currently match your Ideal Customer Profile.')">
+			:description="
+				t(
+					'pipelinq',
+					'No companies currently match your Ideal Customer Profile.',
+				)
+			">
 			<template #icon>
 				<Magnify :size="20" />
 			</template>
@@ -54,20 +66,32 @@
 						{{ t('pipelinq', 'Score') }}{{ sortIndicator('fitScore') }}
 					</th>
 					<th scope="col" class="sortable" @click="setSort('tradeName')">
-						{{ t('pipelinq', 'Company') }}{{ sortIndicator('tradeName') }}
+						{{ t('pipelinq', 'Company')
+						}}{{ sortIndicator('tradeName') }}
 					</th>
 					<th scope="col">{{ t('pipelinq', 'Industry') }}</th>
-					<th scope="col" class="sortable" @click="setSort('employeeCount')">
-						{{ t('pipelinq', 'Employees') }}{{ sortIndicator('employeeCount') }}
+					<th
+						scope="col"
+						class="sortable"
+						@click="setSort('employeeCount')">
+						{{ t('pipelinq', 'Employees')
+						}}{{ sortIndicator('employeeCount') }}
 					</th>
 					<th scope="col">{{ t('pipelinq', 'Location') }}</th>
 					<th scope="col">{{ t('pipelinq', 'Actions') }}</th>
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="p in sortedProspects" :key="p.kvkNumber" :data-testid="`prospect-row-${p.kvkNumber}`">
+				<tr
+					v-for="p in sortedProspects"
+					:key="p.kvkNumber"
+					:data-testid="`prospect-row-${p.kvkNumber}`">
 					<td>
-						<span class="prospects-view__score" :class="scoreClass(p.fitScore)">{{ p.fitScore }}%</span>
+						<span
+							class="prospects-view__score"
+							:class="scoreClass(p.fitScore)"
+							>{{ p.fitScore }}%</span
+						>
 					</td>
 					<td>{{ p.tradeName }}</td>
 					<td>{{ p.sbiDescription || '—' }}</td>
@@ -94,9 +118,9 @@
 //
 // @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
 import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
-import Magnify from 'vue-material-design-icons/Magnify.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useProspectStore } from '../../store/modules/prospect.js'
 
 export default {
@@ -109,6 +133,7 @@ export default {
 		Magnify,
 		AlertCircle,
 	},
+
 	/**
 	 * Expose the prospect Pinia store to the component.
 	 *
@@ -118,6 +143,7 @@ export default {
 	setup() {
 		return { prospectStore: useProspectStore() }
 	},
+
 	data() {
 		return {
 			sortKey: 'fitScore',
@@ -125,6 +151,7 @@ export default {
 			convertingKvk: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Prospects sorted by the active sort column/direction.
@@ -139,14 +166,17 @@ export default {
 			return list.sort((a, b) => {
 				const av = a[key] ?? ''
 				const bv = b[key] ?? ''
-				if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir
+				if (typeof av === 'number' && typeof bv === 'number')
+					return (av - bv) * dir
 				return String(av).localeCompare(String(bv)) * dir
 			})
 		},
 	},
+
 	mounted() {
 		this.prospectStore.fetchProspects()
 	},
+
 	methods: {
 		/**
 		 * Force a fresh prospect fetch (bypass cache).
@@ -156,6 +186,7 @@ export default {
 		refresh() {
 			this.prospectStore.fetchProspects(true)
 		},
+
 		/**
 		 * Toggle/select the active sort column.
 		 *
@@ -170,6 +201,7 @@ export default {
 				this.sortAsc = false
 			}
 		},
+
 		/**
 		 * The sort arrow for a column header.
 		 *
@@ -181,6 +213,7 @@ export default {
 			if (this.sortKey !== key) return ''
 			return this.sortAsc ? ' ▲' : ' ▼'
 		},
+
 		/**
 		 * Map a fit score to a CSS severity class.
 		 *
@@ -194,6 +227,7 @@ export default {
 			if (s >= 40) return 'score--medium'
 			return 'score--low'
 		},
+
 		/**
 		 * Convert a prospect into a CRM lead via the prospect store.
 		 *
@@ -248,14 +282,29 @@ export default {
 	border-radius: var(--border-radius-pill);
 }
 
-.score--high { color: var(--color-success); }
+.score--high {
+	color: var(--color-success);
+}
 
-.score--medium { color: var(--color-warning); }
+.score--medium {
+	color: var(--color-warning);
+}
 
-.score--low { color: var(--color-text-maxcontrast); }
+.score--low {
+	color: var(--color-text-maxcontrast);
+}
 
-.icon-spinning { animation: rotate 1s linear infinite; }
-@keyframes rotate { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+.icon-spinning {
+	animation: rotate 1s linear infinite;
+}
+@keyframes rotate {
+	from {
+		transform: rotate(0);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
 
 @media (prefers-reduced-motion: reduce) {
 	.icon-spinning {

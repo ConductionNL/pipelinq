@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BrpCacheService;
 use OCA\Pipelinq\Service\BsnAuditService;
@@ -37,6 +38,7 @@ use OCA\Pipelinq\Service\HaalCentraalException;
 use OCA\Pipelinq\Service\OptOutService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -98,6 +100,7 @@ class BrpController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $accessPolicy,
 		private IGroupManager $groupManager,
 		private IL10N $l10n,
 		private IAppConfig $appConfig,
@@ -112,38 +115,6 @@ class BrpController extends Controller {
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
-
-	/**
-	 * Server-side BSN validation endpoint (mirror of the client-side 11-proef).
-	 *
-	 * This endpoint exists so admin-tooling / API clients without a browser can verify a
-	 * BSN. The UI does NOT call this — it does the 11-proef locally (REQ-BSN-001-04). All
-	 * responses use the masked BSN; the raw BSN never echoes back.
-	 *
-	 * @return JSONResponse The validation result.
-	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001
-	 */
-	#[NoAdminRequired]
-	public function validate(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$raw = (string)$this->request->getParam('bsn', '');
-		$result = $this->validation->validate($raw);
-		// Never echo back the raw BSN — only the masked variant.
-		return new JSONResponse(
-			[
-				'isFormeelGeldig' => $result['isFormeelGeldig'],
-				'errorCode' => $result['errorCode'],
-				'errorMessage' => $result['errorMessage'],
-				'maskedBsn' => $result['maskedBsn'],
-			],
-			Http::STATUS_OK
-		);
-	}//end validate()
 
 	/**
 	 * POST /api/brp/lookup — execute a BRP lookup with doelbinding.
@@ -181,11 +152,25 @@ class BrpController extends Controller {
 
 		$actor = $user->getUID();
 
+		// Resolving a BSN against the BRP is a CRM capability, not an
+		// any-authenticated-user one. This guard was MISSING while validate()
+		// had one, and gate-7 did not report it: the gate looks for an
+		// authorisation-shaped check in the body and this method already had
+		// several (doelbinding, verzoekreden, the actor-role resolution), none
+		// of which decides WHETHER THIS CALLER MAY LOOK ANYONE UP. A
+		// deny-path test found it; the gate's silence did not.
+		if ($this->accessPolicy->isPrivileged(uid: $actor) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
+			);
+		}
+
 		$rawBsn = (string)$this->request->getParam('bsn', '');
 		$verzoekreden = trim((string)$this->request->getParam('verzoekreden', ''));
 		$doelbinding = trim((string)$this->request->getParam('doelbinding', ''));
-		$grondslag = trim((string)$this->request->getParam('grondslag', ''));
-		$verzoekId = (string)$this->request->getParam('gekoppeldVerzoek', '');
+		$basis = trim((string)$this->request->getParam('basis', ''));
+		$requestId = (string)$this->request->getParam('linkedRequest', '');
 		$contactId = (string)$this->request->getParam('gekoppeldContact', '');
 		$vogScreening = (bool)$this->request->getParam('vogScreening', false);
 
@@ -200,16 +185,16 @@ class BrpController extends Controller {
 			);
 		}
 
-		if ($grondslag === '') {
-			$grondslag = $doelbinding;
+		if ($basis === '') {
+			$basis = $doelbinding;
 		}
 
 		// 2) Permission check (REQ-BSN-005-03).
-		$actorRol = $this->resolveActorRol(actor: $actor);
-		if ($actorRol === null) {
-			$gekoppeldVerzoek = null;
-			if ($verzoekId !== '') {
-				$gekoppeldVerzoek = $verzoekId;
+		$actorRole = $this->resolveActorRole(actor: $actor);
+		if ($actorRole === null) {
+			$linkedRequest = null;
+			if ($requestId !== '') {
+				$linkedRequest = $requestId;
 			}
 
 			$this->audit->recordLookup(
@@ -218,9 +203,9 @@ class BrpController extends Controller {
 				verzoekreden: $verzoekreden,
 				doelbinding: $doelbinding,
 				uitkomst: 'geweigerd-onbevoegd',
-				actie: 'brp-lookup-geweigerd',
+				action: 'brp-lookup-geweigerd',
 				responseCode: 403,
-				gekoppeldVerzoek: $gekoppeldVerzoek,
+				linkedRequest: $linkedRequest,
 				vogScreening: $vogScreening,
 			);
 			return new JSONResponse(
@@ -235,7 +220,7 @@ class BrpController extends Controller {
 		// 3) BSN must pass 11-proef before any external call (defense-in-depth — the UI
 		// already validates, but a direct REST caller could skip the UI).
 		$validation = $this->validation->validate($rawBsn);
-		if ($validation['isFormeelGeldig'] === false) {
+		if ($validation['isFormalValid'] === false) {
 			return new JSONResponse(
 				[
 					'errorCode' => 'invalid-bsn',
@@ -249,7 +234,7 @@ class BrpController extends Controller {
 
 		// 4) Cache lookup.
 		$cached = $this->cacheService->get($rawBsn);
-		$persoon = null;
+		$person = null;
 		$uitkomst = 'fout';
 		$responseCode = 0;
 		$correlationId = null;
@@ -257,7 +242,7 @@ class BrpController extends Controller {
 		$responseDurationMs = null;
 
 		if ($cached !== null) {
-			$persoon = $cached;
+			$person = $cached;
 			$responseInCache = true;
 			$uitkomst = 'geslaagd';
 			$responseCode = 200;
@@ -265,12 +250,12 @@ class BrpController extends Controller {
 
 		if ($cached === null) {
 			try {
-				$verzoekRef = null;
-				if ($verzoekId !== '') {
-					$verzoekRef = $verzoekId;
+				$requestRef = null;
+				if ($requestId !== '') {
+					$requestRef = $requestId;
 				}
 
-				$remote = $this->haalCentraal->lookupPersoon($rawBsn, $verzoekRef);
+				$remote = $this->haalCentraal->lookupPersoon($rawBsn, $requestRef);
 				if ($remote === null) {
 					$uitkomst = 'niet-gevonden';
 					$responseCode = 404;
@@ -283,16 +268,16 @@ class BrpController extends Controller {
 					unset($remote['_correlationId'], $remote['_responseDurationMs'], $remote['_responseStatus']);
 
 					$remote['bsnHash'] = BsnValidationService::hash($rawBsn);
-					$remote['lookupVerzoekId'] = '';
+					$remote['lookupRequestId'] = '';
 					// Back-filled after verzoek save below.
 					$remote['gekoppeldContact'] = $contactId;
-					$persoon = $this->cacheService->set($remote);
+					$person = $this->cacheService->set($remote);
 					$uitkomst = 'geslaagd';
 
 					// Record opt-out side-effect.
 					$this->optOut->recordFromBrpResponse(
 						$rawBsn,
-						(string)($persoon['indicatieGeheim'] ?? '0')
+						(string)($person['indicationSecret'] ?? '0')
 					);
 				}//end if
 			} catch (HaalCentraalException $e) {
@@ -314,9 +299,9 @@ class BrpController extends Controller {
 		}//end if
 
 		// 5) Persist lookup verzoek (audit-trail).
-		$gekoppeldVerzoekRef = null;
-		if ($verzoekId !== '') {
-			$gekoppeldVerzoekRef = $verzoekId;
+		$gekoppeldRequestRef = null;
+		if ($requestId !== '') {
+			$gekoppeldRequestRef = $requestId;
 		}
 
 		$gekoppeldContactRef = null;
@@ -324,37 +309,37 @@ class BrpController extends Controller {
 			$gekoppeldContactRef = $contactId;
 		}
 
-		$cacheVerlooptOp = null;
-		if ($persoon !== null) {
-			$cacheVerlooptOp = ($persoon['retentieTot'] ?? null);
+		$cacheExpiresOn = null;
+		if ($person !== null) {
+			$cacheExpiresOn = ($person['retentionTo'] ?? null);
 		}
 
-		$verzoek = [
+		$request = [
 			'bsnHash' => BsnValidationService::hash($rawBsn),
 			'verzoekreden' => $verzoekreden,
 			'doelbinding' => $doelbinding,
-			'grondslag' => $grondslag,
-			'aangevraagdDoor' => $actor,
-			'aangevraagdNamens' => $actorRol,
-			'verzoekTijdstip' => $now->format(DATE_ATOM),
-			'gekoppeldVerzoek' => $gekoppeldVerzoekRef,
+			'basis' => $basis,
+			'requestedBy' => $actor,
+			'requestedOnBehalfOf' => $actorRole,
+			'requestMoment' => $now->format(DATE_ATOM),
+			'linkedRequest' => $gekoppeldRequestRef,
 			'gekoppeldContact' => $gekoppeldContactRef,
 			'responseStatus' => $uitkomst,
-			'responseTijdstip' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DATE_ATOM),
-			'responseDuurMs' => $responseDurationMs,
+			'responseMoment' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DATE_ATOM),
+			'responseDurationMs' => $responseDurationMs,
 			'haalcentraalCorrelationId' => $correlationId,
-			'responseBevatGeheimhouding' => $persoon !== null && (string)($persoon['indicatieGeheim'] ?? '0') === '1',
+			'responseContainsSecrecy' => $person !== null && (string)($person['indicationSecret'] ?? '0') === '1',
 			'responseInCache' => $responseInCache,
-			'cacheVerlooptOp' => $cacheVerlooptOp,
+			'cacheExpiresOn' => $cacheExpiresOn,
 		];
-		$verzoek = array_filter($verzoek, static fn ($v) => $v !== null);
-		$verzoekSaved = $this->saveLookupVerzoek(verzoek: $verzoek);
-		$verzoekUuid = (string)($verzoekSaved['@self']['id'] ?? $verzoekSaved['id'] ?? '');
+		$request = array_filter($request, static fn ($v) => $v !== null);
+		$requestSaved = $this->saveLookupRequest(request: $request);
+		$verzoekUuid = (string)($requestSaved['@self']['id'] ?? $requestSaved['id'] ?? '');
 
 		// 5b) Back-fill lookupVerzoekId on the freshly-saved persoon.
-		if ($persoon !== null && $responseInCache === false && $verzoekUuid !== '') {
-			$persoon['lookupVerzoekId'] = $verzoekUuid;
-			$this->saveBrpPersoon(persoon: $persoon);
+		if ($person !== null && $responseInCache === false && $verzoekUuid !== '') {
+			$person['lookupRequestId'] = $verzoekUuid;
+			$this->saveBrpPerson(person: $person);
 		}
 
 		// 6) Audit-record (always).
@@ -366,23 +351,23 @@ class BrpController extends Controller {
 			uitkomst: $uitkomst,
 			responseCode: $responseCode,
 			haalcentraalCorrelationId: $correlationId,
-			gekoppeldVerzoek: $gekoppeldVerzoekRef,
-			actorRol: $actorRol,
+			linkedRequest: $gekoppeldRequestRef,
+			actorRole: $actorRole,
 			vogScreening: $vogScreening,
 		);
 
 		// 7) Update contact (REQ-BSN-008).
-		if ($persoon !== null && $contactId !== '') {
+		if ($person !== null && $contactId !== '') {
 			$this->stampContactWithVerifiedBsn(
 				contactId: $contactId,
-				brpPersoonId: (string)($persoon['@self']['id'] ?? $persoon['id'] ?? ''),
-				geheimhouding: ((string)($persoon['indicatieGeheim'] ?? '0')) === '1',
+				brpPersonId: (string)($person['@self']['id'] ?? $person['id'] ?? ''),
+				secrecy: ((string)($person['indicationSecret'] ?? '0')) === '1',
 			);
 		}
 
 		// 8) Response shaping. Strip raw BSN-like fields; never echo BSN.
-		if ($persoon !== null) {
-			unset($persoon['bsn']);
+		if ($person !== null) {
+			unset($person['bsn']);
 		}
 
 		if ($uitkomst === 'niet-gevonden') {
@@ -391,7 +376,7 @@ class BrpController extends Controller {
 					'errorCode' => 'not-found',
 					'errorMessage' => $this->l10n->t('BSN niet aangetroffen in BRP — controleer invoer.'),
 					'responseInCache' => false,
-					'lookupVerzoekId' => $verzoekUuid,
+					'lookupRequestId' => $verzoekUuid,
 				],
 				Http::STATUS_NOT_FOUND
 			);
@@ -403,7 +388,7 @@ class BrpController extends Controller {
 					'errorCode' => 'brp-unavailable',
 					'errorMessage' => $this->l10n->t('BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.'),
 					'responseInCache' => false,
-					'lookupVerzoekId' => $verzoekUuid,
+					'lookupRequestId' => $verzoekUuid,
 				],
 				Http::STATUS_SERVICE_UNAVAILABLE
 			);
@@ -411,9 +396,9 @@ class BrpController extends Controller {
 
 		return new JSONResponse(
 			[
-				'persoon' => $persoon,
+				'persoon' => $person,
 				'responseInCache' => $responseInCache,
-				'lookupVerzoekId' => $verzoekUuid,
+				'lookupRequestId' => $verzoekUuid,
 			],
 			Http::STATUS_OK
 		);
@@ -437,7 +422,7 @@ class BrpController extends Controller {
 		}
 
 		$actor = $user->getUID();
-		if ($this->resolveActorRol(actor: $actor) === null) {
+		if ($this->resolveActorRole(actor: $actor) === null) {
 			return new JSONResponse(
 				[
 					'errorCode' => 'unauthorized',
@@ -449,8 +434,8 @@ class BrpController extends Controller {
 
 		// The actual address surfacing happens on the frontend (it already has the persoon
 		// payload from the lookup). This endpoint only writes the audit entry.
-		$persoon = $this->findLatestPersoonForContact(contactId: $id);
-		if ($persoon === null) {
+		$person = $this->findLatestPersonForContact(contactId: $id);
+		if ($person === null) {
 			return new JSONResponse(
 				[
 					'errorCode' => 'not-found',
@@ -467,15 +452,15 @@ class BrpController extends Controller {
 			verzoekreden: 'Adres onthuld op behandelaarsverantwoording',
 			doelbinding: 'Wet BRP art. 3.3 (uitzondering geheimhouding)',
 			uitkomst: 'adres-onthuld',
-			actie: 'brp-adres-onthuld',
+			action: 'brp-adres-onthuld',
 			responseCode: 200,
-			gekoppeldVerzoek: null,
-			actorRol: $this->resolveActorRol(actor: $actor),
+			linkedRequest: null,
+			actorRole: $this->resolveActorRole(actor: $actor),
 		);
 
 		return new JSONResponse(
 			[
-				'verblijfplaats' => $persoon['verblijfplaats'] ?? null,
+				'residence' => $person['residence'] ?? null,
 			],
 			Http::STATUS_OK
 		);
@@ -496,7 +481,7 @@ class BrpController extends Controller {
 		}
 
 		$actor = $user->getUID();
-		if ($this->resolveActorRol(actor: $actor) === null) {
+		if ($this->resolveActorRole(actor: $actor) === null) {
 			return new JSONResponse(
 				[
 					'errorCode' => 'unauthorized',
@@ -507,9 +492,9 @@ class BrpController extends Controller {
 		}
 
 		$rawBsn = (string)$this->request->getParam('bsn', '');
-		$notitie = $this->request->getParam('notitie');
+		$note = $this->request->getParam('note');
 		$validation = $this->validation->validate($rawBsn);
-		if ($validation['isFormeelGeldig'] === false) {
+		if ($validation['isFormalValid'] === false) {
 			return new JSONResponse(
 				[
 					'errorCode' => 'invalid-bsn',
@@ -519,12 +504,12 @@ class BrpController extends Controller {
 			);
 		}
 
-		$notitieValue = null;
-		if (is_string($notitie) === true) {
-			$notitieValue = $notitie;
+		$noteValue = null;
+		if (is_string($note) === true) {
+			$noteValue = $note;
 		}
 
-		$recorded = $this->optOut->recordLocalOptOut($rawBsn, $actor, $notitieValue);
+		$recorded = $this->optOut->recordLocalOptOut($rawBsn, $actor, $noteValue);
 		if ($recorded === false) {
 			return new JSONResponse(
 				[
@@ -548,6 +533,10 @@ class BrpController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// BRP mutation notifications. Volume ceiling only: the sender authenticates
+	// by its own credential, and refusing a citizen-record mutation because of
+	// a rate limit would leave this app's data silently stale.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function mutationWebhook(): JSONResponse {
 		$rawBody = (string)file_get_contents('php://input');
 		$signature = (string)$this->request->getHeader('X-Signature');
@@ -630,7 +619,7 @@ class BrpController extends Controller {
 	 *
 	 * @return string|null Role label or null when unauthorised.
 	 */
-	private function resolveActorRol(string $actor): ?string {
+	private function resolveActorRole(string $actor): ?string {
 		if ($this->groupManager->isAdmin($actor) === true) {
 			return 'beheerder';
 		}
@@ -663,20 +652,20 @@ class BrpController extends Controller {
 	/**
 	 * Persist a brpLookupVerzoek record.
 	 *
-	 * @param array<string,mixed> $verzoek The lookup-verzoek payload to persist.
+	 * @param array<string,mixed> $request The lookup-verzoek payload to persist.
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function saveLookupVerzoek(array $verzoek): array {
+	private function saveLookupRequest(array $request): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
 		if ($register === '' || $schema === '') {
-			return $verzoek;
+			return $request;
 		}
 
 		try {
 			$saved = $this->getObjectService()->saveObject(
-				object: $verzoek,
+				object: $request,
 				extend: [],
 				register: $register,
 				schema: $schema,
@@ -689,26 +678,26 @@ class BrpController extends Controller {
 				return (array)$saved->jsonSerialize();
 			}
 
-			return $verzoek;
+			return $request;
 		} catch (Throwable $e) {
 			$this->logger->error('lookupVerzoek save failed', ['error' => $e->getMessage()]);
-			return $verzoek;
+			return $request;
 		}
 	}//end saveLookupVerzoek()
 
 	/**
 	 * Persist a brpPersoon record.
 	 *
-	 * @param array<string,mixed> $persoon The BRP-persoon payload to persist.
+	 * @param array<string,mixed> $person The BRP-persoon payload to persist.
 	 *
 	 * @return array<string,mixed>
 	 */
-	private function saveBrpPersoon(array $persoon): array {
+	private function saveBrpPerson(array $person): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
-		$uuid = (string)($persoon['@self']['id'] ?? $persoon['id'] ?? '');
+		$uuid = (string)($person['@self']['id'] ?? $person['id'] ?? '');
 		if ($register === '' || $schema === '') {
-			return $persoon;
+			return $person;
 		}
 
 		$uuidRef = null;
@@ -718,7 +707,7 @@ class BrpController extends Controller {
 
 		try {
 			$saved = $this->getObjectService()->saveObject(
-				object: $persoon,
+				object: $person,
 				extend: [],
 				register: $register,
 				schema: $schema,
@@ -732,10 +721,10 @@ class BrpController extends Controller {
 				return (array)$saved->jsonSerialize();
 			}
 
-			return $persoon;
+			return $person;
 		} catch (Throwable $e) {
 			$this->logger->error('brpPersoon save failed', ['error' => $e->getMessage()]);
-			return $persoon;
+			return $person;
 		}//end try
 	}//end saveBrpPersoon()
 
@@ -743,13 +732,13 @@ class BrpController extends Controller {
 	 * Stamp the Pipelinq contact with verifiedBSN/brpPersoonId/geheimhouding.
 	 *
 	 * @param string $contactId Contact UUID.
-	 * @param string $brpPersoonId BrpPersoon UUID.
-	 * @param bool $geheimhouding True when indicatieGeheim=1.
+	 * @param string $brpPersonId BrpPersoon UUID.
+	 * @param bool $secrecy True when indicatieGeheim=1.
 	 *
 	 * @return void
 	 */
-	private function stampContactWithVerifiedBsn(string $contactId, string $brpPersoonId, bool $geheimhouding): void {
-		if ($contactId === '' || $brpPersoonId === '') {
+	private function stampContactWithVerifiedBsn(string $contactId, string $brpPersonId, bool $secrecy): void {
+		if ($contactId === '' || $brpPersonId === '') {
 			return;
 		}
 
@@ -777,8 +766,8 @@ class BrpController extends Controller {
 			}
 
 			$existingArr['verifiedBSN'] = true;
-			$existingArr['brpPersoonId'] = $brpPersoonId;
-			$existingArr['geheimhouding'] = $geheimhouding;
+			$existingArr['brpPersonId'] = $brpPersonId;
+			$existingArr['secrecy'] = $secrecy;
 			$this->getObjectService()->saveObject(
 				object: $existingArr,
 				extend: [],
@@ -801,7 +790,7 @@ class BrpController extends Controller {
 	 *
 	 * @return array<string,mixed>|null
 	 */
-	private function findLatestPersoonForContact(string $contactId): ?array {
+	private function findLatestPersonForContact(string $contactId): ?array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
 		if ($register === '' || $schema === '') {
@@ -827,7 +816,7 @@ class BrpController extends Controller {
 					$arr = (array)$object->jsonSerialize();
 				}
 
-				if ($latest === null || (string)($arr['opgehaaldOp'] ?? '') > (string)($latest['opgehaaldOp'] ?? '')) {
+				if ($latest === null || (string)($arr['fetchedOn'] ?? '') > (string)($latest['fetchedOn'] ?? '')) {
 					$latest = $arr;
 				}
 			}

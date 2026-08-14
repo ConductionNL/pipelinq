@@ -57,7 +57,10 @@ const ADMIN_SETTINGS = '/settings/admin/pipelinq'
 async function openAdminSettings(page: Page) {
 	const response = await page.goto(ADMIN_SETTINGS)
 	expect(response, 'the admin settings page produced no response').not.toBeNull()
-	expect(response?.status(), 'the pipelinq admin settings page must be served').toBe(200)
+	expect(
+		response?.status(),
+		'the pipelinq admin settings page must be served',
+	).toBe(200)
 	await expect(nextcloudErrorPage(page)).toHaveCount(0)
 
 	const section = page.locator('#pipelinq-settings')
@@ -76,7 +79,9 @@ function ctiSettings(section: ReturnType<Page['locator']>) {
 }
 
 // @e2e openspec/specs/cti-screenpop-adapter/spec.md#admin-accesses-cti-settings-page
-test('CTI config: the admin form exposes every declared configuration control', async ({ page }) => {
+test('CTI config: the admin form exposes every declared configuration control', async ({
+	page,
+}) => {
 	const section = await openAdminSettings(page)
 	const cti = ctiSettings(section)
 	await expect(cti).toBeVisible({ timeout: 15000 })
@@ -99,15 +104,19 @@ test('CTI config: the admin form exposes every declared configuration control', 
 		'Enable inbound screen-pop',
 		'Enable outbound click-to-dial',
 	]) {
-		await expect(cti.getByText(label, { exact: true }).first(), `CTI config control "${label}"`)
-			.toBeVisible({ timeout: 15000 })
+		await expect(
+			cti.getByText(label, { exact: true }).first(),
+			`CTI config control "${label}"`,
+		).toBeVisible({ timeout: 15000 })
 	}
 
 	await assertNoHardError(page)
 })
 
 // @e2e openspec/specs/cti-screenpop-adapter/spec.md#admin-tests-platform-connectivity
-test('CTI config: "Test connection" runs the probe and reports a verdict', async ({ page }) => {
+test('CTI config: "Test connection" runs the probe and reports a verdict', async ({
+	page,
+}) => {
 	const section = await openAdminSettings(page)
 	const cti = ctiSettings(section)
 	await expect(cti).toBeVisible({ timeout: 15000 })
@@ -135,10 +144,14 @@ test('CTI config: "Test connection" runs the probe and reports a verdict', async
 })
 
 // @e2e openspec/specs/cti-screenpop-adapter/spec.md#event-log-displays-webhook-history
-test('CTI event log: the webhook history table renders with its declared columns', async ({ page }) => {
+test('CTI event log: the webhook history table renders with its declared columns', async ({
+	page,
+}) => {
 	const section = await openAdminSettings(page)
 
-	await expect(section.getByText('CTI webhook event log').first()).toBeVisible({ timeout: 15000 })
+	await expect(section.getByText('CTI webhook event log').first()).toBeVisible({
+		timeout: 15000,
+	})
 
 	const table = section.locator('[data-testid="cti-event-log-table"]')
 	await expect(table).toBeVisible({ timeout: 15000 })
@@ -147,9 +160,18 @@ test('CTI event log: the webhook history table renders with its declared columns
 	// single "Status (✓ Processed | ✗ Error)" column; CtiEventLog.vue renders the
 	// same information as TWO columns, "Signature" (✓/✗) and "Error". The columns
 	// asserted below are the ones the implementation actually guarantees.
-	for (const header of ['Received at', 'Platform', 'Event type', 'Call ID', 'Signature', 'Error']) {
-		await expect(table.locator('thead th').filter({ hasText: header }).first(), `column "${header}"`)
-			.toBeVisible()
+	for (const header of [
+		'Received at',
+		'Platform',
+		'Event type',
+		'Call ID',
+		'Signature',
+		'Error',
+	]) {
+		await expect(
+			table.locator('thead th').filter({ hasText: header }).first(),
+			`column "${header}"`,
+		).toBeVisible()
 	}
 
 	// Newest-first ordering is a server-side `sort: ['received_at' => 'desc']` in
@@ -160,7 +182,8 @@ test('CTI event log: the webhook history table renders with its declared columns
 	// states" — a populated body or the explicit empty row — rather than as a row
 	// count that would only ever be reachable on a live telephony instance.
 	await expect(
-		table.locator('tbody tr td.cti-event-log__actions')
+		table
+			.locator('tbody tr td.cti-event-log__actions')
 			.or(table.getByText('No webhook events in the selected range.'))
 			.first(),
 	).toBeVisible({ timeout: 15000 })
@@ -169,13 +192,19 @@ test('CTI event log: the webhook history table renders with its declared columns
 })
 
 // @e2e openspec/specs/cti-screenpop-adapter/spec.md#event-log-filters-by-platform-and-event-type
-test('CTI event log: platform and event-type filters are applied to the log', async ({ page }) => {
+test('CTI event log: platform and event-type filters are applied to the log', async ({
+	page,
+}) => {
 	const section = await openAdminSettings(page)
 
 	const filters = section.locator('.cti-event-log__filters')
 	await expect(filters).toBeVisible({ timeout: 15000 })
-	await expect(filters.getByText('Platform', { exact: true }).first()).toBeVisible()
-	await expect(filters.getByText('Event type', { exact: true }).first()).toBeVisible()
+	await expect(
+		filters.getByText('Platform', { exact: true }).first(),
+	).toBeVisible()
+	await expect(
+		filters.getByText('Event type', { exact: true }).first(),
+	).toBeVisible()
 
 	const table = section.locator('[data-testid="cti-event-log-table"]')
 	await expect(table).toBeVisible({ timeout: 15000 })
@@ -184,37 +213,57 @@ test('CTI event log: platform and event-type filters are applied to the log', as
 	// by position — the pattern workflows/client-crud.spec.ts already uses against
 	// @nextcloud/vue 9 ("Client type"). Position would silently pick the wrong
 	// control if the filter row ever gained a third select.
-	const platformSelect = filters.locator('.v-select').filter({ hasText: /Platform/i }).first()
-	const eventTypeSelect = filters.locator('.v-select').filter({ hasText: /Event type/i }).first()
+	const platformSelect = filters
+		.locator('.v-select')
+		.filter({ hasText: /Platform/i })
+		.first()
+	const eventTypeSelect = filters
+		.locator('.v-select')
+		.filter({ hasText: /Event type/i })
+		.first()
 
 	// NcSelect appends its dropdown to the document body, so the option list is
 	// matched page-wide rather than inside the section — the same pattern
 	// spec-coverage/appointment-booking.spec.ts uses for the client-type select.
 	await platformSelect.click()
-	await page.locator('li[role="option"], .vs__dropdown-option')
-		.filter({ hasText: 'CallVoip' }).first().click()
+	await page
+		.locator('li[role="option"], .vs__dropdown-option')
+		.filter({ hasText: 'CallVoip' })
+		.first()
+		.click()
 
 	// The selection is held (so `filters.platform` really changed), which is what
 	// the component's `watch` keys off to re-issue `GET /api/cti/event-log` with
 	// `platform=callvoip`.
-	await expect(filters.getByText('CallVoip').first()).toBeVisible({ timeout: 10000 })
+	await expect(filters.getByText('CallVoip').first()).toBeVisible({
+		timeout: 10000,
+	})
 
 	await eventTypeSelect.click()
-	await page.locator('li[role="option"], .vs__dropdown-option')
-		.filter({ hasText: 'answered' }).first().click()
-	await expect(filters.getByText('answered').first()).toBeVisible({ timeout: 10000 })
+	await page
+		.locator('li[role="option"], .vs__dropdown-option')
+		.filter({ hasText: 'answered' })
+		.first()
+		.click()
+	await expect(filters.getByText('answered').first()).toBeVisible({
+		timeout: 10000,
+	})
 
 	// The refetch completed rather than hanging: the Reload control is back to its
 	// idle label ("Reloading…" while `loading` is true), and the table is still
 	// mounted underneath the applied filters.
-	await expect(filters.getByRole('button', { name: 'Reload' })).toBeVisible({ timeout: 20000 })
+	await expect(filters.getByRole('button', { name: 'Reload' })).toBeVisible({
+		timeout: 20000,
+	})
 	await expect(table).toBeVisible()
 
 	await assertNoHardError(page)
 })
 
 // @e2e openspec/specs/cti-screenpop-adapter/spec.md#event-log-retention-is-30-days
-test('CTI event log: the view states its 30-day retention window', async ({ page }) => {
+test('CTI event log: the view states its 30-day retention window', async ({
+	page,
+}) => {
 	const section = await openAdminSettings(page)
 
 	const table = section.locator('[data-testid="cti-event-log-table"]')
@@ -225,10 +274,16 @@ test('CTI event log: the view states its 30-day retention window', async ({ page
 	// this requirement a browser can settle. The other half (that rows older than
 	// 30 days are absent) is enforced by lib/BackgroundJob/CtiEventLogCleanupJob.php
 	// against rows no browser session can create.
-	await expect(section.getByText('Showing events from the last 30 days.')).toBeVisible({ timeout: 15000 })
+	await expect(
+		section.getByText('Showing events from the last 30 days.'),
+	).toBeVisible({ timeout: 15000 })
 	// The section's own description carries the same window, so a stale note left
 	// behind after a retention change cannot pass alone.
-	await expect(section.getByText('Last 30 days of inbound webhook events grouped by platform.')).toBeVisible()
+	await expect(
+		section.getByText(
+			'Last 30 days of inbound webhook events grouped by platform.',
+		),
+	).toBeVisible()
 
 	await assertNoHardError(page)
 })
@@ -249,7 +304,9 @@ test('CTI event log: the view states its 30-day retention window', async ({ page
  * nav entry. That is asserted here. Splitting them again — or leaving a stray
  * "CTI integration" leaf behind in the app nav — fails this test.
  */
-test('CTI administration is ONE page: config + event log together, and no split nav entries', async ({ page }) => {
+test('CTI administration is ONE page: config + event log together, and no split nav entries', async ({
+	page,
+}) => {
 	await openApp(page)
 
 	// `revealNavEntry()` is deliberately NOT used: it waits for an entry to become
@@ -266,8 +323,12 @@ test('CTI administration is ONE page: config + event log together, and no split 
 	const section = await openAdminSettings(page)
 	// Exactly one of each, on the same page: the merge, stated as a count.
 	await expect(section.locator('[data-testid="cti-settings"]')).toHaveCount(1)
-	await expect(section.locator('[data-testid="cti-event-log-table"]')).toHaveCount(1)
-	await expect(section.getByText('CTI integration').first()).toBeVisible({ timeout: 15000 })
+	await expect(section.locator('[data-testid="cti-event-log-table"]')).toHaveCount(
+		1,
+	)
+	await expect(section.getByText('CTI integration').first()).toBeVisible({
+		timeout: 15000,
+	})
 	await expect(section.getByText('CTI webhook event log').first()).toBeVisible()
 
 	await assertNoHardError(page)

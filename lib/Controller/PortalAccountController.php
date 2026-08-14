@@ -33,6 +33,7 @@ use OCA\Pipelinq\Service\Portal\PortalExportService;
 use OCA\Pipelinq\Service\Portal\PortalProfileService;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -74,6 +75,7 @@ class PortalAccountController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function profile(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -92,6 +94,7 @@ class PortalAccountController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 30, period: 60)]
 	public function updateProfile(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -122,6 +125,8 @@ class PortalAccountController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	// Tight: a verification token is guessable in bulk without a ceiling.
+	#[AnonRateLimit(limit: 20, period: 60)]
 	public function verifyEmail(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -145,6 +150,9 @@ class PortalAccountController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	// Tight: an export is expensive to produce, so this is a cheap request that
+	// buys the caller a lot of server work.
+	#[AnonRateLimit(limit: 10, period: 60)]
 	public function requestExport(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -164,6 +172,7 @@ class PortalAccountController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 10, period: 60)]
 	public function requestClose(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -183,6 +192,7 @@ class PortalAccountController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 20, period: 60)]
 	public function confirmClose(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {

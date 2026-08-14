@@ -35,6 +35,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Controller\BookingAdminController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\BookingService;
@@ -455,6 +456,7 @@ class BookingAdminControllerTest extends TestCase {
 			bookings: $this->bookings,
 			emailService: ($email ?? $this->createMock(AppointmentEmailService::class)),
 			userSession: $this->userSession,
+			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			l10n: $l10n,
 			logger: $this->createMock(LoggerInterface::class),
 		);

@@ -32,6 +32,7 @@ use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCA\Pipelinq\Service\Portal\PortalRequestService;
 use OCA\Pipelinq\Service\Portal\PortalTenantService;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -68,6 +69,7 @@ class PortalRequestController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function index(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -93,6 +95,7 @@ class PortalRequestController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function show(string $id): JSONResponse {
 		return $this->guarded(
 			handler: function () use ($id): array {
@@ -117,6 +120,7 @@ class PortalRequestController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 30, period: 60)]
 	public function create(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -150,6 +154,7 @@ class PortalRequestController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 30, period: 60)]
 	public function reply(string $id): JSONResponse {
 		return $this->guarded(
 			handler: function () use ($id): array {

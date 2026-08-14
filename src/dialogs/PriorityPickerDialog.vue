@@ -9,9 +9,7 @@
   - inside its parent (ADR-004); it was extracted out of PipelineCard.vue.
   -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Set priority')"
-		@closing="$emit('close')">
+	<NcDialog :name="t('pipelinq', 'Set priority')" @closing="$emit('close')">
 		<div class="dialog-list">
 			<NcButton
 				v-for="p in options"
@@ -34,6 +32,7 @@ export default {
 		NcButton,
 		NcDialog,
 	},
+
 	props: {
 		/**
 		 * Selectable priorities as `{ value, label }` pairs.
@@ -42,6 +41,7 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/**
 		 * The card's current priority; its button is highlighted.
 		 */
@@ -50,6 +50,7 @@ export default {
 			default: null,
 		},
 	},
+
 	emits: ['close', 'select'],
 }
 </script>

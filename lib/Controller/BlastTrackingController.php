@@ -34,12 +34,15 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\TrackingLinkService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
+use OCP\AppFramework\Http\Attribute\BruteForceProtection;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\IRequest;
+use OCP\Security\Bruteforce\IThrottler;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -49,6 +52,40 @@ use Throwable;
  * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#2
  */
 class BlastTrackingController extends Controller {
+
+	/**
+	 * Brute-force throttler action for rejected tracking tokens.
+	 *
+	 * @var string
+	 */
+	private const THROTTLE_ACTION = 'pipelinq_blast_tracking_token';
+
+	/**
+	 * Record a rejected tracking token with the brute-force throttler.
+	 *
+	 * The tokens are signed, so guessing one is expensive already — but these
+	 * two endpoints are the most-fetched public surface the app has (every
+	 * recipient's mail client hits them), which makes them the cheapest place
+	 * to probe from and the easiest to overlook.
+	 *
+	 * The half that COUNTS; `#[BruteForceProtection]` is the half that
+	 * ENFORCES. Either alone is inert — see ADR-082.
+	 *
+	 * @return void
+	 */
+	private function registerRejectedToken(): void {
+		try {
+			$this->throttler->registerAttempt(
+				action: self::THROTTLE_ACTION,
+				ip: $this->request->getRemoteAddress()
+			);
+		} catch (\Throwable $throttlerFailure) {
+			$this->logger->warning(
+				'BlastTrackingController: registerAttempt failed: ' . $throttlerFailure->getMessage()
+			);
+		}
+	}//end registerRejectedToken()
+
 	/**
 	 * A minimal 1x1 transparent GIF89a (43 bytes) — the open pixel.
 	 *
@@ -67,6 +104,7 @@ class BlastTrackingController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private TrackingLinkService $trackingLinkService,
+		private IThrottler $throttler,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -88,6 +126,12 @@ class BlastTrackingController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// The open pixel deliberately does NOT register a rejected token: it always
+	// answers with the same 1x1 GIF whatever the token, precisely so a mail
+	// client never renders a broken image. There is no failure branch to hang
+	// a counter on, and inventing one would leak the very signal the uniform
+	// response exists to hide. The rate limit is the control here.
+	#[AnonRateLimit(limit: 240, period: 60)]
 	public function open(string $token): DataDisplayResponse {
 		try {
 			$payload = $this->trackingLinkService->verifyToken(token: $token);
@@ -128,15 +172,19 @@ class BlastTrackingController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 120, period: 60)]
+	#[BruteForceProtection(action: self::THROTTLE_ACTION)]
 	public function click(string $token): JSONResponse|RedirectResponse {
 		$payload = $this->trackingLinkService->verifyToken(token: $token);
 		if ($payload === null) {
+			$this->registerRejectedToken();
 			return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
 		}
 
 		$deliveryId = (string)($payload['d'] ?? '');
 		$targetUrl = (string)($payload['u'] ?? '');
 		if ($deliveryId === '' || $targetUrl === '') {
+			$this->registerRejectedToken();
 			return new JSONResponse(['error' => 'Link expired or invalid'], Http::STATUS_GONE);
 		}
 

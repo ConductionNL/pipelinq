@@ -37,19 +37,30 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { openApp, navClick, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
+import {
+	openApp,
+	navClick,
+	trackPipelinqErrors,
+	assertNoHardError,
+} from '../helpers/pipelinq'
 
-test('Contracts: the Contracts list page renders from the manifest', async ({ page }) => {
+test('Contracts: the Contracts list page renders from the manifest', async ({
+	page,
+}) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
 	await navClick(page, 'Contracts', /\/contracts/)
 
 	const content = page.locator('#content-vue')
-	await expect(content.getByRole('heading', { name: 'Contracts' }).first()).toBeVisible({ timeout: 15000 })
+	await expect(
+		content.getByRole('heading', { name: 'Contracts' }).first(),
+	).toBeVisible({ timeout: 15000 })
 	// `endDate` is the column the renewal-window migration path depends on (see
 	// the REMOVED "Renewals Due Widget" requirement below), so its presence is
 	// the contract this page owes the retired dashboard tile.
-	await expect(content.getByRole('columnheader', { name: /end ?date/i }).first()).toBeVisible({ timeout: 15000 })
+	await expect(
+		content.getByRole('columnheader', { name: /end ?date/i }).first(),
+	).toBeVisible({ timeout: 15000 })
 
 	await assertNoHardError(page)
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
@@ -72,7 +83,9 @@ test('Contracts: the Contracts list page renders from the manifest', async ({ pa
  * shillinq is not installed there, and the spec requires the tile to show the
  * "Install shillinq" call-to-action and NOT a locally computed number.
  */
-test('Dashboard: the recurring-revenue tile renders and defers to shillinq', async ({ page }) => {
+test('Dashboard: the recurring-revenue tile renders and defers to shillinq', async ({
+	page,
+}) => {
 	await openApp(page)
 
 	const content = page.locator('#content-vue')
@@ -83,11 +96,15 @@ test('Dashboard: the recurring-revenue tile renders and defers to shillinq', asy
 	// SPEC'd behaviour, verbatim: "GIVEN shillinq is not installed … THEN the
 	// recurring-revenue tile MUST show the 'Install shillinq' call-to-action AND
 	// MUST NOT display a locally-computed run-rate number."
-	await expect(content.getByText('Install shillinq').first()).toBeVisible({ timeout: 15000 })
+	await expect(content.getByText('Install shillinq').first()).toBeVisible({
+		timeout: 15000,
+	})
 	// The retired local roll-up formatted its figure as EUR currency; asserting
 	// its absence is what makes "MUST NOT display a locally-computed number"
 	// testable rather than decorative.
-	await expect(content.locator('.cn-dashboard-page__requires-app')).not.toContainText('€')
+	await expect(
+		content.locator('.cn-dashboard-page__requires-app'),
+	).not.toContainText('€')
 
 	await assertNoHardError(page)
 })

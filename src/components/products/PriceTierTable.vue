@@ -14,32 +14,44 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="(tier, index) in rows" :key="index" class="viewTableRow">
+					<tr
+						v-for="(tier, index) in rows"
+						:key="index"
+						class="viewTableRow">
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'From quantity')"
-								:label-visible="false"
-								:model-value="String(tier.minQuantity)"
+								:labelVisible="false"
+								:modelValue="String(tier.minQuantity)"
 								type="number"
-								@update:model-value="v => updateTier(index, 'minQuantity', v)" />
+								@update:modelValue="
+									(v) => updateTier(index, 'minQuantity', v)
+								" />
 						</td>
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'Unit price')"
-								:label-visible="false"
-								:model-value="String(tier.unitPrice)"
+								:labelVisible="false"
+								:modelValue="String(tier.unitPrice)"
 								type="number"
-								@update:model-value="v => updateTier(index, 'unitPrice', v)" />
+								@update:modelValue="
+									(v) => updateTier(index, 'unitPrice', v)
+								" />
 						</td>
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'Label')"
-								:label-visible="false"
-								:model-value="tier.label || ''"
-								@update:model-value="v => updateTier(index, 'label', v)" />
+								:labelVisible="false"
+								:modelValue="tier.label || ''"
+								@update:modelValue="
+									(v) => updateTier(index, 'label', v)
+								" />
 						</td>
 						<td class="price-tier-table__actions-col">
-							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove tier')" @click="removeTier(index)">
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('pipelinq', 'Remove tier')"
+								@click="removeTier(index)">
 								<template #icon>
 									<Delete :size="20" />
 								</template>
@@ -65,10 +77,10 @@
 </template>
 
 <script>
-import { NcButton, NcTextField } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import Plus from 'vue-material-design-icons/Plus.vue'
+import { NcButton, NcTextField } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -79,12 +91,14 @@ export default {
 		Plus,
 		Delete,
 	},
+
 	props: {
 		product: {
 			type: Object,
 			required: true,
 		},
 	},
+
 	emits: ['saved'],
 	data() {
 		return {
@@ -92,11 +106,13 @@ export default {
 			saving: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
 	},
+
 	watch: {
 		product: {
 			immediate: true,
@@ -105,20 +121,24 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Load tiers from the product, sorted ascending by minQuantity.
 		 */
 		loadRows() {
-			const tiers = Array.isArray(this.product.priceTiers) ? this.product.priceTiers : []
+			const tiers = Array.isArray(this.product.priceTiers)
+				? this.product.priceTiers
+				: []
 			this.rows = tiers
-				.map(t => ({
+				.map((t) => ({
 					minQuantity: Number(t.minQuantity) || 1,
 					unitPrice: Number(t.unitPrice) || 0,
 					label: t.label || '',
 				}))
 				.sort((a, b) => a.minQuantity - b.minQuantity)
 		},
+
 		/**
 		 * Update a field on a tier row.
 		 *
@@ -133,13 +153,22 @@ export default {
 				this.rows[index][field] = Number(value)
 			}
 		},
+
 		/**
 		 * Append an empty tier row.
 		 */
 		addTier() {
-			const nextQty = this.rows.length > 0 ? Math.max(...this.rows.map(r => r.minQuantity)) + 1 : 1
-			this.rows.push({ minQuantity: nextQty, unitPrice: Number(this.product.unitPrice) || 0, label: '' })
+			const nextQty =
+				this.rows.length > 0
+					? Math.max(...this.rows.map((r) => r.minQuantity)) + 1
+					: 1
+			this.rows.push({
+				minQuantity: nextQty,
+				unitPrice: Number(this.product.unitPrice) || 0,
+				label: '',
+			})
 		},
+
 		/**
 		 * Remove a tier row.
 		 *
@@ -148,13 +177,14 @@ export default {
 		removeTier(index) {
 			this.rows.splice(index, 1)
 		},
+
 		/**
 		 * Persist the sorted tiers to the product.
 		 */
 		async save() {
 			this.saving = true
 			const sorted = [...this.rows]
-				.filter(r => r.minQuantity >= 1)
+				.filter((r) => r.minQuantity >= 1)
 				.sort((a, b) => a.minQuantity - b.minQuantity)
 			try {
 				const result = await this.objectStore.saveObject('product', {

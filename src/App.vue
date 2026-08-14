@@ -12,16 +12,16 @@
 -->
 <template>
 	<CnAppRoot
-		:ai-companion="true"
+		:aiCompanion="true"
 		:manifest="manifest"
 		:registry="registry"
-		:cell-widgets="cellWidgets"
-		:page-types="pageTypes"
-		app-id="pipelinq"
+		:cellWidgets="cellWidgets"
+		:pageTypes="pageTypes"
+		appId="pipelinq"
 		:translate="translateForApp"
 		:permissions="permissions"
-		:persist-manifest-delta="persistManifestDelta"
-		:requires-apps="[]">
+		:persistManifestDelta="persistManifestDelta"
+		:requiresApps="[]">
 		<template #sidebar>
 			<!--
 				Host-rendered CnObjectSidebar. Detail pages declare their tabs in
@@ -34,14 +34,14 @@
 				v-if="objectSidebarState.active"
 				:title="objectSidebarState.title"
 				:subtitle="objectSidebarState.subtitle"
-				:object-type="objectSidebarState.objectType"
-				:object-id="objectSidebarState.objectId"
+				:objectType="objectSidebarState.objectType"
+				:objectId="objectSidebarState.objectId"
 				:register="objectSidebarState.register"
 				:schema="objectSidebarState.schema"
-				:hidden-tabs="objectSidebarState.hiddenTabs"
+				:hiddenTabs="objectSidebarState.hiddenTabs"
 				:tabs="objectSidebarState.tabs"
-				:custom-components="sidebarComponents"
-				:use-registry="false"
+				:customComponents="sidebarComponents"
+				:useRegistry="false"
 				:open="objectSidebarState.open"
 				@update:open="objectSidebarState.open = $event" />
 		</template>
@@ -49,11 +49,15 @@
 </template>
 
 <script>
-import { reactive } from 'vue'
+import {
+	builtinIntegrations,
+	CnAppRoot,
+	CnObjectSidebar,
+} from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
-import { CnAppRoot, CnObjectSidebar, builtinIntegrations } from '@conduction/nextcloud-vue'
+import { reactive } from 'vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 
@@ -90,6 +94,7 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		/**
 		 * V2 component registry (ADR-036) — maps string keys from
 		 * `manifest.pages[].component` to `{ kind, component }` entries.
@@ -101,6 +106,7 @@ export default {
 			type: Object,
 			default: () => ({}),
 		},
+
 		/**
 		 * Page-type registry — `{ index, detail, dashboard, settings, ... }`.
 		 * Wired through to descendant `CnPageRenderer` instances via
@@ -126,6 +132,7 @@ export default {
 				hiddenTabs: [],
 				tabs: undefined,
 			}),
+
 			// Legacy channel for bespoke index views.
 			sidebarState: reactive({
 				active: false,
@@ -149,6 +156,7 @@ export default {
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
 		},
+
 		/**
 		 * Cell-widget registry for CnAppRoot, keyed by the `widget` id a
 		 * manifest column references (ADR-036).
@@ -163,6 +171,7 @@ export default {
 				'lead-probability': LeadProbabilityCell,
 			}
 		},
+
 		/**
 		 * Component registry for the host CnObjectSidebar, keyed by component
 		 * name. Maps the library's integration tab/widget leaves so manifest
@@ -190,8 +199,12 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async persistManifestDelta(delta) {
-			await axios.put(generateUrl('/apps/openbuild/api/app-overrides/pipelinq'), delta)
+			await axios.put(
+				generateUrl('/apps/openbuild/api/app-overrides/pipelinq'),
+				delta,
+			)
 		},
+
 		/**
 		 * Translate function passed down to CnAppRoot / CnAppNav /
 		 * CnPageRenderer. Closes over the Nextcloud `translate` import

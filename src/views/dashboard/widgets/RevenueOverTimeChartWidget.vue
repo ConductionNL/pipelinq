@@ -17,8 +17,8 @@
 
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
-import { getAnalyticsTrend } from '../../../services/dashboardData.js'
 import { formatEur, formatEurCompact } from '../../../services/commercialFormat.js'
+import { getAnalyticsTrend } from '../../../services/dashboardData.js'
 import analyticsPeriodMixin from './analyticsPeriodMixin.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -33,6 +33,7 @@ export default {
 	components: {
 		CnChartWidget,
 	},
+
 	mixins: [analyticsPeriodMixin, dashboardRefreshMixin],
 	data() {
 		return {
@@ -40,24 +41,28 @@ export default {
 			trend: { series: [] },
 		}
 	},
+
 	computed: {
 		/** @return {Array<string>} X-axis date labels. */
 		chartLabels() {
-			return (this.trend?.series || []).map(pt => pt.date)
+			return (this.trend?.series || []).map((pt) => pt.date)
 		},
+
 		/** @return {Array<object>} Single revenue series. */
 		chartSeries() {
-			const values = (this.trend?.series || []).map(pt => pt.value)
+			const values = (this.trend?.series || []).map((pt) => pt.value)
 			return [{ name: this.t('pipelinq', 'Revenue'), data: values }]
 		},
+
 		/** @return {object} ApexCharts options with euro axis + tooltip. */
 		chartOptions() {
 			return {
-				yaxis: { labels: { formatter: value => formatEurCompact(value) } },
-				tooltip: { y: { formatter: value => formatEur(value, 2) } },
+				yaxis: { labels: { formatter: (value) => formatEurCompact(value) } },
+				tooltip: { y: { formatter: (value) => formatEur(value, 2) } },
 			}
 		},
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/commercial-dashboard/spec.md
@@ -65,7 +70,9 @@ export default {
 		async load() {
 			this.error = null
 			try {
-				this.trend = await getAnalyticsTrend('revenue', this.period) || { series: [] }
+				this.trend = (await getAnalyticsTrend('revenue', this.period)) || {
+					series: [],
+				}
 			} catch (err) {
 				console.error('RevenueOverTimeChartWidget fetch error:', err)
 				this.error = this.t('pipelinq', 'Could not load analytics data.')

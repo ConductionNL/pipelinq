@@ -19,7 +19,7 @@
 			<NcSelect
 				v-model="form.verzoekreden"
 				:options="reasonOptions"
-				:input-label="t('pipelinq', 'Request reason')"
+				:inputLabel="t('pipelinq', 'Request reason')"
 				:placeholder="t('pipelinq', 'Choose a request reason')"
 				:reduce="(o) => o.value"
 				label="label"
@@ -27,7 +27,7 @@
 			<NcSelect
 				v-model="form.doelbinding"
 				:options="bindingOptions"
-				:input-label="t('pipelinq', 'Purpose limitation / legal basis')"
+				:inputLabel="t('pipelinq', 'Purpose limitation / legal basis')"
 				:placeholder="t('pipelinq', 'Choose a legal basis')"
 				:reduce="(o) => o.value"
 				label="label"
@@ -35,11 +35,11 @@
 			<NcTextArea
 				v-model="form.toelichting"
 				:label="t('pipelinq', 'Additional notes')"
-				:placeholder="t('pipelinq', 'Optional — at least 20 characters recommended')"
+				:placeholder="
+					t('pipelinq', 'Optional — at least 20 characters recommended')
+				"
 				rows="3" />
-			<NcCheckboxRadioSwitch
-				v-model="form.vogScreening"
-				type="checkbox">
+			<NcCheckboxRadioSwitch v-model="form.vogScreening" type="checkbox">
 				{{ t('pipelinq', 'VOG-screening (extra Justis-vlag)') }}
 			</NcCheckboxRadioSwitch>
 		</form>
@@ -57,10 +57,10 @@
 <script>
 import {
 	NcButton,
+	NcCheckboxRadioSwitch,
 	NcDialog,
 	NcSelect,
 	NcTextArea,
-	NcCheckboxRadioSwitch,
 } from '@nextcloud/vue'
 
 export default {
@@ -72,6 +72,7 @@ export default {
 		NcTextArea,
 		NcCheckboxRadioSwitch,
 	},
+
 	emits: ['close', 'submit'],
 	data() {
 		return {
@@ -83,38 +84,73 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		reasonOptions() {
 			return [
-				{ value: 'Behandeling AVG-inzageverzoek art. 15', label: this.t('pipelinq', 'Behandeling AVG-inzageverzoek art. 15') },
-				{ value: 'Behandeling AVG-verwijderverzoek art. 17', label: this.t('pipelinq', 'Behandeling AVG-verwijderverzoek art. 17') },
-				{ value: 'VOG-screening', label: this.t('pipelinq', 'VOG-screening') },
-				{ value: 'Reguliere verzoekbehandeling', label: this.t('pipelinq', 'Regular request handling') },
+				{
+					value: 'Behandeling AVG-inzageverzoek art. 15',
+					label: this.t(
+						'pipelinq',
+						'Behandeling AVG-inzageverzoek art. 15',
+					),
+				},
+				{
+					value: 'Behandeling AVG-verwijderverzoek art. 17',
+					label: this.t(
+						'pipelinq',
+						'Behandeling AVG-verwijderverzoek art. 17',
+					),
+				},
+				{
+					value: 'VOG-screening',
+					label: this.t('pipelinq', 'VOG-screening'),
+				},
+				{
+					value: 'Reguliere verzoekbehandeling',
+					label: this.t('pipelinq', 'Regular request handling'),
+				},
 				{ value: 'Overig', label: this.t('pipelinq', 'Other') },
 			]
 		},
+
 		bindingOptions() {
 			return [
-				{ value: 'Publieke taak — Wet BRP art. 3.3', label: this.t('pipelinq', 'Publieke taak — Wet BRP art. 3.3') },
-				{ value: 'AVG art. 6 lid 1 sub e', label: this.t('pipelinq', 'AVG art. 6 lid 1 sub e (publieke taak)') },
-				{ value: 'Rechtmatig belang', label: this.t('pipelinq', 'Rechtmatig belang') },
+				{
+					value: 'Publieke taak — Wet BRP art. 3.3',
+					label: this.t('pipelinq', 'Publieke taak — Wet BRP art. 3.3'),
+				},
+				{
+					value: 'AVG art. 6 lid 1 sub e',
+					label: this.t(
+						'pipelinq',
+						'AVG art. 6 lid 1 sub e (publieke taak)',
+					),
+				},
+				{
+					value: 'Rechtmatig belang',
+					label: this.t('pipelinq', 'Rechtmatig belang'),
+				},
 				{ value: 'Overig', label: this.t('pipelinq', 'Other') },
 			]
 		},
+
 		valid() {
 			return Boolean(this.form.verzoekreden) && Boolean(this.form.doelbinding)
 		},
 	},
+
 	methods: {
 		submit() {
 			if (!this.valid) return
-			const reden = this.form.toelichting && this.form.toelichting.length >= 20
-				? `${this.form.verzoekreden} — ${this.form.toelichting}`
-				: this.form.verzoekreden
+			const reden =
+				this.form.toelichting && this.form.toelichting.length >= 20
+					? `${this.form.verzoekreden} — ${this.form.toelichting}`
+					: this.form.verzoekreden
 			this.$emit('submit', {
 				verzoekreden: reden,
 				doelbinding: this.form.doelbinding,
-				grondslag: this.form.doelbinding,
+				basis: this.form.doelbinding,
 				vogScreening: this.form.vogScreening,
 			})
 		},

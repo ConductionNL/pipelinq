@@ -119,7 +119,7 @@ class HaalCentraalClient {
 	 * configured envs keep working until an operator enables the OR source.
 	 *
 	 * @param string $bsn Raw 9-digit BSN.
-	 * @param string|null $verzoekIdContext Optional context UUID for correlation logging.
+	 * @param string|null $requestIdContext Optional context UUID for correlation logging.
 	 *
 	 * @return array<string,mixed>|null
 	 *
@@ -133,7 +133,7 @@ class HaalCentraalClient {
 	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Linear OR-first then legacy request/response handling.
 	 * @SuppressWarnings(PHPMD.StaticAccess)          BsnValidationService::mask is a pure stateless helper.
 	 */
-	public function lookupPersoon(string $bsn, ?string $verzoekIdContext = null): ?array {
+	public function lookupPersoon(string $bsn, ?string $requestIdContext = null): ?array {
 		$maskedBsn = BsnValidationService::mask($bsn);
 
 		// OR-first: try the OpenRegister BRP leaf, which relays the raw HAL+JSON
@@ -208,21 +208,21 @@ class HaalCentraalClient {
 			}
 
 			$payload = json_decode((string)$response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-			$persoon = $this->parseFirstPersoon(payload: $payload);
-			if ($persoon === null) {
+			$person = $this->parseFirstPerson(payload: $payload);
+			if ($person === null) {
 				return null;
 			}
 
-			$persoon['_correlationId'] = $correlationId;
-			$persoon['_responseDurationMs'] = $duration;
-			$persoon['_responseStatus'] = $status;
-			return $persoon;
+			$person['_correlationId'] = $correlationId;
+			$person['_responseDurationMs'] = $duration;
+			$person['_responseStatus'] = $status;
+			return $person;
 		} catch (HaalCentraalException $e) {
 			throw $e;
 		} catch (Throwable $e) {
 			$this->logger->error(
 				'HaalCentraal transport error',
-				['bsn' => $maskedBsn, 'error' => $e->getMessage(), 'verzoekId' => $verzoekIdContext]
+				['bsn' => $maskedBsn, 'error' => $e->getMessage(), 'requestId' => $requestIdContext]
 			);
 			throw new HaalCentraalException(
 				'BRP momenteel niet bereikbaar — probeer over enkele minuten opnieuw.',
@@ -322,7 +322,7 @@ class HaalCentraalClient {
 			return null;
 		}
 
-		$persoon = $this->normalisePerson(raw: $first);
+		$person = $this->normalisePerson(raw: $first);
 
 		$meta = [];
 		if (is_array($payload['meta'] ?? null) === true) {
@@ -334,21 +334,21 @@ class HaalCentraalClient {
 			$correlationId = (string)$correlationId;
 		}
 
-		$persoon['_correlationId'] = $correlationId;
-		$persoon['_responseDurationMs'] = (int)($meta['durationMs'] ?? 0);
-		$persoon['_responseStatus'] = (int)($meta['status'] ?? 200);
+		$person['_correlationId'] = $correlationId;
+		$person['_responseDurationMs'] = (int)($meta['durationMs'] ?? 0);
+		$person['_responseStatus'] = (int)($meta['status'] ?? 200);
 
 		$this->logger->info(
 			'BRP OR leaf lookup succeeded',
 			[
 				'bsn' => $maskedBsn,
 				'correlationId' => $correlationId,
-				'duration_ms' => $persoon['_responseDurationMs'],
+				'duration_ms' => $person['_responseDurationMs'],
 				'source' => 'openregister-leaf',
 			]
 		);
 
-		return $persoon;
+		return $person;
 	}//end lookupViaOpenRegister()
 
 	/**
@@ -558,8 +558,8 @@ class HaalCentraalClient {
 			'geboorte.plaats',
 			'geboorte.land',
 			'geslacht',
-			'verblijfplaats',
-			'indicatieGeheim',
+			'residence',
+			'indicationSecret',
 		];
 	}//end getDefaultFields()
 
@@ -570,7 +570,7 @@ class HaalCentraalClient {
 	 *
 	 * @return array<string,mixed>|null
 	 */
-	private function parseFirstPersoon(mixed $payload): ?array {
+	private function parseFirstPerson(mixed $payload): ?array {
 		if (is_array($payload) === false) {
 			return null;
 		}
@@ -596,19 +596,19 @@ class HaalCentraalClient {
 	 * @return array<string,mixed>
 	 */
 	private function normalisePerson(array $raw): array {
-		$naam = [];
-		if (is_array($raw['naam'] ?? null) === true) {
-			$naam = $raw['naam'];
+		$name = [];
+		if (is_array($raw['name'] ?? null) === true) {
+			$name = $raw['name'];
 		}
 
-		$geboorte = [];
+		$birth = [];
 		if (is_array($raw['geboorte'] ?? null) === true) {
-			$geboorte = $raw['geboorte'];
+			$birth = $raw['geboorte'];
 		}
 
-		$verblijfplaats = [];
-		if (is_array($raw['verblijfplaats'] ?? null) === true) {
-			$verblijfplaats = $raw['verblijfplaats'];
+		$residence = [];
+		if (is_array($raw['residence'] ?? null) === true) {
+			$residence = $raw['residence'];
 		}
 
 		$geslacht = $raw['geslacht'] ?? '';
@@ -618,32 +618,32 @@ class HaalCentraalClient {
 
 		$geslacht = (string)$geslacht;
 
-		$geboorteplaats = $geboorte['plaats'] ?? '';
-		if (is_array($geboorteplaats) === true) {
-			$geboorteplaats = ($geboorteplaats['omschrijving'] ?? '');
+		$birthPlace = $birth['plaats'] ?? '';
+		if (is_array($birthPlace) === true) {
+			$birthPlace = ($birthPlace['omschrijving'] ?? '');
 		}
 
-		$geboorteplaats = (string)$geboorteplaats;
+		$birthPlace = (string)$birthPlace;
 
-		$geboorteland = $geboorte['land'] ?? '';
-		if (is_array($geboorteland) === true) {
-			$geboorteland = ($geboorteland['code'] ?? '');
+		$birthCountry = $birth['land'] ?? '';
+		if (is_array($birthCountry) === true) {
+			$birthCountry = ($birthCountry['code'] ?? '');
 		}
 
-		$geboorteland = (string)$geboorteland;
+		$birthCountry = (string)$birthCountry;
 
 		return [
-			'voornamen' => (string)($naam['voornamen'] ?? ''),
-			'voorletters' => (string)($naam['voorletters'] ?? ''),
-			'voorvoegsel' => (string)($naam['voorvoegsel'] ?? ''),
-			'geslachtsnaam' => (string)($naam['geslachtsnaam'] ?? ''),
-			'adellijkeTitel' => (string)($naam['adellijkeTitelPredicaat'] ?? ''),
-			'geboortedatum' => (string)($geboorte['datum']['datum'] ?? $geboorte['datum'] ?? ''),
-			'geboorteplaats' => $geboorteplaats,
-			'geboorteland' => $geboorteland,
+			'givenNames' => (string)($name['givenNames'] ?? ''),
+			'initials' => (string)($name['initials'] ?? ''),
+			'namePrefix' => (string)($name['namePrefix'] ?? ''),
+			'surname' => (string)($name['surname'] ?? ''),
+			'nobiliaryTitle' => (string)($name['adellijkeTitelPredicaat'] ?? ''),
+			'dateOfBirth' => (string)($birth['datum']['datum'] ?? $birth['datum'] ?? ''),
+			'birthPlace' => $birthPlace,
+			'birthCountry' => $birthCountry,
 			'geslacht' => self::mapGeslacht(code: $geslacht),
-			'verblijfplaats' => self::mapVerblijfplaats(verblijfplaats: $verblijfplaats),
-			'indicatieGeheim' => (string)($raw['indicatieGeheim'] ?? '0'),
+			'residence' => self::mapResidence(residence: $residence),
+			'indicationSecret' => (string)($raw['indicationSecret'] ?? '0'),
 			'bronsysteem' => 'HaalCentraal-BRP-v2.0',
 		];
 	}//end normalisePerson()
@@ -671,21 +671,21 @@ class HaalCentraalClient {
 	/**
 	 * Map a HaalCentraal verblijfplaats subtree to the schema shape.
 	 *
-	 * @param array<string,mixed> $verblijfplaats The HaalCentraal verblijfplaats subtree.
+	 * @param array<string,mixed> $residence The HaalCentraal verblijfplaats subtree.
 	 *
 	 * @return array<string,mixed>
 	 */
-	private static function mapVerblijfplaats(array $verblijfplaats): array {
-		$adres = $verblijfplaats;
-		if (is_array($verblijfplaats['verblijfadres'] ?? null) === true) {
-			$adres = $verblijfplaats['verblijfadres'];
+	private static function mapResidence(array $residence): array {
+		$adres = $residence;
+		if (is_array($residence['verblijfadres'] ?? null) === true) {
+			$adres = $residence['verblijfadres'];
 		}
 
-		$land = $verblijfplaats['land'] ?? ($adres['land'] ?? null);
+		$land = $residence['land'] ?? ($adres['land'] ?? null);
 
-		$huisnummer = null;
+		$houseNumber = null;
 		if (isset($adres['huisnummer']) === true) {
-			$huisnummer = (int)$adres['huisnummer'];
+			$houseNumber = (int)$adres['huisnummer'];
 		}
 
 		if (is_array($land) === true) {
@@ -696,7 +696,7 @@ class HaalCentraalClient {
 
 		return [
 			'straat' => (string)($adres['officieleStraatnaam'] ?? $adres['straat'] ?? ''),
-			'huisnummer' => $huisnummer,
+			'huisnummer' => $houseNumber,
 			'huisletter' => (string)($adres['huisletter'] ?? ''),
 			'huisnummertoevoeging' => (string)($adres['huisnummertoevoeging'] ?? ''),
 			'postcode' => (string)($adres['postcode'] ?? ''),

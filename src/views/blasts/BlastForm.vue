@@ -5,9 +5,13 @@
 		<header class="blast-form__header">
 			<h2>{{ t('pipelinq', 'New blast') }}</h2>
 			<ol class="blast-form__steps">
-				<li v-for="(s, idx) in steps"
+				<li
+					v-for="(s, idx) in steps"
 					:key="s.key"
-					:class="{ 'is-current': idx === currentStep, 'is-done': idx < currentStep }">
+					:class="{
+						'is-current': idx === currentStep,
+						'is-done': idx < currentStep,
+					}">
 					{{ s.label }}
 				</li>
 			</ol>
@@ -21,18 +25,20 @@
 				<label class="blast-form__label" for="blast-form-name">
 					{{ t('pipelinq', 'Blast name') }} *
 				</label>
-				<input id="blast-form-name"
+				<input
+					id="blast-form-name"
 					v-model="model.name"
 					type="text"
 					class="blast-form__input"
-					:placeholder="t('pipelinq', 'Q4 Gemeente Outreach')">
+					:placeholder="t('pipelinq', 'Q4 Gemeente Outreach')" />
 			</section>
 
 			<!-- Step 2: segment -->
 			<section v-if="step === 'segment'" class="blast-form__panel">
-				<NcSelect v-model="selectedSegment"
+				<NcSelect
+					v-model="selectedSegment"
 					:options="segments"
-					:input-label="t('pipelinq', 'Segment') + ' *'"
+					:inputLabel="t('pipelinq', 'Segment') + ' *'"
 					label="name"
 					:loading="segmentsLoading" />
 				<p v-if="selectedSegment" class="blast-form__hint">
@@ -43,26 +49,32 @@
 
 			<!-- Step 3: template -->
 			<section v-if="step === 'template'" class="blast-form__panel">
-				<NcSelect v-model="selectedTemplate"
+				<NcSelect
+					v-model="selectedTemplate"
 					:options="filteredTemplates"
-					:input-label="t('pipelinq', 'Template') + ' *'"
+					:inputLabel="t('pipelinq', 'Template') + ' *'"
 					label="name"
 					:loading="templatesLoading" />
-				<p v-if="templateValidationError" class="blast-form__error" role="alert">
+				<p
+					v-if="templateValidationError"
+					class="blast-form__error"
+					role="alert">
 					{{ templateValidationError }}
 				</p>
 			</section>
 
 			<!-- Step 4: channel -->
 			<section v-if="step === 'channel'" class="blast-form__panel">
-				<NcSelect v-model="selectedChannel"
+				<NcSelect
+					v-model="selectedChannel"
 					:options="channelOptions"
-					:input-label="t('pipelinq', 'Channel') + ' *'"
+					:inputLabel="t('pipelinq', 'Channel') + ' *'"
 					label="label"
 					:clearable="false" />
-				<NcSelect v-model="selectedConnectorSource"
+				<NcSelect
+					v-model="selectedConnectorSource"
 					:options="connectorSources"
-					:input-label="t('pipelinq', 'Connector source')"
+					:inputLabel="t('pipelinq', 'Connector source')"
 					label="label"
 					:loading="connectorSourcesLoading" />
 			</section>
@@ -72,10 +84,11 @@
 				<label class="blast-form__label" for="blast-form-scheduled-for">
 					{{ t('pipelinq', 'Send at') }}
 				</label>
-				<input id="blast-form-scheduled-for"
+				<input
+					id="blast-form-scheduled-for"
 					v-model="model.scheduledFor"
 					type="datetime-local"
-					class="blast-form__input">
+					class="blast-form__input" />
 				<p class="blast-form__hint">
 					{{ t('pipelinq', 'Leave empty to send immediately on submit.') }}
 				</p>
@@ -84,22 +97,29 @@
 			<!-- Step 6: A/B -->
 			<section v-if="step === 'ab'" class="blast-form__panel">
 				<label class="blast-form__checkbox">
-					<input v-model="abEnabled" type="checkbox">
+					<input v-model="abEnabled" type="checkbox" />
 					{{ t('pipelinq', 'Run an A/B variant test') }}
 				</label>
 				<div v-if="abEnabled" class="blast-form__ab">
 					<label class="blast-form__label" for="blast-form-ab-split">
-						{{ t('pipelinq', 'Variant A share (%)') }}: {{ model.abSplitPercent }}
+						{{ t('pipelinq', 'Variant A share (%)') }}:
+						{{ model.abSplitPercent }}
 					</label>
-					<input id="blast-form-ab-split"
+					<input
+						id="blast-form-ab-split"
 						v-model.number="model.abSplitPercent"
 						type="range"
 						min="0"
 						max="100"
 						step="5"
-						class="blast-form__range">
+						class="blast-form__range" />
 					<p class="blast-form__hint">
-						{{ t('pipelinq', 'Variant B will receive the remaining audience share.') }}
+						{{
+							t(
+								'pipelinq',
+								'Variant B will receive the remaining audience share.',
+							)
+						}}
 					</p>
 				</div>
 			</section>
@@ -113,38 +133,43 @@
 			<NcButton variant="tertiary" @click="$router.push({ name: 'Blasts' })">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton v-if="currentStep > 0"
-				variant="secondary"
-				@click="prev">
+			<NcButton v-if="currentStep > 0" variant="secondary" @click="prev">
 				{{ t('pipelinq', 'Back') }}
 			</NcButton>
-			<NcButton v-if="!isLastStep"
+			<NcButton
+				v-if="!isLastStep"
 				variant="primary"
 				:disabled="!canAdvance"
 				@click="next">
 				{{ t('pipelinq', 'Next') }}
 			</NcButton>
-			<NcButton v-else
+			<NcButton
+				v-else
 				variant="primary"
 				:disabled="!canSubmit || submitting"
 				@click="submit">
-				{{ submitting ? t('pipelinq', 'Saving...') : t('pipelinq', 'Create blast') }}
+				{{
+					submitting
+						? t('pipelinq', 'Saving...')
+						: t('pipelinq', 'Create blast')
+				}}
 			</NcButton>
 		</footer>
 
-		<MissingConsentModal v-if="showConsentModal"
+		<MissingConsentModal
+			v-if="showConsentModal"
 			:contacts="missingConsentContacts"
 			:channel="selectedChannel"
 			@cancel="onConsentCancel"
-			@request-consent="onConsentRequest"
-			@skip-and-send="onConsentSkip" />
+			@requestConsent="onConsentRequest"
+			@skipAndSend="onConsentSkip" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import MissingConsentModal from '../../modals/MissingConsentModal.vue'
 
 const STEPS = [
@@ -164,6 +189,7 @@ export default {
 		NcSelect,
 		MissingConsentModal,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -179,6 +205,7 @@ export default {
 				scheduledFor: '',
 				abSplitPercent: 50,
 			},
+
 			abEnabled: false,
 			segments: [],
 			templates: [],
@@ -196,6 +223,7 @@ export default {
 			consentDecision: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * The step descriptors with localised labels.
@@ -203,8 +231,12 @@ export default {
 		 * @return {Array<{key:string,label:string}>}
 		 */
 		steps() {
-			return STEPS.map((s) => ({ key: s.key, label: this.t('pipelinq', s.labelKey) }))
+			return STEPS.map((s) => ({
+				key: s.key,
+				label: this.t('pipelinq', s.labelKey),
+			}))
 		},
+
 		/**
 		 * The current step key.
 		 *
@@ -213,6 +245,7 @@ export default {
 		step() {
 			return STEPS[this.currentStep].key
 		},
+
 		/**
 		 * Whether this is the last step (submit button shown instead of Next).
 		 *
@@ -221,6 +254,7 @@ export default {
 		isLastStep() {
 			return this.currentStep === STEPS.length - 1
 		},
+
 		/**
 		 * Channel options shown on the channel step.
 		 *
@@ -232,6 +266,7 @@ export default {
 				{ value: 'sms', label: this.t('pipelinq', 'SMS') },
 			]
 		},
+
 		/**
 		 * Templates filtered by the selected channel (email/sms must match).
 		 *
@@ -243,6 +278,7 @@ export default {
 			}
 			return this.templates.filter((t) => t.channel === this.selectedChannel)
 		},
+
 		/**
 		 * Returns true when the current step's required input is satisfied.
 		 *
@@ -250,18 +286,19 @@ export default {
 		 */
 		canAdvance() {
 			switch (this.step) {
-			case 'name':
-				return !!(this.model.name && this.model.name.trim())
-			case 'segment':
-				return !!this.selectedSegment
-			case 'template':
-				return !!this.selectedTemplate && !this.templateValidationError
-			case 'channel':
-				return !!this.selectedChannel
-			default:
-				return true
+				case 'name':
+					return !!(this.model.name && this.model.name.trim())
+				case 'segment':
+					return !!this.selectedSegment
+				case 'template':
+					return !!this.selectedTemplate && !this.templateValidationError
+				case 'channel':
+					return !!this.selectedChannel
+				default:
+					return true
 			}
 		},
+
 		/**
 		 * Returns true when every required step has been satisfied so the user
 		 * can submit. Schedule + A/B are optional but channel/segment/template
@@ -270,21 +307,26 @@ export default {
 		 * @return {boolean}
 		 */
 		canSubmit() {
-			return !!(this.model.name && this.model.name.trim())
+			return (
+				!!(this.model.name && this.model.name.trim())
 				&& !!this.selectedSegment
 				&& !!this.selectedTemplate
 				&& !!this.selectedChannel
 				&& !this.templateValidationError
+			)
 		},
 	},
+
 	watch: {
 		selectedSegment(option) {
 			this.model.segmentId = option?.id || ''
 		},
+
 		selectedTemplate(option) {
 			this.model.templateId = option?.id || ''
 			this.validateTemplate()
 		},
+
 		selectedChannel(value) {
 			this.model.channel = value
 			// Drop the template if it no longer matches the channel.
@@ -294,9 +336,11 @@ export default {
 			}
 			this.validateTemplate()
 		},
+
 		selectedConnectorSource(option) {
 			this.model.connectorSourceId = option?.id || ''
 		},
+
 		abEnabled(on) {
 			if (!on) {
 				this.model.abSplitPercent = 100
@@ -305,11 +349,13 @@ export default {
 			}
 		},
 	},
+
 	mounted() {
 		this.loadSegments()
 		this.loadTemplates()
 		this.loadConnectorSources()
 	},
+
 	methods: {
 		/**
 		 * Load all segments for the segment picker.
@@ -319,7 +365,9 @@ export default {
 		async loadSegments() {
 			this.segmentsLoading = true
 			try {
-				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/segments'))
+				const { data } = await axios.get(
+					generateUrl('/apps/pipelinq/api/segments'),
+				)
 				this.segments = data?.data || data?.results || data || []
 			} catch (_e) {
 				this.segments = []
@@ -327,13 +375,16 @@ export default {
 				this.segmentsLoading = false
 			}
 		},
+
 		/**
 		 * Load all campaign templates.
 		 */
 		async loadTemplates() {
 			this.templatesLoading = true
 			try {
-				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/templates'))
+				const { data } = await axios.get(
+					generateUrl('/apps/pipelinq/api/templates'),
+				)
 				this.templates = data?.data || data?.results || data || []
 			} catch (_e) {
 				this.templates = []
@@ -341,6 +392,7 @@ export default {
 				this.templatesLoading = false
 			}
 		},
+
 		/**
 		 * Load OpenConnector sources usable as email/SMS dispatch endpoints.
 		 */
@@ -361,6 +413,7 @@ export default {
 				this.connectorSourcesLoading = false
 			}
 		},
+
 		/**
 		 * Call the template validation endpoint for email templates; SMS
 		 * templates skip the check (per ComplianceService).
@@ -373,16 +426,27 @@ export default {
 				return
 			}
 			try {
-				const url = generateUrl(`/apps/pipelinq/api/templates/${this.selectedTemplate.id}/validate`)
-				const { data } = await axios.post(url, { channel: this.selectedChannel })
+				const url = generateUrl(
+					`/apps/pipelinq/api/templates/${this.selectedTemplate.id}/validate`,
+				)
+				const { data } = await axios.post(url, {
+					channel: this.selectedChannel,
+				})
 				if (data?.valid === false) {
-					this.templateValidationError = data?.error || this.t('pipelinq', 'Template is missing the unsubscribe token or physical address.')
+					this.templateValidationError =
+						data?.error
+						|| this.t(
+							'pipelinq',
+							'Template is missing the unsubscribe token or physical address.',
+						)
 				}
 			} catch (e) {
 				const msg = e?.response?.data?.error
-				this.templateValidationError = msg || this.t('pipelinq', 'Template validation failed.')
+				this.templateValidationError =
+					msg || this.t('pipelinq', 'Template validation failed.')
 			}
 		},
+
 		/**
 		 * Advance to the next step (validations gate via canAdvance).
 		 */
@@ -391,6 +455,7 @@ export default {
 				this.currentStep += 1
 			}
 		},
+
 		/**
 		 * Step back; clears form-level submit errors.
 		 */
@@ -400,6 +465,7 @@ export default {
 			}
 			this.submitError = ''
 		},
+
 		/**
 		 * Run a compliance preflight before the final POST. When contacts are
 		 * missing consent the missing-consent modal is shown with skip/request/
@@ -413,8 +479,12 @@ export default {
 				return true
 			}
 			try {
-				const url = generateUrl(`/apps/pipelinq/api/segments/${this.selectedSegment.id}/compliance`)
-				const { data } = await axios.get(url, { params: { channel: this.selectedChannel } })
+				const url = generateUrl(
+					`/apps/pipelinq/api/segments/${this.selectedSegment.id}/compliance`,
+				)
+				const { data } = await axios.get(url, {
+					params: { channel: this.selectedChannel },
+				})
 				const missing = data?.missingConsent || data?.missing || []
 				if (missing.length === 0) {
 					return true
@@ -424,10 +494,14 @@ export default {
 				return await this.awaitConsentDecision()
 			} catch (_e) {
 				// On preflight failure, surface the error inline and block the send.
-				this.submitError = this.t('pipelinq', 'Could not run pre-send compliance check.')
+				this.submitError = this.t(
+					'pipelinq',
+					'Could not run pre-send compliance check.',
+				)
 				return false
 			}
 		},
+
 		/**
 		 * Block until the user resolves the missing-consent modal.
 		 *
@@ -447,12 +521,14 @@ export default {
 				})
 			})
 		},
+
 		/**
 		 * Modal handler: user cancelled — abort send.
 		 */
 		onConsentCancel() {
 			this.consentDecision = 'cancel'
 		},
+
 		/**
 		 * Modal handler: user wants to launch a consent-request flow. We
 		 * navigate them to a (forthcoming) consent-request screen but do not
@@ -461,15 +537,20 @@ export default {
 		onConsentRequest() {
 			this.consentDecision = 'request'
 			OC.Notification.showTemporary(
-				this.t('pipelinq', 'A consent-request flow will be opened for the listed contacts.'),
+				this.t(
+					'pipelinq',
+					'A consent-request flow will be opened for the listed contacts.',
+				),
 			)
 		},
+
 		/**
 		 * Modal handler: user accepted skip-and-send.
 		 */
 		onConsentSkip() {
 			this.consentDecision = 'skip'
 		},
+
 		/**
 		 * Final submit: preflight compliance, POST /api/blasts, redirect to monitor.
 		 *
@@ -493,16 +574,23 @@ export default {
 					scheduledFor: this.model.scheduledFor || null,
 					abSplitPercent: this.abEnabled ? this.model.abSplitPercent : 100,
 				}
-				const { data } = await axios.post(generateUrl('/apps/pipelinq/api/blasts'), payload)
+				const { data } = await axios.post(
+					generateUrl('/apps/pipelinq/api/blasts'),
+					payload,
+				)
 				const blastId = data?.id || data?.data?.id
 				if (blastId) {
-					this.$router.push({ name: 'BlastMonitor', params: { id: blastId } })
+					this.$router.push({
+						name: 'BlastMonitor',
+						params: { id: blastId },
+					})
 				} else {
 					this.$router.push({ name: 'Blasts' })
 				}
 			} catch (e) {
 				const msg = e?.response?.data?.error
-				this.submitError = msg || this.t('pipelinq', 'Failed to create blast.')
+				this.submitError =
+					msg || this.t('pipelinq', 'Failed to create blast.')
 			} finally {
 				this.submitting = false
 			}

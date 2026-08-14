@@ -108,7 +108,7 @@ class BrpMonitorJob extends TimedJob {
 			$records = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
 				config: [
 					'filters' => [
-						'actie' => 'brp-lookup-uitgevoerd',
+						'action' => 'brp-lookup-uitgevoerd',
 						'register' => $register,
 						'schema' => $schema,
 					],
@@ -121,15 +121,15 @@ class BrpMonitorJob extends TimedJob {
 			$hits = $audit['hits'];
 
 			// Cache-hit ratio is sourced from brpLookupVerzoek.responseInCache (more accurate).
-			$verzoekSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
-			$verzoek = $this->aggregateVerzoeken(
+			$requestSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
+			$request = $this->aggregateVerzoeken(
 				register: $register,
-				verzoekSchema: $verzoekSchema,
+				requestSchema: $requestSchema,
 				window: $window
 			);
-			$totalVerzoek = $verzoek['totalVerzoek'];
-			$cacheHits = $verzoek['cacheHits'];
-			$durations = $verzoek['durations'];
+			$totalRequest = $request['totalVerzoek'];
+			$cacheHits = $request['cacheHits'];
+			$durations = $request['durations'];
 
 			$errorRate = 0.0;
 			if ($total > 0) {
@@ -137,8 +137,8 @@ class BrpMonitorJob extends TimedJob {
 			}
 
 			$cacheHitRatio = 0.0;
-			if ($totalVerzoek > 0) {
-				$cacheHitRatio = round($cacheHits / $totalVerzoek, 4);
+			if ($totalRequest > 0) {
+				$cacheHitRatio = round($cacheHits / $totalRequest, 4);
 			}
 
 			$avgResponseMs = 0;
@@ -206,13 +206,13 @@ class BrpMonitorJob extends TimedJob {
 		$hits = 0;
 		foreach ($records as $rec) {
 			$arr = $this->recordToArray(rec: $rec);
-			$tijdstip = (string)($arr['tijdstip'] ?? '');
-			if ($tijdstip === '') {
+			$moment = (string)($arr['moment'] ?? '');
+			if ($moment === '') {
 				continue;
 			}
 
 			try {
-				$timestamp = new DateTimeImmutable($tijdstip);
+				$timestamp = new DateTimeImmutable($moment);
 			} catch (Throwable $e) {
 				continue;
 			}
@@ -239,32 +239,32 @@ class BrpMonitorJob extends TimedJob {
 	 * Aggregate brpLookupVerzoek records for cache-hit ratio and durations.
 	 *
 	 * @param string $register Register slug.
-	 * @param string $verzoekSchema brpLookupVerzoek schema slug (empty = skip).
+	 * @param string $requestSchema brpLookupVerzoek schema slug (empty = skip).
 	 * @param DateTimeImmutable $window Lower time bound (inclusive).
 	 *
 	 * @return array{totalVerzoek: int, cacheHits: int, durations: array<int, int>}
 	 */
-	private function aggregateVerzoeken(string $register, string $verzoekSchema, DateTimeImmutable $window): array {
-		if ($verzoekSchema === '') {
+	private function aggregateVerzoeken(string $register, string $requestSchema, DateTimeImmutable $window): array {
+		if ($requestSchema === '') {
 			return ['totalVerzoek' => 0, 'cacheHits' => 0, 'durations' => []];
 		}
 
-		$totalVerzoek = 0;
+		$totalRequest = 0;
 		$cacheHits = 0;
 		$durations = [];
 		$verzoeken = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
 			config: [
 				'filters' => [
 					'register' => $register,
-					'schema' => $verzoekSchema,
+					'schema' => $requestSchema,
 				],
 			]
 		);
 		foreach (($verzoeken ?? []) as $rec) {
 			$arr = $this->recordToArray(rec: $rec);
-			$tijdstip = (string)($arr['verzoekTijdstip'] ?? '');
+			$moment = (string)($arr['requestMoment'] ?? '');
 			try {
-				$timestamp = new DateTimeImmutable($tijdstip);
+				$timestamp = new DateTimeImmutable($moment);
 			} catch (Throwable $e) {
 				continue;
 			}
@@ -273,17 +273,17 @@ class BrpMonitorJob extends TimedJob {
 				continue;
 			}
 
-			$totalVerzoek++;
+			$totalRequest++;
 			if (($arr['responseInCache'] ?? false) === true) {
 				$cacheHits++;
 			}
 
-			if (isset($arr['responseDuurMs']) === true) {
-				$durations[] = (int)$arr['responseDuurMs'];
+			if (isset($arr['responseDurationMs']) === true) {
+				$durations[] = (int)$arr['responseDurationMs'];
 			}
 		}//end foreach
 
-		return ['totalVerzoek' => $totalVerzoek, 'cacheHits' => $cacheHits, 'durations' => $durations];
+		return ['totalVerzoek' => $totalRequest, 'cacheHits' => $cacheHits, 'durations' => $durations];
 	}//end aggregateVerzoeken()
 
 	/**

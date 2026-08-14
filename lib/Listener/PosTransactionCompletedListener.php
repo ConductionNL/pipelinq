@@ -97,12 +97,12 @@ class PosTransactionCompletedListener implements IEventListener {
 
 			// The customer link on a posTransaction is `customer` — a uuid ref to a
 			// pipelinq contact, which is exactly what processPosTransaction() calls
-			// its $klantId. `klantId` / `customerId` / `contactUid` are a retired
+			// its $customerId. `klantId` / `customerId` / `contactUid` are a retired
 			// vocabulary that the posTransaction schema has never declared and that
 			// nothing in this codebase writes, so this read resolved to '' on every
 			// real transaction and returned before awarding anything (pipelinq#807).
-			$klantId = (string)($data['customer'] ?? $data['klantId'] ?? $data['customerId'] ?? $data['contactUid'] ?? '');
-			if ($klantId === '') {
+			$customerId = (string)($data['customer'] ?? $data['klantId'] ?? $data['customerId'] ?? $data['contactUid'] ?? '');
+			if ($customerId === '') {
 				// Anonymous transaction; no points to award.
 				return;
 			}
@@ -120,7 +120,7 @@ class PosTransactionCompletedListener implements IEventListener {
 			$context = [
 				'amount' => (float)($data['total'] ?? $data['totaalbedrag'] ?? $data['amount'] ?? 0),
 				'category' => (string)($data['category'] ?? ''),
-				'channel' => (string)($data['kanaal'] ?? $data['channel'] ?? 'offline'),
+				'channel' => (string)($data['channel'] ?? 'offline'),
 				'segment' => (string)($data['segment'] ?? ''),
 				'timestamp' => (string)($data['settledAt'] ?? $data['voltooidOp'] ?? $data['timestamp'] ?? ''),
 				'posTransactionId' => $transactionId,
@@ -128,7 +128,7 @@ class PosTransactionCompletedListener implements IEventListener {
 				'trigger' => 'purchase',
 			];
 
-			$this->loyaltyEngineService->processPosTransaction(klantId: $klantId, transaction: $context);
+			$this->loyaltyEngineService->processPosTransaction(customerId: $customerId, transaction: $context);
 		} catch (Throwable $e) {
 			// CRITICAL: never throw — POS flow must not be affected.
 			$this->logger->warning(

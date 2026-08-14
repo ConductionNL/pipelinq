@@ -4,41 +4,50 @@
 -->
 <template>
 	<CnDetailPage
-		:title="isEdit ? t('pipelinq', 'Edit destination') : t('pipelinq', 'New destination')"
+		:title="
+			isEdit
+				? t('pipelinq', 'Edit destination')
+				: t('pipelinq', 'New destination')
+		"
 		:loading="loading"
 		@back="goBack">
 		<CnDetailCard :title="t('pipelinq', 'Destination')">
 			<div class="export-form">
-				<NcTextField
-					v-model="model.name"
-					:label="t('pipelinq', 'Name')" />
+				<NcTextField v-model="model.name" :label="t('pipelinq', 'Name')" />
 				<NcSelect
-					:model-value="selectedType"
+					:modelValue="selectedType"
 					:options="typeOptions"
-					:input-label="t('pipelinq', 'Type')"
+					:inputLabel="t('pipelinq', 'Type')"
 					:placeholder="t('pipelinq', 'Choose a destination type…')"
 					label="label"
 					:clearable="false"
-					@update:model-value="(o) => model.type = o ? o.id : ''" />
+					@update:modelValue="(o) => (model.type = o ? o.id : '')" />
 				<NcTextField
 					v-model="model.connectorSourceId"
 					:label="t('pipelinq', 'OpenConnector source ID')"
-					:helper-text="t('pipelinq', 'The OpenConnector source that holds the warehouse credentials')" />
+					:helperText="
+						t(
+							'pipelinq',
+							'The OpenConnector source that holds the warehouse credentials',
+						)
+					" />
 				<NcTextField
 					v-model="model.pathTemplate"
 					:label="t('pipelinq', 'Path template')"
-					:placeholder="'exports/{schema}/{partition}'" />
+					placeholder="exports/{schema}/{partition}" />
 				<NcSelect
-					:model-value="selectedCompression"
+					:modelValue="selectedCompression"
 					:options="compressionOptions"
-					:input-label="t('pipelinq', 'Compression')"
+					:inputLabel="t('pipelinq', 'Compression')"
 					label="label"
 					:clearable="false"
-					@update:model-value="(o) => model.compression = o ? o.id : 'none'" />
+					@update:modelValue="
+						(o) => (model.compression = o ? o.id : 'none')
+					" />
 				<NcTextField
 					v-model="model.namingConvention"
 					:label="t('pipelinq', 'Naming convention')"
-					:placeholder="'{schema}_{run_id}_{timestamp}'" />
+					placeholder="{schema}_{run_id}_{timestamp}" />
 				<NcCheckboxRadioSwitch
 					v-model="model.encryptionEnabled"
 					type="switch">
@@ -54,7 +63,10 @@
 					@click="testConnection">
 					{{ t('pipelinq', 'Test connection') }}
 				</NcButton>
-				<NcButton variant="primary" :disabled="busy || !model.name" @click="save">
+				<NcButton
+					variant="primary"
+					:disabled="busy || !model.name"
+					@click="save">
 					{{ t('pipelinq', 'Save') }}
 				</NcButton>
 				<NcButton variant="secondary" @click="goBack">
@@ -66,11 +78,16 @@
 </template>
 
 <script>
-import { NcButton, NcTextField, NcSelect, NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import { CnDetailCard, CnDetailPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
 import { exportApi } from '../../services/exportApi.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 const TYPES = ['s3', 'azure', 'gcs', 'bigquery', 'snowflake', 'sftp', 'postgres']
 const COMPRESSIONS = ['none', 'gzip', 'snappy', 'zstd']
@@ -85,19 +102,23 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 	},
+
 	props: {
 		exportDestinationId: {
 			type: String,
 			default: null,
 		},
+
 		id: {
 			type: String,
 			default: null,
 		},
 	},
+
 	setup() {
 		return { objectStore: useObjectStore() }
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -113,6 +134,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * The resolved destination id from either prop name.
@@ -120,8 +142,14 @@ export default {
 		 * @return {string|null} The destination UUID.
 		 */
 		destinationId() {
-			return this.exportDestinationId || this.id || this.$route?.params?.id || null
+			return (
+				this.exportDestinationId
+				|| this.id
+				|| this.$route?.params?.id
+				|| null
+			)
 		},
+
 		/**
 		 * Whether the form is editing an existing destination.
 		 *
@@ -130,6 +158,7 @@ export default {
 		isEdit() {
 			return !!this.destinationId
 		},
+
 		/**
 		 * Destination type options.
 		 *
@@ -138,6 +167,7 @@ export default {
 		typeOptions() {
 			return TYPES.map((id) => ({ id, label: id }))
 		},
+
 		/**
 		 * The selected type option.
 		 *
@@ -146,6 +176,7 @@ export default {
 		selectedType() {
 			return this.typeOptions.find((o) => o.id === this.model.type) || null
 		},
+
 		/**
 		 * Compression options.
 		 *
@@ -154,20 +185,26 @@ export default {
 		compressionOptions() {
 			return COMPRESSIONS.map((id) => ({ id, label: id }))
 		},
+
 		/**
 		 * The selected compression option.
 		 *
 		 * @return {object|null} The option.
 		 */
 		selectedCompression() {
-			return this.compressionOptions.find((o) => o.id === this.model.compression) || null
+			return (
+				this.compressionOptions.find((o) => o.id === this.model.compression)
+				|| null
+			)
 		},
 	},
+
 	async mounted() {
 		if (this.isEdit) {
 			await this.load()
 		}
 	},
+
 	methods: {
 		/**
 		 * Load the destination for editing.
@@ -175,7 +212,10 @@ export default {
 		async load() {
 			this.loading = true
 			try {
-				const existing = await this.objectStore.fetchObject('exportDestination', this.destinationId)
+				const existing = await this.objectStore.fetchObject(
+					'exportDestination',
+					this.destinationId,
+				)
 				if (existing) {
 					this.model = { ...this.model, ...existing }
 				}
@@ -185,6 +225,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Persist the destination via the shared object store.
 		 */
@@ -204,6 +245,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Test connectivity to the (saved) destination.
 		 */
@@ -222,6 +264,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Navigate back to the destination list.
 		 */

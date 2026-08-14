@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\SlaAttainmentController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SlaAttainmentService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
@@ -240,6 +241,7 @@ class SlaAttainmentControllerTest extends TestCase {
 				logger: $logger,
 			),
 			userSession: $this->userSession,
+			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			logger: $logger,
 		);
 	}//end buildController()
@@ -300,7 +302,7 @@ class SlaAttainmentControllerTest extends TestCase {
 						[
 							'kind' => 'resolution',
 							'status' => 'met',
-							'metAt' => $date . 'T10:00:00+00:00',
+							'withAt' => $date . 'T10:00:00+00:00',
 						],
 					],
 				],
@@ -448,7 +450,7 @@ class SlaAttainmentControllerTest extends TestCase {
 				'slaStatus' => [
 					'policyId' => 'gold',
 					'targets' => [
-						['kind' => 'resolution', 'status' => 'met', 'metAt' => '2026-06-10T10:00:00+00:00'],
+						['kind' => 'resolution', 'status' => 'met', 'withAt' => '2026-06-10T10:00:00+00:00'],
 					],
 				],
 			]

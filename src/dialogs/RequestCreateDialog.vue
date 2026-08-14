@@ -7,9 +7,9 @@
 		@closing="$emit('close')">
 		<RequestForm
 			ref="form"
-			:show-actions="false"
+			:showActions="false"
 			@save="onSave"
-			@update:valid="v => (valid = v)" />
+			@update:valid="(v) => (valid = v)" />
 		<template #actions>
 			<NcButton data-testid="request-create-cancel" @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
@@ -26,8 +26,8 @@
 </template>
 
 <script>
-import { NcButton, NcDialog } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { NcButton, NcDialog } from '@nextcloud/vue'
 import RequestForm from '../views/requests/RequestForm.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -38,6 +38,7 @@ export default {
 		NcDialog,
 		RequestForm,
 	},
+
 	emits: ['created', 'close'],
 	data() {
 		return {
@@ -45,6 +46,7 @@ export default {
 			saving: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-1
@@ -53,6 +55,7 @@ export default {
 			return useObjectStore()
 		},
 	},
+
 	methods: {
 		/**
 		 * Trigger the form's own validate-then-emit flow; @save fires onSave.
@@ -60,6 +63,7 @@ export default {
 		submit() {
 			this.$refs.form.onSave()
 		},
+
 		/**
 		 * @param formData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-2
@@ -76,7 +80,9 @@ export default {
 					this.$emit('created', result.id)
 				} else {
 					const error = this.objectStore.getError('ticket')
-					showError(error?.message || t('pipelinq', 'Failed to create request.'))
+					showError(
+						error?.message || t('pipelinq', 'Failed to create request.'),
+					)
 				}
 			} finally {
 				this.saving = false

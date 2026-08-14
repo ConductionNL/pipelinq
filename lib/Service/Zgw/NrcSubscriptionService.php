@@ -218,13 +218,13 @@ class NrcSubscriptionService {
 	 *
 	 * @param array<int, array<string, mixed>> $kanalen Raw list.
 	 *
-	 * @return array<int, array{naam:string,filters:array<string,mixed>}>
+	 * @return array<int, array{name:string,filters:array<string,mixed>}>
 	 */
 	private function normaliseKanalen(array $kanalen): array {
 		$out = [];
 		foreach ($kanalen as $entry) {
-			$naam = (string)($entry['naam'] ?? '');
-			if ($naam === '') {
+			$name = (string)($entry['name'] ?? '');
+			if ($name === '') {
 				continue;
 			}
 
@@ -234,10 +234,10 @@ class NrcSubscriptionService {
 			}
 
 			ksort($filters);
-			$out[] = ['naam' => $naam, 'filters' => $filters];
+			$out[] = ['name' => $name, 'filters' => $filters];
 		}
 
-		usort($out, static fn (array $a, array $b): int => strcmp($a['naam'], $b['naam']));
+		usort($out, static fn (array $a, array $b): int => strcmp($a['name'], $b['name']));
 		return $out;
 	}//end normaliseKanalen()
 }//end class

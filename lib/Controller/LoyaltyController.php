@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\GiftCardService;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
@@ -47,6 +48,12 @@ use Throwable;
  * Loyalty REST controller.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class went over the
+ * threshold when each endpoint gained its CRM authorization guard. Every one
+ * of those is a single early-return `if` on the same policy call — the added
+ * complexity is uniform and shallow, not tangled logic, and the alternative
+ * (hiding the guards behind a helper) is the arrangement gate-7 explicitly
+ * does not accept, because a helper that returns null is not a guard.
  * @spec                                           openspec/changes/loyalty-program/specs.md#REQ-LOY-004
  */
 class LoyaltyController extends Controller {
@@ -69,6 +76,7 @@ class LoyaltyController extends Controller {
 		private RedemptionService $redemptionService,
 		private GiftCardService $giftCardService,
 		private LoyaltyProgrammeService $programmeService,
+		private ObjectOwnerAccessPolicy $policy,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 	) {
@@ -91,6 +99,18 @@ class LoyaltyController extends Controller {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Authentication required')],
 				Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
 			);
 		}
 
@@ -127,6 +147,18 @@ class LoyaltyController extends Controller {
 			);
 		}
 
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
+			);
+		}
+
 		$entries = $this->ledgerService->getLedgerHistory(accountId: $accountId);
 		return new JSONResponse(['entries' => $entries]);
 	}//end getAccountHistory()
@@ -148,6 +180,18 @@ class LoyaltyController extends Controller {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Authentication required')],
 				Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
 			);
 		}
 
@@ -176,6 +220,18 @@ class LoyaltyController extends Controller {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Authentication required')],
 				Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
 			);
 		}
 
@@ -212,6 +268,18 @@ class LoyaltyController extends Controller {
 			);
 		}
 
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
+			);
+		}
+
 		$result = $this->redemptionService->validateCode(code: $code);
 		return new JSONResponse($result);
 	}//end lookupRedemptionCode()
@@ -232,6 +300,18 @@ class LoyaltyController extends Controller {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Authentication required')],
 				Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
 			);
 		}
 
@@ -293,6 +373,18 @@ class LoyaltyController extends Controller {
 			);
 		}
 
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
+			);
+		}
+
 		$serial = (string)$this->request->getParam('serial', '');
 		$pin = (string)$this->request->getParam('pin', '');
 		if ($serial === '' || $pin === '') {
@@ -320,6 +412,18 @@ class LoyaltyController extends Controller {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Authentication required')],
 				Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
 			);
 		}
 
@@ -371,6 +475,18 @@ class LoyaltyController extends Controller {
 			);
 		}
 
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
+			);
+		}
+
 		$posTransactionId = $this->request->getParam('posTransactionId');
 		$posTransactionRef = null;
 		if (is_string($posTransactionId) === true) {
@@ -406,6 +522,12 @@ class LoyaltyController extends Controller {
 	 *
 	 * @return JSONResponse The created card + one-time PIN (200), or 400 on invalid input.
 	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) One branch over, from the
+	 * CRM guard added at the top of this method. Issuing a gift card creates a
+	 * bearer instrument, so the guard stays and the count is accepted.
+	 * @SuppressWarnings(PHPMD.NPathComplexity) Same cause: the guard is an
+	 * early return, which multiplies NPath without deepening the logic.
+	 *
 	 * @spec exclude Reinstates loyalty gift-card issuance (money-and-bridge-fixes); loyalty-program canonical spec archived 2026-06-14.
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
@@ -415,6 +537,18 @@ class LoyaltyController extends Controller {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Authentication required')],
 				Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
 			);
 		}
 
@@ -437,11 +571,11 @@ class LoyaltyController extends Controller {
 			$expiryDays = 365;
 		}
 
-		$kanaal = (string)$this->request->getParam('kanaal', 'purchased');
-		$uitgegevenAanRaw = $this->request->getParam('uitgegevenAan');
-		$uitgegevenAan = null;
-		if (is_string($uitgegevenAanRaw) === true && $uitgegevenAanRaw !== '') {
-			$uitgegevenAan = $uitgegevenAanRaw;
+		$channel = (string)$this->request->getParam('channel', 'purchased');
+		$uitgegevenInRaw = $this->request->getParam('issuedIn');
+		$issuedIn = null;
+		if (is_string($uitgegevenInRaw) === true && $uitgegevenInRaw !== '') {
+			$issuedIn = $uitgegevenInRaw;
 		}
 
 		try {
@@ -449,8 +583,8 @@ class LoyaltyController extends Controller {
 				programmeId: $programmeId,
 				initialBalance: $initialBalance,
 				expiryDays: $expiryDays,
-				kanaal: $kanaal,
-				uitgegevenAan: $uitgegevenAan
+				channel: $channel,
+				issuedIn: $issuedIn
 			);
 			return new JSONResponse($result);
 		} catch (Throwable $e) {
@@ -474,6 +608,18 @@ class LoyaltyController extends Controller {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Authentication required')],
 				Http::STATUS_UNAUTHORIZED
+			);
+		}
+
+		// Authentication is not authorization. Loyalty accounts, ledgers and
+		// redemption codes are a CRM capability, not something every account on
+		// the instance holds by being logged in. Admins bypass; see
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
+		// one (23 of 27 schemas carry no owner field).
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
 			);
 		}
 

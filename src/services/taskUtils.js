@@ -6,6 +6,7 @@ import { translate as t } from '@nextcloud/l10n'
 
 /**
  * Task type labels.
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-55
  */
 export function getTaskTypeLabels() {
@@ -18,6 +19,7 @@ export function getTaskTypeLabels() {
 
 /**
  * Task status labels.
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-53
  */
 export function getTaskStatusLabels() {
@@ -31,6 +33,7 @@ export function getTaskStatusLabels() {
 
 /**
  * Task priority labels.
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-51
  */
 export function getTaskPriorityLabels() {
@@ -92,14 +95,14 @@ export function getTaskPriorityLabel(priority) {
  */
 export function getTaskPriorityColor(priority) {
 	switch (priority) {
-	case 'hoog':
-		return 'var(--color-error)'
-	case 'normaal':
-		return 'var(--color-text-maxcontrast)'
-	case 'laag':
-		return 'var(--color-text-lighter)'
-	default:
-		return 'var(--color-text-maxcontrast)'
+		case 'hoog':
+			return 'var(--color-error)'
+		case 'normaal':
+			return 'var(--color-text-maxcontrast)'
+		case 'laag':
+			return 'var(--color-text-lighter)'
+		default:
+			return 'var(--color-text-maxcontrast)'
 	}
 }
 
@@ -141,7 +144,9 @@ export function getDefaultDeadline() {
 export async function fetchUserGroups() {
 	try {
 		const response = await fetch(
-			'/ocs/v2.php/cloud/users/' + encodeURIComponent(OC.currentUser) + '/groups',
+			'/ocs/v2.php/cloud/users/'
+				+ encodeURIComponent(OC.currentUser)
+				+ '/groups',
 			{
 				headers: {
 					Accept: 'application/json',
@@ -168,8 +173,10 @@ export async function fetchUserGroups() {
 export async function searchAssignees(query) {
 	if (!query || query.length < 1) return []
 	try {
-		const url = '/ocs/v2.php/apps/files_sharing/api/v1/sharees'
-			+ '?search=' + encodeURIComponent(query)
+		const url =
+			'/ocs/v2.php/apps/files_sharing/api/v1/sharees'
+			+ '?search='
+			+ encodeURIComponent(query)
 			+ '&itemType=file&perPage=20&format=json'
 		const response = await fetch(url, {
 			headers: {
@@ -183,7 +190,8 @@ export async function searchAssignees(query) {
 		const results = []
 
 		// Users (shareType 0)
-		const users = data?.ocs?.data?.exact?.users?.concat(data?.ocs?.data?.users || []) || []
+		const users =
+			data?.ocs?.data?.exact?.users?.concat(data?.ocs?.data?.users || []) || []
 		for (const u of users) {
 			results.push({
 				id: u.value?.shareWith || u.label,
@@ -193,7 +201,9 @@ export async function searchAssignees(query) {
 		}
 
 		// Groups (shareType 1)
-		const groups = data?.ocs?.data?.exact?.groups?.concat(data?.ocs?.data?.groups || []) || []
+		const groups =
+			data?.ocs?.data?.exact?.groups?.concat(data?.ocs?.data?.groups || [])
+			|| []
 		for (const g of groups) {
 			results.push({
 				id: g.value?.shareWith || g.label,

@@ -1,13 +1,14 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<CnDataTable :rows="items"
+	<CnDataTable
+		:rows="items"
 		:columns="columns"
 		:loading="loading"
-		hide-header
+		hideHeader
 		borderless
-		:empty-text="t('pipelinq', 'No recent activities')"
-		@row-click="onShow" />
+		:emptyText="t('pipelinq', 'No recent activities')"
+		@rowClick="onShow" />
 </template>
 
 <script>
@@ -23,12 +24,14 @@ export default {
 	components: {
 		CnDataTable,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -36,6 +39,7 @@ export default {
 			columns: LIST_COLUMNS,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-50
@@ -55,9 +59,11 @@ export default {
 			})
 		},
 	},
+
 	async mounted() {
 		await this.fetchData()
 	},
+
 	methods: {
 		/**
 		 * Navigate to the clicked activity's entity (lead or request),
@@ -72,6 +78,7 @@ export default {
 			const type = item._entityType === 'lead' ? 'leads' : 'tickets'
 			navigateTo(generateUrl('/apps/pipelinq/' + type + '/' + item._entityId))
 		},
+
 		/**
 		 * @param {string} dateStr The date string to humanise.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-49
@@ -87,14 +94,18 @@ export default {
 				const diffDays = Math.floor(diffHours / 24)
 
 				if (diffMinutes < 1) return t('pipelinq', 'just now')
-				if (diffMinutes < 60) return t('pipelinq', '{minutes}m ago', { minutes: diffMinutes })
-				if (diffHours < 24) return t('pipelinq', '{hours}h ago', { hours: diffHours })
-				if (diffDays < 7) return t('pipelinq', '{days}d ago', { days: diffDays })
+				if (diffMinutes < 60)
+					return t('pipelinq', '{minutes}m ago', { minutes: diffMinutes })
+				if (diffHours < 24)
+					return t('pipelinq', '{hours}h ago', { hours: diffHours })
+				if (diffDays < 7)
+					return t('pipelinq', '{days}d ago', { days: diffDays })
 				return formatDate(dateStr)
 			} catch {
 				return dateStr
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-47
 		 */
@@ -108,12 +119,19 @@ export default {
 
 				if (config.lead) {
 					promises.push(
-						this.fetchRaw(config, 'lead', { _limit: 10, _order: 'updated:desc' })
-							.then(items => items.map(item => ({
+						this.fetchRaw(config, 'lead', {
+							_limit: 10,
+							_order: 'updated:desc',
+						}).then((items) =>
+							items.map((item) => ({
 								...item,
 								entityType: 'lead',
-								modified: item.updated || item.dateModified || item.created,
-							}))),
+								modified:
+									item.updated
+									|| item.dateModified
+									|| item.created,
+							})),
+						),
 					)
 				}
 
@@ -123,12 +141,20 @@ export default {
 					// so the LABEL keeps reading "Request", while navigation goes
 					// to the unified /tickets route (see onShow).
 					promises.push(
-						this.fetchRaw(config, 'ticket', { ticketType: 'request', _limit: 10, _order: 'updated:desc' })
-							.then(items => items.map(item => ({
+						this.fetchRaw(config, 'ticket', {
+							ticketType: 'request',
+							_limit: 10,
+							_order: 'updated:desc',
+						}).then((items) =>
+							items.map((item) => ({
 								...item,
 								entityType: 'request',
-								modified: item.updated || item.dateModified || item.created,
-							}))),
+								modified:
+									item.updated
+									|| item.dateModified
+									|| item.created,
+							})),
+						),
 					)
 				}
 
@@ -149,6 +175,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @param {object} config The object-type registry (register/schema per type).
 		 * @param {string} type The object type to fetch.
@@ -165,8 +192,13 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
-				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
+			const url = generateUrl(
+				'/apps/openregister/api/objects/'
+					+ typeConfig.register
+					+ '/'
+					+ typeConfig.schema
+					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
+			)
 
 			const response = await fetch(url, {
 				headers: {
