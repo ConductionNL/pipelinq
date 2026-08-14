@@ -31,8 +31,8 @@
 					inputmode="numeric"
 					maxlength="9"
 					:helperText="bsnFeedback || ' '"
-					:success="validation.isFormalValid"
-					:error="rawBsn.length > 0 && !validation.isFormalValid" />
+					:success="validation.isFormallyValid"
+					:error="rawBsn.length > 0 && !validation.isFormallyValid" />
 				<NcButton
 					variant="primary"
 					data-testid="brp-lookup-button"
@@ -105,13 +105,17 @@
 </template>
 
 <script>
-import { CnDetailCard } from '@conduction/nextcloud-vue'
+import {
+	BSN_ERROR_CHECKSUM,
+	BSN_ERROR_LENGTH,
+	CnDetailCard,
+	validateBsn,
+} from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import BrpDoelbindingModal from '../modals/BrpDoelbindingModal.vue'
-import { validateBsn } from '../services/bsnValidation.js'
 
 export default {
 	name: 'BrpContactPanel',
@@ -156,14 +160,24 @@ export default {
 
 		bsnFeedback() {
 			if (!this.rawBsn) return ''
-			return (
-				this.validation.errorMessage
-				|| this.t('pipelinq', 'BSN passes the 11-check')
-			)
+
+			// The shared validator returns a stable errorCode and NO message,
+			// deliberately: the local copy this replaced returned hardcoded
+			// Dutch strings that never reached t(), so a Dutch sentence was
+			// shown to every user whatever their language.
+			if (this.validation.errorCode === BSN_ERROR_LENGTH) {
+				return this.t('pipelinq', 'A BSN is exactly 9 digits')
+			}
+
+			if (this.validation.errorCode === BSN_ERROR_CHECKSUM) {
+				return this.t('pipelinq', 'This BSN does not pass the 11-check')
+			}
+
+			return this.t('pipelinq', 'BSN passes the 11-check')
 		},
 
 		canLookup() {
-			return this.validation.isFormalValid && this.lookupState !== 'loading'
+			return this.validation.isFormallyValid && this.lookupState !== 'loading'
 		},
 
 		fullName() {
