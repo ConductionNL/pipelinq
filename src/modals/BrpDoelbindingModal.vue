@@ -114,7 +114,7 @@ export default {
 			this.$emit('submit', {
 				verzoekreden: reden,
 				doelbinding: this.form.doelbinding,
-				grondslag: this.form.doelbinding,
+				basis: this.form.doelbinding,
 				vogScreening: this.form.vogScreening,
 			})
 		},

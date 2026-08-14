@@ -121,7 +121,7 @@ export default {
 	},
 	computed: {
 		programmeOptions() {
-			return this.programmes.map(p => ({ id: p.id, label: p.naam || p.merk || p.id }))
+			return this.programmes.map(p => ({ id: p.id, label: p.name || p.merk || p.id }))
 		},
 		tierRows() {
 			if (!this.kpis || !this.kpis.tierDistribution) {
@@ -150,7 +150,7 @@ export default {
 				const url = generateUrl('/apps/openregister/api/objects/pipelinq/loyaltyProgramme?_limit=200')
 				const response = await axios.get(url)
 				const list = (response.data && (response.data.results || response.data)) || []
-				this.programmes = list.map(p => ({ id: p['@self']?.id || p.id || p.programmeId, naam: p.naam, merk: p.merk }))
+				this.programmes = list.map(p => ({ id: p['@self']?.id || p.id || p.programmeId, name: p.name, merk: p.merk }))
 				if (this.programmes.length && !this.selectedProgramme) {
 					this.selectedProgramme = this.programmeOptions[0]
 					this.loadKpis()

@@ -65,7 +65,7 @@ export default {
 	components: { NcButton, NcCheckboxRadioSwitch, NcNoteCard, NcSelect, NcTextField },
 	data() {
 		return {
-			klantId: '',
+			customerId: '',
 			selectedProgramme: null,
 			programmes: [],
 			optInAccepted: false,
@@ -75,13 +75,13 @@ export default {
 	},
 	computed: {
 		programmeOptions() {
-			return this.programmes.map(p => ({ id: p.id, label: p.naam || p.id, termsUrl: p.termsUrl }))
+			return this.programmes.map(p => ({ id: p.id, label: p.name || p.id, termsUrl: p.termsUrl }))
 		},
 		termsUrl() {
 			return this.selectedProgramme && this.selectedProgramme.termsUrl
 		},
 		canSubmit() {
-			return this.optInAccepted && this.klantId && this.selectedProgramme
+			return this.optInAccepted && this.customerId && this.selectedProgramme
 		},
 		resultId() {
 			if (!this.result) {
@@ -102,7 +102,7 @@ export default {
 				const list = (response.data && (response.data.results || response.data)) || []
 				this.programmes = list.map(p => ({
 					id: p['@self']?.id || p.id || p.programmeId,
-					naam: p.naam,
+					name: p.name,
 					termsUrl: p.termsUrl,
 				}))
 			} catch (error) {
@@ -117,7 +117,7 @@ export default {
 			try {
 				// Create the account via OR /objects, with opt-in fields set.
 				const payload = {
-					klantId: this.klantId,
+					customerId: this.customerId,
 					programmeId: this.selectedProgramme.id,
 					currentBalance: 0,
 					lifetimePoints: 0,
@@ -125,7 +125,7 @@ export default {
 					optInAccepted: true,
 					optInTimestamp: new Date().toISOString(),
 					optInTermsVersion: this.termsVersion,
-					aangemaaktOp: new Date().toISOString(),
+					createdOn: new Date().toISOString(),
 					lastActivityDate: new Date().toISOString(),
 				}
 				const response = await axios.post(
