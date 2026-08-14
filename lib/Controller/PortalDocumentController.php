@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\Portal\PortalInvoiceService;
 use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -87,6 +88,9 @@ class PortalDocumentController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	// Tight: signing is a legally meaningful act, and the token that authorises
+	// it is the only barrier.
+	#[AnonRateLimit(limit: 20, period: 60)]
 	public function sign(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -118,6 +122,7 @@ class PortalDocumentController extends PortalApiController {
 	 *
 	 * @spec openspec/changes/customer-portal/specs.md#REQ-005
 	 */
+	#[AnonRateLimit(limit: 60, period: 60)]
 	public function download(string $token) {
 		try {
 			$result = $this->signing->validateToken(token: $token);

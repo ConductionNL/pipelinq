@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\Portal\PortalOrderService;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCA\Pipelinq\Service\Portal\PortalTenantService;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -78,6 +79,7 @@ class PortalDataController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function invoices(): JSONResponse {
 		return $this->requireListAccess(facade: $this->invoices, feature: 'invoices');
 	}//end invoices()
@@ -93,6 +95,7 @@ class PortalDataController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function invoice(string $id): JSONResponse {
 		return $this->requireObjectAccess(facade: $this->invoices, feature: 'invoices', id: $id);
 	}//end invoice()
@@ -106,6 +109,7 @@ class PortalDataController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function contracts(): JSONResponse {
 		return $this->requireListAccess(facade: $this->contracts, feature: 'contracts');
 	}//end contracts()
@@ -121,6 +125,7 @@ class PortalDataController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function contract(string $id): JSONResponse {
 		return $this->requireObjectAccess(facade: $this->contracts, feature: 'contracts', id: $id);
 	}//end contract()
@@ -134,6 +139,7 @@ class PortalDataController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function orders(): JSONResponse {
 		return $this->requireListAccess(facade: $this->orders, feature: 'orders');
 	}//end orders()
@@ -149,6 +155,7 @@ class PortalDataController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function order(string $id): JSONResponse {
 		return $this->requireObjectAccess(facade: $this->orders, feature: 'orders', id: $id);
 	}//end order()
