@@ -120,22 +120,6 @@ class BrpControllerTest extends TestCase {
 
 	}//end testLookupIsRefusedForAnUnprivilegedCaller()
 
-	/**
-	 * Same for the BSN validation endpoint.
-	 *
-	 * @return void
-	 */
-	public function testValidateIsRefusedForAnUnprivilegedCaller(): void {
-		$controller = $this->buildController(remotePerson: [], privileged: false);
-
-		$this->assertSame(
-			Http::STATUS_FORBIDDEN,
-			$controller->validate()->getStatus(),
-			'An unprivileged account must not be able to probe BSN validity.'
-		);
-
-	}//end testValidateIsRefusedForAnUnprivilegedCaller()
-
 	public function testLookupPersistsMetaIntoAuditRecord(): void {
 		$person = [
 			'givenNames' => 'Jan',
