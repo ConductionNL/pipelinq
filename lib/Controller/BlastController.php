@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCP\AppFramework\Controller;
@@ -60,6 +61,7 @@ class BlastController extends Controller {
 		private readonly BlastService $blastService,
 		private readonly AttributionService $attributionService,
 		private readonly IUserSession $userSession,
+		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -77,8 +79,16 @@ class BlastController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(?string $status = null, int $page = 1, int $limit = 20): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$envelope = $this->blastService->listBlasts(status: $status, page: $page, limit: $limit);
@@ -115,8 +125,16 @@ class BlastController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$blast = $this->blastService->getBlastById(blastId: $id);
@@ -138,8 +156,16 @@ class BlastController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$name = trim((string)$this->request->getParam('name', ''));
@@ -166,8 +192,16 @@ class BlastController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function send(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$summary = $this->blastService->sendBlast(blastId: $id);
@@ -185,8 +219,16 @@ class BlastController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function cancel(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$summary = $this->blastService->cancelBlast(blastId: $id);
@@ -206,8 +248,16 @@ class BlastController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function deliveries(string $id, int $page = 1, int $limit = 20): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$envelope = $this->blastService->listDeliveriesForBlast(blastId: $id, page: $page, limit: $limit);
@@ -227,8 +277,16 @@ class BlastController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function attribution(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$blast = $this->blastService->getBlastById(blastId: $id);
@@ -253,6 +311,15 @@ class BlastController extends Controller {
 
 		return $user->getUID();
 	}//end requireUser()
+
+	/**
+	 * Deny a caller who is authenticated but not a CRM user.
+	 *
+	 * @return JSONResponse The 403 response.
+	 */
+	private function forbidden(): JSONResponse {
+		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+	}//end forbidden()
 
 	/**
 	 * Collect a sanitised draft-blast body from the request.

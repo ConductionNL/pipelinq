@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\MessagingController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\MessagingService;
@@ -65,6 +66,7 @@ class MessagingControllerTest extends TestCase {
 			$this->providerRepo,
 			$this->consentService,
 			$this->userSession,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$this->createMock(LoggerInterface::class),
 		);
 	}//end setUp()
@@ -428,6 +430,7 @@ class MessagingControllerTest extends TestCase {
 			$providerRepo,
 			$consent,
 			$userSession,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 
 		$response = $controller->preflight(contactId: 'c1');

@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SlaAttainmentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -59,6 +60,7 @@ class SlaAttainmentController extends Controller {
 		IRequest $request,
 		private SlaAttainmentService $attainment,
 		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $accessPolicy,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -73,8 +75,15 @@ class SlaAttainmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function attainment(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
 			return new JSONResponse(['error' => 'notAuthenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// SLA attainment reports across the whole service desk — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		$params = [

@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\RoutingController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\RoutingService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
@@ -249,6 +250,7 @@ class RoutingControllerTest extends TestCase {
 				logger: $logger,
 			),
 			userSession: $this->userSession,
+			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			logger: $logger,
 		);
 	}//end buildController()
@@ -549,6 +551,7 @@ class RoutingControllerTest extends TestCase {
 				logger: $logger,
 			),
 			userSession: $this->userSession,
+			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			logger: $logger,
 		);
 

@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ProspectController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -75,6 +76,7 @@ class ProspectControllerTest extends TestCase {
 			$userSession,
 			$l10n,
 			$this->createMock(LoggerInterface::class),
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 	}//end setUp()
 

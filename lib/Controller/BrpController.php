@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BrpCacheService;
 use OCA\Pipelinq\Service\BsnAuditService;
@@ -99,6 +100,7 @@ class BrpController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $accessPolicy,
 		private IGroupManager $groupManager,
 		private IL10N $l10n,
 		private IAppConfig $appConfig,
@@ -130,6 +132,13 @@ class BrpController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// A BSN is the Dutch citizen service number — special-category personal
+		// data under the AVG. Validating one is emphatically not something
+		// every account on the instance may do.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
 		$raw = (string)$this->request->getParam('bsn', '');
@@ -181,6 +190,20 @@ class BrpController extends Controller {
 		}
 
 		$actor = $user->getUID();
+
+		// Resolving a BSN against the BRP is a CRM capability, not an
+		// any-authenticated-user one. This guard was MISSING while validate()
+		// had one, and gate-7 did not report it: the gate looks for an
+		// authorisation-shaped check in the body and this method already had
+		// several (doelbinding, verzoekreden, the actor-role resolution), none
+		// of which decides WHETHER THIS CALLER MAY LOOK ANYONE UP. A
+		// deny-path test found it; the gate's silence did not.
+		if ($this->accessPolicy->isPrivileged(uid: $actor) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
+			);
+		}
 
 		$rawBsn = (string)$this->request->getParam('bsn', '');
 		$verzoekreden = trim((string)$this->request->getParam('verzoekreden', ''));

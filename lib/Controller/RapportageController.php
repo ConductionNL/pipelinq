@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\RapportageService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -55,6 +56,7 @@ class RapportageController extends Controller {
 		IRequest $request,
 		private RapportageService $rapportageService,
 		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $accessPolicy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -74,8 +76,15 @@ class RapportageController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function getPipelineStats(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
 			return new JSONResponse(data: ['message' => 'Authentication required'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Pipeline statistics aggregate the whole sales pipeline — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(data: ['message' => 'Forbidden'], statusCode: Http::STATUS_FORBIDDEN);
 		}
 
 		$pipelineId = (string)$this->request->getParam('pipelineId', '');
