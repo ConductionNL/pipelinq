@@ -17,7 +17,7 @@
     "test:l10n": "node tests/l10n/check-l10n.js",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "stylelint": "stylelint \"src/**/*.{vue,scss,css}\"",
+    "stylelint": "stylelint \"{src,css}/**/*.{vue,scss,css}\"",
     "stylelint-fix": "stylelint \"src/**/*.vue\" \"src/**/*.scss\" \"src/**/*.css\" --fix",
     "test:e2e": "playwright test",
     "test:e2e:docs": "playwright test --project docs-capture",
