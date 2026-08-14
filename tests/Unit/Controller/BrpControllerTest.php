@@ -915,6 +915,7 @@ class BrpControllerTest extends TestCase {
 		return new BrpController(
 			$request,
 			$this->createMock(IUserSession::class),
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$this->createMock(IGroupManager::class),
 			$l10n,
 			$appConfig,

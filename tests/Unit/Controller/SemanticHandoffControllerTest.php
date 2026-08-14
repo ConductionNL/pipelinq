@@ -66,6 +66,15 @@ class SemanticHandoffControllerTest extends TestCase {
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		// Default: the caller holds no privileged group, so authorization has to
 		// come from ownership. A test that wants the privileged path says so.
+		//
+		// This default is load-bearing in BOTH directions now that the CRM
+		// guard exists, which is worth stating because flipping it looks
+		// harmless and is not: set it to true and the ownership tests
+		// (testContractAvailabilityRefusesAContractTheCallerDoesNotOwn and
+		// friends) sail past the guard and reach service calls they assert are
+		// never made. Set it to false and the business-logic tests get a 403
+		// before the behaviour they are about. The two groups need different
+		// callers, so the ones that need privilege ask for it individually.
 		$this->groupManager->method('isInGroup')->willReturn(false);
 
 		$this->objectService = new class {
