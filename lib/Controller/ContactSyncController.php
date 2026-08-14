@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -52,7 +52,7 @@ class ContactSyncController extends Controller {
 		IRequest $request,
 		private ContactSyncService $contactSyncService,
 		private IUserSession $userSession,
-		private CrmAccessPolicy $policy,
+		private ObjectOwnerAccessPolicy $policy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 	) {
@@ -76,7 +76,7 @@ class ContactSyncController extends Controller {
 
 		// Contact sync reaches address books and external directories — a CRM
 		// capability, not an any-authenticated-user one. Admins bypass.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
@@ -114,7 +114,7 @@ class ContactSyncController extends Controller {
 
 		// Contact sync reaches address books and external directories — a CRM
 		// capability, not an any-authenticated-user one. Admins bypass.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
@@ -172,7 +172,7 @@ class ContactSyncController extends Controller {
 
 		// Contact sync reaches address books and external directories — a CRM
 		// capability, not an any-authenticated-user one. Admins bypass.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
@@ -218,7 +218,7 @@ class ContactSyncController extends Controller {
 
 		// Contact sync reaches address books and external directories — a CRM
 		// capability, not an any-authenticated-user one. Admins bypass.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 

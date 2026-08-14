@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\CtiService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -70,7 +70,7 @@ class CtiController extends Controller {
 		IRequest $request,
 		private CtiService $ctiService,
 		private IUserSession $userSession,
-		private CrmAccessPolicy $policy,
+		private ObjectOwnerAccessPolicy $policy,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 	) {
@@ -161,7 +161,7 @@ class CtiController extends Controller {
 		// CTI surfaces resolve a caller's phone number to a customer record and
 		// attach call recordings — CRM data, not an any-authenticated-user
 		// capability. Admins bypass.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -228,7 +228,7 @@ class CtiController extends Controller {
 		}
 
 		// Same posture as screenPop()/attachRecording().
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -286,7 +286,7 @@ class CtiController extends Controller {
 		// CTI surfaces resolve a caller's phone number to a customer record and
 		// attach call recordings — CRM data, not an any-authenticated-user
 		// capability. Admins bypass.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 

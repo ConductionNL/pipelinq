@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\GiftCardService;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
@@ -70,7 +70,7 @@ class LoyaltyController extends Controller {
 		private RedemptionService $redemptionService,
 		private GiftCardService $giftCardService,
 		private LoyaltyProgrammeService $programmeService,
-		private CrmAccessPolicy $policy,
+		private ObjectOwnerAccessPolicy $policy,
 		private IUserSession $userSession,
 		private IL10N $l10n,
 	) {
@@ -99,9 +99,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -144,9 +144,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -180,9 +180,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -220,9 +220,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -265,9 +265,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -300,9 +300,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -370,9 +370,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -412,9 +412,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -472,9 +472,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -531,9 +531,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN
@@ -602,9 +602,9 @@ class LoyaltyController extends Controller {
 		// Authentication is not authorization. Loyalty accounts, ledgers and
 		// redemption codes are a CRM capability, not something every account on
 		// the instance holds by being logged in. Admins bypass; see
-		// CrmAccessPolicy for why this is a group check and not an ownership
+		// ObjectOwnerAccessPolicy for why this is a group check and not an ownership
 		// one (23 of 27 schemas carry no owner field).
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Forbidden')],
 				Http::STATUS_FORBIDDEN

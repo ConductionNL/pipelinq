@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ActivityTimelineService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -62,7 +62,7 @@ class ActivityTimelineController extends Controller {
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private ContainerInterface $container,
-		private CrmAccessPolicy $policy,
+		private ObjectOwnerAccessPolicy $policy,
 	) {
 		// @PublicPage — DI constructor (not HTTP-routable). The actual auth
 		// posture for each endpoint lives on its own method attribute; this
@@ -110,10 +110,15 @@ class ActivityTimelineController extends Controller {
 			// is ['create','update','delete'], so a READ returns true whatever
 			// the flag says (ConductionNL/.github#372). The decision has to be
 			// made by this app.
+			// ownerField is this app's convention for a timeline subject; when
+			// the schema has no such field mayAccess() falls through to the
+			// privileged-group check, which is the only answer available for
+			// the 23 of 27 schemas that record no owner at all.
 			$payload = $object->jsonSerialize();
-			return $this->policy->canAccessObject(
+			return $this->policy->mayAccess(
+				uid: $userId,
 				object: is_array($payload) ? $payload : [],
-				userId: $userId
+				ownerField: 'ownerId'
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(

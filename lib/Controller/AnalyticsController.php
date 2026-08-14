@@ -29,7 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -59,7 +59,7 @@ class AnalyticsController extends Controller {
 		IRequest $request,
 		private AnalyticsService $analyticsService,
 		private IUserSession $userSession,
-		private CrmAccessPolicy $policy,
+		private ObjectOwnerAccessPolicy $policy,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -88,8 +88,8 @@ class AnalyticsController extends Controller {
 		// object to own and nothing to scope. The question is therefore not
 		// "may this caller see THIS record" but "may this caller see
 		// company-wide CRM analytics at all", which is exactly what
-		// CrmAccessPolicy answers. Admins bypass.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -132,8 +132,8 @@ class AnalyticsController extends Controller {
 		// object to own and nothing to scope. The question is therefore not
 		// "may this caller see THIS record" but "may this caller see
 		// company-wide CRM analytics at all", which is exactly what
-		// CrmAccessPolicy answers. Admins bypass.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -175,8 +175,8 @@ class AnalyticsController extends Controller {
 		// object to own and nothing to scope. The question is therefore not
 		// "may this caller see THIS record" but "may this caller see
 		// company-wide CRM analytics at all", which is exactly what
-		// CrmAccessPolicy answers. Admins bypass.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -226,8 +226,8 @@ class AnalyticsController extends Controller {
 		// object to own and nothing to scope. The question is therefore not
 		// "may this caller see THIS record" but "may this caller see
 		// company-wide CRM analytics at all", which is exactly what
-		// CrmAccessPolicy answers. Admins bypass.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		// ObjectOwnerAccessPolicy::isPrivileged answers. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 

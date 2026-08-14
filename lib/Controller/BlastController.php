@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCP\AppFramework\Controller;
@@ -61,7 +61,7 @@ class BlastController extends Controller {
 		private readonly BlastService $blastService,
 		private readonly AttributionService $attributionService,
 		private readonly IUserSession $userSession,
-		private readonly CrmAccessPolicy $policy,
+		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -87,7 +87,7 @@ class BlastController extends Controller {
 		// Authentication is not authorization. Blasts reach customer contact
 		// data and send on the organisation's behalf — a CRM capability.
 		// Admins bypass via the policy.
-		if ($this->policy->isCrmUser(userId: $uid) === false) {
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
 			return $this->forbidden();
 		}
 
@@ -133,7 +133,7 @@ class BlastController extends Controller {
 		// Authentication is not authorization. Blasts reach customer contact
 		// data and send on the organisation's behalf — a CRM capability.
 		// Admins bypass via the policy.
-		if ($this->policy->isCrmUser(userId: $uid) === false) {
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
 			return $this->forbidden();
 		}
 
@@ -164,7 +164,7 @@ class BlastController extends Controller {
 		// Authentication is not authorization. Blasts reach customer contact
 		// data and send on the organisation's behalf — a CRM capability.
 		// Admins bypass via the policy.
-		if ($this->policy->isCrmUser(userId: $uid) === false) {
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
 			return $this->forbidden();
 		}
 
@@ -200,7 +200,7 @@ class BlastController extends Controller {
 		// Authentication is not authorization. Blasts reach customer contact
 		// data and send on the organisation's behalf — a CRM capability.
 		// Admins bypass via the policy.
-		if ($this->policy->isCrmUser(userId: $uid) === false) {
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
 			return $this->forbidden();
 		}
 
@@ -227,7 +227,7 @@ class BlastController extends Controller {
 		// Authentication is not authorization. Blasts reach customer contact
 		// data and send on the organisation's behalf — a CRM capability.
 		// Admins bypass via the policy.
-		if ($this->policy->isCrmUser(userId: $uid) === false) {
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
 			return $this->forbidden();
 		}
 
@@ -256,7 +256,7 @@ class BlastController extends Controller {
 		// Authentication is not authorization. Blasts reach customer contact
 		// data and send on the organisation's behalf — a CRM capability.
 		// Admins bypass via the policy.
-		if ($this->policy->isCrmUser(userId: $uid) === false) {
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
 			return $this->forbidden();
 		}
 
@@ -285,7 +285,7 @@ class BlastController extends Controller {
 		// Authentication is not authorization. Blasts reach customer contact
 		// data and send on the organisation's behalf — a CRM capability.
 		// Admins bypass via the policy.
-		if ($this->policy->isCrmUser(userId: $uid) === false) {
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
 			return $this->forbidden();
 		}
 

@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Lifecycle;
 
+use OCA\Pipelinq\AppInfo\Application;
+use OCP\IAppConfig;
 use OCP\IGroupManager;
 
 /**
@@ -52,12 +54,32 @@ class ObjectOwnerAccessPolicy {
 	public const PRIVILEGED_GROUPS = ['admin', 'sales'];
 
 	/**
+	 * App config key naming an ADDITIONAL group whose members are privileged.
+	 *
+	 * PRIVILEGED_GROUPS above is a compile-time list, which is fine for the two
+	 * groups this app has always assumed but cannot express "our CRM users live
+	 * in a group called something else". Deployments that use a different name
+	 * set this key; it is additive, so the built-in list keeps working and no
+	 * existing caller changes behaviour.
+	 *
+	 * Empty by default, matching every other group key in this app
+	 * (`pos_group`, `pos_manager_group`, `billing_handoff_manager_group`,
+	 * `avg_handler_group` …): an unconfigured instance grants nothing extra
+	 * rather than granting everything.
+	 *
+	 * @var string
+	 */
+	public const CRM_GROUP_KEY = 'crm_group';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IGroupManager $groupManager The NC group manager.
+	 * @param IAppConfig    $appConfig    The app config.
 	 */
 	public function __construct(
 		private IGroupManager $groupManager,
+		private IAppConfig $appConfig,
 	) {
 	}//end __construct()
 
@@ -95,10 +117,20 @@ class ObjectOwnerAccessPolicy {
 	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-lifecycle-management
 	 */
 	public function isPrivileged(string $uid): bool {
+		if ($uid === '') {
+			return false;
+		}
+
 		foreach (self::PRIVILEGED_GROUPS as $group) {
 			if ($this->groupManager->isInGroup($uid, $group) === true) {
 				return true;
 			}
+		}
+
+		// Deployment-configured CRM group, additive to the built-in list.
+		$configured = $this->appConfig->getValueString(Application::APP_ID, self::CRM_GROUP_KEY, '');
+		if ($configured !== '' && $this->groupManager->isInGroup($uid, $configured) === true) {
+			return true;
 		}
 
 		return false;

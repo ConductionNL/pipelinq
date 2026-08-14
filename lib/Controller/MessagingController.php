@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\MessagingService;
@@ -71,7 +71,7 @@ class MessagingController extends Controller {
 		private ChannelProviderRepository $providerRepo,
 		private ConsentService $consentService,
 		private IUserSession $userSession,
-		private CrmAccessPolicy $policy,
+		private ObjectOwnerAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -108,7 +108,7 @@ class MessagingController extends Controller {
 
 		// Messaging sends on the organisation's behalf and reads contact
 		// consent state — a CRM capability, not an any-authenticated-user one.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -155,7 +155,7 @@ class MessagingController extends Controller {
 
 		// Same posture as send()/consent(): preflight reads a contact's
 		// messaging eligibility, which is CRM data.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
@@ -197,7 +197,7 @@ class MessagingController extends Controller {
 
 		// Messaging sends on the organisation's behalf and reads contact
 		// consent state — a CRM capability, not an any-authenticated-user one.
-		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 

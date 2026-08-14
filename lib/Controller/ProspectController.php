@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -52,6 +53,7 @@ class ProspectController extends Controller {
 		private IUserSession $userSession,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
+		private ObjectOwnerAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -68,6 +70,11 @@ class ProspectController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Prospects and leads are customer data. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
 		$refresh = $this->request->getParam(key: 'refresh', default: 'false') === 'true';
@@ -104,6 +111,11 @@ class ProspectController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Prospects and leads are customer data. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
 		$data = $this->request->getParams();

@@ -254,8 +254,10 @@ class SettingsService {
 		'avg_handler_group' => '',
 		'avg_teamlead_group' => '',
 		'avg_dpo_group' => '',
-		// Group whose members may reach the CRM surfaces (CrmAccessPolicy).
-		// Empty = only Nextcloud admins, like every other group key here.
+		// Additional group whose members are privileged for the CRM surfaces
+		// (ObjectOwnerAccessPolicy::CRM_GROUP_KEY). Additive to that class's
+		// built-in PRIVILEGED_GROUPS = ['admin', 'sales']; empty means only
+		// those two, like every other group key here.
 		'crm_group' => '',
 		// First-party marketing-email open/click tracking
 		// (marketing-email-open-click-tracking) — off by default so today's
