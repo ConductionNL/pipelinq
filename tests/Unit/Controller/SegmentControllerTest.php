@@ -174,7 +174,12 @@ class SegmentControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('marketeer');
 		$session->method('getUser')->willReturn($user);
 
-		return new SegmentController($this->createMock(IRequest::class), $service, $session);
+		return new SegmentController(
+			$this->createMock(IRequest::class),
+			$service,
+			$session,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
+		);
 	}//end wiredController()
 
 	/**

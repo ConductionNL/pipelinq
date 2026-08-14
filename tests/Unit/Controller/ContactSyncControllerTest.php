@@ -224,6 +224,7 @@ class ContactSyncControllerTest extends TestCase {
 			$this->createMock(IRequest::class),
 			$this->syncService,
 			$session,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$l10n,
 			$this->createMock(LoggerInterface::class),
 		);

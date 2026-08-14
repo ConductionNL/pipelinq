@@ -155,6 +155,25 @@ class SemanticHandoffControllerTest extends TestCase {
 	 *
 	 * @return void
 	 */
+	/**
+	 * Rebuild the controller behind a caller who IS in a privileged group.
+	 *
+	 * The entry points ask `isPrivileged()` before any object is resolved, so
+	 * a test about what happens AFTER resolution (not found, wrong status, a
+	 * failed handoff) has to get past that guard first — otherwise it asserts
+	 * 404 and is handed the 403 the guard correctly returns.
+	 *
+	 * Tests about authorization itself keep the unprivileged default and use
+	 * {@see rebuildControllerWithGroupManager()} directly.
+	 *
+	 * @return void
+	 */
+	private function withPrivilegedCaller(): void {
+		$privileged = $this->createMock(IGroupManager::class);
+		$privileged->method('isInGroup')->willReturn(true);
+		$this->rebuildControllerWithGroupManager($privileged);
+	}//end withPrivilegedCaller()
+
 	private function rebuildControllerWithGroupManager(IGroupManager $groupManager): void {
 		$this->controller = new SemanticHandoffController(
 			$this->createMock(IRequest::class),
@@ -200,6 +219,7 @@ class SemanticHandoffControllerTest extends TestCase {
 	 */
 	public function testConvertNotFound(): void {
 		$this->signIn();
+		$this->withPrivilegedCaller();
 		$this->handoffService->expects($this->never())->method('handoff');
 		$response = $this->controller->convertRequestToCase(id: 'nope');
 		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
@@ -212,6 +232,7 @@ class SemanticHandoffControllerTest extends TestCase {
 	 */
 	public function testConvertInvalidStatus(): void {
 		$this->signIn();
+		$this->withPrivilegedCaller();
 		$this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'new'];
 		$this->handoffService->expects($this->never())->method('handoff');
 
@@ -227,6 +248,7 @@ class SemanticHandoffControllerTest extends TestCase {
 	 */
 	public function testConvertNotAvailable(): void {
 		$this->signIn();
+		$this->withPrivilegedCaller();
 		$this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'in_progress'];
 		$this->handoffService->method('hasImplementer')->willReturn(false);
 		$this->handoffService->expects($this->never())->method('handoff');
@@ -243,6 +265,7 @@ class SemanticHandoffControllerTest extends TestCase {
 	 */
 	public function testConvertHandoffFailedLeavesRequestUntouched(): void {
 		$this->signIn();
+		$this->withPrivilegedCaller();
 		$this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'in_progress'];
 		$this->handoffService->method('hasImplementer')->willReturn(true);
 		$this->handoffService->method('handoff')->willReturn(['ok' => false, 'reason' => 'handoff-failed']);
@@ -261,6 +284,7 @@ class SemanticHandoffControllerTest extends TestCase {
 	 */
 	public function testConvertSuccess(): void {
 		$this->signIn();
+		$this->withPrivilegedCaller();
 		$this->objectService->store['req-1'] = [
 			'uuid' => 'req-1',
 			'ticketType' => 'request',
@@ -295,6 +319,7 @@ class SemanticHandoffControllerTest extends TestCase {
 	 */
 	public function testConvertRefusesNonRequestTicket(): void {
 		$this->signIn();
+		$this->withPrivilegedCaller();
 		$this->objectService->store['cm-1'] = [
 			'uuid' => 'cm-1',
 			'ticketType' => 'contactmoment',
@@ -314,6 +339,7 @@ class SemanticHandoffControllerTest extends TestCase {
 	 */
 	public function testRequestAvailability(): void {
 		$this->signIn();
+		$this->withPrivilegedCaller();
 		$this->objectService->store['req-1'] = ['uuid' => 'req-1', 'ticketType' => 'request', 'status' => 'in_progress'];
 		$this->handoffService->method('hasImplementer')->willReturn(true);
 

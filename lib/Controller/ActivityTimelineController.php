@@ -114,7 +114,19 @@ class ActivityTimelineController extends Controller {
 			// the schema has no such field mayAccess() falls through to the
 			// privileged-group check, which is the only answer available for
 			// the 23 of 27 schemas that record no owner at all.
-			$payload = $object->jsonSerialize();
+			// The object service is pulled from the container BY STRING, so
+			// this seam is untyped: OpenRegister's find() hands back an
+			// ObjectEntity, but nothing here can enforce that and a plain array
+			// is what several doubles (and older OR versions) return. Calling
+			// jsonSerialize() unconditionally fataled on the array shape, and
+			// the catch below turned that into a silent "deny" — a 404 that
+			// looked like an authorization decision and was really a type
+			// error.
+			$payload = $object;
+			if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+				$payload = $object->jsonSerialize();
+			}
+
 			return $this->policy->mayAccess(
 				uid: $userId,
 				object: is_array($payload) ? $payload : [],

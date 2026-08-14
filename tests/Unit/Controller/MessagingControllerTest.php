@@ -430,6 +430,7 @@ class MessagingControllerTest extends TestCase {
 			$providerRepo,
 			$consent,
 			$userSession,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 
 		$response = $controller->preflight(contactId: 'c1');
