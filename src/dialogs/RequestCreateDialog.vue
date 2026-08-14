@@ -9,7 +9,7 @@
 			ref="form"
 			:show-actions="false"
 			@save="onSave"
-			@update:valid="v => (valid = v)" />
+			@update:valid="(v) => (valid = v)" />
 		<template #actions>
 			<NcButton data-testid="request-create-cancel" @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
@@ -76,7 +76,9 @@ export default {
 					this.$emit('created', result.id)
 				} else {
 					const error = this.objectStore.getError('ticket')
-					showError(error?.message || t('pipelinq', 'Failed to create request.'))
+					showError(
+						error?.message || t('pipelinq', 'Failed to create request.'),
+					)
 				}
 			} finally {
 				this.saving = false

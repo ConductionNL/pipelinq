@@ -91,7 +91,9 @@ export default {
 		 * @return {Array<object>} The tax breakdown rows.
 		 */
 		taxBreakdown() {
-			return [...(this.transaction.taxBreakdown || [])].sort((a, b) => a.rate - b.rate)
+			return [...(this.transaction.taxBreakdown || [])].sort(
+				(a, b) => a.rate - b.rate,
+			)
 		},
 		/**
 		 * Per-rate GL posting rows. Falls back to deriving descriptions from the
@@ -104,7 +106,7 @@ export default {
 			if (Array.isArray(rows) && rows.length > 0) {
 				return [...rows].sort((a, b) => a.rate - b.rate)
 			}
-			return this.taxBreakdown.map(row => ({
+			return this.taxBreakdown.map((row) => ({
 				...row,
 				description: rateDescription(row.rate),
 			}))

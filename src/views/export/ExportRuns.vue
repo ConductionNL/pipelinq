@@ -6,7 +6,9 @@
 	<div>
 		<CnIndexPage
 			:title="t('pipelinq', 'Export runs')"
-			:description="t('pipelinq', 'History of scheduled and manual export runs')"
+			:description="
+				t('pipelinq', 'History of scheduled and manual export runs')
+			"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
@@ -51,7 +53,11 @@ export default {
 	setup() {
 		const sidebarState = inject('sidebarState', null)
 		const objectStore = useObjectStore()
-		return useListView('exportRun', { sidebarState, objectStore, defaultSort: { key: 'startedAt', order: 'desc' } })
+		return useListView('exportRun', {
+			sidebarState,
+			objectStore,
+			defaultSort: { key: 'startedAt', order: 'desc' },
+		})
 	},
 	data() {
 		return {
@@ -66,7 +72,14 @@ export default {
 		 * @return {Array<string>} The column keys.
 		 */
 		visibleColumns() {
-			return ['jobId', 'status', 'rowCount', 'byteCount', 'startedAt', 'endedAt']
+			return [
+				'jobId',
+				'status',
+				'rowCount',
+				'byteCount',
+				'startedAt',
+				'endedAt',
+			]
 		},
 	},
 	methods: {

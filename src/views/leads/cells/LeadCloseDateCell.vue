@@ -2,10 +2,7 @@
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <!-- @spec openspec/specs/customer-360/spec.md -->
 <template>
-	<span
-		class="lead-close-cell"
-		:class="cellClass"
-		:title="srLabel">
+	<span class="lead-close-cell" :class="cellClass" :title="srLabel">
 		<AlertOctagram
 			v-if="state === 'overdue'"
 			:size="16"
@@ -62,7 +59,8 @@ export default {
 		 * @return {?Date}
 		 */
 		dateObj() {
-			if (this.value === null || this.value === undefined || this.value === '') return null
+			if (this.value === null || this.value === undefined || this.value === '')
+				return null
 			const d = new Date(this.value)
 			return Number.isNaN(d.getTime()) ? null : d
 		},
@@ -77,7 +75,9 @@ export default {
 			today.setHours(0, 0, 0, 0)
 			const target = new Date(this.dateObj)
 			target.setHours(0, 0, 0, 0)
-			const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000)
+			const diffDays = Math.round(
+				(target.getTime() - today.getTime()) / 86400000,
+			)
 			if (diffDays < 0) return 'overdue'
 			if (diffDays <= 7) return 'soon'
 			return 'ok'

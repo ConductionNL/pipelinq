@@ -9,7 +9,7 @@
 			ref="form"
 			:show-actions="false"
 			@save="onSave"
-			@update:valid="v => (valid = v)" />
+			@update:valid="(v) => (valid = v)" />
 		<template #actions>
 			<NcButton data-testid="client-create-cancel" @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}

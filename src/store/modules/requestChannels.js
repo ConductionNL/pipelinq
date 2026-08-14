@@ -29,7 +29,9 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 			try {
 				const response = await fetch(API_BASE, { headers: headers() })
 				if (!response.ok) {
-					throw new Error(`Failed to fetch request channels (${response.status})`)
+					throw new Error(
+						`Failed to fetch request channels (${response.status})`,
+					)
 				}
 				const data = await response.json()
 				this.tags = data.tags || []

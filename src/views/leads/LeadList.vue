@@ -32,9 +32,17 @@
 			<div class="lead-list__filters">
 				<NcCheckboxRadioSwitch
 					v-model="showStaleOnly"
-					:aria-label="t('pipelinq', 'Stale only (>{days}d)', { days: staleThreshold })"
+					:aria-label="
+						t('pipelinq', 'Stale only (>{days}d)', {
+							days: staleThreshold,
+						})
+					"
 					type="checkbox">
-					{{ t('pipelinq', 'Stale only (>{days}d)', { days: staleThreshold }) }}
+					{{
+						t('pipelinq', 'Stale only (>{days}d)', {
+							days: staleThreshold,
+						})
+					}}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
 					v-model="hideClosed"
@@ -59,7 +67,12 @@
 <script>
 import { CnIndexPage } from '@conduction/nextcloud-vue'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
-import { getDaysAge, isLeadOverdue, getOverdueDays, getStaleThreshold } from '../../services/pipelineUtils.js'
+import {
+	getDaysAge,
+	isLeadOverdue,
+	getOverdueDays,
+	getStaleThreshold,
+} from '../../services/pipelineUtils.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -73,7 +86,14 @@ export default {
 		return {
 			register: 'pipelinq',
 			schema: 'lead',
-			columns: ['title', 'stage', 'status', 'priority', 'value', 'expectedCloseDate'],
+			columns: [
+				'title',
+				'stage',
+				'status',
+				'priority',
+				'value',
+				'expectedCloseDate',
+			],
 			showStaleOnly: false,
 			hideClosed: true,
 			stages: [],
@@ -144,8 +164,11 @@ export default {
 		 */
 		itemsFilter(items) {
 			if (!Array.isArray(items)) return []
-			return items.filter(item => {
-				if (this.hideClosed && (item.status === 'won' || item.status === 'lost')) {
+			return items.filter((item) => {
+				if (
+					this.hideClosed
+					&& (item.status === 'won' || item.status === 'lost')
+				) {
 					return false
 				}
 				if (this.showStaleOnly && getDaysAge(item) < this.staleThreshold) {
@@ -163,9 +186,13 @@ export default {
 		 */
 		async loadDefaultPipeline() {
 			try {
-				const pipelines = await this.objectStore.fetchCollection('pipeline', { _limit: 50 })
+				const pipelines = await this.objectStore.fetchCollection(
+					'pipeline',
+					{ _limit: 50 },
+				)
 				if (!Array.isArray(pipelines)) return
-				const defaultPipeline = pipelines.find(p => p.isDefault) || pipelines[0]
+				const defaultPipeline =
+					pipelines.find((p) => p.isDefault) || pipelines[0]
 				if (defaultPipeline && Array.isArray(defaultPipeline.stages)) {
 					this.stages = defaultPipeline.stages
 				}

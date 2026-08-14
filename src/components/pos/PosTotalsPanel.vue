@@ -8,7 +8,9 @@
 			<span>{{ t('pipelinq', 'Subtotal') }}</span>
 			<span>{{ formatEur(totals.subtotal) }}</span>
 		</div>
-		<div v-if="totals.discountTotal > 0" class="pos-totals__row pos-totals__row--discount">
+		<div
+			v-if="totals.discountTotal > 0"
+			class="pos-totals__row pos-totals__row--discount">
 			<span>{{ t('pipelinq', 'Discount') }}</span>
 			<span>− {{ formatEur(totals.discountTotal) }}</span>
 		</div>
@@ -16,12 +18,20 @@
 			v-for="rate in totals.taxBreakdown"
 			:key="rate.rate"
 			class="pos-totals__row pos-totals__row--tax">
-			<span>{{ t('pipelinq', 'VAT {rate}%', { rate: rate.rate }) }} ({{ t('pipelinq', 'base') }} {{ formatEur(rate.base) }})</span>
+			<span
+				>{{ t('pipelinq', 'VAT {rate}%', { rate: rate.rate }) }} ({{
+					t('pipelinq', 'base')
+				}}
+				{{ formatEur(rate.base) }})</span
+			>
 			<span>{{ formatEur(rate.tax) }}</span>
 		</div>
 		<div class="pos-totals__row pos-totals__row--total">
 			<span>{{ t('pipelinq', 'Total') }}</span>
-			<span>{{ formatEur(totals.total) }} <small class="pos-totals__mode">{{ priceModeSuffix }}</small></span>
+			<span
+				>{{ formatEur(totals.total) }}
+				<small class="pos-totals__mode">{{ priceModeSuffix }}</small></span
+			>
 		</div>
 	</div>
 </template>

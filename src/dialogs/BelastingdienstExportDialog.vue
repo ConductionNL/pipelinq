@@ -17,7 +17,12 @@
 		@closing="$emit('close')">
 		<div class="bd-export">
 			<p>
-				{{ t('pipelinq', 'Select the period and export format for the Belastingdienst cash register audit package. All audit entries within the range are exported; the hash chain integrity is automatically included in the export metadata.') }}
+				{{
+					t(
+						'pipelinq',
+						'Select the period and export format for the Belastingdienst cash register audit package. All audit entries within the range are exported; the hash chain integrity is automatically included in the export metadata.',
+					)
+				}}
 			</p>
 
 			<div class="form-row">
@@ -26,16 +31,18 @@
 					id="bd-from"
 					v-model="fromDate"
 					type="date"
-					:aria-label="t('pipelinq', 'From date')">
+					:aria-label="t('pipelinq', 'From date')" />
 			</div>
 
 			<div class="form-row">
-				<label for="bd-to">{{ t('pipelinq', 'Up to and including (date)') }}</label>
+				<label for="bd-to">{{
+					t('pipelinq', 'Up to and including (date)')
+				}}</label>
 				<input
 					id="bd-to"
 					v-model="toDate"
 					type="date"
-					:aria-label="t('pipelinq', 'Up to and including date')">
+					:aria-label="t('pipelinq', 'Up to and including date')" />
 			</div>
 
 			<div class="form-row format-row">
@@ -65,10 +72,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="submitting"
-				@click="submit">
+			<NcButton variant="primary" :disabled="submitting" @click="submit">
 				{{ t('pipelinq', 'Download export package') }}
 			</NcButton>
 		</template>
@@ -121,11 +125,17 @@ export default {
 		submit() {
 			this.errorMessage = ''
 			if (!this.fromDate || !this.toDate) {
-				this.errorMessage = t('pipelinq', 'Fill in both dates (required for the Belastingdienst).')
+				this.errorMessage = t(
+					'pipelinq',
+					'Fill in both dates (required for the Belastingdienst).',
+				)
 				return
 			}
 			if (this.fromDate > this.toDate) {
-				this.errorMessage = t('pipelinq', 'The "from" date must be on or before the "to and including" date.')
+				this.errorMessage = t(
+					'pipelinq',
+					'The "from" date must be on or before the "to and including" date.',
+				)
 				return
 			}
 			this.$emit('confirm', {

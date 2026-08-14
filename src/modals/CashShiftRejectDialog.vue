@@ -9,12 +9,23 @@
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-reject">
-			<p>{{ t('pipelinq', 'This rejects the cash difference and reopens the shift for a recount. Enter a reason.') }}</p>
+			<p>
+				{{
+					t(
+						'pipelinq',
+						'This rejects the cash difference and reopens the shift for a recount. Enter a reason.',
+					)
+				}}
+			</p>
 			<NcTextArea
 				v-model="reason"
 				:label="t('pipelinq', 'Rejection reason')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Enter a reason for the rejection') : ''" />
+				:helper-text="
+					showError
+						? t('pipelinq', 'Enter a reason for the rejection')
+						: ''
+				" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">

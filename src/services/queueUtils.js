@@ -102,25 +102,29 @@ export function getOldestWaitingTime(items) {
 export function findMatchingAgents(category, skills, agentProfiles) {
 	if (!category) {
 		// No category: return all available agents
-		return agentProfiles.filter(p => p.isAvailable !== false)
+		return agentProfiles.filter((p) => p.isAvailable !== false)
 	}
 
 	const lowerCategory = category.toLowerCase()
 
 	// Find skills that cover this category
 	const matchingSkillIds = skills
-		.filter(s => s.isActive !== false && (s.categories || []).some(
-			c => c.toLowerCase() === lowerCategory,
-		))
-		.map(s => s.id)
+		.filter(
+			(s) =>
+				s.isActive !== false
+				&& (s.categories || []).some(
+					(c) => c.toLowerCase() === lowerCategory,
+				),
+		)
+		.map((s) => s.id)
 
 	if (matchingSkillIds.length === 0) return []
 
 	// Find agents with those skills
-	return agentProfiles.filter(p => {
+	return agentProfiles.filter((p) => {
 		if (p.isAvailable === false) return false
 		const agentSkills = p.skills || []
-		return agentSkills.some(skillId => matchingSkillIds.includes(skillId))
+		return agentSkills.some((skillId) => matchingSkillIds.includes(skillId))
 	})
 }
 

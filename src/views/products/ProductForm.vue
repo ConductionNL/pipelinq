@@ -11,7 +11,12 @@
 					:error="!!errors.name"
 					:helper-text="errors.name"
 					:maxlength="255"
-					@update:model-value="v => { form.name = v; validateField('name') }" />
+					@update:model-value="
+						(v) => {
+							form.name = v
+							validateField('name')
+						}
+					" />
 			</div>
 			<div class="form-group">
 				<label for="product-sku">{{ t('pipelinq', 'SKU') }}</label>
@@ -21,7 +26,7 @@
 					:label="t('pipelinq', 'SKU')"
 					:model-value="form.sku"
 					:maxlength="100"
-					@update:model-value="v => form.sku = v" />
+					@update:model-value="(v) => (form.sku = v)" />
 			</div>
 		</div>
 
@@ -52,7 +57,9 @@
 
 		<div class="form-row">
 			<div class="form-group">
-				<label for="product-unitPrice">{{ t('pipelinq', 'Unit Price') }} *</label>
+				<label for="product-unitPrice"
+					>{{ t('pipelinq', 'Unit Price') }} *</label
+				>
 				<NcTextField
 					id="product-unitPrice"
 					label-outside
@@ -61,7 +68,12 @@
 					:error="!!errors.unitPrice"
 					:helper-text="errors.unitPrice"
 					type="number"
-					@update:model-value="v => { form.unitPrice = v; validateField('unitPrice') }" />
+					@update:model-value="
+						(v) => {
+							form.unitPrice = v
+							validateField('unitPrice')
+						}
+					" />
 			</div>
 			<div class="form-group">
 				<label for="product-cost">{{ t('pipelinq', 'Cost') }}</label>
@@ -71,7 +83,7 @@
 					:label="t('pipelinq', 'Cost')"
 					:model-value="form.cost"
 					type="number"
-					@update:model-value="v => form.cost = v" />
+					@update:model-value="(v) => (form.cost = v)" />
 			</div>
 		</div>
 
@@ -84,57 +96,69 @@
 					:label="t('pipelinq', 'Unit')"
 					:model-value="form.unit"
 					:placeholder="t('pipelinq', 'e.g. piece, hour, license')"
-					@update:model-value="v => form.unit = v" />
+					@update:model-value="(v) => (form.unit = v)" />
 			</div>
 			<div class="form-group">
-				<label for="product-taxRate">{{ t('pipelinq', 'Tax Rate (%)') }}</label>
+				<label for="product-taxRate">{{
+					t('pipelinq', 'Tax Rate (%)')
+				}}</label>
 				<NcTextField
 					id="product-taxRate"
 					label-outside
 					:label="t('pipelinq', 'Tax Rate (%)')"
 					:model-value="form.taxRate"
-					:disabled="!!form.vatClass"
-					:helper-text="form.vatClass ? t('pipelinq', 'Derived from the selected BTW class') : ''"
+					:disabled="!!form.btwClass"
+					:helper-text="
+						form.btwClass
+							? t('pipelinq', 'Derived from the selected BTW class')
+							: ''
+					"
 					type="number"
-					@update:model-value="v => form.taxRate = v" />
+					@update:model-value="(v) => (form.taxRate = v)" />
 			</div>
 		</div>
 
 		<div class="form-row">
 			<div class="form-group">
-				<label for="product-btwClass">{{ t('pipelinq', 'BTW Class') }}</label>
+				<label for="product-btwClass">{{
+					t('pipelinq', 'BTW Class')
+				}}</label>
 				<NcSelect
-					v-model="form.vatClass"
+					v-model="form.btwClass"
 					input-id="product-btwClass"
 					:input-label="t('pipelinq', 'BTW Class')"
 					:aria-label-combobox="t('pipelinq', 'BTW Class')"
 					:options="btwClassOptions"
 					:placeholder="t('pipelinq', 'Select BTW class')"
 					label="label"
-					:reduce="opt => opt.id"
+					:reduce="(opt) => opt.id"
 					@update:model-value="onBtwClassChange" />
 			</div>
 			<div class="form-group">
-				<label for="product-barcode">{{ t('pipelinq', 'Barcode (EAN/UPC)') }}</label>
+				<label for="product-barcode">{{
+					t('pipelinq', 'Barcode (EAN/UPC)')
+				}}</label>
 				<NcTextField
 					id="product-barcode"
 					label-outside
 					:label="t('pipelinq', 'Barcode (EAN/UPC)')"
 					:model-value="form.barcode"
 					:maxlength="64"
-					@update:model-value="v => form.barcode = v" />
+					@update:model-value="(v) => (form.barcode = v)" />
 			</div>
 		</div>
 
 		<div v-if="form.type === 'service'" class="form-group">
-			<label for="product-duration">{{ t('pipelinq', 'Duration (minutes)') }}</label>
+			<label for="product-duration">{{
+				t('pipelinq', 'Duration (minutes)')
+			}}</label>
 			<NcTextField
 				id="product-duration"
 				label-outside
 				:label="t('pipelinq', 'Duration (minutes)')"
 				:model-value="form.duration"
 				type="number"
-				@update:model-value="v => form.duration = v" />
+				@update:model-value="(v) => (form.duration = v)" />
 		</div>
 
 		<div class="form-group">
@@ -146,11 +170,13 @@
 				:options="categoryOptions"
 				:placeholder="t('pipelinq', 'Select category')"
 				label="name"
-				:reduce="opt => opt.id" />
+				:reduce="(opt) => opt.id" />
 		</div>
 
 		<div class="form-group">
-			<label for="product-description">{{ t('pipelinq', 'Description') }}</label>
+			<label for="product-description">{{
+				t('pipelinq', 'Description')
+			}}</label>
 			<textarea id="product-description" v-model="form.description" rows="3" />
 		</div>
 
@@ -198,7 +224,7 @@ export default {
 				status: 'active',
 				unit: '',
 				taxRate: '21',
-				vatClass: null,
+				btwClass: null,
 				barcode: '',
 				duration: '',
 			},
@@ -232,15 +258,16 @@ export default {
 		isValid() {
 			const hasName = this.form.name.trim().length > 0
 			const hasType = !!this.form.type
-			const hasPrice = this.form.unitPrice !== '' && Number(this.form.unitPrice) >= 0
-			const noErrors = Object.values(this.errors).every(e => !e)
+			const hasPrice =
+				this.form.unitPrice !== '' && Number(this.form.unitPrice) >= 0
+			const noErrors = Object.values(this.errors).every((e) => !e)
 			return hasName && hasType && hasPrice && noErrors
 		},
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-14
 		 */
 		categoryOptions() {
-			return this.categories.map(c => ({ id: c.id, name: c.name }))
+			return this.categories.map((c) => ({ id: c.id, name: c.name }))
 		},
 	},
 	watch: {
@@ -270,16 +297,20 @@ export default {
 				name: data.name || '',
 				description: data.description || '',
 				sku: data.sku || '',
-				unitPrice: data.unitPrice !== undefined ? String(data.unitPrice) : '',
+				unitPrice:
+					data.unitPrice !== undefined ? String(data.unitPrice) : '',
 				cost: data.cost !== undefined ? String(data.cost) : '',
 				category: data.category || null,
 				type: data.type || null,
 				status: data.status || 'active',
 				unit: data.unit || '',
 				taxRate: data.taxRate !== undefined ? String(data.taxRate) : '21',
-				vatClass: data.vatClass || null,
+				btwClass: data.btwClass || null,
 				barcode: data.barcode || '',
-				duration: data.duration !== undefined && data.duration !== null ? String(data.duration) : '',
+				duration:
+					data.duration !== undefined && data.duration !== null
+						? String(data.duration)
+						: '',
 			}
 			this.errors = { name: '', type: '', unitPrice: '' }
 		},
@@ -287,8 +318,11 @@ export default {
 		 * Sync taxRate from the selected BTW class (server re-derives on lookup).
 		 */
 		onBtwClassChange() {
-			if (this.form.vatClass && this.btwRateMap[this.form.vatClass] !== undefined) {
-				this.form.taxRate = String(this.btwRateMap[this.form.vatClass])
+			if (
+				this.form.btwClass
+				&& this.btwRateMap[this.form.btwClass] !== undefined
+			) {
+				this.form.taxRate = String(this.btwRateMap[this.form.btwClass])
 			}
 		},
 		/**
@@ -297,27 +331,33 @@ export default {
 		 */
 		validateField(field) {
 			switch (field) {
-			case 'name':
-				if (!this.form.name.trim()) {
-					this.errors.name = t('pipelinq', 'Name is required')
-				} else {
-					this.errors.name = ''
-				}
-				break
-			case 'type':
-				if (!this.form.type) {
-					this.errors.type = t('pipelinq', 'Type is required')
-				} else {
-					this.errors.type = ''
-				}
-				break
-			case 'unitPrice':
-				if (this.form.unitPrice === '' || Number(this.form.unitPrice) < 0) {
-					this.errors.unitPrice = t('pipelinq', 'Unit price must be 0 or greater')
-				} else {
-					this.errors.unitPrice = ''
-				}
-				break
+				case 'name':
+					if (!this.form.name.trim()) {
+						this.errors.name = t('pipelinq', 'Name is required')
+					} else {
+						this.errors.name = ''
+					}
+					break
+				case 'type':
+					if (!this.form.type) {
+						this.errors.type = t('pipelinq', 'Type is required')
+					} else {
+						this.errors.type = ''
+					}
+					break
+				case 'unitPrice':
+					if (
+						this.form.unitPrice === ''
+						|| Number(this.form.unitPrice) < 0
+					) {
+						this.errors.unitPrice = t(
+							'pipelinq',
+							'Unit price must be 0 or greater',
+						)
+					} else {
+						this.errors.unitPrice = ''
+					}
+					break
 			}
 		},
 		/**
@@ -341,11 +381,12 @@ export default {
 				unitPrice: Number(this.form.unitPrice),
 				cost: this.form.cost ? Number(this.form.cost) : null,
 				taxRate: this.form.taxRate ? Number(this.form.taxRate) : 21,
-				vatClass: this.form.vatClass || null,
+				btwClass: this.form.btwClass || null,
 				barcode: this.form.barcode || '',
-				duration: this.form.type === 'service' && this.form.duration !== ''
-					? Number(this.form.duration)
-					: null,
+				duration:
+					this.form.type === 'service' && this.form.duration !== ''
+						? Number(this.form.duration)
+						: null,
 			}
 			if (this.product?.id) {
 				data.id = this.product.id
@@ -357,7 +398,10 @@ export default {
 		 */
 		async fetchCategories() {
 			try {
-				const results = await this.objectStore.fetchCollection('productCategory', { _limit: 100 })
+				const results = await this.objectStore.fetchCollection(
+					'productCategory',
+					{ _limit: 100 },
+				)
 				this.categories = results || []
 			} catch {
 				this.categories = []

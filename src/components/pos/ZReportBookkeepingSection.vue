@@ -34,13 +34,24 @@
 							:label="bookkeepingStatusLabel" />
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Shillinq journal entry id') }}</label>
-						<code v-if="zReport.shillinqJournalEntryId" data-testid="pos-eod-journal-id">{{ zReport.shillinqJournalEntryId }}</code>
+						<label>{{
+							t('pipelinq', 'Shillinq journal entry id')
+						}}</label>
+						<code
+							v-if="zReport.shillinqJournalEntryId"
+							data-testid="pos-eod-journal-id"
+							>{{ zReport.shillinqJournalEntryId }}</code
+						>
 						<span v-else>—</span>
 					</div>
 				</div>
 				<p class="z-report-section__hint">
-					{{ t('pipelinq', 'The general ledger, the VAT posting and the journal entry are managed in shillinq. Pipelinq only raises the business facts of this POS day via the integration registry.') }}
+					{{
+						t(
+							'pipelinq',
+							'The general ledger, the VAT posting and the journal entry are managed in shillinq. Pipelinq only raises the business facts of this POS day via the integration registry.',
+						)
+					}}
 				</p>
 				<NcButton
 					v-if="canRetry"
@@ -54,7 +65,9 @@
 
 			<section class="z-report-section__block">
 				<h4>{{ t('pipelinq', 'VAT breakdown') }}</h4>
-				<table class="z-report-section__table" data-testid="z-report-tax-table">
+				<table
+					class="z-report-section__table"
+					data-testid="z-report-tax-table">
 					<thead>
 						<tr>
 							<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
@@ -70,7 +83,9 @@
 						</tr>
 						<tr v-if="!taxBreakdown.length">
 							<td colspan="3">
-								{{ t('pipelinq', 'No VAT breakdown — empty report.') }}
+								{{
+									t('pipelinq', 'No VAT breakdown — empty report.')
+								}}
 							</td>
 						</tr>
 					</tbody>
@@ -79,7 +94,9 @@
 
 			<section class="z-report-section__block">
 				<h4>{{ t('pipelinq', 'Payment methods') }}</h4>
-				<table class="z-report-section__table" data-testid="z-report-payment-table">
+				<table
+					class="z-report-section__table"
+					data-testid="z-report-payment-table">
 					<thead>
 						<tr>
 							<th scope="col">{{ t('pipelinq', 'Method') }}</th>
@@ -100,9 +117,15 @@
 				</table>
 			</section>
 		</template>
-		<ConfirmDialog v-if="showRetryConfirm"
+		<ConfirmDialog
+			v-if="showRetryConfirm"
 			:name="t('pipelinq', 'Re-raise journal entry')"
-			:message="t('pipelinq', 'Re-raise journal entry at shillinq? This uses the same idempotency key, so shillinq prevents duplicate postings.')"
+			:message="
+				t(
+					'pipelinq',
+					'Re-raise journal entry at shillinq? This uses the same idempotency key, so shillinq prevents duplicate postings.',
+				)
+			"
 			:confirm-label="t('pipelinq', 'Re-raise')"
 			variant="primary"
 			@confirm="performRetry"
@@ -161,14 +184,19 @@ export default {
 				return this.zReportId
 			}
 			const ctx = this.cnSectionContext
-			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
+			const bag =
+				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
 		taxBreakdown() {
-			return Array.isArray(this.zReport.taxBreakdown) ? this.zReport.taxBreakdown : []
+			return Array.isArray(this.zReport.taxBreakdown)
+				? this.zReport.taxBreakdown
+				: []
 		},
 		paymentBreakdown() {
-			return Array.isArray(this.zReport.paymentMethodBreakdown) ? this.zReport.paymentMethodBreakdown : []
+			return Array.isArray(this.zReport.paymentMethodBreakdown)
+				? this.zReport.paymentMethodBreakdown
+				: []
 		},
 		bookkeepingStatusLabel() {
 			const key = this.zReport.bookkeepingStatus || 'pending'
@@ -185,7 +213,10 @@ export default {
 			const status = this.zReport.bookkeepingStatus || 'pending'
 			const isCandidate = ['pending', 'failed'].includes(status)
 			const hasTakings = Number(this.zReport.transactionCount || 0) > 0
-			const isManager = typeof window.OC?.isUserAdmin === 'function' ? window.OC.isUserAdmin() : false
+			const isManager =
+				typeof window.OC?.isUserAdmin === 'function'
+					? window.OC.isUserAdmin()
+					: false
 			return isCandidate && hasTakings && isManager
 		},
 	},
@@ -208,9 +239,16 @@ export default {
 			}
 			this.loading = true
 			try {
-				this.zReport = await this.objectStore.fetchObject('posZReport', this.resolvedId) || {}
+				this.zReport =
+					(await this.objectStore.fetchObject(
+						'posZReport',
+						this.resolvedId,
+					)) || {}
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Could not load Z-report.'))
+				showError(
+					err?.response?.data?.error
+						|| t('pipelinq', 'Could not load Z-report.'),
+				)
 			} finally {
 				this.loading = false
 			}
@@ -249,7 +287,9 @@ export default {
 				showSuccess(t('pipelinq', 'Journal entry raised at shillinq.'))
 				await this.load()
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Raise failed.'))
+				showError(
+					err?.response?.data?.error || t('pipelinq', 'Raise failed.'),
+				)
 			} finally {
 				this.busy = false
 			}

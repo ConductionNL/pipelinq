@@ -10,37 +10,50 @@
   - inside its parent (ADR-004); it was extracted out of QueueList.vue.
   -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Create queue')"
-		@closing="$emit('close')">
+	<NcDialog :name="t('pipelinq', 'Create queue')" @closing="$emit('close')">
 		<div class="create-form">
 			<label for="queue-new-title">{{ t('pipelinq', 'Title') }}</label>
-			<input id="queue-new-title"
+			<input
+				id="queue-new-title"
 				v-model="newQueue.title"
 				type="text"
-				:placeholder="t('pipelinq', 'Queue name...')">
+				:placeholder="t('pipelinq', 'Queue name...')" />
 
-			<label for="queue-new-description">{{ t('pipelinq', 'Description') }}</label>
-			<textarea id="queue-new-description" v-model="newQueue.description" :placeholder="t('pipelinq', 'Optional description...')" />
+			<label for="queue-new-description">{{
+				t('pipelinq', 'Description')
+			}}</label>
+			<textarea
+				id="queue-new-description"
+				v-model="newQueue.description"
+				:placeholder="t('pipelinq', 'Optional description...')" />
 
-			<label for="queue-new-categories">{{ t('pipelinq', 'Categories (comma-separated)') }}</label>
-			<input id="queue-new-categories"
+			<label for="queue-new-categories">{{
+				t('pipelinq', 'Categories (comma-separated)')
+			}}</label>
+			<input
+				id="queue-new-categories"
 				v-model="newQueue.categoriesInput"
 				type="text"
-				:placeholder="t('pipelinq', 'e.g. vergunningen, omgevingsrecht')">
+				:placeholder="t('pipelinq', 'e.g. vergunningen, omgevingsrecht')" />
 
-			<label for="queue-new-max-capacity">{{ t('pipelinq', 'Max capacity (empty = unlimited)') }}</label>
-			<input id="queue-new-max-capacity"
+			<label for="queue-new-max-capacity">{{
+				t('pipelinq', 'Max capacity (empty = unlimited)')
+			}}</label>
+			<input
+				id="queue-new-max-capacity"
 				v-model.number="newQueue.maxCapacity"
 				type="number"
 				min="1"
-				autocomplete="off">
+				autocomplete="off" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton variant="primary" :disabled="!newQueue.title" @click="$emit('create', { ...newQueue })">
+			<NcButton
+				variant="primary"
+				:disabled="!newQueue.title"
+				@click="$emit('create', { ...newQueue })">
 				{{ t('pipelinq', 'Create') }}
 			</NcButton>
 		</template>

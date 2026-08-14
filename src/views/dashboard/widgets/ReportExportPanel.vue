@@ -28,23 +28,25 @@
 				{{ t('pipelinq', 'Report Export') }}
 			</span>
 			<span class="report-export__subtitle">
-				{{ t('pipelinq', 'Download CSV / Excel / JSON reports for funders and stakeholders.') }}
+				{{
+					t(
+						'pipelinq',
+						'Download CSV / Excel / JSON reports for funders and stakeholders.',
+					)
+				}}
 			</span>
 			<span class="report-export__chevron" aria-hidden="true">
 				{{ expanded ? '▾' : '▸' }}
 			</span>
 		</div>
-		<div
-			v-if="expanded"
-			id="report-export-body"
-			class="report-export__body">
+		<div v-if="expanded" id="report-export-body" class="report-export__body">
 			<NcSelect
 				v-model="entityType"
 				:input-label="t('pipelinq', 'Entity type')"
 				:options="entityOptions"
 				label="label"
 				track-by="value"
-				:reduce="opt => opt.value"
+				:reduce="(opt) => opt.value"
 				:clearable="false"
 				class="report-export__field" />
 			<NcSelect
@@ -53,7 +55,7 @@
 				:options="periodOptions"
 				label="label"
 				track-by="value"
-				:reduce="opt => opt.value"
+				:reduce="(opt) => opt.value"
 				:clearable="false"
 				class="report-export__field" />
 			<NcButton
@@ -67,8 +69,17 @@
 			v-if="showDialog"
 			ref="exportDialog"
 			:items="exportItems"
-			:dialog-title="t('pipelinq', 'Export {entity} report', { entity: selectedEntityLabel })"
-			:description="t('pipelinq', 'Generates a {period} report for {entity}.', { period: selectedPeriodLabel, entity: selectedEntityLabel })"
+			:dialog-title="
+				t('pipelinq', 'Export {entity} report', {
+					entity: selectedEntityLabel,
+				})
+			"
+			:description="
+				t('pipelinq', 'Generates a {period} report for {entity}.', {
+					period: selectedPeriodLabel,
+					entity: selectedEntityLabel,
+				})
+			"
 			:formats="exportFormats"
 			default-format="excel"
 			@confirm="onExportConfirm"
@@ -112,8 +123,14 @@ export default {
 			return [
 				{ value: 'leads', label: this.t('pipelinq', 'Leads') },
 				{ value: 'requests', label: this.t('pipelinq', 'Requests') },
-				{ value: 'contactmomenten', label: this.t('pipelinq', 'Contact moments') },
-				{ value: 'satisfaction', label: this.t('pipelinq', 'Satisfaction scores') },
+				{
+					value: 'contactmomenten',
+					label: this.t('pipelinq', 'Contact moments'),
+				},
+				{
+					value: 'satisfaction',
+					label: this.t('pipelinq', 'Satisfaction scores'),
+				},
 			]
 		},
 		periodOptions() {
@@ -125,11 +142,11 @@ export default {
 			]
 		},
 		selectedEntityLabel() {
-			const opt = this.entityOptions.find(o => o.value === this.entityType)
+			const opt = this.entityOptions.find((o) => o.value === this.entityType)
 			return opt ? opt.label : this.entityType
 		},
 		selectedPeriodLabel() {
-			const opt = this.periodOptions.find(o => o.value === this.period)
+			const opt = this.periodOptions.find((o) => o.value === this.period)
 			return opt ? opt.label : this.period
 		},
 		/**
@@ -172,7 +189,10 @@ export default {
 				period: this.period,
 				format: payload?.format,
 			})
-			if (this.$refs.exportDialog && typeof this.$refs.exportDialog.setResult === 'function') {
+			if (
+				this.$refs.exportDialog
+				&& typeof this.$refs.exportDialog.setResult === 'function'
+			) {
 				this.$refs.exportDialog.setResult({ success: true })
 			}
 		},

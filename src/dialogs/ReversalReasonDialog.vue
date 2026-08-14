@@ -19,16 +19,20 @@
 -->
 <template>
 	<NcDialog :name="t('pipelinq', 'Reverse payment')" @closing="$emit('cancel')">
-		<NcTextField id="reversal-reason"
+		<NcTextField
+			id="reversal-reason"
 			:label="t('pipelinq', 'Reason for reversal')"
 			:model-value="reason"
 			:placeholder="t('pipelinq', 'Why is this payment being reversed?')"
-			@update:model-value="v => reason = v" />
+			@update:model-value="(v) => (reason = v)" />
 		<template #actions>
 			<NcButton @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton variant="error" :disabled="!reason.trim()" @click="$emit('confirm', reason.trim())">
+			<NcButton
+				variant="error"
+				:disabled="!reason.trim()"
+				@click="$emit('confirm', reason.trim())">
 				{{ t('pipelinq', 'Reverse payment') }}
 			</NcButton>
 		</template>

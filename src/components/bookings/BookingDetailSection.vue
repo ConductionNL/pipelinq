@@ -102,15 +102,21 @@
 			<section class="booking-section__block">
 				<h4>{{ t('pipelinq', 'Notes') }}</h4>
 				<div class="form-group">
-					<label for="booking-notes">{{ t('pipelinq', 'Customer-facing notes') }}</label>
-					<textarea id="booking-notes"
+					<label for="booking-notes">{{
+						t('pipelinq', 'Customer-facing notes')
+					}}</label>
+					<textarea
+						id="booking-notes"
 						v-model="editableNotes"
 						rows="3"
 						maxlength="4000" />
 				</div>
 				<div class="form-group">
-					<label for="booking-internal-notes">{{ t('pipelinq', 'Internal staff notes') }}</label>
-					<textarea id="booking-internal-notes"
+					<label for="booking-internal-notes">{{
+						t('pipelinq', 'Internal staff notes')
+					}}</label>
+					<textarea
+						id="booking-internal-notes"
 						v-model="editableInternalNotes"
 						rows="3"
 						maxlength="4000" />
@@ -162,8 +168,12 @@
 						<thead>
 							<tr>
 								<th scope="col">{{ t('pipelinq', 'Status') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Changed at') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Changed by') }}</th>
+								<th scope="col">
+									{{ t('pipelinq', 'Changed at') }}
+								</th>
+								<th scope="col">
+									{{ t('pipelinq', 'Changed by') }}
+								</th>
 								<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
 							</tr>
 						</thead>
@@ -182,8 +192,13 @@
 			<section class="booking-section__block">
 				<h4>{{ t('pipelinq', 'Timeline') }}</h4>
 				<ol class="timeline">
-					<li v-for="(event, idx) in timeline" :key="idx" :class="`timeline-${event.kind}`">
-						<span class="timeline-when">{{ formatDateTime(event.at) }}</span>
+					<li
+						v-for="(event, idx) in timeline"
+						:key="idx"
+						:class="`timeline-${event.kind}`">
+						<span class="timeline-when">{{
+							formatDateTime(event.at)
+						}}</span>
 						<span class="timeline-text">{{ event.text }}</span>
 					</li>
 				</ol>
@@ -269,7 +284,8 @@ export default {
 				return this.bookingId
 			}
 			const ctx = this.cnSectionContext
-			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
+			const bag =
+				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
 		serviceName() {
@@ -281,10 +297,14 @@ export default {
 			return this.booking.customerId || '-'
 		},
 		assignments() {
-			return Array.isArray(this.booking.resourceAssignments) ? this.booking.resourceAssignments : []
+			return Array.isArray(this.booking.resourceAssignments)
+				? this.booking.resourceAssignments
+				: []
 		},
 		history() {
-			const raw = Array.isArray(this.booking.statusHistory) ? this.booking.statusHistory : []
+			const raw = Array.isArray(this.booking.statusHistory)
+				? this.booking.statusHistory
+				: []
 			return [...raw].sort((a, b) => {
 				const ta = a?.changedAt ? Date.parse(a.changedAt) : 0
 				const tb = b?.changedAt ? Date.parse(b.changedAt) : 0
@@ -294,25 +314,53 @@ export default {
 		timeline() {
 			const events = []
 			if (this.booking.startAt) {
-				events.push({ at: this.booking.startAt, kind: 'start', text: t('pipelinq', 'Booking starts') })
+				events.push({
+					at: this.booking.startAt,
+					kind: 'start',
+					text: t('pipelinq', 'Booking starts'),
+				})
 			}
 			if (this.booking.endAt) {
-				events.push({ at: this.booking.endAt, kind: 'end', text: t('pipelinq', 'Booking ends') })
+				events.push({
+					at: this.booking.endAt,
+					kind: 'end',
+					text: t('pipelinq', 'Booking ends'),
+				})
 			}
 			if (this.booking.confirmationSentAt) {
-				events.push({ at: this.booking.confirmationSentAt, kind: 'email', text: t('pipelinq', 'Confirmation email sent') })
+				events.push({
+					at: this.booking.confirmationSentAt,
+					kind: 'email',
+					text: t('pipelinq', 'Confirmation email sent'),
+				})
 			}
 			if (this.booking.reminderSentAt) {
-				events.push({ at: this.booking.reminderSentAt, kind: 'email', text: t('pipelinq', 'Reminder email sent') })
+				events.push({
+					at: this.booking.reminderSentAt,
+					kind: 'email',
+					text: t('pipelinq', 'Reminder email sent'),
+				})
 			}
 			if (this.booking.depositPaidAt) {
-				events.push({ at: this.booking.depositPaidAt, kind: 'payment', text: t('pipelinq', 'Deposit cleared') })
+				events.push({
+					at: this.booking.depositPaidAt,
+					kind: 'payment',
+					text: t('pipelinq', 'Deposit cleared'),
+				})
 			}
 			if (this.booking.noShowFeeChargedAt) {
-				events.push({ at: this.booking.noShowFeeChargedAt, kind: 'payment', text: t('pipelinq', 'No-show fee charged') })
+				events.push({
+					at: this.booking.noShowFeeChargedAt,
+					kind: 'payment',
+					text: t('pipelinq', 'No-show fee charged'),
+				})
 			}
 			if (this.booking.cancelledAt) {
-				events.push({ at: this.booking.cancelledAt, kind: 'cancel', text: t('pipelinq', 'Cancelled') })
+				events.push({
+					at: this.booking.cancelledAt,
+					kind: 'cancel',
+					text: t('pipelinq', 'Cancelled'),
+				})
 			}
 			return events.sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
 		},
@@ -320,14 +368,22 @@ export default {
 			const amount = Number(this.booking.depositAmount || 0)
 			if (!amount) return t('pipelinq', 'None')
 			const paid = !!this.booking.depositPaidAt
-			const formatted = this.formatCurrency(amount, this.service?.currency || 'EUR')
+			const formatted = this.formatCurrency(
+				amount,
+				this.service?.currency || 'EUR',
+			)
 			return paid
-				? t('pipelinq', '{amount} (paid {when})', { amount: formatted, when: this.formatDateTime(this.booking.depositPaidAt) })
+				? t('pipelinq', '{amount} (paid {when})', {
+						amount: formatted,
+						when: this.formatDateTime(this.booking.depositPaidAt),
+					})
 				: t('pipelinq', '{amount} (pending)', { amount: formatted })
 		},
 		notesDirty() {
-			return this.editableNotes !== this.savedNotes
+			return (
+				this.editableNotes !== this.savedNotes
 				|| this.editableInternalNotes !== this.savedInternalNotes
+			)
 		},
 		isFuture() {
 			if (!this.booking.endAt) return false
@@ -351,13 +407,21 @@ export default {
 			return this.booking.status === 'confirmed' && this.isPast
 		},
 		canReschedule() {
-			return ['confirmed', 'pending-deposit'].includes(this.booking.status) && this.isFuture
+			return (
+				['confirmed', 'pending-deposit'].includes(this.booking.status)
+				&& this.isFuture
+			)
 		},
 		canCancel() {
-			return ['confirmed', 'pending-deposit'].includes(this.booking.status) && this.isFuture
+			return (
+				['confirmed', 'pending-deposit'].includes(this.booking.status)
+				&& this.isFuture
+			)
 		},
 		canSendReminder() {
-			return this.booking.status === 'confirmed' && this.isFuture && this.hourAway
+			return (
+				this.booking.status === 'confirmed' && this.isFuture && this.hourAway
+			)
 		},
 	},
 	watch: {
@@ -407,14 +471,19 @@ export default {
 			}
 			this.loading = true
 			try {
-				this.booking = await this.objectStore.fetchObject('booking', this.resolvedId) || {}
+				this.booking =
+					(await this.objectStore.fetchObject('booking', this.resolvedId))
+					|| {}
 				this.editableNotes = this.booking.notes || ''
 				this.savedNotes = this.booking.notes || ''
 				this.editableInternalNotes = this.booking.internalNotes || ''
 				this.savedInternalNotes = this.booking.internalNotes || ''
 				await this.loadContext()
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Could not load booking.'))
+				showError(
+					err?.response?.data?.error
+						|| t('pipelinq', 'Could not load booking.'),
+				)
 			} finally {
 				this.loading = false
 			}
@@ -434,27 +503,50 @@ export default {
 			try {
 				const booking = this.booking
 				if (booking.serviceId && !this.service) {
-					this.service = await this.objectStore.fetchObject('service', booking.serviceId)
+					this.service = await this.objectStore.fetchObject(
+						'service',
+						booking.serviceId,
+					)
 				}
 				// Resolve the customer once per id. fetchObject returns null
 				// (it does not throw) on a 404, so fall back to `client` on a
 				// null contact rather than in a catch — and record the id so a
 				// genuinely missing customer is not refetched on every run.
-				if (booking.customerId && this.loadedCustomerId !== booking.customerId) {
+				if (
+					booking.customerId
+					&& this.loadedCustomerId !== booking.customerId
+				) {
 					this.loadedCustomerId = booking.customerId
-					const contact = await this.objectStore.fetchObject('contact', booking.customerId)
-					this.customer = contact || await this.objectStore.fetchObject('client', booking.customerId)
+					const contact = await this.objectStore.fetchObject(
+						'contact',
+						booking.customerId,
+					)
+					this.customer =
+						contact
+						|| (await this.objectStore.fetchObject(
+							'client',
+							booking.customerId,
+						))
 				}
 				// De-duplicate resource ids: a booking has one assignment row
 				// per step/time-slot, so the same resource recurs across rows.
-				const resourceIds = [...new Set((this.assignments || [])
-					.map(a => a?.resourceId)
-					.filter(Boolean))]
-					.filter(id => !this.resourceLookup[id])
+				const resourceIds = [
+					...new Set(
+						(this.assignments || [])
+							.map((a) => a?.resourceId)
+							.filter(Boolean),
+					),
+				].filter((id) => !this.resourceLookup[id])
 				for (const id of resourceIds) {
-					const resource = await this.objectStore.fetchObject('resource', id)
+					const resource = await this.objectStore.fetchObject(
+						'resource',
+						id,
+					)
 					if (resource?.name) {
-						this.resourceLookup = { ...this.resourceLookup, [id]: resource.name }
+						this.resourceLookup = {
+							...this.resourceLookup,
+							[id]: resource.name,
+						}
 					}
 				}
 			} finally {
@@ -493,7 +585,9 @@ export default {
 			this.busy = true
 			try {
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/bookings/${this.resolvedId}/${action}`),
+					generateUrl(
+						`/apps/pipelinq/api/bookings/${this.resolvedId}/${action}`,
+					),
 					{
 						method: 'POST',
 						headers: {
@@ -512,7 +606,10 @@ export default {
 				showSuccess(okMsg)
 				if (data.bookingId && data.bookingId !== this.resolvedId) {
 					// Reschedule returns a new UUID — navigate to the new booking.
-					this.$router.push({ name: 'BookingDetail', params: { id: data.bookingId } })
+					this.$router.push({
+						name: 'BookingDetail',
+						params: { id: data.bookingId },
+					})
 					return true
 				}
 				await this.load()
@@ -525,24 +622,48 @@ export default {
 			}
 		},
 		async confirmDeposit() {
-			await this.lifecycle('confirm-deposit', {}, t('pipelinq', 'Deposit confirmed.'))
+			await this.lifecycle(
+				'confirm-deposit',
+				{},
+				t('pipelinq', 'Deposit confirmed.'),
+			)
 		},
 		async markCompleted() {
-			await this.lifecycle('complete', {}, t('pipelinq', 'Booking marked completed.'))
+			await this.lifecycle(
+				'complete',
+				{},
+				t('pipelinq', 'Booking marked completed.'),
+			)
 		},
 		async markNoShow() {
-			await this.lifecycle('no-show', {}, t('pipelinq', 'Booking marked as no-show.'))
+			await this.lifecycle(
+				'no-show',
+				{},
+				t('pipelinq', 'Booking marked as no-show.'),
+			)
 		},
 		async sendReminder() {
-			await this.lifecycle('send-reminder', {}, t('pipelinq', 'Reminder dispatched.'))
+			await this.lifecycle(
+				'send-reminder',
+				{},
+				t('pipelinq', 'Reminder dispatched.'),
+			)
 		},
 		async onReschedule(newStartAt) {
 			this.showReschedule = false
-			await this.lifecycle('reschedule', { newStartAt }, t('pipelinq', 'Booking rescheduled.'))
+			await this.lifecycle(
+				'reschedule',
+				{ newStartAt },
+				t('pipelinq', 'Booking rescheduled.'),
+			)
 		},
 		async onCancel(reason) {
 			this.showCancel = false
-			await this.lifecycle('cancel', { reason: reason || '' }, t('pipelinq', 'Booking cancelled.'))
+			await this.lifecycle(
+				'cancel',
+				{ reason: reason || '' },
+				t('pipelinq', 'Booking cancelled.'),
+			)
 		},
 	},
 }
@@ -620,7 +741,8 @@ export default {
 	border-collapse: collapse;
 }
 
-.viewTable th, .viewTable td {
+.viewTable th,
+.viewTable td {
 	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);

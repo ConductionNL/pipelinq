@@ -17,12 +17,14 @@
     "test:l10n": "node tests/l10n/check-l10n.js",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "stylelint": "stylelint \"src/**/*.{vue,scss,css}\"",
+    "stylelint": "stylelint \"{src,css}/**/*.{vue,scss,css}\"",
     "stylelint-fix": "stylelint \"src/**/*.vue\" \"src/**/*.scss\" \"src/**/*.css\" --fix",
     "test:e2e": "playwright test",
     "test:e2e:docs": "playwright test --project docs-capture",
     "test:e2e:install": "playwright install chromium",
     "check:manifest": "node scripts/check-manifest.js",
+    "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
+    "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
     "prepare": "git config core.hooksPath .githooks || true"
   },
   "browserslist": [
@@ -66,6 +68,7 @@
     "@nextcloud/browserslist-config": "^3.0.1",
     "@nextcloud/eslint-config": "^8.4.1",
     "@nextcloud/eslint-plugin": "^2.2.1",
+    "@nextcloud/prettier-config": "^1.2.0",
     "@nextcloud/stylelint-config": "^2.4.0",
     "@nextcloud/webpack-vue-config": "^7.0.2",
     "@playwright/test": "^1.49.0",
@@ -78,6 +81,7 @@
     "css-loader": "~7.1.1",
     "esbuild": "^0.28.0",
     "eslint": "^8.56.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-config-standard": "^17.1.0",
     "eslint-import-resolver-alias": "^1.1.2",
     "eslint-import-resolver-exports": "^1.0.0-beta.5",
@@ -88,6 +92,7 @@
     "eslint-plugin-promise": "^6.6.0",
     "eslint-plugin-vue": "^9.33.0",
     "postcss-html": "^1.8.1",
+    "prettier": "^3.9.6",
     "sass": "^1.99.0",
     "sass-loader": "^16.0.8",
     "style-loader": "~4.0.0",
@@ -101,5 +106,6 @@
     "vue-loader": "^17.4.2",
     "webpack": "^5.94.0",
     "webpack-cli": "^6.0.1"
-  }
+  },
+  "prettier": "@nextcloud/prettier-config"
 }

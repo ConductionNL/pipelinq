@@ -7,7 +7,9 @@
   -->
 <template>
 	<div class="xwiki-sidebar-tab">
-		<div v-if="store.available === false && store.status !== null" class="xwiki-sidebar-tab__unavailable">
+		<div
+			v-if="store.available === false && store.status !== null"
+			class="xwiki-sidebar-tab__unavailable">
 			{{ t('pipelinq', 'xWiki integration unavailable') }}
 		</div>
 		<template v-else>
@@ -57,7 +59,7 @@
 						class="xwiki-sidebar-tab__search-input"
 						:aria-label="t('pipelinq', 'Search knowledge base')"
 						:placeholder="t('pipelinq', 'Search knowledge base')"
-						@input="onSearchInput">
+						@input="onSearchInput" />
 				</div>
 				<NcLoadingIcon v-if="store.loading" />
 				<XWikiArticleList

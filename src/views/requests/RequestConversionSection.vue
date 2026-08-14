@@ -24,7 +24,8 @@
 		<NcLoadingIcon :size="24" />
 	</div>
 	<div v-else-if="hasContent" class="request-conversion-section">
-		<NcButton v-if="showConvertButton"
+		<NcButton
+			v-if="showConvertButton"
 			variant="primary"
 			:disabled="busy"
 			@click="convertToCase">
@@ -39,7 +40,9 @@
 				<span class="request-conversion-section__reference-label">
 					{{ t('pipelinq', 'Case reference') }}
 				</span>
-				<code class="request-conversion-section__reference-value">{{ caseReference }}</code>
+				<code class="request-conversion-section__reference-value">{{
+					caseReference
+				}}</code>
 				<NcButton variant="tertiary" @click="copyReference">
 					{{ t('pipelinq', 'Copy') }}
 				</NcButton>
@@ -92,7 +95,8 @@ export default {
 				return this.requestId
 			}
 			const ctx = this.cnSectionContext
-			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
+			const bag =
+				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
 		caseReference() {
@@ -131,7 +135,10 @@ export default {
 			this.loading = true
 			try {
 				const { data } = await axios.get(
-					generateUrl('/apps/pipelinq/api/handoff/request/{id}/availability', { id: this.resolvedId }),
+					generateUrl(
+						'/apps/pipelinq/api/handoff/request/{id}/availability',
+						{ id: this.resolvedId },
+					),
 				)
 				this.availability = {
 					available: !!data.available,
@@ -155,7 +162,10 @@ export default {
 			this.busy = true
 			try {
 				const { data } = await axios.post(
-					generateUrl('/apps/pipelinq/api/handoff/request/{id}/convert-to-case', { id: this.resolvedId }),
+					generateUrl(
+						'/apps/pipelinq/api/handoff/request/{id}/convert-to-case',
+						{ id: this.resolvedId },
+					),
 					{},
 				)
 				this.availability = {
@@ -168,13 +178,27 @@ export default {
 				this.$emit('converted', { caseReference: data.caseReference || '' })
 			} catch (err) {
 				const body = (err && err.response && err.response.data) || {}
-				if (body.status === 'invalid-status' || body.status === 'not-available') {
-					showError(t('pipelinq', 'Conversion is no longer available for this request.'))
+				if (
+					body.status === 'invalid-status'
+					|| body.status === 'not-available'
+				) {
+					showError(
+						t(
+							'pipelinq',
+							'Conversion is no longer available for this request.',
+						),
+					)
 					await this.loadAvailability()
 				} else if (body.status === 'handoff-failed') {
-					showError(t('pipelinq', 'Could not create the case: {reason}', { reason: body.reason || t('pipelinq', 'unknown error') }))
+					showError(
+						t('pipelinq', 'Could not create the case: {reason}', {
+							reason: body.reason || t('pipelinq', 'unknown error'),
+						}),
+					)
 				} else {
-					showError(t('pipelinq', 'Could not convert this request to a case.'))
+					showError(
+						t('pipelinq', 'Could not convert this request to a case.'),
+					)
 				}
 			} finally {
 				this.busy = false

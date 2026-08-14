@@ -31,8 +31,8 @@
 					inputmode="numeric"
 					maxlength="9"
 					:helper-text="bsnFeedback || ' '"
-					:success="validation.isFormeelValid"
-					:error="rawBsn.length > 0 && !validation.isFormeelValid" />
+					:success="validation.isFormeelGeldig"
+					:error="rawBsn.length > 0 && !validation.isFormeelGeldig" />
 				<NcButton
 					variant="primary"
 					data-testid="brp-lookup-button"
@@ -46,36 +46,49 @@
 				<NcLoadingIcon />
 				<span>{{ t('pipelinq', 'Retrieve from BRP...') }}</span>
 			</div>
-			<div v-else-if="lookupState === 'error'" class="brp-panel__status brp-panel__status--error">
+			<div
+				v-else-if="lookupState === 'error'"
+				class="brp-panel__status brp-panel__status--error">
 				{{ errorMessage }}
 			</div>
 
 			<div v-if="persoon" class="brp-panel__persoon" data-testid="brp-persoon">
 				<div class="brp-panel__persoon-header">
-					<span v-if="persoon.indicationGeheim === '1'" class="brp-panel__geheim-icon" :title="t('pipelinq', 'Confidentiality active')">
+					<span
+						v-if="persoon.indicatieGeheim === '1'"
+						class="brp-panel__geheim-icon"
+						:title="t('pipelinq', 'Confidentiality active')">
 						🔒
 					</span>
 					<strong>{{ fullName }}</strong>
-					<span v-if="cacheHit" class="brp-panel__cache-badge" :title="t('pipelinq', 'Served from cache')">
+					<span
+						v-if="cacheHit"
+						class="brp-panel__cache-badge"
+						:title="t('pipelinq', 'Served from cache')">
 						⚡ {{ t('pipelinq', 'from cache') }}
 					</span>
 				</div>
 				<dl class="brp-panel__persoon-fields">
 					<dt>{{ t('pipelinq', 'Date of birth') }}</dt>
-					<dd>{{ persoon.date_of_birth || '-' }}</dd>
+					<dd>{{ persoon.geboortedatum || '-' }}</dd>
 					<dt>{{ t('pipelinq', 'Place of birth') }}</dt>
-					<dd>{{ persoon.birth_place || '-' }}</dd>
+					<dd>{{ persoon.geboorteplaats || '-' }}</dd>
 					<dt>{{ t('pipelinq', 'Gender') }}</dt>
 					<dd>{{ persoon.geslacht || '-' }}</dd>
 				</dl>
-				<div v-if="persoon.indicationGeheim === '1' && !revealedAddress" class="brp-panel__secret">
+				<div
+					v-if="persoon.indicatieGeheim === '1' && !revealedAddress"
+					class="brp-panel__secret">
 					<span>[{{ t('pipelinq', 'SECRET') }}]</span>
 					<NcButton variant="tertiary" @click="revealAddress">
 						{{ t('pipelinq', 'Show address under accountability') }}
 					</NcButton>
 				</div>
 				<div v-else-if="address" class="brp-panel__address">
-					<div>{{ address.straat }} {{ address.huisnummer }}{{ address.huisletter }}</div>
+					<div>
+						{{ address.straat }} {{ address.huisnummer
+						}}{{ address.huisletter }}
+					</div>
 					<div>{{ address.postcode }} {{ address.woonplaats }}</div>
 					<div v-if="address.land && address.land !== 'Nederland'">
 						{{ address.land }}
@@ -138,25 +151,29 @@ export default {
 		},
 		bsnFeedback() {
 			if (!this.rawBsn) return ''
-			return this.validation.errorMessage || this.t('pipelinq', 'BSN passes the 11-check')
+			return (
+				this.validation.errorMessage
+				|| this.t('pipelinq', 'BSN passes the 11-check')
+			)
 		},
 		canLookup() {
-			return this.validation.isFormeelValid && this.lookupState !== 'loading'
+			return this.validation.isFormeelGeldig && this.lookupState !== 'loading'
 		},
 		fullName() {
 			if (!this.persoon) return ''
 			const parts = [
-				this.persoon.given_names,
-				this.persoon.name_prefix,
-				this.persoon.surname,
+				this.persoon.voornamen,
+				this.persoon.voorvoegsel,
+				this.persoon.geslachtsnaam,
 			].filter(Boolean)
 			return parts.join(' ')
 		},
 		address() {
 			if (!this.persoon) return null
-			if (this.persoon.indicationGeheim === '1' && !this.revealedAddress) return null
+			if (this.persoon.indicatieGeheim === '1' && !this.revealedAddress)
+				return null
 			if (this.revealedVerblijfplaats) return this.revealedVerblijfplaats
-			return this.persoon.residence || null
+			return this.persoon.verblijfplaats || null
 		},
 	},
 	methods: {
@@ -175,7 +192,7 @@ export default {
 					bsn: this.rawBsn,
 					verzoekreden: payload.verzoekreden,
 					doelbinding: payload.doelbinding,
-					basis: payload.basis,
+					grondslag: payload.grondslag,
 					gekoppeldContact: this.contactId,
 					vogScreening: payload.vogScreening,
 				})
@@ -190,21 +207,33 @@ export default {
 			} catch (err) {
 				this.lookupState = 'error'
 				const data = err?.response?.data || {}
-				this.errorMessage = data.errorMessage
-					|| this.t('pipelinq', 'BRP is currently unavailable — please try again in a few minutes.')
+				this.errorMessage =
+					data.errorMessage
+					|| this.t(
+						'pipelinq',
+						'BRP is currently unavailable — please try again in a few minutes.',
+					)
 				showError(this.errorMessage)
 			}
 		},
 		async revealAddress() {
 			try {
-				const url = generateUrl('/apps/pipelinq/api/brp/contact/{id}/reveal-address', { id: this.contactId })
+				const url = generateUrl(
+					'/apps/pipelinq/api/brp/contact/{id}/reveal-address',
+					{ id: this.contactId },
+				)
 				const response = await axios.post(url)
 				this.revealedAddress = true
-				this.revealedVerblijfplaats = response.data?.residence || null
-				showSuccess(this.t('pipelinq', 'Address revealed — audit record created.'))
+				this.revealedVerblijfplaats = response.data?.verblijfplaats || null
+				showSuccess(
+					this.t('pipelinq', 'Address revealed — audit record created.'),
+				)
 			} catch (err) {
 				const data = err?.response?.data || {}
-				showError(data.errorMessage || this.t('pipelinq', 'Could not reveal address.'))
+				showError(
+					data.errorMessage
+						|| this.t('pipelinq', 'Could not reveal address.'),
+				)
 			}
 		},
 	},

@@ -43,14 +43,21 @@ test('requests list renders the seeded request tickets', async ({ page }) => {
 	await openRequests(page)
 
 	const content = page.locator('#content-vue')
-	await expect(content.locator('table, .cn-data-table, [data-testid="cn-data-table"]').first()).toBeVisible()
+	await expect(
+		content
+			.locator('table, .cn-data-table, [data-testid="cn-data-table"]')
+			.first(),
+	).toBeVisible()
 
 	// Asserted per ROW rather than by column index: CnDataTable can prepend a
 	// selection column, so `td:first-child` is not reliably the ticketType cell.
 	const rows = content.locator('table tbody tr')
 	await expect(rows.first()).toBeVisible()
 	const count = await rows.count()
-	expect(count, 'the Tickets tab must show at least one seeded request').toBeGreaterThan(0)
+	expect(
+		count,
+		'the Tickets tab must show at least one seeded request',
+	).toBeGreaterThan(0)
 	for (let i = 0; i < count; i++) {
 		await expect(rows.nth(i)).toContainText(/request/i)
 	}
@@ -61,25 +68,37 @@ test('request create form exposes a title field', async ({ page }) => {
 	await openRequests(page)
 	await dismissSupportDialog(page)
 
-	await page.locator('#content-vue').getByRole('button', { name: 'Add Ticket' }).click()
+	await page
+		.locator('#content-vue')
+		.getByRole('button', { name: 'Add Ticket' })
+		.click()
 	const dialog = page.locator('.modal-container, [role="dialog"]').first()
 	await expect(dialog).toBeVisible({ timeout: 10000 })
 	// `title` is REQUIRED on the ticket schema, so the create form must offer it.
-	await expect(dialog.getByRole('textbox', { name: /title/i }).first()).toBeVisible({ timeout: 10000 })
+	await expect(
+		dialog.getByRole('textbox', { name: /title/i }).first(),
+	).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#validation---title-is-required
-test('request create form offers the required ticketType discriminator', async ({ page }) => {
+test('request create form offers the required ticketType discriminator', async ({
+	page,
+}) => {
 	await openRequests(page)
 	await dismissSupportDialog(page)
 
-	await page.locator('#content-vue').getByRole('button', { name: 'Add Ticket' }).click()
+	await page
+		.locator('#content-vue')
+		.getByRole('button', { name: 'Add Ticket' })
+		.click()
 	const dialog = page.locator('.modal-container, [role="dialog"]').first()
 	await expect(dialog).toBeVisible({ timeout: 10000 })
 	// `ticketType` is the second REQUIRED field on the schema. It is what makes
 	// this one form able to create a request, a complaint or a contactmoment,
 	// so its presence is the contract this unified surface stands on.
-	await expect(dialog.getByText(/ticket ?type/i).first()).toBeVisible({ timeout: 10000 })
+	await expect(dialog.getByText(/ticket ?type/i).first()).toBeVisible({
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/request-management/spec.md#set-channel-during-creation
@@ -87,21 +106,32 @@ test('request list surfaces the channel column', async ({ page }) => {
 	await openRequests(page)
 	// `channel` is a declared column on the Tickets index and the seeded
 	// requests carry web / telefoon / email values.
-	await expect(page.locator('#content-vue table tbody')).toContainText(/web|telefoon|email|balie/i, { timeout: 15000 })
+	await expect(page.locator('#content-vue table tbody')).toContainText(
+		/web|telefoon|email|balie/i,
+		{ timeout: 15000 },
+	)
 })
 
 // @e2e openspec/specs/request-management/spec.md#set-priority-during-creation
 test('request list is reachable from the sidebar', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Tickets', /#\/tickets/)
-	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Tickets' }).first()).toBeVisible()
+	await expect(
+		page
+			.locator('#content-vue')
+			.getByRole('heading', { name: 'Tickets' })
+			.first(),
+	).toBeVisible()
 })
 
 // @e2e openspec/specs/request-management/spec.md#priority-visual-indicators
 test('request list surfaces the priority column', async ({ page }) => {
 	await openRequests(page)
 	// The seeded requests span normal / high / low priorities.
-	await expect(page.locator('#content-vue table tbody')).toContainText(/normal|high|low|urgent/i, { timeout: 15000 })
+	await expect(page.locator('#content-vue table tbody')).toContainText(
+		/normal|high|low|urgent/i,
+		{ timeout: 15000 },
+	)
 })
 
 // @e2e openspec/specs/request-management/spec.md#request-status-distribution-on-dashboard
@@ -110,14 +140,18 @@ test('requests by status widget on dashboard', async ({ page }) => {
 	// dashboard (#/operational), not the landing Commercial overview — the IA
 	// restructure split the dashboards by audience.
 	await page.goto('/apps/pipelinq/#/operational')
-	await expect(page.locator('#content-vue').getByText('Requests by Status').first()).toBeVisible({ timeout: 15000 })
+	await expect(
+		page.locator('#content-vue').getByText('Requests by Status').first(),
+	).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#request-card-displays-key-information
 test('request rows carry the seeded request titles', async ({ page }) => {
 	await openRequests(page)
 	// A concrete seeded record, not merely "a table exists".
-	await expect(page.locator('#content-vue table tbody')).toContainText('[Demo]', { timeout: 15000 })
+	await expect(page.locator('#content-vue table tbody')).toContainText('[Demo]', {
+		timeout: 15000,
+	})
 })
 
 // @e2e openspec/specs/request-management/spec.md#request-without-queue
@@ -129,16 +163,24 @@ test('request list renders without pipelinq console errors', async ({ page }) =>
 })
 
 // @e2e openspec/specs/request-management/spec.md#bulk-actions-bar-visibility
-test('request list exposes the row-selection checkbox that gates bulk actions', async ({ page }) => {
+test('request list exposes the row-selection checkbox that gates bulk actions', async ({
+	page,
+}) => {
 	await openRequests(page)
 	// The bulk-actions bar is gated on a row selection, so the selection
 	// affordance itself is the observable precondition.
-	const firstRowCheckbox = page.locator('#content-vue table tbody tr').first().locator('input[type="checkbox"]').first()
+	const firstRowCheckbox = page
+		.locator('#content-vue table tbody tr')
+		.first()
+		.locator('input[type="checkbox"]')
+		.first()
 	await expect(firstRowCheckbox).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#pagination
-test('the ticket list paginates and page 2 shows different rows', async ({ page }) => {
+test('the ticket list paginates and page 2 shows different rows', async ({
+	page,
+}) => {
 	await openApp(page)
 	await navClick(page, 'Tickets', /\/tickets/)
 
@@ -149,16 +191,25 @@ test('the ticket list paginates and page 2 shows different rows', async ({ page 
 	// contract is genuinely exercisable; asserting it on Queues (6 rows, one
 	// page) asserted a control the component correctly does not render.
 	const content = page.locator('#content-vue')
-	const firstRowBefore = await content.locator('table tbody tr').first().innerText()
+	const firstRowBefore = await content
+		.locator('table tbody tr')
+		.first()
+		.innerText()
 
-	const next = content.locator('.cn-index-page__pagination').getByRole('button', { name: 'Next' }).first()
+	const next = content
+		.locator('.cn-index-page__pagination')
+		.getByRole('button', { name: 'Next' })
+		.first()
 	await expect(next).toBeVisible({ timeout: 15000 })
 	await next.click()
 
 	// A pagination control that renders but does not change the result set is a
 	// dead control, so assert the rows actually moved.
 	await expect
-		.poll(async () => await content.locator('table tbody tr').first().innerText(), { timeout: 15000 })
+		.poll(
+			async () => await content.locator('table tbody tr').first().innerText(),
+			{ timeout: 15000 },
+		)
 		.not.toBe(firstRowBefore)
 })
 

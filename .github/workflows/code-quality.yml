@@ -367,7 +367,19 @@ jobs:
       # `check:vue-demi` in particular guards a dual-package hazard that fails
       # silently at runtime rather than at build time.
       # `test:unit` is NOT listed: "Frontend Tests (unit)" already runs it.
-      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n"]'
+      #
+      # `format` (prettier --check) is listed because the shared workflow has NO
+      # prettier job of its own — `quality.yml` runs eslint and stylelint and
+      # mentions prettier ZERO times. This repo already carries
+      # `@nextcloud/prettier-config` and a `format` script, so without this leg
+      # `npm run format` never runs outside a developer's editor and the tree
+      # drifts straight back out of format between merges — the same inert-
+      # formatter failure mode that made the old `.prettierrc` worth deleting.
+      # Centralising the config never stopped drift; the gate does.
+      # Measured on this tree before enabling: PASSES, 357 of 371 tracked
+      # frontend files in scope (docs/ and l10n/ excluded via .prettierignore /
+      # .gitignore, which prettier 3 also reads).
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format"]'
 
       # ── Coverage ratchet ─────────────────────────────────────────────────
       # `enable-coverage-guard` defaults to FALSE, which is why both

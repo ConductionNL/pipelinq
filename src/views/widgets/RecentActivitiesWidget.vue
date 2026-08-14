@@ -1,7 +1,8 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<CnDataTable :rows="items"
+	<CnDataTable
+		:rows="items"
 		:columns="columns"
 		:loading="loading"
 		hide-header
@@ -87,9 +88,12 @@ export default {
 				const diffDays = Math.floor(diffHours / 24)
 
 				if (diffMinutes < 1) return t('pipelinq', 'just now')
-				if (diffMinutes < 60) return t('pipelinq', '{minutes}m ago', { minutes: diffMinutes })
-				if (diffHours < 24) return t('pipelinq', '{hours}h ago', { hours: diffHours })
-				if (diffDays < 7) return t('pipelinq', '{days}d ago', { days: diffDays })
+				if (diffMinutes < 60)
+					return t('pipelinq', '{minutes}m ago', { minutes: diffMinutes })
+				if (diffHours < 24)
+					return t('pipelinq', '{hours}h ago', { hours: diffHours })
+				if (diffDays < 7)
+					return t('pipelinq', '{days}d ago', { days: diffDays })
 				return formatDate(dateStr)
 			} catch {
 				return dateStr
@@ -108,12 +112,19 @@ export default {
 
 				if (config.lead) {
 					promises.push(
-						this.fetchRaw(config, 'lead', { _limit: 10, _order: 'updated:desc' })
-							.then(items => items.map(item => ({
+						this.fetchRaw(config, 'lead', {
+							_limit: 10,
+							_order: 'updated:desc',
+						}).then((items) =>
+							items.map((item) => ({
 								...item,
 								entityType: 'lead',
-								modified: item.updated || item.dateModified || item.created,
-							}))),
+								modified:
+									item.updated
+									|| item.dateModified
+									|| item.created,
+							})),
+						),
 					)
 				}
 
@@ -123,12 +134,20 @@ export default {
 					// so the LABEL keeps reading "Request", while navigation goes
 					// to the unified /tickets route (see onShow).
 					promises.push(
-						this.fetchRaw(config, 'ticket', { ticketType: 'request', _limit: 10, _order: 'updated:desc' })
-							.then(items => items.map(item => ({
+						this.fetchRaw(config, 'ticket', {
+							ticketType: 'request',
+							_limit: 10,
+							_order: 'updated:desc',
+						}).then((items) =>
+							items.map((item) => ({
 								...item,
 								entityType: 'request',
-								modified: item.updated || item.dateModified || item.created,
-							}))),
+								modified:
+									item.updated
+									|| item.dateModified
+									|| item.created,
+							})),
+						),
 					)
 				}
 
@@ -165,8 +184,13 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
-				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
+			const url = generateUrl(
+				'/apps/openregister/api/objects/'
+					+ typeConfig.register
+					+ '/'
+					+ typeConfig.schema
+					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
+			)
 
 			const response = await fetch(url, {
 				headers: {

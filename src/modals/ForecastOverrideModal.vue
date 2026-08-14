@@ -10,7 +10,12 @@
 		@closing="$emit('close')">
 		<div class="forecast-override">
 			<p class="forecast-override__context">
-				{{ t('pipelinq', 'Overriding {category} for {owner}', { category: categoryLabel, owner: ownerId }) }}
+				{{
+					t('pipelinq', 'Overriding {category} for {owner}', {
+						category: categoryLabel,
+						owner: ownerId,
+					})
+				}}
 			</p>
 			<NcTextField
 				v-model="amount"
@@ -22,7 +27,11 @@
 				:label="t('pipelinq', 'Reason for override')"
 				:placeholder="t('pipelinq', 'Why are you adjusting this number?')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Please enter at least 5 characters.') : ''"
+				:helper-text="
+					showError
+						? t('pipelinq', 'Please enter at least 5 characters.')
+						: ''
+				"
 				rows="3" />
 			<p v-if="errorMessage" class="forecast-override__error">
 				{{ errorMessage }}
@@ -96,7 +105,8 @@ export default {
 				this.$emit('saved', created)
 				this.$emit('close')
 			} catch (error) {
-				this.errorMessage = error?.response?.data?.error
+				this.errorMessage =
+					error?.response?.data?.error
 					|| t('pipelinq', 'Could not save the override.')
 			} finally {
 				this.saving = false

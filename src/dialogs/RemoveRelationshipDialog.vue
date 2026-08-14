@@ -11,14 +11,14 @@
   - ContactRelationships.vue.
   -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Remove relationship')"
-		@closing="$emit('close')">
+	<NcDialog :name="t('pipelinq', 'Remove relationship')" @closing="$emit('close')">
 		<p>
-			{{ t('pipelinq', 'Remove the relationship between {from} and {to}?', {
-				from: fromName,
-				to: toName,
-			}) }}
+			{{
+				t('pipelinq', 'Remove the relationship between {from} and {to}?', {
+					from: fromName,
+					to: toName,
+				})
+			}}
 		</p>
 		<template #actions>
 			<NcButton @click="$emit('close')">

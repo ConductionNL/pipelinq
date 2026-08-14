@@ -17,16 +17,24 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="role in sortedContactRoles" :key="role.id" class="viewTableRow">
+					<tr
+						v-for="role in sortedContactRoles"
+						:key="role.id"
+						class="viewTableRow">
 						<td>
 							<router-link
 								class="contact-link"
-								:to="{ name: 'ContactDetail', params: { id: role.toContact } }">
+								:to="{
+									name: 'ContactDetail',
+									params: { id: role.toContact },
+								}">
 								{{ getEntityName(role.toContact) }}
 							</router-link>
 						</td>
 						<td>
-							<span class="role-badge" :class="'role-badge--' + role.type">
+							<span
+								class="role-badge"
+								:class="'role-badge--' + role.type">
 								{{ getRoleLabel(role.type) }}
 							</span>
 						</td>
@@ -48,7 +56,8 @@
 		</div>
 
 		<!-- Add role dialog -->
-		<AddContactRoleDialog v-if="showAddDialog"
+		<AddContactRoleDialog
+			v-if="showAddDialog"
 			:contact-options="contactOptions"
 			:role-options="roleOptions"
 			@search-contacts="searchContacts"
@@ -113,8 +122,8 @@ export default {
 		 */
 		sortedContactRoles() {
 			return [...this.contactRoles].sort((a, b) => {
-				const aOrder = CRM_ROLES.find(r => r.value === a.type)?.order || 99
-				const bOrder = CRM_ROLES.find(r => r.value === b.type)?.order || 99
+				const aOrder = CRM_ROLES.find((r) => r.value === a.type)?.order || 99
+				const bOrder = CRM_ROLES.find((r) => r.value === b.type)?.order || 99
 				return aOrder - bOrder
 			})
 		},
@@ -129,11 +138,14 @@ export default {
 		async fetchRoles() {
 			this.loading = true
 			try {
-				const items = await this.objectStore.fetchCollection('relationship', {
-					_limit: 50,
-					fromContact: this.leadId,
-					category: 'CRM Rol',
-				})
+				const items = await this.objectStore.fetchCollection(
+					'relationship',
+					{
+						_limit: 50,
+						fromContact: this.leadId,
+						category: 'CRM Rol',
+					},
+				)
 				this.contactRoles = items || []
 				for (const role of this.contactRoles) {
 					if (role.toContact && !this.entityNameCache[role.toContact]) {
@@ -152,7 +164,10 @@ export default {
 		 */
 		async loadEntityName(entityId) {
 			try {
-				const entity = await this.objectStore.fetchObject('contact', entityId)
+				const entity = await this.objectStore.fetchObject(
+					'contact',
+					entityId,
+				)
 				if (entity) {
 					this.entityNameCache[entityId] = entity.name || entityId
 				} else {
@@ -170,7 +185,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
 		 */
 		getRoleLabel(roleType) {
-			const role = CRM_ROLES.find(r => r.value === roleType)
+			const role = CRM_ROLES.find((r) => r.value === roleType)
 			return role ? role.label : roleType
 		},
 		/**
@@ -187,8 +202,14 @@ export default {
 			}
 			this.searchTimeout = setTimeout(async () => {
 				try {
-					const contacts = await this.objectStore.fetchCollection('contact', { _search: query, _limit: 10 })
-					this.contactOptions = (contacts || []).map(c => ({ id: c.id, name: c.name || c.id }))
+					const contacts = await this.objectStore.fetchCollection(
+						'contact',
+						{ _search: query, _limit: 10 },
+					)
+					this.contactOptions = (contacts || []).map((c) => ({
+						id: c.id,
+						name: c.name || c.id,
+					}))
 				} catch {
 					this.contactOptions = []
 				}
@@ -236,7 +257,9 @@ export default {
 				showSuccess(t('pipelinq', 'Contact role removed'))
 				await this.fetchRoles()
 			} catch (e) {
-				showError(e.message || t('pipelinq', 'Failed to remove contact role'))
+				showError(
+					e.message || t('pipelinq', 'Failed to remove contact role'),
+				)
 			}
 		},
 	},

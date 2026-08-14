@@ -22,7 +22,9 @@
 		</NcNoteCard>
 
 		<template v-else-if="byGroup.length > 0">
-			<h3>{{ t('pipelinq', 'Breakdown by {group}', { group: groupLabel }) }}</h3>
+			<h3>
+				{{ t('pipelinq', 'Breakdown by {group}', { group: groupLabel }) }}
+			</h3>
 			<table class="sla-breakdown__table">
 				<thead>
 					<tr>
@@ -108,7 +110,9 @@ export default {
 			]
 		},
 		groupLabel() {
-			const match = this.groupOptions.find(o => o.value === this.effectiveGroupBy)
+			const match = this.groupOptions.find(
+				(o) => o.value === this.effectiveGroupBy,
+			)
 			return match ? match.label : this.t('pipelinq', 'Group')
 		},
 		byGroup() {
@@ -132,11 +136,17 @@ export default {
 			this.error = null
 			try {
 				const url = generateUrl('/apps/pipelinq/api/sla/attainment')
-				const params = { bucket: this.effectiveBucket, groupBy: this.effectiveGroupBy }
+				const params = {
+					bucket: this.effectiveBucket,
+					groupBy: this.effectiveGroupBy,
+				}
 				const response = await axios.get(url, { params })
 				this.payload = response.data || this.payload
 			} catch (e) {
-				this.error = this.t('pipelinq', 'Failed to load SLA attainment. Please try again.')
+				this.error = this.t(
+					'pipelinq',
+					'Failed to load SLA attainment. Please try again.',
+				)
 			} finally {
 				this.loading = false
 			}

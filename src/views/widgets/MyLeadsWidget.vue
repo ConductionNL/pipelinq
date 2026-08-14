@@ -1,7 +1,8 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<CnDataTable :rows="items"
+	<CnDataTable
+		:rows="items"
 		:columns="columns"
 		:loading="loading"
 		hide-header
@@ -9,7 +10,8 @@
 		:empty-text="t('pipelinq', 'No leads assigned to you')"
 		@row-click="onShow">
 		<template #footer>
-			<a class="cn-data-table__view-all"
+			<a
+				class="cn-data-table__view-all"
 				role="button"
 				tabindex="0"
 				@click.prevent="onViewAll"
@@ -54,8 +56,11 @@ export default {
 		items() {
 			const now = new Date()
 			return this.leads.map((lead) => {
-				const isOverdue = lead.expectedCloseDate && new Date(lead.expectedCloseDate) < now
-				const priorityLabel = lead.priority ? t('pipelinq', lead.priority) : ''
+				const isOverdue =
+					lead.expectedCloseDate && new Date(lead.expectedCloseDate) < now
+				const priorityLabel = lead.priority
+					? t('pipelinq', lead.priority)
+					: ''
 				const dueStr = lead.expectedCloseDate
 					? formatDate(lead.expectedCloseDate)
 					: ''
@@ -131,8 +136,13 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
-				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
+			const url = generateUrl(
+				'/apps/openregister/api/objects/'
+					+ typeConfig.register
+					+ '/'
+					+ typeConfig.schema
+					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
+			)
 
 			const response = await fetch(url, {
 				headers: {

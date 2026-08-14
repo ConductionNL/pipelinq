@@ -4,14 +4,16 @@
 -->
 <template>
 	<CnDetailPage
-		:title="isEdit ? t('pipelinq', 'Edit destination') : t('pipelinq', 'New destination')"
+		:title="
+			isEdit
+				? t('pipelinq', 'Edit destination')
+				: t('pipelinq', 'New destination')
+		"
 		:loading="loading"
 		@back="goBack">
 		<CnDetailCard :title="t('pipelinq', 'Destination')">
 			<div class="export-form">
-				<NcTextField
-					v-model="model.name"
-					:label="t('pipelinq', 'Name')" />
+				<NcTextField v-model="model.name" :label="t('pipelinq', 'Name')" />
 				<NcSelect
 					:model-value="selectedType"
 					:options="typeOptions"
@@ -19,11 +21,16 @@
 					:placeholder="t('pipelinq', 'Choose a destination type…')"
 					label="label"
 					:clearable="false"
-					@update:model-value="(o) => model.type = o ? o.id : ''" />
+					@update:model-value="(o) => (model.type = o ? o.id : '')" />
 				<NcTextField
 					v-model="model.connectorSourceId"
 					:label="t('pipelinq', 'OpenConnector source ID')"
-					:helper-text="t('pipelinq', 'The OpenConnector source that holds the warehouse credentials')" />
+					:helper-text="
+						t(
+							'pipelinq',
+							'The OpenConnector source that holds the warehouse credentials',
+						)
+					" />
 				<NcTextField
 					v-model="model.pathTemplate"
 					:label="t('pipelinq', 'Path template')"
@@ -34,7 +41,9 @@
 					:input-label="t('pipelinq', 'Compression')"
 					label="label"
 					:clearable="false"
-					@update:model-value="(o) => model.compression = o ? o.id : 'none'" />
+					@update:model-value="
+						(o) => (model.compression = o ? o.id : 'none')
+					" />
 				<NcTextField
 					v-model="model.namingConvention"
 					:label="t('pipelinq', 'Naming convention')"
@@ -54,7 +63,10 @@
 					@click="testConnection">
 					{{ t('pipelinq', 'Test connection') }}
 				</NcButton>
-				<NcButton variant="primary" :disabled="busy || !model.name" @click="save">
+				<NcButton
+					variant="primary"
+					:disabled="busy || !model.name"
+					@click="save">
 					{{ t('pipelinq', 'Save') }}
 				</NcButton>
 				<NcButton variant="secondary" @click="goBack">
@@ -66,7 +78,12 @@
 </template>
 
 <script>
-import { NcButton, NcTextField, NcSelect, NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcTextField,
+	NcSelect,
+	NcCheckboxRadioSwitch,
+} from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -120,7 +137,12 @@ export default {
 		 * @return {string|null} The destination UUID.
 		 */
 		destinationId() {
-			return this.exportDestinationId || this.id || this.$route?.params?.id || null
+			return (
+				this.exportDestinationId
+				|| this.id
+				|| this.$route?.params?.id
+				|| null
+			)
 		},
 		/**
 		 * Whether the form is editing an existing destination.
@@ -160,7 +182,10 @@ export default {
 		 * @return {object|null} The option.
 		 */
 		selectedCompression() {
-			return this.compressionOptions.find((o) => o.id === this.model.compression) || null
+			return (
+				this.compressionOptions.find((o) => o.id === this.model.compression)
+				|| null
+			)
 		},
 	},
 	async mounted() {
@@ -175,7 +200,10 @@ export default {
 		async load() {
 			this.loading = true
 			try {
-				const existing = await this.objectStore.fetchObject('exportDestination', this.destinationId)
+				const existing = await this.objectStore.fetchObject(
+					'exportDestination',
+					this.destinationId,
+				)
 				if (existing) {
 					this.model = { ...this.model, ...existing }
 				}

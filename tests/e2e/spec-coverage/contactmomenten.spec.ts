@@ -33,23 +33,33 @@ import {
 } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/contactmomenten/spec.md#navigation-item-present
-test('contactmomenten is reachable from the sidebar via the Tickets workspace', async ({ page }) => {
+test('contactmomenten is reachable from the sidebar via the Tickets workspace', async ({
+	page,
+}) => {
 	await openApp(page)
 	await navClick(page, 'Tickets', /\/tickets/)
 	// The subtype tab IS the navigation affordance since the unification.
 	await expect(
-		page.locator('#content-vue').getByRole('tab', { name: 'Contactmomenten', exact: true }),
+		page
+			.locator('#content-vue')
+			.getByRole('tab', { name: 'Contactmomenten', exact: true }),
 	).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/contactmomenten/spec.md#display-contactmomenten-list
-test('contactmomenten list renders seeded contactmoment tickets', async ({ page }) => {
+test('contactmomenten list renders seeded contactmoment tickets', async ({
+	page,
+}) => {
 	await openApp(page)
 	await navClick(page, 'Tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Contactmomenten')
 
 	const content = page.locator('#content-vue')
-	await expect(content.locator('table, .cn-data-table, [data-testid="cn-data-table"]').first()).toBeVisible()
+	await expect(
+		content
+			.locator('table, .cn-data-table, [data-testid="cn-data-table"]')
+			.first(),
+	).toBeVisible()
 
 	// The demo seed writes twelve contactmoment tickets; the tab must show
 	// contactmomenten and nothing else.
@@ -58,7 +68,10 @@ test('contactmomenten list renders seeded contactmoment tickets', async ({ page 
 	const rows = content.locator('table tbody tr')
 	await expect(rows.first()).toBeVisible()
 	const count = await rows.count()
-	expect(count, 'the Contactmomenten tab must show at least one seeded record').toBeGreaterThan(0)
+	expect(
+		count,
+		'the Contactmomenten tab must show at least one seeded record',
+	).toBeGreaterThan(0)
 	for (let i = 0; i < count; i++) {
 		await expect(rows.nth(i)).toContainText(/contactmoment/i)
 	}
@@ -70,11 +83,15 @@ test('contactmomenten list exposes the create entry point', async ({ page }) => 
 	await navClick(page, 'Tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Contactmomenten')
 
-	await expect(page.locator('#content-vue').getByRole('button', { name: 'Add Ticket' })).toBeVisible()
+	await expect(
+		page.locator('#content-vue').getByRole('button', { name: 'Add Ticket' }),
+	).toBeVisible()
 })
 
 // @e2e openspec/specs/contactmomenten/spec.md#create-a-contactmoment-with-minimal-fields
-test('contactmomenten surface loads without pipelinq console errors', async ({ page }) => {
+test('contactmomenten surface loads without pipelinq console errors', async ({
+	page,
+}) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
 	await navClick(page, 'Tickets', /\/tickets/)
@@ -85,7 +102,9 @@ test('contactmomenten surface loads without pipelinq console errors', async ({ p
 })
 
 // @e2e openspec/specs/contactmomenten/spec.md#navigation-item-shows-count-badge
-test('the channel column surfaces the seeded contactmoment channels', async ({ page }) => {
+test('the channel column surfaces the seeded contactmoment channels', async ({
+	page,
+}) => {
 	await openApp(page)
 	await navClick(page, 'Tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Contactmomenten')
@@ -94,7 +113,9 @@ test('the channel column surfaces the seeded contactmoment channels', async ({ p
 	// spans telefoon / email / chat — so the list must carry at least one of
 	// them as cell text, not merely render a table.
 	const rows = page.locator('#content-vue table tbody')
-	await expect(rows).toContainText(/telefoon|email|chat|balie/i, { timeout: 15000 })
+	await expect(rows).toContainText(/telefoon|email|chat|balie/i, {
+		timeout: 15000,
+	})
 })
 
 /*

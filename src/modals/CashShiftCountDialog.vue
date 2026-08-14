@@ -9,17 +9,24 @@
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-count">
-			<p>{{ t('pipelinq', 'Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).') }}</p>
+			<p>
+				{{
+					t(
+						'pipelinq',
+						'Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).',
+					)
+				}}
+			</p>
 			<NcTextField
 				v-model="amount"
 				type="number"
 				:label="t('pipelinq', 'Counted amount')"
 				placeholder="€ 0.00"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Enter a valid amount') : ''" />
-			<NcTextArea
-				v-model="notes"
-				:label="t('pipelinq', 'Notes (optional)')" />
+				:helper-text="
+					showError ? t('pipelinq', 'Enter a valid amount') : ''
+				" />
+			<NcTextArea v-model="notes" :label="t('pipelinq', 'Notes (optional)')" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">

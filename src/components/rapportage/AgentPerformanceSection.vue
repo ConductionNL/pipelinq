@@ -21,25 +21,29 @@
 			<table class="agent-performance__table">
 				<thead>
 					<tr>
-						<th scope="col"
+						<th
+							scope="col"
 							class="sortable"
 							:class="{ 'sort-active': sortKey === 'id' }"
 							@click="setSort('id')">
 							{{ t('pipelinq', 'Agent') }}
 						</th>
-						<th scope="col"
+						<th
+							scope="col"
 							class="sortable"
 							:class="{ 'sort-active': sortKey === 'count' }"
 							@click="setSort('count')">
 							{{ t('pipelinq', 'Contacts') }}
 						</th>
-						<th scope="col"
+						<th
+							scope="col"
 							class="sortable"
 							:class="{ 'sort-active': sortKey === 'avgHandlingTime' }"
 							@click="setSort('avgHandlingTime')">
 							{{ t('pipelinq', 'Avg Time') }}
 						</th>
-						<th scope="col"
+						<th
+							scope="col"
 							class="sortable"
 							:class="{ 'sort-active': sortKey === 'fcrRate' }"
 							@click="setSort('fcrRate')">
@@ -61,12 +65,20 @@
 				<h3>{{ t('pipelinq', 'Team Summary') }}</h3>
 				<div class="agent-performance__summary-grid">
 					<div class="agent-performance__summary-item">
-						<span class="agent-performance__summary-value">{{ teamStats.totalContacts }}</span>
-						<span class="agent-performance__summary-label">{{ t('pipelinq', 'Total contacts') }}</span>
+						<span class="agent-performance__summary-value">{{
+							teamStats.totalContacts
+						}}</span>
+						<span class="agent-performance__summary-label">{{
+							t('pipelinq', 'Total contacts')
+						}}</span>
 					</div>
 					<div class="agent-performance__summary-item">
-						<span class="agent-performance__summary-value">{{ teamStats.avgFcr }}%</span>
-						<span class="agent-performance__summary-label">{{ t('pipelinq', 'Team FCR') }}</span>
+						<span class="agent-performance__summary-value"
+							>{{ teamStats.avgFcr }}%</span
+						>
+						<span class="agent-performance__summary-label">{{
+							t('pipelinq', 'Team FCR')
+						}}</span>
 					</div>
 				</div>
 			</div>
@@ -115,9 +127,13 @@ export default {
 		},
 		teamStats() {
 			const total = this.agents.reduce((s, a) => s + (a.count ?? 0), 0)
-			const avgFcr = this.agents.length > 0
-				? Math.round(this.agents.reduce((s, a) => s + (a.fcrRate ?? 0), 0) / this.agents.length)
-				: 0
+			const avgFcr =
+				this.agents.length > 0
+					? Math.round(
+							this.agents.reduce((s, a) => s + (a.fcrRate ?? 0), 0)
+								/ this.agents.length,
+						)
+					: 0
 			return { totalContacts: total, avgFcr }
 		},
 	},
@@ -141,9 +157,12 @@ export default {
 		async fetchData() {
 			this.loading = true
 			try {
-				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/rapportage/agents'), {
-					params: { period: this.effectivePeriod },
-				})
+				const { data } = await axios.get(
+					generateUrl('/apps/pipelinq/api/rapportage/agents'),
+					{
+						params: { period: this.effectivePeriod },
+					},
+				)
 				const agentMap = data.agents ?? {}
 				this.agents = Object.entries(agentMap)
 					.filter(([, metrics]) => (metrics.count ?? 0) >= 1)
@@ -164,29 +183,73 @@ export default {
 </script>
 
 <style scoped>
-.agent-performance__table { width: 100%; border-collapse: collapse; }
+.agent-performance__table {
+	width: 100%;
+	border-collapse: collapse;
+}
 
-.agent-performance__table th, .agent-performance__table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--color-border); }
+.agent-performance__table th,
+.agent-performance__table td {
+	padding: 10px 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+}
 
-.agent-performance__table th { font-weight: 600; font-size: 0.85em; color: var(--color-text-lighter); }
+.agent-performance__table th {
+	font-weight: 600;
+	font-size: 0.85em;
+	color: var(--color-text-lighter);
+}
 
-.agent-performance__table th.sortable { cursor: pointer; user-select: none; }
+.agent-performance__table th.sortable {
+	cursor: pointer;
+	user-select: none;
+}
 
-.agent-performance__table th.sortable:hover { color: var(--color-text-maxcontrast); }
+.agent-performance__table th.sortable:hover {
+	color: var(--color-text-maxcontrast);
+}
 
-.agent-performance__table th.sort-active { color: var(--color-primary); }
+.agent-performance__table th.sort-active {
+	color: var(--color-primary);
+}
 
-.agent-performance__summary { margin-top: 24px; padding: 16px; border: 1px solid var(--color-border); border-radius: var(--border-radius-large); }
+.agent-performance__summary {
+	margin-top: 24px;
+	padding: 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+}
 
-.agent-performance__summary h3 { margin: 0; font-weight: 600; }
+.agent-performance__summary h3 {
+	margin: 0;
+	font-weight: 600;
+}
 
-.agent-performance__summary-grid { display: flex; gap: 32px; margin-top: 12px; }
+.agent-performance__summary-grid {
+	display: flex;
+	gap: 32px;
+	margin-top: 12px;
+}
 
-.agent-performance__summary-item { text-align: center; }
+.agent-performance__summary-item {
+	text-align: center;
+}
 
-.agent-performance__summary-value { display: block; font-size: 1.5em; font-weight: 700; }
+.agent-performance__summary-value {
+	display: block;
+	font-size: 1.5em;
+	font-weight: 700;
+}
 
-.agent-performance__summary-label { font-size: 0.85em; color: var(--color-text-lighter); }
+.agent-performance__summary-label {
+	font-size: 0.85em;
+	color: var(--color-text-lighter);
+}
 
-.agent-performance__empty { padding: 40px; text-align: center; color: var(--color-text-lighter); }
+.agent-performance__empty {
+	padding: 40px;
+	text-align: center;
+	color: var(--color-text-lighter);
+}
 </style>
