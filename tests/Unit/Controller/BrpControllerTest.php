@@ -94,6 +94,48 @@ class BrpControllerTest extends TestCase {
 	 *
 	 * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
 	 */
+	/**
+	 * THE POINT OF THIS BRANCH. An authenticated but unprivileged caller is
+	 * REFUSED a BRP lookup.
+	 *
+	 * Before the CRM guard this endpoint was reachable by any account on the
+	 * instance. It resolves a BSN — the Dutch citizen service number, special
+	 * category personal data under the AVG — so "logged in" was never a
+	 * sufficient answer to "may you do this".
+	 *
+	 * Every other test in this class runs with a privileged caller and would
+	 * pass just as happily against the unguarded controller. This one would
+	 * not, which is what makes it the test worth having.
+	 *
+	 * @return void
+	 */
+	public function testLookupIsRefusedForAnUnprivilegedCaller(): void {
+		$controller = $this->buildController(remotePerson: [], privileged: false);
+
+		$this->assertSame(
+			Http::STATUS_FORBIDDEN,
+			$controller->lookup()->getStatus(),
+			'An unprivileged account must not be able to resolve a BSN.'
+		);
+
+	}//end testLookupIsRefusedForAnUnprivilegedCaller()
+
+	/**
+	 * Same for the BSN validation endpoint.
+	 *
+	 * @return void
+	 */
+	public function testValidateIsRefusedForAnUnprivilegedCaller(): void {
+		$controller = $this->buildController(remotePerson: [], privileged: false);
+
+		$this->assertSame(
+			Http::STATUS_FORBIDDEN,
+			$controller->validate()->getStatus(),
+			'An unprivileged account must not be able to probe BSN validity.'
+		);
+
+	}//end testValidateIsRefusedForAnUnprivilegedCaller()
+
 	public function testLookupPersistsMetaIntoAuditRecord(): void {
 		$person = [
 			'givenNames' => 'Jan',
@@ -168,7 +210,7 @@ class BrpControllerTest extends TestCase {
 	 *
 	 * @return BrpController
 	 */
-	private function buildController(array $remotePerson): BrpController {
+	private function buildController(array $remotePerson, bool $privileged = true): BrpController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
 			static function (string $key, $default = null) {
@@ -267,7 +309,10 @@ class BrpControllerTest extends TestCase {
 		return new BrpController(
 			$request,
 			$userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			$this->createConfiguredMock(
+				ObjectOwnerAccessPolicy::class,
+				['isPrivileged' => $privileged, 'mayAccess' => $privileged]
+			),
 			$groupManager,
 			$l10n,
 			$appConfig,
