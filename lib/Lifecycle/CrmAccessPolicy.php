@@ -76,11 +76,24 @@ class CrmAccessPolicy {
 	public const CRM_GROUP_KEY = 'crm_group';
 
 	/**
-	 * Default CRM group when the key is unset.
+	 * Default CRM group when the key is unset — deliberately EMPTY.
+	 *
+	 * This follows the convention every other access policy in this app already
+	 * uses: `pos_group`, `pos_manager_group`, `forecast` manager_group,
+	 * `billing_handoff_manager_group`, `avg_handler_group` and
+	 * `avg_teamlead_group` all default to '' and fail closed, so an
+	 * unconfigured instance grants nothing rather than granting everything.
+	 *
+	 * ⚠️ OPERATIONAL CONSEQUENCE, STATED PLAINLY: until an administrator sets
+	 * `crm_group` to a group that HAS MEMBERS, only Nextcloud admins can reach
+	 * the CRM surfaces. A created-but-empty group still denies everyone —
+	 * OpenRegister provisions the groups a config declares but never seeds
+	 * membership. This is the same trade the five policies above already make;
+	 * it is a deployment step, not a defect.
 	 *
 	 * @var string
 	 */
-	public const CRM_GROUP_DEFAULT = 'pipelinq';
+	public const CRM_GROUP_DEFAULT = '';
 
 	/**
 	 * Object fields that can carry an owning user, in priority order.
