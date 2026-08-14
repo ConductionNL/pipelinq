@@ -89,18 +89,18 @@ class BrpCacheService {
 			$latest = null;
 			foreach (($results ?? []) as $object) {
 				$arr = self::toArray(object: $object);
-				$retentieTo = (string)($arr['retentieTot'] ?? '');
-				if ($retentieTo === '') {
+				$retentionTo = (string)($arr['retentionTo'] ?? '');
+				if ($retentionTo === '') {
 					continue;
 				}
 
 				try {
-					$retentieDt = new DateTimeImmutable($retentieTo, new DateTimeZone('UTC'));
+					$retentionDt = new DateTimeImmutable($retentionTo, new DateTimeZone('UTC'));
 				} catch (Throwable $e) {
 					continue;
 				}
 
-				if ($retentieDt <= $now) {
+				if ($retentionDt <= $now) {
 					continue;
 				}
 
@@ -109,9 +109,9 @@ class BrpCacheService {
 					continue;
 				}
 
-				$latestOpgehaald = (string)($latest['opgehaaldOp'] ?? '');
-				$currentOpgehaald = (string)($arr['opgehaaldOp'] ?? '');
-				if ($currentOpgehaald > $latestOpgehaald) {
+				$latestFetched = (string)($latest['fetchedOn'] ?? '');
+				$currentFetched = (string)($arr['fetchedOn'] ?? '');
+				if ($currentFetched > $latestFetched) {
 					$latest = $arr;
 				}
 			}//end foreach
@@ -129,25 +129,25 @@ class BrpCacheService {
 	/**
 	 * Persist a BrpPersoon and stamp it with retentieTot = now + ttlHours.
 	 *
-	 * @param array<string,mixed> $persoon Normalised BrpPersoon array (without retentieTot).
+	 * @param array<string,mixed> $person Normalised BrpPersoon array (without retentieTot).
 	 * @param int|null $ttlHours Override TTL — defaults to configured / 24h.
 	 *
 	 * @return array<string,mixed> The saved object as array (with assigned UUID).
 	 *
 	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-04
 	 */
-	public function set(array $persoon, ?int $ttlHours = null): array {
+	public function set(array $person, ?int $ttlHours = null): array {
 		[$register, $schema] = $this->config();
 
 		$ttl = $ttlHours ?? $this->getConfiguredTtlHours();
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$retentie = $now->modify('+' . max(1, $ttl) . ' hours');
+		$retention = $now->modify('+' . max(1, $ttl) . ' hours');
 
-		$persoon['opgehaaldOp'] = $persoon['opgehaaldOp'] ?? $now->format(DATE_ATOM);
-		$persoon['retentieTot'] = $retentie->format(DATE_ATOM);
+		$person['fetchedOn'] = $person['fetchedOn'] ?? $now->format(DATE_ATOM);
+		$person['retentionTo'] = $retention->format(DATE_ATOM);
 
 		$saved = $this->getObjectService()->saveObject(
-			object: $persoon,
+			object: $person,
 			extend: [],
 			register: $register,
 			schema: $schema,
@@ -192,7 +192,7 @@ class BrpCacheService {
 					continue;
 				}
 
-				$arr['retentieTot'] = $expired;
+				$arr['retentionTo'] = $expired;
 				$this->getObjectService()->saveObject(
 					object: $arr,
 					extend: [],

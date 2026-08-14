@@ -194,7 +194,7 @@ class SlaEngineServiceTest extends TestCase {
 		$status = $this->engine->initialiseStatus($policy, new DateTimeImmutable('2026-05-15T09:00:00Z'));
 		$after = $this->engine->markTargetMet($status, 'resolution', new DateTimeImmutable('2026-05-15T10:00:00Z'));
 		$this->assertSame(SlaEngineService::STATUS_MET, $after['targets'][0]['status']);
-		$this->assertNotEmpty($after['targets'][0]['metAt']);
+		$this->assertNotEmpty($after['targets'][0]['withAt']);
 	}//end testMarkTargetMet()
 
 	/**

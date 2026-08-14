@@ -202,17 +202,17 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 					'status' => 'in-behandeling',
 					'behandelaar' => 'steward-a',
 					'dpiaFlag' => true,
-					'retentieTot' => '2027-01-01T00:00:00Z',
+					'retentionTo' => '2027-01-01T00:00:00Z',
 				],
 			],
 			'41' => [
-				['id' => 'b1', 'verzoekId' => 'v1', 'bronApp' => 'pipelinq-crm', 'contentHash' => 'sha256:abc'],
-				['id' => 'b2', 'verzoekId' => 'v1', 'bronApp' => 'pipelinq-crm', 'contentHash' => 'sha256:def'],
+				['id' => 'b1', 'requestId' => 'v1', 'bronApp' => 'pipelinq-crm', 'contentHash' => 'sha256:abc'],
+				['id' => 'b2', 'requestId' => 'v1', 'bronApp' => 'pipelinq-crm', 'contentHash' => 'sha256:def'],
 			],
 			'42' => [
 				// grond is the Art-23 sub-paragraph the refusal rests on — the
 				// source enum, not a descriptive slug.
-				['id' => 'w1', 'verzoekId' => 'v1', 'grond' => 'art-23-lid-1-sub-i', 'weigering' => 'gedeeltelijk', 'toelichtingAvg23' => 'x'],
+				['id' => 'w1', 'requestId' => 'v1', 'grond' => 'art-23-lid-1-sub-i', 'weigering' => 'gedeeltelijk', 'toelichtingAvg23' => 'x'],
 			],
 			'43' => [
 				// A redactieActie hangs off a bewijsItem (bewijsItemId), never
@@ -373,7 +373,7 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 	public function testRedactionsResolveThroughBewijsItems(): void {
 		$this->store = [
 			'40' => [['id' => 'v9', 'artikel' => 'art-15-inzage', 'status' => 'ingediend']],
-			'41' => [['id' => 'b9', 'verzoekId' => 'v9', 'bronApp' => 'pipelinq-crm']],
+			'41' => [['id' => 'b9', 'requestId' => 'v9', 'bronApp' => 'pipelinq-crm']],
 			'43' => [
 				['id' => 'r9', 'bewijsItemId' => 'b9', 'veldpad' => 'bsn', 'grond' => 'bescherming-rechten-derden'],
 			],

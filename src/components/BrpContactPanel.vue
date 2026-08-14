@@ -31,8 +31,8 @@
 					inputmode="numeric"
 					maxlength="9"
 					:helper-text="bsnFeedback || ' '"
-					:success="validation.isFormeelGeldig"
-					:error="rawBsn.length > 0 && !validation.isFormeelGeldig" />
+					:success="validation.isFormeelValid"
+					:error="rawBsn.length > 0 && !validation.isFormeelValid" />
 				<NcButton
 					variant="primary"
 					data-testid="brp-lookup-button"
@@ -55,7 +55,7 @@
 			<div v-if="persoon" class="brp-panel__persoon" data-testid="brp-persoon">
 				<div class="brp-panel__persoon-header">
 					<span
-						v-if="persoon.indicatieGeheim === '1'"
+						v-if="persoon.indicationGeheim === '1'"
 						class="brp-panel__geheim-icon"
 						:title="t('pipelinq', 'Confidentiality active')">
 						🔒
@@ -70,14 +70,14 @@
 				</div>
 				<dl class="brp-panel__persoon-fields">
 					<dt>{{ t('pipelinq', 'Date of birth') }}</dt>
-					<dd>{{ persoon.geboortedatum || '-' }}</dd>
+					<dd>{{ persoon.date_of_birth || '-' }}</dd>
 					<dt>{{ t('pipelinq', 'Place of birth') }}</dt>
-					<dd>{{ persoon.geboorteplaats || '-' }}</dd>
+					<dd>{{ persoon.birth_place || '-' }}</dd>
 					<dt>{{ t('pipelinq', 'Gender') }}</dt>
 					<dd>{{ persoon.geslacht || '-' }}</dd>
 				</dl>
 				<div
-					v-if="persoon.indicatieGeheim === '1' && !revealedAddress"
+					v-if="persoon.indicationGeheim === '1' && !revealedAddress"
 					class="brp-panel__secret">
 					<span>[{{ t('pipelinq', 'SECRET') }}]</span>
 					<NcButton variant="tertiary" @click="revealAddress">
@@ -157,23 +157,23 @@ export default {
 			)
 		},
 		canLookup() {
-			return this.validation.isFormeelGeldig && this.lookupState !== 'loading'
+			return this.validation.isFormeelValid && this.lookupState !== 'loading'
 		},
 		fullName() {
 			if (!this.persoon) return ''
 			const parts = [
-				this.persoon.voornamen,
-				this.persoon.voorvoegsel,
-				this.persoon.geslachtsnaam,
+				this.persoon.given_names,
+				this.persoon.name_prefix,
+				this.persoon.surname,
 			].filter(Boolean)
 			return parts.join(' ')
 		},
 		address() {
 			if (!this.persoon) return null
-			if (this.persoon.indicatieGeheim === '1' && !this.revealedAddress)
+			if (this.persoon.indicationGeheim === '1' && !this.revealedAddress)
 				return null
 			if (this.revealedVerblijfplaats) return this.revealedVerblijfplaats
-			return this.persoon.verblijfplaats || null
+			return this.persoon.residence || null
 		},
 	},
 	methods: {
@@ -192,7 +192,7 @@ export default {
 					bsn: this.rawBsn,
 					verzoekreden: payload.verzoekreden,
 					doelbinding: payload.doelbinding,
-					grondslag: payload.grondslag,
+					basis: payload.basis,
 					gekoppeldContact: this.contactId,
 					vogScreening: payload.vogScreening,
 				})
@@ -224,7 +224,7 @@ export default {
 				)
 				const response = await axios.post(url)
 				this.revealedAddress = true
-				this.revealedVerblijfplaats = response.data?.verblijfplaats || null
+				this.revealedVerblijfplaats = response.data?.residence || null
 				showSuccess(
 					this.t('pipelinq', 'Address revealed — audit record created.'),
 				)

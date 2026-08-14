@@ -49,7 +49,7 @@ class NrcNotificationListenerTest extends TestCase {
 	 */
 	public function testStatusCreatedUpdatesRequestStatus(): void {
 		$endpoint = ['id' => 'zgw-ep-zoetermeer-openzaak', 'componenten' => ['ztc' => 'https://ztc/']];
-		$zaakUrl = 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/abc';
+		$caseUrl = 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/abc';
 		$statusUrl = 'https://open-zaak.zoetermeer.nl/zaken/api/v1/statussen/def';
 		$statustypeUrl = 'https://ztc/statustypen/xyz';
 
@@ -66,12 +66,12 @@ class NrcNotificationListenerTest extends TestCase {
 			}
 		);
 		$registers->method('findAll')->willReturnCallback(
-			static function (string $schema, array $filters) use ($zaakUrl): array {
-				if ($schema === ZgwRegisterAccess::SCHEMA_MAPPING && ($filters['zgwUrl'] ?? '') === $zaakUrl) {
+			static function (string $schema, array $filters) use ($caseUrl): array {
+				if ($schema === ZgwRegisterAccess::SCHEMA_MAPPING && ($filters['zgwUrl'] ?? '') === $caseUrl) {
 					return [[
 						'@self' => ['uuid' => 'map-1'],
 						'pipelinqId' => 'req-2026-evenement-0456',
-						'zgwUrl' => $zaakUrl,
+						'zgwUrl' => $caseUrl,
 						'zgwResourceType' => 'zaak',
 						'endpointId' => 'zgw-ep-zoetermeer-openzaak',
 					]];
@@ -105,7 +105,7 @@ class NrcNotificationListenerTest extends TestCase {
 
 		$listener->dispatch(
 			['endpointId' => 'zgw-ep-zoetermeer-openzaak', 'callbackAuth' => 'bearer'],
-			['kanaal' => 'zaken', 'resource' => 'status', 'actie' => 'create', 'hoofdObject' => $zaakUrl, 'resourceUrl' => $statusUrl]
+			['channel' => 'zaken', 'resource' => 'status', 'action' => 'create', 'hoofdObject' => $caseUrl, 'resourceUrl' => $statusUrl]
 		);
 
 		self::assertIsArray($savedRequest);
@@ -137,7 +137,7 @@ class NrcNotificationListenerTest extends TestCase {
 
 		$listener->dispatch(
 			['endpointId' => 'zgw-ep-zoetermeer-openzaak'],
-			['kanaal' => 'catalogi', 'resource' => 'zaaktype', 'actie' => 'update']
+			['channel' => 'catalogi', 'resource' => 'caseType', 'action' => 'update']
 		);
 	}//end testCatalogiNotificationInvalidatesZtcCache()
 
@@ -160,7 +160,7 @@ class NrcNotificationListenerTest extends TestCase {
 		$listener = new NrcNotificationListener($registers, $zrc, $ztc, $logger);
 		$listener->dispatch(
 			['endpointId' => 'no-such-endpoint'],
-			['kanaal' => 'zaken', 'resource' => 'status', 'actie' => 'create']
+			['channel' => 'zaken', 'resource' => 'status', 'action' => 'create']
 		);
 	}//end testUnknownEndpointIsLoggedAndDropped()
 
@@ -190,7 +190,7 @@ class NrcNotificationListenerTest extends TestCase {
 		// Should not throw.
 		$listener->dispatch(
 			['endpointId' => 'ep-1'],
-			['kanaal' => 'zaken', 'resource' => 'status', 'actie' => 'create', 'hoofdObject' => 'https://open-zaak/zaken/abc', 'resourceUrl' => 'https://x']
+			['channel' => 'zaken', 'resource' => 'status', 'action' => 'create', 'hoofdObject' => 'https://open-zaak/zaken/abc', 'resourceUrl' => 'https://x']
 		);
 		self::assertTrue(true);
 	}//end testHandlerExceptionIsSwallowed()

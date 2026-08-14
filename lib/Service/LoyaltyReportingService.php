@@ -117,9 +117,9 @@ class LoyaltyReportingService {
 			to: $to
 		);
 
-		$pointsIssued = (int)array_sum(array_map(fn (array $e): int => (int)($e['aantal'] ?? 0), $credits));
-		$pointsRedeemed = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['aantal'] ?? 0)), $debits));
-		$pointsExpired = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['aantal'] ?? 0)), $expiries));
+		$pointsIssued = (int)array_sum(array_map(fn (array $e): int => (int)($e['count'] ?? 0), $credits));
+		$pointsRedeemed = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $debits));
+		$pointsExpired = (int)array_sum(array_map(fn (array $e): int => abs((int)($e['count'] ?? 0)), $expiries));
 
 		$breakagePercent = 0.0;
 		if ($pointsIssued > 0) {
@@ -344,12 +344,12 @@ class LoyaltyReportingService {
 
 		$totalCost = 0.0;
 		foreach ($debits as $entry) {
-			$bron = $entry['brondocument'] ?? [];
-			if (is_array($bron) === false || isset($bron['optionId']) === false) {
+			$source = $entry['brondocument'] ?? [];
+			if (is_array($source) === false || isset($source['optionId']) === false) {
 				continue;
 			}
 
-			$option = $this->getOption(optionId: (string)$bron['optionId']);
+			$option = $this->getOption(optionId: (string)$source['optionId']);
 			if ($option === null) {
 				continue;
 			}

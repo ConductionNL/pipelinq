@@ -132,7 +132,7 @@ class PipelinqBsnIdentityVerifyProvider implements IdentityVerifyProvider {
 		}
 
 		$validation = $this->bsnValidation->validate(bsnInput: $bsn);
-		if ($validation['isFormeelGeldig'] === false) {
+		if ($validation['isFormeelValid'] === false) {
 			return IdentityVerifyResult::failed(
 				providerId: self::PROVIDER_ID,
 				message: 'BSN failed the 11-proef (' . $validation['maskedBsn'] . ').'
@@ -148,7 +148,7 @@ class PipelinqBsnIdentityVerifyProvider implements IdentityVerifyProvider {
 		}
 
 		try {
-			$persoon = $this->brpClient->lookupPersoon(bsn: $bsn, verzoekIdContext: $caseUuid);
+			$person = $this->brpClient->lookupPersoon(bsn: $bsn, requestIdContext: $caseUuid);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq identity verify: BRP lookup failed',
@@ -160,7 +160,7 @@ class PipelinqBsnIdentityVerifyProvider implements IdentityVerifyProvider {
 			);
 		}
 
-		if ($persoon === null || $persoon === []) {
+		if ($person === null || $person === []) {
 			return IdentityVerifyResult::failed(
 				providerId: self::PROVIDER_ID,
 				message: 'No BRP record matched the supplied BSN.'

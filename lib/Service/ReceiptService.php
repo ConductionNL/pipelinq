@@ -310,8 +310,8 @@ class ReceiptService {
 		}
 
 		$lines = [];
-		foreach ($context['btwLines'] as $btw) {
-			$lines[] = $this->amountRow(label: $btw['label'], amount: $btw['tax'], width: $width);
+		foreach ($context['btwLines'] as $vat) {
+			$lines[] = $this->amountRow(label: $vat['label'], amount: $vat['tax'], width: $width);
 		}
 
 		return $lines;
@@ -419,10 +419,10 @@ class ReceiptService {
 	 * @spec openspec/specs/pos-receipt-engine/spec.md
 	 */
 	public function buildContext(array $transaction): array {
-		$btwRows = $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? [];
-		$btwLines = [];
-		if (is_array($btwRows) === true) {
-			foreach ($btwRows as $row) {
+		$vatRows = $transaction['invoiceBreakdown'] ?? $transaction['taxBreakdown'] ?? [];
+		$vatLines = [];
+		if (is_array($vatRows) === true) {
+			foreach ($vatRows as $row) {
 				if (is_array($row) === false) {
 					continue;
 				}
@@ -433,7 +433,7 @@ class ReceiptService {
 					$label = rtrim(rtrim((string)$rate, '0'), '.') . '% ' . $this->l10n->t('VAT');
 				}
 
-				$btwLines[] = [
+				$vatLines[] = [
 					'rate' => $rate,
 					'base' => (float)($row['base'] ?? 0),
 					'tax' => (float)($row['tax'] ?? 0),
@@ -462,7 +462,7 @@ class ReceiptService {
 			'discountTotal' => (float)($transaction['discountTotal'] ?? 0),
 			'totalTax' => (float)($transaction['totalTax'] ?? 0),
 			'total' => (float)($transaction['total'] ?? 0),
-			'btwLines' => $btwLines,
+			'btwLines' => $vatLines,
 			'lines' => $lines,
 			'company' => $this->companyDetails(),
 			'invoiceNumber' => (string)($transaction['invoiceNumber'] ?? ''),

@@ -51,11 +51,11 @@ class TemplateRendererTest extends TestCase {
 	public function testBasicVariableSubstitution(): void {
 		$renderer = $this->buildRenderer();
 		$tpl = [
-			'subject' => 'Uw paspoort is gereed - zaak {{zaakId}}',
+			'subject' => 'Uw paspoort is gereed - zaak {{caseId}}',
 			'body' => '<p>Status: <strong>{{status}}</strong> bij {{gemeente}}.</p>',
 		];
 		$vars = [
-			'zaakId' => 'Z-2026-0042',
+			'caseId' => 'Z-2026-0042',
 			'status' => 'afgehandeld',
 			'gemeente' => 'Amsterdam',
 		];
@@ -142,7 +142,7 @@ class TemplateRendererTest extends TestCase {
 			'body' => '<p>x</p>',
 		];
 		$vars = [
-			'zaakId' => 'Z-2026-0042',
+			'caseId' => 'Z-2026-0042',
 			'status' => 'afgehandeld',
 			'messageId' => 'msg-uuid-1',
 		];
@@ -166,7 +166,7 @@ class TemplateRendererTest extends TestCase {
 			'subject' => 'x',
 			'body' => '<p>x</p>',
 		];
-		$rendered = $renderer->render($tpl, ['zaakId' => 'Z-1']);
+		$rendered = $renderer->render($tpl, ['caseId' => 'Z-1']);
 		$this->assertNull($rendered['deepLink']);
 	}//end testMissingDeepLinkBaseReturnsNull()
 }//end class
