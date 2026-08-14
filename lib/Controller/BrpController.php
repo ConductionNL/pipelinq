@@ -117,45 +117,6 @@ class BrpController extends Controller {
 	}//end __construct()
 
 	/**
-	 * Server-side BSN validation endpoint (mirror of the client-side 11-proef).
-	 *
-	 * This endpoint exists so admin-tooling / API clients without a browser can verify a
-	 * BSN. The UI does NOT call this — it does the 11-proef locally (REQ-BSN-001-04). All
-	 * responses use the masked BSN; the raw BSN never echoes back.
-	 *
-	 * @return JSONResponse The validation result.
-	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001
-	 */
-	#[NoAdminRequired]
-	public function validate(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
-		// A BSN is the Dutch citizen service number — special-category personal
-		// data under the AVG. Validating one is emphatically not something
-		// every account on the instance may do.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
-		}
-
-		$raw = (string)$this->request->getParam('bsn', '');
-		$result = $this->validation->validate($raw);
-		// Never echo back the raw BSN — only the masked variant.
-		return new JSONResponse(
-			[
-				'isFormalValid' => $result['isFormalValid'],
-				'errorCode' => $result['errorCode'],
-				'errorMessage' => $result['errorMessage'],
-				'maskedBsn' => $result['maskedBsn'],
-			],
-			Http::STATUS_OK
-		);
-	}//end validate()
-
-	/**
 	 * POST /api/brp/lookup — execute a BRP lookup with doelbinding.
 	 *
 	 * Body params:
