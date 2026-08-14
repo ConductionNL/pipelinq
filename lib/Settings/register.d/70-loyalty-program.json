@@ -489,7 +489,7 @@
             "description": "Signed delta. Credit positive, debit/expiry negative, adjustment signed.",
             "title": "Aantal"
           },
-          "balansAfter": {
+          "balanceAfter": {
             "type": "integer",
             "description": "Running balance AFTER this entry was applied.",
             "title": "Balans Na"
@@ -527,7 +527,7 @@
         "required": [
           "programmeId",
           "name",
-          "costInPunten",
+          "costInPoints",
           "beloningType"
         ],
         "properties": {
@@ -551,7 +551,7 @@
             "title": "Beschrijving",
             "description": "Detailed description of this record."
           },
-          "costInPunten": {
+          "costInPoints": {
             "type": "integer",
             "description": "Points cost.",
             "title": "Kosten In Punten"
@@ -567,7 +567,7 @@
             "description": "Reward type.",
             "title": "Beloning Type"
           },
-          "beloningValue": {
+          "remunerationValue": {
             "description": "Reward value (number for discount, string for product name, etc.).",
             "title": "Beloning Waarde",
             "oneOf": [
@@ -605,7 +605,7 @@
             "title": "Geldig Tot",
             "description": "Geldig Tot for this record."
           },
-          "perCustomerLimiet": {
+          "perCustomerLimit": {
             "type": "integer",
             "description": "Max times one customer can redeem this option (null = unlimited).",
             "title": "Per Klant Limiet"
@@ -651,7 +651,7 @@
             "description": "FK to LoyaltyProgramme.",
             "title": "Programme ID"
           },
-          "costInPunten": {
+          "costInPoints": {
             "type": "integer",
             "description": "Points debited at redemption time.",
             "title": "Kosten In Punten"
@@ -685,7 +685,7 @@
             "title": "Initiated Op",
             "description": "Initiated Op for this record."
           },
-          "gebruiktOn": {
+          "usedOn": {
             "type": "string",
             "format": "date-time",
             "title": "Gebruikt Op",
@@ -761,18 +761,18 @@
             "description": "Status transitions are sequential.",
             "title": "Status"
           },
-          "uitgegevenOn": {
+          "issuedOn": {
             "type": "string",
             "format": "date-time",
             "title": "Uitgegeven Op",
             "description": "Uitgegeven Op for this record."
           },
-          "uitgegevenIn": {
+          "issuedIn": {
             "type": "string",
             "description": "Recipient label or klantId.",
             "title": "Uitgegeven Aan"
           },
-          "vervaltOn": {
+          "expiresOn": {
             "type": "string",
             "format": "date-time",
             "title": "Vervalt Op",
@@ -837,7 +837,7 @@
             "description": "Movement amount (positive).",
             "title": "Bedrag"
           },
-          "balansAfter": {
+          "balanceAfter": {
             "type": "number",
             "description": "Running balance after the movement.",
             "title": "Balans Na"

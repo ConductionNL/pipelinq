@@ -132,7 +132,7 @@ class PipelinqBsnIdentityVerifyProvider implements IdentityVerifyProvider {
 		}
 
 		$validation = $this->bsnValidation->validate(bsnInput: $bsn);
-		if ($validation['isFormeelValid'] === false) {
+		if ($validation['isFormalValid'] === false) {
 			return IdentityVerifyResult::failed(
 				providerId: self::PROVIDER_ID,
 				message: 'BSN failed the 11-proef (' . $validation['maskedBsn'] . ').'

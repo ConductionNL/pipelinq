@@ -411,7 +411,7 @@ class HaalCentraalClientTest extends TestCase {
 					'woonplaats' => 'Utrecht',
 				],
 			],
-			'indicationGeheim' => '0',
+			'indicationSecret' => '0',
 		];
 	}//end sampleRawPerson()
 
