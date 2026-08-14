@@ -65,7 +65,7 @@ class KvkResultMapper {
 	 * @return string The trade name.
 	 */
 	private function extractTradeName(array $item): string {
-		return $item['eersteHandelsnaam'] ?? ($item['naam'] ?? '');
+		return $item['eersteHandelsnaam'] ?? ($item['name'] ?? '');
 	}//end extractTradeName()
 
 	/**

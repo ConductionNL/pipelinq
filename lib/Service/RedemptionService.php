@@ -90,14 +90,14 @@ class RedemptionService {
 		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
 		$redemption = [
 			'accountId' => $accountId,
-			'klantId' => $account['klantId'] ?? null,
+			'customerId' => $account['customerId'] ?? null,
 			'optionId' => $optionId,
 			'programmeId' => $option['programmeId'] ?? null,
-			'kostenInPunten' => $cost,
+			'costInPunten' => $cost,
 			'beloningCode' => $code,
 			'status' => 'gereserveerd',
-			'initiatedOp' => $now,
-			'geldigTot' => $this->codeExpiryDefault(),
+			'initiatedOn' => $now,
+			'validTo' => $this->codeExpiryDefault(),
 		];
 
 		$saved = $this->persist(payload: $redemption, uuid: null);
@@ -110,7 +110,7 @@ class RedemptionService {
 				amount: $cost,
 				redemptionId: (string)$redemptionUuid,
 				brondocument: ['optionId' => $optionId, 'beloningCode' => $code],
-				verwerktDoor: 'redemption-service'
+				processedBy: 'redemption-service'
 			);
 		} catch (\Throwable $e) {
 			// Roll back the Redemption record on debit failure.
@@ -149,15 +149,15 @@ class RedemptionService {
 			throw new RuntimeException('Redemption option is not currently valid.');
 		}
 
-		$cost = (int)($option['kostenInPunten'] ?? 0);
+		$cost = (int)($option['costInPunten'] ?? 0);
 		if ((int)($account['currentBalance'] ?? 0) < $cost) {
 			throw new RuntimeException('Insufficient balance.');
 		}
 
-		$perKlantLimit = $option['perKlantLimiet'] ?? null;
-		if ($perKlantLimit !== null && (int)$perKlantLimit > 0) {
+		$perCustomerLimit = $option['perCustomerLimiet'] ?? null;
+		if ($perCustomerLimit !== null && (int)$perCustomerLimit > 0) {
 			$usedCount = $this->countUsedRedemptions(accountId: $accountId, optionId: $optionId);
-			if ($usedCount >= (int)$perKlantLimit) {
+			if ($usedCount >= (int)$perCustomerLimit) {
 				throw new RuntimeException('Redemption limit reached for this option.');
 			}
 		}
@@ -183,9 +183,9 @@ class RedemptionService {
 			return ['valid' => false, 'redemption' => $redemption, 'reason' => 'Status is ' . $status];
 		}
 
-		$geldigTot = (string)($redemption['geldigTot'] ?? '');
+		$validTo = (string)($redemption['validTo'] ?? '');
 		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-		if ($geldigTot !== '' && $geldigTot < $now) {
+		if ($validTo !== '' && $validTo < $now) {
 			// Mark as expired in place.
 			$this->markExpired(redemptionId: $this->extractUuid(object: $redemption) ?? '');
 			return ['valid' => false, 'redemption' => $redemption, 'reason' => 'Redemption code expired'];
@@ -214,7 +214,7 @@ class RedemptionService {
 		}
 
 		$redemption['status'] = 'gebruikt';
-		$redemption['gebruiktOp'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
+		$redemption['gebruiktOn'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
 		$redemption['posTransactionId'] = $posTransactionId;
 
 		return $this->persist(payload: $redemption, uuid: $redemptionId);
@@ -240,13 +240,13 @@ class RedemptionService {
 
 		if ((string)($redemption['status'] ?? '') === 'gereserveerd') {
 			$accountId = (string)($redemption['accountId'] ?? '');
-			$cost = (int)($redemption['kostenInPunten'] ?? 0);
+			$cost = (int)($redemption['costInPunten'] ?? 0);
 			if ($accountId !== '' && $cost > 0) {
 				$this->ledgerService->refundPoints(
 					accountId: $accountId,
 					amount: $cost,
 					redemptionId: $redemptionId,
-					verwerktDoor: 'redemption-service'
+					processedBy: 'redemption-service'
 				);
 			}
 		}
@@ -319,7 +319,7 @@ class RedemptionService {
 			array_filter(
 				$options,
 				fn (array $option): bool => $this->isOptionValid(option: $option)
-					&& (int)($option['kostenInPunten'] ?? 0) <= $balance
+					&& (int)($option['costInPunten'] ?? 0) <= $balance
 			)
 		);
 	}//end getValidRedemptionOptions()
@@ -460,8 +460,8 @@ class RedemptionService {
 	 */
 	private function isOptionValid(array $option): bool {
 		$today = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d');
-		$from = (string)($option['geldigVan'] ?? '');
-		$to = (string)($option['geldigTot'] ?? '');
+		$from = (string)($option['validFrom'] ?? '');
+		$to = (string)($option['validTo'] ?? '');
 		if ($from !== '' && $today < $from) {
 			return false;
 		}

@@ -275,8 +275,8 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 */
 	public function run(IOutput $output): void {
 		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$verzoekSchema = $this->appConfig->getValueString(Application::APP_ID, 'avgVerzoek_schema', '');
-		if ($registerId === '' || $verzoekSchema === '') {
+		$requestSchema = $this->appConfig->getValueString(Application::APP_ID, 'avgVerzoek_schema', '');
+		if ($registerId === '' || $requestSchema === '') {
 			$output->info('Pipelinq AVG→DSAR migration: no avgVerzoek schema provisioned, nothing to migrate.');
 			return;
 		}
@@ -293,7 +293,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			// the migration would silently report "no avgVerzoek objects present"
 			// instead of migrating them.
 			$verzoeken = $objectService->findAll(
-				['filters' => ['register' => $registerId, 'schema' => $verzoekSchema], 'limit' => 5000],
+				['filters' => ['register' => $registerId, 'schema' => $requestSchema], 'limit' => 5000],
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -312,16 +312,16 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 
 		$counts = ['migrated' => 0, 'skipped' => 0, 'unmappable' => 0, 'failed' => 0];
 		foreach ($verzoeken as $row) {
-			$verzoek = $this->rowToArray(row: $row);
-			if ($verzoek === null) {
+			$request = $this->rowToArray(row: $row);
+			if ($request === null) {
 				continue;
 			}
 
 			$outcome = $this->migrateOne(
 				objectService: $objectService,
 				registerId: $registerId,
-				verzoekSchema: $verzoekSchema,
-				verzoek: $verzoek,
+				requestSchema: $requestSchema,
+				request: $request,
 				satellites: $satellites,
 				migrated: $migrated
 			);
@@ -377,8 +377,8 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 *
 	 * @param object $objectService The OpenRegister ObjectService.
 	 * @param string $registerId The pipelinq register id.
-	 * @param string $verzoekSchema The avgVerzoek schema id.
-	 * @param array<string, mixed> $verzoek The source object.
+	 * @param string $requestSchema The avgVerzoek schema id.
+	 * @param array<string, mixed> $request The source object.
 	 * @param array<string, mixed> $satellites The indexed satellite store.
 	 * @param array<string, bool> $migrated Source uuids that already have a case.
 	 *
@@ -387,20 +387,20 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	private function migrateOne(
 		object $objectService,
 		string $registerId,
-		string $verzoekSchema,
-		array $verzoek,
+		string $requestSchema,
+		array $request,
 		array $satellites,
 		array $migrated = [],
 	): string {
-		$verzoekId = (string)($verzoek['id'] ?? ($verzoek['uuid'] ?? ''));
+		$requestId = (string)($request['id'] ?? ($request['uuid'] ?? ''));
 
 		// Already has a dataSubjectRequest: the authoritative idempotency check,
 		// since the marker on the source may never have been writable.
-		if ($verzoekId !== '' && isset($migrated[$verzoekId]) === true) {
+		if ($requestId !== '' && isset($migrated[$requestId]) === true) {
 			return 'skipped';
 		}
 
-		if (($verzoek['migratedTo'] ?? '') !== '') {
+		if (($request['migratedTo'] ?? '') !== '') {
 			return 'skipped';
 		}
 
@@ -408,24 +408,24 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		// register. Test emptiness rather than `!== null`: a live object carries
 		// an EMPTY `deleted` block, not a null one, so a null-check skips every
 		// object — including the ones we are here to migrate.
-		if (empty($verzoek['deleted']) === false || empty($verzoek['@self']['deleted']) === false) {
+		if (empty($request['deleted']) === false || empty($request['@self']['deleted']) === false) {
 			return 'skipped';
 		}
 
 		// An article with no dataSubjectRequest equivalent (notably 'geen-avg',
 		// i.e. "not a GDPR request") is surfaced, never coerced into a type. The
 		// old code defaulted it — and every other article — to 'access'.
-		$article = (string)($verzoek['artikel'] ?? '');
+		$article = (string)($request['artikel'] ?? '');
 		if (isset(self::ARTICLE_TYPE[$article]) === false) {
 			$this->logger->warning(
 				'Pipelinq AVG→DSAR migration: no dataSubjectRequest type for artikel — verzoek left in place',
-				['id' => (string)($verzoek['id'] ?? ''), 'artikel' => $article]
+				['id' => (string)($request['id'] ?? ''), 'artikel' => $article]
 			);
 			return 'unmappable';
 		}
 
 		try {
-			$case = $this->mapVerzoek(verzoek: $verzoek, satellites: $satellites);
+			$case = $this->mapRequest(request: $request, satellites: $satellites);
 
 			// A repair step runs from `occ` with no user session, so RBAC
 			// resolves the actor to 'Anonymous' and refuses the write — which is
@@ -444,7 +444,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'Pipelinq AVG→DSAR migration: failed to migrate an avgVerzoek',
-				['id' => (string)($verzoek['id'] ?? ''), 'exception' => $e->getMessage()]
+				['id' => (string)($request['id'] ?? ''), 'exception' => $e->getMessage()]
 			);
 			return 'failed';
 		}//end try
@@ -457,21 +457,21 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		// user can reach, and OpenRegister's folder guard is a documented
 		// default-deny, so this write CANNOT succeed from a repair step today.
 		try {
-			$verzoek['migratedTo'] = (string)$saved->getUuid();
+			$request['migratedTo'] = (string)$saved->getUuid();
 
 			// Drop nulls before writing the source back. An object read out of
 			// OpenRegister carries its unset properties as null, and the schema
 			// types them (`uitkomst` is a string) — so saving the row back
 			// unchanged fails validation on a field we never touched, leaving the
 			// marker unwritten and the case duplicated on every re-run.
-			$payload = array_filter($verzoek, static fn ($value): bool => $value !== null);
+			$payload = array_filter($request, static fn ($value): bool => $value !== null);
 
 			$objectService->saveObject(
 				$payload,
 				[],
 				$registerId,
-				$verzoekSchema,
-				(string)($verzoek['id'] ?? ($verzoek['uuid'] ?? '')),
+				$requestSchema,
+				(string)($request['id'] ?? ($request['uuid'] ?? '')),
 				_rbac: false,
 				_multitenancy: false,
 				currentUser: $this->resolveActingUser()
@@ -486,7 +486,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 				. ' (the verzoek is system-owned and its folder is unreachable from a repair step). The case'
 				. ' records the source uuid, so this is not a failure and will not duplicate on a re-run.',
 				[
-					'verzoek' => (string)($verzoek['id'] ?? ''),
+					'verzoek' => (string)($request['id'] ?? ''),
 					'case' => (string)$saved->getUuid(),
 					'exception' => $e->getMessage(),
 				]
@@ -498,41 +498,41 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	/**
 	 * Map one avgVerzoek (+ its satellites) to a dataSubjectRequest payload.
 	 *
-	 * @param array<string, mixed> $verzoek The source object.
+	 * @param array<string, mixed> $request The source object.
 	 * @param array<string, mixed> $satellites Satellites indexed by schema then verzoekId.
 	 *
 	 * @return array<string, mixed> The OR case payload.
 	 */
-	private function mapVerzoek(array $verzoek, array $satellites): array {
-		$verzoekId = (string)($verzoek['id'] ?? ($verzoek['uuid'] ?? ''));
-		$article = (string)($verzoek['artikel'] ?? '');
+	private function mapRequest(array $request, array $satellites): array {
+		$requestId = (string)($request['id'] ?? ($request['uuid'] ?? ''));
+		$article = (string)($request['artikel'] ?? '');
 
-		$subjectId = (string)($verzoek['verzoekerContact'] ?? '');
+		$subjectId = (string)($request['verzoekerContact'] ?? '');
 		if ($subjectId === '') {
-			$subjectId = (string)($verzoek['verzoekerBsn'] ?? ($verzoek['verzoekerNaam'] ?? 'unknown'));
+			$subjectId = (string)($request['verzoekerBsn'] ?? ($request['verzoekerNaam'] ?? 'unknown'));
 		}
 
-		$bewijs = (array)(($satellites['bewijs'][$verzoekId] ?? []));
-		$weigering = (array)(($satellites['weigering'][$verzoekId] ?? []));
+		$evidence = (array)(($satellites['bewijs'][$requestId] ?? []));
+		$weigering = (array)(($satellites['weigering'][$requestId] ?? []));
 
 		// Redactions reach the verzoek only through its bewijsItems — they are
 		// indexed by `bewijsItemId`, the field they actually carry.
 		$redactie = [];
-		foreach ($bewijs as $item) {
-			$bewijsId = (string)(($item['id'] ?? ($item['uuid'] ?? '')));
-			if ($bewijsId === '') {
+		foreach ($evidence as $item) {
+			$evidenceId = (string)(($item['id'] ?? ($item['uuid'] ?? '')));
+			if ($evidenceId === '') {
 				continue;
 			}
 
-			foreach ((array)($satellites['redactie'][$bewijsId] ?? []) as $actie) {
-				$redactie[] = $actie;
+			foreach ((array)($satellites['redactie'][$evidenceId] ?? []) as $action) {
+				$redactie[] = $action;
 			}
 		}
 
-		$dueAt = (string)($verzoek['wettelijkeTermijnVerloopt'] ?? '');
+		$dueAt = (string)($request['wettelijkeTermijnVerloopt'] ?? '');
 
 		$subjectType = 'natural-person';
-		if (($verzoek['verzoekerContact'] ?? '') !== '') {
+		if (($request['verzoekerContact'] ?? '') !== '') {
 			$subjectType = 'contact';
 		}
 
@@ -546,28 +546,28 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			'subjectType' => $subjectType,
 			'jurisdiction' => 'NL',
 			'type' => $type,
-			'status' => $this->mapStatus(verzoek: $verzoek),
-			'receivedAt' => (string)($verzoek['ingediendOp'] ?? ''),
-			'handler' => (string)($verzoek['behandelaar'] ?? ''),
-			'dpiaRequired' => (bool)($verzoek['dpiaFlag'] ?? false),
-			'notes' => $this->migrationNotes(verzoek: $verzoek, weigering: $weigering),
+			'status' => $this->mapStatus(request: $request),
+			'receivedAt' => (string)($request['ingediendOp'] ?? ''),
+			'handler' => (string)($request['behandelaar'] ?? ''),
+			'dpiaRequired' => (bool)($request['dpiaFlag'] ?? false),
+			'notes' => $this->migrationNotes(request: $request, weigering: $weigering),
 		];
 
 		if ($dueAt !== '') {
 			$case['dueAt'] = $dueAt;
 		}
 
-		$this->applyExtension(case: $case, verzoek: $verzoek, dueAt: $dueAt);
+		$this->applyExtension(case: $case, request: $request, dueAt: $dueAt);
 
 		// Optional 1:1 string fields, copied only when present.
-		foreach (['afgerondOp' => 'closedAt', 'uitkomst' => 'outcome', 'retentieTot' => 'retainUntil'] as $src => $dst) {
-			if (($verzoek[$src] ?? '') !== '') {
-				$case[$dst] = (string)$verzoek[$src];
+		foreach (['afgerondOp' => 'closedAt', 'uitkomst' => 'outcome', 'retentionTo' => 'retainUntil'] as $src => $dst) {
+			if (($request[$src] ?? '') !== '') {
+				$case[$dst] = (string)$request[$src];
 			}
 		}
 
 		$case = $this->applyGround(case: $case, weigering: $weigering);
-		$case = $this->applyCollection(case: $case, key: 'evidence', records: $this->mapEvidence(bewijs: $bewijs));
+		$case = $this->applyCollection(case: $case, key: 'evidence', records: $this->mapEvidence(items: $evidence));
 		$case = $this->applyCollection(case: $case, key: 'redactions', records: $this->mapRedactions(redactie: $redactie));
 
 		return $case;
@@ -610,18 +610,18 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	/**
 	 * Map the source status to the OR status vocabulary.
 	 *
-	 * @param array<string, mixed> $verzoek The source object.
+	 * @param array<string, mixed> $request The source object.
 	 *
 	 * @return string The OR status.
 	 */
-	private function mapStatus(array $verzoek): string {
-		$status = (string)($verzoek['status'] ?? '');
-		if ((string)($verzoek['artikel'] ?? '') === 'geen-avg') {
+	private function mapStatus(array $request): string {
+		$status = (string)($request['status'] ?? '');
+		if ((string)($request['artikel'] ?? '') === 'geen-avg') {
 			return 'closed';
 		}
 
 		if ($status === 'afgerond') {
-			$outcome = (string)($verzoek['uitkomst'] ?? '');
+			$outcome = (string)($request['uitkomst'] ?? '');
 			return (self::OUTCOME_TERMINAL_STATUS[$outcome] ?? 'closed');
 		}
 
@@ -632,25 +632,25 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 * Apply extension fields (extendedUntil / extensionReason) to the case.
 	 *
 	 * @param array<string, mixed> $case The case payload (by reference).
-	 * @param array<string, mixed> $verzoek The source object.
+	 * @param array<string, mixed> $request The source object.
 	 * @param string $dueAt The base due date.
 	 *
 	 * @return void
 	 */
-	private function applyExtension(array &$case, array $verzoek, string $dueAt): void {
-		$verlengdMet = (int)($verzoek['verlengdMet'] ?? 0);
-		if ($verlengdMet <= 0) {
+	private function applyExtension(array &$case, array $request, string $dueAt): void {
+		$verlengdWith = (int)($request['verlengdMet'] ?? 0);
+		if ($verlengdWith <= 0) {
 			return;
 		}
 
-		$case['extensionReason'] = (string)($verzoek['verlengingsgrond'] ?? '');
+		$case['extensionReason'] = (string)($request['verlengingsgrond'] ?? '');
 		if ($dueAt === '') {
 			return;
 		}
 
 		try {
 			$base = new DateTimeImmutable($dueAt);
-			$case['extendedUntil'] = $base->modify(sprintf('+%d days', $verlengdMet))->format(DateTimeInterface::ATOM);
+			$case['extendedUntil'] = $base->modify(sprintf('+%d days', $verlengdWith))->format(DateTimeInterface::ATOM);
 		} catch (\Throwable $e) {
 			// Unparseable due date — leave extendedUntil unset (reason preserved).
 		}
@@ -675,13 +675,13 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	/**
 	 * Map bewijsItem satellites to the OR evidence[] shape.
 	 *
-	 * @param array<mixed> $bewijs The bewijs satellites.
+	 * @param array<mixed> $items The evidence satellites.
 	 *
 	 * @return array<int, array<string, string>> The evidence records.
 	 */
-	private function mapEvidence(array $bewijs): array {
+	private function mapEvidence(array $items): array {
 		$evidence = [];
-		foreach ($bewijs as $item) {
+		foreach ($items as $item) {
 			if (is_array($item) === false) {
 				continue;
 			}
@@ -724,27 +724,27 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	/**
 	 * Build the structured JSON migration notes block preserving NL extras.
 	 *
-	 * @param array<string, mixed> $verzoek The source object.
+	 * @param array<string, mixed> $request The source object.
 	 * @param array<string, mixed> $weigering The weigering satellite (may be empty).
 	 *
 	 * @return string The JSON notes block.
 	 */
-	private function migrationNotes(array $verzoek, array $weigering): string {
+	private function migrationNotes(array $request, array $weigering): string {
 		$block = [
 			'migratedFrom' => 'pipelinq/avgVerzoek',
 			// The source's uuid, so the CASE records which verzoek it came from.
 			// This is what makes the migration idempotent: the marker on the
 			// source cannot be relied on (see alreadyMigrated()).
-			'migratedFromId' => ($verzoek['id'] ?? ($verzoek['uuid'] ?? null)),
-			'kenmerk' => ($verzoek['kenmerk'] ?? null),
-			'ingediendVia' => ($verzoek['ingediendVia'] ?? null),
-			'specifiekeVraag' => ($verzoek['specifiekeVraag'] ?? null),
-			'scope' => ($verzoek['scope'] ?? null),
-			'verzoekerBsnGeverifieerd' => ($verzoek['verzoekerBsnGeverifieerd'] ?? null),
-			'fgGeinformeerd' => ($verzoek['fgGeinformeerd'] ?? null),
-			'termijnOverschreden' => ($verzoek['termijnOverschreden'] ?? null),
-			'bewijsbundel' => ($verzoek['bewijsbundel'] ?? null),
-			'oorspronkelijkArtikel' => ($verzoek['artikel'] ?? null),
+			'migratedFromId' => ($request['id'] ?? ($request['uuid'] ?? null)),
+			'kenmerk' => ($request['kenmerk'] ?? null),
+			'ingediendVia' => ($request['ingediendVia'] ?? null),
+			'specifiekeVraag' => ($request['specifiekeVraag'] ?? null),
+			'scope' => ($request['scope'] ?? null),
+			'verzoekerBsnGeverifieerd' => ($request['verzoekerBsnGeverifieerd'] ?? null),
+			'fgGeinformeerd' => ($request['fgGeinformeerd'] ?? null),
+			'termijnOverschreden' => ($request['termijnOverschreden'] ?? null),
+			'bewijsbundel' => ($request['bewijsbundel'] ?? null),
+			'oorspronkelijkArtikel' => ($request['artikel'] ?? null),
 		];
 
 		if ($weigering !== []) {
@@ -765,11 +765,11 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 */
 	private function loadSatellites(object $objectService, string $registerId): array {
 		return [
-			'bewijs' => $this->indexByVerzoek(
+			'bewijs' => $this->indexByRequest(
 				objectService: $objectService,
 				registerId: $registerId,
 				schemaKey: 'bewijsItem_schema',
-				parentField: 'verzoekId'
+				parentField: 'requestId'
 			),
 			// A redactieActie hangs off a bewijsItem, NOT off the verzoek: its
 			// required parent is `bewijsItemId` and it has no `verzoekId` at all.
@@ -777,17 +777,17 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			// out empty for every migrated request — a silent, total loss of the
 			// redaction record. Index by the real parent and resolve through the
 			// verzoek's bewijsItems (see mapVerzoek).
-			'redactie' => $this->indexByVerzoek(
+			'redactie' => $this->indexByRequest(
 				objectService: $objectService,
 				registerId: $registerId,
 				schemaKey: 'redactieActie_schema',
 				parentField: 'bewijsItemId'
 			),
-			'weigering' => $this->indexFirstByVerzoek(
+			'weigering' => $this->indexFirstByRequest(
 				objectService: $objectService,
 				registerId: $registerId,
 				schemaKey: 'weigering_schema',
-				parentField: 'verzoekId'
+				parentField: 'requestId'
 			),
 		];
 	}//end loadSatellites()
@@ -802,7 +802,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 *
 	 * @return array<string, array<int, array<string, mixed>>> The grouped store.
 	 */
-	private function indexByVerzoek(object $objectService, string $registerId, string $schemaKey, string $parentField): array {
+	private function indexByRequest(object $objectService, string $registerId, string $schemaKey, string $parentField): array {
 		$index = [];
 		foreach ($this->readSchema(objectService: $objectService, registerId: $registerId, schemaKey: $schemaKey) as $row) {
 			$data = $this->rowToArray(row: $row);
@@ -831,7 +831,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 *
 	 * @return array<string, array<string, mixed>> The first-per-parent store.
 	 */
-	private function indexFirstByVerzoek(object $objectService, string $registerId, string $schemaKey, string $parentField): array {
+	private function indexFirstByRequest(object $objectService, string $registerId, string $schemaKey, string $parentField): array {
 		$index = [];
 		foreach ($this->readSchema(objectService: $objectService, registerId: $registerId, schemaKey: $schemaKey) as $row) {
 			$data = $this->rowToArray(row: $row);

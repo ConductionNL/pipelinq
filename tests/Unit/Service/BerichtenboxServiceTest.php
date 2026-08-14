@@ -212,7 +212,7 @@ class BerichtenboxServiceTest extends TestCase {
 			'afgehandeld',
 			'123456789',
 			null,
-			['zaaktype' => 'paspoort']
+			['caseType' => 'paspoort']
 		);
 
 		$this->assertIsArray($result);

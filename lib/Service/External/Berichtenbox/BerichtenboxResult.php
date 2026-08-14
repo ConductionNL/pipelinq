@@ -39,7 +39,7 @@ final class BerichtenboxResult {
 	 * Construct the result value-object.
 	 *
 	 * @param string $outcome Outcome enum.
-	 * @param string $logiusKenmerk Logius-side
+	 * @param string $logiusReference Logius-side
 	 *                              conversation
 	 *                              / dispatch
 	 *                              handle
@@ -58,7 +58,7 @@ final class BerichtenboxResult {
 	 */
 	public function __construct(
 		public readonly string $outcome,
-		public readonly string $logiusKenmerk,
+		public readonly string $logiusReference,
 		public readonly bool $dormant,
 		public readonly array $extras = [],
 	) {

@@ -517,7 +517,7 @@ class SlaEngineService {
 			}
 
 			$targets[$idx]['status'] = self::STATUS_MET;
-			$targets[$idx]['metAt'] = $when->format(DateTimeInterface::ATOM);
+			$targets[$idx]['withAt'] = $when->format(DateTimeInterface::ATOM);
 		}
 
 		$slaStatus['targets'] = $targets;
