@@ -4,7 +4,7 @@
 			v-model="query"
 			:label="label"
 			:placeholder="placeholder"
-			@update:model-value="onInput" />
+			@update:modelValue="onInput" />
 		<div v-if="showDropdown && results.length > 0" class="autocomplete-dropdown">
 			<button
 				v-for="client in results"
@@ -34,8 +34,8 @@
 </template>
 
 <script>
-import { NcTextField, NcButton } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcTextField } from '@nextcloud/vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import { initializeStores } from '../../store/store.js'
 
@@ -46,11 +46,13 @@ export default {
 		NcButton,
 		Close,
 	},
+
 	props: {
 		value: {
 			type: Object,
 			default: null,
 		},
+
 		placeholder: {
 			type: String,
 			/**
@@ -60,6 +62,7 @@ export default {
 				return t('pipelinq', 'Search client...')
 			},
 		},
+
 		label: {
 			type: String,
 			/**
@@ -70,6 +73,7 @@ export default {
 			},
 		},
 	},
+
 	data() {
 		return {
 			query: '',
@@ -80,6 +84,7 @@ export default {
 			debounceTimer: null,
 		}
 	},
+
 	watch: {
 		/**
 		 * @param newVal
@@ -89,6 +94,7 @@ export default {
 			this.selectedClient = newVal
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-10
 	 */
@@ -100,6 +106,7 @@ export default {
 			console.error('ClientAutocomplete: failed to load config', err)
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-11
@@ -113,6 +120,7 @@ export default {
 				this.searchClients()
 			}, 300)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-12
 		 */
@@ -156,6 +164,7 @@ export default {
 				this.showDropdown = false
 			}
 		},
+
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-13
@@ -167,6 +176,7 @@ export default {
 			this.showDropdown = false
 			this.$emit('input', client)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-8
 		 */

@@ -6,19 +6,28 @@
 // with the Nextcloud request token. State is consumed by XWikiWidget,
 // XWikiArticleList, XWikiArticleViewer and XWikiSidebarTab.
 
-import { defineStore } from 'pinia'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 
 const BASE = generateUrl('/apps/pipelinq/api/xwiki')
 
-const headers = () => ({
-	'Content-Type': 'application/json',
-	requesttoken:
-		typeof OC !== 'undefined' && OC.requestToken ? OC.requestToken : '',
-	'OCS-APIREQUEST': 'true',
-})
+/**
+ *
+ */
+function headers() {
+	return {
+		'Content-Type': 'application/json',
+		requesttoken:
+			typeof OC !== 'undefined' && OC.requestToken ? OC.requestToken : '',
+		'OCS-APIREQUEST': 'true',
+	}
+}
 
-const qs = (params) => {
+/**
+ *
+ * @param params
+ */
+function qs(params) {
 	const usp = new URLSearchParams()
 	Object.entries(params).forEach(([key, value]) => {
 		if (value === undefined || value === null || value === '') return

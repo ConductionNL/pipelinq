@@ -5,13 +5,13 @@
 		<div v-if="isGroup" class="rule-node__group">
 			<div class="rule-node__group-header">
 				<NcSelect
-					:model-value="groupOperatorOption"
+					:modelValue="groupOperatorOption"
 					:options="groupOperators"
-					:input-label="t('pipelinq', 'Combine with')"
+					:inputLabel="t('pipelinq', 'Combine with')"
 					label="label"
 					:clearable="false"
 					class="rule-node__op-select"
-					@update:model-value="onGroupOperatorChange" />
+					@update:modelValue="onGroupOperatorChange" />
 				<NcButton variant="tertiary" @click="$emit('remove')">
 					<template #icon>
 						<Delete :size="18" />
@@ -25,13 +25,13 @@
 				:key="index"
 				:node="child"
 				:depth="depth + 1"
-				:entity-type="entityType"
-				:field-options="fieldOptions"
+				:entityType="entityType"
+				:fieldOptions="fieldOptions"
 				:errors="errors"
 				:path="childPath(index)"
 				@update:node="updateChild(index, $event)"
 				@remove="removeChild(index)"
-				@validate-leaf="$emit('validate-leaf')" />
+				@validateLeaf="$emit('validate-leaf')" />
 
 			<div class="rule-node__group-actions">
 				<NcButton variant="secondary" @click="addCondition">
@@ -51,21 +51,21 @@
 
 		<div v-else class="rule-node__leaf">
 			<NcSelect
-				:model-value="fieldOption"
+				:modelValue="fieldOption"
 				:options="fieldOptions"
-				:input-label="t('pipelinq', 'Field')"
+				:inputLabel="t('pipelinq', 'Field')"
 				label="label"
 				:clearable="false"
 				class="rule-node__field"
-				@update:model-value="onFieldChange" />
+				@update:modelValue="onFieldChange" />
 			<NcSelect
-				:model-value="operatorOption"
+				:modelValue="operatorOption"
 				:options="operatorOptions"
-				:input-label="t('pipelinq', 'Operator')"
+				:inputLabel="t('pipelinq', 'Operator')"
 				label="label"
 				:clearable="false"
 				class="rule-node__operator"
-				@update:model-value="onOperatorChange" />
+				@update:modelValue="onOperatorChange" />
 			<div class="rule-node__value-wrap">
 				<label class="rule-node__value-label">
 					{{ t('pipelinq', 'Value') }}
@@ -111,9 +111,9 @@
 </template>
 
 <script>
-import { NcSelect, NcButton } from '@nextcloud/vue'
-import Plus from 'vue-material-design-icons/Plus.vue'
+import { NcButton, NcSelect } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 
 const OPERATORS_BY_TYPE = {
 	string: [
@@ -148,32 +148,39 @@ export default {
 		Plus,
 		Delete,
 	},
+
 	props: {
 		node: {
 			type: Object,
 			required: true,
 		},
+
 		depth: {
 			type: Number,
 			default: 0,
 		},
+
 		entityType: {
 			type: String,
 			required: true,
 		},
+
 		fieldOptions: {
 			type: Array,
 			default: () => [],
 		},
+
 		errors: {
 			type: Object,
 			default: () => ({}),
 		},
+
 		path: {
 			type: String,
 			default: 'root',
 		},
 	},
+
 	emits: ['update:node', 'remove', 'validate-leaf'],
 	computed: {
 		/**
@@ -184,6 +191,7 @@ export default {
 		isGroup() {
 			return Array.isArray(this.node?.children)
 		},
+
 		/**
 		 * Operators available for grouping nodes (AND vs OR).
 		 *
@@ -195,6 +203,7 @@ export default {
 				{ value: 'OR', label: this.t('pipelinq', 'Match any (OR)') },
 			]
 		},
+
 		/**
 		 * Currently-selected group operator option.
 		 *
@@ -206,6 +215,7 @@ export default {
 				|| this.groupOperators[0]
 			)
 		},
+
 		/**
 		 * Indentation style based on nesting depth.
 		 *
@@ -214,6 +224,7 @@ export default {
 		indentStyle() {
 			return { marginLeft: `${Math.min(this.depth, 4) * 16}px` }
 		},
+
 		/**
 		 * Selected field option (lookup by field name).
 		 *
@@ -222,6 +233,7 @@ export default {
 		fieldOption() {
 			return this.fieldOptions.find((o) => o.value === this.node.field) || null
 		},
+
 		/**
 		 * Detected type for the currently-selected field (default string).
 		 *
@@ -230,6 +242,7 @@ export default {
 		fieldType() {
 			return this.fieldOption?.type || 'string'
 		},
+
 		/**
 		 * Operators applicable to the current field type.
 		 *
@@ -243,6 +256,7 @@ export default {
 				label: this.t('pipelinq', o.label),
 			}))
 		},
+
 		/**
 		 * Selected operator option.
 		 *
@@ -254,6 +268,7 @@ export default {
 				|| null
 			)
 		},
+
 		/**
 		 * Native input type for the value field, derived from field type.
 		 *
@@ -268,6 +283,7 @@ export default {
 			}
 			return 'text'
 		},
+
 		/**
 		 * Field-level error message at this node's path.
 		 *
@@ -277,6 +293,7 @@ export default {
 			return this.errors?.[this.path] || ''
 		},
 	},
+
 	methods: {
 		/**
 		 * Build the path string for a child index, used to address errors.
@@ -287,6 +304,7 @@ export default {
 		childPath(index) {
 			return `${this.path}.${index}`
 		},
+
 		/**
 		 * Replace a child node at `index` with `next`, then emit the updated tree.
 		 *
@@ -298,6 +316,7 @@ export default {
 			children[index] = next
 			this.emitChange({ ...this.node, children })
 		},
+
 		/**
 		 * Drop the child node at `index` and emit the updated tree.
 		 *
@@ -307,6 +326,7 @@ export default {
 			const children = this.node.children.filter((_, i) => i !== index)
 			this.emitChange({ ...this.node, children })
 		},
+
 		/**
 		 * Append a blank leaf condition to this group.
 		 */
@@ -317,6 +337,7 @@ export default {
 			]
 			this.emitChange({ ...this.node, children })
 		},
+
 		/**
 		 * Append a blank AND group to this group.
 		 */
@@ -324,6 +345,7 @@ export default {
 			const children = [...this.node.children, { type: 'AND', children: [] }]
 			this.emitChange({ ...this.node, children })
 		},
+
 		/**
 		 * Switch this group from AND to OR or vice versa.
 		 *
@@ -332,6 +354,7 @@ export default {
 		onGroupOperatorChange(option) {
 			this.emitChange({ ...this.node, type: option?.value || 'AND' })
 		},
+
 		/**
 		 * Set the leaf's field; reset operator to a sensible default for the type.
 		 *
@@ -345,6 +368,7 @@ export default {
 			this.emitChange({ ...this.node, field: value, operator: list[0].value })
 			this.$emit('validate-leaf')
 		},
+
 		/**
 		 * Update the leaf's operator.
 		 *
@@ -354,6 +378,7 @@ export default {
 			this.emitChange({ ...this.node, operator: option?.value || 'eq' })
 			this.$emit('validate-leaf')
 		},
+
 		/**
 		 * Update the leaf's value (raw input).
 		 *
@@ -362,6 +387,7 @@ export default {
 		onValueInput(value) {
 			this.emitChange({ ...this.node, value })
 		},
+
 		/**
 		 * Emit the updated node upwards.
 		 *

@@ -1,8 +1,8 @@
+import { generateUrl } from '@nextcloud/router'
 /**
  * Agent Profiles store for Pipelinq — manages agent skill profiles via OpenRegister API.
  */
 import { defineStore } from 'pinia'
-import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from './object.js'
 
 export const useAgentProfilesStore = defineStore('agentProfiles', {

@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import { NcModal, NcButton } from '@nextcloud/vue'
+import { NcButton, NcModal } from '@nextcloud/vue'
 
 const MAX_VISIBLE = 25
 
@@ -63,16 +63,19 @@ export default {
 		NcModal,
 		NcButton,
 	},
+
 	props: {
 		contacts: {
 			type: Array,
 			default: () => [],
 		},
+
 		channel: {
 			type: String,
 			default: 'email',
 		},
 	},
+
 	emits: ['cancel', 'request-consent', 'skip-and-send'],
 	computed: {
 		/**
@@ -83,6 +86,7 @@ export default {
 		displayContacts() {
 			return this.contacts.slice(0, MAX_VISIBLE)
 		},
+
 		/**
 		 * Count of contacts not shown in the visible list.
 		 *
@@ -91,6 +95,7 @@ export default {
 		hiddenCount() {
 			return Math.max(0, this.contacts.length - MAX_VISIBLE)
 		},
+
 		/**
 		 * Localised summary line for the modal body.
 		 *

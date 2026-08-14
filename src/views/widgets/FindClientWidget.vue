@@ -22,9 +22,9 @@
 			<NcSelect
 				v-model="newClient.type"
 				:options="typeOptions"
-				:input-label="t('pipelinq', 'Type')"
+				:inputLabel="t('pipelinq', 'Type')"
 				:placeholder="t('pipelinq', 'Type')"
-				input-id="new-client-type" />
+				inputId="new-client-type" />
 			<NcTextField
 				v-model="newClient.email"
 				:label="t('pipelinq', 'Email')"
@@ -176,22 +176,22 @@
 </template>
 
 <script>
-import {
-	NcTextField,
-	NcButton,
-	NcSelect,
-	NcNoteCard,
-	NcLoadingIcon,
-} from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import {
+	NcButton,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
 import Account from 'vue-material-design-icons/Account.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
+import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
-import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
-import { initializeStores } from '../../store/store.js'
 import { resolveObjectType } from '../../services/pipelineUtils.js'
+import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
 
 export default {
@@ -209,12 +209,14 @@ export default {
 		TrendingUp,
 		ContentCopy,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -229,6 +231,7 @@ export default {
 				{ id: 'person', label: t('pipelinq', 'Person') },
 				{ id: 'organization', label: t('pipelinq', 'Organization') },
 			],
+
 			actionClient: null,
 			actionType: '',
 			actionTitle: '',
@@ -236,6 +239,7 @@ export default {
 			copyFeedback: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
@@ -257,9 +261,11 @@ export default {
 				.slice(0, 20)
 		},
 	},
+
 	async mounted() {
 		await this.fetchData()
 	},
+
 	methods: {
 		toText,
 		/**
@@ -280,6 +286,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @param type
 		 * @param params
@@ -315,6 +322,7 @@ export default {
 			const data = await response.json()
 			return data.results || data || []
 		},
+
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
@@ -322,6 +330,7 @@ export default {
 		viewClient(client) {
 			window.location.href = generateUrl('/apps/pipelinq/clients/' + client.id)
 		},
+
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-37
@@ -331,6 +340,7 @@ export default {
 			this.actionType = 'request'
 			this.actionTitle = ''
 		},
+
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-36
@@ -340,6 +350,7 @@ export default {
 			this.actionType = 'lead'
 			this.actionTitle = ''
 		},
+
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-34
@@ -355,6 +366,7 @@ export default {
 				console.error('Failed to copy email:', err)
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-33
 		 */
@@ -363,6 +375,7 @@ export default {
 			this.actionType = ''
 			this.actionTitle = ''
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-41
 		 */
@@ -428,6 +441,7 @@ export default {
 				this.actionSubmitting = false
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-35
 		 */

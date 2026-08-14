@@ -59,7 +59,11 @@
 		</button>
 	</div>
 </template>
+
 <script>
+/**
+ *
+ */
 function uuid() {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
 		const r = (Math.random() * 16) | 0
@@ -74,6 +78,7 @@ export default {
 			return this.value || []
 		},
 	},
+
 	methods: {
 		/**
 		 * @param arr
@@ -82,6 +87,7 @@ export default {
 		emit(arr) {
 			this.$emit('input', arr)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-1
 		 */
@@ -98,6 +104,7 @@ export default {
 				},
 			])
 		},
+
 		/**
 		 * @param i
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-4
@@ -107,11 +114,13 @@ export default {
 			a.splice(i, 1)
 			this.emit(a)
 		},
+
 		setProp(i, k, v) {
 			const a = [...this.questions]
 			a[i] = { ...a[i], [k]: v }
 			this.emit(a)
 		},
+
 		setType(i, t) {
 			const a = [...this.questions]
 			a[i] = { ...a[i], type: t }
@@ -122,6 +131,7 @@ export default {
 				a[i].options = ['', '']
 			this.emit(a)
 		},
+
 		setOpt(i, oi, v) {
 			const a = [...this.questions]
 			const opts = [...(a[i].options || [])]
@@ -129,6 +139,7 @@ export default {
 			a[i] = { ...a[i], options: opts }
 			this.emit(a)
 		},
+
 		/**
 		 * @param i
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-2
@@ -138,6 +149,7 @@ export default {
 			a[i] = { ...a[i], options: [...(a[i].options || []), ''] }
 			this.emit(a)
 		},
+
 		/**
 		 * @param i
 		 * @param oi
@@ -153,6 +165,7 @@ export default {
 	},
 }
 </script>
+
 <style scoped>
 .qe {
 	display: flex;

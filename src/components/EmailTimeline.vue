@@ -57,12 +57,14 @@ export default {
 		entityType: { type: String, required: true },
 		entityId: { type: String, required: true },
 	},
+
 	data() {
 		return {
 			emails: [],
 			loading: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-29
@@ -74,9 +76,11 @@ export default {
 			)
 		},
 	},
+
 	mounted() {
 		this.fetchEmails()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-27
@@ -89,6 +93,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-28

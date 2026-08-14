@@ -21,7 +21,7 @@
 				:label="t('pipelinq', 'Search')"
 				:placeholder="t('pipelinq', 'Name, e-mail or phone')"
 				data-testid="customer-lookup-input"
-				@update:model-value="onSearchInput" />
+				@update:modelValue="onSearchInput" />
 
 			<div
 				v-if="loading"
@@ -113,6 +113,7 @@ export default {
 		NcLoadingIcon,
 		NcTextField,
 	},
+
 	emits: ['select', 'cancel'],
 	data() {
 		return {
@@ -124,6 +125,7 @@ export default {
 			debounceHandle: null,
 		}
 	},
+
 	mounted() {
 		this.$nextTick(() => {
 			const input = this.$refs.searchInput
@@ -132,11 +134,13 @@ export default {
 			}
 		})
 	},
+
 	beforeUnmount() {
 		if (this.debounceHandle) {
 			clearTimeout(this.debounceHandle)
 		}
 	},
+
 	methods: {
 		/**
 		 * Debounce the search call to avoid hammering the API while typing.
@@ -153,6 +157,7 @@ export default {
 			}
 			this.debounceHandle = setTimeout(() => this.runSearch(), DEBOUNCE_MS)
 		},
+
 		/**
 		 * Fire the search request.
 		 */
@@ -174,6 +179,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Emit the selected customer.
 		 *
@@ -182,6 +188,7 @@ export default {
 		onSelect(row) {
 			this.$emit('select', row)
 		},
+
 		/**
 		 * Close the modal without a selection.
 		 */

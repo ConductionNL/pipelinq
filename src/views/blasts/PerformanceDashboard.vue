@@ -33,8 +33,8 @@
 				type="button"
 				role="tab"
 				:aria-selected="activeTab === tab.id"
+				class="performance-dashboard__tab"
 				:class="[
-					'performance-dashboard__tab',
 					{ 'performance-dashboard__tab--active': activeTab === tab.id },
 				]"
 				@click="activeTab = tab.id">
@@ -227,10 +227,10 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 const OVERVIEW_LIMIT = 50
 const AB_MIN_DELIVERED = 500
@@ -244,6 +244,7 @@ export default {
 		NcLoadingIcon,
 		CnStatusBadge,
 	},
+
 	data() {
 		return {
 			loading: true,
@@ -256,6 +257,7 @@ export default {
 			overviewSortOrder: 'desc',
 		}
 	},
+
 	computed: {
 		/**
 		 * Tab definitions surfaced in the role="tablist" nav.
@@ -269,6 +271,7 @@ export default {
 				{ id: 'attribution', label: this.t('pipelinq', 'Attribution') },
 			]
 		},
+
 		/**
 		 * Column descriptors for the Overview tab, keyed by the row property
 		 * they sort against.
@@ -287,6 +290,7 @@ export default {
 				{ key: 'unsubscribed', label: this.t('pipelinq', 'Unsubscribed') },
 			]
 		},
+
 		/**
 		 * Flattened Overview rows derived from the loaded blast list — pre-
 		 * computes the open / click rates so the column sort can compare
@@ -319,6 +323,7 @@ export default {
 				}
 			})
 		},
+
 		/**
 		 * Overview rows after applying the column sort selected by the user.
 		 *
@@ -338,6 +343,7 @@ export default {
 			})
 			return rows
 		},
+
 		/**
 		 * Group parent A/B blasts with their variant children and roll up
 		 * the chi-square verdict for each pair.
@@ -370,9 +376,11 @@ export default {
 			return pairs
 		},
 	},
+
 	mounted() {
 		this.fetchAll()
 	},
+
 	methods: {
 		/**
 		 * Load blasts, segments (for name lookup) and per-blast attribution
@@ -393,6 +401,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * GET /api/blasts — list recent blasts (limit OVERVIEW_LIMIT).
 		 *
@@ -405,6 +414,7 @@ export default {
 			})
 			this.blasts = data?.data || data?.results || []
 		},
+
 		/**
 		 * GET /api/segments — build an id->name lookup for the Overview
 		 * Segment column. Failure is non-fatal: rows fall back to '—'.
@@ -428,6 +438,7 @@ export default {
 				this.segments = {}
 			}
 		},
+
 		/**
 		 * For every loaded blast, fetch its attribution summary from
 		 * `GET /api/blasts/:id/attribution` and collect non-zero rows into
@@ -464,6 +475,7 @@ export default {
 			}
 			this.attributionRows = rows
 		},
+
 		/**
 		 * Look up a human-readable segment name; fall back to em-dash.
 		 *
@@ -476,6 +488,7 @@ export default {
 			}
 			return this.segments[segmentId] || segmentId
 		},
+
 		/**
 		 * Toggle sort column / direction on the Overview table.
 		 *
@@ -490,6 +503,7 @@ export default {
 				this.overviewSortOrder = 'desc'
 			}
 		},
+
 		/**
 		 * ARIA sort attribute for a column header.
 		 *
@@ -502,6 +516,7 @@ export default {
 			}
 			return this.overviewSortOrder === 'asc' ? 'ascending' : 'descending'
 		},
+
 		/**
 		 * Build the per-blast A/B comparison + significance verdict.
 		 *
@@ -541,6 +556,7 @@ export default {
 				verdictLabel: this.abVerdictLabel(a, b, pValue, significant),
 			}
 		},
+
 		/**
 		 * Extract delivered / clicked / clickRate for one variant.
 		 *
@@ -557,6 +573,7 @@ export default {
 				clickRate: delivered > 0 ? clicked / delivered : 0,
 			}
 		},
+
 		/**
 		 * Milliseconds since `sentAt` (or `scheduledFor` as fallback) for a
 		 * blast. Returns 0 when no timestamp is set.
@@ -575,6 +592,7 @@ export default {
 			}
 			return Math.max(0, Date.now() - date.getTime())
 		},
+
 		/**
 		 * Pearson chi-square p-value on a 2x2 contingency table of clicks
 		 * vs non-clicks for the two variants. Uses an analytical 1-degree
@@ -619,6 +637,7 @@ export default {
 				+ (bNon - expectedBNon) ** 2 / expectedBNon
 			return this.erfc(Math.sqrt(chi / 2))
 		},
+
 		/**
 		 * Abramowitz-Stegun 7.1.26 approximation of erfc(x). Good to
 		 * about 1.5e-7 over x >= 0, more than enough for an A/B verdict.
@@ -641,6 +660,7 @@ export default {
 					* Math.exp(-x * x)
 			return 1 - y
 		},
+
 		/**
 		 * Human-readable A/B verdict line.
 		 *
@@ -677,6 +697,7 @@ export default {
 				{ sanitize: false },
 			)
 		},
+
 		/**
 		 * Format a 0..1 fraction as a percentage with one decimal place.
 		 *
@@ -689,6 +710,7 @@ export default {
 			}
 			return `${(fraction * 100).toFixed(1)}%`
 		},
+
 		/**
 		 * Format a EUR amount as a localised thousand-separated string.
 		 *
@@ -701,6 +723,7 @@ export default {
 			}
 			return `EUR ${value.toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 		},
+
 		/**
 		 * Localised status badge label for the Overview status column.
 		 *

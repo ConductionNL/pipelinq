@@ -120,10 +120,10 @@
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import { useQueuesStore } from '../../store/modules/queues.js'
+import { getWaitingTime, prioritySortComparator } from '../../services/queueUtils.js'
+import { getPriorityColor, getPriorityLabel } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
-import { prioritySortComparator, getWaitingTime } from '../../services/queueUtils.js'
-import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
+import { useQueuesStore } from '../../store/modules/queues.js'
 
 export default {
 	name: 'QueueDetail',
@@ -131,17 +131,20 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 	},
+
 	props: {
 		queueId: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			selectedIds: new Set(),
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-12
@@ -149,42 +152,49 @@ export default {
 		queuesStore() {
 			return useQueuesStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-8
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-5
 		 */
 		loading() {
 			return this.queuesStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-11
 		 */
 		queue() {
 			return this.queuesStore.currentQueue
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-4
 		 */
 		items() {
 			return this.queuesStore.queueItems
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-13
 		 */
 		sortedItems() {
 			return [...this.items].sort(prioritySortComparator)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-7
 		 */
 		nextItem() {
 			return this.sortedItems.find((item) => !item.assignee) || null
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-1
 		 */
@@ -192,6 +202,7 @@ export default {
 			return (this.queue?.assignedAgents || []).length
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-6
 	 */
@@ -199,6 +210,7 @@ export default {
 		await this.queuesStore.fetchQueue(this.queueId)
 		await this.queuesStore.fetchQueueItems(this.queueId)
 	},
+
 	methods: {
 		getPriorityLabel,
 		getPriorityColor,

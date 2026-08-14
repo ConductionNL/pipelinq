@@ -168,10 +168,8 @@
 					<td>{{ entry.registerNumber || '—' }}</td>
 					<td>
 						<span
-							:class="[
-								'action-badge',
-								`action-badge--${actionClass(entry.action)}`,
-							]">
+							class="action-badge"
+							:class="[`action-badge--${actionClass(entry.action)}`]">
 							{{ actionLabel(entry.action) }}
 						</span>
 					</td>
@@ -180,8 +178,8 @@
 					</td>
 					<td>
 						<span
+							class="verify-badge"
 							:class="[
-								'verify-badge',
 								`verify-badge--${verifyClass(entry.verified)}`,
 							]">
 							{{ verifyLabel(entry.verified) }}
@@ -224,12 +222,12 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
-import Download from 'vue-material-design-icons/Download.vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
+import Download from 'vue-material-design-icons/Download.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import BelastingdienstExportDialog from '../../dialogs/BelastingdienstExportDialog.vue'
 
 const PAGE_SIZE = 25
@@ -258,6 +256,7 @@ export default {
 		ChevronRight,
 		BelastingdienstExportDialog,
 	},
+
 	data() {
 		return {
 			entries: [],
@@ -274,6 +273,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * Whether the acting user is a Nextcloud admin (controls export button).
@@ -285,6 +285,7 @@ export default {
 				? window.OC.isUserAdmin()
 				: false
 		},
+
 		/**
 		 * Entries displayed in descending chronological order.
 		 *
@@ -299,6 +300,7 @@ export default {
 			)
 			return copy
 		},
+
 		/**
 		 * Total number of pages at the configured page size.
 		 *
@@ -307,6 +309,7 @@ export default {
 		totalPages() {
 			return Math.max(1, Math.ceil(this.sortedEntries.length / PAGE_SIZE))
 		},
+
 		/**
 		 * Entries to show on the current page.
 		 *
@@ -317,9 +320,11 @@ export default {
 			return this.sortedEntries.slice(start, start + PAGE_SIZE)
 		},
 	},
+
 	async mounted() {
 		await this.refresh()
 	},
+
 	methods: {
 		/**
 		 * Load entries from the bespoke audit endpoint.
@@ -368,12 +373,14 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Apply the current filter inputs by reloading.
 		 */
 		applyFilters() {
 			this.refresh()
 		},
+
 		/**
 		 * Clear all filters and reload.
 		 */
@@ -387,6 +394,7 @@ export default {
 			}
 			this.refresh()
 		},
+
 		/**
 		 * Open the detail view for an audit entry.
 		 *
@@ -399,6 +407,7 @@ export default {
 			}
 			this.$router.push({ name: 'KassakoppelingAuditDetail', params: { id } })
 		},
+
 		/**
 		 * Format an ISO timestamp using the nl-NL locale.
 		 *
@@ -422,6 +431,7 @@ export default {
 				return value
 			}
 		},
+
 		/**
 		 * Format an integer amount in cents as a localised EUR string.
 		 *
@@ -439,6 +449,7 @@ export default {
 				return `€ ${value.toFixed(2)}`
 			}
 		},
+
 		/**
 		 * Get the localised label for an action.
 		 *
@@ -448,6 +459,7 @@ export default {
 		actionLabel(action) {
 			return t('pipelinq', ACTION_LABELS[action] || action || '—')
 		},
+
 		/**
 		 * Get the CSS modifier suffix for an action badge.
 		 *
@@ -457,6 +469,7 @@ export default {
 		actionClass(action) {
 			return ACTION_CLASSES[action] || 'unknown'
 		},
+
 		/**
 		 * Get the localised label for a verification flag.
 		 *
@@ -472,6 +485,7 @@ export default {
 			}
 			return t('pipelinq', 'Yet to verify')
 		},
+
 		/**
 		 * Get the CSS modifier suffix for a verification badge.
 		 *
@@ -487,6 +501,7 @@ export default {
 			}
 			return 'pending'
 		},
+
 		/**
 		 * Download the Belastingdienst export pack and stream it to disk.
 		 *

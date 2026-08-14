@@ -120,7 +120,7 @@
 							:placeholder="t('pipelinq', 'Select type...')"
 							label="label"
 							:reduce="(opt) => opt.value"
-							@update:model-value="onTypeSelect" />
+							@update:modelValue="onTypeSelect" />
 					</div>
 					<div class="form-group">
 						<label for="contact-relationship-notes">{{
@@ -183,16 +183,16 @@
 		<!-- Delete confirmation dialog — own file per ADR-004 (modal-isolation). -->
 		<RemoveRelationshipDialog
 			v-if="showDeleteDialog"
-			:from-name="entityName"
-			:to-name="getEntityName(deletingRelationship?.toContact)"
+			:fromName="entityName"
+			:toName="getEntityName(deletingRelationship?.toContact)"
 			@close="showDeleteDialog = false"
 			@confirm="confirmRemove" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import RemoveRelationshipDialog from '../dialogs/RemoveRelationshipDialog.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -299,21 +299,25 @@ export default {
 		NcSelect,
 		RemoveRelationshipDialog,
 	},
+
 	props: {
 		entityId: {
 			type: String,
 			required: true,
 		},
+
 		entityType: {
 			type: String,
 			required: true,
 			validator: (value) => ['contact', 'client'].includes(value),
 		},
+
 		entityName: {
 			type: String,
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			relationships: [],
@@ -335,6 +339,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-12
@@ -342,6 +347,7 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-18
 		 */
@@ -354,6 +360,7 @@ export default {
 				symmetric: t.symmetric,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-17
 		 */
@@ -364,6 +371,7 @@ export default {
 				{ value: 'weak', label: t('pipelinq', 'Weak') },
 			]
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-8
 		 */
@@ -388,9 +396,11 @@ export default {
 			})
 		},
 	},
+
 	async mounted() {
 		await this.fetchRelationships()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
@@ -418,6 +428,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @param entityId
 		 * @param entityType
@@ -436,9 +447,11 @@ export default {
 				this.entityNameCache[entityId] = entityId
 			}
 		},
+
 		getEntityName(entityId) {
 			return this.entityNameCache[entityId] || entityId || '-'
 		},
+
 		/**
 		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-9
@@ -449,6 +462,7 @@ export default {
 			}
 			return new Date(rel.endDate) < new Date()
 		},
+
 		/**
 		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
@@ -457,6 +471,7 @@ export default {
 			const type = rel.toType === 'client' ? 'ClientDetail' : 'ContactDetail'
 			this.$router.push({ name: type, params: { id: rel.toContact } })
 		},
+
 		/**
 		 * @param typeValue
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
@@ -471,6 +486,7 @@ export default {
 				this.addForm._symmetric = typeObj.symmetric
 			}
 		},
+
 		/**
 		 * @param query
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-16
@@ -512,6 +528,7 @@ export default {
 				}
 			}, 300)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
 		 */
@@ -610,6 +627,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to save relationship'))
 			}
 		},
+
 		/**
 		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-6
@@ -635,6 +653,7 @@ export default {
 			}
 			this.showAddDialog = true
 		},
+
 		/**
 		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-14
@@ -643,6 +662,7 @@ export default {
 			this.deletingRelationship = rel
 			this.showDeleteDialog = true
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-5
 		 */
@@ -681,6 +701,7 @@ export default {
 				)
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-4
 		 */

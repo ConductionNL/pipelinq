@@ -100,19 +100,23 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
+
 		tags: {
 			type: Array,
 			default: () => [],
 		},
+
 		loading: {
 			type: Boolean,
 			default: false,
 		},
+
 		addLabel: {
 			type: String,
 			/**
@@ -122,6 +126,7 @@ export default {
 				return t('pipelinq', '+ Add')
 			},
 		},
+
 		addPlaceholder: {
 			type: String,
 			/**
@@ -131,11 +136,13 @@ export default {
 				return t('pipelinq', 'Enter name...')
 			},
 		},
+
 		usageCheck: {
 			type: Function,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			adding: false,
@@ -145,6 +152,7 @@ export default {
 			error: null,
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-94
@@ -157,6 +165,7 @@ export default {
 				this.$refs.addInput?.focus()
 			})
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-88
 		 */
@@ -165,6 +174,7 @@ export default {
 			this.newName = ''
 			this.error = null
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-92
 		 */
@@ -196,6 +206,7 @@ export default {
 				this.error = e.message
 			}
 		},
+
 		/**
 		 * @param tag
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-95
@@ -208,6 +219,7 @@ export default {
 				this.$refs.editInput?.[0]?.focus()
 			})
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-89
 		 */
@@ -216,6 +228,7 @@ export default {
 			this.editName = ''
 			this.error = null
 		},
+
 		/**
 		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-93
@@ -249,6 +262,7 @@ export default {
 				this.error = e.message
 			}
 		},
+
 		/**
 		 * @param tag
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-90

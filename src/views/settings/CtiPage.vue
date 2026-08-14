@@ -20,8 +20,8 @@
 </template>
 
 <script>
-import CtiSettings from './CtiSettings.vue'
 import CtiEventLog from './CtiEventLog.vue'
+import CtiSettings from './CtiSettings.vue'
 
 export default {
 	name: 'CtiPage',

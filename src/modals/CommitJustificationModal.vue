@@ -22,7 +22,7 @@
 				:label="t('pipelinq', 'Justification')"
 				:placeholder="t('pipelinq', 'Why are you confident in this deal?')"
 				:error="showError"
-				:helper-text="
+				:helperText="
 					showError
 						? t('pipelinq', 'Please enter at least 10 characters.')
 						: ''
@@ -52,6 +52,7 @@ export default {
 			default: '',
 		},
 	},
+
 	emits: ['close', 'save'],
 	data() {
 		return {
@@ -59,14 +60,17 @@ export default {
 			touched: false,
 		}
 	},
+
 	computed: {
 		valid() {
 			return this.reason.trim().length >= 10
 		},
+
 		showError() {
 			return this.touched && !this.valid
 		},
 	},
+
 	methods: {
 		save() {
 			this.touched = true

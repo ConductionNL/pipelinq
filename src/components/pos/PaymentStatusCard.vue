@@ -65,9 +65,9 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import ReversalReasonDialog from '../../dialogs/ReversalReasonDialog.vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { capturePayment, refundPayment } from '../../services/posPaymentApi.js'
 
 export default {
@@ -78,30 +78,37 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		isManager: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	data() {
 		return {
 			busy: false,
 			showReversalDialog: false,
 		}
 	},
+
 	computed: {
 		provider() {
 			return this.transaction.paymentProvider || ''
 		},
+
 		method() {
 			return this.transaction.paymentMethod || ''
 		},
+
 		sessionId() {
 			return this.transaction.paymentSessionId || ''
 		},
+
 		status() {
 			return this.transaction.paymentStatus || ''
 		},
+
 		providerLabel() {
 			const map = {
 				mollie: 'Mollie',
@@ -114,6 +121,7 @@ export default {
 			}
 			return map[this.provider] || this.provider
 		},
+
 		methodLabel() {
 			const map = {
 				ideal: 'iDEAL',
@@ -124,6 +132,7 @@ export default {
 			}
 			return map[this.method] || this.method
 		},
+
 		statusLabel() {
 			const map = {
 				pending: t('pipelinq', 'In progress'),
@@ -134,6 +143,7 @@ export default {
 			}
 			return map[this.status] || this.status || t('pipelinq', 'Unknown')
 		},
+
 		statusClass() {
 			return {
 				'payment-status-card__badge--settled': this.status === 'settled',
@@ -143,12 +153,14 @@ export default {
 				'payment-status-card__badge--refunded': this.status === 'refunded',
 			}
 		},
+
 		canRefund() {
 			return (
 				this.isManager
 				&& (this.status === 'settled' || this.status === 'captured')
 			)
 		},
+
 		hasActions() {
 			return (
 				this.status === 'pending'
@@ -157,6 +169,7 @@ export default {
 			)
 		},
 	},
+
 	methods: {
 		async onCapture() {
 			this.busy = true
@@ -176,6 +189,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Open the reversal-reason dialog.
 		 *
@@ -186,6 +200,7 @@ export default {
 		onRefund() {
 			this.showReversalDialog = true
 		},
+
 		/**
 		 * Reverse the payment with the reason the dialog collected.
 		 *
@@ -218,6 +233,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		onRetry() {
 			this.$emit('retry')
 		},

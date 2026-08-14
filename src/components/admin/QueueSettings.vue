@@ -133,12 +133,14 @@ export default {
 		NcLoadingIcon,
 		NcSettingsSection,
 	},
+
 	data() {
 		return {
 			editingId: null,
 			editForm: {},
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-19
@@ -146,12 +148,14 @@ export default {
 		queuesStore() {
 			return useQueuesStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-17
 		 */
 		loading() {
 			return this.queuesStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-18
 		 */
@@ -159,9 +163,11 @@ export default {
 			return this.queuesStore.queues
 		},
 	},
+
 	mounted() {
 		this.queuesStore.fetchQueues()
 	},
+
 	methods: {
 		/**
 		 * @param queue
@@ -175,6 +181,7 @@ export default {
 				agentsInput: (queue.assignedAgents || []).join(', '),
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-15
 		 */
@@ -182,6 +189,7 @@ export default {
 			this.editingId = null
 			this.editForm = {}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-20
 		 */
@@ -194,6 +202,7 @@ export default {
 							.map((c) => c.trim())
 							.filter(Boolean)
 					: [],
+
 				assignedAgents: this.editForm.agentsInput
 					? this.editForm.agentsInput
 							.split(',')
@@ -206,6 +215,7 @@ export default {
 			await this.queuesStore.saveQueue(data)
 			this.cancelEdit()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-14
 		 */
@@ -216,6 +226,7 @@ export default {
 				categories: [],
 			})
 		},
+
 		/**
 		 * @param queue
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-16

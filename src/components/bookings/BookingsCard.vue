@@ -64,8 +64,8 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
 import { CnDetailCard } from '@conduction/nextcloud-vue'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const STATUS_LABELS = {
@@ -84,6 +84,7 @@ export default {
 	props: {
 		customerId: { type: String, required: true },
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -93,10 +94,12 @@ export default {
 			resourceLookup: {},
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * Future-first sort: upcoming bookings (startAt > now) first in
 		 * ascending order, then past bookings in descending order so the
@@ -121,6 +124,7 @@ export default {
 			return [...future, ...past]
 		},
 	},
+
 	watch: {
 		customerId: {
 			immediate: true,
@@ -131,6 +135,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Fetch bookings for the customer and prime the service / resource
@@ -160,6 +165,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		async primeLabels() {
 			const serviceIds = [
 				...new Set(this.bookings.map((b) => b.serviceId).filter(Boolean)),
@@ -202,21 +208,26 @@ export default {
 				}
 			}
 		},
+
 		open(row) {
 			this.$router.push({ name: 'BookingDetail', params: { id: row.id } })
 		},
+
 		serviceLabel(row) {
 			return this.serviceLookup[row.serviceId] || row.serviceId || '-'
 		},
+
 		resourceLabel(row) {
 			const first = (row.resourceAssignments || [])[0]
 			const id = first?.resourceId
 			if (!id) return '-'
 			return this.resourceLookup[id] || id
 		},
+
 		statusLabel(status) {
 			return t('pipelinq', STATUS_LABELS[status] || status || '-')
 		},
+
 		formatDateTime(iso) {
 			if (!iso) return '-'
 			try {

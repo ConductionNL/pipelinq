@@ -109,7 +109,7 @@
 </template>
 
 <script>
-import { showSuccess, showError } from '@nextcloud/dialogs'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 
 export default {
 	name: 'SyncSettings',
@@ -123,9 +123,11 @@ export default {
 			emailsLinked: 0,
 		}
 	},
+
 	mounted() {
 		this.loadSettings()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-1
@@ -133,6 +135,7 @@ export default {
 		async loadSettings() {
 			// Load from user config
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-4
 		 */
@@ -147,12 +150,14 @@ export default {
 				showError(t('pipelinq', 'Failed to update sync settings'))
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-2
 		 */
 		async updateAccounts() {
 			// Save selected accounts
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-sync-ui/tasks.md#task-3
 		 */

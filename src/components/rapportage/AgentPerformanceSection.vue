@@ -87,9 +87,9 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { NcLoadingIcon } from '@nextcloud/vue'
 
 export default {
 	name: 'AgentPerformanceSection',
@@ -97,10 +97,12 @@ export default {
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** Relative period token (today / week / month), from @workspace.period. */
 		period: { type: String, default: 'today' },
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -109,12 +111,14 @@ export default {
 			agents: [],
 		}
 	},
+
 	computed: {
 		effectivePeriod() {
 			if (this.period) return this.period
 			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
 			return (ctx && ctx.period) || 'today'
 		},
+
 		sortedAgents() {
 			const list = [...this.agents]
 			const dir = this.sortDir === 'desc' ? -1 : 1
@@ -125,6 +129,7 @@ export default {
 				return (aVal - bVal) * dir
 			})
 		},
+
 		teamStats() {
 			const total = this.agents.reduce((s, a) => s + (a.count ?? 0), 0)
 			const avgFcr =
@@ -137,14 +142,17 @@ export default {
 			return { totalContacts: total, avgFcr }
 		},
 	},
+
 	watch: {
 		effectivePeriod() {
 			this.fetchData()
 		},
 	},
+
 	mounted() {
 		this.fetchData()
 	},
+
 	methods: {
 		setSort(key) {
 			if (this.sortKey === key) {
@@ -154,6 +162,7 @@ export default {
 				this.sortDir = 'desc'
 			}
 		},
+
 		async fetchData() {
 			this.loading = true
 			try {

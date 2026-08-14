@@ -18,43 +18,43 @@
 					v-model="model.description"
 					:label="t('pipelinq', 'Description')" />
 				<NcSelect
-					:model-value="selectedSchemas"
+					:modelValue="selectedSchemas"
 					:options="schemaOptions"
-					:input-label="t('pipelinq', 'Source schemas')"
+					:inputLabel="t('pipelinq', 'Source schemas')"
 					:placeholder="t('pipelinq', 'Choose schemas to export…')"
 					label="label"
 					:multiple="true"
-					:keep-open="true"
-					@update:model-value="onSchemasSelect" />
+					:keepOpen="true"
+					@update:modelValue="onSchemasSelect" />
 				<NcSelect
-					:model-value="selectedDestination"
+					:modelValue="selectedDestination"
 					:options="destinationOptions"
-					:input-label="t('pipelinq', 'Destination')"
+					:inputLabel="t('pipelinq', 'Destination')"
 					:placeholder="t('pipelinq', 'Choose a destination…')"
 					label="label"
 					:clearable="false"
-					@update:model-value="
+					@update:modelValue="
 						(o) => (model.destinationId = o ? o.id : '')
 					" />
 				<NcSelect
-					:model-value="selectedFormat"
+					:modelValue="selectedFormat"
 					:options="formatOptions"
-					:input-label="t('pipelinq', 'Format')"
+					:inputLabel="t('pipelinq', 'Format')"
 					label="label"
 					:clearable="false"
-					@update:model-value="(o) => (model.format = o ? o.id : 'csv')" />
+					@update:modelValue="(o) => (model.format = o ? o.id : 'csv')" />
 				<NcSelect
-					:model-value="selectedMode"
+					:modelValue="selectedMode"
 					:options="modeOptions"
-					:input-label="t('pipelinq', 'Mode')"
+					:inputLabel="t('pipelinq', 'Mode')"
 					label="label"
 					:clearable="false"
-					@update:model-value="(o) => (model.mode = o ? o.id : 'full')" />
+					@update:modelValue="(o) => (model.mode = o ? o.id : 'full')" />
 				<NcTextField
 					v-if="model.mode === 'incremental'"
 					v-model="model.incrementalWatermarkColumn"
 					:label="t('pipelinq', 'Watermark column')"
-					:helper-text="
+					:helperText="
 						t(
 							'pipelinq',
 							'Column used to detect changed rows (e.g. updatedAt)',
@@ -63,7 +63,7 @@
 				<NcTextField
 					v-model="model.scheduleCron"
 					:label="t('pipelinq', 'Schedule (cron)')"
-					:placeholder="'0 2 * * *'" />
+					placeholder="0 2 * * *" />
 				<NcTextField
 					v-model="model.rowFilterExpression"
 					:label="t('pipelinq', 'Row filter (optional)')"
@@ -73,7 +73,7 @@
 					:label="
 						t('pipelinq', 'Column allowlist (optional, comma-separated)')
 					"
-					:helper-text="
+					:helperText="
 						t(
 							'pipelinq',
 							'Limit exported columns to minimise PII; leave empty to export all columns',
@@ -102,17 +102,17 @@
 		</CnDetailCard>
 		<ExportTestRunModal
 			v-if="testRunOpen"
-			:job-id="jobId"
+			:jobId="jobId"
 			@close="testRunOpen = false" />
 	</CnDetailPage>
 </template>
 
 <script>
-import { NcButton, NcTextField, NcSelect } from '@nextcloud/vue'
+import { CnDetailCard, CnDetailPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
+import { useObjectStore } from '../../store/modules/object.js'
 
 // The pipelinq schemas the export pipeline may read. `ticket` is the unified
 // supertype (unify-ticket-supertype): the former `request`, `complaint` and
@@ -133,19 +133,23 @@ export default {
 		CnDetailCard,
 		ExportTestRunModal,
 	},
+
 	props: {
 		exportJobId: {
 			type: String,
 			default: null,
 		},
+
 		id: {
 			type: String,
 			default: null,
 		},
 	},
+
 	setup() {
 		return { objectStore: useObjectStore() }
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -168,6 +172,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * The resolved job id from either prop name.
@@ -177,6 +182,7 @@ export default {
 		jobId() {
 			return this.exportJobId || this.id || this.$route?.params?.id || null
 		},
+
 		/**
 		 * Whether the form is editing an existing job.
 		 *
@@ -185,6 +191,7 @@ export default {
 		isEdit() {
 			return !!this.jobId
 		},
+
 		/**
 		 * Source schema options.
 		 *
@@ -193,6 +200,7 @@ export default {
 		schemaOptions() {
 			return EXPORTABLE_SCHEMAS.map((id) => ({ id, label: id }))
 		},
+
 		/**
 		 * The currently selected schema options.
 		 *
@@ -203,6 +211,7 @@ export default {
 				(this.model.sourceSchemas || []).includes(o.id),
 			)
 		},
+
 		/**
 		 * Destination dropdown options.
 		 *
@@ -217,6 +226,7 @@ export default {
 						: `${d.name} (${d.type} — ${this.t('pipelinq', 'unverified')})`,
 			}))
 		},
+
 		/**
 		 * The selected destination option.
 		 *
@@ -229,6 +239,7 @@ export default {
 				) || null
 			)
 		},
+
 		/**
 		 * Format options.
 		 *
@@ -237,6 +248,7 @@ export default {
 		formatOptions() {
 			return FORMATS.map((id) => ({ id, label: id }))
 		},
+
 		/**
 		 * The selected format option.
 		 *
@@ -245,6 +257,7 @@ export default {
 		selectedFormat() {
 			return this.formatOptions.find((o) => o.id === this.model.format) || null
 		},
+
 		/**
 		 * Mode options.
 		 *
@@ -259,6 +272,7 @@ export default {
 				),
 			}))
 		},
+
 		/**
 		 * The selected mode option.
 		 *
@@ -268,12 +282,14 @@ export default {
 			return this.modeOptions.find((o) => o.id === this.model.mode) || null
 		},
 	},
+
 	async mounted() {
 		await this.loadDestinations()
 		if (this.isEdit) {
 			await this.load()
 		}
 	},
+
 	methods: {
 		/**
 		 * Load destinations for the dropdown.
@@ -290,6 +306,7 @@ export default {
 				this.destinations = []
 			}
 		},
+
 		/**
 		 * Load the job for editing.
 		 */
@@ -312,6 +329,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Track the multi-select schema choice.
 		 *
@@ -320,6 +338,7 @@ export default {
 		onSchemasSelect(options) {
 			this.model.sourceSchemas = (options || []).map((o) => o.id)
 		},
+
 		/**
 		 * Parse the comma-separated allowlist text into an array.
 		 *
@@ -331,6 +350,7 @@ export default {
 				.map((s) => s.trim())
 				.filter((s) => s.length > 0)
 		},
+
 		/**
 		 * Persist the job via the shared object store.
 		 */
@@ -353,6 +373,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Open the dedicated test-run modal, which auto-executes the run.
 		 *
@@ -366,6 +387,7 @@ export default {
 			}
 			this.testRunOpen = true
 		},
+
 		/**
 		 * Navigate back to the job list.
 		 */

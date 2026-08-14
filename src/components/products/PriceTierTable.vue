@@ -21,29 +21,29 @@
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'From quantity')"
-								:label-visible="false"
-								:model-value="String(tier.minQuantity)"
+								:labelVisible="false"
+								:modelValue="String(tier.minQuantity)"
 								type="number"
-								@update:model-value="
+								@update:modelValue="
 									(v) => updateTier(index, 'minQuantity', v)
 								" />
 						</td>
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'Unit price')"
-								:label-visible="false"
-								:model-value="String(tier.unitPrice)"
+								:labelVisible="false"
+								:modelValue="String(tier.unitPrice)"
 								type="number"
-								@update:model-value="
+								@update:modelValue="
 									(v) => updateTier(index, 'unitPrice', v)
 								" />
 						</td>
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'Label')"
-								:label-visible="false"
-								:model-value="tier.label || ''"
-								@update:model-value="
+								:labelVisible="false"
+								:modelValue="tier.label || ''"
+								@update:modelValue="
 									(v) => updateTier(index, 'label', v)
 								" />
 						</td>
@@ -77,10 +77,10 @@
 </template>
 
 <script>
-import { NcButton, NcTextField } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import Plus from 'vue-material-design-icons/Plus.vue'
+import { NcButton, NcTextField } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -91,12 +91,14 @@ export default {
 		Plus,
 		Delete,
 	},
+
 	props: {
 		product: {
 			type: Object,
 			required: true,
 		},
 	},
+
 	emits: ['saved'],
 	data() {
 		return {
@@ -104,11 +106,13 @@ export default {
 			saving: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
 	},
+
 	watch: {
 		product: {
 			immediate: true,
@@ -117,6 +121,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Load tiers from the product, sorted ascending by minQuantity.
@@ -133,6 +138,7 @@ export default {
 				}))
 				.sort((a, b) => a.minQuantity - b.minQuantity)
 		},
+
 		/**
 		 * Update a field on a tier row.
 		 *
@@ -147,6 +153,7 @@ export default {
 				this.rows[index][field] = Number(value)
 			}
 		},
+
 		/**
 		 * Append an empty tier row.
 		 */
@@ -161,6 +168,7 @@ export default {
 				label: '',
 			})
 		},
+
 		/**
 		 * Remove a tier row.
 		 *
@@ -169,6 +177,7 @@ export default {
 		removeTier(index) {
 			this.rows.splice(index, 1)
 		},
+
 		/**
 		 * Persist the sorted tiers to the product.
 		 */

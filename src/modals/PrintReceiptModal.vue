@@ -11,12 +11,12 @@
 		<div class="receipt-modal">
 			<NcSelect
 				v-model="selectedTemplate"
-				:input-label="t('pipelinq', 'Receipt Template')"
+				:inputLabel="t('pipelinq', 'Receipt Template')"
 				:options="templateOptions"
 				:placeholder="t('pipelinq', 'Select template')"
 				label="label"
 				:clearable="false"
-				@update:model-value="loadPreview" />
+				@update:modelValue="loadPreview" />
 
 			<p v-if="printerDevice" class="receipt-modal__device">
 				{{ t('pipelinq', 'Configured printer:') }}
@@ -44,8 +44,8 @@
 </template>
 
 <script>
-import { NcDialog, NcButton, NcSelect } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
 import ReceiptPreviewPane from '../components/pos/ReceiptPreviewPane.vue'
 
 export default {
@@ -56,16 +56,19 @@ export default {
 		NcSelect,
 		ReceiptPreviewPane,
 	},
+
 	props: {
 		transactionId: {
 			type: String,
 			required: true,
 		},
+
 		templates: {
 			type: Array,
 			default: () => [],
 		},
 	},
+
 	emits: ['close', 'printed'],
 	data() {
 		return {
@@ -78,6 +81,7 @@ export default {
 			statusType: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * Template options for the NcSelect dropdown.
@@ -90,6 +94,7 @@ export default {
 				label: tpl.name || tpl.id,
 			}))
 		},
+
 		/**
 		 * CSS class for the status message.
 		 *
@@ -102,9 +107,11 @@ export default {
 			}
 		},
 	},
+
 	async mounted() {
 		await this.loadPreview()
 	},
+
 	methods: {
 		/**
 		 * Load the rendered receipt preview.
@@ -135,6 +142,7 @@ export default {
 				this.previewLoading = false
 			}
 		},
+
 		/**
 		 * Request the ESC/POS byte stream for the transaction.
 		 *

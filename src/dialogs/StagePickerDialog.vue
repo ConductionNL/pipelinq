@@ -32,6 +32,7 @@ export default {
 		NcButton,
 		NcDialog,
 	},
+
 	props: {
 		/**
 		 * The stages of the pipeline the card sits on.
@@ -41,6 +42,7 @@ export default {
 			default: () => [],
 		},
 	},
+
 	emits: ['close', 'select'],
 }
 </script>

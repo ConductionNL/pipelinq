@@ -47,9 +47,9 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { NcLoadingIcon } from '@nextcloud/vue'
 
 const CHANNEL_COLORS = {
 	telefoon: '#4c84db',
@@ -67,41 +67,49 @@ export default {
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** Relative period token (today / week / month), from @workspace.period. */
 		period: { type: String, default: 'month' },
 		/** Trend granularity (daily / weekly), from @workspace.granularity. */
 		granularity: { type: String, default: 'daily' },
 	},
+
 	data() {
 		return {
 			loading: false,
 			channelRows: [],
 		}
 	},
+
 	computed: {
 		effectivePeriod() {
 			if (this.period) return this.period
 			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
 			return (ctx && ctx.period) || 'month'
 		},
+
 		effectiveGranularity() {
 			if (this.granularity) return this.granularity
 			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
 			return (ctx && ctx.granularity) || 'daily'
 		},
 	},
+
 	watch: {
 		effectivePeriod() {
 			this.fetchData()
 		},
+
 		effectiveGranularity() {
 			this.fetchData()
 		},
 	},
+
 	mounted() {
 		this.fetchData()
 	},
+
 	methods: {
 		async fetchData() {
 			this.loading = true

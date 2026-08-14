@@ -31,6 +31,7 @@ export default {
 	components: {
 		CnChartWidget,
 	},
+
 	mixins: [analyticsPeriodMixin, dashboardRefreshMixin],
 	data() {
 		return {
@@ -38,6 +39,7 @@ export default {
 			trend: { series: [] },
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/dashboard/spec.md
@@ -45,6 +47,7 @@ export default {
 		chartLabels() {
 			return (this.trend?.series || []).map((pt) => pt.date)
 		},
+
 		/**
 		 * @spec openspec/specs/dashboard/spec.md
 		 */
@@ -53,6 +56,7 @@ export default {
 			return [{ name: this.t('pipelinq', 'Requests'), data: values }]
 		},
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/dashboard/spec.md

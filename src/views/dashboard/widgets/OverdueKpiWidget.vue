@@ -2,7 +2,7 @@
 	<CnStatsBlock
 		:title="t('pipelinq', 'Overdue')"
 		:count="count"
-		:count-label="t('pipelinq', 'overdue')"
+		:countLabel="t('pipelinq', 'overdue')"
 		:icon="AlertCircle"
 		:variant="count > 0 ? 'error' : 'default'"
 		horizontal
@@ -13,10 +13,10 @@
 import { CnStatsBlock } from '@conduction/nextcloud-vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import {
-	getLeads,
-	getRequests,
-	getPipelines,
 	getClosedStageNames,
+	getLeads,
+	getPipelines,
+	getRequests,
 } from '../../../services/dashboardData.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -25,6 +25,7 @@ export default {
 	components: {
 		CnStatsBlock,
 	},
+
 	mixins: [dashboardRefreshMixin],
 	data() {
 		return {
@@ -32,6 +33,7 @@ export default {
 			count: 0,
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-15

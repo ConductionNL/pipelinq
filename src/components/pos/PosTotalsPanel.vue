@@ -46,11 +46,13 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		priceMode: {
 			type: String,
 			default: 'excl',
 		},
 	},
+
 	computed: {
 		/**
 		 * Server-mirroring total computation. The same formula runs
@@ -62,6 +64,7 @@ export default {
 		totals() {
 			return computeTotals(this.lines, this.priceMode)
 		},
+
 		/**
 		 * Inclusive / exclusive BTW suffix shown next to the total.
 		 *
@@ -73,6 +76,7 @@ export default {
 				: t('pipelinq', 'excl. VAT')
 		},
 	},
+
 	methods: {
 		formatEur,
 	},

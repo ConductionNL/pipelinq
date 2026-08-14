@@ -91,14 +91,17 @@ export default {
 				email: '',
 				accountType: 'b2c',
 			},
+
 			pendingEmail: '',
 			message: '',
 			error: '',
 		}
 	},
+
 	mounted() {
 		this.load()
 	},
+
 	methods: {
 		async load() {
 			try {
@@ -117,6 +120,7 @@ export default {
 				this.error = e.message
 			}
 		},
+
 		async save() {
 			this.message = ''
 			this.error = ''

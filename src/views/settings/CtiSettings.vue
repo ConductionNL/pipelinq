@@ -30,7 +30,7 @@
 			<NcSelect
 				v-model="config.platform"
 				:options="platformOptions"
-				:input-label="t('pipelinq', 'Platform')"
+				:inputLabel="t('pipelinq', 'Platform')"
 				label="label"
 				:reduce="(o) => o.value" />
 			<NcTextField
@@ -40,7 +40,7 @@
 			<NcSelect
 				v-model="config.auth_method"
 				:options="authMethodOptions"
-				:input-label="t('pipelinq', 'Auth method')"
+				:inputLabel="t('pipelinq', 'Auth method')"
 				label="label"
 				:reduce="(o) => o.value" />
 			<NcTextField
@@ -89,6 +89,7 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -96,7 +97,6 @@ import {
 	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { getConfig, testConnection, updateConfig } from '../../services/ctiApi.js'
 
 export default {
@@ -108,6 +108,7 @@ export default {
 		NcSettingsSection,
 		NcTextField,
 	},
+
 	data() {
 		return {
 			config: {
@@ -121,11 +122,13 @@ export default {
 				default_outbound_caller_id: '',
 				default_country_code: 'NL',
 			},
+
 			saving: false,
 			testing: false,
 			status: '',
 		}
 	},
+
 	computed: {
 		platformOptions() {
 			return [
@@ -135,6 +138,7 @@ export default {
 				{ value: 'other', label: t('pipelinq', 'Other') },
 			]
 		},
+
 		authMethodOptions() {
 			return [
 				{ value: 'basic', label: 'Basic' },
@@ -147,6 +151,7 @@ export default {
 			]
 		},
 	},
+
 	async mounted() {
 		try {
 			const config = await getConfig()
@@ -159,6 +164,7 @@ export default {
 			)
 		}
 	},
+
 	methods: {
 		async save() {
 			this.saving = true
@@ -176,6 +182,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		async test() {
 			this.testing = true
 			this.status = ''

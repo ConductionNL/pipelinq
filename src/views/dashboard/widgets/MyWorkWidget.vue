@@ -16,12 +16,12 @@
 		:rows="items"
 		:columns="columns"
 		:loading="!loaded"
-		:loading-text="t('pipelinq', 'Loading…')"
-		hide-header
+		:loadingText="t('pipelinq', 'Loading…')"
+		hideHeader
 		borderless
-		:empty-text="t('pipelinq', 'No items assigned to you')"
-		:row-class="rowClass"
-		@row-click="openItem">
+		:emptyText="t('pipelinq', 'No items assigned to you')"
+		:rowClass="rowClass"
+		@rowClick="openItem">
 		<template #column-entityType="{ row }">
 			<span class="entity-badge" :class="'badge--' + row.entityType">
 				{{ row.entityType === 'lead' ? 'LEAD' : 'REQ' }}
@@ -49,8 +49,8 @@
 
 <script>
 import { CnDataTable } from '@conduction/nextcloud-vue'
-import { NcButton } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton } from '@nextcloud/vue'
 import { formatDate } from '../../../services/localeUtils.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -76,6 +76,7 @@ export default {
 		CnDataTable,
 		NcButton,
 	},
+
 	mixins: [dashboardRefreshMixin],
 	data() {
 		return {
@@ -90,6 +91,7 @@ export default {
 			],
 		}
 	},
+
 	methods: {
 		formatDate,
 		/**
@@ -101,6 +103,7 @@ export default {
 		rowClass(row) {
 			return row.isOverdue ? 'my-work-row--overdue' : ''
 		},
+
 		/**
 		 * Fetch the current user's top-N worklist from the canonical
 		 * server-side union endpoint (leads + requests, pre-sorted by
@@ -133,6 +136,7 @@ export default {
 				this.loaded = true
 			}
 		},
+
 		/**
 		 * Navigate to the row's detail page. The route differs per row
 		 * (LeadDetail vs TicketDetail); the server-side worklist row carries

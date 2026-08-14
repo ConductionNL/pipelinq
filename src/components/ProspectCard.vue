@@ -59,12 +59,14 @@ export default {
 	components: {
 		NcButton,
 	},
+
 	props: {
 		prospect: {
 			type: Object,
 			required: true,
 		},
 	},
+
 	emits: ['create-lead'],
 	computed: {
 		/**

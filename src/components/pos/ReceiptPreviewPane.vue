@@ -24,11 +24,13 @@ export default {
 	components: {
 		NcLoadingIcon,
 	},
+
 	props: {
 		content: {
 			type: String,
 			default: '',
 		},
+
 		loading: {
 			type: Boolean,
 			default: false,

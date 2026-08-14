@@ -16,7 +16,7 @@
 		     for the card itself; CnRowActions handles its own focus.        -->
 		<div class="pipeline-card__menu" @click.stop>
 			<NcActions
-				:force-menu="true"
+				:forceMenu="true"
 				:inline="0"
 				:aria-label="t('pipelinq', 'Card actions')">
 				<NcActionButton @click="openMoveMenu">
@@ -106,34 +106,33 @@
 </template>
 
 <script>
-import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import ArrowRightThick from 'vue-material-design-icons/ArrowRightThick.vue'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
 import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
-import Flag from 'vue-material-design-icons/Flag.vue'
+import ArrowRightThick from 'vue-material-design-icons/ArrowRightThick.vue'
 import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
-import StagePickerDialog from '../../dialogs/StagePickerDialog.vue'
+import Flag from 'vue-material-design-icons/Flag.vue'
 import AssigneePickerDialog from '../../dialogs/AssigneePickerDialog.vue'
 import PriorityPickerDialog from '../../dialogs/PriorityPickerDialog.vue'
+import StagePickerDialog from '../../dialogs/StagePickerDialog.vue'
 import {
-	getPriorityLabel,
-	getPriorityColor,
-	getStatusLabel,
-} from '../../services/requestStatus.js'
+	formatDate as formatLocaleDate,
+	formatNumber,
+} from '../../services/localeUtils.js'
 import {
-	getDaysAge,
-	getAgingClass,
 	formatAge,
+	getAgingClass,
+	getDaysAge,
 	getStaleThreshold,
 	resolveObjectType,
 } from '../../services/pipelineUtils.js'
+import {
+	getPriorityColor,
+	getPriorityLabel,
+	getStatusLabel,
+} from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
-// eslint-disable-next-line no-unused-vars -- used in template via Options API fallthrough
-import {
-	formatNumber,
-	formatDate as formatLocaleDate,
-} from '../../services/localeUtils.js'
 
 // Module-level user cache shared across all PipelineCard instances
 let usersCache = null
@@ -151,24 +150,29 @@ export default {
 		Flag,
 		ClockAlert,
 	},
+
 	props: {
 		item: {
 			type: Object,
 			required: true,
 		},
+
 		entityType: {
 			type: String,
 			default: 'lead',
 		},
+
 		stages: {
 			type: Array,
 			default: () => [],
 		},
+
 		columnProperty: {
 			type: String,
 			default: 'stage',
 		},
 	},
+
 	data() {
 		return {
 			users: [],
@@ -180,6 +184,7 @@ export default {
 			pickedAssignee: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
@@ -187,6 +192,7 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * The registered OpenRegister object type behind this card's *logical*
 		 * `entityType`, plus the `ticketType` discriminator when that logical type
@@ -199,6 +205,7 @@ export default {
 		resolvedType() {
 			return resolveObjectType(this.entityType)
 		},
+
 		/**
 		 * Pinia settings store — holds the stale-threshold configuration
 		 * surfaced through the existing settings endpoint.
@@ -208,6 +215,7 @@ export default {
 		settingsStore() {
 			return useSettingsStore()
 		},
+
 		/**
 		 * Resolved stale threshold (days) from settings; defaults to 14 if
 		 * the store hasn't been initialised yet.
@@ -217,12 +225,14 @@ export default {
 		staleThreshold() {
 			return getStaleThreshold(this.settingsStore.config)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
 		 */
 		currentColumnValue() {
 			return this.item[this.columnProperty] || ''
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
 		 * @spec openspec/specs/lead-management/spec.md
@@ -250,24 +260,28 @@ export default {
 			}
 			return false
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-37
 		 */
 		daysAge() {
 			return getDaysAge(this.item)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
 		 */
 		agingClass() {
 			return getAgingClass(this.daysAge)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
 		 */
 		agingLabel() {
 			return formatAge(this.daysAge)
 		},
+
 		/**
 		 * Stale = no activity for `staleThreshold` days. Driven by the
 		 * settings store, not a hardcoded constant.
@@ -278,18 +292,21 @@ export default {
 			if (this.entityType !== 'lead') return false
 			return this.daysAge >= this.staleThreshold
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
 		 */
 		stageOptions() {
 			return this.stages.map((s) => s.name)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
 		 */
 		userOptions() {
 			return this.users
 		},
+
 		/**
 		 * Priority levels exposed in the quick action menu.
 		 *
@@ -304,6 +321,7 @@ export default {
 			]
 		},
 	},
+
 	watch: {
 		currentColumnValue: {
 			immediate: true,
@@ -315,6 +333,7 @@ export default {
 				this.selectedStage = val || null
 			},
 		},
+
 		'item.assignee': {
 			immediate: true,
 			/**
@@ -326,9 +345,11 @@ export default {
 			},
 		},
 	},
+
 	async mounted() {
 		await this.loadUsers()
 	},
+
 	methods: {
 		formatNumber,
 		getPriorityLabel,

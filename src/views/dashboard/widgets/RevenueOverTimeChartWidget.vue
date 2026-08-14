@@ -17,8 +17,8 @@
 
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
-import { getAnalyticsTrend } from '../../../services/dashboardData.js'
 import { formatEur, formatEurCompact } from '../../../services/commercialFormat.js'
+import { getAnalyticsTrend } from '../../../services/dashboardData.js'
 import analyticsPeriodMixin from './analyticsPeriodMixin.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -33,6 +33,7 @@ export default {
 	components: {
 		CnChartWidget,
 	},
+
 	mixins: [analyticsPeriodMixin, dashboardRefreshMixin],
 	data() {
 		return {
@@ -40,16 +41,19 @@ export default {
 			trend: { series: [] },
 		}
 	},
+
 	computed: {
 		/** @return {Array<string>} X-axis date labels. */
 		chartLabels() {
 			return (this.trend?.series || []).map((pt) => pt.date)
 		},
+
 		/** @return {Array<object>} Single revenue series. */
 		chartSeries() {
 			const values = (this.trend?.series || []).map((pt) => pt.value)
 			return [{ name: this.t('pipelinq', 'Revenue'), data: values }]
 		},
+
 		/** @return {object} ApexCharts options with euro axis + tooltip. */
 		chartOptions() {
 			return {
@@ -58,6 +62,7 @@ export default {
 			}
 		},
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/commercial-dashboard/spec.md

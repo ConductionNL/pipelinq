@@ -32,6 +32,7 @@ export default {
 	props: {
 		name: { type: String, default: '' },
 	},
+
 	emits: ['confirm', 'cancel'],
 }
 </script>

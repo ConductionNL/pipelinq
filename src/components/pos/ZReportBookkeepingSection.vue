@@ -126,7 +126,7 @@
 					'Re-raise journal entry at shillinq? This uses the same idempotency key, so shillinq prevents duplicate postings.',
 				)
 			"
-			:confirm-label="t('pipelinq', 'Re-raise')"
+			:confirmLabel="t('pipelinq', 'Re-raise')"
 			variant="primary"
 			@confirm="performRetry"
 			@cancel="showRetryConfirm = false" />
@@ -134,13 +134,13 @@
 </template>
 
 <script>
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
-import { useObjectStore } from '../../store/modules/object.js'
-import { formatEur } from '../../services/posTotals.js'
 import { raiseJournalEntry } from '../../services/posBookkeepingApi.js'
+import { formatEur } from '../../services/posTotals.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 const BOOKKEEPING_STATUS_LABELS = {
 	pending: 'Queued',
@@ -156,9 +156,11 @@ export default {
 		NcLoadingIcon,
 		CnStatusBadge,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The Z-report id (token-resolved from @objectId by CnBodySections). */
 		zReportId: {
@@ -166,6 +168,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			zReport: {},
@@ -174,10 +177,12 @@ export default {
 			showRetryConfirm: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/** The resolved Z-report id — prop wins, else the injected section context. */
 		resolvedId() {
 			if (this.zReportId) {
@@ -188,20 +193,24 @@ export default {
 				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		taxBreakdown() {
 			return Array.isArray(this.zReport.taxBreakdown)
 				? this.zReport.taxBreakdown
 				: []
 		},
+
 		paymentBreakdown() {
 			return Array.isArray(this.zReport.paymentMethodBreakdown)
 				? this.zReport.paymentMethodBreakdown
 				: []
 		},
+
 		bookkeepingStatusLabel() {
 			const key = this.zReport.bookkeepingStatus || 'pending'
 			return t('pipelinq', BOOKKEEPING_STATUS_LABELS[key] || key)
 		},
+
 		/**
 		 * Whether the manager-gated re-raise button is shown. The server-side
 		 * gate is authoritative; this only hides the button for non-managers and
@@ -220,6 +229,7 @@ export default {
 			return isCandidate && hasTakings && isManager
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -228,6 +238,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		formatEur,
 		/**
@@ -253,6 +264,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Confirm + trigger a manager-gated re-raise of the shillinq journal entry.
 		 *
@@ -266,6 +278,7 @@ export default {
 			}
 			this.showRetryConfirm = true
 		},
+
 		/**
 		 * Re-raise the journal entry once the dialog confirms.
 		 *

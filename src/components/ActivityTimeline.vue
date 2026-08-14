@@ -89,16 +89,16 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
-import { NcButton, NcLoadingIcon, NcEmptyContent } from '@nextcloud/vue'
-import Phone from 'vue-material-design-icons/Phone.vue'
-import Email from 'vue-material-design-icons/Email.vue'
-import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
-import Message from 'vue-material-design-icons/Message.vue'
 import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
+import Email from 'vue-material-design-icons/Email.vue'
+import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
+import Message from 'vue-material-design-icons/Message.vue'
+import Phone from 'vue-material-design-icons/Phone.vue'
 import TimelineTextOutline from 'vue-material-design-icons/TimelineTextOutline.vue'
 
 export default {
@@ -116,16 +116,19 @@ export default {
 		ClockOutline,
 		TimelineTextOutline,
 	},
+
 	props: {
 		entityType: {
 			type: String,
 			required: true,
 		},
+
 		entityId: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			items: [],
@@ -137,6 +140,7 @@ export default {
 			activeFilter: 'all',
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-2
@@ -154,13 +158,16 @@ export default {
 			]
 		},
 	},
+
 	watch: {
 		entityId: 'reload',
 		entityType: 'reload',
 	},
+
 	mounted() {
 		this.reload()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-6
@@ -172,6 +179,7 @@ export default {
 			this.total = 0
 			this.fetchPage(1)
 		},
+
 		/**
 		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-7
@@ -183,6 +191,7 @@ export default {
 			this.activeFilter = value
 			this.reload()
 		},
+
 		/**
 		 * @param page
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-1
@@ -222,6 +231,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-5
 		 */
@@ -230,6 +240,7 @@ export default {
 				this.fetchPage(this.page + 1)
 			}
 		},
+
 		/**
 		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-4
@@ -259,6 +270,7 @@ export default {
 			}
 			return Message
 		},
+
 		/**
 		 * @param type
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-9
@@ -279,6 +291,7 @@ export default {
 					return type
 			}
 		},
+
 		/**
 		 * @param text
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-8
@@ -288,6 +301,7 @@ export default {
 			const max = 120
 			return text.length > max ? text.substring(0, max) + '...' : text
 		},
+
 		/**
 		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-3

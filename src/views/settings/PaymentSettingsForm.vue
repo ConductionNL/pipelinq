@@ -48,7 +48,7 @@
 					<NcSelect
 						v-model="provider.environment"
 						:options="environmentOptions"
-						:input-label="t('pipelinq', 'Environment')"
+						:inputLabel="t('pipelinq', 'Environment')"
 						label="label"
 						:reduce="(o) => o.value" />
 
@@ -60,11 +60,11 @@
 					<NcSelect
 						v-model="provider.credential"
 						:options="credentialsFor(provider.name)"
-						:input-label="t('pipelinq', 'API credential')"
+						:inputLabel="t('pipelinq', 'API credential')"
 						:loading="loadingCredentials"
 						:placeholder="t('pipelinq', 'Select a credential')"
 						label="label"
-						@update:model-value="
+						@update:modelValue="
 							(v) => onCredentialChange(provider, v)
 						" />
 
@@ -98,7 +98,7 @@
 						a constrained HTTP proxy cannot carry it.
 					-->
 					<NcTextField
-						:model-value="
+						:modelValue="
 							provider.webhookSecret === MASK
 								? ''
 								: provider.webhookSecret
@@ -110,7 +110,7 @@
 								: ''
 						"
 						type="password"
-						@update:model-value="
+						@update:modelValue="
 							(v) => onSecretChange(provider, 'webhookSecret', v)
 						" />
 
@@ -180,6 +180,9 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -188,13 +191,10 @@ import {
 	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { generateUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
 import {
 	listProviders,
-	updateProvider,
 	testConnection,
+	updateProvider,
 } from '../../services/posPaymentApi.js'
 
 const MASK = '***SET***'
@@ -223,6 +223,7 @@ export default {
 		NcSettingsSection,
 		NcTextField,
 	},
+
 	data() {
 		return {
 			providers: [],
@@ -236,6 +237,7 @@ export default {
 			MASK,
 		}
 	},
+
 	computed: {
 		environmentOptions() {
 			return [
@@ -244,12 +246,14 @@ export default {
 			]
 		},
 	},
+
 	async mounted() {
 		// Credentials first: refresh() preselects each provider's saved credential from
 		// this list, so it has to be populated before the providers land.
 		await this.fetchCredentials()
 		await this.refresh()
 	},
+
 	methods: {
 		async refresh() {
 			this.loading = true
@@ -273,6 +277,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Normalize a provider from the API so every field bound to an
 		 * NcTextField is always a string. The secrets come back as the MASK
@@ -298,6 +303,7 @@ export default {
 				config,
 			}
 		},
+
 		/**
 		 * The broker credentials this provider can use.
 		 *
@@ -314,10 +320,12 @@ export default {
 				.filter((c) => wanted.includes(c.provider))
 				.map((c) => ({ label: c.name || c.id, value: c.id }))
 		},
+
 		displayName(name) {
 			const p = this.providers.find((x) => x.name === name)
 			return (p && p.displayName) || name
 		},
+
 		/**
 		 * Load the user's broker credentials.
 		 *
@@ -339,20 +347,24 @@ export default {
 				this.loadingCredentials = false
 			}
 		},
+
 		onCredentialChange(provider, option) {
 			provider.credentialId = option ? option.value : ''
 		},
+
 		providerTypeLabel(type) {
 			return type === 'terminal'
 				? t('pipelinq', 'PIN-terminal')
 				: t('pipelinq', 'Online')
 		},
+
 		onSecretChange(provider, field, value) {
 			// Replacing the MASK with a typed value flags it as a real edit;
 			// leaving it as MASK keeps the stored value (server ignores both
 			// MASK and empty strings on update).
 			provider[field] = value
 		},
+
 		async onSave(provider) {
 			this.savingProvider = provider.name
 			try {
@@ -389,6 +401,7 @@ export default {
 				this.savingProvider = null
 			}
 		},
+
 		async onTest(provider) {
 			this.testingProvider = provider.name
 			try {

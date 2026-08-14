@@ -22,7 +22,7 @@
 			<NcSelect
 				v-model="form.outcome"
 				:options="outcomeOptions"
-				:input-label="t('pipelinq', 'Outcome')"
+				:inputLabel="t('pipelinq', 'Outcome')"
 				:placeholder="t('pipelinq', 'Choose outcome')"
 				:reduce="(o) => o.value"
 				label="label"
@@ -36,7 +36,7 @@
 				v-if="form.outcome === 'escalated'"
 				v-model="form.queue"
 				:options="queueOptions"
-				:input-label="t('pipelinq', 'Escalation queue')"
+				:inputLabel="t('pipelinq', 'Escalation queue')"
 				:placeholder="t('pipelinq', 'Choose queue')"
 				label="label" />
 		</form>
@@ -76,6 +76,7 @@ export default {
 		queueOptions: { type: Array, default: () => [] },
 		saving: { type: Boolean, default: false },
 	},
+
 	emits: ['close', 'submit'],
 	data() {
 		return {
@@ -87,6 +88,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		outcomeOptions() {
 			return OUTCOMES.map((o) => ({
@@ -94,12 +96,14 @@ export default {
 				label: t('pipelinq', o.label),
 			}))
 		},
+
 		valid() {
 			return (
 				this.form.subject.trim().length > 0 && this.form.outcome.length > 0
 			)
 		},
 	},
+
 	methods: {
 		submit() {
 			if (!this.valid) {

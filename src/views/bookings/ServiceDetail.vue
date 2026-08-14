@@ -38,13 +38,13 @@
 		v-else
 		:title="serviceData.name || t('pipelinq', 'Service')"
 		:subtitle="t('pipelinq', 'Service')"
-		:back-route="{ name: 'Services' }"
-		:back-label="t('pipelinq', 'Back to list')"
+		:backRoute="{ name: 'Services' }"
+		:backLabel="t('pipelinq', 'Back to list')"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
-		object-type="pipelinq_service"
-		:object-id="serviceId"
-		:sidebar-props="sidebarProps">
+		objectType="pipelinq_service"
+		:objectId="serviceId"
+		:sidebarProps="sidebarProps">
 		<template #actions>
 			<NcButton variant="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
@@ -182,16 +182,16 @@
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { computed } from 'vue'
 import {
-	CnDetailPage,
 	CnDetailCard,
+	CnDetailPage,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
-import ServiceForm from './ServiceForm.vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton } from '@nextcloud/vue'
+import { computed } from 'vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
+import ServiceForm from './ServiceForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const STATUS_LABELS = {
@@ -209,9 +209,11 @@ export default {
 		ServiceForm,
 		DeleteServiceDialog,
 	},
+
 	props: {
 		id: { type: String, default: null },
 	},
+
 	/**
 	 * Live updates for the viewed service (or-object-{uuid} via the
 	 * nc-vue liveUpdatesPlugin, default-on since beta.212). Events are
@@ -237,38 +239,47 @@ export default {
 		})
 		return {}
 	},
+
 	data() {
 		return {
 			editing: false,
 			showDelete: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		serviceId() {
 			return this.id || null
 		},
+
 		isNew() {
 			return !this.serviceId || this.serviceId === 'new'
 		},
+
 		loading() {
 			return this.objectStore.loading?.service || false
 		},
+
 		serviceData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('service', this.serviceId) || {}
 		},
+
 		steps() {
 			return Array.isArray(this.serviceData.multiStep)
 				? this.serviceData.multiStep
 				: []
 		},
+
 		requiredSkillsLabel() {
 			const skills = this.serviceData.requiredSkills || []
 			return skills.length ? skills.join(', ') : '-'
 		},
+
 		sidebarProps() {
 			const cfg = this.objectStore.objectTypeRegistry?.service || {}
 			return {
@@ -279,11 +290,13 @@ export default {
 			}
 		},
 	},
+
 	async mounted() {
 		if (!this.isNew) {
 			await this.objectStore.fetchObject('service', this.serviceId)
 		}
 	},
+
 	methods: {
 		async onFormSave(formData) {
 			const saved = await this.objectStore.saveObject('service', formData)
@@ -304,6 +317,7 @@ export default {
 				this.editing = false
 			}
 		},
+
 		onFormCancel() {
 			if (this.isNew) {
 				this.$router.push({ name: 'Services' })
@@ -311,6 +325,7 @@ export default {
 				this.editing = false
 			}
 		},
+
 		async confirmDelete() {
 			this.showDelete = false
 			const ok = await this.objectStore.deleteObject('service', this.serviceId)
@@ -323,6 +338,7 @@ export default {
 				)
 			}
 		},
+
 		/**
 		 * Best-effort availability-cache invalidation after a service save.
 		 *
@@ -371,6 +387,7 @@ export default {
 				// Resource list fetch failure: cache is regenerated hourly.
 			}
 		},
+
 		formatDuration(minutes) {
 			const n = Number(minutes) || 0
 			if (n < 60) return t('pipelinq', '{n} min', { n })
@@ -380,6 +397,7 @@ export default {
 				? t('pipelinq', '{n}h', { n: h })
 				: t('pipelinq', '{h}h {m}min', { h, m })
 		},
+
 		formatCurrency(value, currency) {
 			const code = currency || 'EUR'
 			const n = Number(value) || 0
@@ -393,6 +411,7 @@ export default {
 				return `${code} ${n}`
 			}
 		},
+
 		statusLabel(status) {
 			return t('pipelinq', STATUS_LABELS[status] || status || '-')
 		},

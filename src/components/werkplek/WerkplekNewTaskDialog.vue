@@ -4,13 +4,13 @@
 <template>
 	<CnFormDialog
 		ref="dialog"
-		:dialog-title="t('pipelinq', 'New task')"
+		:dialogTitle="t('pipelinq', 'New task')"
 		:fields="fields"
-		:confirm-label="t('pipelinq', 'Create')"
-		:cancel-label="t('pipelinq', 'Cancel')"
-		:success-text="t('pipelinq', 'Task created.')"
-		name-field="subject"
-		:initial-values="initialValues"
+		:confirmLabel="t('pipelinq', 'Create')"
+		:cancelLabel="t('pipelinq', 'Cancel')"
+		:successText="t('pipelinq', 'Task created.')"
+		nameField="subject"
+		:initialValues="initialValues"
 		@confirm="onConfirm"
 		@close="$emit('close')" />
 </template>
@@ -43,6 +43,7 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Summary text carried over from the in-progress contactmoment;
 		 * shows up as a non-required free-text field on the task.
@@ -114,6 +115,7 @@ export default {
 				},
 			]
 		},
+
 		/**
 		 * Initial values for the dialog (pre-filled context).
 		 *
@@ -127,6 +129,7 @@ export default {
 				contactMomentSummary: this.contactMomentSummary || '',
 			}
 		},
+
 		/**
 		 * Pinia object store handle.
 		 *
@@ -152,6 +155,7 @@ export default {
 				clientId: this.clientId,
 				contactMomentSummary:
 					this.contactMomentSummary || values.description || '',
+
 				status: 'open',
 			}
 			try {

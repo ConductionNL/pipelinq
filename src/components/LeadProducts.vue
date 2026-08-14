@@ -153,16 +153,16 @@
 							:placeholder="t('pipelinq', 'Search products...')"
 							label="name"
 							:reduce="(opt) => opt.id"
-							@update:model-value="onProductSelect" />
+							@update:modelValue="onProductSelect" />
 					</div>
 					<div class="form-row">
 						<div class="form-group">
 							<NcTextField
 								id="lead-product-quantity"
 								:label="t('pipelinq', 'Quantity')"
-								:model-value="String(addForm.quantity)"
+								:modelValue="String(addForm.quantity)"
 								type="number"
-								@update:model-value="
+								@update:modelValue="
 									(v) => (addForm.quantity = Number(v))
 								" />
 						</div>
@@ -170,9 +170,9 @@
 							<NcTextField
 								id="lead-product-unit-price"
 								:label="t('pipelinq', 'Unit Price')"
-								:model-value="String(addForm.unitPrice)"
+								:modelValue="String(addForm.unitPrice)"
 								type="number"
-								@update:model-value="
+								@update:modelValue="
 									(v) => (addForm.unitPrice = Number(v))
 								" />
 						</div>
@@ -180,9 +180,9 @@
 							<NcTextField
 								id="lead-product-discount"
 								:label="t('pipelinq', 'Discount')"
-								:model-value="String(addForm.discount)"
+								:modelValue="String(addForm.discount)"
 								type="number"
-								@update:model-value="
+								@update:modelValue="
 									(v) => (addForm.discount = Number(v))
 								" />
 						</div>
@@ -214,10 +214,10 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
-import { useObjectStore } from '../store/modules/object.js'
+import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
+import { useObjectStore } from '../store/modules/object.js'
 
 export default {
 	name: 'LeadProducts',
@@ -227,16 +227,19 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	props: {
 		leadId: {
 			type: String,
 			required: true,
 		},
+
 		leadValue: {
 			type: Number,
 			default: null,
 		},
 	},
+
 	emits: ['value-changed', 'sync-value'],
 	data() {
 		return {
@@ -253,6 +256,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-17
@@ -260,6 +264,7 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-1.1
 		 */
@@ -269,6 +274,7 @@ export default {
 				name: p.sku ? `${p.name || p.id} (${p.sku})` : p.name || p.id,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-15
 		 */
@@ -278,6 +284,7 @@ export default {
 				0,
 			)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-16
 		 */
@@ -287,9 +294,11 @@ export default {
 			return Math.abs(Number(this.leadValue) - this.grandTotal) > 0.01
 		},
 	},
+
 	async mounted() {
 		await this.fetchData()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-12
@@ -313,6 +322,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @param productId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-14
@@ -321,6 +331,7 @@ export default {
 			const product = this.products.find((p) => p.id === productId)
 			return product?.name || productId || '-'
 		},
+
 		/**
 		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-11
@@ -331,6 +342,7 @@ export default {
 			const discount = Number(item.discount) || 0
 			return qty * price * (1 - discount / 100)
 		},
+
 		/**
 		 * @param productId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-18
@@ -341,6 +353,7 @@ export default {
 				this.addForm.unitPrice = Number(product.unitPrice) || 0
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-10
 		 */
@@ -366,6 +379,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to add product'))
 			}
 		},
+
 		/**
 		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-22
@@ -387,6 +401,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to update line item'))
 			}
 		},
+
 		/**
 		 * @param item
 		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-2.2
@@ -398,6 +413,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to update notes'))
 			}
 		},
+
 		/**
 		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-20
@@ -413,6 +429,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to remove line item'))
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-21
 		 */
@@ -425,6 +442,7 @@ export default {
 				notes: '',
 			}
 		},
+
 		/**
 		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-13

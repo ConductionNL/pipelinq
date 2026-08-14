@@ -10,13 +10,13 @@
 		<div class="lead-forecast-tab__row">
 			<NcSelect
 				v-model="selected"
-				input-id="forecast-category-select"
-				:input-label="t('pipelinq', 'Forecast category')"
+				inputId="forecast-category-select"
+				:inputLabel="t('pipelinq', 'Forecast category')"
 				:options="categoryOptions"
 				label="label"
 				:disabled="locked"
 				:clearable="false"
-				@update:model-value="onChange" />
+				@update:modelValue="onChange" />
 			<span
 				v-if="locked"
 				class="lead-forecast-tab__lock"
@@ -60,7 +60,7 @@
 
 		<CommitJustificationModal
 			v-if="showJustification"
-			:initial-reason="justification"
+			:initialReason="justification"
 			@close="cancelJustification"
 			@save="confirmJustification" />
 	</div>
@@ -83,6 +83,7 @@ export default {
 			default: () => ({}),
 		},
 	},
+
 	emits: ['update'],
 	data() {
 		const current = this.objectData?.forecast_category || 'pipeline'
@@ -95,6 +96,7 @@ export default {
 			history: this.objectData?.forecast_category_history || [],
 		}
 	},
+
 	computed: {
 		categoryOptions() {
 			return [
@@ -106,17 +108,21 @@ export default {
 				{ id: 'closed_lost', label: t('pipelinq', 'Closed Lost') },
 			]
 		},
+
 		locked() {
 			return CLOSED.includes(this.objectData?.forecast_category)
 		},
+
 		dealValue() {
 			return Number(this.objectData?.value || 0)
 		},
 	},
+
 	methods: {
 		toOption(id) {
 			return { id, label: this.categoryLabel(id) }
 		},
+
 		categoryLabel(id) {
 			const map = {
 				commit: t('pipelinq', 'Commit'),
@@ -128,6 +134,7 @@ export default {
 			}
 			return map[id] || id
 		},
+
 		onChange(option) {
 			this.errorMessage = ''
 			const id = option?.id
@@ -145,12 +152,14 @@ export default {
 			}
 			this.persist(id, this.justification)
 		},
+
 		confirmJustification(reason) {
 			this.justification = reason
 			this.showJustification = false
 			this.persist(this.pending || 'commit', reason)
 			this.pending = null
 		},
+
 		cancelJustification() {
 			this.showJustification = false
 			this.pending = null
@@ -159,6 +168,7 @@ export default {
 				this.objectData?.forecast_category || 'pipeline',
 			)
 		},
+
 		persist(category, justification) {
 			this.$emit('update', {
 				forecast_category: category,

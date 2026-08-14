@@ -5,10 +5,10 @@
 		:rows="items"
 		:columns="columns"
 		:loading="loading"
-		hide-header
+		hideHeader
 		borderless
-		:empty-text="t('pipelinq', 'No recent activities')"
-		@row-click="onShow" />
+		:emptyText="t('pipelinq', 'No recent activities')"
+		@rowClick="onShow" />
 </template>
 
 <script>
@@ -24,12 +24,14 @@ export default {
 	components: {
 		CnDataTable,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -37,6 +39,7 @@ export default {
 			columns: LIST_COLUMNS,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-50
@@ -56,9 +59,11 @@ export default {
 			})
 		},
 	},
+
 	async mounted() {
 		await this.fetchData()
 	},
+
 	methods: {
 		/**
 		 * Navigate to the clicked activity's entity (lead or request),
@@ -73,6 +78,7 @@ export default {
 			const type = item._entityType === 'lead' ? 'leads' : 'tickets'
 			navigateTo(generateUrl('/apps/pipelinq/' + type + '/' + item._entityId))
 		},
+
 		/**
 		 * @param {string} dateStr The date string to humanise.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-49
@@ -99,6 +105,7 @@ export default {
 				return dateStr
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-47
 		 */
@@ -168,6 +175,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @param {object} config The object-type registry (register/schema per type).
 		 * @param {string} type The object type to fetch.

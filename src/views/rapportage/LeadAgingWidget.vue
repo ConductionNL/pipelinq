@@ -37,10 +37,12 @@ export default {
 			default: () => [],
 		},
 	},
+
 	computed: {
 		buckets() {
 			return Array.isArray(this.data) ? this.data : []
 		},
+
 		labels() {
 			return this.buckets.map((b) => {
 				const total =
@@ -50,9 +52,11 @@ export default {
 				return `${b.bucket}: ${b.count}${total}`
 			})
 		},
+
 		series() {
 			return this.buckets.map((b) => b.count || 0)
 		},
+
 		hasData() {
 			return this.buckets.some((b) => (b.count || 0) > 0)
 		},

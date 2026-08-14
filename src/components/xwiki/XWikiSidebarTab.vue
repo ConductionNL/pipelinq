@@ -73,9 +73,9 @@
 
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
-import { useXwikiStore } from '../../store/modules/xwiki.js'
 import XWikiArticleList from './XWikiArticleList.vue'
 import XWikiArticleViewer from './XWikiArticleViewer.vue'
+import { useXwikiStore } from '../../store/modules/xwiki.js'
 
 export default {
 	name: 'XWikiSidebarTab',
@@ -85,22 +85,27 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		tags: {
 			type: Array,
 			default: () => [],
 		},
+
 		contextQuery: {
 			type: String,
 			default: '',
 		},
+
 		limit: {
 			type: Number,
 			default: 10,
 		},
 	},
+
 	setup() {
 		return { store: useXwikiStore() }
 	},
+
 	data() {
 		return {
 			mode: 'search',
@@ -110,10 +115,12 @@ export default {
 			debounceHandle: null,
 		}
 	},
+
 	async mounted() {
 		await this.store.checkStatus()
 		await this.refresh()
 	},
+
 	methods: {
 		async refresh() {
 			await this.store.search({
@@ -123,18 +130,22 @@ export default {
 				limit: this.limit,
 			})
 		},
+
 		setMode(mode) {
 			this.mode = mode
 		},
+
 		onSearchInput() {
 			if (this.debounceHandle) clearTimeout(this.debounceHandle)
 			this.debounceHandle = setTimeout(() => {
 				this.refresh()
 			}, 300)
 		},
+
 		async browseSpace(space) {
 			await this.store.getPages(space, { limit: this.limit })
 		},
+
 		openArticle(article) {
 			this.selectedPage = article.id || article.title
 			this.selectedWiki = article.wiki || 'xwiki'

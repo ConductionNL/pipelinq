@@ -37,6 +37,7 @@ export default {
 	components: {
 		AlertCircleOutline,
 	},
+
 	props: {
 		/**
 		 * Raw cell value (0..100).
@@ -48,6 +49,7 @@ export default {
 			default: null,
 		},
 	},
+
 	computed: {
 		/**
 		 * True when the raw value is missing or non-numeric.
@@ -62,6 +64,7 @@ export default {
 				|| Number.isNaN(Number(this.value))
 			)
 		},
+
 		/**
 		 * Probability as a rounded integer percentage.
 		 *
@@ -70,6 +73,7 @@ export default {
 		percent() {
 			return Math.round(Number(this.value) || 0)
 		},
+
 		/**
 		 * True when the probability falls under the low-confidence threshold.
 		 *

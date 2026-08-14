@@ -5,10 +5,10 @@
 		:rows="items"
 		:columns="columns"
 		:loading="loading"
-		hide-header
+		hideHeader
 		borderless
-		:empty-text="t('pipelinq', 'No leads found')"
-		@row-click="onShow">
+		:emptyText="t('pipelinq', 'No leads found')"
+		@rowClick="onShow">
 		<template #footer>
 			<a
 				class="cn-data-table__view-all"
@@ -36,12 +36,14 @@ export default {
 	components: {
 		CnDataTable,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -50,6 +52,7 @@ export default {
 			columns: LIST_COLUMNS,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-28
@@ -61,6 +64,7 @@ export default {
 			}
 			return map
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-31
 		 */
@@ -84,9 +88,11 @@ export default {
 			})
 		},
 	},
+
 	async mounted() {
 		await this.fetchData()
 	},
+
 	methods: {
 		/**
 		 * Navigate to the clicked lead in the same tab.
@@ -97,6 +103,7 @@ export default {
 		onShow(item) {
 			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id))
 		},
+
 		/**
 		 * Navigate to the full leads list.
 		 *
@@ -105,6 +112,7 @@ export default {
 		onViewAll() {
 			navigateTo(generateUrl('/apps/pipelinq/leads'))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-29
 		 */
@@ -131,6 +139,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @param {object} config The object-type registry (register/schema per type).
 		 * @param {string} type The object type to fetch.

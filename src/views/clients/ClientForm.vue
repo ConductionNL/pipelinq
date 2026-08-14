@@ -4,14 +4,14 @@
 			<label for="client-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
 				id="client-name"
-				label-outside
+				labelOutside
 				:label="t('pipelinq', 'Name')"
-				:model-value="form.name"
+				:modelValue="form.name"
 				:error="!!errors.name"
-				:helper-text="errors.name"
+				:helperText="errors.name"
 				:maxlength="255"
 				data-testid="client-name-input"
-				@update:model-value="
+				@update:modelValue="
 					(v) => {
 						form.name = v
 						validateField('name')
@@ -24,13 +24,13 @@
 				<label for="client-type">{{ t('pipelinq', 'Type') }} *</label>
 				<NcSelect
 					v-model="form.type"
-					input-id="client-type"
-					:input-label="t('pipelinq', 'Type')"
-					label-outside
+					inputId="client-type"
+					:inputLabel="t('pipelinq', 'Type')"
+					labelOutside
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
 					data-testid="client-type-select"
-					@update:model-value="validateField('type')" />
+					@update:modelValue="validateField('type')" />
 				<p v-if="errors.type" class="field-error">
 					{{ errors.type }}
 				</p>
@@ -39,14 +39,14 @@
 				<label for="client-email">{{ t('pipelinq', 'Email') }}</label>
 				<NcTextField
 					id="client-email"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Email')"
-					:model-value="form.email"
+					:modelValue="form.email"
 					:error="!!errors.email"
-					:helper-text="errors.email"
+					:helperText="errors.email"
 					type="email"
 					data-testid="client-email-input"
-					@update:model-value="
+					@update:modelValue="
 						(v) => {
 							form.email = v
 							validateField('email')
@@ -60,13 +60,13 @@
 				<label for="client-phone">{{ t('pipelinq', 'Phone') }}</label>
 				<NcTextField
 					id="client-phone"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Phone')"
-					:model-value="form.phone"
+					:modelValue="form.phone"
 					:error="!!errors.phone"
-					:helper-text="errors.phone"
+					:helperText="errors.phone"
 					data-testid="client-phone-input"
-					@update:model-value="
+					@update:modelValue="
 						(v) => {
 							form.phone = v
 							validateField('phone')
@@ -77,13 +77,13 @@
 				<label for="client-website">{{ t('pipelinq', 'Website') }}</label>
 				<NcTextField
 					id="client-website"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Website')"
-					:model-value="form.website"
+					:modelValue="form.website"
 					:error="!!errors.website"
-					:helper-text="errors.website"
+					:helperText="errors.website"
 					data-testid="client-website-input"
-					@update:model-value="
+					@update:modelValue="
 						(v) => {
 							form.website = v
 							validateField('website')
@@ -96,11 +96,11 @@
 			<label for="client-address">{{ t('pipelinq', 'Address') }}</label>
 			<NcTextField
 				id="client-address"
-				label-outside
+				labelOutside
 				:label="t('pipelinq', 'Address')"
-				:model-value="form.address"
+				:modelValue="form.address"
 				data-testid="client-address-input"
-				@update:model-value="(v) => (form.address = v)" />
+				@update:modelValue="(v) => (form.address = v)" />
 		</div>
 
 		<div class="form-group">
@@ -128,7 +128,7 @@
 </template>
 
 <script>
-import { NcButton, NcTextField, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
@@ -149,11 +149,13 @@ export default {
 		NcTextField,
 		NcSelect,
 	},
+
 	props: {
 		client: {
 			type: Object,
 			default: () => ({}),
 		},
+
 		/**
 		 * Render the built-in Save / Cancel buttons. Set to `false` when the
 		 * host supplies its own action buttons (e.g. a parent NcDialog driving
@@ -164,6 +166,7 @@ export default {
 			default: true,
 		},
 	},
+
 	data() {
 		return {
 			form: {
@@ -175,6 +178,7 @@ export default {
 				address: '',
 				notes: '',
 			},
+
 			errors: {
 				name: '',
 				type: '',
@@ -182,9 +186,11 @@ export default {
 				phone: '',
 				website: '',
 			},
+
 			typeOptions: ['person', 'organization'],
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-27
@@ -196,6 +202,7 @@ export default {
 			return hasName && hasType && noErrors
 		},
 	},
+
 	watch: {
 		// Surface validity so a host (e.g. a parent NcDialog) can enable or
 		// disable its own submit button.
@@ -205,6 +212,7 @@ export default {
 				this.$emit('update:valid', val)
 			},
 		},
+
 		client: {
 			immediate: true,
 			/**
@@ -218,6 +226,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * @param data
@@ -236,6 +245,7 @@ export default {
 			// Clear errors when populating
 			this.errors = { name: '', type: '', email: '', phone: '', website: '' }
 		},
+
 		/**
 		 * @param field
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
@@ -284,6 +294,7 @@ export default {
 					break
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-30
 		 */
@@ -295,6 +306,7 @@ export default {
 			this.validateField('website')
 			return this.isValid
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-28
 		 * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1

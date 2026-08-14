@@ -1,8 +1,8 @@
+import { generateUrl } from '@nextcloud/router'
 /**
  * Prospect store — fetches prospect discovery data from the Pipelinq API.
  */
 import { defineStore } from 'pinia'
-import { generateUrl } from '@nextcloud/router'
 
 export const useProspectStore = defineStore('prospect', {
 	state: () => ({

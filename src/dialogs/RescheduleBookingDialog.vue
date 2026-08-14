@@ -44,6 +44,7 @@ export default {
 	props: {
 		currentStartAt: { type: String, default: '' },
 	},
+
 	emits: ['confirm', 'cancel'],
 	data() {
 		return {
@@ -51,6 +52,7 @@ export default {
 			error: '',
 		}
 	},
+
 	computed: {
 		isValid() {
 			return (
@@ -59,6 +61,7 @@ export default {
 			)
 		},
 	},
+
 	methods: {
 		/**
 		 * Convert an ISO-8601 timestamp to the value format expected by
@@ -74,6 +77,7 @@ export default {
 			const pad = (n) => String(n).padStart(2, '0')
 			return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 		},
+
 		onConfirm() {
 			if (!this.newStartAt) {
 				this.error = t('pipelinq', 'Pick a new start time.')

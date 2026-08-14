@@ -114,14 +114,14 @@
 
 		<PosTenderTypeFormDialog
 			v-if="showForm"
-			:tender-type="editingType"
+			:tenderType="editingType"
 			@close="onFormClose"
 			@saved="onFormSaved" />
 		<ConfirmDialog
 			v-if="pendingDeleteType"
 			:name="t('pipelinq', 'Delete tender type')"
 			:message="deleteTypeMessage"
-			:confirm-label="t('pipelinq', 'Delete')"
+			:confirmLabel="t('pipelinq', 'Delete')"
 			@confirm="performDeleteType"
 			@cancel="pendingDeleteType = null" />
 	</div>
@@ -129,15 +129,15 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
-import Plus from 'vue-material-design-icons/Plus.vue'
-import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
-import PosTenderTypeFormDialog from '../../modals/PosTenderTypeFormDialog.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
+import PosTenderTypeFormDialog from '../../modals/PosTenderTypeFormDialog.vue'
 
 export default {
 	name: 'PosTenderTypeList',
@@ -151,6 +151,7 @@ export default {
 		Delete,
 		PosTenderTypeFormDialog,
 	},
+
 	data() {
 		return {
 			tenderTypes: [],
@@ -161,9 +162,7 @@ export default {
 			pendingDeleteType: null,
 		}
 	},
-	async mounted() {
-		await this.refresh()
-	},
+
 	computed: {
 		/**
 		 * Built here rather than inline in the template so the t() key stays
@@ -186,6 +185,11 @@ export default {
 			)
 		},
 	},
+
+	async mounted() {
+		await this.refresh()
+	},
+
 	methods: {
 		async refresh() {
 			this.loading = true
@@ -205,10 +209,12 @@ export default {
 				this.loading = false
 			}
 		},
+
 		createNew() {
 			this.editingType = null
 			this.showForm = true
 		},
+
 		/**
 		 * Open the edit form for a tender type.
 		 *
@@ -222,6 +228,7 @@ export default {
 			this.editingType = { ...type }
 			this.showForm = true
 		},
+
 		/**
 		 * Open the delete confirmation for a tender type.
 		 *
@@ -234,6 +241,7 @@ export default {
 		deleteType(type) {
 			this.pendingDeleteType = type
 		},
+
 		/**
 		 * Delete the pending tender type once the dialog confirms.
 		 *
@@ -262,15 +270,18 @@ export default {
 				showError(msg)
 			}
 		},
+
 		onFormClose() {
 			this.showForm = false
 			this.editingType = null
 		},
+
 		async onFormSaved() {
 			this.showForm = false
 			this.editingType = null
 			await this.refresh()
 		},
+
 		idOf(type) {
 			if (type?.['@self']?.id) {
 				return type['@self'].id

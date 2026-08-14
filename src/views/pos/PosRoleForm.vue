@@ -85,7 +85,7 @@
 					'Delete this role? Staff assignments must be removed first.',
 				)
 			"
-			:confirm-label="t('pipelinq', 'Delete')"
+			:confirmLabel="t('pipelinq', 'Delete')"
 			@confirm="performDelete"
 			@cancel="showDeleteConfirm = false" />
 	</div>
@@ -111,9 +111,11 @@ export default {
 		NcLoadingIcon,
 		NcTextField,
 	},
+
 	props: {
 		id: { type: String, default: '' },
 	},
+
 	data() {
 		return {
 			form: {
@@ -124,16 +126,19 @@ export default {
 				canRefund: false,
 				canNoSale: false,
 			},
+
 			loading: false,
 			saving: false,
 			errorMessage: '',
 			showDeleteConfirm: false,
 		}
 	},
+
 	computed: {
 		isNew() {
 			return !this.id
 		},
+
 		canSave() {
 			return (
 				!!this.form.name
@@ -142,11 +147,13 @@ export default {
 			)
 		},
 	},
+
 	async mounted() {
 		if (!this.isNew) {
 			await this.load()
 		}
 	},
+
 	methods: {
 		async load() {
 			this.loading = true
@@ -170,6 +177,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		async save() {
 			this.saving = true
 			this.errorMessage = ''
@@ -190,6 +198,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Open the delete confirmation.
 		 *
@@ -200,6 +209,7 @@ export default {
 		confirmDelete() {
 			this.showDeleteConfirm = true
 		},
+
 		/**
 		 * Delete the role once the dialog confirms.
 		 *
@@ -225,6 +235,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Leave the form. The host (PosRoleManager, on the admin page) closes the
 		 * dialog — this form no longer routes back to a list page of its own.

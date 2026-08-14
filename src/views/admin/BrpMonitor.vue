@@ -46,10 +46,8 @@
 				<div v-else class="brp-monitor__cert">
 					<div>
 						<span
-							:class="[
-								'brp-monitor__badge',
-								'brp-monitor__badge--' + cert.status,
-							]">
+							class="brp-monitor__badge"
+							:class="['brp-monitor__badge--' + cert.status]">
 							{{ certStatusLabel }}
 						</span>
 					</div>
@@ -86,9 +84,9 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 export default {
 	name: 'BrpMonitor',
@@ -96,6 +94,7 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -104,15 +103,18 @@ export default {
 			cert: null,
 		}
 	},
+
 	computed: {
 		cacheHitPct() {
 			if (!this.report || !this.report.cacheHitRatio) return 0
 			return Math.round(this.report.cacheHitRatio * 100)
 		},
+
 		errorPct() {
 			if (!this.report || !this.report.errorRate) return 0
 			return Math.round(this.report.errorRate * 100)
 		},
+
 		certStatusLabel() {
 			if (!this.cert) return ''
 			if (this.cert.status === 'ok') return this.t('pipelinq', 'OK')
@@ -123,9 +125,11 @@ export default {
 			return this.cert.status
 		},
 	},
+
 	mounted() {
 		this.load()
 	},
+
 	methods: {
 		async load() {
 			this.loading = true

@@ -17,23 +17,23 @@
 			<NcSelect
 				v-model="form.category"
 				:options="categoryOptions"
-				:input-label="t('pipelinq', 'Category')"
+				:inputLabel="t('pipelinq', 'Category')"
 				:placeholder="t('pipelinq', 'Category')"
-				input-id="request-category" />
+				inputId="request-category" />
 
 			<NcSelect
 				v-model="form.priority"
 				:options="priorityOptions"
-				:input-label="t('pipelinq', 'Priority')"
+				:inputLabel="t('pipelinq', 'Priority')"
 				:placeholder="t('pipelinq', 'Priority')"
-				input-id="request-priority" />
+				inputId="request-priority" />
 
 			<NcSelect
 				v-model="form.channel"
 				:options="channelOptions"
-				:input-label="t('pipelinq', 'Channel')"
+				:inputLabel="t('pipelinq', 'Channel')"
 				:placeholder="t('pipelinq', 'Channel')"
-				input-id="request-channel" />
+				inputId="request-channel" />
 
 			<NcButton variant="primary" :disabled="submitting" @click="onSubmit">
 				{{
@@ -69,8 +69,8 @@
 </template>
 
 <script>
-import { NcTextField, NcButton, NcSelect, NcNoteCard } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
@@ -84,12 +84,14 @@ export default {
 		NcNoteCard,
 		ClientAutocomplete,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			config: null,
@@ -99,6 +101,7 @@ export default {
 				priority: 'normal',
 				channel: null,
 			},
+
 			selectedClient: null,
 			submitted: false,
 			submitting: false,
@@ -111,12 +114,14 @@ export default {
 				t('pipelinq', 'Billing'),
 				t('pipelinq', 'Support'),
 			],
+
 			priorityOptions: [
 				{ id: 'low', label: t('pipelinq', 'Low') },
 				{ id: 'normal', label: t('pipelinq', 'Normal') },
 				{ id: 'high', label: t('pipelinq', 'High') },
 				{ id: 'urgent', label: t('pipelinq', 'Urgent') },
 			],
+
 			channelOptions: [
 				{ id: 'phone', label: t('pipelinq', 'Phone') },
 				{ id: 'email', label: t('pipelinq', 'Email') },
@@ -125,6 +130,7 @@ export default {
 			],
 		}
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-53
 	 */
@@ -137,6 +143,7 @@ export default {
 			console.error('StartRequestWidget init error:', err)
 		}
 	},
+
 	methods: {
 		generateUrl,
 		toText,
@@ -147,6 +154,7 @@ export default {
 		onClientSelected(client) {
 			this.selectedClient = client
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-55
 		 */
@@ -173,6 +181,7 @@ export default {
 						typeof this.form.priority === 'object'
 							? this.form.priority.id
 							: this.form.priority || 'normal',
+
 					occurredAt: new Date().toISOString(),
 				}
 
@@ -220,6 +229,7 @@ export default {
 				this.submitting = false
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-56
 		 */
@@ -236,6 +246,7 @@ export default {
 			this.successLink = ''
 			this.fetchRecentRequests()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-52
 		 */

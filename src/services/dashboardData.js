@@ -12,8 +12,8 @@
 // (5 min). Call `invalidateDashboardData()` to force a refetch (used
 // by the "Refresh" header action).
 
-import { reactive } from 'vue'
 import { generateUrl } from '@nextcloud/router'
+import { reactive } from 'vue'
 import { initializeStores } from '../store/store.js'
 
 const CACHE_TTL_MS = 5 * 60 * 1000
@@ -284,6 +284,7 @@ export function getAnalyticsTrend(metric, period) {
  * Drop every cached dataset. Call from a "Refresh" UI action or
  * after creating a new object so the dashboard reflects the change
  * on the next widget mount/remount.
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-22
  */
 export function invalidateDashboardData() {

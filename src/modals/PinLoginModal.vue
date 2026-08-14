@@ -22,7 +22,7 @@
 			<NcSelect
 				v-model="selectedStaffId"
 				:options="staffOptions"
-				:input-label="t('pipelinq', 'Staff member')"
+				:inputLabel="t('pipelinq', 'Staff member')"
 				:placeholder="t('pipelinq', 'Select your name')"
 				:reduce="(o) => o.value"
 				label="label"
@@ -117,12 +117,14 @@ export default {
 			lockedUntil: '',
 		}
 	},
+
 	computed: {
 		staffOptions() {
 			return this.staff
 				.filter((s) => s.isActive !== false)
 				.map((s) => ({ value: s.id, label: s.displayName || s.id }))
 		},
+
 		canSubmit() {
 			return (
 				!!this.selectedStaffId
@@ -131,9 +133,11 @@ export default {
 			)
 		},
 	},
+
 	async mounted() {
 		await this.loadStaff()
 	},
+
 	methods: {
 		async loadStaff() {
 			this.loading = true
@@ -148,6 +152,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		press(digit) {
 			if (this.pin.length >= 6) {
 				return
@@ -155,13 +160,16 @@ export default {
 			this.pin += digit
 			this.errorMessage = ''
 		},
+
 		clearPin() {
 			this.pin = ''
 			this.errorMessage = ''
 		},
+
 		backspace() {
 			this.pin = this.pin.slice(0, -1)
 		},
+
 		async submit() {
 			if (!this.canSubmit) {
 				return

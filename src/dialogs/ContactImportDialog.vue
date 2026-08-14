@@ -5,12 +5,12 @@
 		@closing="$emit('close')">
 		<div class="import-dialog">
 			<NcTextField
-				:model-value="query"
+				:modelValue="query"
 				:label="t('pipelinq', 'Search contacts...')"
-				:show-trailing-button="query !== ''"
+				:showTrailingButton="query !== ''"
 				class="import-dialog__search"
-				@update:model-value="onSearch"
-				@trailing-button-click="onClearSearch" />
+				@update:modelValue="onSearch"
+				@trailingButtonClick="onClearSearch" />
 
 			<NcLoadingIcon v-if="searching" />
 
@@ -72,8 +72,8 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'ContactImportDialog',
@@ -83,17 +83,20 @@ export default {
 		NcLoadingIcon,
 		NcTextField,
 	},
+
 	props: {
 		importType: {
 			type: String,
 			default: 'client',
 			validator: (v) => ['client', 'contact'].includes(v),
 		},
+
 		clientId: {
 			type: String,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			query: '',
@@ -103,6 +106,7 @@ export default {
 			searchTimeout: null,
 		}
 	},
+
 	methods: {
 		/**
 		 * @param value

@@ -36,7 +36,7 @@
 				<NcSelect
 					v-model="form.posRole"
 					:options="roleOptions"
-					:input-label="t('pipelinq', 'Role')"
+					:inputLabel="t('pipelinq', 'Role')"
 					:placeholder="t('pipelinq', 'Choose a role')"
 					:reduce="(o) => o.value"
 					label="label" />
@@ -81,7 +81,7 @@
 			:message="
 				t('pipelinq', 'Delete this staff member? This cannot be undone.')
 			"
-			:confirm-label="t('pipelinq', 'Delete')"
+			:confirmLabel="t('pipelinq', 'Delete')"
 			@confirm="performDelete"
 			@cancel="showDeleteConfirm = false" />
 	</div>
@@ -109,9 +109,11 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	props: {
 		id: { type: String, default: '' },
 	},
+
 	data() {
 		return {
 			form: {
@@ -121,6 +123,7 @@ export default {
 				pin: '',
 				isActive: true,
 			},
+
 			roles: [],
 			loading: false,
 			saving: false,
@@ -128,13 +131,16 @@ export default {
 			showDeleteConfirm: false,
 		}
 	},
+
 	computed: {
 		isNew() {
 			return !this.id
 		},
+
 		roleOptions() {
 			return this.roles.map((r) => ({ value: r.id, label: r.name || r.id }))
 		},
+
 		canSave() {
 			if (!this.form.displayName || !this.form.posRole) {
 				return false
@@ -152,12 +158,14 @@ export default {
 			return true
 		},
 	},
+
 	async mounted() {
 		await this.loadRoles()
 		if (!this.isNew) {
 			await this.load()
 		}
 	},
+
 	methods: {
 		async loadRoles() {
 			try {
@@ -168,6 +176,7 @@ export default {
 				this.roles = []
 			}
 		},
+
 		async load() {
 			this.loading = true
 			try {
@@ -189,6 +198,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		async save() {
 			this.saving = true
 			this.errorMessage = ''
@@ -218,6 +228,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Open the delete confirmation.
 		 *
@@ -228,6 +239,7 @@ export default {
 		confirmDelete() {
 			this.showDeleteConfirm = true
 		},
+
 		/**
 		 * Delete the staff member once the dialog confirms.
 		 *
@@ -253,6 +265,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Leave the form. The host (PosStaffManager, on the admin page) closes the
 		 * dialog — this form no longer routes back to a list page of its own.

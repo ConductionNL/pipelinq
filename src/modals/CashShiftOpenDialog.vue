@@ -15,7 +15,7 @@
 				type="number"
 				:label="t('pipelinq', 'Opening amount (€)')"
 				:error="showError"
-				:helper-text="
+				:helperText="
 					showError ? t('pipelinq', 'Opening amount required') : ''
 				" />
 			<NcTextField
@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextField, NcTextArea } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcTextArea, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftOpenDialog',
@@ -45,12 +45,14 @@ export default {
 		NcTextField,
 		NcTextArea,
 	},
+
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -61,6 +63,7 @@ export default {
 			showError: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * Validate the float amount and emit the open payload.

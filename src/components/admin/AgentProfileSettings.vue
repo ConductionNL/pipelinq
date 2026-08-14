@@ -122,12 +122,14 @@ export default {
 		NcLoadingIcon,
 		NcSettingsSection,
 	},
+
 	data() {
 		return {
 			editingId: null,
 			editForm: {},
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-9
@@ -135,24 +137,28 @@ export default {
 		profilesStore() {
 			return useAgentProfilesStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-11
 		 */
 		skillsStore() {
 			return useSkillsStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-6
 		 */
 		loading() {
 			return this.profilesStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-8
 		 */
 		profiles() {
 			return this.profilesStore.profiles
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-2
 		 */
@@ -160,6 +166,7 @@ export default {
 			return this.skillsStore.skills
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-7
 	 */
@@ -167,6 +174,7 @@ export default {
 		this.profilesStore.fetchProfiles()
 		this.skillsStore.fetchSkills()
 	},
+
 	methods: {
 		/**
 		 * @param profile
@@ -179,6 +187,7 @@ export default {
 				.filter(Boolean)
 				.map((s) => s.title)
 		},
+
 		/**
 		 * @param profile
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-12
@@ -187,6 +196,7 @@ export default {
 			this.editingId = profile.id
 			this.editForm = { ...profile }
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-3
 		 */
@@ -194,6 +204,7 @@ export default {
 			this.editingId = null
 			this.editForm = {}
 		},
+
 		/**
 		 * @param skillId
 		 * @param checked
@@ -209,6 +220,7 @@ export default {
 			}
 			this.editForm = { ...this.editForm, skills }
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-10
 		 */
@@ -216,6 +228,7 @@ export default {
 			await this.profilesStore.saveProfile(this.editForm)
 			this.cancelEdit()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-1
 		 */
@@ -229,6 +242,7 @@ export default {
 				isAvailable: true,
 			})
 		},
+
 		/**
 		 * @param profile
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-4

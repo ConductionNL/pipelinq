@@ -206,7 +206,7 @@
 
 			<RescheduleBookingDialog
 				v-if="showReschedule"
-				:current-start-at="booking.startAt || ''"
+				:currentStartAt="booking.startAt || ''"
 				@confirm="onReschedule"
 				@cancel="showReschedule = false" />
 
@@ -219,11 +219,11 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import RescheduleBookingDialog from '../../dialogs/RescheduleBookingDialog.vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import CancelBookingDialog from '../../dialogs/CancelBookingDialog.vue'
+import RescheduleBookingDialog from '../../dialogs/RescheduleBookingDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const STATUS_LABELS = {
@@ -246,9 +246,11 @@ export default {
 		RescheduleBookingDialog,
 		CancelBookingDialog,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The booking id (token-resolved from @objectId by CnBodySections). */
 		bookingId: {
@@ -256,6 +258,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			booking: {},
@@ -274,10 +277,12 @@ export default {
 			contextLoading: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/** The resolved booking id — prop wins, else the injected section context. */
 		resolvedId() {
 			if (this.bookingId) {
@@ -288,19 +293,23 @@ export default {
 				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		serviceName() {
 			return this.service?.name || this.booking.serviceId || '-'
 		},
+
 		customerLabel() {
 			if (this.customer?.name) return this.customer.name
 			if (this.customer?.fullName) return this.customer.fullName
 			return this.booking.customerId || '-'
 		},
+
 		assignments() {
 			return Array.isArray(this.booking.resourceAssignments)
 				? this.booking.resourceAssignments
 				: []
 		},
+
 		history() {
 			const raw = Array.isArray(this.booking.statusHistory)
 				? this.booking.statusHistory
@@ -311,6 +320,7 @@ export default {
 				return ta - tb
 			})
 		},
+
 		timeline() {
 			const events = []
 			if (this.booking.startAt) {
@@ -364,6 +374,7 @@ export default {
 			}
 			return events.sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
 		},
+
 		depositLabel() {
 			const amount = Number(this.booking.depositAmount || 0)
 			if (!amount) return t('pipelinq', 'None')
@@ -379,51 +390,62 @@ export default {
 					})
 				: t('pipelinq', '{amount} (pending)', { amount: formatted })
 		},
+
 		notesDirty() {
 			return (
 				this.editableNotes !== this.savedNotes
 				|| this.editableInternalNotes !== this.savedInternalNotes
 			)
 		},
+
 		isFuture() {
 			if (!this.booking.endAt) return false
 			return new Date(this.booking.endAt).getTime() > Date.now()
 		},
+
 		isPast() {
 			if (!this.booking.endAt) return false
 			return new Date(this.booking.endAt).getTime() <= Date.now()
 		},
+
 		hourAway() {
 			if (!this.booking.startAt) return false
 			return new Date(this.booking.startAt).getTime() - Date.now() > HOUR_MS
 		},
+
 		canConfirmDeposit() {
 			return this.booking.status === 'pending-deposit'
 		},
+
 		canMarkCompleted() {
 			return this.booking.status === 'confirmed' && this.isPast
 		},
+
 		canMarkNoShow() {
 			return this.booking.status === 'confirmed' && this.isPast
 		},
+
 		canReschedule() {
 			return (
 				['confirmed', 'pending-deposit'].includes(this.booking.status)
 				&& this.isFuture
 			)
 		},
+
 		canCancel() {
 			return (
 				['confirmed', 'pending-deposit'].includes(this.booking.status)
 				&& this.isFuture
 			)
 		},
+
 		canSendReminder() {
 			return (
 				this.booking.status === 'confirmed' && this.isFuture && this.hourAway
 			)
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -432,10 +454,12 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		statusLabel(status) {
 			return t('pipelinq', STATUS_LABELS[status] || status || '-')
 		},
+
 		formatDateTime(iso) {
 			if (!iso) return '-'
 			try {
@@ -444,6 +468,7 @@ export default {
 				return iso
 			}
 		},
+
 		formatCurrency(value, currency) {
 			const code = currency || 'EUR'
 			const n = Number(value) || 0
@@ -457,10 +482,12 @@ export default {
 				return `${code} ${n}`
 			}
 		},
+
 		resourceName(resourceId) {
 			if (!resourceId) return '-'
 			return this.resourceLookup[resourceId] || resourceId
 		},
+
 		/**
 		 * Load the booking and seed the notes editor, then resolve the linked
 		 * Service / Customer / Resource names.
@@ -488,6 +515,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Fetch the linked Service / Customer / Resource records so the
 		 * section can display human-readable names instead of UUIDs.
@@ -553,6 +581,7 @@ export default {
 				this.contextLoading = false
 			}
 		},
+
 		async saveNotes() {
 			this.busy = true
 			try {
@@ -573,6 +602,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * POST to a booking-admin endpoint and reload the booking on success.
 		 *
@@ -621,6 +651,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		async confirmDeposit() {
 			await this.lifecycle(
 				'confirm-deposit',
@@ -628,6 +659,7 @@ export default {
 				t('pipelinq', 'Deposit confirmed.'),
 			)
 		},
+
 		async markCompleted() {
 			await this.lifecycle(
 				'complete',
@@ -635,6 +667,7 @@ export default {
 				t('pipelinq', 'Booking marked completed.'),
 			)
 		},
+
 		async markNoShow() {
 			await this.lifecycle(
 				'no-show',
@@ -642,6 +675,7 @@ export default {
 				t('pipelinq', 'Booking marked as no-show.'),
 			)
 		},
+
 		async sendReminder() {
 			await this.lifecycle(
 				'send-reminder',
@@ -649,6 +683,7 @@ export default {
 				t('pipelinq', 'Reminder dispatched.'),
 			)
 		},
+
 		async onReschedule(newStartAt) {
 			this.showReschedule = false
 			await this.lifecycle(
@@ -657,6 +692,7 @@ export default {
 				t('pipelinq', 'Booking rescheduled.'),
 			)
 		},
+
 		async onCancel(reason) {
 			this.showCancel = false
 			await this.lifecycle(

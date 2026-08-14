@@ -5,13 +5,13 @@
 				<label for="product-name">{{ t('pipelinq', 'Name') }} *</label>
 				<NcTextField
 					id="product-name"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Name')"
-					:model-value="form.name"
+					:modelValue="form.name"
 					:error="!!errors.name"
-					:helper-text="errors.name"
+					:helperText="errors.name"
 					:maxlength="255"
-					@update:model-value="
+					@update:modelValue="
 						(v) => {
 							form.name = v
 							validateField('name')
@@ -22,11 +22,11 @@
 				<label for="product-sku">{{ t('pipelinq', 'SKU') }}</label>
 				<NcTextField
 					id="product-sku"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'SKU')"
-					:model-value="form.sku"
+					:modelValue="form.sku"
 					:maxlength="100"
-					@update:model-value="(v) => (form.sku = v)" />
+					@update:modelValue="(v) => (form.sku = v)" />
 			</div>
 		</div>
 
@@ -35,11 +35,11 @@
 				<label for="product-type">{{ t('pipelinq', 'Type') }} *</label>
 				<NcSelect
 					v-model="form.type"
-					input-id="product-type"
+					inputId="product-type"
 					:aria-label-combobox="t('pipelinq', 'Type')"
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
-					@update:model-value="validateField('type')" />
+					@update:modelValue="validateField('type')" />
 				<p v-if="errors.type" class="field-error">
 					{{ errors.type }}
 				</p>
@@ -48,7 +48,7 @@
 				<label for="product-status">{{ t('pipelinq', 'Status') }}</label>
 				<NcSelect
 					v-model="form.status"
-					input-id="product-status"
+					inputId="product-status"
 					:aria-label-combobox="t('pipelinq', 'Status')"
 					:options="statusOptions"
 					:placeholder="t('pipelinq', 'Select status')" />
@@ -62,13 +62,13 @@
 				>
 				<NcTextField
 					id="product-unitPrice"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Unit Price')"
-					:model-value="form.unitPrice"
+					:modelValue="form.unitPrice"
 					:error="!!errors.unitPrice"
-					:helper-text="errors.unitPrice"
+					:helperText="errors.unitPrice"
 					type="number"
-					@update:model-value="
+					@update:modelValue="
 						(v) => {
 							form.unitPrice = v
 							validateField('unitPrice')
@@ -79,11 +79,11 @@
 				<label for="product-cost">{{ t('pipelinq', 'Cost') }}</label>
 				<NcTextField
 					id="product-cost"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Cost')"
-					:model-value="form.cost"
+					:modelValue="form.cost"
 					type="number"
-					@update:model-value="(v) => (form.cost = v)" />
+					@update:modelValue="(v) => (form.cost = v)" />
 			</div>
 		</div>
 
@@ -92,11 +92,11 @@
 				<label for="product-unit">{{ t('pipelinq', 'Unit') }}</label>
 				<NcTextField
 					id="product-unit"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Unit')"
-					:model-value="form.unit"
+					:modelValue="form.unit"
 					:placeholder="t('pipelinq', 'e.g. piece, hour, license')"
-					@update:model-value="(v) => (form.unit = v)" />
+					@update:modelValue="(v) => (form.unit = v)" />
 			</div>
 			<div class="form-group">
 				<label for="product-taxRate">{{
@@ -104,17 +104,17 @@
 				}}</label>
 				<NcTextField
 					id="product-taxRate"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Tax Rate (%)')"
-					:model-value="form.taxRate"
+					:modelValue="form.taxRate"
 					:disabled="!!form.vatClass"
-					:helper-text="
+					:helperText="
 						form.vatClass
 							? t('pipelinq', 'Derived from the selected BTW class')
 							: ''
 					"
 					type="number"
-					@update:model-value="(v) => (form.taxRate = v)" />
+					@update:modelValue="(v) => (form.taxRate = v)" />
 			</div>
 		</div>
 
@@ -125,14 +125,14 @@
 				}}</label>
 				<NcSelect
 					v-model="form.vatClass"
-					input-id="product-btwClass"
-					:input-label="t('pipelinq', 'BTW Class')"
+					inputId="product-btwClass"
+					:inputLabel="t('pipelinq', 'BTW Class')"
 					:aria-label-combobox="t('pipelinq', 'BTW Class')"
 					:options="btwClassOptions"
 					:placeholder="t('pipelinq', 'Select BTW class')"
 					label="label"
 					:reduce="(opt) => opt.id"
-					@update:model-value="onBtwClassChange" />
+					@update:modelValue="onBtwClassChange" />
 			</div>
 			<div class="form-group">
 				<label for="product-barcode">{{
@@ -140,11 +140,11 @@
 				}}</label>
 				<NcTextField
 					id="product-barcode"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Barcode (EAN/UPC)')"
-					:model-value="form.barcode"
+					:modelValue="form.barcode"
 					:maxlength="64"
-					@update:model-value="(v) => (form.barcode = v)" />
+					@update:modelValue="(v) => (form.barcode = v)" />
 			</div>
 		</div>
 
@@ -154,18 +154,18 @@
 			}}</label>
 			<NcTextField
 				id="product-duration"
-				label-outside
+				labelOutside
 				:label="t('pipelinq', 'Duration (minutes)')"
-				:model-value="form.duration"
+				:modelValue="form.duration"
 				type="number"
-				@update:model-value="(v) => (form.duration = v)" />
+				@update:modelValue="(v) => (form.duration = v)" />
 		</div>
 
 		<div class="form-group">
 			<label for="product-category">{{ t('pipelinq', 'Category') }}</label>
 			<NcSelect
 				v-model="form.category"
-				input-id="product-category"
+				inputId="product-category"
 				:aria-label-combobox="t('pipelinq', 'Category')"
 				:options="categoryOptions"
 				:placeholder="t('pipelinq', 'Select category')"
@@ -195,7 +195,7 @@
 /*
  * @visual exclude unmounted orphan — no e2e can reach it. This file is imported by nothing in src/ (measured: zero references outside itself, against ExportJobsView's three as the positive control), it is named by no manifest component, and it is absent from src/registry.js. The /products/:id page is a declarative type:"detail" page drawn by the manifest renderer, and the ProductDetail.vue that tests/e2e/workflows/product-crud.spec.ts pairs it with does not exist on disk. An unmounted component has no surface to screenshot. openspec/specs/product-catalog/spec.md:592 still describes this file as shipped UI, so deleting it is a product decision rather than a gate fix.
  */
-import { NcButton, NcTextField, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -205,12 +205,14 @@ export default {
 		NcTextField,
 		NcSelect,
 	},
+
 	props: {
 		product: {
 			type: Object,
 			default: () => ({}),
 		},
 	},
+
 	data() {
 		return {
 			form: {
@@ -228,11 +230,13 @@ export default {
 				barcode: '',
 				duration: '',
 			},
+
 			errors: {
 				name: '',
 				type: '',
 				unitPrice: '',
 			},
+
 			typeOptions: ['product', 'service'],
 			statusOptions: ['active', 'inactive'],
 			btwClassOptions: [
@@ -241,10 +245,12 @@ export default {
 				{ id: 'nul', label: t('pipelinq', 'Zero (0%)') },
 				{ id: 'vrijgesteld', label: t('pipelinq', 'Exempt') },
 			],
+
 			btwRateMap: { hoog: 21, laag: 9, nul: 0, vrijgesteld: 0 },
 			categories: [],
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-18
@@ -252,6 +258,7 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-17
 		 */
@@ -263,6 +270,7 @@ export default {
 			const noErrors = Object.values(this.errors).every((e) => !e)
 			return hasName && hasType && hasPrice && noErrors
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-14
 		 */
@@ -270,6 +278,7 @@ export default {
 			return this.categories.map((c) => ({ id: c.id, name: c.name }))
 		},
 	},
+
 	watch: {
 		product: {
 			immediate: true,
@@ -284,9 +293,11 @@ export default {
 			},
 		},
 	},
+
 	async mounted() {
 		await this.fetchCategories()
 	},
+
 	methods: {
 		/**
 		 * @param data
@@ -299,6 +310,7 @@ export default {
 				sku: data.sku || '',
 				unitPrice:
 					data.unitPrice !== undefined ? String(data.unitPrice) : '',
+
 				cost: data.cost !== undefined ? String(data.cost) : '',
 				category: data.category || null,
 				type: data.type || null,
@@ -314,6 +326,7 @@ export default {
 			}
 			this.errors = { name: '', type: '', unitPrice: '' }
 		},
+
 		/**
 		 * Sync taxRate from the selected BTW class (server re-derives on lookup).
 		 */
@@ -325,6 +338,7 @@ export default {
 				this.form.taxRate = String(this.btwRateMap[this.form.vatClass])
 			}
 		},
+
 		/**
 		 * @param field
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-22
@@ -360,6 +374,7 @@ export default {
 					break
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-21
 		 */
@@ -369,6 +384,7 @@ export default {
 			this.validateField('unitPrice')
 			return this.isValid
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-19
 		 */
@@ -393,6 +409,7 @@ export default {
 			}
 			this.$emit('save', data)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-15
 		 */

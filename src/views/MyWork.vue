@@ -132,25 +132,31 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
-import { useObjectStore } from '../store/modules/object.js'
-import {
-	getStatusLabel,
-	getPriorityLabel,
-	getPriorityColor,
-} from '../services/requestStatus.js'
-import { isStale } from '../services/pipelineUtils.js'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { formatDateFull, formatNumber } from '../services/localeUtils.js'
+import { isStale } from '../services/pipelineUtils.js'
+import {
+	getPriorityColor,
+	getPriorityLabel,
+	getStatusLabel,
+} from '../services/requestStatus.js'
+import { useObjectStore } from '../store/modules/object.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
 
+/**
+ *
+ */
 function startOfToday() {
 	const d = new Date()
 	d.setHours(0, 0, 0, 0)
 	return d
 }
 
+/**
+ *
+ */
 function endOfWeek() {
 	const d = startOfToday()
 	const day = d.getDay()
@@ -160,6 +166,11 @@ function endOfWeek() {
 	return d
 }
 
+/**
+ *
+ * @param date1
+ * @param date2
+ */
 function daysBetween(date1, date2) {
 	const diff = date2.getTime() - date1.getTime()
 	return Math.floor(diff / (1000 * 60 * 60 * 24))
@@ -171,6 +182,7 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -182,6 +194,7 @@ export default {
 			pipelines: [],
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-12
@@ -189,6 +202,7 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-4
 		 */
@@ -313,6 +327,7 @@ export default {
 		leadCount() {
 			return this.filteredItems.filter((i) => i.entityType === 'lead').length
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-15
 		 */
@@ -320,6 +335,7 @@ export default {
 			return this.filteredItems.filter((i) => i.entityType === 'request')
 				.length
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-16
 		 */
@@ -382,9 +398,11 @@ export default {
 			return t('pipelinq', 'No items assigned to you')
 		},
 	},
+
 	mounted() {
 		this.fetchAll()
 	},
+
 	methods: {
 		formatNumber,
 		getPriorityLabel,
