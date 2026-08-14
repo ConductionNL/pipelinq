@@ -70,14 +70,23 @@ jobs:
           done < <(git ls-files '*.php' | grep -v '^vendor/' | grep -v '^tests/fixtures/')
           exit "$fail"
 
-      # JSON that will not parse breaks register fragments and composer/npm
-      # metadata, and is the other thing a bad merge leaves behind.
+      # JSON that will not parse breaks register fragments and app metadata,
+      # and is the other thing a bad merge leaves behind.
+      #
+      # SCOPED, because the first version was not and failed immediately on
+      # honest files: editor and tooling configs (tsconfig, eslint, devcontainer)
+      # are JSONC — comments and trailing commas — which is valid for their
+      # consumers and invalid for a strict parser. A gate that fails on correct
+      # files is worse than no gate: it gets switched off, and takes the checks
+      # that were working with it. Only the JSON the app itself loads is checked.
       - name: JSON parses
         run: |
           set -euo pipefail
           fail=0
           while IFS= read -r f; do
+            [ -f "$f" ] || continue
             python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f" \
               || { echo "::error file=$f::invalid JSON"; fail=1; }
-          done < <(git ls-files '*.json' | grep -v '^vendor/' | grep -v '^node_modules/')
+          done < <(git ls-files 'composer.json' 'package.json' 'appinfo/*.json' 'lib/**/*.json' \
+                     | grep -v '^vendor/' | grep -v '^node_modules/')
           exit "$fail"
