@@ -188,6 +188,14 @@ class CtiController extends Controller {
 			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
+		// Placing an outbound call on the organisation's telephony account is a
+		// CRM capability. Its sibling webhook() on this controller was guarded
+		// in the first pass and clickToDial -- the one that actually DIALS --
+		// was not.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
 		$targetNumber = (string)$this->request->getParam('targetNumber', '');
 		$extension = (string)$this->request->getParam('extension', '');
 		if ($targetNumber === '' || $extension === '') {

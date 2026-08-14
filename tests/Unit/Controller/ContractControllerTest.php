@@ -642,6 +642,10 @@ class ContractControllerTest extends TestCase {
 	 */
 	public function testRenewalMetricsAggregatesTheSeededContracts(): void {
 		$this->signIn();
+		// See the sibling test: an instance-wide aggregate needs the privileged
+		// caller, because there is no single object whose ownership could grant
+		// access instead.
+		$this->groupManager->method('isInGroup')->willReturn(true);
 		$this->objects->seed(
 			'c-10',
 			'contract',
@@ -686,6 +690,11 @@ class ContractControllerTest extends TestCase {
 	 */
 	public function testRenewalMetricsExcludesSoftDeletedContracts(): void {
 		$this->signIn();
+		// renewalMetrics aggregates the whole contract book, so it now asks
+		// isPrivileged() rather than per-contract ownership — there is no
+		// single contract to own. This test is about the aggregation, so it
+		// needs the caller that may see company-wide figures.
+		$this->groupManager->method('isInGroup')->willReturn(true);
 		$this->objects->seed(
 			'c-20',
 			'contract',

@@ -200,6 +200,13 @@ class ContractController extends Controller {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
+		// Revenue across the whole contract book — no object selector, so
+		// there is nothing to own and the only question is whether this caller
+		// may see company-wide figures at all.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
 		return new JSONResponse($this->revenueService->getSummary());
 	}//end summary()
 
@@ -218,6 +225,12 @@ class ContractController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Same shape as summary(): an instance-wide aggregate with no object
+		// selector, so isPrivileged is the only question that can be asked.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		$from = (string)$this->request->getParam('from', date('Y-m-d', strtotime('-3 months')));

@@ -198,6 +198,14 @@ class BookingAdminController extends Controller {
 			return $this->unauthorised();
 		}
 
+		// Booking administration moves other people's appointments — a CRM
+		// capability, not an any-authenticated-user one. This one was MISSED in
+		// the first pass: its four siblings on this controller got the guard
+		// and markNoShow did not, and marking a no-show can charge a fee.
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		}
+
 		return $this->run(
 			label: 'markNoShow',
 			handler: function () use ($id, $uid): array {
