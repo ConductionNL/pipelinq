@@ -386,7 +386,10 @@ class ContractControllerTest extends TestCase {
 				logger: $logger,
 			),
 			userSession: $this->userSession,
-			accessPolicy: new ObjectOwnerAccessPolicy(groupManager: $this->groupManager),
+			accessPolicy: new ObjectOwnerAccessPolicy(
+				groupManager: $this->groupManager,
+				appConfig: $this->createMock(IAppConfig::class)
+			),
 			container: $container,
 			logger: $logger,
 		);

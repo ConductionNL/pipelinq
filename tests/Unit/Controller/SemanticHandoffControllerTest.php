@@ -154,7 +154,10 @@ class SemanticHandoffControllerTest extends TestCase {
 			$this->appConfig,
 			$this->ticketService,
 			$this->userSession,
-			new ObjectOwnerAccessPolicy(groupManager: $groupManager),
+			new ObjectOwnerAccessPolicy(
+				groupManager: $groupManager,
+				appConfig: $this->createMock(IAppConfig::class)
+			),
 			$this->createMock(LoggerInterface::class),
 		);
 	}//end rebuildControllerWithGroupManager()
