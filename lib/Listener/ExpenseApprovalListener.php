@@ -37,6 +37,7 @@ use OCA\Pipelinq\Event\ExpenseApprovedEvent;
 use OCA\Pipelinq\Service\ApSyncNotifier;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\ShillinqApService;
+use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\EventDispatcher\IEventListener;
@@ -61,6 +62,21 @@ use Throwable;
  *  app-config and logger — the minimal collaborator set for AP fan-out.
  */
 class ExpenseApprovalListener implements IEventListener {
+	use EntityAccessorTrait;
+
+	/**
+	 * Expense UUIDs whose dispatch is currently on the stack.
+	 *
+	 * Static rather than per-instance on purpose: Nextcloud's event dispatcher
+	 * resolves the listener from the container per dispatch, so a re-entrant
+	 * dispatch is not guaranteed to reach the same object. Static state is safe
+	 * here because PHP-FPM tears the process context down per request, and the
+	 * `finally` in handle() releases the key even when dispatch throws.
+	 *
+	 * @var array<string, true>
+	 */
+	private static array $inFlight = [];
+
 	/**
 	 * Constructor.
 	 *
@@ -100,35 +116,47 @@ class ExpenseApprovalListener implements IEventListener {
 		}
 
 		try {
-			$entity = $this->resolveEntity(event: $event);
-
-			if ($this->isExpense(entity: $entity) === false) {
+			$dispatchable = $this->resolveDispatchable(event: $event);
+			if ($dispatchable === null) {
 				return;
 			}
 
-			$data = $entity->getObject();
+			[$uuid, $data] = $dispatchable;
 
-			// Only fire for approved expenses (REQ-AP-002).
-			if (($data['status'] ?? '') !== 'approved') {
+			// Re-entrancy: our own persist() re-enters this listener.
+			//
+			// dispatchApproval() -> persist() -> ObjectService::saveObject(), and
+			// MagicMapper::update() dispatches ObjectUpdatedEvent for that write.
+			// The event carries the SAME expense, still status=approved, so every
+			// check above passes again. The idempotency guard cannot stop it: it
+			// short-circuits only on apSyncStatus === 'synced', and the first
+			// re-entry sees 'pending' — the value persist() has just written. The
+			// terminating write is therefore never reached and each level fires
+			// another outbound AP webhook with its own retries.
+			//
+			// `silent: true` on saveObject() does NOT fix this and was measured:
+			// $silent gates the audit trail and updateInverseRelations only
+			// (openregister lib/Service/Object/SaveObject.php:3468, :3489, :5445,
+			// :5515). The lifecycle dispatch at MagicMapper.php:8997 is gated
+			// solely by suppressLifecycleEvents(), i.e. by
+			// SystemOperationContext::isActive(), which a listener is not in.
+			//
+			// Until now the only thing preventing the loop was the method_exists()
+			// probe this branch repairs: isExpense() was permanently false, so
+			// handle() never reached dispatchApproval() at all. Reviving the
+			// listener without this guard arms the loop. Today it stays bounded
+			// only because shouldDispatch() is false without a configured webhook
+			// URL — i.e. it would arm the moment anyone configures AP sync.
+			if (isset(self::$inFlight[$uuid]) === true) {
 				return;
 			}
 
-			$uuid = (string)$entity->getUuid();
-			if ($uuid === '') {
-				return;
+			self::$inFlight[$uuid] = true;
+			try {
+				$this->dispatchApproval(uuid: $uuid, data: $data);
+			} finally {
+				unset(self::$inFlight[$uuid]);
 			}
-
-			// Idempotency: never re-dispatch an already-synced expense (REQ-AP-002 Scenario 5).
-			if (($data['apSyncStatus'] ?? null) === 'synced') {
-				return;
-			}
-
-			// Webhook not configured: silent no-op (REQ-AP-002 Scenario 6).
-			if ($this->apService->shouldDispatch() === false) {
-				return;
-			}
-
-			$this->dispatchApproval(uuid: $uuid, data: $data);
 		} catch (Throwable $e) {
 			// CRITICAL: never throw — approval workflow must not be affected.
 			$this->logger->warning(
@@ -137,6 +165,50 @@ class ExpenseApprovalListener implements IEventListener {
 			);
 		}//end try
 	}//end handle()
+
+	/**
+	 * Decide whether this event should produce an AP dispatch, and for what.
+	 *
+	 * Extracted from handle() so the preconditions live in one place and
+	 * handle() is left with the re-entrancy guard and the error boundary. Every
+	 * `null` here is a deliberate no-op named by REQ-AP-002.
+	 *
+	 * @param ObjectCreatedEvent|ObjectUpdatedEvent $event The dispatched event.
+	 *
+	 * @return array{0: string, 1: array<string, mixed>}|null The expense UUID and
+	 *                                                        its data, or null when this event is not an approval to dispatch.
+	 */
+	private function resolveDispatchable(ObjectCreatedEvent|ObjectUpdatedEvent $event): ?array {
+		$entity = $this->resolveEntity(event: $event);
+
+		if ($this->isExpense(entity: $entity) === false) {
+			return null;
+		}
+
+		$data = $entity->getObject();
+
+		// Only fire for approved expenses (REQ-AP-002).
+		if (($data['status'] ?? '') !== 'approved') {
+			return null;
+		}
+
+		$uuid = (string)$entity->getUuid();
+		if ($uuid === '') {
+			return null;
+		}
+
+		// Idempotency: never re-dispatch an already-synced expense (REQ-AP-002 Scenario 5).
+		if (($data['apSyncStatus'] ?? null) === 'synced') {
+			return null;
+		}
+
+		// Webhook not configured: silent no-op (REQ-AP-002 Scenario 6).
+		if ($this->apService->shouldDispatch() === false) {
+			return null;
+		}
+
+		return [$uuid, $data];
+	}//end resolveDispatchable()
 
 	/**
 	 * Resolve the event's target entity.
@@ -214,18 +286,23 @@ class ExpenseApprovalListener implements IEventListener {
 	 * @return bool True when the entity is an expense.
 	 */
 	private function isExpense(object $entity): bool {
-		if (method_exists($entity, 'getSchema') === false) {
+		// `getSchema()` is served by Entity::__call, so method_exists() is FALSE
+		// for it on a real ObjectEntity; probing with it turned this listener —
+		// and the whole AP dispatch behind it — permanently off. Read the value
+		// instead and treat '' as "no schema" (pipelinq#807).
+		$schemaId = $this->readEntityValue(entity: $entity, getter: 'getSchema');
+		if ($schemaId === '') {
 			return false;
 		}
 
-		$entityType = $this->schemaMapService->resolveEntityType(schemaId: (string)$entity->getSchema());
+		$entityType = $this->schemaMapService->resolveEntityType(schemaId: $schemaId);
 		if ($entityType === 'expense') {
 			return true;
 		}
 
 		// Fallback: direct compare against app-config expense_schema (REQ-AP-002).
 		$expenseSchema = $this->appConfig->getValueString(Application::APP_ID, 'expense_schema', '');
-		return $expenseSchema !== '' && (string)$entity->getSchema() === $expenseSchema;
+		return $expenseSchema !== '' && $schemaId === $expenseSchema;
 	}//end isExpense()
 
 	/**

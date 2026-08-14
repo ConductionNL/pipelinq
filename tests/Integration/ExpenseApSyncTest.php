@@ -228,13 +228,13 @@ class ExpenseApSyncTest extends TestCase {
 	 * @return ObjectEntity The entity double.
 	 */
 	private function expenseEntity(array $data): ObjectEntity {
-		$entity = $this->getMockBuilder(ObjectEntity::class)
-			->disableOriginalConstructor()
-			->onlyMethods(['getSchema', 'getUuid', 'getObject', 'jsonSerialize'])
-			->getMock();
-		$entity->method('getSchema')->willReturn('schema-expense');
-		$entity->method('getUuid')->willReturn((string)($data['uuid'] ?? 'exp-1'));
-		$entity->method('getObject')->willReturn($data);
+		// A REAL entity, not a mock: getSchema()/getUuid() are served by
+		// Entity::__call in production and cannot be configured with onlyMethods()
+		// against a faithful stub (pipelinq#807).
+		$entity = new ObjectEntity();
+		$entity->setUuid((string)($data['uuid'] ?? 'exp-1'));
+		$entity->setSchema('schema-expense');
+		$entity->setObject($data);
 		return $entity;
 	}//end expenseEntity()
 

@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -46,6 +47,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class CtiDispositionService {
+	use EntityAccessorTrait;
+
 	/**
 	 * Allowed disposition outcomes.
 	 *
@@ -220,8 +223,14 @@ class CtiDispositionService {
 			$id = null;
 			if (is_array($saved) === true) {
 				$id = ($saved['id'] ?? ($saved['uuid'] ?? null));
-			} elseif (is_object($saved) === true && method_exists($saved, 'getUuid') === true) {
-				$id = $saved->getUuid();
+			} elseif (is_object($saved) === true) {
+				// SaveObject() returns an ObjectEntity whose getUuid() is served by
+				// Entity::__call — method_exists() is FALSE for it, so the follow-up
+				// task was written and its id thrown away (pipelinq#807).
+				$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
+				if ($uuid !== '') {
+					$id = $uuid;
+				}
 			}
 
 			if ($id !== null) {
