@@ -48,6 +48,12 @@ use Throwable;
  * Loyalty REST controller.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class went over the
+ * threshold when each endpoint gained its CRM authorization guard. Every one
+ * of those is a single early-return `if` on the same policy call — the added
+ * complexity is uniform and shallow, not tangled logic, and the alternative
+ * (hiding the guards behind a helper) is the arrangement gate-7 explicitly
+ * does not accept, because a helper that returns null is not a guard.
  * @spec                                           openspec/changes/loyalty-program/specs.md#REQ-LOY-004
  */
 class LoyaltyController extends Controller {
@@ -515,6 +521,12 @@ class LoyaltyController extends Controller {
 	 * `uitgegevenAan`.
 	 *
 	 * @return JSONResponse The created card + one-time PIN (200), or 400 on invalid input.
+	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) One branch over, from the
+	 * CRM guard added at the top of this method. Issuing a gift card creates a
+	 * bearer instrument, so the guard stays and the count is accepted.
+	 * @SuppressWarnings(PHPMD.NPathComplexity) Same cause: the guard is an
+	 * early return, which multiplies NPath without deepening the logic.
 	 *
 	 * @spec exclude Reinstates loyalty gift-card issuance (money-and-bridge-fixes); loyalty-program canonical spec archived 2026-06-14.
 	 */

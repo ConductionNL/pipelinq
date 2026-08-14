@@ -43,6 +43,11 @@ use OCP\IUserSession;
 /**
  * Controller for reporting endpoints and SLA configuration.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Over the threshold since
+ * each reporting endpoint gained its CRM authorization guard. These aggregate
+ * across the whole service desk, so the guard is the point rather than an
+ * inconvenience; the added complexity is one uniform early return per method.
+ *
  * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
  */
 class ReportingController extends Controller {

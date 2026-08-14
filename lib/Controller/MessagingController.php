@@ -180,6 +180,12 @@ class MessagingController extends Controller {
 	 * @return JSONResponse The recorded state.
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
+	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) One branch over, from the
+	 * CRM guard. Recording consent writes a GDPR legal basis, so the guard is
+	 * exactly where it belongs and the count is accepted.
+	 * @SuppressWarnings(PHPMD.NPathComplexity) Same early return; NPath counts
+	 * paths multiplicatively, so one guard doubles it without adding depth.
 	 */
 	#[NoAdminRequired]
 	public function consent(
