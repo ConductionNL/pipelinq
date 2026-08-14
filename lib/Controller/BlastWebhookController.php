@@ -36,6 +36,7 @@ use OCA\Pipelinq\BackgroundJob\BlastSendJob;
 use OCA\Pipelinq\Service\WebhookProcessorService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
@@ -107,6 +108,10 @@ class BlastWebhookController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// Email/SMS event webhooks. These BATCH — SendGrid in particular posts
+	// many events per request and bursts hard after a send — so the ceiling is
+	// deliberately loose. Too tight and a campaign's delivery events are lost.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function sendgrid(): JSONResponse {
 		$rawBody = $this->readRawBody();
 		$signature = $this->extractSignatureHeader(fallback: 'X-Twilio-Email-Event-Webhook-Signature');
@@ -149,6 +154,7 @@ class BlastWebhookController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function ses(): JSONResponse {
 		$rawBody = $this->readRawBody();
 		$signature = $this->extractSignatureHeader(fallback: 'X-Amz-Sns-Message-Signature');
@@ -193,6 +199,7 @@ class BlastWebhookController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function twilio(): JSONResponse {
 		$rawBody = $this->readRawBody();
 		$signature = $this->extractSignatureHeader(fallback: 'X-Twilio-Signature');

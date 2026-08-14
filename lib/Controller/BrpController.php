@@ -37,6 +37,7 @@ use OCA\Pipelinq\Service\HaalCentraalException;
 use OCA\Pipelinq\Service\OptOutService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -548,6 +549,10 @@ class BrpController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// BRP mutation notifications. Volume ceiling only: the sender authenticates
+	// by its own credential, and refusing a citizen-record mutation because of
+	// a rate limit would leave this app's data silently stale.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function mutationWebhook(): JSONResponse {
 		$rawBody = (string)file_get_contents('php://input');
 		$signature = (string)$this->request->getHeader('X-Signature');

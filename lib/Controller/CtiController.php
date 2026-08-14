@@ -27,6 +27,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\CtiService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
@@ -89,6 +90,9 @@ class CtiController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// Telephony platform events — one per call state change, so a busy contact
+	// centre generates these steadily.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function webhook(string $platform): JSONResponse {
 		$rawBody = (string)file_get_contents('php://input');
 		$signature = (string)$this->request->getHeader('X-Pipelinq-Signature');

@@ -42,6 +42,7 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
@@ -118,6 +119,8 @@ class HealthController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// Liveness probe — polled on a schedule by monitoring.
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function index(): JSONResponse {
 		$engine = $this->engineResult();
 		if ($engine === null) {
