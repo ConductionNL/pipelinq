@@ -27,9 +27,9 @@ namespace OCA\Pipelinq\Service;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
 use OCP\IGroupManager;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Service for contactmoment business operations.
@@ -55,10 +55,10 @@ class ContactmomentService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private TicketService $ticketService,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -72,7 +72,7 @@ class ContactmomentService {
 	 */
 	public function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Exception $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}
@@ -217,7 +217,6 @@ class ContactmomentService {
 	 */
 	private function objectServiceLoose(): ?object {
 		try {
-			$service = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (\Throwable $e) {
 			return null;
 		}

@@ -34,9 +34,9 @@ use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\Notification\IManager as INotificationManager;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * BRP availability + SLA monitor.
@@ -67,10 +67,10 @@ class BrpMonitorJob extends TimedJob {
 	public function __construct(
 		ITimeFactory $time,
 		private IAppConfig $appConfig,
-		private ContainerInterface $container,
 		private IGroupManager $groupManager,
 		private INotificationManager $notificationManager,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(
@@ -105,7 +105,7 @@ class BrpMonitorJob extends TimedJob {
 			$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 			$window = $now->modify('-24 hours');
 
-			$records = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
+			$records = $this->objectService->findAll(
 				config: [
 					'filters' => [
 						'action' => 'brp-lookup-uitgevoerd',
@@ -252,7 +252,7 @@ class BrpMonitorJob extends TimedJob {
 		$totalRequest = 0;
 		$cacheHits = 0;
 		$durations = [];
-		$verzoeken = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
+		$verzoeken = $this->objectService->findAll(
 			config: [
 				'filters' => [
 					'register' => $register,

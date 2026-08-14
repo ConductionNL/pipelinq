@@ -32,9 +32,9 @@ use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Service for POS staff business operations.
@@ -86,10 +86,10 @@ class PosStaffService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private PosRoleService $posRoleService,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -648,7 +648,7 @@ class PosStaffService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}

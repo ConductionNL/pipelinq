@@ -37,10 +37,11 @@ use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Service\LanguageService;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Service for the Schedules API.
@@ -124,8 +125,9 @@ class ScheduledTaskService {
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly NotificationService $notificationService,
-		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly LanguageService $languageService,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -870,9 +872,8 @@ class ScheduledTaskService {
 		}
 
 		try {
-			$languageService = $this->container->get('OCA\OpenRegister\Service\LanguageService');
 			$lang = $this->parsePreferredLanguage(headerValue: $acceptLanguage);
-			$languageService->setPreferredLanguage(language: $lang);
+			$this->languageService->setPreferredLanguage(language: $lang);
 		} catch (\Throwable $e) {
 			$this->logger->debug(
 				message: 'applyAcceptLanguage: OR LanguageService unavailable.',
@@ -887,7 +888,7 @@ class ScheduledTaskService {
 	 * @return object The OpenRegister ObjectService instance.
 	 */
 	private function getObjectService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

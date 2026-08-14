@@ -37,9 +37,9 @@ use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * AppointmentEmailService — composes confirmation + reminder emails.
@@ -115,12 +115,12 @@ class AppointmentEmailService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IMailer $mailer,
 		private IURLGenerator $urlGenerator,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -856,7 +856,7 @@ class AppointmentEmailService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
 		}

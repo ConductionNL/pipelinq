@@ -55,9 +55,9 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Conversational analytics orchestrator (Navi AI).
@@ -97,11 +97,11 @@ class NaviService {
 	 * @param NaviConversationStore $conversationStore User-scoped store of conversation turns.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private readonly TicketService $ticketService,
 		private readonly NaviConversationStore $conversationStore,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -554,8 +554,7 @@ class NaviService {
 		}
 
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$results = $objectService->findAll(
+			$results = $this->objectService->findAll(
 				config: ['filters' => ['register' => $register, 'schema' => $schema]]
 			);
 		} catch (\Throwable $e) {

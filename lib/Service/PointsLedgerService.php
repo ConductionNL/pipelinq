@@ -33,9 +33,10 @@ use DateTimeZone;
 use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Append-only points ledger.
@@ -57,10 +58,11 @@ class PointsLedgerService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoyaltyAccountService $accountService,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
+		private readonly AggregationRunner $aggregationRunner,
 	) {
 	}//end __construct()
 
@@ -539,7 +541,7 @@ class PointsLedgerService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
 		}
@@ -558,7 +560,7 @@ class PointsLedgerService {
 	 */
 	private function getAggregationRunner(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\Aggregation\AggregationRunner');
+			return $this->aggregationRunner;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister aggregation runner is unavailable.', 0, $e);
 		}

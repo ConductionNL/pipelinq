@@ -45,9 +45,11 @@ use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\WebhookService;
+use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Service for POS cash-drawer (shift / drop / count / diff) operations.
@@ -105,10 +107,12 @@ class CashShiftService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private PosAccessPolicy $policy,
 		private LoggerInterface $logger,
+		private readonly WebhookService $webhookService,
+		private readonly ObjectService $objectService,
+		private readonly AggregationRunner $aggregationRunner,
 	) {
 	}//end __construct()
 
@@ -600,9 +604,8 @@ class CashShiftService {
 		];
 
 		try {
-			$webhookService = $this->container->get('OCA\OpenRegister\Service\WebhookService');
 			$event = new Event();
-			$webhookService->dispatchEvent(_event: $event, eventName: self::EVENT_CASH_DIFF_CONFIRMED, payload: $payload);
+			$this->webhookService->dispatchEvent(_event: $event, eventName: self::EVENT_CASH_DIFF_CONFIRMED, payload: $payload);
 			return $eventId;
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -804,7 +807,7 @@ class CashShiftService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}
@@ -823,7 +826,7 @@ class CashShiftService {
 	 */
 	private function getAggregationRunner(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\Aggregation\AggregationRunner');
+			return $this->aggregationRunner;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister aggregation runner is not available.');
 		}

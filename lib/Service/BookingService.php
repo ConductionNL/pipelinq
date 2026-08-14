@@ -38,9 +38,9 @@ use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * BookingService — booking lifecycle service.
@@ -172,13 +172,13 @@ class BookingService {
 	 * @param IJobList $jobList The background-job list (member 09 rebalance is deferred to it).
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IUserSession $userSession,
 		private AvailabilityService $availabilityService,
 		private EligibilityService $eligibilityService,
 		private LoggerInterface $logger,
 		private IJobList $jobList,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -1576,7 +1576,7 @@ class BookingService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
 		}

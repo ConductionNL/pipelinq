@@ -34,10 +34,12 @@ use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use RuntimeException;
+use OCA\OpenRegister\Service\WebhookService;
+use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 
 /**
  * Service for POS refund business operations.
@@ -101,9 +103,11 @@ class PosRefundService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
+		private readonly WebhookService $webhookService,
+		private readonly ObjectService $objectService,
+		private readonly TransitionEngine $transitionEngine,
 	) {
 	}//end __construct()
 
@@ -400,9 +404,8 @@ class PosRefundService {
 		$payload = $this->buildRefundPayload(eventId: $eventId, refund: $refund);
 
 		try {
-			$webhookService = $this->container->get('OCA\OpenRegister\Service\WebhookService');
 			$event = new Event();
-			$webhookService->dispatchEvent(_event: $event, eventName: self::EVENT_REFUND_COMPLETED, payload: $payload);
+			$this->webhookService->dispatchEvent(_event: $event, eventName: self::EVENT_REFUND_COMPLETED, payload: $payload);
 			return $eventId;
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -450,9 +453,8 @@ class PosRefundService {
 			);
 
 			try {
-				$webhookService = $this->container->get('OCA\OpenRegister\Service\WebhookService');
 				$event = new Event();
-				$webhookService->dispatchEvent(
+				$this->webhookService->dispatchEvent(
 					_event: $event,
 					eventName: self::EVENT_STOCK_MOVEMENT,
 					payload: $payload
@@ -782,7 +784,7 @@ class PosRefundService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}
@@ -799,7 +801,7 @@ class PosRefundService {
 	 */
 	private function getTransitionEngine(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\Lifecycle\TransitionEngine');
+			return $this->transitionEngine;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister TransitionEngine is not available.');
 		}

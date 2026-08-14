@@ -27,9 +27,9 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Programme activation + validation service.
@@ -53,9 +53,9 @@ class LoyaltyProgrammeService {
 	 * @param SchemaLifecycleGraph $lifecycleGraph Reads the programme status graph from its schema.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 		private SchemaLifecycleGraph $lifecycleGraph = new SchemaLifecycleGraph(),
 	) {
 	}//end __construct()
@@ -320,7 +320,7 @@ class LoyaltyProgrammeService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
 		}

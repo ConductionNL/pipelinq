@@ -32,9 +32,9 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Pipeline analytics aggregation service.
@@ -61,9 +61,9 @@ class RapportageService {
 	 * @param LoggerInterface $logger Logger for fallback paths.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -470,7 +470,7 @@ class RapportageService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
 		}

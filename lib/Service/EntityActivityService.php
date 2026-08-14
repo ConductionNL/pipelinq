@@ -31,10 +31,10 @@ namespace OCA\Pipelinq\Service;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Builds the merged, paginated activity feed for an entity.
@@ -107,10 +107,10 @@ class EntityActivityService {
 	 *                                     tickets after unify-ticket-supertype.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly TicketService $ticketService,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -600,7 +600,7 @@ class EntityActivityService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (Throwable $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}

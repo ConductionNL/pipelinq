@@ -42,6 +42,7 @@ use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Berichtenbox message lifecycle service.
@@ -113,6 +114,7 @@ class BerichtenboxService {
 		private readonly DutchHolidayCalendar $holidayCalendar,
 		private readonly TicketService $ticketService,
 		private readonly LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -1044,7 +1046,7 @@ class BerichtenboxService {
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister service unavailable.', 0, $e);
 		}

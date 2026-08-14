@@ -36,8 +36,8 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
 use OCP\IRequest;
-use Psr\Container\ContainerInterface;
 use Throwable;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Admin endpoints for Berichtenbox ops.
@@ -52,8 +52,8 @@ class BerichtenboxAdminController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
+		private readonly ObjectService $objectService,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -193,7 +193,7 @@ class BerichtenboxAdminController extends Controller {
 	 * @return \OCA\OpenRegister\Service\ObjectService
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

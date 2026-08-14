@@ -29,10 +29,10 @@ use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IRequest;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Append-only audit-trail service for BSN bevragingen.
@@ -60,10 +60,10 @@ class BsnAuditService {
 	 * @param LoggerInterface $logger Logger (raw BSN MUST never appear here).
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IRequest $request,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -328,7 +328,7 @@ class BsnAuditService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (Throwable $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}

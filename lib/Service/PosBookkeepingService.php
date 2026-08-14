@@ -57,9 +57,10 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\WebhookService;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Service for the POS end-of-day pipeline + registry-mediated journal raise.
@@ -136,11 +137,12 @@ class PosBookkeepingService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IMailer $mailer,
 		private PosAccessPolicy $policy,
 		private LoggerInterface $logger,
+		private readonly WebhookService $webhookService,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -661,9 +663,8 @@ class PosBookkeepingService {
 	 */
 	private function dispatch(string $eventName, array $payload): bool {
 		try {
-			$webhookService = $this->container->get('OCA\OpenRegister\Service\WebhookService');
 			$event = new Event();
-			$webhookService->dispatchEvent(
+			$this->webhookService->dispatchEvent(
 				_event: $event,
 				eventName: $eventName,
 				payload: $payload
@@ -907,7 +908,7 @@ class PosBookkeepingService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}

@@ -31,10 +31,10 @@ use DateTimeImmutable;
 use Exception;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Aggregates a client's open tickets (all `ticketType`s), SLA/queue status,
@@ -92,12 +92,12 @@ class Customer360SummaryService {
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
 		private readonly RegisterResolverService $registerResolver,
 		private readonly IAppConfig $appConfig,
 		private readonly TicketService $ticketService,
 		private readonly ActivityTimelineService $activityTimeline,
 		private readonly LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -284,7 +284,7 @@ class Customer360SummaryService {
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (Throwable $e) {
 			throw new RuntimeException('OpenRegister ObjectService is not available', 0, $e);
 		}

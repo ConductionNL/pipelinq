@@ -27,8 +27,8 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Service for searching and importing Nextcloud contacts into Pipelinq.
@@ -50,7 +50,7 @@ class ContactSyncService {
 		private ContactVcardService $contactVcardService,
 		private ContactLinkedUidsService $linkedUidsService,
 		private IAppConfig $appConfig,
-		private ContainerInterface $container,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -141,7 +141,7 @@ class ContactSyncService {
 	 * @return object The object service.
 	 */
 	private function getObjectService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

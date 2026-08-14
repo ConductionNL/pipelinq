@@ -35,9 +35,9 @@ use DateTimeInterface;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Append-only audit logger.
@@ -60,9 +60,9 @@ class DeliveryAuditLogger {
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -364,7 +364,7 @@ class DeliveryAuditLogger {
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister service unavailable.', 0, $e);
 		}

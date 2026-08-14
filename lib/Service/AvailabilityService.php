@@ -33,9 +33,9 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Compute per-resource per-day availability as 15-minute-aligned free blocks.
@@ -132,10 +132,10 @@ class AvailabilityService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private ICacheFactory $cacheFactory,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -1097,7 +1097,7 @@ class AvailabilityService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
 		}

@@ -25,8 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Service for creating default pipelines.
@@ -42,9 +42,9 @@ class DefaultPipelineService {
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private ContainerInterface $container,
 		private PipelineStageData $stageData,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -139,6 +139,6 @@ class DefaultPipelineService {
 	 * @return object The object service.
 	 */
 	private function getObjectService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

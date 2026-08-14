@@ -48,9 +48,9 @@ use Exception;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Resolver + read/write facade for the unified ticket schema.
@@ -124,9 +124,9 @@ class TicketService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -141,7 +141,7 @@ class TicketService {
 	 */
 	public function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Exception $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}

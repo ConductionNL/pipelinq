@@ -34,9 +34,9 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Mailbox lookup with TTL cache.
@@ -61,11 +61,11 @@ class MailboxResolver {
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly EncryptionService $encryption,
 		private readonly LogiusConnector $logiusConnector,
 		private readonly LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -238,7 +238,7 @@ class MailboxResolver {
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister service unavailable: ' . $e->getMessage(), 0, $e);
 		}

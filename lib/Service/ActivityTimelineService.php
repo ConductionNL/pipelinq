@@ -42,10 +42,10 @@ use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Aggregates CRM activity data from multiple OpenRegister schemas.
@@ -85,11 +85,11 @@ class ActivityTimelineService {
 	 *                                     `ticketType=contactmoment`, not their own schema.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private TicketService $ticketService,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -102,7 +102,7 @@ class ActivityTimelineService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (Throwable $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}

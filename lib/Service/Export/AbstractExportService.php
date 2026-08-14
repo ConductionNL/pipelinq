@@ -35,8 +35,8 @@ use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Base class for the BI export services.
@@ -59,6 +59,7 @@ abstract class AbstractExportService {
 	public function __construct(
 		protected ContainerInterface $container,
 		protected IAppConfig $appConfig,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -184,7 +185,7 @@ abstract class AbstractExportService {
 	 */
 	protected function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}

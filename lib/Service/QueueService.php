@@ -34,8 +34,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Service for queue operations such as capacity checks, overflow routing, and item assignment.
@@ -54,10 +54,10 @@ class QueueService {
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private ContainerInterface $container,
 		private LoggerInterface $logger,
 		private RegisterResolverService $registerResolver,
 		private readonly TicketService $ticketService,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -337,6 +337,6 @@ class QueueService {
 	 * @return object The object service.
 	 */
 	private function getObjectService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

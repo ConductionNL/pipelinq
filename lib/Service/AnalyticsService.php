@@ -39,9 +39,9 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Cross-module analytics summary service.
@@ -137,10 +137,10 @@ class AnalyticsService {
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private readonly TicketService $ticketService,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -251,7 +251,7 @@ class AnalyticsService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException(message: 'OpenRegister ObjectService is unavailable.', code: 0, previous: $e);
 		}

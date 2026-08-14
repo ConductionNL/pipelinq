@@ -29,9 +29,9 @@ use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Snapshot generation orchestration.
@@ -84,7 +84,6 @@ class SnapshotGenerationService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IGroupManager $groupManager,
 		private ForecastRollupService $rollup,
@@ -93,6 +92,7 @@ class SnapshotGenerationService {
 		private QuotaService $quotaService,
 		private NotificationService $notifier,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
 	) {
 	}//end __construct()
 
@@ -524,7 +524,7 @@ class SnapshotGenerationService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
 		}

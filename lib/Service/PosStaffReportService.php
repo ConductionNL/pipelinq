@@ -30,9 +30,10 @@ use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Service that aggregates posTransaction objects per staff member.
@@ -55,10 +56,11 @@ class PosStaffReportService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private PosStaffService $posStaffService,
 		private LoggerInterface $logger,
+		private readonly ObjectService $objectService,
+		private readonly AggregationRunner $aggregationRunner,
 	) {
 	}//end __construct()
 
@@ -353,7 +355,7 @@ class PosStaffReportService {
 	 */
 	private function getObjectService(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister service is not available.');
 		}
@@ -372,7 +374,7 @@ class PosStaffReportService {
 	 */
 	private function getAggregationRunner(): object {
 		try {
-			return $this->container->get('OCA\OpenRegister\Service\Aggregation\AggregationRunner');
+			return $this->aggregationRunner;
 		} catch (\Throwable $e) {
 			throw new RuntimeException('OpenRegister aggregation runner is not available.');
 		}
