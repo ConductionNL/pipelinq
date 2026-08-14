@@ -371,7 +371,7 @@ class CtiControllerTest extends TestCase {
 				new OriginateResult(
 					success: true,
 					externalCallId: 'call-9',
-					contactmomentId: 'cm-9',
+					interactionId: 'cm-9',
 					platform: 'callvoip',
 				)
 			);
@@ -381,12 +381,12 @@ class CtiControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(
-			['success', 'externalCallId', 'contactmomentId', 'error', 'platform'],
+			['success', 'externalCallId', 'interactionId', 'error', 'platform'],
 			array_keys($data)
 		);
 		$this->assertTrue($data['success']);
 		$this->assertSame('call-9', $data['externalCallId']);
-		$this->assertSame('cm-9', $data['contactmomentId']);
+		$this->assertSame('cm-9', $data['interactionId']);
 		$this->assertNull($data['error']);
 	}//end testClickToDialReturnsOriginateEnvelopeOnSuccess()
 
@@ -471,7 +471,7 @@ class CtiControllerTest extends TestCase {
 	public function testWebhookRejectsAnInvalidSignatureWith422(): void {
 		$service = $this->createMock(CtiService::class);
 		$service->method('handleWebhook')->willReturn(
-			['logged' => true, 'valid' => false, 'contactmomentId' => null]
+			['logged' => true, 'valid' => false, 'interactionId' => null]
 		);
 
 		$response = $this->controller($service, null)->webhook('callvoip');
@@ -491,13 +491,13 @@ class CtiControllerTest extends TestCase {
 	public function testWebhookAcknowledgesAVerifiedDelivery(): void {
 		$service = $this->createMock(CtiService::class);
 		$service->method('handleWebhook')->willReturn(
-			['logged' => true, 'valid' => true, 'contactmomentId' => 'cm-1']
+			['logged' => true, 'valid' => true, 'interactionId' => 'cm-1']
 		);
 
 		$response = $this->controller($service, null)->webhook('callvoip');
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['ok' => true, 'contactmomentId' => 'cm-1'], $response->getData());
+		$this->assertSame(['ok' => true, 'interactionId' => 'cm-1'], $response->getData());
 	}//end testWebhookAcknowledgesAVerifiedDelivery()
 
 	/**
@@ -624,8 +624,8 @@ class CtiControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $first->getStatus());
 		$this->assertSame(Http::STATUS_OK, $second->getStatus());
 		$this->assertSame(
-			$first->getData()['contactmomentId'],
-			$second->getData()['contactmomentId'],
+			$first->getData()['interactionId'],
+			$second->getData()['interactionId'],
 			'a replayed delivery must resolve to the same contactmoment'
 		);
 		$this->assertSame(1, $created, 'the replay created a second contactmoment');
@@ -755,13 +755,13 @@ class CtiControllerTest extends TestCase {
 		$service->expects($this->once())
 			->method('processDisposition')
 			->with('cm-1', 'Address change', 'resolved', 'Handled on the call')
-			->willReturn(['contactmomentId' => 'cm-1', 'outcome' => 'resolved', 'taskId' => null]);
+			->willReturn(['interactionId' => 'cm-1', 'outcome' => 'resolved', 'taskId' => null]);
 
 		$response = $this->controller($service)->disposition('cm-1');
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(
-			['contactmomentId' => 'cm-1', 'outcome' => 'resolved', 'taskId' => null],
+			['interactionId' => 'cm-1', 'outcome' => 'resolved', 'taskId' => null],
 			$response->getData()
 		);
 	}//end testDispositionReturnsTheProcessedOutcome()

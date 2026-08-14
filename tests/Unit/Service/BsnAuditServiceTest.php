@@ -94,8 +94,8 @@ class BsnAuditServiceTest extends TestCase {
 			actor: 'demo:tester',
 			rawBsn: '123456782',
 			verzoekreden: 'unit-test',
-			doelbinding: 'unit-test',
-			uitkomst: 'geslaagd',
+			purposeBinding: 'unit-test',
+			outcome: 'geslaagd',
 		);
 		self::assertSame('', $uuid);
 	}//end testRecordLookupFallsBackWhenStorageMissing()

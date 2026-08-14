@@ -134,7 +134,7 @@
         "x-schema-org": "schema:CreativeWork",
         "required": [
           "clientIdentifier",
-          "secretKluisRef",
+          "secretVaultRef",
           "userId",
           "userRepresentation"
         ],
@@ -146,7 +146,7 @@
             "facetable": true,
             "title": "Client Identifier"
           },
-          "secretKluisRef": {
+          "secretVaultRef": {
             "type": "string",
             "description": "Vault reference (e.g. 'vault://zgw/zoetermeer/client-secret') to the HS256 client secret",
             "maxLength": 256,
@@ -431,7 +431,7 @@
           "id": "d1a0e0c0-zgw1-4001-a001-000000000001"
         },
         "clientIdentifier": "pipelinq-zoetermeer",
-        "secretKluisRef": "vault://zgw/zoetermeer/client-secret",
+        "secretVaultRef": "vault://zgw/zoetermeer/client-secret",
         "userId": "pipelinq",
         "userRepresentation": "Pipelinq backend (Conduction)",
         "tokenLifespanSeconds": 3600,
@@ -445,7 +445,7 @@
           "id": "d1a0e0c0-zgw1-4001-a001-000000000002"
         },
         "clientIdentifier": "pipelinq-amsterdam",
-        "secretKluisRef": "vault://zgw/amsterdam/client-secret",
+        "secretVaultRef": "vault://zgw/amsterdam/client-secret",
         "userId": "pipelinq",
         "userRepresentation": "Pipelinq backend (Conduction)",
         "tokenLifespanSeconds": 3600,
@@ -459,7 +459,7 @@
           "id": "d1a0e0c0-zgw1-4001-a001-000000000003"
         },
         "clientIdentifier": "pipelinq-utrecht",
-        "secretKluisRef": "vault://zgw/utrecht/client-secret",
+        "secretVaultRef": "vault://zgw/utrecht/client-secret",
         "userId": "pipelinq",
         "userRepresentation": "Pipelinq backend (Conduction)",
         "tokenLifespanSeconds": 1800,

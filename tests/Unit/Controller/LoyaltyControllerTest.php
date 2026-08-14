@@ -512,7 +512,7 @@ class LoyaltyControllerTest extends TestCase {
 		$this->assertSame('gereserveerd', $data['status']);
 		$this->assertSame(120, $data['costInPoints']);
 		$this->assertSame('acc-1', $data['accountId']);
-		$this->assertMatchesRegularExpression('/^RDM-[0-9A-F]{8}$/', (string)$data['beloningCode']);
+		$this->assertMatchesRegularExpression('/^RDM-[0-9A-F]{8}$/', (string)$data['rewardCode']);
 
 		// The points were debited exactly once and the balance stayed positive.
 		$account = $store->row('klantLoyaltyAccount_schema', 'acc-1');
@@ -650,7 +650,7 @@ class LoyaltyControllerTest extends TestCase {
 			'rdm-1',
 			[
 				'accountId' => 'acc-1',
-				'beloningCode' => 'RDM-DEADBEEF',
+				'rewardCode' => 'RDM-DEADBEEF',
 				'costInPoints' => 100,
 				'status' => 'gereserveerd',
 				'validTo' => '2099-01-01T00:00:00+00:00',
@@ -719,7 +719,7 @@ class LoyaltyControllerTest extends TestCase {
 			'rdm-1',
 			[
 				'accountId' => 'acc-1',
-				'beloningCode' => 'RDM-DEADBEEF',
+				'rewardCode' => 'RDM-DEADBEEF',
 				'costInPoints' => 100,
 				'status' => 'gereserveerd',
 				'validTo' => '2099-01-01T00:00:00+00:00',
@@ -751,7 +751,7 @@ class LoyaltyControllerTest extends TestCase {
 			'rdm-1',
 			[
 				'accountId' => 'acc-1',
-				'beloningCode' => 'RDM-DEADBEEF',
+				'rewardCode' => 'RDM-DEADBEEF',
 				'costInPoints' => 100,
 				'status' => 'gereserveerd',
 				'validTo' => '2099-01-01T00:00:00+00:00',
@@ -781,7 +781,7 @@ class LoyaltyControllerTest extends TestCase {
 			'rdm-old',
 			[
 				'accountId' => 'acc-1',
-				'beloningCode' => 'RDM-EXPIRED0',
+				'rewardCode' => 'RDM-EXPIRED0',
 				'costInPoints' => 100,
 				'status' => 'gereserveerd',
 				'validTo' => '2000-01-01T00:00:00+00:00',
@@ -899,7 +899,7 @@ class LoyaltyControllerTest extends TestCase {
 			[
 				'serial' => 'GC-00000042',
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
-				'currentBalans' => 40.0,
+				'currentBalance' => 40.0,
 				'status' => 'active',
 				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
@@ -957,7 +957,7 @@ class LoyaltyControllerTest extends TestCase {
 			[
 				'serial' => 'GC-00000042',
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
-				'currentBalans' => 40.0,
+				'currentBalance' => 40.0,
 				'status' => 'active',
 				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
@@ -979,7 +979,7 @@ class LoyaltyControllerTest extends TestCase {
 			],
 			$response->getData()
 		);
-		$this->assertSame(25.0, $store->row('giftCard_schema', 'gc-1')['currentBalans']);
+		$this->assertSame(25.0, $store->row('giftCard_schema', 'gc-1')['currentBalance']);
 	}//end testRedeemGiftCardDebitsTheStoredBalance()
 
 	/**
@@ -996,7 +996,7 @@ class LoyaltyControllerTest extends TestCase {
 			[
 				'serial' => 'GC-00000042',
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
-				'currentBalans' => 10.0,
+				'currentBalance' => 10.0,
 				'status' => 'active',
 				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
@@ -1015,8 +1015,8 @@ class LoyaltyControllerTest extends TestCase {
 		$this->assertSame(0.0, $data['balanceAfter']);
 		$this->assertSame(15.0, $data['changeAmount']);
 		$this->assertSame('depleted', $data['status']);
-		$this->assertSame(0.0, $store->row('giftCard_schema', 'gc-1')['currentBalans']);
-		$this->assertGreaterThanOrEqual(0.0, $store->row('giftCard_schema', 'gc-1')['currentBalans']);
+		$this->assertSame(0.0, $store->row('giftCard_schema', 'gc-1')['currentBalance']);
+		$this->assertGreaterThanOrEqual(0.0, $store->row('giftCard_schema', 'gc-1')['currentBalance']);
 	}//end testRedeemGiftCardCannotDriveTheBalanceNegative()
 
 	/**
@@ -1032,7 +1032,7 @@ class LoyaltyControllerTest extends TestCase {
 			[
 				'serial' => 'GC-00000042',
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
-				'currentBalans' => 10.0,
+				'currentBalance' => 10.0,
 				'status' => 'active',
 				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
@@ -1048,7 +1048,7 @@ class LoyaltyControllerTest extends TestCase {
 		$second = $controller->redeemGiftCard();
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $second->getStatus());
 		$this->assertSame(['error' => 'Gift card is not active.'], $second->getData());
-		$this->assertSame(0.0, $store->row('giftCard_schema', 'gc-1')['currentBalans']);
+		$this->assertSame(0.0, $store->row('giftCard_schema', 'gc-1')['currentBalance']);
 	}//end testRedeemGiftCardRefusesADepletedCard()
 
 	/**
@@ -1065,7 +1065,7 @@ class LoyaltyControllerTest extends TestCase {
 			[
 				'serial' => 'GC-00000042',
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
-				'currentBalans' => 100.0,
+				'currentBalance' => 100.0,
 				'status' => 'active',
 				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
@@ -1084,7 +1084,7 @@ class LoyaltyControllerTest extends TestCase {
 		);
 
 		// Contract: the same POS transaction must settle at most once.
-		$this->assertSame(75.0, $store->row('giftCard_schema', 'gc-1')['currentBalans']);
+		$this->assertSame(75.0, $store->row('giftCard_schema', 'gc-1')['currentBalance']);
 	}//end testRedeemGiftCardIsIdempotentOnPosTransactionId()
 
 	/**
@@ -1100,7 +1100,7 @@ class LoyaltyControllerTest extends TestCase {
 			[
 				'serial' => 'GC-00000042',
 				'pin' => password_hash('123456', PASSWORD_BCRYPT, ['cost' => 4]),
-				'currentBalans' => 40.0,
+				'currentBalance' => 40.0,
 				'status' => 'active',
 				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
@@ -1114,7 +1114,7 @@ class LoyaltyControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertSame(['error' => 'Invalid PIN.'], $response->getData());
-		$this->assertSame(40.0, $store->row('giftCard_schema', 'gc-1')['currentBalans']);
+		$this->assertSame(40.0, $store->row('giftCard_schema', 'gc-1')['currentBalance']);
 	}//end testRedeemGiftCardRefusesAnInvalidPin()
 
 	/**
@@ -1177,7 +1177,7 @@ class LoyaltyControllerTest extends TestCase {
 			'gc-1',
 			[
 				'serial' => 'GC-00000042',
-				'currentBalans' => 50.0,
+				'currentBalance' => 50.0,
 				'status' => 'issued',
 				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
@@ -1191,7 +1191,7 @@ class LoyaltyControllerTest extends TestCase {
 		$data = $response->getData();
 		$this->assertSame('active', $data['status']);
 		$this->assertSame('GC-00000042', $data['serial']);
-		$this->assertSame(50.0, $data['currentBalans']);
+		$this->assertSame(50.0, $data['currentBalance']);
 		$this->assertSame('active', $store->row('giftCard_schema', 'gc-1')['status']);
 	}//end testActivateGiftCardReturnsTheActivatedCard()
 
@@ -1224,7 +1224,7 @@ class LoyaltyControllerTest extends TestCase {
 			'gc-blocked',
 			[
 				'serial' => 'GC-00000043',
-				'currentBalans' => 50.0,
+				'currentBalance' => 50.0,
 				'status' => 'blocked',
 				'expiresOn' => '2099-01-01T00:00:00+00:00',
 			]
@@ -1275,7 +1275,7 @@ class LoyaltyControllerTest extends TestCase {
 			->with(null, 50.0, 365, 'purchased', 'Bram')
 			->willReturn(
 				[
-					'card' => ['@self' => ['id' => 'gc-1'], 'serial' => 'GC-00000042', 'status' => 'issued', 'currentBalans' => 50.0],
+					'card' => ['@self' => ['id' => 'gc-1'], 'serial' => 'GC-00000042', 'status' => 'issued', 'currentBalance' => 50.0],
 					'pin' => '123456',
 				]
 			);

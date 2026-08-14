@@ -147,7 +147,7 @@ class BrpControllerTest extends TestCase {
 		self::assertSame('corr-shared-xyz', $request['haalcentraalCorrelationId']);
 		self::assertSame(142, $request['responseDurationMs']);
 		self::assertSame('geslaagd', $request['responseStatus']);
-		self::assertSame('Wet BRP', $request['doelbinding']);
+		self::assertSame('Wet BRP', $request['purposeBinding']);
 		self::assertArrayHasKey('bsnHash', $request);
 		// The raw BSN must never be a field on the audit record.
 		self::assertArrayNotHasKey('bsn', $request);
@@ -201,7 +201,7 @@ class BrpControllerTest extends TestCase {
 				$params = [
 					'bsn' => self::DEMO_BSN,
 					'verzoekreden' => 'Adresverificatie',
-					'doelbinding' => 'Wet BRP',
+					'purposeBinding' => 'Wet BRP',
 					'basis' => 'Wet BRP art. 1.4',
 				];
 				return $params[$key] ?? $default;
@@ -398,10 +398,10 @@ class BrpControllerTest extends TestCase {
 
 		$this->assertCount(1, $recorded, 'the reveal was not audited');
 		$this->assertSame('brp-adres-onthuld', $recorded[0]['action']);
-		$this->assertSame('adres-onthuld', $recorded[0]['uitkomst']);
+		$this->assertSame('adres-onthuld', $recorded[0]['outcome']);
 		$this->assertSame('behandelaar1', $recorded[0]['actor']);
 		$this->assertSame('beheerder', $recorded[0]['actorRole']);
-		$this->assertStringContainsString('Wet BRP art. 3.3', $recorded[0]['doelbinding']);
+		$this->assertStringContainsString('Wet BRP art. 3.3', $recorded[0]['purposeBinding']);
 	}//end testRevealAddressReturnsTheResidenceAndWritesTheAuditEntry()
 
 	/**
@@ -753,8 +753,8 @@ class BrpControllerTest extends TestCase {
 				string $actor,
 				string $rawBsn,
 				string $verzoekreden,
-				string $doelbinding,
-				string $uitkomst,
+				string $purposeBinding,
+				string $outcome,
 				string $action = 'brp-lookup-uitgevoerd',
 				?int $responseCode = null,
 				?string $haalcentraalCorrelationId = null,
@@ -766,8 +766,8 @@ class BrpControllerTest extends TestCase {
 					'actor' => $actor,
 					'rawBsn' => $rawBsn,
 					'verzoekreden' => $verzoekreden,
-					'doelbinding' => $doelbinding,
-					'uitkomst' => $uitkomst,
+					'purposeBinding' => $purposeBinding,
+					'outcome' => $outcome,
 					'action' => $action,
 					'actorRole' => $actorRole,
 				];

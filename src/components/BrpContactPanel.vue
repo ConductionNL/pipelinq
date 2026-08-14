@@ -74,7 +74,7 @@
 					<dt>{{ t('pipelinq', 'Place of birth') }}</dt>
 					<dd>{{ persoon.birth_place || '-' }}</dd>
 					<dt>{{ t('pipelinq', 'Gender') }}</dt>
-					<dd>{{ persoon.geslacht || '-' }}</dd>
+					<dd>{{ persoon.gender || '-' }}</dd>
 				</dl>
 				<div
 					v-if="persoon.indicationSecret === '1' && !revealedAddress"
@@ -201,7 +201,7 @@ export default {
 				const response = await axios.post(url, {
 					bsn: this.rawBsn,
 					verzoekreden: payload.verzoekreden,
-					doelbinding: payload.doelbinding,
+					purposeBinding: payload.purposeBinding,
 					basis: payload.basis,
 					gekoppeldContact: this.contactId,
 					vogScreening: payload.vogScreening,

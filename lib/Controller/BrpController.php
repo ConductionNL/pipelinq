@@ -122,7 +122,7 @@ class BrpController extends Controller {
 	 * Body params:
 	 *   - bsn:           string (required, 9 digits, must pass 11-proef)
 	 *   - verzoekreden:  string (required, non-empty)
-	 *   - doelbinding:   string (required, non-empty)
+	 *   - purposeBinding:   string (required, non-empty)
 	 *   - grondslag:     string (required, non-empty)
 	 *   - gekoppeldVerzoek: string (optional UUID)
 	 *   - gekoppeldContact: string (optional UUID)
@@ -168,14 +168,14 @@ class BrpController extends Controller {
 
 		$rawBsn = (string)$this->request->getParam('bsn', '');
 		$verzoekreden = trim((string)$this->request->getParam('verzoekreden', ''));
-		$doelbinding = trim((string)$this->request->getParam('doelbinding', ''));
+		$purposeBinding = trim((string)$this->request->getParam('purposeBinding', ''));
 		$basis = trim((string)$this->request->getParam('basis', ''));
 		$requestId = (string)$this->request->getParam('linkedRequest', '');
 		$contactId = (string)$this->request->getParam('gekoppeldContact', '');
 		$vogScreening = (bool)$this->request->getParam('vogScreening', false);
 
 		// 1) Doelbinding presence (REQ-BSN-002-01).
-		if ($verzoekreden === '' || $doelbinding === '') {
+		if ($verzoekreden === '' || $purposeBinding === '') {
 			return new JSONResponse(
 				[
 					'errorCode' => 'doelbinding-missing',
@@ -186,7 +186,7 @@ class BrpController extends Controller {
 		}
 
 		if ($basis === '') {
-			$basis = $doelbinding;
+			$basis = $purposeBinding;
 		}
 
 		// 2) Permission check (REQ-BSN-005-03).
@@ -201,8 +201,8 @@ class BrpController extends Controller {
 				actor: $actor,
 				rawBsn: $rawBsn,
 				verzoekreden: $verzoekreden,
-				doelbinding: $doelbinding,
-				uitkomst: 'geweigerd-onbevoegd',
+				purposeBinding: $purposeBinding,
+				outcome: 'geweigerd-onbevoegd',
 				action: 'brp-lookup-geweigerd',
 				responseCode: 403,
 				linkedRequest: $linkedRequest,
@@ -235,7 +235,7 @@ class BrpController extends Controller {
 		// 4) Cache lookup.
 		$cached = $this->cacheService->get($rawBsn);
 		$person = null;
-		$uitkomst = 'fout';
+		$outcome = 'fout';
 		$responseCode = 0;
 		$correlationId = null;
 		$responseInCache = false;
@@ -244,7 +244,7 @@ class BrpController extends Controller {
 		if ($cached !== null) {
 			$person = $cached;
 			$responseInCache = true;
-			$uitkomst = 'geslaagd';
+			$outcome = 'geslaagd';
 			$responseCode = 200;
 		}
 
@@ -257,7 +257,7 @@ class BrpController extends Controller {
 
 				$remote = $this->haalCentraal->lookupPersoon($rawBsn, $requestRef);
 				if ($remote === null) {
-					$uitkomst = 'niet-gevonden';
+					$outcome = 'niet-gevonden';
 					$responseCode = 404;
 				}
 
@@ -272,7 +272,7 @@ class BrpController extends Controller {
 					// Back-filled after verzoek save below.
 					$remote['gekoppeldContact'] = $contactId;
 					$person = $this->cacheService->set($remote);
-					$uitkomst = 'geslaagd';
+					$outcome = 'geslaagd';
 
 					// Record opt-out side-effect.
 					$this->optOut->recordFromBrpResponse(
@@ -281,9 +281,9 @@ class BrpController extends Controller {
 					);
 				}//end if
 			} catch (HaalCentraalException $e) {
-				$uitkomst = 'fout';
+				$outcome = 'fout';
 				if ($e->getStatusCode() === 0) {
-					$uitkomst = 'timeout';
+					$outcome = 'timeout';
 				}
 
 				$responseCode = $e->getStatusCode();
@@ -293,7 +293,7 @@ class BrpController extends Controller {
 					'Unexpected BRP lookup failure',
 					['error' => $e->getMessage()]
 				);
-				$uitkomst = 'fout';
+				$outcome = 'fout';
 				$responseCode = 500;
 			}//end try
 		}//end if
@@ -317,14 +317,14 @@ class BrpController extends Controller {
 		$request = [
 			'bsnHash' => BsnValidationService::hash($rawBsn),
 			'verzoekreden' => $verzoekreden,
-			'doelbinding' => $doelbinding,
+			'purposeBinding' => $purposeBinding,
 			'basis' => $basis,
 			'requestedBy' => $actor,
 			'requestedOnBehalfOf' => $actorRole,
 			'requestMoment' => $now->format(DATE_ATOM),
 			'linkedRequest' => $gekoppeldRequestRef,
 			'gekoppeldContact' => $gekoppeldContactRef,
-			'responseStatus' => $uitkomst,
+			'responseStatus' => $outcome,
 			'responseMoment' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DATE_ATOM),
 			'responseDurationMs' => $responseDurationMs,
 			'haalcentraalCorrelationId' => $correlationId,
@@ -347,8 +347,8 @@ class BrpController extends Controller {
 			actor: $actor,
 			rawBsn: $rawBsn,
 			verzoekreden: $verzoekreden,
-			doelbinding: $doelbinding,
-			uitkomst: $uitkomst,
+			purposeBinding: $purposeBinding,
+			outcome: $outcome,
 			responseCode: $responseCode,
 			haalcentraalCorrelationId: $correlationId,
 			linkedRequest: $gekoppeldRequestRef,
@@ -370,7 +370,7 @@ class BrpController extends Controller {
 			unset($person['bsn']);
 		}
 
-		if ($uitkomst === 'niet-gevonden') {
+		if ($outcome === 'niet-gevonden') {
 			return new JSONResponse(
 				[
 					'errorCode' => 'not-found',
@@ -382,7 +382,7 @@ class BrpController extends Controller {
 			);
 		}
 
-		if ($uitkomst === 'fout' || $uitkomst === 'timeout') {
+		if ($outcome === 'fout' || $outcome === 'timeout') {
 			return new JSONResponse(
 				[
 					'errorCode' => 'brp-unavailable',
@@ -450,8 +450,8 @@ class BrpController extends Controller {
 			actor: $actor,
 			rawBsn: '',
 			verzoekreden: 'Adres onthuld op behandelaarsverantwoording',
-			doelbinding: 'Wet BRP art. 3.3 (uitzondering geheimhouding)',
-			uitkomst: 'adres-onthuld',
+			purposeBinding: 'Wet BRP art. 3.3 (uitzondering geheimhouding)',
+			outcome: 'adres-onthuld',
 			action: 'brp-adres-onthuld',
 			responseCode: 200,
 			linkedRequest: null,

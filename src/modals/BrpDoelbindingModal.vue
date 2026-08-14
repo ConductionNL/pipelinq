@@ -25,7 +25,7 @@
 				label="label"
 				required />
 			<NcSelect
-				v-model="form.doelbinding"
+				v-model="form.purposeBinding"
 				:options="bindingOptions"
 				:inputLabel="t('pipelinq', 'Purpose limitation / legal basis')"
 				:placeholder="t('pipelinq', 'Choose a legal basis')"
@@ -78,7 +78,7 @@ export default {
 		return {
 			form: {
 				verzoekreden: '',
-				doelbinding: '',
+				purposeBinding: '',
 				toelichting: '',
 				vogScreening: false,
 			},
@@ -136,7 +136,9 @@ export default {
 		},
 
 		valid() {
-			return Boolean(this.form.verzoekreden) && Boolean(this.form.doelbinding)
+			return (
+				Boolean(this.form.verzoekreden) && Boolean(this.form.purposeBinding)
+			)
 		},
 	},
 
@@ -149,8 +151,8 @@ export default {
 					: this.form.verzoekreden
 			this.$emit('submit', {
 				verzoekreden: reden,
-				doelbinding: this.form.doelbinding,
-				basis: this.form.doelbinding,
+				purposeBinding: this.form.purposeBinding,
+				basis: this.form.purposeBinding,
 				vogScreening: this.form.vogScreening,
 			})
 		},

@@ -62,7 +62,7 @@ class BsnValidationServiceTest extends TestCase {
 			$result = $this->service->validate($bsn);
 			self::assertTrue($result['isFormalValid'], "BSN $bsn should pass");
 			self::assertNull($result['errorCode']);
-			self::assertSame(0, $result['elfproefScore']);
+			self::assertSame(0, $result['elevenTestScore']);
 		}
 	}//end testValidBsnPassesElfproef()
 

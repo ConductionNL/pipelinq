@@ -70,7 +70,7 @@ class PointsLedgerService {
 	 * @param string $accountId The account UUID.
 	 * @param int $amount Positive integer points to credit.
 	 * @param ?string $ruleId The PointsRule UUID that produced the credit.
-	 * @param array<string, mixed> $brondocument Source linkage (transactionId etc.).
+	 * @param array<string, mixed> $sourceDocument Source linkage (transactionId etc.).
 	 * @param string $processedBy Who/what processed it (POS terminal id, system).
 	 *
 	 * @return array<string, mixed> The created PointsLedgerEntry.
@@ -83,7 +83,7 @@ class PointsLedgerService {
 		string $accountId,
 		int $amount,
 		?string $ruleId,
-		array $brondocument,
+		array $sourceDocument,
 		string $processedBy,
 	): array {
 		if ($amount <= 0) {
@@ -95,7 +95,7 @@ class PointsLedgerService {
 			type: 'credit',
 			signedCount: $amount,
 			ruleId: $ruleId,
-			brondocument: $brondocument,
+			sourceDocument: $sourceDocument,
 			processedBy: $processedBy,
 			lifetimeDelta: $amount
 		);
@@ -107,7 +107,7 @@ class PointsLedgerService {
 	 * @param string $accountId The account UUID.
 	 * @param int $amount Positive integer points to debit.
 	 * @param string $redemptionId The Redemption UUID.
-	 * @param array<string, mixed> $brondocument Source linkage.
+	 * @param array<string, mixed> $sourceDocument Source linkage.
 	 * @param string $processedBy Who/what processed it.
 	 *
 	 * @return array<string, mixed> The PointsLedgerEntry.
@@ -120,7 +120,7 @@ class PointsLedgerService {
 		string $accountId,
 		int $amount,
 		string $redemptionId,
-		array $brondocument,
+		array $sourceDocument,
 		string $processedBy,
 	): array {
 		if ($amount <= 0) {
@@ -136,14 +136,14 @@ class PointsLedgerService {
 			throw new RuntimeException('Insufficient balance.');
 		}
 
-		$brondocument['redemptionId'] = $redemptionId;
+		$sourceDocument['redemptionId'] = $redemptionId;
 
 		return $this->appendAndUpdate(
 			accountId: $accountId,
 			type: 'debit',
 			signedCount: -$amount,
 			ruleId: null,
-			brondocument: $brondocument,
+			sourceDocument: $sourceDocument,
 			processedBy: $processedBy,
 			lifetimeDelta: 0
 		);
@@ -170,7 +170,7 @@ class PointsLedgerService {
 			type: 'expiry',
 			signedCount: -$amount,
 			ruleId: null,
-			brondocument: ['expiryPolicyRef' => $reason],
+			sourceDocument: ['expiryPolicyRef' => $reason],
 			processedBy: 'system:expiry-batch',
 			lifetimeDelta: 0
 		);
@@ -196,7 +196,7 @@ class PointsLedgerService {
 			type: 'adjustment',
 			signedCount: $delta,
 			ruleId: null,
-			brondocument: ['reason' => $reason],
+			sourceDocument: ['reason' => $reason],
 			processedBy: $processedBy,
 			lifetimeDelta: max(0, $delta)
 		);
@@ -227,7 +227,7 @@ class PointsLedgerService {
 			type: 'refund',
 			signedCount: $amount,
 			ruleId: null,
-			brondocument: ['redemptionId' => $redemptionId, 'reason' => 'redemption cancelled'],
+			sourceDocument: ['redemptionId' => $redemptionId, 'reason' => 'redemption cancelled'],
 			processedBy: $processedBy,
 			lifetimeDelta: 0
 		);
@@ -398,7 +398,7 @@ class PointsLedgerService {
 	 * @param string $type One of credit/debit/expiry/adjustment/refund.
 	 * @param int $signedCount Signed delta.
 	 * @param ?string $ruleId Optional PointsRule UUID.
-	 * @param array<string, mixed> $brondocument Source linkage.
+	 * @param array<string, mixed> $sourceDocument Source linkage.
 	 * @param string $processedBy Processor identifier.
 	 * @param int $lifetimeDelta Positive contribution to lifetimePoints (credits only).
 	 *
@@ -409,7 +409,7 @@ class PointsLedgerService {
 		string $type,
 		int $signedCount,
 		?string $ruleId,
-		array $brondocument,
+		array $sourceDocument,
 		string $processedBy,
 		int $lifetimeDelta,
 	): array {
@@ -428,7 +428,7 @@ class PointsLedgerService {
 			'type' => $type,
 			'count' => $signedCount,
 			'balanceAfter' => $newBalance,
-			'brondocument' => $brondocument,
+			'sourceDocument' => $sourceDocument,
 			'ruleId' => $ruleId,
 			'timestamp' => $now,
 			'processedBy' => $processedBy,

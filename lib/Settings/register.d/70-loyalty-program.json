@@ -183,7 +183,7 @@
           "programmeId",
           "name",
           "trigger",
-          "formule"
+          "formula"
         ],
         "properties": {
           "ruleId": {
@@ -220,7 +220,7 @@
             "description": "Optional JSON filter (category, excludeCategory, segment, dayOfWeek, timeRange, channel).",
             "title": "Conditie"
           },
-          "formule": {
+          "formula": {
             "type": "object",
             "description": "Points formula. Supported types: fixed {value}, percentage {value}, stepped {brackets:[{amount,points}]}.",
             "title": "Formule"
@@ -317,7 +317,7 @@
             "description": "Benefits JSON: pointsMultiplier (number), exclusiveOffers (bool), freeShipping (bool), etc.",
             "title": "Benefits"
           },
-          "upgradeBeleid": {
+          "upgradePolicy": {
             "type": "string",
             "enum": [
               "immediate",
@@ -327,7 +327,7 @@
             "description": "Upgrade timing.",
             "title": "Upgrade Beleid"
           },
-          "downgradeBeleid": {
+          "downgradePolicy": {
             "type": "string",
             "enum": [
               "none",
@@ -494,7 +494,7 @@
             "description": "Running balance AFTER this entry was applied.",
             "title": "Balans Na"
           },
-          "brondocument": {
+          "sourceDocument": {
             "type": "object",
             "description": "Source linkage (e.g. {transactionId, redemptionId, expiryPolicyRef, reason}).",
             "title": "Brondocument"
@@ -528,7 +528,7 @@
           "programmeId",
           "name",
           "costInPoints",
-          "beloningType"
+          "rewardType"
         ],
         "properties": {
           "optionId": {
@@ -556,7 +556,7 @@
             "description": "Points cost.",
             "title": "Kosten In Punten"
           },
-          "beloningType": {
+          "rewardType": {
             "type": "string",
             "enum": [
               "discount",
@@ -583,7 +583,7 @@
               }
             ]
           },
-          "kostBasisEur": {
+          "costBasisEur": {
             "type": "number",
             "description": "Estimated business cost in EUR for cost % reporting (REQ-LOY-008).",
             "title": "Kost Basis Eur"
@@ -623,7 +623,7 @@
           "accountId",
           "optionId",
           "status",
-          "beloningCode"
+          "rewardCode"
         ],
         "properties": {
           "redemptionId": {
@@ -656,7 +656,7 @@
             "description": "Points debited at redemption time.",
             "title": "Kosten In Punten"
           },
-          "beloningCode": {
+          "rewardCode": {
             "type": "string",
             "description": "Unique redemption code (UUID-derived, presented to POS).",
             "title": "Beloning Code"
@@ -708,8 +708,8 @@
         "required": [
           "serial",
           "pin",
-          "initialeBalans",
-          "currentBalans",
+          "initialBalance",
+          "currentBalance",
           "status"
         ],
         "properties": {
@@ -733,12 +733,12 @@
             "description": "bcrypt PIN hash — never plaintext, never logged.",
             "title": "Pin"
           },
-          "initialeBalans": {
+          "initialBalance": {
             "type": "number",
             "title": "Initiale Balans",
             "description": "Initiale Balans for this record."
           },
-          "currentBalans": {
+          "currentBalance": {
             "type": "number",
             "title": "Current Balans",
             "description": "Current Balans for this record."

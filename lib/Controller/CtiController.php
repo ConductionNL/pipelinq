@@ -143,7 +143,7 @@ class CtiController extends Controller {
 		return new JSONResponse(
 			[
 				'ok' => true,
-				'contactmomentId' => ($result['contactmomentId'] ?? null),
+				'interactionId' => ($result['interactionId'] ?? null),
 			]
 		);
 	}//end webhook()
@@ -257,7 +257,7 @@ class CtiController extends Controller {
 
 		try {
 			$result = $this->ctiService->processDisposition(
-				contactmomentId: $id,
+				interactionId: $id,
 				subject: $subject,
 				outcome: $outcome,
 				notes: $notes,

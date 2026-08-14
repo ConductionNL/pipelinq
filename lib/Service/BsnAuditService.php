@@ -77,8 +77,8 @@ class BsnAuditService {
 	 * @param string $actor Actor user UID.
 	 * @param string $rawBsn Raw 9-digit BSN (hashed in-process; never stored).
 	 * @param string $verzoekreden Verzoekreden (compliance audit field).
-	 * @param string $doelbinding Doelbinding (compliance audit field).
-	 * @param string $uitkomst Outcome enum value (see schema).
+	 * @param string $purposeBinding Doelbinding (compliance audit field).
+	 * @param string $outcome Outcome enum value (see schema).
 	 * @param string $action Action enum value (default `brp-lookup-uitgevoerd`).
 	 * @param int|null $responseCode HTTP status from HaalCentraal (200, 404, 503).
 	 * @param string|null $haalcentraalCorrelationId Correlation ID for trace.
@@ -99,8 +99,8 @@ class BsnAuditService {
 		string $actor,
 		string $rawBsn,
 		string $verzoekreden,
-		string $doelbinding,
-		string $uitkomst,
+		string $purposeBinding,
+		string $outcome,
 		string $action = 'brp-lookup-uitgevoerd',
 		?int $responseCode = null,
 		?string $haalcentraalCorrelationId = null,
@@ -118,10 +118,10 @@ class BsnAuditService {
 			'actorRole' => $actorRole,
 			'moment' => $now->format(DATE_ATOM),
 			'verzoekreden' => $verzoekreden,
-			'doelbinding' => $doelbinding,
-			'uitkomst' => $uitkomst,
+			'purposeBinding' => $purposeBinding,
+			'outcome' => $outcome,
 			'responseCode' => $responseCode,
-			'ipAdres' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
+			'ipAddress' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
 			'userAgent' => 'Pipelinq/' . (Application::APP_ID) . ' (Nextcloud)',
 			'haalcentraalCorrelationId' => $haalcentraalCorrelationId,
 			'linkedRequest' => $linkedRequest,
@@ -157,7 +157,7 @@ class BsnAuditService {
 					'action' => $action,
 					'actor' => $actor,
 					'bsn' => $maskedBsn,
-					'uitkomst' => $uitkomst,
+					'outcome' => $outcome,
 				]
 			);
 			return $uuid;
@@ -242,7 +242,7 @@ class BsnAuditService {
 				// Immutable schema: callers MUST go through the system pseudonym path.
 				$arr['bsnHash'] = $newHash;
 				$arr['action'] = 'brp-rtbf-gepseudonimiseerd';
-				$arr['uitkomst'] = 'gepseudonimiseerd';
+				$arr['outcome'] = 'gepseudonimiseerd';
 				$this->getObjectService()->saveObject(
 					object: $arr,
 					extend: [],

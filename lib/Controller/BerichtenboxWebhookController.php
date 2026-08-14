@@ -194,7 +194,7 @@ class BerichtenboxWebhookController extends Controller {
 		return new JSONResponse(
 			[
 				'ok' => true,
-				'contactmomentId' => (string)($reply['createdContactmomentId'] ?? ''),
+				'interactionId' => (string)($reply['createdInteractionId'] ?? ''),
 				'replyId' => (string)($reply['uuid'] ?? ''),
 			]
 		);

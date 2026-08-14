@@ -94,7 +94,7 @@ class RedemptionService {
 			'optionId' => $optionId,
 			'programmeId' => $option['programmeId'] ?? null,
 			'costInPoints' => $cost,
-			'beloningCode' => $code,
+			'rewardCode' => $code,
 			'status' => 'gereserveerd',
 			'initiatedOn' => $now,
 			'validTo' => $this->codeExpiryDefault(),
@@ -109,7 +109,7 @@ class RedemptionService {
 				accountId: $accountId,
 				amount: $cost,
 				redemptionId: (string)$redemptionUuid,
-				brondocument: ['optionId' => $optionId, 'beloningCode' => $code],
+				sourceDocument: ['optionId' => $optionId, 'rewardCode' => $code],
 				processedBy: 'redemption-service'
 			);
 		} catch (\Throwable $e) {
@@ -369,7 +369,7 @@ class RedemptionService {
 			$rows = $this->getObjectService()->findAll(
 				config: [
 					'filters' => [
-						'beloningCode' => $code,
+						'rewardCode' => $code,
 						'register' => $register,
 						'schema' => $schema,
 					],

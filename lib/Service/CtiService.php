@@ -97,7 +97,7 @@ class CtiService {
 	 * @param string|null $rawBody Raw body (for signature recheck).
 	 * @param string|null $signature Signature header from the request.
 	 *
-	 * @return array{logged: bool, valid: bool, contactmomentId: string|null}
+	 * @return array{logged: bool, valid: bool, interactionId: string|null}
 	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
 	 */
@@ -120,7 +120,7 @@ class CtiService {
 		}
 
 		$normalised = $adapter->handleInboundWebhook($payload);
-		$contactmomentId = null;
+		$interactionId = null;
 		$processingError = null;
 
 		if ($valid === false) {
@@ -129,7 +129,7 @@ class CtiService {
 
 		if ($valid === true) {
 			try {
-				$contactmomentId = $this->dispatchEvent(platform: $platform, event: $normalised);
+				$interactionId = $this->dispatchEvent(platform: $platform, event: $normalised);
 			} catch (\Throwable $e) {
 				$this->logger->error(
 					'CTI webhook dispatch failed',
@@ -149,7 +149,7 @@ class CtiService {
 		return [
 			'logged' => true,
 			'valid' => $valid,
-			'contactmomentId' => $contactmomentId,
+			'interactionId' => $interactionId,
 		];
 	}//end handleWebhook()
 
@@ -261,7 +261,7 @@ class CtiService {
 	/**
 	 * Update a contactmoment ticket with final metadata once the call ended.
 	 *
-	 * @param string $contactmomentId Contactmoment ticket UUID.
+	 * @param string $interactionId Contactmoment ticket UUID.
 	 * @param int $durationSeconds Talk duration.
 	 * @param string $outcome Disposition outcome (may be empty).
 	 * @param string $dispositionSubject Disposition subject.
@@ -273,7 +273,7 @@ class CtiService {
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
 	public function completeContactmoment(
-		string $contactmomentId,
+		string $interactionId,
 		int $durationSeconds,
 		string $outcome,
 		string $dispositionSubject,
@@ -298,12 +298,12 @@ class CtiService {
 					'disposition_outcome' => $dispositionOutcome,
 					'disposition_notes' => $dispositionNotes,
 				],
-				uuid: $contactmomentId,
+				uuid: $interactionId,
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI completeContactmoment failed',
-				['exception' => $e->getMessage(), 'contactmomentId' => $contactmomentId]
+				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
 			);
 		}//end try
 	}//end completeContactmoment()
@@ -311,7 +311,7 @@ class CtiService {
 	/**
 	 * Attach recording metadata to an existing contactmoment ticket.
 	 *
-	 * @param string $contactmomentId Contactmoment ticket UUID.
+	 * @param string $interactionId Contactmoment ticket UUID.
 	 * @param string $recordingUrl URL of the recording.
 	 * @param string $expiresAt ISO 8601 retention expiry.
 	 *
@@ -319,7 +319,7 @@ class CtiService {
 	 *
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
-	public function attachRecording(string $contactmomentId, string $recordingUrl, string $expiresAt): void {
+	public function attachRecording(string $interactionId, string $recordingUrl, string $expiresAt): void {
 		if ($this->ticketService->isConfigured() === false) {
 			return;
 		}
@@ -331,12 +331,12 @@ class CtiService {
 					'recording_url' => $recordingUrl,
 					'recording_retention_expires_at' => $expiresAt,
 				],
-				uuid: $contactmomentId,
+				uuid: $interactionId,
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI attachRecording failed',
-				['exception' => $e->getMessage(), 'contactmomentId' => $contactmomentId]
+				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
 			);
 		}
 	}//end attachRecording()
@@ -377,9 +377,9 @@ class CtiService {
 			);
 		}
 
-		$contactmomentId = null;
+		$interactionId = null;
 		if ($callResult->success === true) {
-			$contactmomentId = $this->createPendingContactmoment(
+			$interactionId = $this->createPendingContactmoment(
 				direction: 'outbound',
 				fromNumber: $callerId,
 				toNumber: $targetNumber,
@@ -395,7 +395,7 @@ class CtiService {
 		return new OriginateResult(
 			success: $callResult->success,
 			externalCallId: $callResult->externalCallId,
-			contactmomentId: $contactmomentId,
+			interactionId: $interactionId,
 			error: $callResult->error,
 			platform: $platform,
 		);
@@ -894,7 +894,7 @@ class CtiService {
 		}
 
 		$this->attachRecording(
-			contactmomentId: $id,
+			interactionId: $id,
 			recordingUrl: $event->recordingUrl,
 			expiresAt: ($event->recordingExpiresAt ?? ''),
 		);
@@ -960,16 +960,16 @@ class CtiService {
 	 *
 	 * Delegates to {@see CtiDispositionService}.
 	 *
-	 * @param string $contactmomentId Contactmoment UUID.
+	 * @param string $interactionId Contactmoment UUID.
 	 * @param string $subject Disposition subject.
 	 * @param string $outcome Outcome enum.
 	 * @param string $notes Notes.
 	 *
-	 * @return array{outcome: string, contactmomentId: string, taskId: string|null}
+	 * @return array{outcome: string, interactionId: string, taskId: string|null}
 	 */
-	public function processDisposition(string $contactmomentId, string $subject, string $outcome, string $notes): array {
+	public function processDisposition(string $interactionId, string $subject, string $outcome, string $notes): array {
 		return $this->dispositionService->processDisposition(
-			contactmomentId: $contactmomentId,
+			interactionId: $interactionId,
 			subject: $subject,
 			outcome: $outcome,
 			notes: $notes,

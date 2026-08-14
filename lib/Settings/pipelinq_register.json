@@ -2941,13 +2941,13 @@
         "summary": "Resultaat van een 11-proef BSN-validatie",
         "description": "Onveranderlijk resultaat van een 11-proef controle (RvIG-algoritme). Wordt aangemaakt bij elke validatie-poging (server-side audit). BSN wordt gemaskeerd opgeslagen (***XXXX*) — raw BSN gaat NOOIT in een bsnValidatie-object.",
         "required": [
-          "ingevoerdBsn",
+          "enteredBsn",
           "isFormalValid",
           "validationMoment",
           "initiatedBy"
         ],
         "properties": {
-          "ingevoerdBsn": {
+          "enteredBsn": {
             "type": "string",
             "description": "Gemaskeerd BSN — pattern ***XXXX* (eerste 3 + laatste 1 vervangen door ***). Raw 9-cijferig BSN wordt NIET opgeslagen.",
             "maxLength": 16,
@@ -2959,7 +2959,7 @@
             "title": "Formally valid",
             "facetable": true
           },
-          "elfproefScore": {
+          "elevenTestScore": {
             "type": "integer",
             "description": "Intermediaire score (sum mod 11) voor debugging. 0 = geldig.",
             "title": "Eleven-test score"
@@ -3008,7 +3008,7 @@
         "required": [
           "bsnHash",
           "verzoekreden",
-          "doelbinding",
+          "purposeBinding",
           "basis",
           "requestedBy",
           "requestMoment",
@@ -3028,7 +3028,7 @@
             "title": "Request reason",
             "facetable": true
           },
-          "doelbinding": {
+          "purposeBinding": {
             "type": "string",
             "description": "Wettelijke grondslag (AVG art. 6, Wet BRP art. 3.3 lid 1, etc.)",
             "maxLength": 500,
@@ -3141,11 +3141,11 @@
           "givenNames",
           "surname",
           "dateOfBirth",
-          "geslacht",
+          "gender",
           "residence",
           "indicationSecret",
           "fetchedOn",
-          "bronsysteem",
+          "sourceSystem",
           "lookupRequestId",
           "gekoppeldContact",
           "retentionTo"
@@ -3205,7 +3205,7 @@
             "maxLength": 2,
             "title": "Birth Country"
           },
-          "geslacht": {
+          "gender": {
             "type": "string",
             "description": "schema:gender — man, vrouw, onbekend",
             "enum": [
@@ -3238,7 +3238,7 @@
             "format": "date-time",
             "title": "Retrieved At"
           },
-          "bronsysteem": {
+          "sourceSystem": {
             "type": "string",
             "description": "Bronsysteem-aanduiding (HaalCentraal-BRP-v2.0)",
             "maxLength": 64,
@@ -3280,7 +3280,7 @@
           "bsnHash",
           "actor",
           "moment",
-          "uitkomst",
+          "outcome",
           "retainUntil"
         ],
         "properties": {
@@ -3331,13 +3331,13 @@
             "maxLength": 500,
             "title": "Request Reason"
           },
-          "doelbinding": {
+          "purposeBinding": {
             "type": "string",
             "description": "Gekopieerd uit BrpLookupVerzoek",
             "maxLength": 500,
             "title": "Purpose Binding"
           },
-          "uitkomst": {
+          "outcome": {
             "type": "string",
             "description": "Uitkomst van de bevraging",
             "enum": [
@@ -3357,7 +3357,7 @@
             "description": "HTTP status code van HaalCentraal (200, 404, 403, 503)",
             "title": "HTTP Response Code"
           },
-          "ipAdres": {
+          "ipAddress": {
             "type": "string",
             "description": "Requester IP, geanonimiseerd (laatste octet vervangen door 0)",
             "maxLength": 64,
@@ -3452,7 +3452,7 @@
             "format": "date",
             "title": "End Date"
           },
-          "beperkt": {
+          "limited": {
             "type": "array",
             "description": "Array van restricties: commerciele-derden, kerkgenootschappen, derdeportalen",
             "items": {
@@ -5166,7 +5166,7 @@
         },
         "bsnHash": "63b1f7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1b2",
         "verzoekreden": "Behandeling AVG-inzageverzoek art. 15",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
         "basis": "Publieke taak (AVG art. 6 lid 1 sub e)",
         "requestedBy": "demo:m.devries",
         "requestedOnBehalfOf": "behandelaar-burgerzaken",
@@ -5188,7 +5188,7 @@
         },
         "bsnHash": "12abf7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c188",
         "verzoekreden": "Reguliere verzoekbehandeling",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
         "basis": "Publieke taak (AVG art. 6 lid 1 sub e)",
         "requestedBy": "demo:j.smith",
         "requestedOnBehalfOf": "behandelaar-burgerzaken",
@@ -5214,7 +5214,7 @@
         "dateOfBirth": "1978-03-22",
         "birthPlace": "Utrecht",
         "birthCountry": "NL",
-        "geslacht": "vrouw",
+        "gender": "vrouw",
         "residence": {
           "straat": "Lange Voorhout",
           "huisnummer": 14,
@@ -5225,7 +5225,7 @@
         },
         "indicationSecret": "0",
         "fetchedOn": "2026-08-14T09:23:46+00:00",
-        "bronsysteem": "HaalCentraal-BRP-v2.0",
+        "sourceSystem": "HaalCentraal-BRP-v2.0",
         "lookupRequestId": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e21",
         "gekoppeldContact": "00000000-0000-0000-0000-000000000000",
         "retentionTo": "2026-08-21T09:23:46+00:00"
@@ -5243,10 +5243,10 @@
         "actorRole": "behandelaar-burgerzaken",
         "moment": "2026-08-14T09:23:46+00:00",
         "verzoekreden": "Behandeling AVG-inzageverzoek art. 15",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
-        "uitkomst": "geslaagd",
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
+        "outcome": "geslaagd",
         "responseCode": 200,
-        "ipAdres": "10.42.18.0",
+        "ipAddress": "10.42.18.0",
         "userAgent": "Pipelinq/pipelinq (Nextcloud)",
         "haalcentraalCorrelationId": "hc-corr-7f3a9b2e",
         "vogScreening": false,
@@ -5265,8 +5265,8 @@
         "actorRole": "behandelaar-burgerzaken",
         "moment": "2026-08-14T10:15:23+00:00",
         "verzoekreden": "Reguliere verzoekbehandeling",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
-        "uitkomst": "niet-gevonden",
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
+        "outcome": "niet-gevonden",
         "responseCode": 404,
         "haalcentraalCorrelationId": "hc-corr-9e2b4c1f",
         "vogScreening": false,
@@ -5283,7 +5283,7 @@
         "type": "geheimhouding-gemeente",
         "source": "BRP",
         "effectiveDate": "2024-11-01",
-        "beperkt": [
+        "limited": [
           "commerciele-derden",
           "kerkgenootschappen",
           "derdeportalen"
