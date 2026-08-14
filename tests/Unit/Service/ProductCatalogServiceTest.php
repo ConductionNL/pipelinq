@@ -152,7 +152,7 @@ class ProductCatalogServiceTest extends TestCase {
 	public function testResolveEffectivePriceAppliesTier(): void {
 		$product = [
 			'unitPrice' => 5.49,
-			'btwClass' => 'hoog',
+			'vatClass' => 'hoog',
 			'priceTiers' => [
 				['minQuantity' => 1, 'unitPrice' => 5.49, 'label' => 'Losse verpakking'],
 				['minQuantity' => 5, 'unitPrice' => 4.75, 'label' => 'Doos (5 pakken)'],
@@ -176,7 +176,7 @@ class ProductCatalogServiceTest extends TestCase {
 	public function testResolveEffectivePriceFallsBackToBase(): void {
 		$product = [
 			'unitPrice' => 5.49,
-			'btwClass' => 'hoog',
+			'vatClass' => 'hoog',
 			'priceTiers' => [
 				['minQuantity' => 1, 'unitPrice' => 5.49, 'label' => 'Losse verpakking'],
 				['minQuantity' => 5, 'unitPrice' => 4.75, 'label' => 'Doos'],
@@ -197,7 +197,7 @@ class ProductCatalogServiceTest extends TestCase {
 	public function testResolveEffectivePriceUsesVariantOverride(): void {
 		$product = [
 			'unitPrice' => 19.95,
-			'btwClass' => 'hoog',
+			'vatClass' => 'hoog',
 			'variants' => [
 				['sku' => 'TSH-L-WIT', 'unitPrice' => 19.95, 'status' => 'active'],
 				['sku' => 'TSH-L-ZWA', 'unitPrice' => 21.95, 'status' => 'active'],
@@ -233,12 +233,12 @@ class ProductCatalogServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testResolveEffectivePriceVrijgesteldZeroRate(): void {
-		$product = ['unitPrice' => 125.00, 'btwClass' => 'vrijgesteld'];
+		$product = ['unitPrice' => 125.00, 'vatClass' => 'vrijgesteld'];
 
 		$result = $this->service->resolveEffectivePrice($product, 1.0);
 
 		$this->assertSame(0, $result['taxRate']);
-		$this->assertSame('vrijgesteld', $result['btwClass']);
+		$this->assertSame('vrijgesteld', $result['vatClass']);
 	}//end testResolveEffectivePriceVrijgesteldZeroRate()
 
 	/**

@@ -146,7 +146,7 @@ class FakeAggregationRunner {
 			}
 
 			foreach ($criterion as $op => $operand) {
-				if ($this->checkOp(value: $value, op: (string)$op, operand: $operand) === false) {
+				if ($this->checkOn(value: $value, op: (string)$op, operand: $operand) === false) {
 					return false;
 				}
 			}
@@ -164,7 +164,7 @@ class FakeAggregationRunner {
 	 *
 	 * @return bool Whether the operator is satisfied.
 	 */
-	private function checkOp(mixed $value, string $op, mixed $operand): bool {
+	private function checkOn(mixed $value, string $op, mixed $operand): bool {
 		if ($op === 'in') {
 			return is_array($operand) === true && in_array($value, $operand, true);
 		}

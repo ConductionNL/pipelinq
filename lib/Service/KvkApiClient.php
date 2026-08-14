@@ -161,7 +161,7 @@ class KvkApiClient {
 			'apikey' => $apiKey,
 			'type' => 'hoofdvestiging',
 			'pagina' => '1',
-			'aantal' => '50',
+			'count' => '50',
 			'sbiHoofdActiviteit' => $sbiCode,
 		];
 

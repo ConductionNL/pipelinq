@@ -179,14 +179,14 @@ class PointsExpiryBatchJob extends TimedJob {
 
 		if ($lastActivity < $noticeCutoff->format('c')) {
 			// Advance notice.
-			$klantId = (string)($account['klantId'] ?? '');
-			if ($klantId === '') {
+			$customerId = (string)($account['customerId'] ?? '');
+			if ($customerId === '') {
 				return;
 			}
 
 			try {
 				$this->notificationService->sendNotification(
-					userId: $klantId,
+					userId: $customerId,
 					subject: 'loyalty_points_expiring',
 					parameters: [
 						'points' => $balance,

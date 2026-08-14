@@ -164,26 +164,26 @@ class HaalCentraalClientTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$client = $this->buildClient(values: [], httpClient: $httpClient, logger: $logger);
 
-		$persoon = $client->lookupPersoon(self::DEMO_BSN);
+		$person = $client->lookupPersoon(self::DEMO_BSN);
 
 		self::assertFalse($legacyHit, 'legacy HaalCentraal transport must not run when OR returns 200');
 		self::assertNotNull($orUrl, 'OR BRP leaf endpoint was not called');
 		self::assertStringContainsString('integrations/brp/person', (string)$orUrl);
-		self::assertIsArray($persoon);
+		self::assertIsArray($person);
 
 		// The audit fields the controller persists into brpLookupVerzoek.
-		self::assertSame('corr-or-abc-123', $persoon['_correlationId'], 'haalcentraalCorrelationId source');
-		self::assertSame(87, $persoon['_responseDurationMs'], 'responseDuurMs source');
-		self::assertSame(200, $persoon['_responseStatus'], 'responseStatus source');
+		self::assertSame('corr-or-abc-123', $person['_correlationId'], 'haalcentraalCorrelationId source');
+		self::assertSame(87, $person['_responseDurationMs'], 'responseDuurMs source');
+		self::assertSame(200, $person['_responseStatus'], 'responseStatus source');
 
 		// The normalised person body is identical to what normalisePerson()
 		// yields for the same raw upstream data (the mapping is unchanged).
-		self::assertSame('Jan', $persoon['voornamen']);
-		self::assertSame('Jansen', $persoon['geslachtsnaam']);
-		self::assertSame('man', $persoon['geslacht']);
-		self::assertSame('1990-01-01', $persoon['geboortedatum']);
-		self::assertSame('HaalCentraal-BRP-v2.0', $persoon['bronsysteem']);
-		self::assertSame('Hoofdstraat', $persoon['verblijfplaats']['straat']);
+		self::assertSame('Jan', $person['givenNames']);
+		self::assertSame('Jansen', $person['surname']);
+		self::assertSame('man', $person['geslacht']);
+		self::assertSame('1990-01-01', $person['dateOfBirth']);
+		self::assertSame('HaalCentraal-BRP-v2.0', $person['bronsysteem']);
+		self::assertSame('Hoofdstraat', $person['residence']['straat']);
 	}//end testLookupUsesOpenRegisterLeafWithMeta()
 
 	/**
@@ -213,12 +213,12 @@ class HaalCentraalClientTest extends TestCase {
 		$httpClient->method('get')->willReturn($response);
 
 		$client = $this->buildClient(values: [], httpClient: $httpClient);
-		$persoon = $client->lookupPersoon(self::DEMO_BSN);
+		$person = $client->lookupPersoon(self::DEMO_BSN);
 
-		self::assertIsArray($persoon);
-		self::assertNull($persoon['_correlationId'], 'null correlationId must persist as null');
-		self::assertSame(12, $persoon['_responseDurationMs']);
-		self::assertSame(200, $persoon['_responseStatus']);
+		self::assertIsArray($person);
+		self::assertNull($person['_correlationId'], 'null correlationId must persist as null');
+		self::assertSame(12, $person['_responseDurationMs']);
+		self::assertSame(200, $person['_responseStatus']);
 	}//end testLookupOpenRegisterLeafNullCorrelationId()
 
 	/**
@@ -392,10 +392,10 @@ class HaalCentraalClientTest extends TestCase {
 	private function sampleRawPerson(): array {
 		return [
 			'burgerservicenummer' => '999999990',
-			'naam' => [
-				'voornamen' => 'Jan',
-				'voorletters' => 'J.',
-				'geslachtsnaam' => 'Jansen',
+			'name' => [
+				'givenNames' => 'Jan',
+				'initials' => 'J.',
+				'surname' => 'Jansen',
 			],
 			'geboorte' => [
 				'datum' => ['datum' => '1990-01-01'],
@@ -403,7 +403,7 @@ class HaalCentraalClientTest extends TestCase {
 				'land' => ['code' => '6030'],
 			],
 			'geslacht' => ['code' => 'M'],
-			'verblijfplaats' => [
+			'residence' => [
 				'verblijfadres' => [
 					'officieleStraatnaam' => 'Hoofdstraat',
 					'huisnummer' => 12,
@@ -411,7 +411,7 @@ class HaalCentraalClientTest extends TestCase {
 					'woonplaats' => 'Utrecht',
 				],
 			],
-			'indicatieGeheim' => '0',
+			'indicationGeheim' => '0',
 		];
 	}//end sampleRawPerson()
 

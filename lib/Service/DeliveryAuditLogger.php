@@ -261,7 +261,7 @@ class DeliveryAuditLogger {
 	 * `selectielijst.<zaaktype>` whose value is the retention period in
 	 * years. Defaults to {@see self::DEFAULT_RETENTION_YEARS}.
 	 *
-	 * @param string $zaaktype Zaaktype slug.
+	 * @param string $caseType Zaaktype slug.
 	 * @param DateTimeInterface|null $from Anchor (defaults to now).
 	 *
 	 * @return DateTimeImmutable
@@ -270,10 +270,10 @@ class DeliveryAuditLogger {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) DateTimeImmutable::createFromInterface is a native immutable factory; no DI alternative.
 	 */
-	public function calculateRetentionUntil(string $zaaktype, ?DateTimeInterface $from = null): DateTimeImmutable {
+	public function calculateRetentionUntil(string $caseType, ?DateTimeInterface $from = null): DateTimeImmutable {
 		$years = (int)$this->appConfig->getValueString(
 			Application::APP_ID,
-			'selectielijst.' . $zaaktype,
+			'selectielijst.' . $caseType,
 			(string)self::DEFAULT_RETENTION_YEARS
 		);
 		if ($years <= 0) {
@@ -322,7 +322,7 @@ class DeliveryAuditLogger {
 		array $extras = [],
 	): void {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$retention = ($retentionUntil ?? $this->calculateRetentionUntil(zaaktype: ''));
+		$retention = ($retentionUntil ?? $this->calculateRetentionUntil(caseType: ''));
 
 		$row = array_merge(
 			$extras,

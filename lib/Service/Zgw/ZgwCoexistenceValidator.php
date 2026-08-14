@@ -84,31 +84,31 @@ class ZgwCoexistenceValidator {
 	/**
 	 * Validate that at most one write path is active for a gemeente.
 	 *
-	 * @param string $gemeenteCode CBS 4-digit gemeente code.
+	 * @param string $municipalityCode CBS 4-digit gemeente code.
 	 *
 	 * @return void
 	 *
 	 * @throws DoubleWritePathException When both ZGW + StUF are write-enabled.
 	 */
-	public function validateWritePath(string $gemeenteCode): void {
-		if ($gemeenteCode === '') {
+	public function validateWritePath(string $municipalityCode): void {
+		if ($municipalityCode === '') {
 			return;
 		}
 
-		$zgwWriters = $this->activeZgwWriters(gemeenteCode: $gemeenteCode);
-		$stufWriters = $this->activeStufWriters(gemeenteCode: $gemeenteCode);
+		$zgwWriters = $this->activeZgwWriters(municipalityCode: $municipalityCode);
+		$stufWriters = $this->activeStufWriters(municipalityCode: $municipalityCode);
 
 		if ($zgwWriters !== [] && $stufWriters !== []) {
 			$conflicting = array_values(array_unique(array_merge($zgwWriters, $stufWriters)));
 			$msg = sprintf(
 				'ZGW: dubbele schrijfpad-conflict voor gemeente "%s" — schakel een van de volgende endpoints uit: %s',
-				$gemeenteCode,
+				$municipalityCode,
 				implode(', ', $conflicting)
 			);
 			$this->logger->warning(
 				'ZGW: double-write conflict detected',
 				[
-					'gemeente' => $gemeenteCode,
+					'gemeente' => $municipalityCode,
 					'conflicting' => $conflicting,
 				]
 			);
@@ -119,14 +119,14 @@ class ZgwCoexistenceValidator {
 	/**
 	 * IDs of all active ZGW write endpoints for a gemeente.
 	 *
-	 * @param string $gemeenteCode CBS code.
+	 * @param string $municipalityCode CBS code.
 	 *
 	 * @return array<int, string>
 	 */
-	private function activeZgwWriters(string $gemeenteCode): array {
+	private function activeZgwWriters(string $municipalityCode): array {
 		$rows = $this->registers->findAll(
 			ZgwRegisterAccess::SCHEMA_ENDPOINT,
-			['gemeenteCode' => $gemeenteCode]
+			['municipalityCode' => $municipalityCode]
 		);
 		$ids = [];
 		foreach ($rows as $row) {
@@ -148,14 +148,14 @@ class ZgwCoexistenceValidator {
 	/**
 	 * IDs of all active StUF write endpoints for a gemeente.
 	 *
-	 * @param string $gemeenteCode CBS code.
+	 * @param string $municipalityCode CBS code.
 	 *
 	 * @return array<int, string>
 	 */
-	private function activeStufWriters(string $gemeenteCode): array {
+	private function activeStufWriters(string $municipalityCode): array {
 		$rows = $this->registers->findAll(
 			self::STUF_ENDPOINT_SCHEMA,
-			['gemeenteCode' => $gemeenteCode]
+			['municipalityCode' => $municipalityCode]
 		);
 		$ids = [];
 		foreach ($rows as $row) {

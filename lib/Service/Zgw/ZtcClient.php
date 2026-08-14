@@ -108,19 +108,19 @@ class ZtcClient {
 	 * Resolve a statustype URL by omschrijving + parent zaaktype.
 	 *
 	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param string $zaaktypeUrl Parent zaaktype URL.
+	 * @param string $caseTypeUrl Parent zaaktype URL.
 	 * @param string $omschrijving Statustype omschrijving.
 	 *
 	 * @return string Statustype URL.
 	 *
 	 * @throws ZaaktypeNotInCatalogusException When no statustype matches.
 	 */
-	public function resolveStatustype(array $endpoint, string $zaaktypeUrl, string $omschrijving): string {
+	public function resolveStatustype(array $endpoint, string $caseTypeUrl, string $omschrijving): string {
 		$hit = $this->resolveByOmschrijving(
 			endpoint: $endpoint,
 			resourceType: self::RESOURCE_STATUSTYPE,
 			omschrijving: $omschrijving,
-			extraQuery: ['zaaktype' => $zaaktypeUrl]
+			extraQuery: ['caseType' => $caseTypeUrl]
 		);
 		if ($hit === null) {
 			throw new ZaaktypeNotInCatalogusException($omschrijving);
@@ -133,19 +133,19 @@ class ZtcClient {
 	 * Resolve a roltype URL by omschrijving + parent zaaktype.
 	 *
 	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param string $zaaktypeUrl Parent zaaktype URL.
+	 * @param string $caseTypeUrl Parent zaaktype URL.
 	 * @param string $omschrijving Roltype omschrijving (e.g. "Initiator").
 	 *
 	 * @return string Roltype URL.
 	 *
 	 * @throws ZaaktypeNotInCatalogusException When no roltype matches.
 	 */
-	public function resolveRoltype(array $endpoint, string $zaaktypeUrl, string $omschrijving): string {
+	public function resolveRoltype(array $endpoint, string $caseTypeUrl, string $omschrijving): string {
 		$hit = $this->resolveByOmschrijving(
 			endpoint: $endpoint,
 			resourceType: self::RESOURCE_ROLTYPE,
 			omschrijving: $omschrijving,
-			extraQuery: ['zaaktype' => $zaaktypeUrl]
+			extraQuery: ['caseType' => $caseTypeUrl]
 		);
 		if ($hit === null) {
 			throw new ZaaktypeNotInCatalogusException($omschrijving);
