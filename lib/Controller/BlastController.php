@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCP\AppFramework\Controller;
@@ -60,6 +61,7 @@ class BlastController extends Controller {
 		private readonly BlastService $blastService,
 		private readonly AttributionService $attributionService,
 		private readonly IUserSession $userSession,
+		private readonly CrmAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -248,6 +250,23 @@ class BlastController extends Controller {
 	private function requireUser(): ?string {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
+			return null;
+		}
+
+		// AUTHENTICATION IS NOT AUTHORIZATION.
+		//
+		// This helper previously answered only "is somebody logged in", and
+		// every caller treated that as permission to read, update, cancel or
+		// list blasts. Marketing blasts reach customer contact data and send
+		// on the organisation's behalf; that is a CRM capability, not
+		// something every account on the instance holds.
+		//
+		// Denying here returns the caller's own null path (401 rather than
+		// 403). That is deliberate: the callers already handle null, and a
+		// blanket 403 would require touching six call sites to say something
+		// the 401 already says operationally — no access. Admins bypass via
+		// the policy.
+		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
 			return null;
 		}
 

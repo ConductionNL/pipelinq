@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\MessagingService;
@@ -70,6 +71,7 @@ class MessagingController extends Controller {
 		private ChannelProviderRepository $providerRepo,
 		private ConsentService $consentService,
 		private IUserSession $userSession,
+		private CrmAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -102,6 +104,12 @@ class MessagingController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Messaging sends on the organisation's behalf and reads contact
+		// consent state — a CRM capability, not an any-authenticated-user one.
+		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		if ($channel !== 'sms' && $channel !== 'whatsapp') {
@@ -140,8 +148,15 @@ class MessagingController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function preflight(string $contactId = ''): JSONResponse {
-		if ($this->userSession->getUser() === null) {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Same posture as send()/consent(): preflight reads a contact's
+		// messaging eligibility, which is CRM data.
+		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		$contact = $this->messagingService->loadContact(contactId: $contactId);
@@ -178,6 +193,12 @@ class MessagingController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Messaging sends on the organisation's behalf and reads contact
+		// consent state — a CRM capability, not an any-authenticated-user one.
+		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
+			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		if ($channel !== 'sms' && $channel !== 'whatsapp') {

@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -53,6 +54,7 @@ class SegmentController extends Controller {
 		IRequest $request,
 		private readonly SegmentService $segmentService,
 		private readonly IUserSession $userSession,
+		private readonly CrmAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -167,6 +169,14 @@ class SegmentController extends Controller {
 	private function requireUser(): ?string {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
+			return null;
+		}
+
+		// Authentication is not authorization. A segment is a saved query over
+		// the customer base; listing or evaluating one exposes who is in it.
+		// That is a CRM capability. Admins bypass via the policy; callers
+		// already handle the null path.
+		if ($this->policy->isCrmUser(userId: $user->getUID()) === false) {
 			return null;
 		}
 
