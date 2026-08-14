@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\CrmAccessPolicy;
 use OCA\Pipelinq\Service\ActivityTimelineService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -61,6 +62,7 @@ class ActivityTimelineController extends Controller {
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private ContainerInterface $container,
+		private CrmAccessPolicy $policy,
 	) {
 		// @PublicPage — DI constructor (not HTTP-routable). The actual auth
 		// posture for each endpoint lives on its own method attribute; this
@@ -87,19 +89,40 @@ class ActivityTimelineController extends Controller {
 	 *
 	 * @return bool Whether the object could be verified.
 	 */
-	private function objectExists(string $entityId): bool {
+	private function objectAccessible(string $entityId, string $userId): bool {
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$object = $objectService->find($entityId, []);
-			return $object !== null;
+			if ($object === null) {
+				return false;
+			}
+
+			// EXISTENCE IS NOT AUTHORIZATION.
+			//
+			// This used to `return $object !== null`, which answers "does this
+			// id name something" — a question every authenticated caller can
+			// ask about every id in the instance. The find() above is also
+			// deliberately unscoped (no register, no schema), so it resolves
+			// across every magic table; that widens the reach of a bare
+			// existence check rather than narrowing it.
+			//
+			// `_rbac: true` is NOT the fix here: DEFAULT_CLOSED_WRITE_ACTIONS
+			// is ['create','update','delete'], so a READ returns true whatever
+			// the flag says (ConductionNL/.github#372). The decision has to be
+			// made by this app.
+			$payload = $object->jsonSerialize();
+			return $this->policy->canAccessObject(
+				object: is_array($payload) ? $payload : [],
+				userId: $userId
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				'ActivityTimelineController: could not verify object existence, denying',
+				'ActivityTimelineController: could not verify object access, denying',
 				['entityId' => $entityId, 'exception' => $e->getMessage()]
 			);
 			return false;
 		}
-	}//end objectExists()
+	}//end objectAccessible()
 
 	/**
 	 * Return the merged activity timeline for an entity.
@@ -129,7 +152,11 @@ class ActivityTimelineController extends Controller {
 			);
 		}
 
-		if ($this->objectExists(entityId: $entityId) === false) {
+		// 404 rather than 403 on purpose: a caller who may not see the entity
+		// must not be able to tell "exists but forbidden" from "does not
+		// exist", or the endpoint becomes an existence oracle over every id in
+		// the instance.
+		if ($this->objectAccessible(entityId: $entityId, userId: $user->getUID()) === false) {
 			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
 		}
 
@@ -188,7 +215,11 @@ class ActivityTimelineController extends Controller {
 			);
 		}
 
-		if ($this->objectExists(entityId: $entityId) === false) {
+		// 404 rather than 403 on purpose: a caller who may not see the entity
+		// must not be able to tell "exists but forbidden" from "does not
+		// exist", or the endpoint becomes an existence oracle over every id in
+		// the instance.
+		if ($this->objectAccessible(entityId: $entityId, userId: $user->getUID()) === false) {
 			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
 		}
 
@@ -245,7 +276,11 @@ class ActivityTimelineController extends Controller {
 			);
 		}
 
-		if ($this->objectExists(entityId: $entityId) === false) {
+		// 404 rather than 403 on purpose: a caller who may not see the entity
+		// must not be able to tell "exists but forbidden" from "does not
+		// exist", or the endpoint becomes an existence oracle over every id in
+		// the instance.
+		if ($this->objectAccessible(entityId: $entityId, userId: $user->getUID()) === false) {
 			return new JSONResponse(['message' => 'Entity not found'], Http::STATUS_NOT_FOUND);
 		}
 
