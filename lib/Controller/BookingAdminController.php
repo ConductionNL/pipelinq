@@ -155,6 +155,8 @@ class BookingAdminController extends Controller {
 	 * @param string $id The booking UUID.
 	 *
 	 * @return JSONResponse The result, or an error.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	#[NoAdminRequired]
 	public function markCompleted(string $id): JSONResponse {
@@ -216,6 +218,8 @@ class BookingAdminController extends Controller {
 	 * @param string $id The booking UUID.
 	 *
 	 * @return JSONResponse The result, or an error.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	#[NoAdminRequired]
 	public function sendReminder(string $id): JSONResponse {
@@ -249,6 +253,8 @@ class BookingAdminController extends Controller {
 	 * @param string $id The booking UUID.
 	 *
 	 * @return JSONResponse The result, or an error.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	#[NoAdminRequired]
 	public function confirmDeposit(string $id): JSONResponse {
