@@ -35,6 +35,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\AppointmentDepositService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
@@ -94,6 +95,11 @@ class AppointmentPaymentWebhookController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// Inbound provider webhook: the caller is a payment provider retrying on
+	// its own schedule, authenticated by its own signature. Generous ceiling —
+	// dropping a payment notification is a worse failure than absorbing a
+	// burst, and it would land on the provider's side where we cannot see it.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function callback(): JSONResponse {
 		$rawBody = $this->readRawBody();
 		$signature = (string)$this->request->getHeader('X-Pipelinq-Signature');

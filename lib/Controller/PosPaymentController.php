@@ -36,6 +36,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\PosPaymentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
@@ -291,6 +292,8 @@ class PosPaymentController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// POS payment provider callback.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function webhook(string $provider): JSONResponse {
 		$rawBody = $this->readRawBody();
 		$signature = $this->resolveSignatureHeader(provider: $provider);

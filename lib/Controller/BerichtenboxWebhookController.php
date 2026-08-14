@@ -37,6 +37,7 @@ use OCA\Pipelinq\Service\BerichtenboxService;
 use OCA\Pipelinq\Service\LogiusConnector;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
@@ -80,6 +81,8 @@ class BerichtenboxWebhookController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// Berichtenbox delivery callbacks — same posture as every receiver here.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function readReceipt(): JSONResponse {
 		$rawBody = $this->readRawBody();
 		if ($this->logius->handleWebhookSignature($this->request, $rawBody) === false) {
@@ -136,6 +139,7 @@ class BerichtenboxWebhookController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function inboundReply(): JSONResponse {
 		$rawBody = $this->readRawBody();
 		if ($this->logius->handleWebhookSignature($this->request, $rawBody) === false) {
