@@ -160,7 +160,7 @@ export default {
 		programmeOptions() {
 			return this.programmes.map((p) => ({
 				id: p.id,
-				label: p.naam || p.merk || p.id,
+				label: p.name || p.merk || p.id,
 			}))
 		},
 		tierRows() {
@@ -197,7 +197,7 @@ export default {
 					(response.data && (response.data.results || response.data)) || []
 				this.programmes = list.map((p) => ({
 					id: p['@self']?.id || p.id || p.programmeId,
-					naam: p.naam,
+					name: p.name,
 					merk: p.merk,
 				}))
 				if (this.programmes.length && !this.selectedProgramme) {

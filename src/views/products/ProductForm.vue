@@ -107,9 +107,9 @@
 					label-outside
 					:label="t('pipelinq', 'Tax Rate (%)')"
 					:model-value="form.taxRate"
-					:disabled="!!form.btwClass"
+					:disabled="!!form.vatClass"
 					:helper-text="
-						form.btwClass
+						form.vatClass
 							? t('pipelinq', 'Derived from the selected BTW class')
 							: ''
 					"
@@ -124,7 +124,7 @@
 					t('pipelinq', 'BTW Class')
 				}}</label>
 				<NcSelect
-					v-model="form.btwClass"
+					v-model="form.vatClass"
 					input-id="product-btwClass"
 					:input-label="t('pipelinq', 'BTW Class')"
 					:aria-label-combobox="t('pipelinq', 'BTW Class')"
@@ -224,7 +224,7 @@ export default {
 				status: 'active',
 				unit: '',
 				taxRate: '21',
-				btwClass: null,
+				vatClass: null,
 				barcode: '',
 				duration: '',
 			},
@@ -305,7 +305,7 @@ export default {
 				status: data.status || 'active',
 				unit: data.unit || '',
 				taxRate: data.taxRate !== undefined ? String(data.taxRate) : '21',
-				btwClass: data.btwClass || null,
+				vatClass: data.vatClass || null,
 				barcode: data.barcode || '',
 				duration:
 					data.duration !== undefined && data.duration !== null
@@ -319,10 +319,10 @@ export default {
 		 */
 		onBtwClassChange() {
 			if (
-				this.form.btwClass
-				&& this.btwRateMap[this.form.btwClass] !== undefined
+				this.form.vatClass
+				&& this.btwRateMap[this.form.vatClass] !== undefined
 			) {
-				this.form.taxRate = String(this.btwRateMap[this.form.btwClass])
+				this.form.taxRate = String(this.btwRateMap[this.form.vatClass])
 			}
 		},
 		/**
@@ -381,7 +381,7 @@ export default {
 				unitPrice: Number(this.form.unitPrice),
 				cost: this.form.cost ? Number(this.form.cost) : null,
 				taxRate: this.form.taxRate ? Number(this.form.taxRate) : 21,
-				btwClass: this.form.btwClass || null,
+				vatClass: this.form.vatClass || null,
 				barcode: this.form.barcode || '',
 				duration:
 					this.form.type === 'service' && this.form.duration !== ''
