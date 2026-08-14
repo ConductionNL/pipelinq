@@ -91,6 +91,16 @@ class ContractController extends Controller {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
+		// This controller already authorises per object via
+		// $this->accessPolicy->mayAccess() — but create() has no object yet to
+		// own, so that check has nothing to test and the method was reachable
+		// by any authenticated account. Creating a contract is a CRM
+		// capability; the privileged-group half of the same policy is the
+		// question that CAN be asked before the object exists.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
 		$body = $this->request->getParams();
 		unset($body['_route']);
 
