@@ -37,6 +37,7 @@ use OCA\Pipelinq\Service\BookingService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -131,6 +132,7 @@ class PortalController extends Controller {
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function services(): JSONResponse {
 		try {
 			$services = $this->listBookableServices();
@@ -154,6 +156,7 @@ class PortalController extends Controller {
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function availability(): JSONResponse {
 		$serviceId = trim((string)$this->request->getParam('serviceId', ''));
 		$date = trim((string)$this->request->getParam('date', ''));
@@ -182,6 +185,9 @@ class PortalController extends Controller {
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
+	// Tight: a booking consumes a real slot, so an unbounded caller can exhaust
+	// availability for everyone else without ever authenticating.
+	#[AnonRateLimit(limit: 20, period: 60)]
 	public function book(): JSONResponse {
 		$params = $this->collectBookParams();
 		$error = $this->validateBookParams(params: $params);
@@ -287,6 +293,7 @@ class PortalController extends Controller {
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getBooking(string $bookingId): JSONResponse {
 		$token = trim((string)$this->request->getParam('token', ''));
 		if ($token !== '') {
@@ -317,6 +324,7 @@ class PortalController extends Controller {
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
+	#[AnonRateLimit(limit: 30, period: 60)]
 	public function reschedule(): JSONResponse {
 		$token = trim((string)$this->request->getParam('token', ''));
 		$newStartAt = trim((string)$this->request->getParam('newStartAt', ''));
@@ -360,6 +368,7 @@ class PortalController extends Controller {
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
+	#[AnonRateLimit(limit: 30, period: 60)]
 	public function cancel(): JSONResponse {
 		$token = trim((string)$this->request->getParam('token', ''));
 		$reason = (string)$this->request->getParam('reason', '');

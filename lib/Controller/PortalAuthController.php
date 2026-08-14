@@ -36,6 +36,7 @@ use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCA\Pipelinq\Service\Portal\PortalSessionManager;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -88,6 +89,12 @@ class PortalAuthController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	// An IP-scoped ceiling ALONGSIDE the account-scoped lockout, not instead of
+	// it. PortalAuthService already arms a sliding-window lockout after repeated
+	// failures on ONE account — but an account lockout cannot see PASSWORD
+	// SPRAYING, where one IP tries one password against many accounts and never
+	// trips any single account's counter. That is the gap this closes.
+	#[AnonRateLimit(limit: 20, period: 60)]
 	public function login(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -120,6 +127,7 @@ class PortalAuthController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 60, period: 60)]
 	public function logout(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -140,6 +148,7 @@ class PortalAuthController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 60, period: 60)]
 	public function extendSession(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -161,6 +170,9 @@ class PortalAuthController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	// Tight: this one sends mail to an address the caller supplies, so an
+	// unbounded caller can use it to mail-bomb a third party.
+	#[AnonRateLimit(limit: 10, period: 60)]
 	public function passwordResetRequest(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -180,6 +192,9 @@ class PortalAuthController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	// Tight: the token is the only thing standing between a caller and an
+	// account takeover, so the ceiling bounds how fast one can be guessed.
+	#[AnonRateLimit(limit: 20, period: 60)]
 	public function passwordReset(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -204,6 +219,7 @@ class PortalAuthController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 20, period: 60)]
 	public function mfaEnroll(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
@@ -235,6 +251,9 @@ class PortalAuthController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	// Tightest in this controller: a TOTP code is six digits, so the whole
+	// keyspace is a million guesses. Without a ceiling that is minutes of work.
+	#[AnonRateLimit(limit: 10, period: 60)]
 	public function mfaVerify(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {
