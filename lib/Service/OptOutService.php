@@ -116,14 +116,14 @@ class OptOutService {
 	 * Creates the flag at most once: re-firing only updates `notitie`.
 	 *
 	 * @param string $rawBsn Raw BSN (caller MUST not log it).
-	 * @param string $indicatieGeheim Value of BRP's indicatieGeheim ("0" = none, "1" = present).
+	 * @param string $indicationSecret Value of BRP's indicatieGeheim ("0" = none, "1" = present).
 	 *
 	 * @return bool True when an OptOutVlag was newly created / refreshed.
 	 *
 	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-01
 	 */
-	public function recordFromBrpResponse(string $rawBsn, string $indicatieGeheim): bool {
-		if ($indicatieGeheim !== '1') {
+	public function recordFromBrpResponse(string $rawBsn, string $indicationSecret): bool {
+		if ($indicationSecret !== '1') {
 			return false;
 		}
 
@@ -137,8 +137,8 @@ class OptOutService {
 			$object = [
 				'bsnHash' => BsnValidationService::hash($rawBsn),
 				'type' => 'geheimhouding-gemeente',
-				'bron' => 'BRP',
-				'ingangsdatum' => $today->format('Y-m-d'),
+				'source' => 'BRP',
+				'effectiveDate' => $today->format('Y-m-d'),
 				'beperkt' => ['commerciele-derden', 'kerkgenootschappen', 'derdeportalen'],
 			];
 			$this->getObjectService()->saveObject(
@@ -162,24 +162,24 @@ class OptOutService {
 	 *
 	 * @param string $rawBsn Raw BSN.
 	 * @param string $actor The user UID who registered it.
-	 * @param string|null $notitie Optional free-text explanation.
+	 * @param string|null $note Optional free-text explanation.
 	 *
 	 * @return bool True on success.
 	 *
 	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-006-02
 	 */
-	public function recordLocalOptOut(string $rawBsn, string $actor, ?string $notitie = null): bool {
+	public function recordLocalOptOut(string $rawBsn, string $actor, ?string $note = null): bool {
 		try {
 			[$register, $schema] = $this->config();
 			$today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 			$object = [
 				'bsnHash' => BsnValidationService::hash($rawBsn),
 				'type' => 'lokale-contact-opt-out',
-				'bron' => 'lokaal',
-				'ingangsdatum' => $today->format('Y-m-d'),
+				'source' => 'lokaal',
+				'effectiveDate' => $today->format('Y-m-d'),
 				'beperkt' => ['commerciele-derden'],
-				'lokaalOpgevoerdDoor' => $actor,
-				'notitie' => $notitie,
+				'localEnteredBy' => $actor,
+				'note' => $note,
 			];
 			$object = array_filter($object, static fn ($v) => $v !== null);
 			$this->getObjectService()->saveObject(
@@ -207,8 +207,8 @@ class OptOutService {
 	 * @return bool
 	 */
 	private function isActive(array $arr, DateTimeImmutable $today): bool {
-		$ingang = (string)($arr['ingangsdatum'] ?? '');
-		$einddatum = $arr['einddatum'] ?? null;
+		$ingang = (string)($arr['effectiveDate'] ?? '');
+		$endDate = $arr['endDate'] ?? null;
 		if ($ingang === '') {
 			return false;
 		}
@@ -223,14 +223,14 @@ class OptOutService {
 			return false;
 		}
 
-		if ($einddatum !== null && $einddatum !== '') {
+		if ($endDate !== null && $endDate !== '') {
 			try {
-				$eindDt = new DateTimeImmutable((string)$einddatum, new DateTimeZone('UTC'));
+				$endDt = new DateTimeImmutable((string)$endDate, new DateTimeZone('UTC'));
 			} catch (Throwable $e) {
 				return true;
 			}
 
-			if ($today > $eindDt) {
+			if ($today > $endDt) {
 				return false;
 			}
 		}

@@ -136,7 +136,7 @@ class PortalProfileService {
 		}//end foreach
 
 		if (array_key_exists('email', $changes) === true) {
-			$this->beginEmailChange(account: $account, accountId: $accountId, tenantId: $tenantId, newEmail: (string)$changes['email']);
+			$this->startEmailChange(account: $account, accountId: $accountId, tenantId: $tenantId, newEmail: (string)$changes['email']);
 		}
 
 		$saved = $this->repository->save(self::SCHEMA, $account, $accountId);
@@ -198,7 +198,7 @@ class PortalProfileService {
 	 *
 	 * @return void
 	 */
-	private function beginEmailChange(array &$account, string $accountId, string $tenantId, string $newEmail): void {
+	private function startEmailChange(array &$account, string $accountId, string $tenantId, string $newEmail): void {
 		$newEmail = strtolower(trim($newEmail));
 		if ($newEmail === '' || $newEmail === strtolower((string)($account['email'] ?? ''))) {
 			return;

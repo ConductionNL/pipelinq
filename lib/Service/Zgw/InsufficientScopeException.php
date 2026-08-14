@@ -44,12 +44,12 @@ class InsufficientScopeException extends ZgwException {
 	 * Constructor.
 	 *
 	 * @param string $scope Missing scope name (e.g. "zaken.aanmaken").
-	 * @param string $zaaktypeUrl Target zaaktype/besluittype/informatieobjecttype URL.
+	 * @param string $caseTypeUrl Target zaaktype/besluittype/informatieobjecttype URL.
 	 * @param string $additionalInfo Optional extra context for the operator.
 	 */
 	public function __construct(
 		public readonly string $scope,
-		public readonly string $zaaktypeUrl,
+		public readonly string $caseTypeUrl,
 		string $additionalInfo = '',
 	) {
 		$suffix = '';
@@ -60,7 +60,7 @@ class InsufficientScopeException extends ZgwException {
 		$msg = sprintf(
 			'ZGW: missing scope "%s" on resource "%s".%s',
 			$scope,
-			$zaaktypeUrl,
+			$caseTypeUrl,
 			$suffix
 		);
 		parent::__construct(message: $msg);

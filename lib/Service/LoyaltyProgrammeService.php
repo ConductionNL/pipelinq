@@ -77,8 +77,8 @@ class LoyaltyProgrammeService {
 		}
 
 		// Date range.
-		$start = (string)($programme['startdatum'] ?? '');
-		$end = (string)($programme['einddatum'] ?? '');
+		$start = (string)($programme['startDate'] ?? '');
+		$end = (string)($programme['endDate'] ?? '');
 		if ($start !== '' && $end !== '' && $start > $end) {
 			$errors[] = 'Cannot activate: einddatum must be after startdatum';
 		}

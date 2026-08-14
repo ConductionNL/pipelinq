@@ -119,7 +119,7 @@ class BerichtenboxService {
 	/**
 	 * Queue an outbound message for a zaak status transition.
 	 *
-	 * @param string $zaakId External zaak id.
+	 * @param string $caseId External zaak id.
 	 * @param string|null $contactmomentId Linked Contactmoment id (optional).
 	 * @param string $status New zaak status.
 	 * @param string $bsn Burger's plaintext BSN (validated upstream).
@@ -138,7 +138,7 @@ class BerichtenboxService {
 	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
 	 */
 	public function queueOutboundMessage(
-		string $zaakId,
+		string $caseId,
 		?string $contactmomentId,
 		string $status,
 		string $bsn,
@@ -148,7 +148,7 @@ class BerichtenboxService {
 	): array {
 		$tenantId = $this->resolveTenantId();
 		$template = ($templateOverride ?? $this->findTemplate(
-			zaaktype: (string)($extraVariables['zaaktype'] ?? ''),
+			caseType: (string)($extraVariables['caseType'] ?? ''),
 			status: $status,
 			language: (string)($extraVariables['language'] ?? 'nl')
 		));
@@ -156,7 +156,7 @@ class BerichtenboxService {
 
 		$variables = array_merge(
 			[
-				'zaakId' => $zaakId,
+				'caseId' => $caseId,
 				'status' => $status,
 				'gemeente' => $this->appConfig->getValueString(
 					Application::APP_ID,
@@ -179,7 +179,7 @@ class BerichtenboxService {
 			'bsn' => $this->encryption->encrypt($bsn, $tenantId),
 			'bsnHash' => $bsnHash,
 			'contactmomentId' => ($contactmomentId ?? ''),
-			'zaakId' => $zaakId,
+			'caseId' => $caseId,
 			'subject' => $rendered['subject'],
 			'body' => $rendered['body'],
 			'templateId' => (string)($template['id'] ?? $template['uuid'] ?? 'inline'),
@@ -193,7 +193,7 @@ class BerichtenboxService {
 		$this->auditLogger->logQueued(
 			messageId: $messageUuid,
 			payloadHash: $this->auditLogger->hashPayload($rendered['body']),
-			retentionUntil: $this->auditLogger->calculateRetentionUntil((string)($extraVariables['zaaktype'] ?? ''))
+			retentionUntil: $this->auditLogger->calculateRetentionUntil((string)($extraVariables['caseType'] ?? ''))
 		);
 
 		return $saved;
@@ -819,13 +819,13 @@ class BerichtenboxService {
 	/**
 	 * Find a matching template for zaaktype + status + language.
 	 *
-	 * @param string $zaaktype zaaktype slug.
+	 * @param string $caseType zaaktype slug.
 	 * @param string $status status.
 	 * @param string $language language.
 	 *
 	 * @return array|null
 	 */
-	private function findTemplate(string $zaaktype, string $status, string $language): ?array {
+	private function findTemplate(string $caseType, string $status, string $language): ?array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(
 			Application::APP_ID,
@@ -842,7 +842,7 @@ class BerichtenboxService {
 					'filters' => [
 						'register' => $register,
 						'schema' => $schema,
-						'zaaktype' => $zaaktype,
+						'caseType' => $caseType,
 						'status' => $status,
 						'language' => $language,
 					],
@@ -922,9 +922,9 @@ class BerichtenboxService {
 		$payload = [
 			'title' => 'Re: ' . ((string)($parent['subject'] ?? '')),
 			'description' => (string)($reply['bodyText'] ?? ''),
-			'kanaal' => 'berichtenbox',
+			'channel' => 'berichtenbox',
 			'outcome' => 'opvolging-nodig',
-			'zaakId' => (string)($parent['zaakId'] ?? ''),
+			'caseId' => (string)($parent['caseId'] ?? ''),
 			'parentMessageId' => (string)($parent['uuid'] ?? ''),
 			'berichtenboxReplyId' => (string)($reply['uuid'] ?? ''),
 		];

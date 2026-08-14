@@ -16,7 +16,7 @@
 
 		<form @submit.prevent="enroll">
 			<NcTextField
-				v-model="klantId"
+				v-model="customerId"
 				:label="t('pipelinq', 'Customer (klantId / contact UID)')"
 				required />
 
@@ -89,7 +89,7 @@ export default {
 
 	data() {
 		return {
-			klantId: '',
+			customerId: '',
 			selectedProgramme: null,
 			programmes: [],
 			optInAccepted: false,
@@ -102,7 +102,7 @@ export default {
 		programmeOptions() {
 			return this.programmes.map((p) => ({
 				id: p.id,
-				label: p.naam || p.id,
+				label: p.name || p.id,
 				termsUrl: p.termsUrl,
 			}))
 		},
@@ -112,7 +112,7 @@ export default {
 		},
 
 		canSubmit() {
-			return this.optInAccepted && this.klantId && this.selectedProgramme
+			return this.optInAccepted && this.customerId && this.selectedProgramme
 		},
 
 		resultId() {
@@ -143,7 +143,7 @@ export default {
 					(response.data && (response.data.results || response.data)) || []
 				this.programmes = list.map((p) => ({
 					id: p['@self']?.id || p.id || p.programmeId,
-					naam: p.naam,
+					name: p.name,
 					termsUrl: p.termsUrl,
 				}))
 			} catch (error) {
@@ -159,7 +159,7 @@ export default {
 			try {
 				// Create the account via OR /objects, with opt-in fields set.
 				const payload = {
-					klantId: this.klantId,
+					customerId: this.customerId,
 					programmeId: this.selectedProgramme.id,
 					currentBalance: 0,
 					lifetimePoints: 0,
@@ -167,7 +167,7 @@ export default {
 					optInAccepted: true,
 					optInTimestamp: new Date().toISOString(),
 					optInTermsVersion: this.termsVersion,
-					aangemaaktOp: new Date().toISOString(),
+					createdOn: new Date().toISOString(),
 					lastActivityDate: new Date().toISOString(),
 				}
 				const response = await axios.post(

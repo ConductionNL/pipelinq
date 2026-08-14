@@ -53,12 +53,12 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 		$mock->method('findAll')->willReturnCallback(
 			static function (string $schema, array $filters) use ($tables): array {
 				$rows = $tables[$schema] ?? [];
-				$code = (string)($filters['gemeenteCode'] ?? '');
+				$code = (string)($filters['municipalityCode'] ?? '');
 				if ($code === '') {
 					return $rows;
 				}
 				return array_values(array_filter($rows, static function (array $row) use ($code): bool {
-					return (string)($row['gemeenteCode'] ?? '') === $code;
+					return (string)($row['municipalityCode'] ?? '') === $code;
 				}));
 			}
 		);
@@ -73,10 +73,10 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 	public function testBothWritePathsActiveRaises(): void {
 		$registers = $this->registerAccessWith([
 			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-				['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => false],
+				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'actief' => true, 'readOnly' => false],
 			],
 			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
-				['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'on'],
+				['id' => 'stuf-zo', 'municipalityCode' => '0637', 'write' => 'on'],
 			],
 		]);
 
@@ -95,10 +95,10 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 	public function testZgwOnlyWritePathPasses(): void {
 		$registers = $this->registerAccessWith([
 			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-				['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => false],
+				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'actief' => true, 'readOnly' => false],
 			],
 			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
-				['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'off'],
+				['id' => 'stuf-zo', 'municipalityCode' => '0637', 'write' => 'off'],
 			],
 		]);
 
@@ -115,10 +115,10 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 	public function testBothReadOnlyPasses(): void {
 		$registers = $this->registerAccessWith([
 			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-				['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => true],
+				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'actief' => true, 'readOnly' => true],
 			],
 			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
-				['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'off'],
+				['id' => 'stuf-zo', 'municipalityCode' => '0637', 'write' => 'off'],
 			],
 		]);
 
@@ -149,10 +149,10 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 	public function testExceptionCarriesConflictingIds(): void {
 		$registers = $this->registerAccessWith([
 			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-				['id' => 'zgw-zo', 'gemeenteCode' => '0637', 'actief' => true, 'readOnly' => false],
+				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'actief' => true, 'readOnly' => false],
 			],
 			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
-				['id' => 'stuf-zo', 'gemeenteCode' => '0637', 'write' => 'on'],
+				['id' => 'stuf-zo', 'municipalityCode' => '0637', 'write' => 'on'],
 			],
 		]);
 

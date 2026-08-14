@@ -89,31 +89,31 @@ class ProductCatalogService {
 	 * invoice; an unknown or empty class falls back to the standard 21% high
 	 * rate so a missing class can never silently drop tax to zero.
 	 *
-	 * @param string|null $btwClass The BTW class (hoog/laag/nul/vrijgesteld).
+	 * @param string|null $vatClass The BTW class (hoog/laag/nul/vrijgesteld).
 	 *
 	 * @return int The tax rate percentage.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
 	 */
-	public function btwClassToRate(?string $btwClass): int {
-		if ($this->isValidBtwClass(btwClass: $btwClass) === false) {
+	public function btwClassToRate(?string $vatClass): int {
+		if ($this->isValidBtwClass(vatClass: $vatClass) === false) {
 			return self::BTW_CLASS_RATES['hoog'];
 		}
 
-		return self::BTW_CLASS_RATES[$btwClass];
+		return self::BTW_CLASS_RATES[$vatClass];
 	}//end btwClassToRate()
 
 	/**
 	 * Whether a value is one of the four valid BTW classes.
 	 *
-	 * @param string|null $btwClass The BTW class candidate.
+	 * @param string|null $vatClass The BTW class candidate.
 	 *
 	 * @return bool Whether the class is valid.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
 	 */
-	public function isValidBtwClass(?string $btwClass): bool {
-		return $btwClass !== null && isset(self::BTW_CLASS_RATES[$btwClass]) === true;
+	public function isValidBtwClass(?string $vatClass): bool {
+		return $vatClass !== null && isset(self::BTW_CLASS_RATES[$vatClass]) === true;
 	}//end isValidBtwClass()
 
 	/**
@@ -231,10 +231,10 @@ class ProductCatalogService {
 			}
 		}
 
-		$btwClass = (string)($product['btwClass'] ?? '');
-		$btwClassOrNull = $btwClass;
-		if ($btwClass === '') {
-			$btwClassOrNull = null;
+		$vatClass = (string)($product['vatClass'] ?? '');
+		$vatClassOrNull = $vatClass;
+		if ($vatClass === '') {
+			$vatClassOrNull = null;
 		}
 
 		return [
@@ -242,8 +242,8 @@ class ProductCatalogService {
 			'source' => $source,
 			'tierLabel' => $tierLabel,
 			'quantity' => $quantity,
-			'btwClass' => $btwClass,
-			'taxRate' => $this->btwClassToRate(btwClass: $btwClassOrNull),
+			'vatClass' => $vatClass,
+			'taxRate' => $this->btwClassToRate(vatClass: $vatClassOrNull),
 		];
 	}//end resolveEffectivePrice()
 

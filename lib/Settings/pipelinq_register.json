@@ -258,14 +258,14 @@
             "title": "BSN verified",
             "facetable": true
           },
-          "brpPersoonId": {
+          "brpPersonId": {
             "type": "string",
             "description": "UUID-referentie naar meest recente geldige BrpPersoon. Null na retentie-expiratie. Niet exposable in standaard export-templates.",
             "format": "uuid",
             "visible": false,
             "title": "BRP Person ID"
           },
-          "geheimhouding": {
+          "secrecy": {
             "type": "boolean",
             "description": "Afgeleid uit OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). Wanneer true: adresgegevens worden afgeschermd in standaard-views — alleen via expliciete \"toon adres onder verantwoording\" zichtbaar (met extra audit-entry).",
             "default": false,
@@ -1032,7 +1032,7 @@
             "visible": false,
             "title": "Tax Rate"
           },
-          "btwClass": {
+          "vatClass": {
             "type": "string",
             "description": "Dutch BTW class. Governs receipt printing and invoice BTW labels and drives taxRate: hoog (21%), laag (9%), nul (0%), vrijgesteld (exempt, 0%).",
             "enum": [
@@ -2942,9 +2942,9 @@
         "description": "Onveranderlijk resultaat van een 11-proef controle (RvIG-algoritme). Wordt aangemaakt bij elke validatie-poging (server-side audit). BSN wordt gemaskeerd opgeslagen (***XXXX*) — raw BSN gaat NOOIT in een bsnValidatie-object.",
         "required": [
           "ingevoerdBsn",
-          "isFormeelGeldig",
-          "validatieTijdstip",
-          "geinitieerdDoor"
+          "isFormalValid",
+          "validationMoment",
+          "initiatedBy"
         ],
         "properties": {
           "ingevoerdBsn": {
@@ -2953,7 +2953,7 @@
             "maxLength": 16,
             "title": "BSN (masked)"
           },
-          "isFormeelGeldig": {
+          "isFormalValid": {
             "type": "boolean",
             "description": "Resultaat van 11-proef (true = pass, false = fail)",
             "title": "Formally valid",
@@ -2964,13 +2964,13 @@
             "description": "Intermediaire score (sum mod 11) voor debugging. 0 = geldig.",
             "title": "Eleven-test score"
           },
-          "validatieTijdstip": {
+          "validationMoment": {
             "type": "string",
             "description": "ISO 8601 timestamp van validatie (UTC)",
             "format": "date-time",
             "title": "Validation timestamp"
           },
-          "geinitieerdDoor": {
+          "initiatedBy": {
             "type": "string",
             "description": "Nextcloud user UID die de validatie initieerde",
             "maxLength": 128,
@@ -2989,7 +2989,7 @@
             "title": "Context",
             "facetable": true
           },
-          "verzoekId": {
+          "requestId": {
             "type": "string",
             "description": "UUID van gekoppeld Pipelinq verzoek (request, complaint) indien van toepassing",
             "format": "uuid",
@@ -3009,9 +3009,9 @@
           "bsnHash",
           "verzoekreden",
           "doelbinding",
-          "grondslag",
-          "aangevraagdDoor",
-          "verzoekTijdstip",
+          "basis",
+          "requestedBy",
+          "requestMoment",
           "responseStatus"
         ],
         "properties": {
@@ -3034,32 +3034,32 @@
             "maxLength": 500,
             "title": "Purpose binding"
           },
-          "grondslag": {
+          "basis": {
             "type": "string",
             "description": "Publieke taak, rechtsplicht, gerechtvaardigd belang, etc.",
             "maxLength": 200,
             "title": "Legal basis",
             "facetable": true
           },
-          "aangevraagdDoor": {
+          "requestedBy": {
             "type": "string",
             "description": "Nextcloud user UID van behandelaar",
             "maxLength": 128,
             "title": "Requested by"
           },
-          "aangevraagdNamens": {
+          "requestedOnBehalfOf": {
             "type": "string",
             "description": "Afdeling / rol (behandelaar-burgerzaken, behandelaar-avg)",
             "maxLength": 200,
             "title": "Requested on behalf of"
           },
-          "verzoekTijdstip": {
+          "requestMoment": {
             "type": "string",
             "description": "ISO 8601 wanneer lookup werd aangevraagd",
             "format": "date-time",
             "title": "Request timestamp"
           },
-          "gekoppeldVerzoek": {
+          "linkedRequest": {
             "type": "string",
             "description": "UUID-referentie naar Pipelinq verzoek (request, complaint, etc.)",
             "format": "uuid",
@@ -3086,14 +3086,14 @@
             "title": "Response status",
             "facetable": true
           },
-          "responseTijdstip": {
+          "responseMoment": {
             "type": "string",
             "description": "ISO 8601 wanneer HaalCentraal antwoordde",
             "format": "date-time",
             "visible": false,
             "title": "Response Timestamp"
           },
-          "responseDuurMs": {
+          "responseDurationMs": {
             "type": "integer",
             "description": "Response time in milliseconds",
             "visible": false,
@@ -3106,7 +3106,7 @@
             "visible": false,
             "title": "Haalcentraal Correlation ID"
           },
-          "responseBevatGeheimhouding": {
+          "responseContainsSecrecy": {
             "type": "boolean",
             "description": "Indicatie dat response indicatieGeheim=1 bevatte",
             "default": false,
@@ -3120,7 +3120,7 @@
             "facetable": true,
             "title": "Response In Cache"
           },
-          "cacheVerlooptOp": {
+          "cacheExpiresOn": {
             "type": "string",
             "description": "ISO 8601 wanneer gecachte response verloopt",
             "format": "date-time",
@@ -3138,17 +3138,17 @@
         "description": "Persoonsgegevens uit HaalCentraal BRP, genormaliseerd. Gekoppeld aan Contact. Versleuteld at-rest (Nextcloud native encryption). retentieTot stuurt het BrpRetentionJob — record wordt automatisch verwijderd na ingestelde periode (default 7 dagen na verzoek-afsluiting).",
         "required": [
           "bsnHash",
-          "voornamen",
-          "geslachtsnaam",
-          "geboortedatum",
+          "givenNames",
+          "surname",
+          "dateOfBirth",
           "geslacht",
-          "verblijfplaats",
-          "indicatieGeheim",
-          "opgehaaldOp",
+          "residence",
+          "indicationSecret",
+          "fetchedOn",
           "bronsysteem",
-          "lookupVerzoekId",
+          "lookupRequestId",
           "gekoppeldContact",
-          "retentieTot"
+          "retentionTo"
         ],
         "properties": {
           "bsnHash": {
@@ -3157,49 +3157,49 @@
             "maxLength": 64,
             "title": "BSN-hash"
           },
-          "voornamen": {
+          "givenNames": {
             "type": "string",
             "description": "Voornamen (schema:givenName)",
             "maxLength": 200,
             "title": "Given Names"
           },
-          "voorletters": {
+          "initials": {
             "type": "string",
             "description": "Afgekorte voornamen (schema:givenName initials)",
             "maxLength": 32,
             "title": "Initials"
           },
-          "voorvoegsel": {
+          "namePrefix": {
             "type": "string",
             "description": "Voorvoegsel: vd, de, van, van der, etc.",
             "maxLength": 32,
             "title": "Name Prefix"
           },
-          "geslachtsnaam": {
+          "surname": {
             "type": "string",
             "description": "Achternaam (schema:familyName)",
             "maxLength": 200,
             "title": "Family Name"
           },
-          "adellijkeTitel": {
+          "nobiliaryTitle": {
             "type": "string",
             "description": "Baron, Gravin, etc.",
             "maxLength": 64,
             "title": "Noble Title"
           },
-          "geboortedatum": {
+          "dateOfBirth": {
             "type": "string",
             "description": "Geboortedatum (YYYY-MM-DD)",
             "format": "date",
             "title": "Date of Birth"
           },
-          "geboorteplaats": {
+          "birthPlace": {
             "type": "string",
             "description": "Plaats van geboorte",
             "maxLength": 200,
             "title": "Birth Place"
           },
-          "geboorteland": {
+          "birthCountry": {
             "type": "string",
             "description": "Landcode (ISO 3166-1 alpha-2)",
             "maxLength": 2,
@@ -3216,12 +3216,12 @@
             "title": "Gender",
             "facetable": true
           },
-          "verblijfplaats": {
+          "residence": {
             "type": "object",
             "description": "Adresgegevens (straat, huisnummer, postcode, woonplaats, land)",
             "title": "Residence Address"
           },
-          "indicatieGeheim": {
+          "indicationSecret": {
             "type": "string",
             "description": "Geheimhouding-indicatie uit BRP — \"0\" (geen), \"1\" (geheimhouding gemeente)",
             "enum": [
@@ -3232,7 +3232,7 @@
             "title": "Confidentiality Indicator",
             "facetable": true
           },
-          "opgehaaldOp": {
+          "fetchedOn": {
             "type": "string",
             "description": "ISO 8601 wanneer dit Persoon-record van HaalCentraal kwam",
             "format": "date-time",
@@ -3245,7 +3245,7 @@
             "default": "HaalCentraal-BRP-v2.0",
             "title": "Source System"
           },
-          "lookupVerzoekId": {
+          "lookupRequestId": {
             "type": "string",
             "description": "UUID-referentie naar BrpLookupVerzoek",
             "format": "uuid",
@@ -3257,7 +3257,7 @@
             "format": "uuid",
             "title": "Linked Contact"
           },
-          "retentieTot": {
+          "retentionTo": {
             "type": "string",
             "description": "ISO 8601 datum/tijd tot hoelang dit record mag bestaan. BrpRetentionJob verwijdert records waar retentieTot < now.",
             "format": "date-time",
@@ -3276,15 +3276,15 @@
           "x-openregister-immutable": true
         },
         "required": [
-          "actie",
+          "action",
           "bsnHash",
           "actor",
-          "tijdstip",
+          "moment",
           "uitkomst",
-          "bewaartot"
+          "retainUntil"
         ],
         "properties": {
-          "actie": {
+          "action": {
             "type": "string",
             "description": "Type actie",
             "enum": [
@@ -3312,14 +3312,14 @@
             "title": "Actor",
             "facetable": true
           },
-          "actorRol": {
+          "actorRole": {
             "type": "string",
             "description": "Rol of groep van actor (behandelaar-burgerzaken, behandelaar-avg, beheerder)",
             "maxLength": 128,
             "facetable": true,
             "title": "Actor Role"
           },
-          "tijdstip": {
+          "moment": {
             "type": "string",
             "description": "ISO 8601 timestamp van actie",
             "format": "date-time",
@@ -3377,7 +3377,7 @@
             "maxLength": 128,
             "title": "HaalCentraal Correlation ID"
           },
-          "gekoppeldVerzoek": {
+          "linkedRequest": {
             "type": "string",
             "description": "UUID-referentie naar Pipelinq verzoek",
             "format": "uuid",
@@ -3391,7 +3391,7 @@
             "facetable": true,
             "title": "VOG Screening"
           },
-          "bewaartot": {
+          "retainUntil": {
             "type": "string",
             "description": "ISO 8601 tot hoelang dit record bewaard moet blijven (default now + 5 jaar)",
             "format": "date-time",
@@ -3409,8 +3409,8 @@
         "required": [
           "bsnHash",
           "type",
-          "bron",
-          "ingangsdatum"
+          "source",
+          "effectiveDate"
         ],
         "properties": {
           "bsnHash": {
@@ -3430,7 +3430,7 @@
             "title": "Type",
             "facetable": true
           },
-          "bron": {
+          "source": {
             "type": "string",
             "description": "BRP (automatisch uit response) of lokaal (handmatig opgevoerd)",
             "enum": [
@@ -3440,13 +3440,13 @@
             "title": "Source",
             "facetable": true
           },
-          "ingangsdatum": {
+          "effectiveDate": {
             "type": "string",
             "description": "ISO 8601 date wanneer opt-out van kracht werd",
             "format": "date",
             "title": "Effective Date"
           },
-          "einddatum": {
+          "endDate": {
             "type": "string",
             "description": "ISO 8601 date wanneer opt-out afloopt (null = onbeperkt)",
             "format": "date",
@@ -3460,14 +3460,14 @@
             },
             "title": "Restrictions"
           },
-          "lokaalOpgevoerdDoor": {
+          "localEnteredBy": {
             "type": "string",
             "description": "Nextcloud user UID van wie de opt-out lokaal registreerde",
             "maxLength": 128,
             "visible": false,
             "title": "Registered By"
           },
-          "notitie": {
+          "note": {
             "type": "string",
             "description": "Vrije toelichting (bijv. \"verzoek burger per formulier X\")",
             "maxLength": 1000,
@@ -3881,7 +3881,7 @@
         "status": "active",
         "unit": "stuk",
         "taxRate": 9,
-        "btwClass": "laag",
+        "vatClass": "laag",
         "modifierGroups": [
           {
             "name": "Melksoort",
@@ -3942,7 +3942,7 @@
         "status": "active",
         "unit": "stuk",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "hoog",
         "variants": [
           {
             "sku": "TSH-S-WIT",
@@ -4027,7 +4027,7 @@
         "status": "active",
         "unit": "pak",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "hoog",
         "priceTiers": [
           {
             "minQuantity": 1,
@@ -4060,7 +4060,7 @@
         "status": "active",
         "unit": "behandeling",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "hoog",
         "duration": 60,
         "modifierGroups": [
           {
@@ -4100,7 +4100,7 @@
         "status": "active",
         "unit": "uur",
         "taxRate": 0,
-        "btwClass": "vrijgesteld",
+        "vatClass": "vrijgesteld",
         "duration": 60,
         "priceTiers": [
           {
@@ -4135,7 +4135,7 @@
         "status": "active",
         "unit": "fles",
         "taxRate": 21,
-        "btwClass": "hoog"
+        "vatClass": "hoog"
       },
       {
         "@self": {
@@ -4152,7 +4152,7 @@
         "status": "active",
         "unit": "pot",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "hoog",
         "variants": [
           {
             "sku": "HAR-GEL-002-75",
@@ -4201,7 +4201,7 @@
         "status": "active",
         "unit": "flesje",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "hoog",
         "variants": [
           {
             "sku": "NAG-LAK-001-RED",
@@ -4250,7 +4250,7 @@
         "status": "active",
         "unit": "tube",
         "taxRate": 9,
-        "btwClass": "laag"
+        "vatClass": "laag"
       },
       {
         "@self": {
@@ -4267,7 +4267,7 @@
         "status": "active",
         "unit": "stuk",
         "taxRate": 21,
-        "btwClass": "hoog"
+        "vatClass": "hoog"
       },
       {
         "@self": {
@@ -4964,7 +4964,7 @@
         "status": "active",
         "unit": "project",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "hoog",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e60"
       },
       {
@@ -4983,7 +4983,7 @@
         "status": "active",
         "unit": "dag",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "hoog",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e61"
       },
       {
@@ -5002,7 +5002,7 @@
         "status": "active",
         "unit": "maand",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "hoog",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
       },
       {
@@ -5021,7 +5021,7 @@
         "status": "active",
         "unit": "gebruiker/jaar",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "hoog",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
       },
       {
@@ -5167,17 +5167,17 @@
         "bsnHash": "63b1f7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1b2",
         "verzoekreden": "Behandeling AVG-inzageverzoek art. 15",
         "doelbinding": "Publieke taak — Wet BRP art. 3.3",
-        "grondslag": "Publieke taak (AVG art. 6 lid 1 sub e)",
-        "aangevraagdDoor": "demo:m.devries",
-        "aangevraagdNamens": "behandelaar-burgerzaken",
-        "verzoekTijdstip": "2026-08-14T09:23:45+00:00",
+        "basis": "Publieke taak (AVG art. 6 lid 1 sub e)",
+        "requestedBy": "demo:m.devries",
+        "requestedOnBehalfOf": "behandelaar-burgerzaken",
+        "requestMoment": "2026-08-14T09:23:45+00:00",
         "responseStatus": "geslaagd",
-        "responseTijdstip": "2026-08-14T09:23:46+00:00",
-        "responseDuurMs": 412,
+        "responseMoment": "2026-08-14T09:23:46+00:00",
+        "responseDurationMs": 412,
         "haalcentraalCorrelationId": "hc-corr-7f3a9b2e",
-        "responseBevatGeheimhouding": false,
+        "responseContainsSecrecy": false,
         "responseInCache": false,
-        "cacheVerlooptOp": "2026-08-15T09:23:46+00:00"
+        "cacheExpiresOn": "2026-08-15T09:23:46+00:00"
       },
       {
         "@self": {
@@ -5189,13 +5189,13 @@
         "bsnHash": "12abf7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c188",
         "verzoekreden": "Reguliere verzoekbehandeling",
         "doelbinding": "Publieke taak — Wet BRP art. 3.3",
-        "grondslag": "Publieke taak (AVG art. 6 lid 1 sub e)",
-        "aangevraagdDoor": "demo:j.smith",
-        "aangevraagdNamens": "behandelaar-burgerzaken",
-        "verzoekTijdstip": "2026-08-14T10:15:22+00:00",
+        "basis": "Publieke taak (AVG art. 6 lid 1 sub e)",
+        "requestedBy": "demo:j.smith",
+        "requestedOnBehalfOf": "behandelaar-burgerzaken",
+        "requestMoment": "2026-08-14T10:15:22+00:00",
         "responseStatus": "niet-gevonden",
-        "responseTijdstip": "2026-08-14T10:15:23+00:00",
-        "responseDuurMs": 305,
+        "responseMoment": "2026-08-14T10:15:23+00:00",
+        "responseDurationMs": 305,
         "haalcentraalCorrelationId": "hc-corr-9e2b4c1f",
         "responseInCache": false
       },
@@ -5207,15 +5207,15 @@
           "id": "c7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e31"
         },
         "bsnHash": "63b1f7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1b2",
-        "voornamen": "Maria Wilhelmina",
-        "voorletters": "M.W.",
-        "voorvoegsel": "van der",
-        "geslachtsnaam": "Berg",
-        "geboortedatum": "1978-03-22",
-        "geboorteplaats": "Utrecht",
-        "geboorteland": "NL",
+        "givenNames": "Maria Wilhelmina",
+        "initials": "M.W.",
+        "namePrefix": "van der",
+        "surname": "Berg",
+        "dateOfBirth": "1978-03-22",
+        "birthPlace": "Utrecht",
+        "birthCountry": "NL",
         "geslacht": "vrouw",
-        "verblijfplaats": {
+        "residence": {
           "straat": "Lange Voorhout",
           "huisnummer": 14,
           "huisletter": "H",
@@ -5223,12 +5223,12 @@
           "woonplaats": "'s-Gravenhage",
           "land": "Nederland"
         },
-        "indicatieGeheim": "0",
-        "opgehaaldOp": "2026-08-14T09:23:46+00:00",
+        "indicationSecret": "0",
+        "fetchedOn": "2026-08-14T09:23:46+00:00",
         "bronsysteem": "HaalCentraal-BRP-v2.0",
-        "lookupVerzoekId": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e21",
+        "lookupRequestId": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e21",
         "gekoppeldContact": "00000000-0000-0000-0000-000000000000",
-        "retentieTot": "2026-08-21T09:23:46+00:00"
+        "retentionTo": "2026-08-21T09:23:46+00:00"
       },
       {
         "@self": {
@@ -5237,11 +5237,11 @@
           "slug": "bsn-audit-seed-success",
           "id": "d7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e41"
         },
-        "actie": "brp-lookup-uitgevoerd",
+        "action": "brp-lookup-uitgevoerd",
         "bsnHash": "63b1f7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1b2",
         "actor": "demo:m.devries",
-        "actorRol": "behandelaar-burgerzaken",
-        "tijdstip": "2026-08-14T09:23:46+00:00",
+        "actorRole": "behandelaar-burgerzaken",
+        "moment": "2026-08-14T09:23:46+00:00",
         "verzoekreden": "Behandeling AVG-inzageverzoek art. 15",
         "doelbinding": "Publieke taak — Wet BRP art. 3.3",
         "uitkomst": "geslaagd",
@@ -5250,7 +5250,7 @@
         "userAgent": "Pipelinq/pipelinq (Nextcloud)",
         "haalcentraalCorrelationId": "hc-corr-7f3a9b2e",
         "vogScreening": false,
-        "bewaartot": "2031-08-14T09:23:46+00:00"
+        "retainUntil": "2031-08-14T09:23:46+00:00"
       },
       {
         "@self": {
@@ -5259,18 +5259,18 @@
           "slug": "bsn-audit-seed-notfound",
           "id": "d7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e42"
         },
-        "actie": "brp-lookup-uitgevoerd",
+        "action": "brp-lookup-uitgevoerd",
         "bsnHash": "12abf7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c188",
         "actor": "demo:j.smith",
-        "actorRol": "behandelaar-burgerzaken",
-        "tijdstip": "2026-08-14T10:15:23+00:00",
+        "actorRole": "behandelaar-burgerzaken",
+        "moment": "2026-08-14T10:15:23+00:00",
         "verzoekreden": "Reguliere verzoekbehandeling",
         "doelbinding": "Publieke taak — Wet BRP art. 3.3",
         "uitkomst": "niet-gevonden",
         "responseCode": 404,
         "haalcentraalCorrelationId": "hc-corr-9e2b4c1f",
         "vogScreening": false,
-        "bewaartot": "2031-08-14T10:15:23+00:00"
+        "retainUntil": "2031-08-14T10:15:23+00:00"
       },
       {
         "@self": {
@@ -5281,8 +5281,8 @@
         },
         "bsnHash": "abcdef7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1e",
         "type": "geheimhouding-gemeente",
-        "bron": "BRP",
-        "ingangsdatum": "2024-11-01",
+        "source": "BRP",
+        "effectiveDate": "2024-11-01",
         "beperkt": [
           "commerciele-derden",
           "kerkgenootschappen",

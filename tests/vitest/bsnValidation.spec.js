@@ -14,7 +14,7 @@ describe('validateBsn', () => {
 	it('accepts a BSN that satisfies the 11-proef', () => {
 		// 111222333 is a canonical valid test BSN (passes the weighted check).
 		const result = validateBsn('111222333')
-		expect(result.isFormeelGeldig).toBe(true)
+		expect(result.isFormalValid).toBe(true)
 		expect(result.errorCode).toBeNull()
 		expect(result.errorMessage).toBeNull()
 		expect(result.maskedBsn).toBe('***2223*')
@@ -22,20 +22,20 @@ describe('validateBsn', () => {
 
 	it('rejects a BSN of the wrong length', () => {
 		const result = validateBsn('123')
-		expect(result.isFormeelGeldig).toBe(false)
+		expect(result.isFormalValid).toBe(false)
 		expect(result.errorCode).toBe('length')
 		expect(result.errorMessage).toBe('Een BSN bestaat uit exact 9 cijfers')
 	})
 
 	it('rejects a 9-char value containing non-digits', () => {
 		const result = validateBsn('12345678X')
-		expect(result.isFormeelGeldig).toBe(false)
+		expect(result.isFormalValid).toBe(false)
 		expect(result.errorCode).toBe('length')
 	})
 
 	it('rejects a 9-digit BSN that fails the checksum', () => {
 		const result = validateBsn('123456789')
-		expect(result.isFormeelGeldig).toBe(false)
+		expect(result.isFormalValid).toBe(false)
 		expect(result.errorCode).toBe('checksum')
 		expect(result.errorMessage).toBe('Dit BSN voldoet niet aan de 11-proef')
 	})

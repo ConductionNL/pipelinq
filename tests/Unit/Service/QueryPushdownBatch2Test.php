@@ -99,17 +99,17 @@ class QueryPushdownBatch2Test extends TestCase {
 	 */
 	public function testGetAccountBalanceMatchesPhpSum(): void {
 		$rows = [
-			['accountId' => 'a1', 'aantal' => 100],
-			['accountId' => 'a1', 'aantal' => -30],
-			['accountId' => 'a1', 'aantal' => 50],
-			['accountId' => 'a2', 'aantal' => 9999],
+			['accountId' => 'a1', 'count' => 100],
+			['accountId' => 'a1', 'count' => -30],
+			['accountId' => 'a1', 'count' => 50],
+			['accountId' => 'a2', 'count' => 9999],
 		];
 
 		// Oracle: prior PHP path summed signed aantal over the account history.
 		$phpBalance = 0;
 		foreach ($rows as $r) {
 			if ($r['accountId'] === 'a1') {
-				$phpBalance += (int)$r['aantal'];
+				$phpBalance += (int)$r['count'];
 			}
 		}
 

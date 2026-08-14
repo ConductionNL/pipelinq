@@ -437,11 +437,11 @@ class LoyaltyController extends Controller {
 			$expiryDays = 365;
 		}
 
-		$kanaal = (string)$this->request->getParam('kanaal', 'purchased');
-		$uitgegevenAanRaw = $this->request->getParam('uitgegevenAan');
-		$uitgegevenAan = null;
-		if (is_string($uitgegevenAanRaw) === true && $uitgegevenAanRaw !== '') {
-			$uitgegevenAan = $uitgegevenAanRaw;
+		$channel = (string)$this->request->getParam('channel', 'purchased');
+		$uitgegevenInRaw = $this->request->getParam('issuedIn');
+		$issuedIn = null;
+		if (is_string($uitgegevenInRaw) === true && $uitgegevenInRaw !== '') {
+			$issuedIn = $uitgegevenInRaw;
 		}
 
 		try {
@@ -449,8 +449,8 @@ class LoyaltyController extends Controller {
 				programmeId: $programmeId,
 				initialBalance: $initialBalance,
 				expiryDays: $expiryDays,
-				kanaal: $kanaal,
-				uitgegevenAan: $uitgegevenAan
+				channel: $channel,
+				issuedIn: $issuedIn
 			);
 			return new JSONResponse($result);
 		} catch (Throwable $e) {

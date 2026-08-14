@@ -69,16 +69,16 @@ class BrpControllerTest extends TestCase {
 	 *
 	 * @var \ArrayObject<string,mixed>
 	 */
-	private \ArrayObject $verzoekHolder;
+	private \ArrayObject $requestHolder;
 
 	/**
 	 * Return the captured `brpLookupVerzoek` payload, or null when none.
 	 *
 	 * @return array<string,mixed>|null
 	 */
-	private function capturedVerzoek(): ?array {
-		if (isset($this->verzoekHolder['verzoek']) === true) {
-			return $this->verzoekHolder['verzoek'];
+	private function capturedRequest(): ?array {
+		if (isset($this->requestHolder['verzoek']) === true) {
+			return $this->requestHolder['verzoek'];
 		}
 
 		return null;
@@ -95,10 +95,10 @@ class BrpControllerTest extends TestCase {
 	 */
 	public function testLookupPersistsMetaIntoAuditRecord(): void {
 		$person = [
-			'voornamen' => 'Jan',
-			'geslachtsnaam' => 'Jansen',
-			'indicatieGeheim' => '0',
-			'verblijfplaats' => ['straat' => 'Hoofdstraat'],
+			'givenNames' => 'Jan',
+			'surname' => 'Jansen',
+			'indicationSecret' => '0',
+			'residence' => ['straat' => 'Hoofdstraat'],
 			'_correlationId' => 'corr-shared-xyz',
 			'_responseDurationMs' => 142,
 			'_responseStatus' => 200,
@@ -115,15 +115,15 @@ class BrpControllerTest extends TestCase {
 
 		// The audit record carries the meta from the client, mapped to the
 		// canonical Wet-BRP field names — identical regardless of transport.
-		$verzoek = $this->capturedVerzoek();
-		self::assertNotNull($verzoek, 'brpLookupVerzoek was not persisted');
-		self::assertSame('corr-shared-xyz', $verzoek['haalcentraalCorrelationId']);
-		self::assertSame(142, $verzoek['responseDuurMs']);
-		self::assertSame('geslaagd', $verzoek['responseStatus']);
-		self::assertSame('Wet BRP', $verzoek['doelbinding']);
-		self::assertArrayHasKey('bsnHash', $verzoek);
+		$request = $this->capturedRequest();
+		self::assertNotNull($request, 'brpLookupVerzoek was not persisted');
+		self::assertSame('corr-shared-xyz', $request['haalcentraalCorrelationId']);
+		self::assertSame(142, $request['responseDurationMs']);
+		self::assertSame('geslaagd', $request['responseStatus']);
+		self::assertSame('Wet BRP', $request['doelbinding']);
+		self::assertArrayHasKey('bsnHash', $request);
 		// The raw BSN must never be a field on the audit record.
-		self::assertArrayNotHasKey('bsn', $verzoek);
+		self::assertArrayNotHasKey('bsn', $request);
 	}//end testLookupPersistsMetaIntoAuditRecord()
 
 	/**
@@ -137,8 +137,8 @@ class BrpControllerTest extends TestCase {
 	 */
 	public function testLookupNullCorrelationIdNotPersisted(): void {
 		$person = [
-			'voornamen' => 'Jan',
-			'indicatieGeheim' => '0',
+			'givenNames' => 'Jan',
+			'indicationSecret' => '0',
 			'_correlationId' => null,
 			'_responseDurationMs' => 9,
 			'_responseStatus' => 200,
@@ -147,14 +147,14 @@ class BrpControllerTest extends TestCase {
 		$controller = $this->buildController(remotePerson: $person);
 		$controller->lookup();
 
-		$verzoek = $this->capturedVerzoek();
-		self::assertNotNull($verzoek);
+		$request = $this->capturedRequest();
+		self::assertNotNull($request);
 		self::assertArrayNotHasKey(
 			'haalcentraalCorrelationId',
-			$verzoek,
+			$request,
 			'null correlation id is array_filtered out, not persisted as null'
 		);
-		self::assertSame(9, $verzoek['responseDuurMs']);
+		self::assertSame(9, $request['responseDurationMs']);
 	}//end testLookupNullCorrelationIdNotPersisted()
 
 	/**
@@ -175,7 +175,7 @@ class BrpControllerTest extends TestCase {
 					'bsn' => self::DEMO_BSN,
 					'verzoekreden' => 'Adresverificatie',
 					'doelbinding' => 'Wet BRP',
-					'grondslag' => 'Wet BRP art. 1.4',
+					'basis' => 'Wet BRP art. 1.4',
 				];
 				return $params[$key] ?? $default;
 			}
@@ -209,14 +209,14 @@ class BrpControllerTest extends TestCase {
 
 		$validation = $this->createMock(BsnValidationService::class);
 		$validation->method('validate')->willReturn(
-			['isFormeelGeldig' => true, 'errorCode' => null, 'errorMessage' => null, 'maskedBsn' => '*****6782']
+			['isFormalValid' => true, 'errorCode' => null, 'errorMessage' => null, 'maskedBsn' => '*****6782']
 		);
 
 		$cacheService = $this->createMock(BrpCacheService::class);
 		$cacheService->method('get')->willReturn(null);
 		// set() echoes the persoon back (so back-fill + response shaping work).
 		$cacheService->method('set')->willReturnCallback(
-			static fn (array $persoon, ?int $ttl = null): array => $persoon
+			static fn (array $person, ?int $ttl = null): array => $person
 		);
 
 		$haalCentraal = $this->createMock(HaalCentraalClient::class);
@@ -261,7 +261,7 @@ class BrpControllerTest extends TestCase {
 
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
-		$this->verzoekHolder = $holder;
+		$this->requestHolder = $holder;
 
 		return new BrpController(
 			$request,
@@ -352,8 +352,8 @@ class BrpControllerTest extends TestCase {
 				[
 					'bsnHash' => str_repeat('f', 64),
 					'gekoppeldContact' => 'contact-1',
-					'opgehaaldOp' => '2026-08-01T10:00:00Z',
-					'verblijfplaats' => ['straat' => 'Hoofdstraat', 'huisnummer' => 12],
+					'fetchedOn' => '2026-08-01T10:00:00Z',
+					'residence' => ['straat' => 'Hoofdstraat', 'huisnummer' => 12],
 				],
 			]
 		);
@@ -362,14 +362,14 @@ class BrpControllerTest extends TestCase {
 		$data = $response->getData();
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['verblijfplaats'], array_keys($data));
-		$this->assertSame('Hoofdstraat', $data['verblijfplaats']['straat']);
+		$this->assertSame(['residence'], array_keys($data));
+		$this->assertSame('Hoofdstraat', $data['residence']['straat']);
 
 		$this->assertCount(1, $recorded, 'the reveal was not audited');
-		$this->assertSame('brp-adres-onthuld', $recorded[0]['actie']);
+		$this->assertSame('brp-adres-onthuld', $recorded[0]['action']);
 		$this->assertSame('adres-onthuld', $recorded[0]['uitkomst']);
 		$this->assertSame('behandelaar1', $recorded[0]['actor']);
-		$this->assertSame('beheerder', $recorded[0]['actorRol']);
+		$this->assertSame('beheerder', $recorded[0]['actorRole']);
 		$this->assertStringContainsString('Wet BRP art. 3.3', $recorded[0]['doelbinding']);
 	}//end testRevealAddressReturnsTheResidenceAndWritesTheAuditEntry()
 
@@ -382,15 +382,15 @@ class BrpControllerTest extends TestCase {
 	public function testRevealAddressReturnsTheMostRecentlyRetrievedPerson(): void {
 		$controller = $this->buildPrivacyController(
 			persons: [
-				['opgehaaldOp' => '2026-01-01T00:00:00Z', 'verblijfplaats' => ['straat' => 'Oude Weg']],
-				['opgehaaldOp' => '2026-08-01T00:00:00Z', 'verblijfplaats' => ['straat' => 'Nieuwe Weg']],
+				['fetchedOn' => '2026-01-01T00:00:00Z', 'residence' => ['straat' => 'Oude Weg']],
+				['fetchedOn' => '2026-08-01T00:00:00Z', 'residence' => ['straat' => 'Nieuwe Weg']],
 			]
 		);
 
 		$response = $controller->revealAddress('contact-1');
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame('Nieuwe Weg', $response->getData()['verblijfplaats']['straat']);
+		$this->assertSame('Nieuwe Weg', $response->getData()['residence']['straat']);
 	}//end testRevealAddressReturnsTheMostRecentlyRetrievedPerson()
 
 	/**
@@ -416,8 +416,8 @@ class BrpControllerTest extends TestCase {
 			persons: [
 				[
 					'bsnHash' => str_repeat('f', 64),
-					'opgehaaldOp' => '2026-08-01T10:00:00Z',
-					'verblijfplaats' => ['straat' => 'Hoofdstraat'],
+					'fetchedOn' => '2026-08-01T10:00:00Z',
+					'residence' => ['straat' => 'Hoofdstraat'],
 				],
 			]
 		);
@@ -452,13 +452,13 @@ class BrpControllerTest extends TestCase {
 
 		$controller = $this->buildPrivacyController(
 			audit: $audit,
-			persons: [['opgehaaldOp' => '2026-08-01T10:00:00Z', 'verblijfplaats' => ['straat' => 'Hoofdstraat']]]
+			persons: [['fetchedOn' => '2026-08-01T10:00:00Z', 'residence' => ['straat' => 'Hoofdstraat']]]
 		);
 
 		$response = $controller->revealAddress('contact-1');
 
 		$this->assertGreaterThanOrEqual(500, $response->getStatus());
-		$this->assertArrayNotHasKey('verblijfplaats', $response->getData());
+		$this->assertArrayNotHasKey('residence', $response->getData());
 	}//end testRevealAddressIsRefusedWhenTheAuditEntryCouldNotBeWritten()
 
 	// ==================================================================
@@ -530,7 +530,7 @@ class BrpControllerTest extends TestCase {
 			->with(self::DEMO_BSN, 'behandelaar1', 'Verzoek per brief')
 			->willReturn(true);
 
-		$controller = $this->buildPrivacyController(optOut: $optOut, notitie: 'Verzoek per brief');
+		$controller = $this->buildPrivacyController(optOut: $optOut, note: 'Verzoek per brief');
 		$response = $controller->optOutCreate();
 
 		$this->assertSame(Http::STATUS_CREATED, $response->getStatus());
@@ -724,11 +724,11 @@ class BrpControllerTest extends TestCase {
 				string $verzoekreden,
 				string $doelbinding,
 				string $uitkomst,
-				string $actie = 'brp-lookup-uitgevoerd',
+				string $action = 'brp-lookup-uitgevoerd',
 				?int $responseCode = null,
 				?string $haalcentraalCorrelationId = null,
-				?string $gekoppeldVerzoek = null,
-				?string $actorRol = null,
+				?string $linkedRequest = null,
+				?string $actorRole = null,
 				bool $vogScreening = false,
 			) use (&$recorded): string {
 				$recorded[] = [
@@ -737,8 +737,8 @@ class BrpControllerTest extends TestCase {
 					'verzoekreden' => $verzoekreden,
 					'doelbinding' => $doelbinding,
 					'uitkomst' => $uitkomst,
-					'actie' => $actie,
-					'actorRol' => $actorRol,
+					'action' => $action,
+					'actorRole' => $actorRole,
 				];
 				return 'audit-1';
 			}
@@ -757,7 +757,7 @@ class BrpControllerTest extends TestCase {
 	 * @param string|null $uid Signed-in uid, or null.
 	 * @param bool $authorised Whether the actor resolves a role.
 	 * @param bool $bsnValid Whether the BSN passes the 11-proef.
-	 * @param string|null $notitie The opt-out note.
+	 * @param string|null $note The opt-out note.
 	 *
 	 * @return BrpController The controller.
 	 *
@@ -771,12 +771,12 @@ class BrpControllerTest extends TestCase {
 		?string $uid = 'behandelaar1',
 		bool $authorised = true,
 		bool $bsnValid = true,
-		?string $notitie = null,
+		?string $note = null,
 	): BrpController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
-			static function (string $key, $default = null) use ($notitie) {
-				$params = ['bsn' => self::DEMO_BSN, 'notitie' => $notitie];
+			static function (string $key, $default = null) use ($note) {
+				$params = ['bsn' => self::DEMO_BSN, 'note' => $note];
 				return ($params[$key] ?? $default);
 			}
 		);
@@ -813,7 +813,7 @@ class BrpControllerTest extends TestCase {
 		$validation = $this->createMock(BsnValidationService::class);
 		$validation->method('validate')->willReturn(
 			[
-				'isFormeelGeldig' => $bsnValid,
+				'isFormalValid' => $bsnValid,
 				'errorCode' => null,
 				'errorMessage' => 'Ongeldig BSN.',
 				'maskedBsn' => '*****6782',

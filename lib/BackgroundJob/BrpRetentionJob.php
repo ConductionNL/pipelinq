@@ -84,9 +84,9 @@ class BrpRetentionJob extends TimedJob {
 	protected function run(mixed $argument): void {
 		try {
 			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-			$persoonSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
+			$personSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpPersoon_schema', '');
 			$contactSchema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
-			if ($register === '' || $persoonSchema === '') {
+			if ($register === '' || $personSchema === '') {
 				$this->logger->info('BRP retention: schemas not configured; skipping');
 				return;
 			}
@@ -98,7 +98,7 @@ class BrpRetentionJob extends TimedJob {
 				config: [
 					'filters' => [
 						'register' => $register,
-						'schema' => $persoonSchema,
+						'schema' => $personSchema,
 					],
 				]
 			);
@@ -106,11 +106,11 @@ class BrpRetentionJob extends TimedJob {
 			$deleted = 0;
 			foreach (($records ?? []) as $record) {
 				$arr = $this->recordToArray(rec: $record);
-				$wasDeleted = $this->deleteExpiredPersoon(
+				$wasDeleted = $this->deleteExpiredPerson(
 					objects: $objects,
 					record: $arr,
 					register: $register,
-					persoonSchema: $persoonSchema,
+					personSchema: $personSchema,
 					contactSchema: $contactSchema,
 					now: $now
 				);
@@ -151,32 +151,32 @@ class BrpRetentionJob extends TimedJob {
 	 * @param object $objects OR ObjectService.
 	 * @param array<string, mixed> $record Persoon record data.
 	 * @param string $register Register slug.
-	 * @param string $persoonSchema BrpPersoon schema slug.
+	 * @param string $personSchema BrpPersoon schema slug.
 	 * @param string $contactSchema Contact schema slug.
 	 * @param DateTimeImmutable $now Current time (UTC).
 	 *
 	 * @return bool True when a record was deleted.
 	 */
-	private function deleteExpiredPersoon(
+	private function deleteExpiredPerson(
 		object $objects,
 		array $record,
 		string $register,
-		string $persoonSchema,
+		string $personSchema,
 		string $contactSchema,
 		DateTimeImmutable $now,
 	): bool {
-		$retentieTo = (string)($record['retentieTot'] ?? '');
-		if ($retentieTo === '') {
+		$retentionTo = (string)($record['retentionTo'] ?? '');
+		if ($retentionTo === '') {
 			return false;
 		}
 
 		try {
-			$retentieDt = new DateTimeImmutable($retentieTo, new DateTimeZone('UTC'));
+			$retentionDt = new DateTimeImmutable($retentionTo, new DateTimeZone('UTC'));
 		} catch (Throwable $e) {
 			return false;
 		}
 
-		if ($retentieDt > $now) {
+		if ($retentionDt > $now) {
 			return false;
 		}
 
@@ -185,7 +185,7 @@ class BrpRetentionJob extends TimedJob {
 
 		try {
 			$objects->setRegister($register)
-				->setSchema($persoonSchema)
+				->setSchema($personSchema)
 				->deleteObject(uuid: $uuid);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -235,7 +235,7 @@ class BrpRetentionJob extends TimedJob {
 				return;
 			}
 
-			if ((string)($existingArr['brpPersoonId'] ?? '') !== $persoonUuid) {
+			if ((string)($existingArr['brpPersonId'] ?? '') !== $persoonUuid) {
 				return;
 			}
 

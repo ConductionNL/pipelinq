@@ -57,7 +57,7 @@ class BsnValidationService {
 	 *
 	 * @param string $bsnInput Raw 9-digit BSN candidate (caller-trimmed).
 	 *
-	 * @return array{isFormeelGeldig: bool, elfproefScore: int, errorCode: ?string, errorMessage: ?string, maskedBsn: string}
+	 * @return array{isFormalValid: bool, elfproefScore: int, errorCode: ?string, errorMessage: ?string, maskedBsn: string}
 	 *
 	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001-01
 	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001-02
@@ -67,7 +67,7 @@ class BsnValidationService {
 		// 1. Length / character check (REQ-BSN-001-03 — short-circuits 11-proef).
 		if (strlen($bsnInput) !== 9 || ctype_digit($bsnInput) === false) {
 			return [
-				'isFormeelGeldig' => false,
+				'isFormalValid' => false,
 				'elfproefScore' => -1,
 				'errorCode' => self::ERROR_LENGTH,
 				'errorMessage' => 'Een BSN bestaat uit exact 9 cijfers.',
@@ -95,7 +95,7 @@ class BsnValidationService {
 		}
 
 		return [
-			'isFormeelGeldig' => $isValid,
+			'isFormalValid' => $isValid,
 			'elfproefScore' => $modulo,
 			'errorCode' => $errorCode,
 			'errorMessage' => $errorMessage,

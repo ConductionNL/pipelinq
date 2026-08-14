@@ -63,8 +63,8 @@ class GiftCardService {
 	 * @param ?string $programmeId Optional programme UUID.
 	 * @param float $initialBalance Initial card balance.
 	 * @param int $expiryDays Days until expiry (default 365).
-	 * @param string $kanaal Issuance channel.
-	 * @param ?string $uitgegevenAan Recipient label.
+	 * @param string $channel Issuance channel.
+	 * @param ?string $issuedIn Recipient label.
 	 *
 	 * @return array{card: array<string, mixed>, pin: string} Card + plaintext PIN (returned ONCE).
 	 *
@@ -74,8 +74,8 @@ class GiftCardService {
 		?string $programmeId,
 		float $initialBalance,
 		int $expiryDays = 365,
-		string $kanaal = 'purchased',
-		?string $uitgegevenAan = null,
+		string $channel = 'purchased',
+		?string $issuedIn = null,
 	): array {
 		if ($initialBalance <= 0) {
 			throw new RuntimeException('Initial balance must be positive.');
@@ -97,10 +97,10 @@ class GiftCardService {
 			'currentBalans' => $initialBalance,
 			'valuta' => 'EUR',
 			'status' => 'issued',
-			'uitgegevenOp' => $now,
-			'uitgegevenAan' => $uitgegevenAan,
-			'vervaltOp' => $exp,
-			'kanaal' => $kanaal,
+			'issuedOn' => $now,
+			'issuedIn' => $issuedIn,
+			'expiresOn' => $exp,
+			'channel' => $channel,
 		];
 
 		$saved = $this->persistCard(payload: $card, uuid: null);
@@ -108,10 +108,10 @@ class GiftCardService {
 		$this->logTransaction(
 			giftCardId: (string)$this->extractUuid(object: $saved),
 			type: 'issue',
-			bedrag: $initialBalance,
-			balansNa: $initialBalance,
+			amount: $initialBalance,
+			balanceAfter: $initialBalance,
 			posTransactionId: null,
-			verwerktDoor: 'gift-card-service'
+			processedBy: 'gift-card-service'
 		);
 
 		return ['card' => $saved, 'pin' => $pin];
@@ -193,9 +193,9 @@ class GiftCardService {
 			throw new RuntimeException('Gift card is not active.');
 		}
 
-		$vervaltOp = (string)($card['vervaltOp'] ?? '');
+		$expiresOn = (string)($card['expiresOn'] ?? '');
 		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-		if ($vervaltOp !== '' && $vervaltOp < $now) {
+		if ($expiresOn !== '' && $expiresOn < $now) {
 			throw new RuntimeException('Gift card has expired.');
 		}
 
@@ -225,10 +225,10 @@ class GiftCardService {
 		$this->logTransaction(
 			giftCardId: $giftCardId,
 			type: $type,
-			bedrag: $applied,
-			balansNa: $after,
+			amount: $applied,
+			balanceAfter: $after,
 			posTransactionId: $posTransactionId,
-			verwerktDoor: 'gift-card-service'
+			processedBy: 'gift-card-service'
 		);
 
 		return [
@@ -275,10 +275,10 @@ class GiftCardService {
 		$this->logTransaction(
 			giftCardId: $giftCardId,
 			type: 'refund',
-			bedrag: $amount,
-			balansNa: $after,
+			amount: $amount,
+			balanceAfter: $after,
 			posTransactionId: $posTransactionId,
-			verwerktDoor: 'gift-card-service'
+			processedBy: 'gift-card-service'
 		);
 
 		return $saved;
@@ -304,10 +304,10 @@ class GiftCardService {
 		$this->logTransaction(
 			giftCardId: $giftCardId,
 			type: 'block',
-			bedrag: 0.0,
-			balansNa: (float)($card['currentBalans'] ?? 0),
+			amount: 0.0,
+			balanceAfter: (float)($card['currentBalans'] ?? 0),
 			posTransactionId: null,
-			verwerktDoor: 'gift-card-service'
+			processedBy: 'gift-card-service'
 		);
 
 		$this->logger->info(
@@ -343,7 +343,7 @@ class GiftCardService {
 		return [
 			'balance' => (float)($card['currentBalans'] ?? 0),
 			'status' => (string)($card['status'] ?? 'issued'),
-			'expiryDate' => $card['vervaltOp'] ?? null,
+			'expiryDate' => $card['expiresOn'] ?? null,
 		];
 	}//end getCardDetails()
 
@@ -368,19 +368,19 @@ class GiftCardService {
 			return [
 				'valid' => false,
 				'balance' => (float)($card['currentBalans'] ?? 0),
-				'expiryDate' => ($card['vervaltOp'] ?? null),
+				'expiryDate' => ($card['expiresOn'] ?? null),
 				'giftCardId' => $this->extractUuid(object: $card),
 				'reason' => 'Blocked',
 			];
 		}
 
-		$vervaltOp = (string)($card['vervaltOp'] ?? '');
+		$expiresOn = (string)($card['expiresOn'] ?? '');
 		$now = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
-		if ($vervaltOp !== '' && $vervaltOp < $now) {
+		if ($expiresOn !== '' && $expiresOn < $now) {
 			return [
 				'valid' => false,
 				'balance' => (float)($card['currentBalans'] ?? 0),
-				'expiryDate' => $vervaltOp,
+				'expiryDate' => $expiresOn,
 				'giftCardId' => $this->extractUuid(object: $card),
 				'reason' => 'Expired',
 			];
@@ -391,8 +391,8 @@ class GiftCardService {
 		}
 
 		$expiryDate = null;
-		if ($vervaltOp !== '') {
-			$expiryDate = $vervaltOp;
+		if ($expiresOn !== '') {
+			$expiryDate = $expiresOn;
 		}
 
 		return [
@@ -475,13 +475,13 @@ class GiftCardService {
 	/**
 	 * List gift cards owned by a klantId (used by GDPR export).
 	 *
-	 * @param string $klantId The klantId.
+	 * @param string $customerId The klantId.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @spec exclude mechanical phpmd cleanup — no behaviour change
 	 */
-	public function listForKlant(string $klantId): array {
+	public function listForKlant(string $customerId): array {
 		[$register, $schema] = $this->config(schemaKey: 'giftCard_schema');
 		if ($register === '' || $schema === '') {
 			return [];
@@ -491,7 +491,7 @@ class GiftCardService {
 			$rows = $this->getObjectService()->findAll(
 				config: [
 					'filters' => [
-						'klantId' => $klantId,
+						'customerId' => $customerId,
 						'register' => $register,
 						'schema' => $schema,
 					],
@@ -531,20 +531,20 @@ class GiftCardService {
 	 *
 	 * @param string $giftCardId The card UUID.
 	 * @param string $type The transaction type.
-	 * @param float $bedrag The movement amount.
-	 * @param float $balansNa The balance after the movement.
+	 * @param float $amount The movement amount.
+	 * @param float $balanceAfter The balance after the movement.
 	 * @param ?string $posTransactionId The POS transaction id.
-	 * @param string $verwerktDoor Processor identifier.
+	 * @param string $processedBy Processor identifier.
 	 *
 	 * @return void
 	 */
 	private function logTransaction(
 		string $giftCardId,
 		string $type,
-		float $bedrag,
-		float $balansNa,
+		float $amount,
+		float $balanceAfter,
 		?string $posTransactionId,
-		string $verwerktDoor,
+		string $processedBy,
 	): void {
 		[$register, $schema] = $this->config(schemaKey: 'giftCardTransaction_schema');
 		if ($register === '' || $schema === '') {
@@ -554,11 +554,11 @@ class GiftCardService {
 		$payload = [
 			'giftCardId' => $giftCardId,
 			'type' => $type,
-			'bedrag' => $bedrag,
-			'balansNa' => $balansNa,
+			'amount' => $amount,
+			'balanceAfter' => $balanceAfter,
 			'timestamp' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c'),
 			'posTransactionId' => $posTransactionId,
-			'verwerktDoor' => $verwerktDoor,
+			'processedBy' => $processedBy,
 		];
 
 		try {

@@ -300,7 +300,7 @@ class SlaAttainmentControllerTest extends TestCase {
 						[
 							'kind' => 'resolution',
 							'status' => 'met',
-							'metAt' => $date . 'T10:00:00+00:00',
+							'withAt' => $date . 'T10:00:00+00:00',
 						],
 					],
 				],
@@ -448,7 +448,7 @@ class SlaAttainmentControllerTest extends TestCase {
 				'slaStatus' => [
 					'policyId' => 'gold',
 					'targets' => [
-						['kind' => 'resolution', 'status' => 'met', 'metAt' => '2026-06-10T10:00:00+00:00'],
+						['kind' => 'resolution', 'status' => 'met', 'withAt' => '2026-06-10T10:00:00+00:00'],
 					],
 				],
 			]
