@@ -18,11 +18,11 @@
  *   2. Pass tenantContext: useTenantContext to the createObjectStore options.
  */
 import {
+	auditTrailsPlugin,
 	createObjectStore,
 	filesPlugin,
-	auditTrailsPlugin,
-	relationsPlugin,
 	registerMappingPlugin,
+	relationsPlugin,
 } from '@conduction/nextcloud-vue'
 
 export const useObjectStore = createObjectStore('object', {

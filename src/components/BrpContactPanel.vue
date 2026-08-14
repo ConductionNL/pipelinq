@@ -30,7 +30,7 @@
 					autocomplete="off"
 					inputmode="numeric"
 					maxlength="9"
-					:helper-text="bsnFeedback || ' '"
+					:helperText="bsnFeedback || ' '"
 					:success="validation.isFormeelGeldig"
 					:error="rawBsn.length > 0 && !validation.isFormeelGeldig" />
 				<NcButton
@@ -105,13 +105,13 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { CnDetailCard } from '@conduction/nextcloud-vue'
-import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { validateBsn } from '../services/bsnValidation.js'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import BrpDoelbindingModal from '../modals/BrpDoelbindingModal.vue'
+import { validateBsn } from '../services/bsnValidation.js'
 
 export default {
 	name: 'BrpContactPanel',
@@ -122,16 +122,19 @@ export default {
 		CnDetailCard,
 		BrpDoelbindingModal,
 	},
+
 	props: {
 		contactId: {
 			type: String,
 			required: true,
 		},
+
 		initialBsn: {
 			type: String,
 			default: '',
 		},
 	},
+
 	emits: ['contact-updated'],
 	data() {
 		return {
@@ -145,10 +148,12 @@ export default {
 			revealedVerblijfplaats: null,
 		}
 	},
+
 	computed: {
 		validation() {
 			return validateBsn(this.rawBsn)
 		},
+
 		bsnFeedback() {
 			if (!this.rawBsn) return ''
 			return (
@@ -156,9 +161,11 @@ export default {
 				|| this.t('pipelinq', 'BSN passes the 11-check')
 			)
 		},
+
 		canLookup() {
 			return this.validation.isFormeelGeldig && this.lookupState !== 'loading'
 		},
+
 		fullName() {
 			if (!this.persoon) return ''
 			const parts = [
@@ -168,6 +175,7 @@ export default {
 			].filter(Boolean)
 			return parts.join(' ')
 		},
+
 		address() {
 			if (!this.persoon) return null
 			if (this.persoon.indicatieGeheim === '1' && !this.revealedAddress)
@@ -176,12 +184,14 @@ export default {
 			return this.persoon.verblijfplaats || null
 		},
 	},
+
 	methods: {
 		openDoelbinding() {
 			if (!this.canLookup) return
 			this.errorMessage = ''
 			this.showModal = true
 		},
+
 		async onLookup(payload) {
 			this.showModal = false
 			this.lookupState = 'loading'
@@ -216,6 +226,7 @@ export default {
 				showError(this.errorMessage)
 			}
 		},
+
 		async revealAddress() {
 			try {
 				const url = generateUrl(

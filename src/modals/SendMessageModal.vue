@@ -21,7 +21,7 @@
 			<NcSelect
 				v-model="channel"
 				:options="channelOptions"
-				:input-label="t('pipelinq', 'Channel')"
+				:inputLabel="t('pipelinq', 'Channel')"
 				label="label"
 				:reduce="(o) => o.value" />
 
@@ -55,7 +55,7 @@
 						<NcSelect
 							v-model="consentLegalBasis"
 							:options="legalBasisOptions"
-							:input-label="t('pipelinq', 'Legal basis')"
+							:inputLabel="t('pipelinq', 'Legal basis')"
 							label="label"
 							:reduce="(o) => o.value" />
 						<NcButton
@@ -83,7 +83,7 @@
 					<NcSelect
 						v-model="templateId"
 						:options="templateOptions"
-						:input-label="t('pipelinq', 'Template')"
+						:inputLabel="t('pipelinq', 'Template')"
 						label="label"
 						:reduce="(o) => o.value" />
 					<p
@@ -125,10 +125,10 @@
 </template>
 
 <script>
-import { NcButton, NcModal, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcModal, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'SendMessageModal',
@@ -139,15 +139,18 @@ export default {
 		NcTextArea,
 		NcTextField,
 	},
+
 	props: {
 		contactId: {
 			type: String,
 			required: true,
 		},
+
 		clientId: {
 			type: String,
 			default: '',
 		},
+
 		preflight: {
 			type: Object,
 			default: () => ({
@@ -158,6 +161,7 @@ export default {
 			}),
 		},
 	},
+
 	emits: ['sent', 'close'],
 	data() {
 		return {
@@ -173,10 +177,12 @@ export default {
 			localConsent: null,
 		}
 	},
+
 	computed: {
 		today() {
 			return new Date().toLocaleDateString()
 		},
+
 		channelOptions() {
 			const options = []
 			if (this.preflight.channels && this.preflight.channels.sms) {
@@ -187,20 +193,24 @@ export default {
 			}
 			return options
 		},
+
 		channelLabel() {
 			return this.channel === 'sms'
 				? t('pipelinq', 'SMS')
 				: t('pipelinq', 'WhatsApp')
 		},
+
 		whatsappNeedsTemplate() {
 			return this.channel === 'whatsapp' && !this.preflight.whatsappSessionOpen
 		},
+
 		templateOptions() {
 			return (this.preflight.templates || []).map((tpl) => ({
 				value: tpl.id,
 				label: `${tpl.externalId} (${tpl.language})`,
 			}))
 		},
+
 		selectedTemplate() {
 			return (
 				(this.preflight.templates || []).find(
@@ -208,6 +218,7 @@ export default {
 				) || null
 			)
 		},
+
 		effectiveConsentState() {
 			if (this.localConsent && this.localConsent.channel === this.channel) {
 				return this.localConsent.state
@@ -217,6 +228,7 @@ export default {
 				|| 'unknown'
 			)
 		},
+
 		consentLabel() {
 			const labels = {
 				'opted-in': t('pipelinq', 'opted in'),
@@ -225,6 +237,7 @@ export default {
 			}
 			return labels[this.effectiveConsentState] || labels.unknown
 		},
+
 		/**
 		 * Whether the currently selected channel's consent state is
 		 * acceptable for a business-initiated send: a WhatsApp template send
@@ -242,6 +255,7 @@ export default {
 			}
 			return this.effectiveConsentState !== 'opted-out'
 		},
+
 		legalBasisOptions() {
 			return [
 				{ value: 'consent', label: t('pipelinq', 'Consent') },
@@ -252,6 +266,7 @@ export default {
 				},
 			]
 		},
+
 		canSend() {
 			if (this.sending || !this.channel || !this.consentOk) {
 				return false
@@ -261,6 +276,7 @@ export default {
 			}
 			return this.body.trim() !== ''
 		},
+
 		resultMessage() {
 			if (!this.sendResult) {
 				return ''
@@ -270,23 +286,28 @@ export default {
 					'pipelinq',
 					'The server refused to send: consent is missing for this channel.',
 				),
+
 				'budget-exceeded': t(
 					'pipelinq',
 					'The server refused to send: the messaging budget for this period is exceeded.',
 				),
+
 				'template-required': t(
 					'pipelinq',
 					'The server refused to send: the WhatsApp session window has expired and a template is required.',
 				),
+
 				'template-invalid': t(
 					'pipelinq',
 					'The server refused to send: the selected template is invalid ({reason}).',
 					{ reason: this.sendResult.reason || t('pipelinq', 'unknown') },
 				),
+
 				'no-provider': t(
 					'pipelinq',
 					'The server refused to send: no active provider is configured for this channel.',
 				),
+
 				failed: t(
 					'pipelinq',
 					'The message could not be delivered by the provider.',
@@ -298,6 +319,7 @@ export default {
 			)
 		},
 	},
+
 	watch: {
 		channel() {
 			this.sendResult = null
@@ -305,6 +327,7 @@ export default {
 			this.templateId = null
 			this.templateParams = []
 		},
+
 		selectedTemplate(tpl) {
 			if (!tpl) {
 				this.templateParams = []
@@ -315,6 +338,7 @@ export default {
 			this.templateParams = new Array(count).fill('')
 		},
 	},
+
 	methods: {
 		async recordConsent() {
 			if (!this.consentEvidence) {
@@ -344,6 +368,7 @@ export default {
 				this.recordingConsent = false
 			}
 		},
+
 		async send() {
 			if (!this.canSend) {
 				return

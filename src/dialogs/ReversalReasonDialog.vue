@@ -22,9 +22,9 @@
 		<NcTextField
 			id="reversal-reason"
 			:label="t('pipelinq', 'Reason for reversal')"
-			:model-value="reason"
+			:modelValue="reason"
 			:placeholder="t('pipelinq', 'Why is this payment being reversed?')"
-			@update:model-value="(v) => (reason = v)" />
+			@update:modelValue="(v) => (reason = v)" />
 		<template #actions>
 			<NcButton @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}

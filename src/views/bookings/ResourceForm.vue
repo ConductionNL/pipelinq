@@ -23,11 +23,11 @@
 				<NcTextField
 					id="resource-name"
 					:label="t('pipelinq', 'Name') + ' *'"
-					:model-value="form.name"
+					:modelValue="form.name"
 					:error="!!errors.name"
-					:helper-text="errors.name"
+					:helperText="errors.name"
 					:maxlength="255"
-					@update:model-value="
+					@update:modelValue="
 						(v) => {
 							form.name = v
 							validateField('name')
@@ -38,7 +38,7 @@
 				<label for="resource-type">{{ t('pipelinq', 'Type') }} *</label>
 				<NcSelect
 					v-model="form.type"
-					input-id="resource-type"
+					inputId="resource-type"
 					:aria-label-combobox="t('pipelinq', 'Resource type')"
 					:options="typeOptions"
 					:reduce="(o) => o.value"
@@ -51,7 +51,7 @@
 				<label for="resource-status">{{ t('pipelinq', 'Status') }} *</label>
 				<NcSelect
 					v-model="form.status"
-					input-id="resource-status"
+					inputId="resource-status"
 					:aria-label-combobox="t('pipelinq', 'Status')"
 					:options="statusOptions"
 					:reduce="(o) => o.value"
@@ -62,8 +62,8 @@
 					id="resource-max-concurrent"
 					:label="t('pipelinq', 'Max concurrent bookings')"
 					type="number"
-					:model-value="String(form.maxConcurrent ?? 1)"
-					@update:model-value="
+					:modelValue="String(form.maxConcurrent ?? 1)"
+					@update:modelValue="
 						(v) =>
 							(form.maxConcurrent =
 								v === '' ? 1 : Math.max(1, Number(v)))
@@ -84,8 +84,8 @@
 			<NcTextField
 				id="resource-skills"
 				:label="t('pipelinq', 'Skills (comma-separated)')"
-				:model-value="skillsCsv"
-				@update:model-value="onSkillsInput" />
+				:modelValue="skillsCsv"
+				@update:modelValue="onSkillsInput" />
 		</div>
 
 		<div class="form-row">
@@ -93,15 +93,15 @@
 				<NcTextField
 					id="resource-user-id"
 					:label="t('pipelinq', 'Nextcloud user ID (staff only)')"
-					:model-value="form.userId || ''"
-					@update:model-value="(v) => (form.userId = v)" />
+					:modelValue="form.userId || ''"
+					@update:modelValue="(v) => (form.userId = v)" />
 			</div>
 			<div class="form-group">
 				<NcTextField
 					id="resource-calendar-sync"
 					:label="t('pipelinq', 'Calendar sync link (UUID)')"
-					:model-value="form.calendarSyncId || ''"
-					@update:model-value="(v) => (form.calendarSyncId = v)" />
+					:modelValue="form.calendarSyncId || ''"
+					@update:modelValue="(v) => (form.calendarSyncId = v)" />
 			</div>
 		</div>
 
@@ -121,7 +121,7 @@
 						<td>
 							<NcSelect
 								v-model="row.day"
-								:input-id="`hours-day-${idx}`"
+								:inputId="`hours-day-${idx}`"
 								:aria-label-combobox="t('pipelinq', 'Day')"
 								:options="dayOptions"
 								:reduce="(o) => o.value"
@@ -243,6 +243,7 @@ export default {
 	props: {
 		resource: { type: Object, default: () => ({}) },
 	},
+
 	emits: ['save', 'cancel'],
 	data() {
 		return {
@@ -250,6 +251,7 @@ export default {
 			errors: { name: '' },
 		}
 	},
+
 	computed: {
 		isValid() {
 			const hasName = (this.form.name || '').trim().length > 0
@@ -263,9 +265,11 @@ export default {
 				&& !this.vacationError
 			)
 		},
+
 		skillsCsv() {
 			return (this.form.skills || []).join(', ')
 		},
+
 		typeOptions() {
 			return [
 				{ value: 'staff', label: t('pipelinq', 'Staff') },
@@ -273,6 +277,7 @@ export default {
 				{ value: 'equipment', label: t('pipelinq', 'Equipment') },
 			]
 		},
+
 		statusOptions() {
 			return [
 				{ value: 'active', label: t('pipelinq', 'Active') },
@@ -280,9 +285,11 @@ export default {
 				{ value: 'archived', label: t('pipelinq', 'Archived') },
 			]
 		},
+
 		dayOptions() {
 			return DAYS.map((d) => ({ value: d, label: t('pipelinq', d) }))
 		},
+
 		/**
 		 * @return {string} Error text when any workingHours row has openTime
 		 *  >= closeTime, empty otherwise.
@@ -296,6 +303,7 @@ export default {
 			})
 			return bad ? t('pipelinq', 'Open time must be before close time.') : ''
 		},
+
 		/**
 		 * @return {string} Error text when any vacations row has startDate
 		 *  > endDate, empty otherwise.
@@ -313,6 +321,7 @@ export default {
 				: ''
 		},
 	},
+
 	watch: {
 		resource: {
 			immediate: true,
@@ -323,6 +332,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		emptyForm() {
 			return {
@@ -338,6 +348,7 @@ export default {
 				status: 'active',
 			}
 		},
+
 		populateForm(data) {
 			this.form = {
 				...this.emptyForm(),
@@ -346,12 +357,14 @@ export default {
 				workingHours: Array.isArray(data.workingHours)
 					? data.workingHours.map((r) => ({ ...r }))
 					: [],
+
 				vacations: Array.isArray(data.vacations)
 					? data.vacations.map((r) => ({ ...r }))
 					: [],
 			}
 			this.errors = { name: '' }
 		},
+
 		validateField(field) {
 			if (field === 'name') {
 				this.errors.name = String(this.form.name || '').trim()
@@ -359,16 +372,19 @@ export default {
 					: t('pipelinq', 'Name is required')
 			}
 		},
+
 		validateAll() {
 			this.validateField('name')
 			return this.isValid
 		},
+
 		onSkillsInput(value) {
 			this.form.skills = (value || '')
 				.split(',')
 				.map((s) => s.trim())
 				.filter((s) => s.length > 0)
 		},
+
 		addHours() {
 			this.form.workingHours.push({
 				day: 'monday',
@@ -376,15 +392,19 @@ export default {
 				closeTime: '17:00',
 			})
 		},
+
 		removeHours(idx) {
 			this.form.workingHours.splice(idx, 1)
 		},
+
 		addVacation() {
 			this.form.vacations.push({ startDate: '', endDate: '', label: '' })
 		},
+
 		removeVacation(idx) {
 			this.form.vacations.splice(idx, 1)
 		},
+
 		onSave() {
 			if (!this.validateAll()) {
 				return

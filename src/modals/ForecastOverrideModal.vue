@@ -27,7 +27,7 @@
 				:label="t('pipelinq', 'Reason for override')"
 				:placeholder="t('pipelinq', 'Why are you adjusting this number?')"
 				:error="showError"
-				:helper-text="
+				:helperText="
 					showError
 						? t('pipelinq', 'Please enter at least 5 characters.')
 						: ''
@@ -62,6 +62,7 @@ export default {
 		category: { type: String, default: 'commit' },
 		currentAmount: { type: Number, default: 0 },
 	},
+
 	emits: ['close', 'saved'],
 	data() {
 		return {
@@ -72,19 +73,23 @@ export default {
 			errorMessage: '',
 		}
 	},
+
 	computed: {
 		categoryLabel() {
 			return this.category === 'best_case'
 				? t('pipelinq', 'Best-case')
 				: t('pipelinq', 'Commit')
 		},
+
 		valid() {
 			return this.reason.trim().length >= 5 && Number(this.amount) >= 0
 		},
+
 		showError() {
 			return this.touched && this.reason.trim().length < 5
 		},
 	},
+
 	methods: {
 		async save() {
 			this.touched = true

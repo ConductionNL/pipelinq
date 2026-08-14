@@ -23,10 +23,10 @@
 		:schema="schema"
 		:columns="columns"
 		:sidebar="sidebarConfig"
-		:row-class="rowClassFor"
-		:items-filter="itemsFilter"
-		:row-click-to-view="false"
-		@row-click="openLead"
+		:rowClass="rowClassFor"
+		:itemsFilter="itemsFilter"
+		:rowClickToView="false"
+		@rowClick="openLead"
 		@view="openLead">
 		<template #header-actions>
 			<div class="lead-list__filters">
@@ -69,12 +69,12 @@ import { CnIndexPage } from '@conduction/nextcloud-vue'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import {
 	getDaysAge,
-	isLeadOverdue,
 	getOverdueDays,
 	getStaleThreshold,
+	isLeadOverdue,
 } from '../../services/pipelineUtils.js'
-import { useSettingsStore } from '../../store/modules/settings.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 
 export default {
 	name: 'LeadList',
@@ -82,6 +82,7 @@ export default {
 		CnIndexPage,
 		NcCheckboxRadioSwitch,
 	},
+
 	data() {
 		return {
 			register: 'pipelinq',
@@ -94,11 +95,13 @@ export default {
 				'value',
 				'expectedCloseDate',
 			],
+
 			showStaleOnly: false,
 			hideClosed: true,
 			stages: [],
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/lead-management/spec.md
@@ -106,12 +109,14 @@ export default {
 		settingsStore() {
 			return useSettingsStore()
 		},
+
 		/**
 		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * Effective stale threshold from the settings store. Falls back to
 		 * 14 days when the store hasn't initialised yet.
@@ -121,6 +126,7 @@ export default {
 		staleThreshold() {
 			return getStaleThreshold(this.settingsStore.config)
 		},
+
 		/**
 		 * Sidebar config for the index page; mirrors the manifest.json default.
 		 */
@@ -128,10 +134,12 @@ export default {
 			return { enabled: true, showMetadata: true }
 		},
 	},
+
 	async mounted() {
 		await this.settingsStore.fetchSettings()
 		await this.loadDefaultPipeline()
 	},
+
 	methods: {
 		isLeadOverdue,
 		getOverdueDays,
@@ -143,6 +151,7 @@ export default {
 		openLead(row) {
 			this.$router.push({ name: 'LeadDetail', params: { id: row.id } })
 		},
+
 		/**
 		 * Compute the row CSS class for the given lead. Drives the
 		 * `.lead-overdue` highlighting on the list rows.
@@ -154,6 +163,7 @@ export default {
 		rowClassFor(item) {
 			return isLeadOverdue(item, this.stages) ? 'lead-overdue' : ''
 		},
+
 		/**
 		 * Custom items filter — applied after the platform's search/sort.
 		 * Implements the stale toggle and the optional "hide closed" filter.
@@ -177,6 +187,7 @@ export default {
 				return true
 			})
 		},
+
 		/**
 		 * Resolve the default pipeline's stages so the overdue highlighting
 		 * (REQ-LM-004) can honour each stage's `isClosed` flag. Falls back to

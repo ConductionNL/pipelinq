@@ -32,6 +32,7 @@ export default {
 		NcButton,
 		NcDialog,
 	},
+
 	props: {
 		/**
 		 * Selectable priorities as `{ value, label }` pairs.
@@ -40,6 +41,7 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/**
 		 * The card's current priority; its button is highlighted.
 		 */
@@ -48,6 +50,7 @@ export default {
 			default: null,
 		},
 	},
+
 	emits: ['close', 'select'],
 }
 </script>

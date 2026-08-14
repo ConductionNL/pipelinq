@@ -1,8 +1,8 @@
+import { generateUrl } from '@nextcloud/router'
 /**
  * Queues store for Pipelinq — manages queue CRUD via OpenRegister API.
  */
 import { defineStore } from 'pinia'
-import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from './object.js'
 
 export const useQueuesStore = defineStore('queues', {

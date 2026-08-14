@@ -28,9 +28,9 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import PhoneIcon from 'vue-material-design-icons/Phone.vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { clickToDial } from '../services/ctiApi.js'
 
 export default {
@@ -41,12 +41,14 @@ export default {
 		extension: { type: String, default: '' },
 		enabled: { type: Boolean, default: true },
 	},
+
 	emits: ['initiated'],
 	data() {
 		return {
 			dialing: false,
 		}
 	},
+
 	methods: {
 		async dial() {
 			if (!this.targetNumber || !this.extension) {

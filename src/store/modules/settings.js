@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 
 export const useSettingsStore = defineStore('settings', {
 	state: () => ({

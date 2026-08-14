@@ -12,10 +12,10 @@
 				v-model="selectedPipeline"
 				:options="pipelineOptions"
 				:clearable="true"
-				:input-label="t('pipelinq', 'Pipeline')"
+				:inputLabel="t('pipelinq', 'Pipeline')"
 				label="label"
-				track-by="value"
-				@update:model-value="
+				trackBy="value"
+				@update:modelValue="
 					$emit(
 						'pipeline-change',
 						selectedPipeline ? selectedPipeline.value : null,
@@ -41,7 +41,7 @@
 
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
-import { NcSelect, NcEmptyContent } from '@nextcloud/vue'
+import { NcEmptyContent, NcSelect } from '@nextcloud/vue'
 
 export default {
 	name: 'PipelineFunnelWidget',
@@ -51,24 +51,29 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		pipelineOptions: {
 			type: Array,
 			default: () => [],
 		},
 	},
+
 	emits: ['pipeline-change'],
 	data() {
 		return {
 			selectedPipeline: null,
 		}
 	},
+
 	computed: {
 		filteredData() {
 			return Array.isArray(this.data) ? this.data : []
 		},
+
 		categories() {
 			return this.filteredData.map((row) => row.stage)
 		},
+
 		series() {
 			return [
 				{

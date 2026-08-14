@@ -47,6 +47,7 @@ export default {
 		NcButton,
 		NcDialog,
 	},
+
 	props: {
 		/**
 		 * The pipeline pending deletion.
@@ -55,6 +56,7 @@ export default {
 			type: Object,
 			required: true,
 		},
+
 		/**
 		 * Number of leads/requests currently on the pipeline.
 		 */
@@ -63,6 +65,7 @@ export default {
 			default: 0,
 		},
 	},
+
 	emits: ['cancel', 'confirm'],
 }
 </script>

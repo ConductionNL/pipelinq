@@ -22,11 +22,11 @@
 			<NcSelect
 				v-model="form.pipeline"
 				:options="pipelineOptions"
-				:input-label="t('pipelinq', 'Pipeline')"
+				:inputLabel="t('pipelinq', 'Pipeline')"
 				:placeholder="t('pipelinq', 'Pipeline')"
 				label="label"
-				track-by="id"
-				input-id="lead-pipeline" />
+				trackBy="id"
+				inputId="lead-pipeline" />
 
 			<NcTextField
 				v-model="form.value"
@@ -37,9 +37,9 @@
 			<NcSelect
 				v-model="form.source"
 				:options="sourceOptions"
-				:input-label="t('pipelinq', 'Source')"
+				:inputLabel="t('pipelinq', 'Source')"
 				:placeholder="t('pipelinq', 'Source')"
-				input-id="lead-source" />
+				inputId="lead-source" />
 
 			<NcButton variant="primary" :disabled="submitting" @click="onSubmit">
 				{{
@@ -63,8 +63,8 @@
 </template>
 
 <script>
-import { NcTextField, NcButton, NcSelect, NcNoteCard } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
@@ -78,12 +78,14 @@ export default {
 		NcNoteCard,
 		ClientAutocomplete,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			config: null,
@@ -94,6 +96,7 @@ export default {
 				value: '',
 				source: null,
 			},
+
 			selectedClient: null,
 			submitted: false,
 			submitting: false,
@@ -109,6 +112,7 @@ export default {
 			],
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-26
@@ -121,6 +125,7 @@ export default {
 			}))
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-22
 	 */
@@ -133,6 +138,7 @@ export default {
 			console.error('CreateLeadWidget init error:', err)
 		}
 	},
+
 	methods: {
 		/**
 		 * @param client
@@ -141,6 +147,7 @@ export default {
 		onClientSelected(client) {
 			this.selectedClient = client
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-20
 		 */
@@ -176,6 +183,7 @@ export default {
 				console.error('Failed to fetch pipelines:', err)
 			}
 		},
+
 		/**
 		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-21
@@ -188,6 +196,7 @@ export default {
 			)
 			return sorted[0]
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-24
 		 */
@@ -196,6 +205,7 @@ export default {
 				this.onSubmit()
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-25
 		 */
@@ -266,6 +276,7 @@ export default {
 				this.submitting = false
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-27
 		 */
@@ -274,6 +285,7 @@ export default {
 				title: '',
 				pipeline:
 					this.pipelineOptions.length > 0 ? this.pipelineOptions[0] : null,
+
 				value: '',
 				source: null,
 			}

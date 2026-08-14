@@ -20,11 +20,11 @@
 		<!-- Subject → ticket.title -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.title"
+				:modelValue="form.title"
 				:label="t('pipelinq', 'Subject')"
 				:error="!!errors.title"
-				:helper-text="errors.title"
-				@update:model-value="(v) => (form.title = v)" />
+				:helperText="errors.title"
+				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
 		<!-- Channel + Outcome row -->
@@ -78,25 +78,25 @@
 		<!-- Summary → ticket.description -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.description"
+				:modelValue="form.description"
 				:label="t('pipelinq', 'Summary')"
-				@update:model-value="(v) => (form.description = v)" />
+				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
 		<!-- Duration -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.duration"
+				:modelValue="form.duration"
 				:label="t('pipelinq', 'Duration (e.g. PT5M, PT1H30M)')"
-				@update:model-value="(v) => (form.duration = v)" />
+				@update:modelValue="(v) => (form.duration = v)" />
 		</div>
 
 		<!-- Notes -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.notes"
+				:modelValue="form.notes"
 				:label="t('pipelinq', 'Notes')"
-				@update:model-value="(v) => (form.notes = v)" />
+				@update:modelValue="(v) => (form.notes = v)" />
 		</div>
 
 		<!-- Actions -->
@@ -119,8 +119,8 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {
@@ -130,20 +130,24 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	props: {
 		clientId: {
 			type: String,
 			default: null,
 		},
+
 		requestId: {
 			type: String,
 			default: null,
 		},
+
 		inline: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	data() {
 		return {
 			// Ticket fields, written verbatim to the `ticket` schema on save.
@@ -157,6 +161,7 @@ export default {
 				duration: '',
 				notes: '',
 			},
+
 			// Request-type tickets for the "Request" (parent ticket) dropdown.
 			// Held locally rather than read from `objectStore.collections.ticket`,
 			// which is a shared, unnarrowed key any other ticket view may overwrite.
@@ -169,16 +174,19 @@ export default {
 				'social',
 				'brief',
 			],
+
 			outcomeOptions: [
 				'afgehandeld',
 				'doorverbonden',
 				'terugbelverzoek',
 				'vervolgactie',
 			],
+
 			saving: false,
 			errorMessage: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-23
@@ -186,12 +194,14 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-20
 		 */
 		clients() {
 			return this.objectStore.collections.client || []
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-19
 		 */
@@ -201,6 +211,7 @@ export default {
 				label: c.name || c.id,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
 		 */
@@ -210,6 +221,7 @@ export default {
 				label: r.title || r.id,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-22
 		 */
@@ -223,10 +235,12 @@ export default {
 			}
 			return errors
 		},
+
 		isValid() {
 			return this.form.title?.trim() && this.form.channel
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
 	 */
@@ -254,6 +268,7 @@ export default {
 			}
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-24

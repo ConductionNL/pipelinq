@@ -26,6 +26,7 @@ export default {
 		NcDialog,
 		PosRoleForm,
 	},
+
 	props: {
 		/**
 		 * The role to edit, or '' to create a new one.
@@ -35,6 +36,7 @@ export default {
 			default: '',
 		},
 	},
+
 	computed: {
 		/**
 		 * @return {string} Dialog heading, reflecting create vs edit.

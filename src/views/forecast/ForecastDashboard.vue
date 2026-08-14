@@ -9,11 +9,11 @@
 			<div class="forecast-dashboard__controls">
 				<NcSelect
 					v-model="selectedLevel"
-					:input-label="t('pipelinq', 'Level')"
+					:inputLabel="t('pipelinq', 'Level')"
 					:options="levelOptions"
 					label="label"
 					:clearable="false"
-					@update:model-value="loadSnapshots" />
+					@update:modelValue="loadSnapshots" />
 				<NcButton variant="secondary" @click="exportCsv">
 					{{ t('pipelinq', 'Export CSV') }}
 				</NcButton>
@@ -131,11 +131,11 @@
 
 		<ForecastOverrideModal
 			v-if="overrideTarget"
-			:period-id="periodId"
-			:owner-id="overrideTarget.owner_id"
+			:periodId="periodId"
+			:ownerId="overrideTarget.owner_id"
 			:level="childLevel"
-			:category="'commit'"
-			:current-amount="overrideTarget.commit"
+			category="commit"
+			:currentAmount="overrideTarget.commit"
 			@close="overrideTarget = null"
 			@saved="onOverrideSaved" />
 	</div>
@@ -150,12 +150,12 @@ import {
 	NcSelect,
 } from '@nextcloud/vue'
 import ForecastOverrideModal from '../../modals/ForecastOverrideModal.vue'
-import { fetchSnapshots, csvExportUrl } from '../../services/forecastApi.js'
+import { csvExportUrl, fetchSnapshots } from '../../services/forecastApi.js'
 import {
-	projectedAttainment,
+	attainmentPercent,
 	gapToQuota,
 	isAtRisk,
-	attainmentPercent,
+	projectedAttainment,
 } from '../../services/forecastMath.js'
 
 export default {
@@ -168,6 +168,7 @@ export default {
 		NcSelect,
 		ForecastOverrideModal,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -177,6 +178,7 @@ export default {
 			daysRemaining: 30,
 		}
 	},
+
 	computed: {
 		levelOptions() {
 			return [
@@ -186,9 +188,11 @@ export default {
 				{ id: 'rep', label: t('pipelinq', 'Rep') },
 			]
 		},
+
 		level() {
 			return this.selectedLevel?.id || 'team'
 		},
+
 		childLevel() {
 			return (
 				{ company: 'division', division: 'team', team: 'rep', rep: 'rep' }[
@@ -196,11 +200,13 @@ export default {
 				] || 'rep'
 			)
 		},
+
 		periodId() {
 			const now = new Date()
 			const quarter = Math.floor(now.getMonth() / 3) + 1
 			return 'Q' + quarter + '-' + now.getFullYear()
 		},
+
 		summary() {
 			const commit = this.sum('commit')
 			const bestCase = this.sum('best_case')
@@ -216,6 +222,7 @@ export default {
 				gap: gapToQuota(quota, projected),
 			}
 		},
+
 		atRisk() {
 			return isAtRisk(
 				this.summary.projected,
@@ -223,6 +230,7 @@ export default {
 				this.daysRemaining,
 			)
 		},
+
 		atRiskMessage() {
 			const pct =
 				100 - attainmentPercent(this.summary.projected, this.summary.quota)
@@ -232,6 +240,7 @@ export default {
 				{ gap: pct, days: this.daysRemaining },
 			)
 		},
+
 		progressLabel() {
 			const onTrack = this.summary.closedWon + this.summary.commit
 			return t('pipelinq', '{value} of {quota} on track ({percent}%)', {
@@ -241,29 +250,36 @@ export default {
 			})
 		},
 	},
+
 	mounted() {
 		this.loadSnapshots()
 	},
+
 	methods: {
 		sum(key) {
 			return this.rows.reduce((acc, row) => acc + Number(row[key] || 0), 0)
 		},
+
 		pct(value) {
 			return Math.min(100, attainmentPercent(value, this.summary.quota))
 		},
+
 		hasOverride(row) {
 			return !!row.commit_override_reason
 		},
+
 		overrideTitle(row) {
 			return t('pipelinq', 'Rep submitted: {original} — {reason}', {
 				original: this.formatMoney(row.original_commit),
 				reason: row.commit_override_reason,
 			})
 		},
+
 		formatMoney(value) {
 			const num = Number(value || 0)
 			return '€' + num.toLocaleString('nl-NL', { maximumFractionDigits: 0 })
 		},
+
 		async loadSnapshots() {
 			this.loading = true
 			try {
@@ -278,13 +294,16 @@ export default {
 				this.loading = false
 			}
 		},
+
 		openOverride(row) {
 			this.overrideTarget = row
 		},
+
 		onOverrideSaved() {
 			this.overrideTarget = null
 			this.loadSnapshots()
 		},
+
 		exportCsv() {
 			window.location.href = csvExportUrl({
 				periodId: this.periodId,

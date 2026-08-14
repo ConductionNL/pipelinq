@@ -116,6 +116,7 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	data() {
 		return {
 			categories: [],
@@ -127,6 +128,7 @@ export default {
 			error: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-59
@@ -134,6 +136,7 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-62
 		 */
@@ -146,9 +149,11 @@ export default {
 			})
 		},
 	},
+
 	async mounted() {
 		await this.fetchCategories()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-58
@@ -167,6 +172,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-63
 		 */
@@ -178,6 +184,7 @@ export default {
 				this.$refs.addInput?.focus()
 			})
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-55
 		 */
@@ -186,6 +193,7 @@ export default {
 			this.addForm = { name: '', description: '' }
 			this.error = null
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-61
 		 */
@@ -207,6 +215,7 @@ export default {
 				this.error = e.message || t('pipelinq', 'Failed to create category')
 			}
 		},
+
 		/**
 		 * @param cat
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-64
@@ -222,6 +231,7 @@ export default {
 				this.$refs.editInput?.[0]?.focus()
 			})
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-56
 		 */
@@ -230,6 +240,7 @@ export default {
 			this.editForm = { name: '', description: '' }
 			this.error = null
 		},
+
 		/**
 		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-60
@@ -252,6 +263,7 @@ export default {
 				this.error = e.message || t('pipelinq', 'Failed to update category')
 			}
 		},
+
 		/**
 		 * @param cat
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-57

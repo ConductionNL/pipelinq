@@ -4,8 +4,8 @@
 <template>
 	<div class="werkplek-header-actions">
 		<WerkplekAgentStatus
-			:is-available="isAvailable"
-			@update:is-available="isAvailable = $event" />
+			:isAvailable="isAvailable"
+			@update:isAvailable="isAvailable = $event" />
 	</div>
 </template>
 

@@ -14,15 +14,15 @@
 			:pagination="pagination"
 			:loading="loading"
 			:refreshing="refreshing"
-			:sort-key="sortKey"
-			:sort-order="sortOrder"
-			:include-columns="visibleColumns"
-			:empty-title="t('pipelinq', 'No export runs yet')"
-			:show-add="false"
+			:sortKey="sortKey"
+			:sortOrder="sortOrder"
+			:includeColumns="visibleColumns"
+			:emptyTitle="t('pipelinq', 'No export runs yet')"
+			:showAdd="false"
 			@refresh="onRefresh"
 			@sort="onSort"
 			@view="openRun"
-			@page-changed="onPageChange">
+			@pageChanged="onPageChange">
 			<template #row-actions="{ row }">
 				<NcButton
 					v-if="canRetry(row)"
@@ -37,12 +37,12 @@
 </template>
 
 <script>
-import { inject } from 'vue'
-import { NcButton } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton } from '@nextcloud/vue'
+import { inject } from 'vue'
 import { exportApi } from '../../services/exportApi.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ExportRuns',
@@ -50,6 +50,7 @@ export default {
 		CnIndexPage,
 		NcButton,
 	},
+
 	setup() {
 		const sidebarState = inject('sidebarState', null)
 		const objectStore = useObjectStore()
@@ -59,12 +60,14 @@ export default {
 			defaultSort: { key: 'startedAt', order: 'desc' },
 		})
 	},
+
 	data() {
 		return {
 			busyId: null,
 			refreshing: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * Columns shown on the list, in order.
@@ -82,6 +85,7 @@ export default {
 			]
 		},
 	},
+
 	methods: {
 		/**
 		 * Refresh handler for the Actions-menu Refresh item. Drives the
@@ -97,6 +101,7 @@ export default {
 				this.refreshing = false
 			}
 		},
+
 		/**
 		 * Whether a run can be retried.
 		 *
@@ -106,6 +111,7 @@ export default {
 		canRetry(row) {
 			return ['failed', 'partial', 'skipped_overlap'].includes(row.status)
 		},
+
 		/**
 		 * Navigate to a run's detail.
 		 *
@@ -114,6 +120,7 @@ export default {
 		openRun(row) {
 			this.$router.push({ name: 'ExportRunDetail', params: { id: row.id } })
 		},
+
 		/**
 		 * Retry a failed run.
 		 *

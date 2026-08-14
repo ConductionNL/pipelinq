@@ -219,8 +219,8 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 
 <script>
 import {
-	fetchServiceBySlug,
 	fetchAvailability,
+	fetchServiceBySlug,
 	submitBooking,
 } from '../../services/bookingPortalApi.js'
 
@@ -244,11 +244,13 @@ export default {
 				phone: '',
 				notes: '',
 			},
+
 			fieldErrors: {},
 			submitting: false,
 			submitError: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * The service slug from the route.
@@ -260,6 +262,7 @@ export default {
 				? this.$route.params.serviceSlug
 				: ''
 		},
+
 		/**
 		 * Today's date as an ISO YYYY-MM-DD string (picker minimum).
 		 *
@@ -268,6 +271,7 @@ export default {
 		minDate() {
 			return new Date().toISOString().slice(0, 10)
 		},
+
 		/**
 		 * The furthest bookable date (90 days out).
 		 *
@@ -278,6 +282,7 @@ export default {
 			d.setDate(d.getDate() + 90)
 			return d.toISOString().slice(0, 10)
 		},
+
 		/**
 		 * Whether the service carries a non-zero price.
 		 *
@@ -286,6 +291,7 @@ export default {
 		hasPrice() {
 			return this.service && Number(this.service.price) > 0
 		},
+
 		/**
 		 * The formatted price label.
 		 *
@@ -303,6 +309,7 @@ export default {
 				return amount + ' ' + cur
 			}
 		},
+
 		/**
 		 * The formatted duration label.
 		 *
@@ -312,6 +319,7 @@ export default {
 			const mins = Number((this.service && this.service.durationMinutes) || 0)
 			return this.n('pipelinq', '%n minute', '%n minutes', mins)
 		},
+
 		/**
 		 * Hint text describing available dates.
 		 *
@@ -327,14 +335,17 @@ export default {
 			)
 		},
 	},
+
 	watch: {
 		serviceSlug() {
 			this.loadService()
 		},
 	},
+
 	mounted() {
 		this.loadService()
 	},
+
 	methods: {
 		/**
 		 * Load the service by slug.
@@ -351,6 +362,7 @@ export default {
 				this.loadingService = false
 			}
 		},
+
 		/**
 		 * Handle a date change: load available slots.
 		 */
@@ -379,6 +391,7 @@ export default {
 				this.loadingSlots = false
 			}
 		},
+
 		/**
 		 * Select a slot.
 		 *
@@ -388,6 +401,7 @@ export default {
 			this.selectedSlot = slot.startAt
 			this.submitError = ''
 		},
+
 		/**
 		 * Format an ISO timestamp as a local HH:MM time.
 		 *
@@ -404,6 +418,7 @@ export default {
 				minute: '2-digit',
 			})
 		},
+
 		/**
 		 * Validate the booking form.
 		 *
@@ -425,6 +440,7 @@ export default {
 			this.fieldErrors = errors
 			return Object.keys(errors).length === 0
 		},
+
 		/**
 		 * Submit the booking.
 		 */
@@ -455,6 +471,7 @@ export default {
 				this.submitting = false
 			}
 		},
+
 		/**
 		 * Map an error to a friendly, non-technical message (never a stack trace).
 		 *

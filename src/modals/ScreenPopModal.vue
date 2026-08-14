@@ -70,6 +70,7 @@ export default {
 		e164: { type: String, default: '' },
 		rawNumber: { type: String, default: '' },
 	},
+
 	emits: ['close', 'select', 'intake'],
 	methods: {
 		displayName(match) {

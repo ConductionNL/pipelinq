@@ -118,9 +118,11 @@ export default {
 			error: '',
 		}
 	},
+
 	mounted() {
 		this.load()
 	},
+
 	methods: {
 		async load() {
 			try {
@@ -130,6 +132,7 @@ export default {
 				this.error = e.message
 			}
 		},
+
 		async grant() {
 			this.message = ''
 			this.error = ''
@@ -146,6 +149,7 @@ export default {
 				this.error = e.message || t('pipelinq', 'Could not grant access.')
 			}
 		},
+
 		async revoke(delegation) {
 			try {
 				const id =

@@ -15,10 +15,10 @@
 				v-model="selectedRange"
 				:options="rangeOptions"
 				:clearable="false"
-				:input-label="t('pipelinq', 'Date range')"
+				:inputLabel="t('pipelinq', 'Date range')"
 				label="label"
-				track-by="value"
-				@update:model-value="onRangeChange" />
+				trackBy="value"
+				@update:modelValue="onRangeChange" />
 		</div>
 
 		<NcEmptyContent
@@ -41,7 +41,7 @@
 
 <script>
 import { CnChartWidget, CnStatsBlock } from '@conduction/nextcloud-vue'
-import { NcSelect, NcEmptyContent } from '@nextcloud/vue'
+import { NcEmptyContent, NcSelect } from '@nextcloud/vue'
 
 export default {
 	name: 'WinLossWidget',
@@ -52,21 +52,25 @@ export default {
 			default: () => ({}),
 		},
 	},
+
 	emits: ['range-change'],
 	data() {
 		return {
 			selectedRange: { value: 'all', label: '' },
 		}
 	},
+
 	computed: {
 		hasData() {
 			const won = this.data?.wonCount || 0
 			const lost = this.data?.lostCount || 0
 			return won + lost > 0
 		},
+
 		pieSeries() {
 			return [this.data?.wonCount || 0, this.data?.lostCount || 0]
 		},
+
 		statsCards() {
 			return [
 				{
@@ -91,6 +95,7 @@ export default {
 				},
 			]
 		},
+
 		rangeOptions() {
 			return [
 				{ value: '30d', label: t('pipelinq', 'Last 30 days') },
@@ -100,10 +105,12 @@ export default {
 			]
 		},
 	},
+
 	mounted() {
 		this.selectedRange =
 			this.rangeOptions.find((o) => o.value === 'all') || this.rangeOptions[0]
 	},
+
 	methods: {
 		/**
 		 * Translate the selected NcSelect option into a {from,to} range

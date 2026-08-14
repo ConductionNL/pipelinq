@@ -10,7 +10,7 @@
 				v-model="ownerId"
 				:label="t('pipelinq', 'Rep')"
 				:placeholder="t('pipelinq', 'Rep user id')"
-				@update:model-value="loadTrend" />
+				@update:modelValue="loadTrend" />
 		</div>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
@@ -124,12 +124,14 @@ export default {
 			accuracyRows: [],
 		}
 	},
+
 	computed: {
 		periodId() {
 			const now = new Date()
 			const quarter = Math.floor(now.getMonth() / 3) + 1
 			return 'Q' + quarter + '-' + now.getFullYear()
 		},
+
 		maxValue() {
 			let max = 1
 			for (const point of this.series) {
@@ -138,6 +140,7 @@ export default {
 			return max
 		},
 	},
+
 	methods: {
 		async loadTrend() {
 			if (!this.ownerId) {
@@ -165,6 +168,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		buildDelta() {
 			if (this.series.length < 2) {
 				this.delta = null
@@ -177,12 +181,14 @@ export default {
 					curr.commit > prev.commit
 						? this.formatMoney(curr.commit - prev.commit)
 						: '',
+
 				outOfCommit:
 					curr.commit < prev.commit
 						? this.formatMoney(prev.commit - curr.commit)
 						: '',
 			}
 		},
+
 		line(key) {
 			if (!this.series.length) {
 				return ''
@@ -196,9 +202,11 @@ export default {
 				})
 				.join(' ')
 		},
+
 		bandFor(score) {
 			return accuracyBand(score)
 		},
+
 		formatMoney(value) {
 			return (
 				'€'

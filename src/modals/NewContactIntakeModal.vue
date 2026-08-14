@@ -59,6 +59,7 @@ export default {
 		prefillPhone: { type: String, default: '' },
 		e164: { type: String, default: '' },
 	},
+
 	emits: ['close', 'submit'],
 	data() {
 		return {
@@ -71,6 +72,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		valid() {
 			return (
@@ -78,6 +80,7 @@ export default {
 			)
 		},
 	},
+
 	methods: {
 		submit() {
 			if (!this.valid) {

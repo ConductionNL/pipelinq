@@ -22,8 +22,8 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 
 /**
  * Agent availability toggle button for the KCC Werkplek.
@@ -69,6 +69,7 @@ export default {
 				? this.t('pipelinq', 'Available')
 				: this.t('pipelinq', 'Unavailable')
 		},
+
 		/**
 		 * Aria label describing the toggle action (a11y).
 		 *

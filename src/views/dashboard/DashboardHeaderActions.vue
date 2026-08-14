@@ -45,18 +45,18 @@
 import { NcButton } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
+import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import LeadCreateDialog from '../../dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from '../../dialogs/RequestCreateDialog.vue'
-import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import {
-	refreshDashboardData,
-	getLeads,
-	getRequests,
-	getPipelines,
-	getComplaints,
 	getClients,
+	getComplaints,
+	getLeads,
 	getMyLeads,
 	getMyRequests,
+	getPipelines,
+	getRequests,
+	refreshDashboardData,
 } from '../../services/dashboardData.js'
 
 export default {
@@ -69,6 +69,7 @@ export default {
 		RequestCreateDialog,
 		ClientCreateDialog,
 	},
+
 	data() {
 		return {
 			showLeadDialog: false,
@@ -77,6 +78,7 @@ export default {
 			refreshing: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-4
@@ -102,6 +104,7 @@ export default {
 				this.refreshing = false
 			}
 		},
+
 		/**
 		 * @param leadId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-2
@@ -110,6 +113,7 @@ export default {
 			this.showLeadDialog = false
 			this.$router.push({ name: 'LeadDetail', params: { id: leadId } })
 		},
+
 		/**
 		 * @param requestId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-3
@@ -120,6 +124,7 @@ export default {
 			// (unify-ticket-supertype) — open the unified detail page.
 			this.$router.push({ name: 'TicketDetail', params: { id: requestId } })
 		},
+
 		/**
 		 * @param clientId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-1

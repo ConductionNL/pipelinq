@@ -76,12 +76,14 @@ export default {
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** Time bucket (day / week / month / quarter), from @workspace.bucket. */
 		bucket: { type: String, default: 'month' },
 		/** Grouping dimension (policy / tier / team / target / customer), from @workspace.groupBy. */
 		groupBy: { type: String, default: 'policy' },
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -89,17 +91,20 @@ export default {
 			payload: { details: { byGroup: [] } },
 		}
 	},
+
 	computed: {
 		effectiveBucket() {
 			if (this.bucket) return this.bucket
 			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
 			return (ctx && ctx.bucket) || 'month'
 		},
+
 		effectiveGroupBy() {
 			if (this.groupBy) return this.groupBy
 			const ctx = this.cnSectionContext && this.cnSectionContext.workspace
 			return (ctx && ctx.groupBy) || 'policy'
 		},
+
 		groupOptions() {
 			return [
 				{ value: 'policy', label: this.t('pipelinq', 'Policy') },
@@ -109,27 +114,33 @@ export default {
 				{ value: 'customer', label: this.t('pipelinq', 'Customer') },
 			]
 		},
+
 		groupLabel() {
 			const match = this.groupOptions.find(
 				(o) => o.value === this.effectiveGroupBy,
 			)
 			return match ? match.label : this.t('pipelinq', 'Group')
 		},
+
 		byGroup() {
 			return (this.payload.details && this.payload.details.byGroup) || []
 		},
 	},
+
 	watch: {
 		effectiveBucket() {
 			this.fetchAttainment()
 		},
+
 		effectiveGroupBy() {
 			this.fetchAttainment()
 		},
 	},
+
 	mounted() {
 		this.fetchAttainment()
 	},
+
 	methods: {
 		async fetchAttainment() {
 			this.loading = true
@@ -151,6 +162,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		percent(value) {
 			const n = Number(value) || 0
 			return `${(n * 100).toFixed(1)}%`

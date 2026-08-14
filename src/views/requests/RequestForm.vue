@@ -3,19 +3,19 @@
 		<!-- Title -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.title"
+				:modelValue="form.title"
 				:label="t('pipelinq', 'Title')"
 				:error="!!errors.title"
-				:helper-text="errors.title"
-				@update:model-value="(v) => (form.title = v)" />
+				:helperText="errors.title"
+				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
 		<!-- Description -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.description"
+				:modelValue="form.description"
 				:label="t('pipelinq', 'Description')"
-				@update:model-value="(v) => (form.description = v)" />
+				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
 		<!-- Status + Priority row -->
@@ -53,19 +53,19 @@
 			</div>
 			<div class="form-group">
 				<NcTextField
-					:model-value="form.category"
+					:modelValue="form.category"
 					:label="t('pipelinq', 'Category')"
-					@update:model-value="(v) => (form.category = v)" />
+					@update:modelValue="(v) => (form.category = v)" />
 			</div>
 		</div>
 
 		<!-- Requested at -->
 		<div class="form-group">
 			<NcDateTimePickerNative
-				:model-value="occurredAtDate"
+				:modelValue="occurredAtDate"
 				:label="t('pipelinq', 'Requested at')"
 				type="date"
-				@update:model-value="occurredAtDate = $event" />
+				@update:modelValue="occurredAtDate = $event" />
 		</div>
 
 		<!-- Client -->
@@ -93,7 +93,7 @@
 					label="label"
 					:reduce="(o) => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
-					@update:model-value="onPipelineChange" />
+					@update:modelValue="onPipelineChange" />
 			</div>
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
@@ -130,10 +130,10 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
+import { getAllowedTransitions } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
-import { getAllowedTransitions } from '../../services/requestStatus.js'
-import { toDateObject, toDateInputString } from '../../services/localeUtils.js'
 
 export default {
 	name: 'RequestForm',
@@ -143,15 +143,18 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	props: {
 		request: {
 			type: Object,
 			default: null,
 		},
+
 		preLinkedClient: {
 			type: String,
 			default: null,
 		},
+
 		/**
 		 * Render the built-in Cancel / Save buttons. Set to `false` when the
 		 * host supplies its own action buttons (e.g. a parent NcDialog driving
@@ -162,6 +165,7 @@ export default {
 			default: true,
 		},
 	},
+
 	data() {
 		return {
 			form: {
@@ -176,9 +180,11 @@ export default {
 				pipeline: null,
 				stage: null,
 			},
+
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
 		}
 	},
+
 	computed: {
 		/**
 		 * Bridge the stored `occurredAt` string (formerly `requestedAt`, renamed by
@@ -195,6 +201,7 @@ export default {
 			get() {
 				return toDateObject(this.form.occurredAt)
 			},
+
 			/**
 			 * @param {Date|null} date The picked date.
 			 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
@@ -203,27 +210,32 @@ export default {
 				this.form.occurredAt = toDateInputString(date)
 			},
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-44
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-49
 		 */
 		requestChannelsStore() {
 			return useRequestChannelsStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-39
 		 */
 		channelOptions() {
 			return this.requestChannelsStore.channelNames
 		},
+
 		isEdit() {
 			return !!this.request?.id
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-38
 		 */
@@ -232,12 +244,14 @@ export default {
 			const current = this.request.status || 'new'
 			return [current, ...getAllowedTransitions(current)]
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-48
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-50
 		 */
@@ -246,6 +260,7 @@ export default {
 				(p) => p.entityType === 'request' || p.entityType === 'both',
 			)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-47
 		 */
@@ -255,6 +270,7 @@ export default {
 				label: p.title,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-51
 		 */
@@ -262,6 +278,7 @@ export default {
 			if (!this.form.pipeline) return null
 			return this.pipelines.find((p) => p.id === this.form.pipeline) || null
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-52
 		 */
@@ -271,12 +288,14 @@ export default {
 				.sort((a, b) => a.order - b.order)
 				.map((s) => s.name)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-41
 		 */
 		clients() {
 			return this.objectStore.collections.client || []
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-40
 		 */
@@ -286,6 +305,7 @@ export default {
 				label: c.name || c.id,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
 		 */
@@ -296,10 +316,12 @@ export default {
 			}
 			return errors
 		},
+
 		isValid() {
 			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
 		},
 	},
+
 	watch: {
 		// Surface validity so a host (e.g. a parent NcDialog) can enable or
 		// disable its own submit button.
@@ -310,6 +332,7 @@ export default {
 			},
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
 	 */
@@ -341,6 +364,7 @@ export default {
 			this.autoAssignDefaultPipeline()
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-37
@@ -358,6 +382,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-45
 		 */
@@ -373,6 +398,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-46
 		 */

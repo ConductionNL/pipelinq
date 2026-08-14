@@ -20,8 +20,8 @@
 
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
-import { getAnalyticsTrend } from '../../../services/dashboardData.js'
 import { formatEur, formatEurCompact } from '../../../services/commercialFormat.js'
+import { getAnalyticsTrend } from '../../../services/dashboardData.js'
 import analyticsPeriodMixin from './analyticsPeriodMixin.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -36,6 +36,7 @@ export default {
 	components: {
 		CnChartWidget,
 	},
+
 	mixins: [analyticsPeriodMixin, dashboardRefreshMixin],
 	data() {
 		return {
@@ -43,20 +44,24 @@ export default {
 			trend: { series: [] },
 		}
 	},
+
 	computed: {
 		/** @return {boolean} Whether there is nothing to plot. */
 		isEmpty() {
 			return (this.trend?.series || []).length === 0
 		},
+
 		/** @return {Array<string>} Customer names. */
 		chartLabels() {
 			return (this.trend?.series || []).map((pt) => pt.date)
 		},
+
 		/** @return {Array<object>} Single revenue series. */
 		chartSeries() {
 			const values = (this.trend?.series || []).map((pt) => pt.value)
 			return [{ name: this.t('pipelinq', 'Revenue'), data: values }]
 		},
+
 		/** @return {object} Horizontal bar options with euro axis. */
 		chartOptions() {
 			return {
@@ -67,6 +72,7 @@ export default {
 			}
 		},
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/commercial-dashboard/spec.md

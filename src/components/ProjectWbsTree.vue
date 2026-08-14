@@ -53,8 +53,8 @@
 				</span>
 				<span class="wbs-billable">
 					<span
+						class="billable-dot"
 						:class="[
-							'billable-dot',
 							resolvedBillable('phase', phase)
 								? 'billable-dot--on'
 								: 'billable-dot--off',
@@ -91,8 +91,8 @@
 					</span>
 					<span class="wbs-billable wbs-billable--task">
 						<span
+							class="billable-dot"
 							:class="[
-								'billable-dot',
 								resolvedBillable('task', task, { phase })
 									? 'billable-dot--on'
 									: 'billable-dot--off',
@@ -129,34 +129,40 @@ export default {
 	components: {
 		NcButton,
 	},
+
 	props: {
 		/** Parent project — used as the root of the billable inheritance chain. */
 		project: {
 			type: Object,
 			required: true,
 		},
+
 		/** Array of projectPhase objects belonging to the project. */
 		phases: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Array of projectTask objects belonging to the project. */
 		tasks: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Array of projectActivity objects belonging to the project. */
 		activities: {
 			type: Array,
 			default: () => [],
 		},
 	},
+
 	emits: ['add-phase', 'add-task', 'add-activity'],
 	data() {
 		return {
 			openPhases: {},
 		}
 	},
+
 	computed: {
 		/**
 		 * Phases sorted by their stored sequence (the legacy field also
@@ -173,6 +179,7 @@ export default {
 			})
 		},
 	},
+
 	methods: {
 		/**
 		 * Toggle a phase's collapsed/expanded state.
@@ -185,6 +192,7 @@ export default {
 				[phaseId]: !this.openPhases[phaseId],
 			}
 		},
+
 		/**
 		 * Whether the phase is currently expanded. Phases default to open.
 		 *
@@ -195,6 +203,7 @@ export default {
 			if (this.openPhases[phaseId] === undefined) return true
 			return !!this.openPhases[phaseId]
 		},
+
 		/**
 		 * Tasks belonging to a given phase, ordered by sequence then name.
 		 *
@@ -211,6 +220,7 @@ export default {
 					return String(a.name || '').localeCompare(String(b.name || ''))
 				})
 		},
+
 		/**
 		 * Count of completed tasks in a phase (Scenario 13 / 28).
 		 *
@@ -221,6 +231,7 @@ export default {
 			return this.tasksFor(phase).filter((t) => t.status === 'completed')
 				.length
 		},
+
 		/**
 		 * Logged hours summed across all activities for a given task.
 		 *
@@ -233,6 +244,7 @@ export default {
 				.reduce((sum, a) => sum + (Number(a.durationMinutes) || 0), 0)
 			return Math.round((minutes / 60) * 10) / 10
 		},
+
 		/**
 		 * Resolved billable flag for a given WBS level, walking up the
 		 * hierarchy until the first explicitly-set value is found
@@ -269,6 +281,7 @@ export default {
 			}
 			return true
 		},
+
 		/**
 		 * UI label for the billable indicator, including the "(geërfd van …)"
 		 * hint when the value was resolved via inheritance (Scenarios 8, 11).
@@ -296,6 +309,7 @@ export default {
 			}
 			return base
 		},
+
 		/**
 		 * Localised label for a lifecycle status.
 		 *

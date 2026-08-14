@@ -41,8 +41,8 @@
 
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
-import { useXwikiStore } from '../../store/modules/xwiki.js'
 import XWikiArticleList from './XWikiArticleList.vue'
+import { useXwikiStore } from '../../store/modules/xwiki.js'
 
 export default {
 	name: 'XWikiWidget',
@@ -52,49 +52,60 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		tags: {
 			type: Array,
 			default: () => [],
 		},
+
 		query: {
 			type: String,
 			default: '',
 		},
+
 		limit: {
 			type: Number,
 			default: 5,
 		},
+
 		title: {
 			type: String,
 			default: 'Knowledge base',
 		},
+
 		showSearch: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['select', 'view-more'],
 	setup() {
 		return { store: useXwikiStore() }
 	},
+
 	data() {
 		return {
 			localQuery: this.query,
 			debounceHandle: null,
 		}
 	},
+
 	computed: {
 		visibleArticles() {
 			return (this.store.articles || []).slice(0, this.limit)
 		},
+
 		hasMore() {
 			return (this.store.articles || []).length > this.limit
 		},
 	},
+
 	async mounted() {
 		await this.store.checkStatus()
 		await this.refresh()
 	},
+
 	methods: {
 		async refresh() {
 			await this.store.search({
@@ -104,9 +115,11 @@ export default {
 				limit: this.limit + 1,
 			})
 		},
+
 		onSelect(article) {
 			this.$emit('select', article)
 		},
+
 		onSearchInput() {
 			if (this.debounceHandle) clearTimeout(this.debounceHandle)
 			this.debounceHandle = setTimeout(() => {

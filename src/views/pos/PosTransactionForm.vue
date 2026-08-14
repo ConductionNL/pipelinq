@@ -25,27 +25,27 @@
 					v-model="transaction.terminalId"
 					:label="t('pipelinq', 'Terminal')" />
 				<NcSelect
-					:model-value="selectedClient"
+					:modelValue="selectedClient"
 					:options="clientOptions"
-					:input-label="t('pipelinq', 'Client (optional)')"
+					:inputLabel="t('pipelinq', 'Client (optional)')"
 					label="label"
 					:clearable="true"
-					@update:model-value="onClientSelect" />
+					@update:modelValue="onClientSelect" />
 				<NcSelect
-					:model-value="selectedPriceMode"
+					:modelValue="selectedPriceMode"
 					:options="priceModeOptions"
-					:input-label="t('pipelinq', 'Price mode')"
+					:inputLabel="t('pipelinq', 'Price mode')"
 					label="label"
 					:clearable="false"
-					@update:model-value="onPriceModeSelect" />
+					@update:modelValue="onPriceModeSelect" />
 				<NcSelect
-					:model-value="selectedTender"
+					:modelValue="selectedTender"
 					:options="tenderOptions"
-					:input-label="t('pipelinq', 'Tender type')"
+					:inputLabel="t('pipelinq', 'Tender type')"
 					label="label"
 					:clearable="false"
 					data-testid="tender-type"
-					@update:model-value="onTenderSelect" />
+					@update:modelValue="onTenderSelect" />
 				<NcTextField
 					v-model="transaction.notes"
 					:label="t('pipelinq', 'Notes')" />
@@ -135,7 +135,7 @@
 						:key="line._key"
 						:line="line"
 						:products="products"
-						:price-mode="priceMode"
+						:priceMode="priceMode"
 						@update:line="updateLine(index, $event)"
 						@remove="removeLine(index)" />
 				</tbody>
@@ -148,11 +148,11 @@
 				{{ t('pipelinq', 'Add line') }}
 			</NcButton>
 
-			<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
+			<PosTotalsPanel :lines="lines" :priceMode="priceMode" />
 
 			<PaymentMethodSelector
 				v-model="paymentSelection"
-				:client-selected="!!transaction.client"
+				:clientSelected="!!transaction.client"
 				@change="onPaymentSelectionChange" />
 
 			<div class="pos-form__actions">
@@ -174,23 +174,23 @@
 </template>
 
 <script>
-import { NcButton, NcTextField, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
+import axios from '@nextcloud/axios'
 import { showError, showSuccess, showWarning } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vue'
 import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
 import PurchaseHistory from '../../components/pos/PurchaseHistory.vue'
 import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
-import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vue'
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
-import { useObjectStore } from '../../store/modules/object.js'
-import { recalculateLine } from '../../services/posTotals.js'
 import {
 	attachCustomer as apiAttachCustomer,
 	detachCustomer as apiDetachCustomer,
 	getCustomerHistory,
 } from '../../services/posCustomerApi.js'
+import { recalculateLine } from '../../services/posTotals.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 /**
  * Normalise an object-store collection into a plain rows array.
@@ -223,12 +223,14 @@ export default {
 		CustomerLookupModal,
 		PaymentMethodSelector,
 	},
+
 	props: {
 		posTransactionId: {
 			type: String,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			transaction: {
@@ -246,6 +248,7 @@ export default {
 				consentSyncStatus: '',
 				tenderType: 'cash',
 			},
+
 			lines: [],
 			products: [],
 			clients: [],
@@ -261,10 +264,12 @@ export default {
 			paymentMethod: 'cash',
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * The transaction id from the prop or route.
 		 *
@@ -273,6 +278,7 @@ export default {
 		transactionId() {
 			return this.posTransactionId || this.$route.params.id || null
 		},
+
 		/**
 		 * Whether this is a new (unsaved) transaction.
 		 *
@@ -281,6 +287,7 @@ export default {
 		isNew() {
 			return !this.transactionId || this.transactionId === 'new'
 		},
+
 		/**
 		 * Client picker options.
 		 *
@@ -289,6 +296,7 @@ export default {
 		clientOptions() {
 			return this.clients.map((c) => ({ id: c.id, label: c.name }))
 		},
+
 		/**
 		 * The selected client option.
 		 *
@@ -300,6 +308,7 @@ export default {
 				|| null
 			)
 		},
+
 		/**
 		 * The current price mode ('excl' default).
 		 *
@@ -308,6 +317,7 @@ export default {
 		priceMode() {
 			return this.transaction.priceMode === 'incl' ? 'incl' : 'excl'
 		},
+
 		/**
 		 * Available price mode options.
 		 *
@@ -319,6 +329,7 @@ export default {
 				{ id: 'incl', label: t('pipelinq', 'Incl. VAT') },
 			]
 		},
+
 		/**
 		 * The selected price mode option.
 		 *
@@ -330,6 +341,7 @@ export default {
 				|| this.priceModeOptions[0]
 			)
 		},
+
 		/**
 		 * Tender type picker options.
 		 *
@@ -342,6 +354,7 @@ export default {
 				{ id: 'onAccount', label: t('pipelinq', 'On account') },
 			]
 		},
+
 		/**
 		 * The selected tender option.
 		 *
@@ -353,6 +366,7 @@ export default {
 				this.tenderOptions.find((o) => o.id === id) || this.tenderOptions[0]
 			)
 		},
+
 		/**
 		 * Whether on-account + customer invariant holds (REQ-PCL-005).
 		 *
@@ -364,6 +378,7 @@ export default {
 			}
 			return !!this.selectedCustomer
 		},
+
 		/**
 		 * Aggregate gate for the Checkout button.
 		 *
@@ -372,6 +387,7 @@ export default {
 		checkoutAllowed() {
 			return this.isOnAccountValid
 		},
+
 		/**
 		 * Error message surfaced near the customer picker for on-account misuse.
 		 *
@@ -390,6 +406,7 @@ export default {
 			return ''
 		},
 	},
+
 	async mounted() {
 		this.loading = true
 		try {
@@ -402,6 +419,7 @@ export default {
 			this.loading = false
 		}
 	},
+
 	methods: {
 		/**
 		 * Load the product catalog for the picker.
@@ -419,6 +437,7 @@ export default {
 				this.products = []
 			}
 		},
+
 		/**
 		 * Load clients for the optional account-sale picker.
 		 */
@@ -432,6 +451,7 @@ export default {
 				this.clients = []
 			}
 		},
+
 		/**
 		 * Load an existing transaction and its lines.
 		 */
@@ -487,6 +507,7 @@ export default {
 					? provider
 					: provider + ':' + method
 		},
+
 		/**
 		 * Next stable v-for key for a line row.
 		 *
@@ -496,6 +517,7 @@ export default {
 			this.keyCounter += 1
 			return this.keyCounter
 		},
+
 		/**
 		 * Append a blank line.
 		 */
@@ -512,6 +534,7 @@ export default {
 				}),
 			)
 		},
+
 		/**
 		 * Replace a line after an edit.
 		 *
@@ -521,6 +544,7 @@ export default {
 		updateLine(index, line) {
 			this.lines[index] = { ...line, _key: this.lines[index]._key }
 		},
+
 		/**
 		 * Remove a line, queueing a delete if it was persisted.
 		 *
@@ -533,6 +557,7 @@ export default {
 			}
 			this.lines.splice(index, 1)
 		},
+
 		/**
 		 * Update local payment provider/method state when the selector changes.
 		 *
@@ -566,6 +591,7 @@ export default {
 				this.transaction.paymentStatus = 'pending'
 			}
 		},
+
 		/**
 		 * Persist the transaction header and its lines.
 		 *
@@ -679,6 +705,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Apply a client selection.
 		 *
@@ -687,6 +714,7 @@ export default {
 		onClientSelect(option) {
 			this.transaction.client = option ? option.id : null
 		},
+
 		/**
 		 * Apply a price mode selection.
 		 *
@@ -695,6 +723,7 @@ export default {
 		onPriceModeSelect(option) {
 			this.transaction.priceMode = option ? option.id : 'excl'
 		},
+
 		/**
 		 * Apply a tender type selection.
 		 *
@@ -703,6 +732,7 @@ export default {
 		onTenderSelect(option) {
 			this.transaction.tenderType = option ? option.id : 'cash'
 		},
+
 		/**
 		 * Apply a marketing-consent toggle.
 		 *
@@ -711,18 +741,21 @@ export default {
 		onConsentChange(event) {
 			this.transaction.marketingConsent = !!event.target.checked
 		},
+
 		/**
 		 * Open the customer lookup modal.
 		 */
 		openCustomerLookup() {
 			this.showCustomerModal = true
 		},
+
 		/**
 		 * Close the customer lookup modal.
 		 */
 		closeCustomerLookup() {
 			this.showCustomerModal = false
 		},
+
 		/**
 		 * Apply a customer chosen from the lookup modal.
 		 *
@@ -740,6 +773,7 @@ export default {
 			this.showCustomerModal = false
 			await this.loadHistory(row.id)
 		},
+
 		/**
 		 * Clear the selected customer (REQ-PCL-002 Scenario 3).
 		 */
@@ -757,6 +791,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * Load purchase history for the selected customer.
 		 *
@@ -769,6 +804,7 @@ export default {
 				this.history = []
 			}
 		},
+
 		/**
 		 * Attach the customer + consent on the server (called from save).
 		 *
@@ -790,6 +826,7 @@ export default {
 				)
 			}
 		},
+
 		/**
 		 * Return to the transaction list.
 		 */

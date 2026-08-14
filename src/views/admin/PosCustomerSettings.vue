@@ -105,6 +105,7 @@ export default {
 		NcLoadingIcon,
 		NcSettingsSection,
 	},
+
 	data() {
 		return {
 			form: {
@@ -113,12 +114,14 @@ export default {
 				enablePipelinqSync: true,
 				requireCustomerForOnAccount: true,
 			},
+
 			loading: false,
 			saving: false,
 			statusMessage: '',
 			statusError: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * Available search-field options with labels.
@@ -132,6 +135,7 @@ export default {
 				{ id: 'phone', label: t('pipelinq', 'Phone') },
 			]
 		},
+
 		/**
 		 * Available history depths.
 		 *
@@ -141,9 +145,11 @@ export default {
 			return ALL_DEPTHS
 		},
 	},
+
 	async mounted() {
 		await this.load()
 	},
+
 	methods: {
 		/**
 		 * Load the persisted settings.
@@ -158,11 +164,13 @@ export default {
 						&& settings.customerSearchFields.length
 							? settings.customerSearchFields
 							: [...ALL_FIELDS],
+
 					customerHistoryDepth: ALL_DEPTHS.includes(
 						Number(settings.customerHistoryDepth),
 					)
 						? Number(settings.customerHistoryDepth)
 						: 10,
+
 					enablePipelinqSync: settings.enablePipelinqSync !== false,
 					requireCustomerForOnAccount:
 						settings.requireCustomerForOnAccount !== false,
@@ -174,6 +182,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Toggle a search field on / off.
 		 *
@@ -189,6 +198,7 @@ export default {
 			}
 			this.form.customerSearchFields = ALL_FIELDS.filter((f) => current.has(f))
 		},
+
 		/**
 		 * Persist the form.
 		 */

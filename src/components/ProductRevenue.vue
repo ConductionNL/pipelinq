@@ -30,22 +30,24 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
-import { useObjectStore } from '../store/modules/object.js'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
+import { useObjectStore } from '../store/modules/object.js'
 
 export default {
 	name: 'ProductRevenue',
 	components: {
 		NcLoadingIcon,
 	},
+
 	data() {
 		return {
 			loading: false,
 			topProducts: [],
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-3
@@ -54,9 +56,11 @@ export default {
 			return useObjectStore()
 		},
 	},
+
 	async mounted() {
 		await this.fetchData()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-1
@@ -145,6 +149,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-2

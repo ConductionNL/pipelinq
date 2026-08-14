@@ -11,26 +11,26 @@
 					:options="pipelineSelectOptions"
 					:clearable="false"
 					label="label"
-					:input-label="t('pipelinq', 'Select pipeline')"
+					:inputLabel="t('pipelinq', 'Select pipeline')"
 					:placeholder="t('pipelinq', 'Select pipeline')"
 					:reduce="(o) => o.value"
 					class="pipeline-selector"
-					@update:model-value="onPipelineChange" />
+					@update:modelValue="onPipelineChange" />
 				<NcSelect
 					v-if="hasMultipleSchemas"
 					v-model="showFilter"
 					:options="showFilterOptions"
 					:clearable="false"
-					:input-label="t('pipelinq', 'Filter by type')"
+					:inputLabel="t('pipelinq', 'Filter by type')"
 					class="show-filter" />
 				<NcTextField
-					:model-value="searchQuery"
+					:modelValue="searchQuery"
 					type="search"
-					label-outside
+					labelOutside
 					:placeholder="t('pipelinq', 'Search pipeline...')"
 					:aria-label="t('pipelinq', 'Search pipeline...')"
 					class="pipeline-search"
-					@update:model-value="(v) => (searchQuery = v)" />
+					@update:modelValue="(v) => (searchQuery = v)" />
 				<div class="view-toggle">
 					<NcButton
 						:variant="viewMode === 'kanban' ? 'primary' : 'tertiary'"
@@ -175,9 +175,9 @@
 						v-for="item in getStageItems(stage.name)"
 						:key="item.id"
 						:item="item"
-						:entity-type="item._schemaSlug"
+						:entityType="item._schemaSlug"
 						:stages="sortedStages"
-						:column-property="getColumnProperty(item)"
+						:columnProperty="getColumnProperty(item)"
 						@open="openItem"
 						@refresh="fetchPipelineItems" />
 				</div>
@@ -215,9 +215,9 @@
 							v-for="item in getStageItems(stage.name)"
 							:key="item.id"
 							:item="item"
-							:entity-type="item._schemaSlug"
+							:entityType="item._schemaSlug"
 							:stages="sortedStages"
-							:column-property="getColumnProperty(item)"
+							:columnProperty="getColumnProperty(item)"
 							@open="openItem"
 							@refresh="fetchPipelineItems" />
 					</div>
@@ -371,21 +371,21 @@
 
 <script>
 import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
-import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
-import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
+import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import PipelineCard from './PipelineCard.vue'
-import { useObjectStore } from '../../store/modules/object.js'
-import { initializeStores } from '../../store/store.js'
-import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
+import { formatDate } from '../../services/localeUtils.js'
 import {
+	formatAge,
+	getAgingClass,
 	getDaysAge,
 	isStale,
-	getAgingClass,
-	formatAge,
 	resolveObjectType,
 } from '../../services/pipelineUtils.js'
-import { formatDate } from '../../services/localeUtils.js'
+import { getPriorityColor, getPriorityLabel } from '../../services/requestStatus.js'
+import { useObjectStore } from '../../store/modules/object.js'
+import { initializeStores } from '../../store/store.js'
 
 export default {
 	name: 'PipelineBoard',
@@ -399,9 +399,11 @@ export default {
 		FormatListBulleted,
 		Cog,
 	},
+
 	inject: {
 		pipelineSidebarState: { default: null },
 	},
+
 	data() {
 		return {
 			selectedPipelineId: null,
@@ -453,6 +455,7 @@ export default {
 			expandedBreakdownStage: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-16
@@ -460,12 +463,14 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-23
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-22
 		 */
@@ -475,6 +480,7 @@ export default {
 				label: p.title,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
 		 */
@@ -484,6 +490,7 @@ export default {
 				this.pipelines.find((p) => p.id === this.selectedPipelineId) || null
 			)
 		},
+
 		/**
 		 * The registered object types the selected pipeline renders, used
 		 * to scope the live collection subscriptions. Logical mapping
@@ -515,18 +522,22 @@ export default {
 			}
 			return [...types].sort()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-24
 		 */
 		propertyMappings() {
 			return this.selectedPipeline?.propertyMappings || []
 		},
+
 		hasMultipleSchemas() {
 			return this.propertyMappings.length > 1
 		},
+
 		hasTotals() {
 			return this.propertyMappings.some((m) => m.totalsProperty)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-27
 		 */
@@ -543,6 +554,7 @@ export default {
 			}
 			return options
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-29
 		 */
@@ -552,18 +564,21 @@ export default {
 				(a, b) => a.order - b.order,
 			)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-21
 		 */
 		openStages() {
 			return this.sortedStages.filter((s) => !s.isClosed)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-3
 		 */
 		closedStages() {
 			return this.sortedStages.filter((s) => s.isClosed)
 		},
+
 		/**
 		 * Schema-filtered merged array of all pipeline items; no search applied.
 		 *
@@ -577,6 +592,7 @@ export default {
 			}
 			return result
 		},
+
 		/**
 		 * allItems filtered by searchQuery (case-insensitive title match).
 		 * Empty searchQuery passes all items through unchanged.
@@ -590,6 +606,7 @@ export default {
 				(i.title || '').toLowerCase().includes(query),
 			)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
 		 */
@@ -641,6 +658,7 @@ export default {
 			return items
 		},
 	},
+
 	watch: {
 		/**
 		 * @param {object|null} val The newly selected pipeline object
@@ -649,6 +667,7 @@ export default {
 		selectedPipeline(val) {
 			this.syncSidebarState(val)
 		},
+
 		/**
 		 * Re-scope the live collection subscriptions when the selected
 		 * pipeline (or the async type registration) changes.
@@ -658,6 +677,7 @@ export default {
 		liveTypes() {
 			this.syncLiveSubscriptions()
 		},
+
 		/**
 		 * Live event hint received on the store (or-collection event →
 		 * liveUpdatesPlugin) — refresh the board through the existing
@@ -665,10 +685,11 @@ export default {
 		 *
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
-		'objectStore.liveLastEventAt'() {
+		'objectStore.liveLastEventAt': function () {
 			this.onLiveEvent()
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-15
 	 */
@@ -695,6 +716,7 @@ export default {
 		this.loading = false
 		this.syncLiveSubscriptions()
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-2
 	 */
@@ -707,6 +729,7 @@ export default {
 			this.pipelineSidebarState.onSave = null
 		}
 	},
+
 	methods: {
 		getPriorityLabel,
 		getPriorityColor,

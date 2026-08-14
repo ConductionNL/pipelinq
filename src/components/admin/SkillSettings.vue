@@ -96,12 +96,14 @@ export default {
 		NcLoadingIcon,
 		NcSettingsSection,
 	},
+
 	data() {
 		return {
 			editingId: null,
 			editForm: {},
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-28
@@ -109,12 +111,14 @@ export default {
 		skillsStore() {
 			return useSkillsStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-25
 		 */
 		loading() {
 			return this.skillsStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-27
 		 */
@@ -122,9 +126,11 @@ export default {
 			return this.skillsStore.skills
 		},
 	},
+
 	mounted() {
 		this.skillsStore.fetchSkills()
 	},
+
 	methods: {
 		/**
 		 * @param skill
@@ -137,6 +143,7 @@ export default {
 				categoriesInput: (skill.categories || []).join(', '),
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-23
 		 */
@@ -144,6 +151,7 @@ export default {
 			this.editingId = null
 			this.editForm = {}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-26
 		 */
@@ -161,6 +169,7 @@ export default {
 			await this.skillsStore.saveSkill(data)
 			this.cancelEdit()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-22
 		 */
@@ -171,6 +180,7 @@ export default {
 				categories: [],
 			})
 		},
+
 		/**
 		 * @param skill
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-24

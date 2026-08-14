@@ -58,18 +58,18 @@
 		<!-- Add role dialog -->
 		<AddContactRoleDialog
 			v-if="showAddDialog"
-			:contact-options="contactOptions"
-			:role-options="roleOptions"
-			@search-contacts="searchContacts"
+			:contactOptions="contactOptions"
+			:roleOptions="roleOptions"
+			@searchContacts="searchContacts"
 			@submit="addRole"
 			@cancel="showAddDialog = false" />
 	</div>
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import AddContactRoleDialog from '../dialogs/AddContactRoleDialog.vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { useObjectStore } from '../store/modules/object.js'
 
 const CRM_ROLES = [
@@ -88,12 +88,14 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 	},
+
 	props: {
 		leadId: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			contactRoles: [],
@@ -104,6 +106,7 @@ export default {
 			searchTimeout: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-5
@@ -111,12 +114,14 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-7
 		 */
 		roleOptions() {
 			return CRM_ROLES
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-9
 		 */
@@ -128,9 +133,11 @@ export default {
 			})
 		},
 	},
+
 	async mounted() {
 		await this.fetchRoles()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-2
@@ -158,6 +165,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @param entityId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-4
@@ -177,9 +185,11 @@ export default {
 				this.entityNameCache[entityId] = entityId
 			}
 		},
+
 		getEntityName(entityId) {
 			return this.entityNameCache[entityId] || entityId || '-'
 		},
+
 		/**
 		 * @param roleType
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
@@ -188,6 +198,7 @@ export default {
 			const role = CRM_ROLES.find((r) => r.value === roleType)
 			return role ? role.label : roleType
 		},
+
 		/**
 		 * @param query
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-8
@@ -215,7 +226,9 @@ export default {
 				}
 			}, 300)
 		},
+
 		/**
+		 * @param form
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-1
 		 */
 		async addRole(form) {
@@ -243,6 +256,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to add contact role'))
 			}
 		},
+
 		/**
 		 * @param role
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-6

@@ -1,13 +1,18 @@
-import { defineStore } from 'pinia'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 
 const API_BASE = generateUrl('/apps/pipelinq/api/settings/lead-sources')
 
-const headers = () => ({
-	'Content-Type': 'application/json',
-	requesttoken: OC.requestToken,
-	'OCS-APIREQUEST': 'true',
-})
+/**
+ *
+ */
+function headers() {
+	return {
+		'Content-Type': 'application/json',
+		requesttoken: OC.requestToken,
+		'OCS-APIREQUEST': 'true',
+	}
+}
 
 export const useLeadSourcesStore = defineStore('leadSources', {
 	state: () => ({

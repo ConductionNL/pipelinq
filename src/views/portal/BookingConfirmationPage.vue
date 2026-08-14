@@ -83,6 +83,7 @@ export default {
 			error: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * The booking id from the route.
@@ -94,6 +95,7 @@ export default {
 				? this.$route.params.bookingId
 				: ''
 		},
+
 		/**
 		 * Whether a deposit payment is still pending.
 		 *
@@ -109,6 +111,7 @@ export default {
 				&& this.booking.status !== 'confirmed'
 			)
 		},
+
 		/**
 		 * The "email sent" notice with the customer email interpolated.
 		 *
@@ -122,6 +125,7 @@ export default {
 				{ email },
 			)
 		},
+
 		/**
 		 * Whether the booking carries a price.
 		 *
@@ -130,6 +134,7 @@ export default {
 		hasPrice() {
 			return this.booking && Number(this.booking.price) > 0
 		},
+
 		/**
 		 * The formatted price.
 		 *
@@ -147,6 +152,7 @@ export default {
 				return amount + ' ' + cur
 			}
 		},
+
 		/**
 		 * The translated booking status label.
 		 *
@@ -162,6 +168,7 @@ export default {
 			const status = this.booking ? this.booking.status : ''
 			return map[status] || status
 		},
+
 		/**
 		 * The translated payment status label.
 		 *
@@ -177,9 +184,11 @@ export default {
 			return map[status] || status
 		},
 	},
+
 	mounted() {
 		this.load()
 	},
+
 	methods: {
 		/**
 		 * Load the booking summary.
@@ -202,6 +211,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Format an ISO timestamp as a local date and time.
 		 *

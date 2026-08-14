@@ -14,8 +14,8 @@
 	<CnDetailPage
 		:title="title"
 		:subtitle="t('pipelinq', 'Cash register audit log')"
-		:back-route="{ name: 'KassakoppelingAuditList' }"
-		:back-label="t('pipelinq', 'Back to audit log')"
+		:backRoute="{ name: 'KassakoppelingAuditList' }"
+		:backLabel="t('pipelinq', 'Back to audit log')"
 		:loading="loading"
 		:sidebar="{ enabled: false }">
 		<template #actions>
@@ -32,7 +32,8 @@
 		<CnDetailCard :title="t('pipelinq', 'Verification status')">
 			<div class="kk-audit-detail__status">
 				<span
-					:class="['verify-pill', `verify-pill--${verifyClass}`]"
+					class="verify-pill"
+					:class="[`verify-pill--${verifyClass}`]"
 					data-testid="kassakoppeling-audit-verify-badge">
 					{{ verifyHeadline }}
 				</span>
@@ -47,7 +48,8 @@
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Action') }}</label>
 					<span
-						:class="['action-badge', `action-badge--${actionClass}`]"
+						class="action-badge"
+						:class="[`action-badge--${actionClass}`]"
 						>{{ actionLabel }}</span
 					>
 				</div>
@@ -175,10 +177,10 @@
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
+import { CnDetailCard, CnDetailPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 
 const ACTION_LABELS = {
 	sale: 'Sale',
@@ -201,12 +203,14 @@ export default {
 		CnDetailPage,
 		CnDetailCard,
 	},
+
 	props: {
 		auditEntryId: {
 			type: String,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			entry: {},
@@ -215,6 +219,7 @@ export default {
 			chainResult: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Resolve the audit entry id from props or route.
@@ -224,6 +229,7 @@ export default {
 		entryId() {
 			return this.auditEntryId || this.$route.params.id || null
 		},
+
 		/**
 		 * Title shown in the detail header.
 		 *
@@ -235,6 +241,7 @@ export default {
 			}
 			return `${this.actionLabel} — ${this.entry.registerNumber || '?'}`
 		},
+
 		/**
 		 * Translated action label.
 		 *
@@ -246,6 +253,7 @@ export default {
 				ACTION_LABELS[this.entry.action] || this.entry.action || '—',
 			)
 		},
+
 		/**
 		 * Action CSS class suffix.
 		 *
@@ -254,6 +262,7 @@ export default {
 		actionClass() {
 			return ACTION_CLASSES[this.entry.action] || 'unknown'
 		},
+
 		/**
 		 * Verification badge CSS suffix.
 		 *
@@ -268,6 +277,7 @@ export default {
 			}
 			return 'pending'
 		},
+
 		/**
 		 * Headline for the verification pill.
 		 *
@@ -282,6 +292,7 @@ export default {
 			}
 			return t('pipelinq', 'Verification not yet performed')
 		},
+
 		/**
 		 * Body text for the verification status card.
 		 *
@@ -305,6 +316,7 @@ export default {
 				'The entry has not been verified yet. Click "Verify signature" to recompute the HMAC and chain hash live.',
 			)
 		},
+
 		/**
 		 * Human readable result of the verify action.
 		 *
@@ -323,9 +335,11 @@ export default {
 			return `${sig}, ${hash}`
 		},
 	},
+
 	async mounted() {
 		await this.load()
 	},
+
 	methods: {
 		/**
 		 * Fetch the entry from the API.
@@ -360,6 +374,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Trigger a server-side re-verification of the signature + chain hash.
 		 */
@@ -410,6 +425,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Format an ISO timestamp using the nl-NL locale.
 		 *
@@ -433,6 +449,7 @@ export default {
 				return value
 			}
 		},
+
 		/**
 		 * Format an integer cent value as a localised EUR string.
 		 *
@@ -450,6 +467,7 @@ export default {
 				return `€ ${value.toFixed(2)}`
 			}
 		},
+
 		/**
 		 * Truncate a long hex digest for display.
 		 *
@@ -465,6 +483,7 @@ export default {
 			}
 			return `${value.slice(0, 12)}…${value.slice(-8)}`
 		},
+
 		/**
 		 * Copy a value to the clipboard and show feedback.
 		 *

@@ -73,12 +73,14 @@ export default {
 		/** Selectable roles, shape { value, label }. */
 		roleOptions: { type: Array, default: () => [] },
 	},
+
 	emits: ['submit', 'cancel', 'search-contacts'],
 	data() {
 		return {
 			form: { toContact: null, type: null, notes: '' },
 		}
 	},
+
 	computed: {
 		/**
 		 * Both selects are required, matching the button guard the overlay had.

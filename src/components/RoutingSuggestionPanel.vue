@@ -80,20 +80,24 @@ export default {
 		NcLoadingIcon,
 		Refresh,
 	},
+
 	props: {
 		requestId: {
 			type: String,
 			required: true,
 		},
+
 		category: {
 			type: String,
 			default: '',
 		},
+
 		entityType: {
 			type: String,
 			default: 'request',
 		},
 	},
+
 	emits: ['assigned'],
 	data() {
 		return {
@@ -103,6 +107,7 @@ export default {
 			errorMessage: '',
 		}
 	},
+
 	watch: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-4
@@ -110,6 +115,7 @@ export default {
 		requestId() {
 			this.loadSuggestions()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-2
 		 */
@@ -117,9 +123,11 @@ export default {
 			this.loadSuggestions()
 		},
 	},
+
 	mounted() {
 		this.loadSuggestions()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-3

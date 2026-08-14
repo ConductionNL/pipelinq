@@ -73,20 +73,24 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	props: {
 		jobId: {
 			type: String,
 			required: true,
 		},
+
 		initialResult: {
 			type: Object,
 			default: null,
 		},
+
 		autoRun: {
 			type: Boolean,
 			default: true,
 		},
 	},
+
 	emits: ['close', 'completed'],
 	data() {
 		return {
@@ -94,6 +98,7 @@ export default {
 			result: this.initialResult,
 		}
 	},
+
 	computed: {
 		/**
 		 * Sample row count surfaced from the test run result envelope.
@@ -115,6 +120,7 @@ export default {
 			}
 			return 0
 		},
+
 		/**
 		 * Errors collected from the test run result.
 		 *
@@ -127,6 +133,7 @@ export default {
 			const list = this.result.errors || []
 			return Array.isArray(list) ? list : [String(list)]
 		},
+
 		/**
 		 * Optional sample-file download URL surfaced from the result envelope.
 		 *
@@ -138,6 +145,7 @@ export default {
 			}
 			return this.result.download_url || this.result.downloadUrl || null
 		},
+
 		/**
 		 * Filename hint for the sample download (server-provided or derived).
 		 *
@@ -151,6 +159,7 @@ export default {
 				this.result.filename || this.result.fileName || 'export-test-sample'
 			)
 		},
+
 		/**
 		 * The format reported in the result, for context.
 		 *
@@ -162,6 +171,7 @@ export default {
 			}
 			return this.result.format || null
 		},
+
 		/**
 		 * The destination type or name reported in the result, for context.
 		 *
@@ -174,11 +184,13 @@ export default {
 			return this.result.destination || this.result.destinationType || null
 		},
 	},
+
 	mounted() {
 		if (this.autoRun && this.result === null) {
 			this.rerun()
 		}
 	},
+
 	methods: {
 		/**
 		 * Execute the test run and update local result.

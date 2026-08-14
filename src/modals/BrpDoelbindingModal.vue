@@ -19,7 +19,7 @@
 			<NcSelect
 				v-model="form.verzoekreden"
 				:options="reasonOptions"
-				:input-label="t('pipelinq', 'Request reason')"
+				:inputLabel="t('pipelinq', 'Request reason')"
 				:placeholder="t('pipelinq', 'Choose a request reason')"
 				:reduce="(o) => o.value"
 				label="label"
@@ -27,7 +27,7 @@
 			<NcSelect
 				v-model="form.doelbinding"
 				:options="bindingOptions"
-				:input-label="t('pipelinq', 'Purpose limitation / legal basis')"
+				:inputLabel="t('pipelinq', 'Purpose limitation / legal basis')"
 				:placeholder="t('pipelinq', 'Choose a legal basis')"
 				:reduce="(o) => o.value"
 				label="label"
@@ -57,10 +57,10 @@
 <script>
 import {
 	NcButton,
+	NcCheckboxRadioSwitch,
 	NcDialog,
 	NcSelect,
 	NcTextArea,
-	NcCheckboxRadioSwitch,
 } from '@nextcloud/vue'
 
 export default {
@@ -72,6 +72,7 @@ export default {
 		NcTextArea,
 		NcCheckboxRadioSwitch,
 	},
+
 	emits: ['close', 'submit'],
 	data() {
 		return {
@@ -83,6 +84,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		reasonOptions() {
 			return [
@@ -111,6 +113,7 @@ export default {
 				{ value: 'Overig', label: this.t('pipelinq', 'Other') },
 			]
 		},
+
 		bindingOptions() {
 			return [
 				{
@@ -131,10 +134,12 @@ export default {
 				{ value: 'Overig', label: this.t('pipelinq', 'Other') },
 			]
 		},
+
 		valid() {
 			return Boolean(this.form.verzoekreden) && Boolean(this.form.doelbinding)
 		},
 	},
+
 	methods: {
 		submit() {
 			if (!this.valid) return

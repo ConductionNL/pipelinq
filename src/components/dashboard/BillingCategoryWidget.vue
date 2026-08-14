@@ -33,15 +33,15 @@
 		:labels="labels"
 		:series="series"
 		:colors="colors"
-		@segment-click="onSegmentClick" />
+		@segmentClick="onSegmentClick" />
 </template>
 
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
+import { generateUrl } from '@nextcloud/router'
 import { NcEmptyContent } from '@nextcloud/vue'
 import { useBillingCategoryStore } from '../../store/modules/billingCategory.js'
 import { initializeStores } from '../../store/store.js'
-import { generateUrl } from '@nextcloud/router'
 
 const UNCATEGORIZED_KEY = '__uncategorized__'
 
@@ -52,12 +52,14 @@ export default {
 		const billingCategoryStore = useBillingCategoryStore()
 		return { billingCategoryStore }
 	},
+
 	data() {
 		return {
 			loading: true,
 			timeEntries: [],
 		}
 	},
+
 	computed: {
 		/**
 		 * Map slug/uuid -> category record for fast lookup.
@@ -73,6 +75,7 @@ export default {
 			}
 			return idx
 		},
+
 		/**
 		 * Total hours per category key (slug/uuid). Unresolved keys roll
 		 * into the "Uncategorized" bucket.
@@ -99,22 +102,28 @@ export default {
 			}
 			return result
 		},
+
 		labels() {
 			return this.buckets.map((b) => b.label)
 		},
+
 		series() {
 			return this.buckets.map((b) => b.hours)
 		},
+
 		colors() {
 			return this.buckets.map((b) => b.color)
 		},
+
 		hasData() {
 			return this.buckets.some((b) => b.hours > 0)
 		},
 	},
+
 	async mounted() {
 		await this.load()
 	},
+
 	methods: {
 		/**
 		 * Load categories + time entries. REQ-BCT-004.
@@ -153,6 +162,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Navigate to the time entry list filtered by the clicked segment.
 		 *

@@ -9,18 +9,18 @@
 			<div class="loyalty-reporting__controls">
 				<NcSelect
 					v-model="selectedProgramme"
-					:input-label="t('pipelinq', 'Programme')"
+					:inputLabel="t('pipelinq', 'Programme')"
 					:options="programmeOptions"
 					label="label"
 					:clearable="false"
-					@update:model-value="loadKpis" />
+					@update:modelValue="loadKpis" />
 				<NcSelect
 					v-model="selectedPeriod"
-					:input-label="t('pipelinq', 'Period')"
+					:inputLabel="t('pipelinq', 'Period')"
 					:options="periodOptions"
 					label="label"
 					:clearable="false"
-					@update:model-value="loadKpis" />
+					@update:modelValue="loadKpis" />
 			</div>
 		</div>
 
@@ -131,13 +131,13 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import NcSelect from '@nextcloud/vue/components/NcSelect'
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
-import { showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'LoyaltyReporting',
@@ -153,9 +153,11 @@ export default {
 				{ id: '90d', label: 'Last 90 days', days: 90 },
 				{ id: '365d', label: 'Last 12 months', days: 365 },
 			],
+
 			kpis: null,
 		}
 	},
+
 	computed: {
 		programmeOptions() {
 			return this.programmes.map((p) => ({
@@ -163,6 +165,7 @@ export default {
 				label: p.naam || p.merk || p.id,
 			}))
 		},
+
 		tierRows() {
 			if (!this.kpis || !this.kpis.tierDistribution) {
 				return []
@@ -173,20 +176,24 @@ export default {
 			}))
 		},
 	},
+
 	mounted() {
 		this.selectedPeriod = this.periodOptions[1]
 		this.loadProgrammes()
 	},
+
 	methods: {
 		formatNumber(n) {
 			return new Intl.NumberFormat('nl-NL').format(Number(n || 0))
 		},
+
 		formatMoney(amount) {
 			return new Intl.NumberFormat('nl-NL', {
 				style: 'currency',
 				currency: 'EUR',
 			}).format(Number(amount || 0))
 		},
+
 		async loadProgrammes() {
 			try {
 				const url = generateUrl(
@@ -208,6 +215,7 @@ export default {
 				showError(this.t('pipelinq', 'Failed to load programmes'))
 			}
 		},
+
 		async loadKpis() {
 			if (!this.selectedProgramme) {
 				return
@@ -230,6 +238,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		exportCsv() {
 			if (!this.kpis) {
 				return

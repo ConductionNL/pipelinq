@@ -20,14 +20,14 @@
 			<NcSelect
 				v-model="filters.platform"
 				:options="platformOptions"
-				:input-label="t('pipelinq', 'Platform')"
+				:inputLabel="t('pipelinq', 'Platform')"
 				label="label"
 				:reduce="(o) => o.value"
 				clearable />
 			<NcSelect
 				v-model="filters.event_type"
 				:options="eventTypeOptions"
-				:input-label="t('pipelinq', 'Event type')"
+				:inputLabel="t('pipelinq', 'Event type')"
 				label="label"
 				:reduce="(o) => o.value"
 				clearable />
@@ -86,8 +86,8 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect, NcSettingsSection } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
+import { NcButton, NcLoadingIcon, NcSelect, NcSettingsSection } from '@nextcloud/vue'
 import CtiPayloadDialog from '../../dialogs/CtiPayloadDialog.vue'
 import { getEventLog } from '../../services/ctiApi.js'
 
@@ -100,6 +100,7 @@ export default {
 		NcSelect,
 		NcSettingsSection,
 	},
+
 	data() {
 		return {
 			events: [],
@@ -111,6 +112,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		platformOptions() {
 			return [
@@ -119,6 +121,7 @@ export default {
 				{ value: 'asterisk', label: 'Asterisk' },
 			]
 		},
+
 		eventTypeOptions() {
 			return [
 				'ringing',
@@ -131,13 +134,16 @@ export default {
 			].map((v) => ({ value: v, label: v }))
 		},
 	},
+
 	watch: {
 		'filters.platform': 'reload',
 		'filters.event_type': 'reload',
 	},
+
 	mounted() {
 		this.reload()
 	},
+
 	methods: {
 		/**
 		 * Reload the CTI event log from the backing store.
@@ -159,6 +165,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		viewPayload(row) {
 			this.payloadRow = row
 		},

@@ -23,11 +23,11 @@
 			<NcTextField
 				id="service-name"
 				:label="t('pipelinq', 'Name') + ' *'"
-				:model-value="form.name"
+				:modelValue="form.name"
 				:error="!!errors.name"
-				:helper-text="errors.name"
+				:helperText="errors.name"
 				:maxlength="255"
-				@update:model-value="
+				@update:modelValue="
 					(v) => {
 						form.name = v
 						validateField('name')
@@ -52,10 +52,10 @@
 					id="service-duration"
 					:label="t('pipelinq', 'Duration (minutes)') + ' *'"
 					type="number"
-					:model-value="String(form.durationMinutes ?? '')"
+					:modelValue="String(form.durationMinutes ?? '')"
 					:error="!!errors.durationMinutes"
-					:helper-text="errors.durationMinutes"
-					@update:model-value="
+					:helperText="errors.durationMinutes"
+					@update:modelValue="
 						(v) => {
 							form.durationMinutes = v === '' ? null : Number(v)
 							validateField('durationMinutes')
@@ -67,8 +67,8 @@
 					id="service-buffer-before"
 					:label="t('pipelinq', 'Buffer before (min)')"
 					type="number"
-					:model-value="String(form.bufferBeforeMinutes ?? 0)"
-					@update:model-value="
+					:modelValue="String(form.bufferBeforeMinutes ?? 0)"
+					@update:modelValue="
 						(v) => (form.bufferBeforeMinutes = v === '' ? 0 : Number(v))
 					" />
 			</div>
@@ -77,8 +77,8 @@
 					id="service-buffer-after"
 					:label="t('pipelinq', 'Buffer after (min)')"
 					type="number"
-					:model-value="String(form.bufferAfterMinutes ?? 0)"
-					@update:model-value="
+					:modelValue="String(form.bufferAfterMinutes ?? 0)"
+					@update:modelValue="
 						(v) => (form.bufferAfterMinutes = v === '' ? 0 : Number(v))
 					" />
 			</div>
@@ -90,8 +90,8 @@
 					id="service-price"
 					:label="t('pipelinq', 'Price')"
 					type="number"
-					:model-value="String(form.price ?? 0)"
-					@update:model-value="
+					:modelValue="String(form.price ?? 0)"
+					@update:modelValue="
 						(v) => (form.price = v === '' ? 0 : Number(v))
 					" />
 			</div>
@@ -99,9 +99,9 @@
 				<NcTextField
 					id="service-currency"
 					:label="t('pipelinq', 'Currency')"
-					:model-value="form.currency || 'EUR'"
+					:modelValue="form.currency || 'EUR'"
 					:maxlength="3"
-					@update:model-value="
+					@update:modelValue="
 						(v) => (form.currency = (v || '').toUpperCase())
 					" />
 			</div>
@@ -111,8 +111,8 @@
 			<NcTextField
 				id="service-skills"
 				:label="t('pipelinq', 'Required skills (comma-separated)')"
-				:model-value="skillsCsv"
-				@update:model-value="onSkillsInput" />
+				:modelValue="skillsCsv"
+				@update:modelValue="onSkillsInput" />
 		</div>
 
 		<div class="form-group">
@@ -145,7 +145,7 @@
 						<td>
 							<NcSelect
 								v-model="step.resourceType"
-								:input-id="`step-resource-${idx}`"
+								:inputId="`step-resource-${idx}`"
 								:aria-label-combobox="t('pipelinq', 'Resource type')"
 								:options="resourceTypeOptions"
 								:reduce="(o) => o.value"
@@ -220,9 +220,9 @@
 					id="service-deposit-amount"
 					:label="t('pipelinq', 'Deposit amount')"
 					type="number"
-					:model-value="String(form.depositAmount ?? 0)"
+					:modelValue="String(form.depositAmount ?? 0)"
 					:disabled="!form.requiresDeposit"
-					@update:model-value="
+					@update:modelValue="
 						(v) => (form.depositAmount = v === '' ? 0 : Number(v))
 					" />
 			</div>
@@ -231,8 +231,8 @@
 					id="service-no-show-fee"
 					:label="t('pipelinq', 'No-show fee')"
 					type="number"
-					:model-value="String(form.noShowFee ?? 0)"
-					@update:model-value="
+					:modelValue="String(form.noShowFee ?? 0)"
+					@update:modelValue="
 						(v) => (form.noShowFee = v === '' ? 0 : Number(v))
 					" />
 			</div>
@@ -245,7 +245,7 @@
 				}}</label>
 				<NcSelect
 					v-model="form.cancellationPolicy"
-					input-id="service-cancellation-policy"
+					inputId="service-cancellation-policy"
 					:aria-label-combobox="t('pipelinq', 'Cancellation policy')"
 					:options="cancellationPolicyOptions"
 					:reduce="(o) => o.value"
@@ -256,8 +256,8 @@
 					id="service-cancellation-hours"
 					:label="t('pipelinq', 'Cancellation hours before')"
 					type="number"
-					:model-value="String(form.cancellationHoursBefore ?? 24)"
-					@update:model-value="
+					:modelValue="String(form.cancellationHoursBefore ?? 24)"
+					@update:modelValue="
 						(v) =>
 							(form.cancellationHoursBefore =
 								v === '' ? 24 : Number(v))
@@ -269,7 +269,7 @@
 			<label for="service-status">{{ t('pipelinq', 'Status') }} *</label>
 			<NcSelect
 				v-model="form.status"
-				input-id="service-status"
+				inputId="service-status"
 				:aria-label-combobox="t('pipelinq', 'Status')"
 				:options="statusOptions"
 				:reduce="(o) => o.value"
@@ -305,6 +305,7 @@ export default {
 			default: () => ({}),
 		},
 	},
+
 	emits: ['save', 'cancel'],
 	data() {
 		return {
@@ -315,6 +316,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		isValid() {
 			const hasName = (this.form.name || '').trim().length > 0
@@ -324,9 +326,11 @@ export default {
 			const noErrors = Object.values(this.errors).every((e) => !e)
 			return hasName && hasDuration && noErrors
 		},
+
 		skillsCsv() {
 			return (this.form.requiredSkills || []).join(', ')
 		},
+
 		statusOptions() {
 			return [
 				{ value: 'draft', label: t('pipelinq', 'Draft') },
@@ -334,6 +338,7 @@ export default {
 				{ value: 'archived', label: t('pipelinq', 'Archived') },
 			]
 		},
+
 		cancellationPolicyOptions() {
 			return [
 				{ value: 'free', label: t('pipelinq', 'Free') },
@@ -341,9 +346,11 @@ export default {
 				{ value: 'always-charge', label: t('pipelinq', 'Always charge') },
 			]
 		},
+
 		resourceTypeOptions() {
 			return RESOURCE_TYPES.map((v) => ({ value: v, label: t('pipelinq', v) }))
 		},
+
 		/**
 		 * Surfaces an inline warning when the multiStep duration total
 		 * disagrees with the top-level durationMinutes — REQ-APT-001
@@ -372,6 +379,7 @@ export default {
 			)
 		},
 	},
+
 	watch: {
 		service: {
 			immediate: true,
@@ -382,6 +390,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		emptyForm() {
 			return {
@@ -403,6 +412,7 @@ export default {
 				status: 'active',
 			}
 		},
+
 		populateForm(data) {
 			this.form = {
 				...this.emptyForm(),
@@ -410,12 +420,14 @@ export default {
 				multiStep: Array.isArray(data.multiStep)
 					? data.multiStep.map((s) => ({ ...s }))
 					: [],
+
 				requiredSkills: Array.isArray(data.requiredSkills)
 					? [...data.requiredSkills]
 					: [],
 			}
 			this.errors = { name: '', durationMinutes: '' }
 		},
+
 		validateField(field) {
 			switch (field) {
 				case 'name':
@@ -445,11 +457,13 @@ export default {
 					break
 			}
 		},
+
 		validateAll() {
 			this.validateField('name')
 			this.validateField('durationMinutes')
 			return this.isValid
 		},
+
 		/**
 		 * Parse a comma-separated skill list into the array form.
 		 *
@@ -461,6 +475,7 @@ export default {
 				.map((s) => s.trim())
 				.filter((s) => s.length > 0)
 		},
+
 		addStep() {
 			this.form.multiStep.push({
 				durationMinutes: 0,
@@ -469,9 +484,11 @@ export default {
 				allowGap: false,
 			})
 		},
+
 		removeStep(idx) {
 			this.form.multiStep.splice(idx, 1)
 		},
+
 		/**
 		 * Reorder a step by `delta` positions, clamped to the array bounds.
 		 *
@@ -486,6 +503,7 @@ export default {
 			const step = this.form.multiStep.splice(idx, 1)[0]
 			this.form.multiStep.splice(target, 0, step)
 		},
+
 		onSave() {
 			if (!this.validateAll()) {
 				return

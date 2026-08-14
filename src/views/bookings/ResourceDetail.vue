@@ -33,13 +33,13 @@
 		v-else
 		:title="resourceData.name || t('pipelinq', 'Resource')"
 		:subtitle="t('pipelinq', 'Resource')"
-		:back-route="{ name: 'Resources' }"
-		:back-label="t('pipelinq', 'Back to list')"
+		:backRoute="{ name: 'Resources' }"
+		:backLabel="t('pipelinq', 'Back to list')"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
-		object-type="pipelinq_resource"
-		:object-id="resourceId"
-		:sidebar-props="sidebarProps">
+		objectType="pipelinq_resource"
+		:objectId="resourceId"
+		:sidebarProps="sidebarProps">
 		<template #actions>
 			<NcButton variant="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
@@ -147,16 +147,16 @@
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { computed } from 'vue'
 import {
-	CnDetailPage,
 	CnDetailCard,
+	CnDetailPage,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
-import ResourceForm from './ResourceForm.vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton } from '@nextcloud/vue'
+import { computed } from 'vue'
 import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
+import ResourceForm from './ResourceForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -168,9 +168,11 @@ export default {
 		ResourceForm,
 		DeleteResourceDialog,
 	},
+
 	props: {
 		id: { type: String, default: null },
 	},
+
 	/**
 	 * Live updates for the viewed resource (or-object-{uuid} via the
 	 * nc-vue liveUpdatesPlugin, default-on since beta.212). Events are
@@ -196,43 +198,53 @@ export default {
 		})
 		return {}
 	},
+
 	data() {
 		return {
 			editing: false,
 			showDelete: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		resourceId() {
 			return this.id || null
 		},
+
 		isNew() {
 			return !this.resourceId || this.resourceId === 'new'
 		},
+
 		loading() {
 			return this.objectStore.loading?.resource || false
 		},
+
 		resourceData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('resource', this.resourceId) || {}
 		},
+
 		workingHours() {
 			return Array.isArray(this.resourceData.workingHours)
 				? this.resourceData.workingHours
 				: []
 		},
+
 		vacations() {
 			return Array.isArray(this.resourceData.vacations)
 				? this.resourceData.vacations
 				: []
 		},
+
 		skillsLabel() {
 			const skills = this.resourceData.skills || []
 			return skills.length ? skills.join(', ') : '-'
 		},
+
 		sidebarProps() {
 			const cfg = this.objectStore.objectTypeRegistry?.resource || {}
 			return {
@@ -243,11 +255,13 @@ export default {
 			}
 		},
 	},
+
 	async mounted() {
 		if (!this.isNew) {
 			await this.objectStore.fetchObject('resource', this.resourceId)
 		}
 	},
+
 	methods: {
 		async onFormSave(formData) {
 			const saved = await this.objectStore.saveObject('resource', formData)
@@ -270,6 +284,7 @@ export default {
 				this.editing = false
 			}
 		},
+
 		onFormCancel() {
 			if (this.isNew) {
 				this.$router.push({ name: 'Resources' })
@@ -277,6 +292,7 @@ export default {
 				this.editing = false
 			}
 		},
+
 		async confirmDelete() {
 			this.showDelete = false
 			const ok = await this.objectStore.deleteObject(
@@ -292,6 +308,7 @@ export default {
 				)
 			}
 		},
+
 		/**
 		 * Best-effort invalidation of this resource's availability cache rows.
 		 *

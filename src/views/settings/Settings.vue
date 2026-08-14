@@ -4,14 +4,14 @@
 		<NcSettingsSection
 			:name="t('pipelinq', 'Pipelinq Settings')"
 			:description="t('pipelinq', 'Configure your Pipelinq installation')"
-			doc-url="https://pipelinq.conduction.nl/docs/intro" />
+			docUrl="https://pipelinq.conduction.nl/docs/intro" />
 
 		<!-- Version Information -->
 		<CnVersionInfoCard
-			:app-name="'Pipelinq'"
-			:app-version="appVersion"
-			:is-up-to-date="true"
-			:show-update-button="true"
+			appName="Pipelinq"
+			:appVersion="appVersion"
+			:isUpToDate="true"
+			:showUpdateButton="true"
 			:title="t('pipelinq', 'Version Information')"
 			:description="
 				t('pipelinq', 'Information about the current Pipelinq installation')
@@ -92,9 +92,9 @@
 			:title="t('pipelinq', 'Lead Sources')"
 			:tags="leadSourceTags"
 			:loading="leadSourcesLoading"
-			:add-label="t('pipelinq', '+ Add Source')"
-			:add-placeholder="t('pipelinq', 'Enter source name...')"
-			:usage-check="checkLeadSourceUsage"
+			:addLabel="t('pipelinq', '+ Add Source')"
+			:addPlaceholder="t('pipelinq', 'Enter source name...')"
+			:usageCheck="checkLeadSourceUsage"
 			@add="addLeadSource"
 			@remove="removeLeadSource"
 			@rename="renameLeadSource" />
@@ -105,9 +105,9 @@
 			:title="t('pipelinq', 'Request Channels')"
 			:tags="requestChannelTags"
 			:loading="requestChannelsLoading"
-			:add-label="t('pipelinq', '+ Add Channel')"
-			:add-placeholder="t('pipelinq', 'Enter channel name...')"
-			:usage-check="checkRequestChannelUsage"
+			:addLabel="t('pipelinq', '+ Add Channel')"
+			:addPlaceholder="t('pipelinq', 'Enter channel name...')"
+			:usageCheck="checkRequestChannelUsage"
 			@add="addRequestChannel"
 			@remove="removeRequestChannel"
 			@rename="renameRequestChannel" />
@@ -137,7 +137,7 @@
 				type="number"
 				:label="t('pipelinq', 'Stale after (days)')"
 				placeholder="14"
-				:helper-text="
+				:helperText="
 					t(
 						'pipelinq',
 						'Number of days a lead can stay untouched before it is flagged as stale. Default: 14.',
@@ -172,7 +172,7 @@
 				:label="t('pipelinq', 'Shillinq Ledger Webhook URL')"
 				placeholder="https://shillinq.example.com/ledger/webhook"
 				:error="shillinqUrlInvalid"
-				:helper-text="
+				:helperText="
 					shillinqUrlInvalid
 						? t('pipelinq', 'Please enter a valid HTTPS URL')
 						: ''
@@ -182,7 +182,7 @@
 				:label="t('pipelinq', 'Shillinq WIP webhook URL')"
 				placeholder="https://shillinq.example.com/api/wip/events"
 				:error="wipUrlInvalid"
-				:helper-text="
+				:helperText="
 					wipUrlInvalid
 						? t('pipelinq', 'Please enter a valid HTTPS URL')
 						: ''
@@ -201,7 +201,7 @@
 				v-model="config.billing_handoff_manager_group"
 				:label="t('pipelinq', 'Billing handoff manager group')"
 				placeholder="billing-managers"
-				:helper-text="
+				:helperText="
 					t(
 						'pipelinq',
 						'Nextcloud group allowed to trigger \'Send to billing\'. Leave empty to restrict it to Nextcloud administrators.',
@@ -236,7 +236,7 @@
 				:label="t('pipelinq', 'Shillinq AP webhook URL')"
 				placeholder="https://shillinq.example.com/ap-webhook"
 				:error="shillinqApUrlInvalid"
-				:helper-text="
+				:helperText="
 					shillinqApUrlInvalid
 						? t(
 								'pipelinq',
@@ -306,7 +306,7 @@
 				v-model="config.xwiki_default_space"
 				:label="t('pipelinq', 'Default xWiki space')"
 				placeholder="Kennisbank"
-				:helper-text="
+				:helperText="
 					t(
 						'pipelinq',
 						'Space name pre-selected by the dashboard widget. Leave empty to search across all spaces.',
@@ -317,7 +317,7 @@
 				type="number"
 				:label="t('pipelinq', 'Cache TTL (seconds)')"
 				placeholder="300"
-				:helper-text="
+				:helperText="
 					t(
 						'pipelinq',
 						'How long search and page results are cached server-side. Default: 300.',
@@ -327,7 +327,7 @@
 				v-model="config.xwiki_direct_url"
 				:label="t('pipelinq', 'Direct xWiki URL (fallback)')"
 				placeholder="http://xwiki:8080/xwiki"
-				:helper-text="
+				:helperText="
 					t(
 						'pipelinq',
 						'Used only when the xWiki Nextcloud app is unavailable. Should point at the xWiki base URL without trailing slash.',
@@ -382,8 +382,9 @@
 </template>
 
 <script>
-import { loadState } from '@nextcloud/initial-state'
 import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
+import { loadState } from '@nextcloud/initial-state'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -392,30 +393,29 @@ import {
 	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
-import { useSettingsStore } from '../../store/modules/settings.js'
-import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
-import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
-import { useObjectStore } from '../../store/modules/object.js'
-import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
-import PipelineManager from './PipelineManager.vue'
-import ProductCategoryManager from './ProductCategoryManager.vue'
-import ProspectSettings from './ProspectSettings.vue'
-import TagManager from './TagManager.vue'
-import QueueSettings from '../../components/admin/QueueSettings.vue'
-import SkillSettings from '../../components/admin/SkillSettings.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
+import QueueSettings from '../../components/admin/QueueSettings.vue'
+import SkillSettings from '../../components/admin/SkillSettings.vue'
+import CtiPage from './CtiPage.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
-import CtiPage from './CtiPage.vue'
 import PaymentSettingsForm from './PaymentSettingsForm.vue'
-import PosTenderTypeManager from './PosTenderTypeManager.vue'
-import PosStaffManager from './PosStaffManager.vue'
+import PipelineManager from './PipelineManager.vue'
 import PosRoleManager from './PosRoleManager.vue'
+import PosStaffManager from './PosStaffManager.vue'
+import PosTenderTypeManager from './PosTenderTypeManager.vue'
+import ProductCategoryManager from './ProductCategoryManager.vue'
+import ProspectSettings from './ProspectSettings.vue'
+import TagManager from './TagManager.vue'
+import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
+import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
+import { useObjectStore } from '../../store/modules/object.js'
+import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 
 export default {
 	name: 'Settings',
@@ -445,6 +445,7 @@ export default {
 		ForecastSettings,
 		ExportConfigurationSettings,
 	},
+
 	data() {
 		return {
 			config: {},
@@ -476,6 +477,7 @@ export default {
 			xwikiAppInstalled: true,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-87
@@ -483,27 +485,32 @@ export default {
 		settingsStore() {
 			return useSettingsStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-74
 		 */
 		leadSourcesStore() {
 			return useLeadSourcesStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-85
 		 */
 		requestChannelsStore() {
 			return useRequestChannelsStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-76
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
 		isConfigured() {
 			return !!this.config.register
 		},
+
 		/**
 		 * The real time-intake emit flag (time-billing-handoff-emit), converted
 		 * between the backend's string 'true'/'false' config value and a
@@ -515,6 +522,7 @@ export default {
 			get() {
 				return this.config.shillinq_time_intake_enabled === 'true'
 			},
+
 			set(value) {
 				this.config = {
 					...this.config,
@@ -522,6 +530,7 @@ export default {
 				}
 			},
 		},
+
 		/**
 		 * Whether the entered Shillinq webhook URL is present but not a valid HTTPS URL.
 		 * An empty value is valid (disables the integration).
@@ -537,6 +546,7 @@ export default {
 				return true
 			}
 		},
+
 		/**
 		 * Whether the entered Shillinq WIP webhook URL is present but not a valid HTTPS URL.
 		 * An empty value is valid (disables the integration).
@@ -554,6 +564,7 @@ export default {
 				return true
 			}
 		},
+
 		/**
 		 * Whether the entered Shillinq AP webhook URL is present but not a valid HTTPS URL.
 		 * An empty value is valid (disables the integration). REQ-AP-004 Scenario 13.
@@ -571,30 +582,35 @@ export default {
 				return true
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-72
 		 */
 		leadSourceTags() {
 			return this.leadSourcesStore.tags
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-73
 		 */
 		leadSourcesLoading() {
 			return this.leadSourcesStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-83
 		 */
 		requestChannelTags() {
 			return this.requestChannelsStore.tags
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-84
 		 */
 		requestChannelsLoading() {
 			return this.requestChannelsStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-77
 		 */
@@ -616,6 +632,7 @@ export default {
 				.filter((group) => group.types.length > 0)
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-75
 	 */
@@ -642,6 +659,7 @@ export default {
 			this.testXwiki()
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
@@ -683,6 +701,7 @@ export default {
 				this.reimporting = false
 			}
 		},
+
 		/**
 		 * @param configuration
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-86
@@ -698,6 +717,7 @@ export default {
 			}
 			this.saving = false
 		},
+
 		/**
 		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-67
@@ -705,6 +725,7 @@ export default {
 		async addLeadSource(name) {
 			await this.leadSourcesStore.addSource(name)
 		},
+
 		/**
 		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-79
@@ -712,6 +733,7 @@ export default {
 		async removeLeadSource(id) {
 			await this.leadSourcesStore.removeSource(id)
 		},
+
 		/**
 		 * @param id
 		 * @param name
@@ -720,6 +742,7 @@ export default {
 		async renameLeadSource(id, name) {
 			await this.leadSourcesStore.renameSource(id, name)
 		},
+
 		/**
 		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-68
@@ -727,6 +750,7 @@ export default {
 		async addRequestChannel(name) {
 			await this.requestChannelsStore.addChannel(name)
 		},
+
 		/**
 		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-80
@@ -734,6 +758,7 @@ export default {
 		async removeRequestChannel(id) {
 			await this.requestChannelsStore.removeChannel(id)
 		},
+
 		/**
 		 * @param id
 		 * @param name
@@ -742,6 +767,7 @@ export default {
 		async renameRequestChannel(id, name) {
 			await this.requestChannelsStore.renameChannel(id, name)
 		},
+
 		/**
 		 * @param sourceName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-69
@@ -749,6 +775,7 @@ export default {
 		async checkLeadSourceUsage(sourceName) {
 			return this.countObjectsWithField('lead', 'source', sourceName)
 		},
+
 		/**
 		 * @param channelName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
@@ -760,6 +787,7 @@ export default {
 				ticketType: 'request',
 			})
 		},
+
 		/**
 		 * Persist the Shillinq ledger webhook URL through the standard settings endpoint.
 		 *
@@ -795,6 +823,7 @@ export default {
 				this.savingShillinq = false
 			}
 		},
+
 		/**
 		 * Reflect a saved export-configuration payload back into local state.
 		 *
@@ -806,6 +835,7 @@ export default {
 				this.config = { ...this.config, ...updated }
 			}
 		},
+
 		/**
 		 * Persist the Shillinq AP webhook URL through the standard settings endpoint.
 		 *
@@ -841,6 +871,7 @@ export default {
 				this.savingShillinqAp = false
 			}
 		},
+
 		/**
 		 * Persist the lead stale threshold through the standard settings endpoint.
 		 *
@@ -878,6 +909,7 @@ export default {
 				this.savingStale = false
 			}
 		},
+
 		/**
 		 * Persist xWiki integration settings (xwiki-integration).
 		 *
@@ -910,6 +942,7 @@ export default {
 				this.savingXwiki = false
 			}
 		},
+
 		/**
 		 * Test the xWiki connection via /api/xwiki/status.
 		 *
@@ -952,6 +985,7 @@ export default {
 				this.testingXwiki = false
 			}
 		},
+
 		/**
 		 * @param type
 		 * @param field

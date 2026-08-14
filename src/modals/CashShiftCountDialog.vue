@@ -23,7 +23,7 @@
 				:label="t('pipelinq', 'Counted amount')"
 				placeholder="€ 0.00"
 				:error="showError"
-				:helper-text="
+				:helperText="
 					showError ? t('pipelinq', 'Enter a valid amount') : ''
 				" />
 			<NcTextArea v-model="notes" :label="t('pipelinq', 'Notes (optional)')" />
@@ -40,7 +40,7 @@
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextField, NcTextArea } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcTextArea, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftCountDialog',
@@ -50,12 +50,14 @@ export default {
 		NcTextField,
 		NcTextArea,
 	},
+
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -64,6 +66,7 @@ export default {
 			showError: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * Validate the counted amount and emit the count payload.

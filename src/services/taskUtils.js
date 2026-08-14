@@ -6,6 +6,7 @@ import { translate as t } from '@nextcloud/l10n'
 
 /**
  * Task type labels.
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-55
  */
 export function getTaskTypeLabels() {
@@ -18,6 +19,7 @@ export function getTaskTypeLabels() {
 
 /**
  * Task status labels.
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-53
  */
 export function getTaskStatusLabels() {
@@ -31,6 +33,7 @@ export function getTaskStatusLabels() {
 
 /**
  * Task priority labels.
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-51
  */
 export function getTaskPriorityLabels() {

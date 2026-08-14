@@ -25,7 +25,7 @@
 			<div class="sync-settings__field">
 				<NcSelect
 					v-model="form.account"
-					:input-label="t('pipelinq', 'Nextcloud Mail account')"
+					:inputLabel="t('pipelinq', 'Nextcloud Mail account')"
 					:options="accountOptions"
 					:reduce="reduceAccount"
 					:clearable="true"
@@ -134,8 +134,8 @@ import {
 	NcSelect,
 	NcSettingsSection,
 } from '@conduction/nextcloud-vue'
-import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'SyncSettingsSection',
@@ -146,6 +146,7 @@ export default {
 		NcSelect,
 		NcSettingsSection,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -158,18 +159,22 @@ export default {
 				enabled: false,
 				excludedText: '',
 			},
+
 			status: {
 				lastRunAt: null,
 				linked: 0,
 				scanned: 0,
 				error: null,
 			},
+
 			accountOptions: [{ id: 0, label: this.t('pipelinq', 'None') }],
 		}
 	},
+
 	async created() {
 		await this.load()
 	},
+
 	methods: {
 		/**
 		 * Load the persisted matching settings + last-run status.
@@ -221,6 +226,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Persist the form.
 		 */
@@ -260,6 +266,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Run the matcher once for the current user.
 		 */
@@ -300,6 +307,7 @@ export default {
 				this.triggering = false
 			}
 		},
+
 		/**
 		 * Map an NcSelect option to its stored numeric id.
 		 *

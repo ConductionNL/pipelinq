@@ -38,7 +38,7 @@
 				<NcSelect
 					v-model="selectedSegment"
 					:options="segments"
-					:input-label="t('pipelinq', 'Segment') + ' *'"
+					:inputLabel="t('pipelinq', 'Segment') + ' *'"
 					label="name"
 					:loading="segmentsLoading" />
 				<p v-if="selectedSegment" class="blast-form__hint">
@@ -52,7 +52,7 @@
 				<NcSelect
 					v-model="selectedTemplate"
 					:options="filteredTemplates"
-					:input-label="t('pipelinq', 'Template') + ' *'"
+					:inputLabel="t('pipelinq', 'Template') + ' *'"
 					label="name"
 					:loading="templatesLoading" />
 				<p
@@ -68,13 +68,13 @@
 				<NcSelect
 					v-model="selectedChannel"
 					:options="channelOptions"
-					:input-label="t('pipelinq', 'Channel') + ' *'"
+					:inputLabel="t('pipelinq', 'Channel') + ' *'"
 					label="label"
 					:clearable="false" />
 				<NcSelect
 					v-model="selectedConnectorSource"
 					:options="connectorSources"
-					:input-label="t('pipelinq', 'Connector source')"
+					:inputLabel="t('pipelinq', 'Connector source')"
 					label="label"
 					:loading="connectorSourcesLoading" />
 			</section>
@@ -161,15 +161,15 @@
 			:contacts="missingConsentContacts"
 			:channel="selectedChannel"
 			@cancel="onConsentCancel"
-			@request-consent="onConsentRequest"
-			@skip-and-send="onConsentSkip" />
+			@requestConsent="onConsentRequest"
+			@skipAndSend="onConsentSkip" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import MissingConsentModal from '../../modals/MissingConsentModal.vue'
 
 const STEPS = [
@@ -189,6 +189,7 @@ export default {
 		NcSelect,
 		MissingConsentModal,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -204,6 +205,7 @@ export default {
 				scheduledFor: '',
 				abSplitPercent: 50,
 			},
+
 			abEnabled: false,
 			segments: [],
 			templates: [],
@@ -221,6 +223,7 @@ export default {
 			consentDecision: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * The step descriptors with localised labels.
@@ -233,6 +236,7 @@ export default {
 				label: this.t('pipelinq', s.labelKey),
 			}))
 		},
+
 		/**
 		 * The current step key.
 		 *
@@ -241,6 +245,7 @@ export default {
 		step() {
 			return STEPS[this.currentStep].key
 		},
+
 		/**
 		 * Whether this is the last step (submit button shown instead of Next).
 		 *
@@ -249,6 +254,7 @@ export default {
 		isLastStep() {
 			return this.currentStep === STEPS.length - 1
 		},
+
 		/**
 		 * Channel options shown on the channel step.
 		 *
@@ -260,6 +266,7 @@ export default {
 				{ value: 'sms', label: this.t('pipelinq', 'SMS') },
 			]
 		},
+
 		/**
 		 * Templates filtered by the selected channel (email/sms must match).
 		 *
@@ -271,6 +278,7 @@ export default {
 			}
 			return this.templates.filter((t) => t.channel === this.selectedChannel)
 		},
+
 		/**
 		 * Returns true when the current step's required input is satisfied.
 		 *
@@ -290,6 +298,7 @@ export default {
 					return true
 			}
 		},
+
 		/**
 		 * Returns true when every required step has been satisfied so the user
 		 * can submit. Schedule + A/B are optional but channel/segment/template
@@ -307,14 +316,17 @@ export default {
 			)
 		},
 	},
+
 	watch: {
 		selectedSegment(option) {
 			this.model.segmentId = option?.id || ''
 		},
+
 		selectedTemplate(option) {
 			this.model.templateId = option?.id || ''
 			this.validateTemplate()
 		},
+
 		selectedChannel(value) {
 			this.model.channel = value
 			// Drop the template if it no longer matches the channel.
@@ -324,9 +336,11 @@ export default {
 			}
 			this.validateTemplate()
 		},
+
 		selectedConnectorSource(option) {
 			this.model.connectorSourceId = option?.id || ''
 		},
+
 		abEnabled(on) {
 			if (!on) {
 				this.model.abSplitPercent = 100
@@ -335,11 +349,13 @@ export default {
 			}
 		},
 	},
+
 	mounted() {
 		this.loadSegments()
 		this.loadTemplates()
 		this.loadConnectorSources()
 	},
+
 	methods: {
 		/**
 		 * Load all segments for the segment picker.
@@ -359,6 +375,7 @@ export default {
 				this.segmentsLoading = false
 			}
 		},
+
 		/**
 		 * Load all campaign templates.
 		 */
@@ -375,6 +392,7 @@ export default {
 				this.templatesLoading = false
 			}
 		},
+
 		/**
 		 * Load OpenConnector sources usable as email/SMS dispatch endpoints.
 		 */
@@ -395,6 +413,7 @@ export default {
 				this.connectorSourcesLoading = false
 			}
 		},
+
 		/**
 		 * Call the template validation endpoint for email templates; SMS
 		 * templates skip the check (per ComplianceService).
@@ -427,6 +446,7 @@ export default {
 					msg || this.t('pipelinq', 'Template validation failed.')
 			}
 		},
+
 		/**
 		 * Advance to the next step (validations gate via canAdvance).
 		 */
@@ -435,6 +455,7 @@ export default {
 				this.currentStep += 1
 			}
 		},
+
 		/**
 		 * Step back; clears form-level submit errors.
 		 */
@@ -444,6 +465,7 @@ export default {
 			}
 			this.submitError = ''
 		},
+
 		/**
 		 * Run a compliance preflight before the final POST. When contacts are
 		 * missing consent the missing-consent modal is shown with skip/request/
@@ -479,6 +501,7 @@ export default {
 				return false
 			}
 		},
+
 		/**
 		 * Block until the user resolves the missing-consent modal.
 		 *
@@ -498,12 +521,14 @@ export default {
 				})
 			})
 		},
+
 		/**
 		 * Modal handler: user cancelled — abort send.
 		 */
 		onConsentCancel() {
 			this.consentDecision = 'cancel'
 		},
+
 		/**
 		 * Modal handler: user wants to launch a consent-request flow. We
 		 * navigate them to a (forthcoming) consent-request screen but do not
@@ -518,12 +543,14 @@ export default {
 				),
 			)
 		},
+
 		/**
 		 * Modal handler: user accepted skip-and-send.
 		 */
 		onConsentSkip() {
 			this.consentDecision = 'skip'
 		},
+
 		/**
 		 * Final submit: preflight compliance, POST /api/blasts, redirect to monitor.
 		 *

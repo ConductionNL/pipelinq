@@ -52,10 +52,10 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 const DEFAULT_AVAILABILITY = {
 	available: false,
@@ -71,9 +71,11 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The request id (token-resolved from @objectId by CnBodySections). */
 		requestId: {
@@ -81,6 +83,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -88,6 +91,7 @@ export default {
 			availability: { ...DEFAULT_AVAILABILITY },
 		}
 	},
+
 	computed: {
 		/** The resolved request id — prop wins, else the injected section context. */
 		resolvedId() {
@@ -99,22 +103,27 @@ export default {
 				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		caseReference() {
 			return this.availability.caseReference || ''
 		},
+
 		/** Converted whenever the server reports status converted or a case is already linked. */
 		isConverted() {
 			return this.availability.status === 'converted' || !!this.caseReference
 		},
+
 		/** Shown only when an ns#Case implementer exists AND the request is in_progress. */
 		showConvertButton() {
 			return this.availability.canConvert === true && !this.isConverted
 		},
+
 		/** Whether this section has anything to render at all (else it stays hidden). */
 		hasContent() {
 			return this.showConvertButton || this.isConverted
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -123,6 +132,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Fetch the current conversion availability for this request.
@@ -152,6 +162,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Convert the request into a case via the semantic handoff endpoint.
 		 */
@@ -204,6 +215,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Copy the case reference UUID to the clipboard.
 		 */

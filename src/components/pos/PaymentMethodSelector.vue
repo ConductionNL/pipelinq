@@ -13,13 +13,13 @@
 <template>
 	<div class="payment-method-selector">
 		<NcSelect
-			:model-value="selection"
+			:modelValue="selection"
 			:options="combinedOptions"
-			:input-label="t('pipelinq', 'Payment method')"
+			:inputLabel="t('pipelinq', 'Payment method')"
 			label="label"
 			:reduce="(o) => o.value"
 			:loading="loading"
-			@update:model-value="onSelect" />
+			@update:modelValue="onSelect" />
 		<p
 			v-if="selection && providerOf(selection) === 'mollie'"
 			class="payment-method-selector__hint">
@@ -65,12 +65,14 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		// Only show option when a client is selected.
 		clientSelected: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	// Declared explicitly so Vue 3 does not also fall these through onto the
 	// root element as attributes, and so the v-model contract is self-evident.
 	emits: ['update:modelValue', 'change'],
@@ -80,10 +82,12 @@ export default {
 			loading: true,
 		}
 	},
+
 	computed: {
 		selection() {
 			return this.modelValue || null
 		},
+
 		combinedOptions() {
 			const opts = STATIC_OPTIONS.filter(
 				(o) => o.value !== 'account' || this.clientSelected,
@@ -145,10 +149,12 @@ export default {
 			}
 			return opts
 		},
+
 		activeProviders() {
 			return this.providers.filter((p) => p.isActive)
 		},
 	},
+
 	async mounted() {
 		try {
 			this.providers = await listProviders()
@@ -159,17 +165,20 @@ export default {
 			this.loading = false
 		}
 	},
+
 	methods: {
 		providerOf(combined) {
 			if (!combined) return ''
 			const idx = combined.indexOf(':')
 			return idx === -1 ? combined : combined.slice(0, idx)
 		},
+
 		methodOf(combined) {
 			if (!combined) return ''
 			const idx = combined.indexOf(':')
 			return idx === -1 ? combined : combined.slice(idx + 1)
 		},
+
 		onSelect(value) {
 			const combined = value && typeof value === 'object' ? value.value : value
 			const providerName = this.providerOf(combined)

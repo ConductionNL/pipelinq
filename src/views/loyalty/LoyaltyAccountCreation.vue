@@ -22,7 +22,7 @@
 
 			<NcSelect
 				v-model="selectedProgramme"
-				:input-label="t('pipelinq', 'Programme')"
+				:inputLabel="t('pipelinq', 'Programme')"
 				:options="programmeOptions"
 				label="label"
 				:clearable="false" />
@@ -68,14 +68,14 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
 import NcSelect from '@nextcloud/vue/components/NcSelect'
 import NcTextField from '@nextcloud/vue/components/NcTextField'
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
-import { showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'LoyaltyAccountCreation',
@@ -86,6 +86,7 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	data() {
 		return {
 			klantId: '',
@@ -96,6 +97,7 @@ export default {
 			result: null,
 		}
 	},
+
 	computed: {
 		programmeOptions() {
 			return this.programmes.map((p) => ({
@@ -104,12 +106,15 @@ export default {
 				termsUrl: p.termsUrl,
 			}))
 		},
+
 		termsUrl() {
 			return this.selectedProgramme && this.selectedProgramme.termsUrl
 		},
+
 		canSubmit() {
 			return this.optInAccepted && this.klantId && this.selectedProgramme
 		},
+
 		resultId() {
 			if (!this.result) {
 				return ''
@@ -121,9 +126,11 @@ export default {
 			)
 		},
 	},
+
 	mounted() {
 		this.loadProgrammes()
 	},
+
 	methods: {
 		async loadProgrammes() {
 			try {
@@ -143,6 +150,7 @@ export default {
 				showError(this.t('pipelinq', 'Failed to load programmes'))
 			}
 		},
+
 		async enroll() {
 			if (!this.canSubmit) {
 				return

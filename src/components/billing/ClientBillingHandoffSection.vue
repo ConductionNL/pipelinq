@@ -110,9 +110,11 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The client id (token-resolved from @objectId by CnBodySections). */
 		clientId: {
@@ -120,6 +122,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		const period = currentMonthPeriod()
 		return {
@@ -131,6 +134,7 @@ export default {
 			lastResult: null,
 		}
 	},
+
 	computed: {
 		/** The resolved client id — prop wins, else the injected section context. */
 		resolvedId() {
@@ -142,9 +146,11 @@ export default {
 				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		deepLinkUrl() {
 			return this.availability.deepLinkUrl
 		},
+
 		/** Shown only when the real emit is enabled AND the user is a manager. */
 		showSendControls() {
 			return (
@@ -152,10 +158,12 @@ export default {
 				&& this.availability.isManager === true
 			)
 		},
+
 		/** Whether this section has anything to render at all (else it stays hidden). */
 		hasContent() {
 			return this.showSendControls || !!this.deepLinkUrl
 		},
+
 		lastResultType() {
 			if (!this.lastResult) {
 				return 'success'
@@ -171,6 +179,7 @@ export default {
 			}
 			return 'error'
 		},
+
 		lastResultMessage() {
 			if (!this.lastResult) {
 				return ''
@@ -217,6 +226,7 @@ export default {
 			}
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -226,6 +236,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Fetch the current "Send to billing" availability for this client.
@@ -246,6 +257,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Send the selected period's approved, un-billed entries to billing.
 		 */

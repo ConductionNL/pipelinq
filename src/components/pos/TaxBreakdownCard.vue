@@ -84,6 +84,7 @@ export default {
 			default: () => ({}),
 		},
 	},
+
 	computed: {
 		/**
 		 * Persisted per-rate tax summary rows, sorted by rate ascending.
@@ -95,6 +96,7 @@ export default {
 				(a, b) => a.rate - b.rate,
 			)
 		},
+
 		/**
 		 * Per-rate GL posting rows. Falls back to deriving descriptions from the
 		 * tax breakdown for legacy records that predate the invoice breakdown.
@@ -111,6 +113,7 @@ export default {
 				description: rateDescription(row.rate),
 			}))
 		},
+
 		/**
 		 * Whether prices are tax-inclusive.
 		 *
@@ -119,6 +122,7 @@ export default {
 		isInclusive() {
 			return this.transaction.priceMode === 'incl'
 		},
+
 		/**
 		 * Price mode label for the card header.
 		 *
@@ -130,6 +134,7 @@ export default {
 				: t('pipelinq', 'Prices excl. VAT')
 		},
 	},
+
 	methods: {
 		formatEur,
 	},

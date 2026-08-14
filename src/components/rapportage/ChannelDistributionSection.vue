@@ -51,9 +51,9 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 const CHANNEL_COLORS = {
 	telefoon: '#4c84db',
@@ -71,16 +71,19 @@ export default {
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** Relative period token (today / week / month), from @workspace.period. */
 		period: { type: String, default: 'today' },
 	},
+
 	data() {
 		return {
 			loading: false,
 			channelData: [],
 		}
 	},
+
 	computed: {
 		effectivePeriod() {
 			if (this.period) return this.period
@@ -88,14 +91,17 @@ export default {
 			return (ctx && ctx.period) || 'today'
 		},
 	},
+
 	watch: {
 		effectivePeriod() {
 			this.fetchData()
 		},
 	},
+
 	mounted() {
 		this.fetchData()
 	},
+
 	methods: {
 		async fetchData() {
 			this.loading = true
@@ -121,6 +127,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		exportCsv() {
 			window.location.href = generateUrl(
 				'/apps/pipelinq/api/rapportage/export',

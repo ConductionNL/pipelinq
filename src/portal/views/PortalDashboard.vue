@@ -107,9 +107,11 @@ export default {
 			default: () => ['invoices', 'contracts', 'orders'],
 		},
 	},
+
 	data() {
 		return { activeTab: 'invoices', rows: [], loading: false, error: '' }
 	},
+
 	computed: {
 		availableTabs() {
 			const all = [
@@ -119,6 +121,7 @@ export default {
 			]
 			return all.filter((tab) => this.features.includes(tab.key))
 		},
+
 		tableCaption() {
 			const labels = {
 				invoices: t('pipelinq', 'Invoices'),
@@ -128,11 +131,13 @@ export default {
 			return labels[this.activeTab] || t('pipelinq', 'My documents')
 		},
 	},
+
 	mounted() {
 		if (this.availableTabs.length) {
 			this.select(this.availableTabs[0].key)
 		}
 	},
+
 	methods: {
 		onTabKeydown(event, key) {
 			// WAI-ARIA Authoring Practices: tab roving focus on Arrow keys.
@@ -162,6 +167,7 @@ export default {
 				})
 			}
 		},
+
 		async select(tab) {
 			this.activeTab = tab
 			this.loading = true
@@ -176,12 +182,14 @@ export default {
 				this.loading = false
 			}
 		},
+
 		downloadLabel(row) {
 			return t('pipelinq', 'Download {number}', {
 				number:
 					row.invoiceNumber || row.contractNumber || row.orderNumber || '',
 			})
 		},
+
 		async download(row) {
 			try {
 				const objectType =
