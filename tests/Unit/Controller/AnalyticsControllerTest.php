@@ -358,12 +358,9 @@ class AnalyticsControllerTest extends TestCase {
 		return new AnalyticsController(
 			request: $this->request,
 			analyticsService: new AnalyticsService(
-				appConfig: $appConfig,
 				logger: $this->logger,
 				ticketService: new TicketService(
-					appConfig: $appConfig,
 					logger: $this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
 		),
 			),
 			userSession: $this->userSession,

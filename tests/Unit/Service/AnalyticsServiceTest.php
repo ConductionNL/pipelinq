@@ -104,7 +104,6 @@ class AnalyticsServiceTest extends TestCase {
 			appConfig: $appConfig,
 			logger: $logger,
 			ticketService: $this->createTicketService(
-				byCollection: $byCollection,
 				registerMissing: $registerMissing
 			),
 			objectService: $objectService,

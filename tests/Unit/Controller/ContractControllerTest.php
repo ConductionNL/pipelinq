@@ -376,12 +376,10 @@ class ContractControllerTest extends TestCase {
 		return new ContractController(
 			request: $this->request,
 			contractService: new ContractService(
-				appConfig: $appConfig,
 				container: $container,
 				logger: $logger,
 			),
 			revenueService: new RecurringRevenueService(
-				appConfig: $appConfig,
 				container: $container,
 				logger: $logger,
 			),

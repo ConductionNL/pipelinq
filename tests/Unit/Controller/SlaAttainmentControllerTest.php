@@ -231,14 +231,10 @@ class SlaAttainmentControllerTest extends TestCase {
 		return new SlaAttainmentController(
 			request: $this->request,
 			attainment: new SlaAttainmentService(
-				appConfig: $appConfig,
 				ticketService: new TicketService(
-					appConfig: $appConfig,
 					logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
 		),
 				logger: $logger,
-			container: $this->createMock(ContainerInterface::class),
 		),
 			userSession: $this->userSession,
 			logger: $logger,
