@@ -90,7 +90,7 @@ class KccWerkplekService {
 	/**
 	 * Resolve the OpenRegister ObjectService lazily.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface The OpenRegister object service.
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface The OpenRegister object service.
 	 *
 	 * @throws RuntimeException If the OpenRegister app is not installed.
 	 *

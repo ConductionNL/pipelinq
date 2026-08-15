@@ -190,7 +190,7 @@ class BerichtenboxAdminController extends Controller {
 	/**
 	 * Resolve OR service.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		return $this->objectService;

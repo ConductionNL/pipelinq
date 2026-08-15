@@ -278,7 +278,7 @@ class Customer360SummaryService {
 	/**
 	 * Resolve the OpenRegister ObjectService lazily.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface The OpenRegister object service.
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface The OpenRegister object service.
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */

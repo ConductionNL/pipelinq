@@ -51,7 +51,7 @@ class SettingsController extends Controller {
 	/**
 	 * The OpenRegister object service.
 	 *
-	 * @var \OCA\OpenRegister\Service\ObjectServiceInterface|null The OpenRegister object service.
+	 * @var \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister object service.
 	 */
 	private ?\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService = null;
 
@@ -83,7 +83,7 @@ class SettingsController extends Controller {
 	/**
 	 * Attempts to retrieve the OpenRegister service from the container.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface|null The OpenRegister service if available, null otherwise.
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister service if available, null otherwise.
 	 * @throws \RuntimeException If the service is not available.
 	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-6
 	 */

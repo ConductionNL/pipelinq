@@ -1040,7 +1040,7 @@ class BerichtenboxService {
 	/**
 	 * Get OR ObjectService.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface
 	 *
 	 * @throws RuntimeException If OR is unavailable.
 	 */
