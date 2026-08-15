@@ -75,7 +75,7 @@ class DefaultQueueServiceTest extends TestCase {
 			appConfig: $this->appConfig,
 			logger: $this->logger,
 			registerResolver: new RegisterResolverService(appConfig: $this->appConfig),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectServiceMock,
 		);
 	}//end buildService()
 

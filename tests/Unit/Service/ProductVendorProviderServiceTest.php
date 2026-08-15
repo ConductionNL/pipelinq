@@ -108,7 +108,7 @@ class ProductVendorProviderServiceTest extends TestCase {
 			$appConfig,
 			$container,
 			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $os,
 		);
 	}//end makeService()
 

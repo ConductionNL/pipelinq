@@ -173,7 +173,7 @@ class WorklistServiceTest extends TestCase {
 			l10n: $l10n,
 			logger: $logger,
 			ticketService: $ticketService,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->objectService,
 		);
 	}
 

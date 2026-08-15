@@ -74,7 +74,7 @@ class SnapshotGenerationServiceTest extends TestCase {
 			quotaService: $quota,
 			notifier: $this->createMock(NotificationService::class),
 			logger: $this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $d,
 		);
 	}//end setUp()
 

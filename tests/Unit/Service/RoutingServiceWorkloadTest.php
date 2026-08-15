@@ -215,7 +215,7 @@ class RoutingServiceWorkloadTest extends TestCase {
 		$this->container->method('get')->willReturn($this->fakeObjectService($rows));
 		$this->mockTicketRows($rows);
 		$service = new RoutingService($this->appConfig, $this->container, $this->ticketService, $this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $out,
 		);
 
 		// 2 open request tickets + 3 open leads = 5.
@@ -231,7 +231,7 @@ class RoutingServiceWorkloadTest extends TestCase {
 		$this->container->method('get')->willReturn($this->fakeObjectService([]));
 		$this->mockTicketRows([]);
 		$service = new RoutingService($this->appConfig, $this->container, $this->ticketService, $this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $out,
 		);
 
 		$this->assertSame(0, $service->getAgentWorkload(userId: ''));

@@ -128,7 +128,7 @@ class Customer360SummaryServiceTest extends TestCase {
 			$this->ticketService,
 			$this->activityTimeline,
 			$logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->objectService,
 		);
 	}//end setUp()
 

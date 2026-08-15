@@ -168,7 +168,7 @@ class RapportageServiceTest extends TestCase {
 	 */
 	public function testGetStageValuesAggregatesCountAndValue(): void {
 		$service = new RapportageService($this->container, $this->appConfig, $this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $default,
 		);
 		$rows = $service->getStageValues();
 		$byStage = [];
@@ -195,7 +195,7 @@ class RapportageServiceTest extends TestCase {
 	 */
 	public function testGetSourcePerformanceComputesConversion(): void {
 		$service = new RapportageService($this->container, $this->appConfig, $this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $default,
 		);
 		$rows = $service->getSourcePerformance();
 		$bySrc = [];
@@ -223,7 +223,7 @@ class RapportageServiceTest extends TestCase {
 	 */
 	public function testGetWinLossAnalysisComputesWinRate(): void {
 		$service = new RapportageService($this->container, $this->appConfig, $this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $default,
 		);
 		$winLoss = $service->getWinLossAnalysis();
 
@@ -244,7 +244,7 @@ class RapportageServiceTest extends TestCase {
 	 */
 	public function testGetAgingBucketsDistributesOpenLeads(): void {
 		$service = new RapportageService($this->container, $this->appConfig, $this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $default,
 		);
 		$rows = $service->getAgingBuckets();
 		$byBucket = [];

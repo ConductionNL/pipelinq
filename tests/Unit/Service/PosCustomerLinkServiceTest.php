@@ -79,7 +79,7 @@ class PosCustomerLinkServiceTest extends TestCase {
 		$this->service = new PosCustomerLinkService(
 			appConfig: $this->appConfig,
 			logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $default,
 		);
 
 	}//end setUp()

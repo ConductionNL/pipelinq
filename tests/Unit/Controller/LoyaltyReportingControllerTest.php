@@ -151,7 +151,7 @@ class LoyaltyReportingControllerTest extends TestCase {
 			$this->createMock(PointsLedgerService::class),
 			$programmeService,
 			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $key,
 		);
 	}//end realReportingService()
 

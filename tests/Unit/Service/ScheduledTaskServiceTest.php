@@ -190,7 +190,7 @@ class ScheduledTaskServiceTest extends TestCase {
 			$this->notificationService,
 			$this->container,
 			$this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $stub,
 		);
 	}//end makeService()
 

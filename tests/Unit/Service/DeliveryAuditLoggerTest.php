@@ -83,7 +83,7 @@ class DeliveryAuditLoggerTest extends TestCase {
 			$container,
 			$appConfig,
 			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
 	}//end buildLogger()
 

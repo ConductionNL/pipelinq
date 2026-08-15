@@ -329,7 +329,7 @@ class QueryPushdownBatch3Test extends TestCase {
 		$appConfig = $this->appConfig();
 
 		$ticketService = new TicketService(container: $container, appConfig: $appConfig, logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $key,
 		);
 
 		$service = new KccWerkplekService(

@@ -51,7 +51,7 @@ class ContactLinkedUidsServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$service = new ContactLinkedUidsService($appConfig, $container, $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
 
 		// With empty register/schema, should return empty.

@@ -86,7 +86,7 @@ class ContactmomentServiceTest extends TestCase {
 			$this->ticketService,
 			$this->groupManager,
 			$this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
 	}//end setUp()
 

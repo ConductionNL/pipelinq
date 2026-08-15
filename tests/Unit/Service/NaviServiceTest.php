@@ -176,7 +176,7 @@ class NaviServiceTest extends TestCase {
 			logger: $logger,
 			ticketService: $ticketService,
 			conversationStore: $conversationStore,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
 	}
 

@@ -96,7 +96,7 @@ class QueueServiceTest extends TestCase {
 			logger: $this->logger,
 			registerResolver: new RegisterResolverService(appConfig: $this->appConfig),
 			ticketService: $this->ticketService,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $mock,
 		);
 	}//end buildService()
 

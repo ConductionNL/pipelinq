@@ -278,7 +278,7 @@ class BrpControllerTest extends TestCase {
 			$webhookListener,
 			$container,
 			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
 	}//end buildController()
 
@@ -861,7 +861,7 @@ class BrpControllerTest extends TestCase {
 			$this->createMock(BrpMutationWebhookListener::class),
 			$container,
 			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
 	}//end buildPrivacyController()
 
@@ -926,7 +926,7 @@ class BrpControllerTest extends TestCase {
 			$listener,
 			$this->createMock(ContainerInterface::class),
 			$logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
 	}//end buildWebhookController()
 }//end class

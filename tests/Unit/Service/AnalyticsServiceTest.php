@@ -107,7 +107,7 @@ class AnalyticsServiceTest extends TestCase {
 				byCollection: $byCollection,
 				registerMissing: $registerMissing
 			),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
 	}
 

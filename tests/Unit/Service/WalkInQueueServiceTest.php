@@ -72,7 +72,7 @@ class WalkInQueueServiceTest extends TestCase {
 			appConfig: $appConfig,
 			availabilityService: $availability,
 			logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
 
 		return [$service, $objectService, $availability];

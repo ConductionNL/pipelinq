@@ -257,7 +257,7 @@ class PosRefundServiceTest extends TestCase {
 			$container,
 			$this->appConfig,
 			$logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $key,
 		);
 	}//end setUp()
 

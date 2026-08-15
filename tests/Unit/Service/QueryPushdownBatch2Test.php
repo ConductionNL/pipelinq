@@ -120,7 +120,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			$this->appConfig(),
 			$this->createMock(LoyaltyAccountService::class),
 			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $key,
 		);
 
 		self::assertSame(120, $phpBalance);
@@ -140,7 +140,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			$this->appConfig(),
 			$this->createMock(LoyaltyAccountService::class),
 			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $key,
 		);
 
 		self::assertSame(0, $service->getAccountBalance(accountId: 'nobody'));
@@ -188,7 +188,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			$this->createMock(PointsLedgerService::class),
 			$this->createMock(LoyaltyProgrammeService::class),
 			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $key,
 		);
 
 		$report = $service->getTierReport(programmeId: 'p1');
@@ -258,7 +258,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			$this->appConfig(),
 			$staffService,
 			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $key,
 		);
 
 		$report = $service->staffSalesReport();

@@ -102,7 +102,7 @@ class CommercialAnalyticsServiceTest extends TestCase {
 			appConfig: $appConfig,
 			logger: $logger,
 			ticketService: $ticketService,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
 	}
 

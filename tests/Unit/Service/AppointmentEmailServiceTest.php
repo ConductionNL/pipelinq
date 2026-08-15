@@ -139,7 +139,7 @@ class AppointmentEmailServiceTest extends TestCase {
 			$this->urlGenerator,
 			$this->l10n,
 			$this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $default,
 		);
 	}//end buildService()
 
