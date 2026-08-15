@@ -31,7 +31,7 @@
     "extends @nextcloud/browserslist-config"
   ],
   "dependencies": {
-    "@conduction/nextcloud-vue": "2.3.0",
+    "@conduction/nextcloud-vue": "^2.3.0",
     "@nextcloud/axios": "~2.5.2",
     "@nextcloud/capabilities": "^1.2.1",
     "@nextcloud/dialogs": "^7.4.1",
@@ -55,10 +55,7 @@
     "vuedraggable": "^4.1.0"
   },
   "overrides": {
-    "@nextcloud/axios": "~2.5.2",
-    "@conduction/nextcloud-vue": {
-      "eslint": "$eslint"
-    }
+    "@nextcloud/axios": "~2.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
