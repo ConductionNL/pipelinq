@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
 use OCA\Pipelinq\Service\LoyaltyReportingService;
@@ -119,6 +120,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			$this->appConfig(),
 			$this->createMock(LoyaltyAccountService::class),
 			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		self::assertSame(120, $phpBalance);
@@ -138,6 +140,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			$this->appConfig(),
 			$this->createMock(LoyaltyAccountService::class),
 			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		self::assertSame(0, $service->getAccountBalance(accountId: 'nobody'));
@@ -185,6 +188,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			$this->createMock(PointsLedgerService::class),
 			$this->createMock(LoyaltyProgrammeService::class),
 			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		$report = $service->getTierReport(programmeId: 'p1');
@@ -254,6 +258,7 @@ class QueryPushdownBatch2Test extends TestCase {
 			$this->appConfig(),
 			$staffService,
 			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		$report = $service->staffSalesReport();

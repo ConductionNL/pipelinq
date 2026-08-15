@@ -84,7 +84,8 @@ class MailboxResolverTest extends TestCase {
 			$appConfig,
 			$this->makeEncryption(),
 			$connector,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildResolver()
 

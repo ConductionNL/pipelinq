@@ -148,7 +148,8 @@ class BookingServiceTest extends TestCase {
 			availabilityService: $availability,
 			eligibilityService: $eligibility,
 			logger: $logger,
-			jobList: $jobList
+			jobList: $jobList,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		return [$service, $objectService, $availability, $eligibility, $jobList];

@@ -76,6 +76,7 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 			container: $container,
 			appConfig: $appConfig,
 			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildService()
 

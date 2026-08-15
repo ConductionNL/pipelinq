@@ -128,7 +128,8 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase {
 				container: $container,
 				appConfig: $this->appConfig,
 				logger: new NullLogger(),
-			),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 		);
 	}//end setUp()
 

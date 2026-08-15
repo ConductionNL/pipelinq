@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Controller\BookingAdminController;
 use OCA\Pipelinq\Service\AppointmentEmailService;
@@ -173,6 +174,7 @@ class BookingAdminControllerTest extends TestCase {
 			appConfig: $appConfig,
 			availabilityService: $availability,
 			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		$this->collaborators = [
@@ -218,6 +220,7 @@ class BookingAdminControllerTest extends TestCase {
 			eligibilityService: $this->createMock(EligibilityService::class),
 			logger: $this->collaborators['logger'],
 			jobList: $jobList,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildBookingService()
 

@@ -92,7 +92,8 @@ class AvailabilityServiceTest extends TestCase {
 			container: $container,
 			appConfig: $appConfig,
 			cacheFactory: $cacheFactory,
-			logger: $logger
+			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		return [$service, $objectService];

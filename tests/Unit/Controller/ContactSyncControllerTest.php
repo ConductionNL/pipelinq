@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\ContactSyncController;
 use OCA\Pipelinq\Service\ContactDataBuilder;
 use OCA\Pipelinq\Service\ContactImportService;
@@ -649,11 +650,14 @@ class ContactSyncControllerTest extends TestCase {
 
 		return new ContactSyncService(
 			$contactsManager,
-			new ContactImportService($appConfig, $container, new ContactDataBuilder()),
+			new ContactImportService($appConfig, $container, new ContactDataBuilder(),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 			$this->createMock(ContactVcardService::class),
 			$this->createMock(ContactLinkedUidsService::class),
 			$appConfig,
 			$container,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end realSyncService()
 }//end class

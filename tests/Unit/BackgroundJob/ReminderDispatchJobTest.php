@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\BackgroundJob\ReminderDispatchJob;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -96,6 +97,7 @@ class ReminderDispatchJobTest extends TestCase {
 			$this->appConfig,
 			$this->container,
 			$this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildJob()
 

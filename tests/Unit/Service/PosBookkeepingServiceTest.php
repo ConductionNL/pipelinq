@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosBookkeepingService;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -242,6 +243,7 @@ class PosBookkeepingServiceTest extends TestCase {
 			$mailer,
 			$policy,
 			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end setUp()
 

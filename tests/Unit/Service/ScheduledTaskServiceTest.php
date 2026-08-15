@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -189,6 +190,7 @@ class ScheduledTaskServiceTest extends TestCase {
 			$this->notificationService,
 			$this->container,
 			$this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end makeService()
 

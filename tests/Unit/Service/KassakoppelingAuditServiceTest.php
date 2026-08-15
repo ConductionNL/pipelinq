@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\BelastingdienstExportService;
 use OCA\Pipelinq\Service\KassakoppelingAuditService;
 use OCA\Pipelinq\Service\KassakoppelingSignatureService;
@@ -184,6 +185,7 @@ class KassakoppelingAuditServiceTest extends TestCase {
 			signature: $signature,
 			exporter: $exporter,
 			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 	}//end setUp()

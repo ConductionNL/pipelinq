@@ -91,7 +91,8 @@ class ContactVcardWriterServiceGuardTest extends TestCase {
 			$appConfig,
 			$container,
 			$this->createMock(LoggerInterface::class),
-			$resolver
+			$resolver,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildService()
 

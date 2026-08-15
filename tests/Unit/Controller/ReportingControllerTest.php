@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\ReportingController;
 use OCA\Pipelinq\Service\ReportingService;
 use OCA\Pipelinq\Service\TicketService;
@@ -120,7 +121,8 @@ class ReportingControllerTest extends TestCase {
 				container: $container,
 				appConfig: $appConfig,
 				logger: $logger,
-			),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 		);
 	}//end setUp()
 

@@ -98,6 +98,7 @@ class TicketServiceTest extends TestCase {
 			container: $this->container,
 			appConfig: $this->appConfig,
 			logger: $this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildService()
 

@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ActivityTimelineService;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCA\Pipelinq\Service\RegisterResolverService;
@@ -127,6 +128,7 @@ class Customer360SummaryServiceTest extends TestCase {
 			$this->ticketService,
 			$this->activityTimeline,
 			$logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end setUp()
 

@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IGroupManager;
@@ -85,6 +86,7 @@ class ContactmomentServiceTest extends TestCase {
 			$this->ticketService,
 			$this->groupManager,
 			$this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end setUp()
 

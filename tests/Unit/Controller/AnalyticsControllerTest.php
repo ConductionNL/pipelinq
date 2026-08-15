@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\AnalyticsController;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCA\Pipelinq\Service\TicketService;
@@ -364,7 +365,8 @@ class AnalyticsControllerTest extends TestCase {
 					container: $container,
 					appConfig: $appConfig,
 					logger: $this->logger,
-				),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 			),
 			userSession: $this->userSession,
 			logger: $this->logger,

@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Service\WorklistService;
 use OCP\IAppConfig;
@@ -172,7 +173,8 @@ class WorklistServiceTest extends TestCase {
 			appConfig: $appConfig,
 			l10n: $l10n,
 			logger: $logger,
-			ticketService: $ticketService
+			ticketService: $ticketService,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}
 

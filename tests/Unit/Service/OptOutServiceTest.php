@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\OptOutService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -42,7 +43,9 @@ class OptOutServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$appConfig->method('getValueString')->willReturn('');
 
-		$service = new OptOutService($container, $appConfig, $logger);
+		$service = new OptOutService($container, $appConfig, $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 		self::assertFalse($service->hasOptOut('123456782'));
 	}//end testHasOptOutFalseWhenUnconfigured()
 
@@ -59,7 +62,9 @@ class OptOutServiceTest extends TestCase {
 		// Container::get should never be called.
 		$container->expects(self::never())->method('get');
 
-		$service = new OptOutService($container, $appConfig, $logger);
+		$service = new OptOutService($container, $appConfig, $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 		self::assertFalse($service->recordFromBrpResponse('123456782', '0'));
 		self::assertFalse($service->recordFromBrpResponse('123456782', ''));
 	}//end testRecordFromBrpResponseSkipsNonGeheim()

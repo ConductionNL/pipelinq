@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
@@ -101,7 +102,8 @@ class CommercialAnalyticsServiceTest extends TestCase {
 			container: $container,
 			appConfig: $appConfig,
 			logger: $logger,
-			ticketService: $ticketService
+			ticketService: $ticketService,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}
 

@@ -65,7 +65,9 @@ class ContactImportServiceGuardTest extends TestCase {
 		$builder->method('buildClientImportData')->willReturn(['name' => 'Acme']);
 		$builder->method('buildContactImportData')->willReturn(['name' => 'Alice']);
 
-		return new ContactImportService($appConfig, $container, $builder);
+		return new ContactImportService($appConfig, $container, $builder,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 	}//end buildService()
 
 	/**

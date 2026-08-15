@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\DefaultPipelineService;
 use OCA\Pipelinq\Service\PipelineStageData;
 use OCP\IAppConfig;
@@ -45,7 +46,9 @@ class DefaultPipelineServiceTest extends TestCase {
 
 		$logger->expects($this->once())->method('warning');
 
-		$service = new DefaultPipelineService($appConfig, $container, $stageData, $logger);
+		$service = new DefaultPipelineService($appConfig, $container, $stageData, $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 		$service->createDefaultPipelines();
 	}//end testSkipsWhenNotConfigured()
 
@@ -65,7 +68,9 @@ class DefaultPipelineServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->once())->method('error');
 
-		$service = new DefaultPipelineService($appConfig, $container, $stageData, $logger);
+		$service = new DefaultPipelineService($appConfig, $container, $stageData, $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 		$service->createDefaultPipelines();
 	}//end testCatchesExceptions()
 }//end class

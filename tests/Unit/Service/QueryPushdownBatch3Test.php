@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\KccWerkplekService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
@@ -327,7 +328,9 @@ class QueryPushdownBatch3Test extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$appConfig = $this->appConfig();
 
-		$ticketService = new TicketService(container: $container, appConfig: $appConfig, logger: $logger);
+		$ticketService = new TicketService(container: $container, appConfig: $appConfig, logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 
 		$service = new KccWerkplekService(
 			container: $container,

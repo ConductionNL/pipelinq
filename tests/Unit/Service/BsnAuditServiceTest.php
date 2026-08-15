@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\BsnAuditService;
 use OCA\Pipelinq\Service\BsnValidationService;
 use OCP\IAppConfig;
@@ -89,7 +90,9 @@ class BsnAuditServiceTest extends TestCase {
 
 		$logger->expects(self::once())->method('error');
 
-		$service = new BsnAuditService($container, $appConfig, $request, $logger);
+		$service = new BsnAuditService($container, $appConfig, $request, $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 		$uuid = $service->recordLookup(
 			actor: 'demo:tester',
 			rawBsn: '123456782',

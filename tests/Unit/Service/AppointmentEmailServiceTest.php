@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -138,6 +139,7 @@ class AppointmentEmailServiceTest extends TestCase {
 			$this->urlGenerator,
 			$this->l10n,
 			$this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildService()
 

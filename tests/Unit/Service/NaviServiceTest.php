@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\NaviConversationStore;
 use OCA\Pipelinq\Service\NaviService;
 use OCA\Pipelinq\Service\TicketService;
@@ -175,7 +176,8 @@ class NaviServiceTest extends TestCase {
 			appConfig: $appConfig,
 			logger: $logger,
 			ticketService: $ticketService,
-			conversationStore: $conversationStore
+			conversationStore: $conversationStore,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}
 

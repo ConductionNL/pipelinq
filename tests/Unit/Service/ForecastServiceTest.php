@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ExchangeRateService;
 use OCA\Pipelinq\Service\ForecastRollupService;
 use OCA\Pipelinq\Service\ForecastService;
@@ -60,7 +61,8 @@ class ForecastServiceTest extends TestCase {
 			appConfig: $appConfig,
 			quotaService: $quota,
 			rollup: $rollup,
-			logger: $logger
+			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end setUp()
 

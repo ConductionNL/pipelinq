@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\SlaAttainmentController;
 use OCA\Pipelinq\Service\SlaAttainmentService;
 use OCA\Pipelinq\Service\TicketService;
@@ -236,7 +237,8 @@ class SlaAttainmentControllerTest extends TestCase {
 					container: $container,
 					appConfig: $appConfig,
 					logger: $logger,
-				),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 				logger: $logger,
 			),
 			userSession: $this->userSession,

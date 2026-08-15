@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\QuotaService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -51,7 +52,9 @@ class QuotaServiceTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new QuotaService(container: $container, appConfig: $appConfig, logger: $logger);
+		$this->service = new QuotaService(container: $container, appConfig: $appConfig, logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 	}//end setUp()
 
 	/**

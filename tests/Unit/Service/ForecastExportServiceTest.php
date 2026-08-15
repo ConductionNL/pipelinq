@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ForecastExportService;
 use OCA\Pipelinq\Service\ForecastService;
 use OCA\Pipelinq\Service\ReportingService;
@@ -171,6 +172,7 @@ class ForecastExportServiceTest extends TestCase {
 			$this->createMock(ForecastService::class),
 			$this->createMock(ReportingService::class),
 			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		$result = $service->exportSnapshots(periodId: 'p1', level: 'rep', ownerId: null, limit: 2, offset: 1);

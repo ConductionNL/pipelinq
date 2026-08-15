@@ -178,7 +178,8 @@ class BerichtenboxServiceTest extends TestCase {
 			$audit,
 			new DutchHolidayCalendar(),
 			$this->ticketServiceStub(),
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildService()
 
@@ -558,7 +559,8 @@ class BerichtenboxServiceTest extends TestCase {
 			$audit,
 			new DutchHolidayCalendar(),
 			$this->ticketServiceStub(),
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		$updated = $service->handleReadReceipt('logius-77', '2026-06-01T12:00:00Z');

@@ -80,6 +80,7 @@ class PosCustomerLinkServiceTest extends TestCase {
 			container: $container,
 			appConfig: $this->appConfig,
 			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 	}//end setUp()

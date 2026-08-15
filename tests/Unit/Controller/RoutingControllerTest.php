@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\RoutingController;
 use OCA\Pipelinq\Service\RoutingService;
 use OCA\Pipelinq\Service\TicketService;
@@ -245,7 +246,8 @@ class RoutingControllerTest extends TestCase {
 					container: $container,
 					appConfig: $appConfig,
 					logger: $logger,
-				),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 				logger: $logger,
 			),
 			userSession: $this->userSession,
@@ -545,7 +547,8 @@ class RoutingControllerTest extends TestCase {
 					container: $container,
 					appConfig: $appConfig,
 					logger: $logger,
-				),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 				logger: $logger,
 			),
 			userSession: $this->userSession,

@@ -188,13 +188,19 @@ class LoyaltyControllerTest extends TestCase {
 		$container = $this->containerWithStore($store);
 		$appConfig = $this->appConfig();
 		$logger = $this->createMock(LoggerInterface::class);
-		$accountService = new LoyaltyAccountService($container, $appConfig, $logger);
-		$ledgerService = new PointsLedgerService($container, $appConfig, $accountService, $logger);
+		$accountService = new LoyaltyAccountService($container, $appConfig, $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
+		$ledgerService = new PointsLedgerService($container, $appConfig, $accountService, $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 
 		return $this->buildController(
 			accountService: $accountService,
 			ledgerService: $ledgerService,
-			redemptionService: new RedemptionService($container, $appConfig, $accountService, $ledgerService, $logger),
+			redemptionService: new RedemptionService($container, $appConfig, $accountService, $ledgerService, $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 			params: $params
 		);
 	}//end realRedemptionController()
@@ -212,8 +218,9 @@ class LoyaltyControllerTest extends TestCase {
 			giftCardService: new GiftCardService(
 				$this->containerWithStore($store),
 				$this->appConfig(),
-				$this->createMock(LoggerInterface::class)
-			),
+				$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 			params: $params
 		);
 	}//end realGiftCardController()

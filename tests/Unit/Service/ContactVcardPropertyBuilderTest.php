@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ContactVcardPropertyBuilder;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -44,7 +45,9 @@ class ContactVcardPropertyBuilderTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$container = $this->createMock(ContainerInterface::class);
 
-		$this->builder = new ContactVcardPropertyBuilder($appConfig, $container);
+		$this->builder = new ContactVcardPropertyBuilder($appConfig, $container,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 	}//end setUp()
 
 	/**

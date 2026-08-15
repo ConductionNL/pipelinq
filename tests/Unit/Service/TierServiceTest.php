@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\TierService;
 use PHPUnit\Framework\TestCase;
 
@@ -77,7 +78,8 @@ class TierServiceTest extends TestCase {
 			appConfig: $appConfig,
 			accountService: $accountService,
 			eventDispatcher: $eventDispatcher,
-			logger: $logger
+			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end makeServiceStub()
 }//end class

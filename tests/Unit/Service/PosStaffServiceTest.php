@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\PosRoleService;
 use OCA\Pipelinq\Service\PosStaffService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -157,6 +158,7 @@ class PosStaffServiceTest extends TestCase {
 			container: $container,
 			appConfig: $this->appConfig,
 			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		$this->service = new PosStaffService(
@@ -164,6 +166,7 @@ class PosStaffServiceTest extends TestCase {
 			appConfig: $this->appConfig,
 			posRoleService: $this->roleService,
 			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		// Seed a role.

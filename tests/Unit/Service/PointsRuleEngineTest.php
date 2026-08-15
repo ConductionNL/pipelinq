@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\PointsRuleEngine;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -41,7 +42,8 @@ class PointsRuleEngineTest extends TestCase {
 		$this->engine = new PointsRuleEngine(
 			container: $container,
 			appConfig: $appConfig,
-			logger: $logger
+			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end setUp()
 

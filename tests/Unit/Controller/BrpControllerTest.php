@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\BrpController;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BrpCacheService;
@@ -277,6 +278,7 @@ class BrpControllerTest extends TestCase {
 			$webhookListener,
 			$container,
 			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildController()
 
@@ -859,6 +861,7 @@ class BrpControllerTest extends TestCase {
 			$this->createMock(BrpMutationWebhookListener::class),
 			$container,
 			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildPrivacyController()
 
@@ -923,6 +926,7 @@ class BrpControllerTest extends TestCase {
 			$listener,
 			$this->createMock(ContainerInterface::class),
 			$logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildWebhookController()
 }//end class

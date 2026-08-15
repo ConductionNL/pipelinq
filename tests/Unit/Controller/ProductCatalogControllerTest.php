@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\ProductCatalogController;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\ProductCatalogService;
@@ -174,6 +175,7 @@ class ProductCatalogControllerTest extends TestCase {
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppConfig::class),
 			$this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		return new ProductCatalogController(

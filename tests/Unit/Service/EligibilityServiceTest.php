@@ -167,14 +167,16 @@ class EligibilityServiceTest extends TestCase {
 			container: $container,
 			appConfig: $appConfig,
 			cacheFactory: $cacheFactory,
-			logger: $logger
+			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		return new EligibilityService(
 			container: $container,
 			appConfig: $appConfig,
 			availabilityService: $availability,
-			logger: $logger
+			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildService()
 

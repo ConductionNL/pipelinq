@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\RoutingService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
@@ -213,7 +214,9 @@ class RoutingServiceWorkloadTest extends TestCase {
 
 		$this->container->method('get')->willReturn($this->fakeObjectService($rows));
 		$this->mockTicketRows($rows);
-		$service = new RoutingService($this->appConfig, $this->container, $this->ticketService, $this->logger);
+		$service = new RoutingService($this->appConfig, $this->container, $this->ticketService, $this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 
 		// 2 open request tickets + 3 open leads = 5.
 		$this->assertSame(5, $service->getAgentWorkload(userId: 'user-1'));
@@ -227,7 +230,9 @@ class RoutingServiceWorkloadTest extends TestCase {
 	public function testGetAgentWorkloadEmptyUserReturnsZero(): void {
 		$this->container->method('get')->willReturn($this->fakeObjectService([]));
 		$this->mockTicketRows([]);
-		$service = new RoutingService($this->appConfig, $this->container, $this->ticketService, $this->logger);
+		$service = new RoutingService($this->appConfig, $this->container, $this->ticketService, $this->logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 
 		$this->assertSame(0, $service->getAgentWorkload(userId: ''));
 	}//end testGetAgentWorkloadEmptyUserReturnsZero()
