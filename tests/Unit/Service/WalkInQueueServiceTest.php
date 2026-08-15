@@ -69,7 +69,6 @@ class WalkInQueueServiceTest extends TestCase {
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
 		$service = new WalkInQueueService(
-			container: $container,
 			appConfig: $appConfig,
 			availabilityService: $availability,
 			logger: $logger,

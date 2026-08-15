@@ -142,7 +142,6 @@ class BookingServiceTest extends TestCase {
 		$jobList = ($jobList ?? $this->createMock(originalClassName: IJobList::class));
 
 		$service = new BookingService(
-			container: $container,
 			appConfig: $appConfig,
 			userSession: $userSession,
 			availabilityService: $availability,

@@ -66,7 +66,6 @@ class SnapshotGenerationServiceTest extends TestCase {
 		$quota->method('getQuotaAmount')->willReturn(null);
 
 		$this->service = new SnapshotGenerationService(
-			container: $this->createMock(ContainerInterface::class),
 			appConfig: $appConfig,
 			groupManager: $this->createMock(IGroupManager::class),
 			rollup: $rollup,

@@ -170,7 +170,6 @@ class BookingAdminControllerTest extends TestCase {
 		$this->request = $this->createMock(IRequest::class);
 
 		$this->walkIn = new WalkInQueueService(
-			container: $container,
 			appConfig: $appConfig,
 			availabilityService: $availability,
 			logger: $logger,
@@ -213,7 +212,6 @@ class BookingAdminControllerTest extends TestCase {
 	 */
 	private function buildBookingService(IJobList $jobList): BookingService {
 		return new BookingService(
-			container: $this->collaborators['container'],
 			appConfig: $this->collaborators['appConfig'],
 			userSession: $this->userSession,
 			availabilityService: $this->collaborators['availability'],

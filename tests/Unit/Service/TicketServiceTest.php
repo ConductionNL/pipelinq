@@ -95,7 +95,6 @@ class TicketServiceTest extends TestCase {
 	 */
 	private function buildService(): TicketService {
 		return new TicketService(
-			container: $this->container,
 			appConfig: $this->appConfig,
 			logger: $this->logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),

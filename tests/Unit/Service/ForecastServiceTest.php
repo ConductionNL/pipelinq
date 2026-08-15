@@ -57,7 +57,6 @@ class ForecastServiceTest extends TestCase {
 		$rollup = new ForecastRollupService(exchangeRate: $exchange);
 
 		$this->service = new ForecastService(
-			container: $container,
 			appConfig: $appConfig,
 			quotaService: $quota,
 			rollup: $rollup,

@@ -180,7 +180,6 @@ class KassakoppelingAuditServiceTest extends TestCase {
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
 		$this->service = new KassakoppelingAuditService(
-			container: $container,
 			appConfig: $appConfig,
 			signature: $signature,
 			exporter: $exporter,

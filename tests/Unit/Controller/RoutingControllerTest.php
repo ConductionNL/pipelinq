@@ -241,9 +241,7 @@ class RoutingControllerTest extends TestCase {
 			request: $this->request,
 			routingService: new RoutingService(
 				appConfig: $appConfig,
-				container: $container,
 				ticketService: new TicketService(
-					container: $container,
 					appConfig: $appConfig,
 					logger: $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
@@ -542,9 +540,7 @@ class RoutingControllerTest extends TestCase {
 			request: $this->request,
 			routingService: new RoutingService(
 				appConfig: $appConfig,
-				container: $container,
 				ticketService: new TicketService(
-					container: $container,
 					appConfig: $appConfig,
 					logger: $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),

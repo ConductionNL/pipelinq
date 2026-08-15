@@ -169,7 +169,6 @@ class WorklistServiceTest extends TestCase {
 		);
 
 		return new WorklistService(
-			container: $container,
 			appConfig: $appConfig,
 			l10n: $l10n,
 			logger: $logger,

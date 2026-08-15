@@ -89,7 +89,6 @@ class AvailabilityServiceTest extends TestCase {
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
 		$service = new AvailabilityService(
-			container: $container,
 			appConfig: $appConfig,
 			cacheFactory: $cacheFactory,
 			logger: $logger,

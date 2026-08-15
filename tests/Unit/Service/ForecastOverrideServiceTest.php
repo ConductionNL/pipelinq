@@ -45,7 +45,6 @@ class ForecastOverrideServiceTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->service = new ForecastOverrideService(
-			container: $this->createMock(ContainerInterface::class),
 			appConfig: $this->createMock(IAppConfig::class),
 			forecastService: $this->createMock(ForecastService::class),
 			logger: $this->createMock(LoggerInterface::class),

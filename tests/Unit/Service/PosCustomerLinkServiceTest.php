@@ -77,7 +77,6 @@ class PosCustomerLinkServiceTest extends TestCase {
 			->willReturn($this->objectService);
 
 		$this->service = new PosCustomerLinkService(
-			container: $container,
 			appConfig: $this->appConfig,
 			logger: $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),

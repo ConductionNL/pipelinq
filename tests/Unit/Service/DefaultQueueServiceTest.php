@@ -73,7 +73,6 @@ class DefaultQueueServiceTest extends TestCase {
 	private function buildService(): DefaultQueueService {
 		return new DefaultQueueService(
 			appConfig: $this->appConfig,
-			container: $this->container,
 			logger: $this->logger,
 			registerResolver: new RegisterResolverService(appConfig: $this->appConfig),
 			objectService: $this->createMock(ObjectServiceInterface::class),

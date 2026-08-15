@@ -93,7 +93,6 @@ class QueueServiceTest extends TestCase {
 	private function buildService(): QueueService {
 		return new QueueService(
 			appConfig: $this->appConfig,
-			container: $this->container,
 			logger: $this->logger,
 			registerResolver: new RegisterResolverService(appConfig: $this->appConfig),
 			ticketService: $this->ticketService,

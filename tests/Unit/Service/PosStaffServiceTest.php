@@ -155,14 +155,12 @@ class PosStaffServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$this->roleService = new PosRoleService(
-			container: $container,
 			appConfig: $this->appConfig,
 			logger: $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		$this->service = new PosStaffService(
-			container: $container,
 			appConfig: $this->appConfig,
 			posRoleService: $this->roleService,
 			logger: $logger,

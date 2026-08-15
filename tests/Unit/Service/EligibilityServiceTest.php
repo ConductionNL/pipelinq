@@ -164,7 +164,6 @@ class EligibilityServiceTest extends TestCase {
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
 		$availability = new AvailabilityService(
-			container: $container,
 			appConfig: $appConfig,
 			cacheFactory: $cacheFactory,
 			logger: $logger,
@@ -172,7 +171,6 @@ class EligibilityServiceTest extends TestCase {
 		);
 
 		return new EligibilityService(
-			container: $container,
 			appConfig: $appConfig,
 			availabilityService: $availability,
 			logger: $logger,

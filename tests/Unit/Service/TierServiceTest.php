@@ -74,7 +74,6 @@ class TierServiceTest extends TestCase {
 		$logger = $this->createMock(\Psr\Log\LoggerInterface::class);
 
 		return new TierService(
-			container: $container,
 			appConfig: $appConfig,
 			accountService: $accountService,
 			eventDispatcher: $eventDispatcher,

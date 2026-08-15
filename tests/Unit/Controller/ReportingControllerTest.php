@@ -118,7 +118,6 @@ class ReportingControllerTest extends TestCase {
 			appConfig: $appConfig,
 			logger: $logger,
 			ticketService: new TicketService(
-				container: $container,
 				appConfig: $appConfig,
 				logger: $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),

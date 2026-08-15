@@ -40,7 +40,6 @@ class PointsRuleEngineTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$this->engine = new PointsRuleEngine(
-			container: $container,
 			appConfig: $appConfig,
 			logger: $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),

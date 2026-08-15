@@ -73,7 +73,6 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
 		return new LoyaltyProgrammeService(
-			container: $container,
 			appConfig: $appConfig,
 			logger: $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),

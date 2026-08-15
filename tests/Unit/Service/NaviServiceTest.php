@@ -172,7 +172,6 @@ class NaviServiceTest extends TestCase {
 		);
 
 		return new NaviService(
-			container: $container,
 			appConfig: $appConfig,
 			logger: $logger,
 			ticketService: $ticketService,

@@ -99,7 +99,6 @@ class CommercialAnalyticsServiceTest extends TestCase {
 		$ticketService->method('findByType')->willReturn([]);
 
 		return new AnalyticsService(
-			container: $container,
 			appConfig: $appConfig,
 			logger: $logger,
 			ticketService: $ticketService,

@@ -101,7 +101,6 @@ class AnalyticsServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		return new AnalyticsService(
-			container: $container,
 			appConfig: $appConfig,
 			logger: $logger,
 			ticketService: $this->createTicketService(
