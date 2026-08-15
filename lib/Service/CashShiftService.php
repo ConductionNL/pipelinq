@@ -542,7 +542,7 @@ class CashShiftService {
 		$reference = (string)($shift['reference'] ?? ($shift['id'] ?? ''));
 
 		$task = [
-			'type' => 'opvolgtaak',
+			'type' => 'followUpTask',
 			'subject' => 'Hercount verplicht voor shift ' . $reference,
 			'description' => 'Hercount verplicht; vorige telling afgewezen — Reden: ' . $reason,
 			'status' => 'open',

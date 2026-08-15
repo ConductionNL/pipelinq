@@ -202,8 +202,8 @@ class BrpController extends Controller {
 				rawBsn: $rawBsn,
 				verzoekreden: $verzoekreden,
 				purposeBinding: $purposeBinding,
-				outcome: 'geweigerd-onbevoegd',
-				action: 'brp-lookup-geweigerd',
+				outcome: 'refused-unauthorised',
+				action: 'brp-lookup-refused',
 				responseCode: 403,
 				linkedRequest: $linkedRequest,
 				vogScreening: $vogScreening,
@@ -235,7 +235,7 @@ class BrpController extends Controller {
 		// 4) Cache lookup.
 		$cached = $this->cacheService->get($rawBsn);
 		$person = null;
-		$outcome = 'fout';
+		$outcome = 'error';
 		$responseCode = 0;
 		$correlationId = null;
 		$responseInCache = false;
@@ -244,7 +244,7 @@ class BrpController extends Controller {
 		if ($cached !== null) {
 			$person = $cached;
 			$responseInCache = true;
-			$outcome = 'geslaagd';
+			$outcome = 'succeeded';
 			$responseCode = 200;
 		}
 
@@ -257,7 +257,7 @@ class BrpController extends Controller {
 
 				$remote = $this->haalCentraal->lookupPersoon($rawBsn, $requestRef);
 				if ($remote === null) {
-					$outcome = 'niet-gevonden';
+					$outcome = 'not-found';
 					$responseCode = 404;
 				}
 
@@ -272,7 +272,7 @@ class BrpController extends Controller {
 					// Back-filled after verzoek save below.
 					$remote['gekoppeldContact'] = $contactId;
 					$person = $this->cacheService->set($remote);
-					$outcome = 'geslaagd';
+					$outcome = 'succeeded';
 
 					// Record opt-out side-effect.
 					$this->optOut->recordFromBrpResponse(
@@ -281,7 +281,7 @@ class BrpController extends Controller {
 					);
 				}//end if
 			} catch (HaalCentraalException $e) {
-				$outcome = 'fout';
+				$outcome = 'error';
 				if ($e->getStatusCode() === 0) {
 					$outcome = 'timeout';
 				}
@@ -293,7 +293,7 @@ class BrpController extends Controller {
 					'Unexpected BRP lookup failure',
 					['error' => $e->getMessage()]
 				);
-				$outcome = 'fout';
+				$outcome = 'error';
 				$responseCode = 500;
 			}//end try
 		}//end if
@@ -370,7 +370,7 @@ class BrpController extends Controller {
 			unset($person['bsn']);
 		}
 
-		if ($outcome === 'niet-gevonden') {
+		if ($outcome === 'not-found') {
 			return new JSONResponse(
 				[
 					'errorCode' => 'not-found',
@@ -382,7 +382,7 @@ class BrpController extends Controller {
 			);
 		}
 
-		if ($outcome === 'fout' || $outcome === 'timeout') {
+		if ($outcome === 'error' || $outcome === 'timeout') {
 			return new JSONResponse(
 				[
 					'errorCode' => 'brp-unavailable',
@@ -451,8 +451,8 @@ class BrpController extends Controller {
 			rawBsn: '',
 			verzoekreden: 'Adres onthuld op behandelaarsverantwoording',
 			purposeBinding: 'Wet BRP art. 3.3 (uitzondering geheimhouding)',
-			outcome: 'adres-onthuld',
-			action: 'brp-adres-onthuld',
+			outcome: 'address-revealed',
+			action: 'brp-address-revealed',
 			responseCode: 200,
 			linkedRequest: null,
 			actorRole: $this->resolveActorRole(actor: $actor),

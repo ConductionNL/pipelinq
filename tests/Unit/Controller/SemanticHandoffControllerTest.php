@@ -322,7 +322,7 @@ class SemanticHandoffControllerTest extends TestCase {
 		$this->withPrivilegedCaller();
 		$this->objectService->store['cm-1'] = [
 			'uuid' => 'cm-1',
-			'ticketType' => 'contactmoment',
+			'ticketType' => 'interaction',
 			'status' => 'in_progress',
 		];
 		$this->handoffService->expects($this->never())->method('handoff');

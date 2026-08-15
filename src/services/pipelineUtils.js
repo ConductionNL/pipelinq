@@ -11,7 +11,7 @@ import { translate as t } from '@nextcloud/l10n'
  * anything that turns a logical slug into an OpenRegister object type must
  * route through resolveObjectType().
  */
-const TICKET_SUBTYPES = ['request', 'complaint', 'contactmoment']
+const TICKET_SUBTYPES = ['request', 'complaint', 'interaction']
 
 /**
  * Map a logical entity slug onto the OpenRegister object type it now lives in.

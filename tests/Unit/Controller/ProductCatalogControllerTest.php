@@ -345,7 +345,7 @@ class ProductCatalogControllerTest extends TestCase {
 					'source' => 'variant',
 					'tierLabel' => '',
 					'quantity' => 12.0,
-					'vatClass' => 'hoog',
+					'vatClass' => 'high',
 					'taxRate' => 21,
 				]
 			);
@@ -366,7 +366,7 @@ class ProductCatalogControllerTest extends TestCase {
 	public function testResolvePriceReturnsTheDocumentedEnvelope(): void {
 		$controller = $this->controllerWithRealService(
 			[
-				'product' => ['unitPrice' => 3.5, 'vatClass' => 'hoog'],
+				'product' => ['unitPrice' => 3.5, 'vatClass' => 'high'],
 				'quantity' => 1,
 			]
 		);
@@ -379,7 +379,7 @@ class ProductCatalogControllerTest extends TestCase {
 		$this->assertSame('base', $data['source']);
 		$this->assertSame('', $data['tierLabel']);
 		$this->assertSame(1.0, $data['quantity']);
-		$this->assertSame('hoog', $data['vatClass']);
+		$this->assertSame('high', $data['vatClass']);
 		$this->assertSame(21, $data['taxRate']);
 	}//end testResolvePriceReturnsTheDocumentedEnvelope()
 
@@ -391,7 +391,7 @@ class ProductCatalogControllerTest extends TestCase {
 	public function testResolvePriceRoundsToCents(): void {
 		$controller = $this->controllerWithRealService(
 			[
-				'product' => ['unitPrice' => 10.126, 'vatClass' => 'hoog'],
+				'product' => ['unitPrice' => 10.126, 'vatClass' => 'high'],
 				'quantity' => 1,
 			]
 		);
@@ -400,7 +400,7 @@ class ProductCatalogControllerTest extends TestCase {
 
 		$controller = $this->controllerWithRealService(
 			[
-				'product' => ['unitPrice' => 10.124, 'vatClass' => 'hoog'],
+				'product' => ['unitPrice' => 10.124, 'vatClass' => 'high'],
 				'quantity' => 1,
 			]
 		);
@@ -417,7 +417,7 @@ class ProductCatalogControllerTest extends TestCase {
 	public function testResolvePriceAppliesTheQuantityTierOverTheListPrice(): void {
 		$product = [
 			'unitPrice' => 10.0,
-			'vatClass' => 'hoog',
+			'vatClass' => 'high',
 			'priceTiers' => [
 				['minQuantity' => 10, 'unitPrice' => 8.0, 'label' => 'from 10'],
 				['minQuantity' => 50, 'unitPrice' => 6.5, 'label' => 'from 50'],
@@ -450,7 +450,7 @@ class ProductCatalogControllerTest extends TestCase {
 			[
 				'product' => [
 					'unitPrice' => 10.0,
-					'vatClass' => 'hoog',
+					'vatClass' => 'high',
 					'priceTiers' => [['minQuantity' => 10, 'unitPrice' => 8.0, 'label' => 'from 10']],
 				],
 				'quantity' => 9,
@@ -474,7 +474,7 @@ class ProductCatalogControllerTest extends TestCase {
 			[
 				'product' => [
 					'unitPrice' => 10.0,
-					'vatClass' => 'laag',
+					'vatClass' => 'low',
 					'variants' => [['sku' => 'COF-L', 'unitPrice' => 12.5]],
 				],
 				'quantity' => 1,
@@ -501,7 +501,7 @@ class ProductCatalogControllerTest extends TestCase {
 	public function testResolvePriceDropsTheQuantityTierWhenAVariantIsChosen(): void {
 		$product = [
 			'unitPrice' => 10.0,
-			'vatClass' => 'hoog',
+			'vatClass' => 'high',
 			'priceTiers' => [['minQuantity' => 10, 'unitPrice' => 8.0, 'label' => 'from 10']],
 			'variants' => [['sku' => 'COF-L']],
 		];
@@ -581,7 +581,7 @@ class ProductCatalogControllerTest extends TestCase {
 	 */
 	public function testResolvePriceNeverReturnsANegativeUnitPrice(): void {
 		$data = $this->controllerWithRealService(
-			['product' => ['unitPrice' => -10.0, 'vatClass' => 'hoog'], 'quantity' => 1]
+			['product' => ['unitPrice' => -10.0, 'vatClass' => 'high'], 'quantity' => 1]
 		)->resolvePrice()->getData();
 
 		$this->assertGreaterThanOrEqual(0.0, $data['unitPrice']);
@@ -622,7 +622,7 @@ class ProductCatalogControllerTest extends TestCase {
 	public function testResolvePriceIsComputedFromTheClientSuppliedProductBody(): void {
 		$data = $this->controllerWithRealService(
 			[
-				'product' => ['unitPrice' => 0.01, 'vatClass' => 'nul'],
+				'product' => ['unitPrice' => 0.01, 'vatClass' => 'zero'],
 				'quantity' => 1,
 			]
 		)->resolvePrice()->getData();

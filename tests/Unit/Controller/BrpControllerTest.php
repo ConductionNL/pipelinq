@@ -146,7 +146,7 @@ class BrpControllerTest extends TestCase {
 		self::assertNotNull($request, 'brpLookupVerzoek was not persisted');
 		self::assertSame('corr-shared-xyz', $request['haalcentraalCorrelationId']);
 		self::assertSame(142, $request['responseDurationMs']);
-		self::assertSame('geslaagd', $request['responseStatus']);
+		self::assertSame('succeeded', $request['responseStatus']);
 		self::assertSame('Wet BRP', $request['purposeBinding']);
 		self::assertArrayHasKey('bsnHash', $request);
 		// The raw BSN must never be a field on the audit record.
@@ -397,8 +397,8 @@ class BrpControllerTest extends TestCase {
 		$this->assertSame('Hoofdstraat', $data['residence']['straat']);
 
 		$this->assertCount(1, $recorded, 'the reveal was not audited');
-		$this->assertSame('brp-adres-onthuld', $recorded[0]['action']);
-		$this->assertSame('adres-onthuld', $recorded[0]['outcome']);
+		$this->assertSame('brp-address-revealed', $recorded[0]['action']);
+		$this->assertSame('address-revealed', $recorded[0]['outcome']);
 		$this->assertSame('behandelaar1', $recorded[0]['actor']);
 		$this->assertSame('beheerder', $recorded[0]['actorRole']);
 		$this->assertStringContainsString('Wet BRP art. 3.3', $recorded[0]['purposeBinding']);
@@ -755,7 +755,7 @@ class BrpControllerTest extends TestCase {
 				string $verzoekreden,
 				string $purposeBinding,
 				string $outcome,
-				string $action = 'brp-lookup-uitgevoerd',
+				string $action = 'brp-lookup-executed',
 				?int $responseCode = null,
 				?string $haalcentraalCorrelationId = null,
 				?string $linkedRequest = null,

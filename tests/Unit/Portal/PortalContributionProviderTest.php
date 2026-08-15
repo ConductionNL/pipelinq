@@ -158,7 +158,7 @@ final class PortalContributionProviderTest extends TestCase {
 			'clientRequests' => ['ticket', 'client', 'request'],
 			'clientComplaints' => ['ticket', 'client', 'complaint'],
 			'clientContracts' => ['contract', 'clientRef', null],
-			'clientContactmoments' => ['ticket', 'client', 'contactmoment'],
+			'clientContactmoments' => ['ticket', 'client', 'interaction'],
 		];
 		foreach ($expected as $id => [$schema, $scopeField, $ticketType]) {
 			$this->assertSame('pipelinq', $collections[$id]['register']);
@@ -190,13 +190,13 @@ final class PortalContributionProviderTest extends TestCase {
 			'ticketType'
 		);
 		sort($ticketTypes);
-		$this->assertSame(['complaint', 'contactmoment', 'request'], $ticketTypes, 'Each ticket collection narrows to its own kind');
+		$this->assertSame(['complaint', 'interaction', 'request'], $ticketTypes, 'Each ticket collection narrows to its own kind');
 
 		$schemas = array_column($manifest['collections'], 'schema');
 		$this->assertNotContains('booking', $schemas, 'booking is a customer surface, never in the client manifest');
 		$this->assertSame(
 			[],
-			array_intersect(['request', 'complaint', 'contactmoment'], $schemas),
+			array_intersect(['request', 'complaint', 'interaction'], $schemas),
 			'The request/complaint/contactmoment schemas are retired — every one of them is a ticket row now'
 		);
 	}//end testClientCollectionsAreOrgScoped()
@@ -362,7 +362,7 @@ final class PortalContributionProviderTest extends TestCase {
 
 		$contactmoment = $this->indexById($manifest['collections'])['clientContactmoments'];
 		$this->assertSame('ticket', $contactmoment['schema']);
-		$this->assertSame(['ticketType' => 'contactmoment'], $contactmoment['filter'], 'Narrowed to logged interactions only');
+		$this->assertSame(['ticketType' => 'interaction'], $contactmoment['filter'], 'Narrowed to logged interactions only');
 		$this->assertSame('client', $contactmoment['scopeField']);
 		$this->assertSame('clientId', $contactmoment['scopeClaim']);
 		$this->assertArrayNotHasKey('minTrust', $contactmoment, 'B2B contactmoment carries no special-category data — no trust floor');
@@ -581,7 +581,7 @@ final class PortalContributionProviderTest extends TestCase {
 	 * @spec openspec/changes/portal-projected-collections/specs/portal-contribution/spec.md
 	 */
 	public function testTicketSurfacesCarryKindDiscriminator(): void {
-		$kinds = ['request', 'complaint', 'contactmoment'];
+		$kinds = ['request', 'complaint', 'interaction'];
 
 		foreach ([self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT] as $subject) {
 			$manifest = $this->provider->getContribution($subject);

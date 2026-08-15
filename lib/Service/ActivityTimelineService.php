@@ -132,7 +132,7 @@ class ActivityTimelineService {
 
 		return [
 			'register' => $register,
-			'contactmoment' => $this->ticketService->getSchemaId(),
+			'interaction' => $this->ticketService->getSchemaId(),
 			'task' => $task,
 			'emailLink' => $emailLink,
 			'calendarLink' => $calendarLink,
@@ -361,7 +361,7 @@ class ActivityTimelineService {
 	 */
 	private function sourceToActivityType(string $sourceType): string {
 		return match ($sourceType) {
-			'contactmoment' => 'contactmoment',
+			'interaction' => 'interaction',
 			'task' => 'task',
 			'emailLink' => 'email',
 			'calendarLink' => 'calendar',
@@ -388,7 +388,7 @@ class ActivityTimelineService {
 			$rawTypes = explode(',', (string)$rawTypes);
 		}
 
-		$allowed = ['contactmoment', 'task', 'email', 'calendar', 'worklog'];
+		$allowed = ['interaction', 'task', 'email', 'calendar', 'worklog'];
 		$result = [];
 		foreach ($rawTypes as $type) {
 			$type = strtolower(trim((string)$type));
@@ -594,7 +594,7 @@ class ActivityTimelineService {
 	public function resolveEntityQueryParams(string $entityType, string $entityId): array {
 		return match ($entityType) {
 			'client' => [
-				'contactmoment' => [
+				'interaction' => [
 					'ticketType' => TicketService::TYPE_CONTACTMOMENT,
 					'client' => $entityId,
 				],
@@ -603,7 +603,7 @@ class ActivityTimelineService {
 				'calendarLink' => ['linkedEntityType' => 'client', 'linkedEntityId' => $entityId],
 			],
 			'request' => [
-				'contactmoment' => [
+				'interaction' => [
 					'ticketType' => TicketService::TYPE_CONTACTMOMENT,
 					'parentTicket' => $entityId,
 				],
@@ -639,11 +639,11 @@ class ActivityTimelineService {
 		$id = (string)($object['id'] ?? $object['uuid'] ?? '');
 
 		switch ($sourceType) {
-			case 'contactmoment':
+			case 'interaction':
 				// Ticket field names (unify-ticket-supertype): subject -> title,
 				// summary -> description, contactedAt -> occurredAt, agent -> assignee.
 				$channel = (string)($object['channel'] ?? '');
-				$type = 'contactmoment';
+				$type = 'interaction';
 				if ($channel === 'worklog') {
 					$type = 'worklog';
 				}
@@ -739,7 +739,7 @@ class ActivityTimelineService {
 	 */
 	public function createWorklog(string $entityType, string $entityId, array $data): array {
 		$config = $this->getConfig();
-		if ($config['register'] === '' || $config['contactmoment'] === '') {
+		if ($config['register'] === '' || $config['interaction'] === '') {
 			throw new RuntimeException('Contactmoment register or schema not configured.');
 		}
 
@@ -772,7 +772,7 @@ class ActivityTimelineService {
 
 		$savedArray = $this->extractObjectArray(saved: $saved);
 		$normalized = $this->normalizeActivity(
-			sourceType: 'contactmoment',
+			sourceType: 'interaction',
 			object: $savedArray,
 			entityType: $entityType,
 			entityId: $entityId
@@ -798,7 +798,7 @@ class ActivityTimelineService {
 		$limit = $this->normaliseLimit(rawLimit: ($params['_limit'] ?? null));
 
 		$config = $this->getConfig();
-		if ($config['register'] === '' || $config['contactmoment'] === '') {
+		if ($config['register'] === '' || $config['interaction'] === '') {
 			return [
 				'items' => [],
 				'total' => 0,
@@ -823,7 +823,7 @@ class ActivityTimelineService {
 
 		$rawObjects = $this->querySchema(
 			registerId: $config['register'],
-			schemaId: $config['contactmoment'],
+			schemaId: $config['interaction'],
 			filters: $filters
 		);
 
@@ -876,7 +876,7 @@ class ActivityTimelineService {
 		$totalSeconds = 0;
 		foreach ($rawObjects as $object) {
 			$normalised = $this->normalizeActivity(
-				sourceType: 'contactmoment',
+				sourceType: 'interaction',
 				object: $object,
 				entityType: $entityType,
 				entityId: $entityId

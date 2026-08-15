@@ -73,7 +73,7 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 	public function testBothWritePathsActiveRaises(): void {
 		$registers = $this->registerAccessWith([
 			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'actief' => true, 'readOnly' => false],
+				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'active' => true, 'readOnly' => false],
 			],
 			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
 				['id' => 'stuf-zo', 'municipalityCode' => '0637', 'write' => 'on'],
@@ -95,7 +95,7 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 	public function testZgwOnlyWritePathPasses(): void {
 		$registers = $this->registerAccessWith([
 			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'actief' => true, 'readOnly' => false],
+				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'active' => true, 'readOnly' => false],
 			],
 			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
 				['id' => 'stuf-zo', 'municipalityCode' => '0637', 'write' => 'off'],
@@ -115,7 +115,7 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 	public function testBothReadOnlyPasses(): void {
 		$registers = $this->registerAccessWith([
 			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'actief' => true, 'readOnly' => true],
+				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'active' => true, 'readOnly' => true],
 			],
 			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
 				['id' => 'stuf-zo', 'municipalityCode' => '0637', 'write' => 'off'],
@@ -149,7 +149,7 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 	public function testExceptionCarriesConflictingIds(): void {
 		$registers = $this->registerAccessWith([
 			ZgwRegisterAccess::SCHEMA_ENDPOINT => [
-				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'actief' => true, 'readOnly' => false],
+				['id' => 'zgw-zo', 'municipalityCode' => '0637', 'active' => true, 'readOnly' => false],
 			],
 			ZgwCoexistenceValidator::STUF_ENDPOINT_SCHEMA => [
 				['id' => 'stuf-zo', 'municipalityCode' => '0637', 'write' => 'on'],

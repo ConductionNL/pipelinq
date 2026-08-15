@@ -394,7 +394,7 @@ export default {
 			} catch (e) {
 				showError(
 					t('pipelinq', 'Save failed: {error}', {
-						error: e.message || 'onbekend',
+						error: e.message || 'unknown',
 					}),
 				)
 			} finally {

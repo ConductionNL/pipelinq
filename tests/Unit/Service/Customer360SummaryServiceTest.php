@@ -172,7 +172,7 @@ class Customer360SummaryServiceTest extends TestCase {
 
 		$this->assertSame(4, $summary['openTicketCount']);
 		$this->assertSame(
-			['request' => 1, 'complaint' => 1, 'contactmoment' => 2],
+			['request' => 1, 'complaint' => 1, 'interaction' => 2],
 			$summary['openTicketsByType']
 		);
 	}//end testOpenTicketCountSpansAllTicketTypes()

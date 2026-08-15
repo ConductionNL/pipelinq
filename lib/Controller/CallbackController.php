@@ -223,7 +223,7 @@ class CallbackController extends Controller {
 
 			$transition = $this->callbackService->validateStatusTransition(
 				$taskData['status'] ?? 'open',
-				'afgerond'
+				'completed'
 			);
 
 			if ($transition['valid'] === false) {

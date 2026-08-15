@@ -243,7 +243,7 @@ class LoyaltyControllerTest extends TestCase {
 					'programmeId' => 'prog-1',
 					'currentBalance' => 1250,
 					'lifetimePoints' => 4000,
-					'status' => 'actief',
+					'status' => 'active',
 					'optInTermsVersion' => '1.0',
 				]
 			);
@@ -256,7 +256,7 @@ class LoyaltyControllerTest extends TestCase {
 
 		$data = $response->getData();
 		$this->assertSame(1250, $data['currentBalance']);
-		$this->assertSame('actief', $data['status']);
+		$this->assertSame('active', $data['status']);
 		$this->assertSame('prog-1', $data['programmeId']);
 		$this->assertArrayNotHasKey('optInTermsVersion', $data);
 	}//end testGetAccountReturnsAccountWithoutOptInTermsVersion()
@@ -308,7 +308,7 @@ class LoyaltyControllerTest extends TestCase {
 				'customerId' => 'victim',
 				'programmeId' => 'prog-1',
 				'currentBalance' => 98000,
-				'status' => 'actief',
+				'status' => 'active',
 			]
 		);
 
@@ -495,7 +495,7 @@ class LoyaltyControllerTest extends TestCase {
 		$store->seed(
 			'klantLoyaltyAccount_schema',
 			'acc-1',
-			['customerId' => 'mallory', 'programmeId' => 'prog-1', 'currentBalance' => 500, 'lifetimePoints' => 500, 'status' => 'actief']
+			['customerId' => 'mallory', 'programmeId' => 'prog-1', 'currentBalance' => 500, 'lifetimePoints' => 500, 'status' => 'active']
 		);
 		$store->seed(
 			'redemptionOption_schema',
@@ -509,7 +509,7 @@ class LoyaltyControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_CREATED, $response->getStatus());
 
 		$data = $response->getData();
-		$this->assertSame('gereserveerd', $data['status']);
+		$this->assertSame('reserved', $data['status']);
 		$this->assertSame(120, $data['costInPoints']);
 		$this->assertSame('acc-1', $data['accountId']);
 		$this->assertMatchesRegularExpression('/^RDM-[0-9A-F]{8}$/', (string)$data['rewardCode']);
@@ -531,7 +531,7 @@ class LoyaltyControllerTest extends TestCase {
 		$store->seed(
 			'klantLoyaltyAccount_schema',
 			'acc-1',
-			['customerId' => 'mallory', 'programmeId' => 'prog-1', 'currentBalance' => 100, 'status' => 'actief']
+			['customerId' => 'mallory', 'programmeId' => 'prog-1', 'currentBalance' => 100, 'status' => 'active']
 		);
 		$store->seed(
 			'redemptionOption_schema',
@@ -563,7 +563,7 @@ class LoyaltyControllerTest extends TestCase {
 		$store->seed(
 			'klantLoyaltyAccount_schema',
 			'acc-1',
-			['customerId' => 'mallory', 'programmeId' => 'prog-1', 'currentBalance' => 200, 'status' => 'actief']
+			['customerId' => 'mallory', 'programmeId' => 'prog-1', 'currentBalance' => 200, 'status' => 'active']
 		);
 		$store->seed(
 			'redemptionOption_schema',
@@ -612,7 +612,7 @@ class LoyaltyControllerTest extends TestCase {
 		$store->seed(
 			'klantLoyaltyAccount_schema',
 			'acc-victim',
-			['customerId' => 'victim', 'programmeId' => 'prog-1', 'currentBalance' => 5000, 'status' => 'actief']
+			['customerId' => 'victim', 'programmeId' => 'prog-1', 'currentBalance' => 5000, 'status' => 'active']
 		);
 		$store->seed(
 			'redemptionOption_schema',
@@ -652,7 +652,7 @@ class LoyaltyControllerTest extends TestCase {
 				'accountId' => 'acc-1',
 				'rewardCode' => 'RDM-DEADBEEF',
 				'costInPoints' => 100,
-				'status' => 'gereserveerd',
+				'status' => 'reserved',
 				'validTo' => '2099-01-01T00:00:00+00:00',
 			]
 		);
@@ -665,7 +665,7 @@ class LoyaltyControllerTest extends TestCase {
 		$data = $response->getData();
 		$this->assertTrue($data['valid']);
 		$this->assertNull($data['reason']);
-		$this->assertSame('gereserveerd', $data['redemption']['status']);
+		$this->assertSame('reserved', $data['redemption']['status']);
 		$this->assertSame(100, $data['redemption']['costInPoints']);
 	}//end testLookupRedemptionCodeReturnsValidationShape()
 
@@ -721,7 +721,7 @@ class LoyaltyControllerTest extends TestCase {
 				'accountId' => 'acc-1',
 				'rewardCode' => 'RDM-DEADBEEF',
 				'costInPoints' => 100,
-				'status' => 'gereserveerd',
+				'status' => 'reserved',
 				'validTo' => '2099-01-01T00:00:00+00:00',
 			]
 		);
@@ -732,10 +732,10 @@ class LoyaltyControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 
 		$data = $response->getData();
-		$this->assertSame('gebruikt', $data['status']);
+		$this->assertSame('used', $data['status']);
 		$this->assertSame('pos-777', $data['posTransactionId']);
 		$this->assertArrayHasKey('usedOn', $data);
-		$this->assertSame('gebruikt', $store->row('redemption_schema', 'rdm-1')['status']);
+		$this->assertSame('used', $store->row('redemption_schema', 'rdm-1')['status']);
 	}//end testUseRedemptionCodeMarksTheCodeUsed()
 
 	/**
@@ -753,7 +753,7 @@ class LoyaltyControllerTest extends TestCase {
 				'accountId' => 'acc-1',
 				'rewardCode' => 'RDM-DEADBEEF',
 				'costInPoints' => 100,
-				'status' => 'gereserveerd',
+				'status' => 'reserved',
 				'validTo' => '2099-01-01T00:00:00+00:00',
 			]
 		);
@@ -762,11 +762,11 @@ class LoyaltyControllerTest extends TestCase {
 
 		$first = $controller->useRedemptionCode(code: 'RDM-DEADBEEF');
 		$this->assertSame(Http::STATUS_OK, $first->getStatus());
-		$this->assertSame('gebruikt', $first->getData()['status']);
+		$this->assertSame('used', $first->getData()['status']);
 
 		$replay = $controller->useRedemptionCode(code: 'RDM-DEADBEEF');
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $replay->getStatus());
-		$this->assertSame(['error' => 'Status is gebruikt'], $replay->getData());
+		$this->assertSame(['error' => 'Status is used'], $replay->getData());
 	}//end testUseRedemptionCodeRefusesReplayOfAnAlreadyUsedCode()
 
 	/**
@@ -783,7 +783,7 @@ class LoyaltyControllerTest extends TestCase {
 				'accountId' => 'acc-1',
 				'rewardCode' => 'RDM-EXPIRED0',
 				'costInPoints' => 100,
-				'status' => 'gereserveerd',
+				'status' => 'reserved',
 				'validTo' => '2000-01-01T00:00:00+00:00',
 			]
 		);
@@ -793,7 +793,7 @@ class LoyaltyControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
 		$this->assertSame(['error' => 'Redemption code expired'], $response->getData());
-		$this->assertSame('vervallen', $store->row('redemption_schema', 'rdm-old')['status']);
+		$this->assertSame('lapsed', $store->row('redemption_schema', 'rdm-old')['status']);
 	}//end testUseRedemptionCodeRefusesAnExpiredCode()
 
 	/**

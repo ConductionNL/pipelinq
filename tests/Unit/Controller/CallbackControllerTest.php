@@ -214,7 +214,7 @@ class CallbackControllerTest extends TestCase {
 			'eligible' => true,
 			'reason' => '',
 		]);
-		$claimedTask = ['id' => 'task-123', 'assigneeUserId' => 'agent-001', 'status' => 'in_behandeling'];
+		$claimedTask = ['id' => 'task-123', 'assigneeUserId' => 'agent-001', 'status' => 'in_progress'];
 		$this->callbackService->method('applyClaim')->willReturn($claimedTask);
 		$this->scheduledTaskService->method('updateScheduledTask')->willReturn($claimedTask);
 

@@ -104,7 +104,7 @@ class BsnAuditService {
 		string $verzoekreden,
 		string $purposeBinding,
 		string $outcome,
-		string $action = 'brp-lookup-uitgevoerd',
+		string $action = 'brp-lookup-executed',
 		?int $responseCode = null,
 		?string $haalcentraalCorrelationId = null,
 		?string $linkedRequest = null,
@@ -248,8 +248,8 @@ class BsnAuditService {
 
 				// Immutable schema: callers MUST go through the system pseudonym path.
 				$arr['bsnHash'] = $newHash;
-				$arr['action'] = 'brp-rtbf-gepseudonimiseerd';
-				$arr['outcome'] = 'gepseudonimiseerd';
+				$arr['action'] = 'brp-rtbf-pseudonymised';
+				$arr['outcome'] = 'pseudonymised';
 				$this->getObjectService()->saveObject(
 					object: $arr,
 					extend: [],

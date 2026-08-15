@@ -59,10 +59,10 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 */
 	public const TRIGGER_STATUSES = [
 		'received',
-		'in-behandeling',
-		'meer-info-nodig',
-		'afgehandeld',
-		'afgewezen',
+		'in-progress',
+		'more-info-needed',
+		'handled',
+		'rejected',
 	];
 
 	/**

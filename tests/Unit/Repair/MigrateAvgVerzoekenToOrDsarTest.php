@@ -199,7 +199,7 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 					'wettelijkeTermijnVerloopt' => '2026-02-01T00:00:00Z',
 					'verlengdMet' => 30,
 					'verlengingsgrond' => 'complex',
-					'status' => 'in-behandeling',
+					'status' => 'in-progress',
 					'behandelaar' => 'steward-a',
 					'dpiaFlag' => true,
 					'retentionTo' => '2027-01-01T00:00:00Z',
@@ -264,8 +264,8 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 		$this->store = [
 			'40' => [
 				['id' => 'a', 'artikel' => 'art-17-wissing', 'status' => 'ingediend'],
-				['id' => 'b', 'artikel' => 'art-16-rectificatie', 'status' => 'afgerond', 'outcome' => 'geweigerd'],
-				['id' => 'd', 'artikel' => 'art-20-portabiliteit', 'status' => 'afgerond', 'outcome' => 'toegekend'],
+				['id' => 'b', 'artikel' => 'art-16-rectificatie', 'status' => 'completed', 'outcome' => 'geweigerd'],
+				['id' => 'd', 'artikel' => 'art-20-portabiliteit', 'status' => 'completed', 'outcome' => 'toegekend'],
 			],
 		];
 
@@ -329,7 +329,7 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 				[
 					'id' => 'gone',
 					'artikel' => 'art-15-inzage',
-					'status' => 'afgerond',
+					'status' => 'completed',
 					'deleted' => ['deletedAt' => '2026-06-23T12:58:15+00:00', 'deletedBy' => 'admin'],
 				],
 			],

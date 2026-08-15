@@ -130,7 +130,7 @@ class TierDowngradeJob extends TimedJob {
 			$rows = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
 				config: [
 					'filters' => [
-						'status' => 'actief',
+						'status' => 'active',
 						'register' => $register,
 						'schema' => $schema,
 					],

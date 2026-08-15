@@ -51,7 +51,7 @@ use Throwable;
  *  set of collaborators for the update-time SLA lifecycle.
  */
 class SlaObjectUpdatedListener implements IEventListener {
-	private const TRACKED_TYPES = ['request', 'complaint', 'klacht', 'callback'];
+	private const TRACKED_TYPES = ['request', 'complaint', 'complaint', 'callback'];
 
 	/**
 	 * Statuses commonly used to indicate "resolved" — used to short-circuit
@@ -60,7 +60,7 @@ class SlaObjectUpdatedListener implements IEventListener {
 	 *
 	 * @var array<int, string>
 	 */
-	private const DEFAULT_RESOLVED_STATUSES = ['resolved', 'completed', 'closed', 'afgehandeld'];
+	private const DEFAULT_RESOLVED_STATUSES = ['resolved', 'completed', 'closed', 'handled'];
 
 	/**
 	 * Constructor.
@@ -169,7 +169,7 @@ class SlaObjectUpdatedListener implements IEventListener {
 		$alreadyFired = (int)($slaStatus['currentEscalationLevel'] ?? 0);
 		$matchType = $type;
 		if ($type === 'complaint') {
-			$matchType = 'klacht';
+			$matchType = 'complaint';
 		}
 
 		$result = $this->engine->executeEscalations(

@@ -47,10 +47,10 @@ class SchemaLifecycleGraphTest extends TestCase {
 	public function testTaskAdjacencyMatchesDeclaredGraph(): void {
 		$this->assertSame(
 			expected: [
-				'open' => ['in_behandeling'],
-				'in_behandeling' => ['afgerond', 'verlopen'],
-				'afgerond' => ['open'],
-				'verlopen' => ['open'],
+				'open' => ['in_progress'],
+				'in_progress' => ['completed', 'expired'],
+				'completed' => ['open'],
+				'expired' => ['open'],
 			],
 			actual: $this->graph()->adjacencyFor(schemaSlug: 'task')
 		);
@@ -80,10 +80,10 @@ class SchemaLifecycleGraphTest extends TestCase {
 	 */
 	public function testLoyaltyProgrammeAdjacencyDeclaresActivateEdge(): void {
 		$graph = $this->graph()->adjacencyFor(schemaSlug: 'loyaltyProgramme');
-		$this->assertArrayHasKey(key: 'concept', array: $graph);
-		$this->assertSame(expected: ['actief'], actual: $graph['concept']);
-		$this->assertContains(needle: 'gepauzeerd', haystack: $graph['actief']);
-		$this->assertContains(needle: 'beeindigd', haystack: $graph['actief']);
+		$this->assertArrayHasKey(key: 'draft', array: $graph);
+		$this->assertSame(expected: ['active'], actual: $graph['draft']);
+		$this->assertContains(needle: 'paused', haystack: $graph['active']);
+		$this->assertContains(needle: 'ended', haystack: $graph['active']);
 	}//end testLoyaltyProgrammeAdjacencyDeclaresActivateEdge()
 
 	/**

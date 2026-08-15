@@ -658,14 +658,14 @@ class HaalCentraalClient {
 	private static function mapGeslacht(string $code): string {
 		$code = strtoupper($code);
 		if ($code === 'M' || $code === 'MAN') {
-			return 'man';
+			return 'male';
 		}
 
 		if ($code === 'V' || $code === 'VROUW' || $code === 'F') {
-			return 'vrouw';
+			return 'female';
 		}
 
-		return 'onbekend';
+		return 'unknown';
 	}//end mapGeslacht()
 
 	/**

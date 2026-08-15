@@ -59,7 +59,7 @@
  *       emitting malformed or zero-total rows would fail.
  *
  *   (b) No tracked object ever carries an `slaStatus`: both SLA listeners gate
- *       on entity types 'request'/'complaint'/'klacht'/'callback' while
+ *       on entity types 'request'/'complaint'/'complaint'/'callback' while
  *       `SchemaMapService::resolveEntityType()` resolves the unified ticket
  *       schema to 'ticket' (and carries no `callback_schema` entry at all).
  *       Measured live: 86 seeded tickets, 0 with an `slaStatus`; creating a

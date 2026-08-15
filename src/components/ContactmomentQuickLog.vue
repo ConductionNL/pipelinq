@@ -6,7 +6,7 @@
   -
   - Quick-log form for a contactmoment. Since unify-ticket-supertype the
   - contactmoment is not its own schema: it is a `ticket` object carrying
-  - `ticketType: 'contactmoment'`. The form therefore writes the unified ticket
+  - `ticketType: 'interaction'`. The form therefore writes the unified ticket
   - fields (title / description / occurredAt / assignee / parentTicket) while the
   - UI keeps the familiar contactmoment wording (Subject, Summary, Request).
   -->
@@ -176,10 +176,10 @@ export default {
 			],
 
 			outcomeOptions: [
-				'afgehandeld',
-				'doorverbonden',
-				'terugbelverzoek',
-				'vervolgactie',
+				'handled',
+				'transferred',
+				'callbackRequest',
+				'followUpAction',
 			],
 
 			saving: false,
@@ -279,11 +279,11 @@ export default {
 			this.saving = true
 			this.errorMessage = ''
 
-			// A contactmoment is a `ticket` with ticketType 'contactmoment'
+			// A contactmoment is a `ticket` with ticketType 'interaction'
 			// (unify-ticket-supertype): subject→title, summary→description,
 			// contactedAt→occurredAt, agent→assignee, request→parentTicket.
 			const data = {
-				ticketType: 'contactmoment',
+				ticketType: 'interaction',
 				title: this.form.title,
 				channel: this.form.channel,
 				occurredAt: new Date().toISOString(),

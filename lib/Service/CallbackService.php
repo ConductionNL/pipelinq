@@ -63,10 +63,10 @@ class CallbackService {
 	 * @var array<string, array<string>>
 	 */
 	public const ALLOWED_TRANSITIONS = [
-		'open' => ['in_behandeling'],
-		'in_behandeling' => ['afgerond', 'verlopen'],
-		'afgerond' => ['open'],
-		'verlopen' => ['open'],
+		'open' => ['in_progress'],
+		'in_progress' => ['completed', 'expired'],
+		'completed' => ['open'],
+		'expired' => ['open'],
 	];
 
 	/**
@@ -265,7 +265,7 @@ class CallbackService {
 
 		$taskData['assigneeUserId'] = $user->getUID();
 		$taskData['assigneeGroupId'] = null;
-		$taskData['status'] = 'in_behandeling';
+		$taskData['status'] = 'in_progress';
 
 		return $taskData;
 	}//end applyClaim()
@@ -281,7 +281,7 @@ class CallbackService {
 	 * @spec openspec/changes/callback-management/tasks.md#task-1.1
 	 */
 	public function applyCompletion(array $taskData, string $resultText): array {
-		$taskData['status'] = 'afgerond';
+		$taskData['status'] = 'completed';
 		$taskData['completedAt'] = (new DateTime())->format(DateTime::ATOM);
 		$taskData['resultText'] = $resultText;
 

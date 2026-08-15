@@ -240,10 +240,10 @@ export default {
 			typeOptions: ['product', 'service'],
 			statusOptions: ['active', 'inactive'],
 			btwClassOptions: [
-				{ id: 'hoog', label: t('pipelinq', 'High (21%)') },
-				{ id: 'laag', label: t('pipelinq', 'Low (9%)') },
-				{ id: 'nul', label: t('pipelinq', 'Zero (0%)') },
-				{ id: 'vrijgesteld', label: t('pipelinq', 'Exempt') },
+				{ id: 'high', label: t('pipelinq', 'High (21%)') },
+				{ id: 'low', label: t('pipelinq', 'Low (9%)') },
+				{ id: 'zero', label: t('pipelinq', 'Zero (0%)') },
+				{ id: 'exempt', label: t('pipelinq', 'Exempt') },
 			],
 
 			btwRateMap: { hoog: 21, laag: 9, nul: 0, vrijgesteld: 0 },

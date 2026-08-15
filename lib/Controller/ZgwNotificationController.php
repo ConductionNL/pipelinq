@@ -143,9 +143,9 @@ class ZgwNotificationController extends Controller {
 	 * @return array<string, mixed>|null Matching abonnement, or null.
 	 */
 	private function resolveAbonnementByBearer(string $token): ?array {
-		$rows = $this->registers->findAll(ZgwRegisterAccess::SCHEMA_ABONN, ['actief' => true]);
+		$rows = $this->registers->findAll(ZgwRegisterAccess::SCHEMA_ABONN, ['active' => true]);
 		foreach ($rows as $row) {
-			if ((bool)($row['actief'] ?? false) === false) {
+			if ((bool)($row['active'] ?? false) === false) {
 				continue;
 			}
 
