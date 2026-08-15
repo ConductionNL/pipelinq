@@ -55,7 +55,6 @@ class AdyenAdapterTest extends TestCase {
 				'environment' => 'sandbox',
 				'merchantAccount' => 'PipelinqPOS',
 			],
-			logger: $logger,
 			http: $transport
 		);
 

@@ -51,8 +51,6 @@ class MollieAdapterTest extends TestCase {
 				'apiKey' => 'test_dummy_key',
 				'webhookSecret' => 'super-secret',
 			],
-			config: ['environment' => 'sandbox'],
-			logger: $logger,
 			http: $transport
 		);
 
@@ -94,9 +92,6 @@ class MollieAdapterTest extends TestCase {
 	public function testInitiateWithoutApiKeyFails(): void {
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$adapter = new MollieAdapter(
-			credentials: [],
-			config: [],
-			logger: $logger,
 			http: new StubHttpTransport(responses: [])
 		);
 
