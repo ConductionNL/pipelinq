@@ -59,7 +59,7 @@ class Customer360SummaryServiceTest extends TestCase {
 	/**
 	 * The mocked OpenRegister ObjectService (leads + queues).
 	 *
-	 * @var \OCA\OpenRegister\Service\ObjectService&MockObject
+	 * @var \OCA\OpenRegister\Service\ObjectServiceInterface&MockObject
 	 */
 	private \OCA\OpenRegister\Contract\ObjectServiceInterface $objectService;
 
