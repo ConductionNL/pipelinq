@@ -149,7 +149,7 @@ export default {
 			return [
 				{ value: 'all', label: this.t('pipelinq', 'All') },
 				{
-					value: 'contactmoment',
+					value: 'interaction',
 					label: this.t('pipelinq', 'Contact moments'),
 				},
 				{ value: 'task', label: this.t('pipelinq', 'Tasks') },
@@ -246,7 +246,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-4
 		 */
 		iconFor(item) {
-			if (item.type === 'contactmoment') {
+			if (item.type === 'interaction') {
 				const channel = (item.metadata && item.metadata.channel) || ''
 				if (channel === 'phone') {
 					return Phone
@@ -277,7 +277,7 @@ export default {
 		 */
 		typeLabel(type) {
 			switch (type) {
-				case 'contactmoment':
+				case 'interaction':
 					return this.t('pipelinq', 'Contact moment')
 				case 'worklog':
 					return this.t('pipelinq', 'Worklog')

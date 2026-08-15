@@ -113,14 +113,14 @@ class CtiDispositionService {
 		$taskId = null;
 		if ($outcome === 'callback') {
 			$taskId = $this->createTask(
-				type: 'terugbelverzoek',
+				type: 'callbackRequest',
 				subject: $subject,
 				notes: $notes,
 				interactionId: $interactionId,
 			);
 		} elseif ($outcome === 'escalated') {
 			$taskId = $this->createTask(
-				type: 'opvolgtaak',
+				type: 'followUpTask',
 				subject: $subject,
 				notes: $notes,
 				interactionId: $interactionId,
@@ -210,7 +210,7 @@ class CtiDispositionService {
 						'description' => $notes,
 						'status' => 'open',
 						'queueName' => $queueName,
-						'contactmoment' => $interactionId,
+						'interaction' => $interactionId,
 					],
 					static fn ($value): bool => ($value !== null && $value !== '')
 				),

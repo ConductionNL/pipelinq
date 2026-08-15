@@ -242,10 +242,10 @@
             "type": "string",
             "enum": [
               "received",
-              "in-behandeling",
-              "meer-info-nodig",
-              "afgehandeld",
-              "afgewezen"
+              "in-progress",
+              "more-info-needed",
+              "handled",
+              "rejected"
             ],
             "description": "Zaaktype status the template applies to (indexed).",
             "title": "Status"

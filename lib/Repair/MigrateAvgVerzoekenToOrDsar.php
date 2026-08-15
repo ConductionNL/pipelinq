@@ -102,7 +102,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 	 */
 	private const STATUS_MAP = [
 		'ingediend' => 'received',
-		'in-behandeling' => 'in-progress',
+		'in-progress' => 'in-progress',
 		'bewijs-verzamelen' => 'evidence-collection',
 		'redactie' => 'evidence-collection',
 		'bundle-genereren' => 'in-progress',
@@ -620,7 +620,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			return 'closed';
 		}
 
-		if ($status === 'afgerond') {
+		if ($status === 'completed') {
 			$outcome = (string)($request['outcome'] ?? '');
 			return (self::OUTCOME_TERMINAL_STATUS[$outcome] ?? 'closed');
 		}

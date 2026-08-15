@@ -157,7 +157,7 @@ class LoyaltyEngineService {
 		}
 
 		$accountId = (string)$this->extractUuid(object: $account);
-		if ((string)($account['status'] ?? '') !== 'actief') {
+		if ((string)($account['status'] ?? '') !== 'active') {
 			$this->logger->info(
 				'Pipelinq: account disabled, points credit skipped',
 				['accountId' => $accountId, 'customerId' => $customerId]
@@ -377,7 +377,7 @@ class LoyaltyEngineService {
 	}//end creditAndFinalize()
 
 	/**
-	 * Get all programmes whose status is "actief".
+	 * Get all programmes whose status is "active".
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
@@ -392,7 +392,7 @@ class LoyaltyEngineService {
 			$rows = $this->getObjectService()->findAll(
 				config: [
 					'filters' => [
-						'status' => 'actief',
+						'status' => 'active',
 						'register' => $register,
 						'schema' => $schema,
 					],

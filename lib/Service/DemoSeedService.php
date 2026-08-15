@@ -160,12 +160,12 @@ class DemoSeedService {
 	 * @var array<string, string>
 	 */
 	private const OUTCOME_STATUS = [
-		'afgehandeld' => 'resolved',
-		'opgelost' => 'resolved',
-		'doorverbonden' => 'closed',
-		'doorverwezen' => 'closed',
-		'terugbelverzoek' => 'in_progress',
-		'vervolgactie' => 'in_progress',
+		'handled' => 'resolved',
+		'resolved' => 'resolved',
+		'transferred' => 'closed',
+		'referred' => 'closed',
+		'callbackRequest' => 'in_progress',
+		'followUpAction' => 'in_progress',
 	];
 
 	/**

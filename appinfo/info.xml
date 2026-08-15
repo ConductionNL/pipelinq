@@ -141,6 +141,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
     <repair-steps>
         <post-migration>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+            <!--
+                After InitializeSettings imports the register: the schema edit
+                changes the DECLARATION, but every row already written still
+                holds the Dutch string, and a filter on the new value returns
+                null rather than an error.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameDutchPipelinqValues</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
             <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
@@ -179,6 +186,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
         -->
         <install>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+            <!--
+                After InitializeSettings imports the register: the schema edit
+                changes the DECLARATION, but every row already written still
+                holds the Dutch string, and a filter on the new value returns
+                null rather than an error.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameDutchPipelinqValues</step>
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
         </install>
     </repair-steps>

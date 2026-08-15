@@ -8,7 +8,7 @@
           "slug": "berichtenbox-paspoort-afgehandeld-nl"
         },
         "caseType": "paspoortaanvraag",
-        "status": "afgehandeld",
+        "status": "handled",
         "language": "nl",
         "subject": "Uw paspoort is gereed - zaak {{zaakId}}",
         "body": "<p>Geachte burger,</p><p>Uw paspoortaanvraag (zaak {{zaakId}}) is afgehandeld. U kunt uw paspoort ophalen bij {{gemeente}}.</p><p>Met vriendelijke groet,<br/>{{gemeente}}</p>",
@@ -22,7 +22,7 @@
           "slug": "berichtenbox-rijbewijs-in-behandeling-nl"
         },
         "caseType": "rijbewijsaanvraag",
-        "status": "in-behandeling",
+        "status": "in-progress",
         "language": "nl",
         "subject": "Uw rijbewijsaanvraag is in behandeling - zaak {{zaakId}}",
         "body": "<p>Geachte burger,</p><p>Wij hebben uw rijbewijsaanvraag (zaak {{zaakId}}) ontvangen en in behandeling genomen. U ontvangt bericht zodra deze klaar is.</p>",
@@ -36,7 +36,7 @@
           "slug": "berichtenbox-avg-inzage-meer-info-nl"
         },
         "caseType": "avg-inzageverzoek",
-        "status": "meer-info-nodig",
+        "status": "more-info-needed",
         "language": "nl",
         "subject": "Uw AVG-inzageverzoek - aanvullende informatie nodig",
         "body": "<p>Geachte burger,</p><p>Voor uw inzageverzoek (zaak {{zaakId}}) hebben wij aanvullende informatie nodig.</p><p><strong>Wettelijke termijn:</strong> {{deadline}}</p><p><strong>Grondslag:</strong> AVG Art. 15</p>",

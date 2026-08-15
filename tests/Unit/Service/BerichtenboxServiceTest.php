@@ -209,7 +209,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$result = $service->queueOutboundMessage(
 			'Z-2026-1',
 			'cm-1',
-			'afgehandeld',
+			'handled',
 			'123456789',
 			null,
 			['caseType' => 'paspoort']

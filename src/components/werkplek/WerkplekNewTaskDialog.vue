@@ -77,15 +77,15 @@ export default {
 					required: true,
 					enum: [
 						{
-							value: 'terugbelverzoek',
+							value: 'callbackRequest',
 							label: this.t('pipelinq', 'Callback'),
 						},
 						{
-							value: 'opvolgtaak',
+							value: 'followUpTask',
 							label: this.t('pipelinq', 'Follow-up'),
 						},
 						{
-							value: 'informatievraag',
+							value: 'informationRequest',
 							label: this.t('pipelinq', 'Information'),
 						},
 					],
@@ -96,9 +96,9 @@ export default {
 					widget: 'select',
 					required: false,
 					enum: [
-						{ value: 'laag', label: this.t('pipelinq', 'Low') },
-						{ value: 'normaal', label: this.t('pipelinq', 'Normal') },
-						{ value: 'hoog', label: this.t('pipelinq', 'High') },
+						{ value: 'low', label: this.t('pipelinq', 'Low') },
+						{ value: 'normal', label: this.t('pipelinq', 'Normal') },
+						{ value: 'high', label: this.t('pipelinq', 'High') },
 					],
 				},
 				{
@@ -123,8 +123,8 @@ export default {
 		 */
 		initialValues() {
 			return {
-				type: 'opvolgtaak',
-				priority: 'normaal',
+				type: 'followUpTask',
+				priority: 'normal',
 				clientId: this.clientId,
 				contactMomentSummary: this.contactMomentSummary || '',
 			}

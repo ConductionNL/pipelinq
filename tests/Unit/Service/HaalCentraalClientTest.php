@@ -180,7 +180,7 @@ class HaalCentraalClientTest extends TestCase {
 		// yields for the same raw upstream data (the mapping is unchanged).
 		self::assertSame('Jan', $person['givenNames']);
 		self::assertSame('Jansen', $person['surname']);
-		self::assertSame('man', $person['gender']);
+		self::assertSame('male', $person['gender']);
 		self::assertSame('1990-01-01', $person['dateOfBirth']);
 		self::assertSame('HaalCentraal-BRP-v2.0', $person['sourceSystem']);
 		self::assertSame('Hoofdstraat', $person['residence']['straat']);

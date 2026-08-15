@@ -55,7 +55,7 @@ class QueryPushdownBatch3Test extends TestCase {
 	 *
 	 * @var array<int, string>
 	 */
-	private const OPEN_TASK_STATUSES = ['open', 'in_behandeling'];
+	private const OPEN_TASK_STATUSES = ['open', 'in_progress'];
 
 	/**
 	 * IAppConfig stub mapping every *_schema key to itself and register to a
@@ -304,8 +304,8 @@ class QueryPushdownBatch3Test extends TestCase {
 		$tasks = [
 			['id' => 't1', 'assigneeUserId' => 'alice', 'status' => 'open'],
 			['id' => 't2', 'assigneeUserId' => 'alice', 'status' => 'done'],
-			['id' => 't3', 'assigneeUserId' => 'bob', 'status' => 'in_behandeling'],
-			['id' => 't4', 'assigneeUserId' => 'alice', 'status' => 'in_behandeling'],
+			['id' => 't3', 'assigneeUserId' => 'bob', 'status' => 'in_progress'],
+			['id' => 't4', 'assigneeUserId' => 'alice', 'status' => 'in_progress'],
 		];
 
 		$agents = [

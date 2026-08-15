@@ -94,7 +94,7 @@ class KvkResultMapper {
 	 * @return bool True if company is active.
 	 */
 	private function isCompanyActive(array $item): bool {
-		return ($item['actief'] ?? 'Ja') === 'Ja';
+		return ($item['active'] ?? 'Ja') === 'Ja';
 	}//end isCompanyActive()
 
 	/**

@@ -206,7 +206,7 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase {
 			// source — the discriminator must keep it out of the dossier.
 			'26' => [
 				['id' => 'req-1', 'ticketType' => 'request', 'contact' => 'subject-1'],
-				['id' => 'cm-1', 'ticketType' => 'contactmoment', 'client' => 'unrelated'],
+				['id' => 'cm-1', 'ticketType' => 'interaction', 'client' => 'unrelated'],
 				['id' => 'cpl-1', 'ticketType' => 'complaint', 'client' => 'subject-1'],
 			],
 		];

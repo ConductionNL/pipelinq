@@ -56,13 +56,13 @@ class TemplateRendererTest extends TestCase {
 		];
 		$vars = [
 			'caseId' => 'Z-2026-0042',
-			'status' => 'afgehandeld',
+			'status' => 'handled',
 			'gemeente' => 'Amsterdam',
 		];
 
 		$rendered = $renderer->render($tpl, $vars);
 		$this->assertSame('Uw paspoort is gereed - zaak Z-2026-0042', $rendered['subject']);
-		$this->assertStringContainsString('afgehandeld', $rendered['body']);
+		$this->assertStringContainsString('handled', $rendered['body']);
 		$this->assertStringContainsString('Amsterdam', $rendered['body']);
 	}//end testBasicVariableSubstitution()
 
@@ -143,7 +143,7 @@ class TemplateRendererTest extends TestCase {
 		];
 		$vars = [
 			'caseId' => 'Z-2026-0042',
-			'status' => 'afgehandeld',
+			'status' => 'handled',
 			'messageId' => 'msg-uuid-1',
 		];
 

@@ -89,7 +89,7 @@ class LoyaltyReportingService {
 		$tierDistribution = [];
 		$outstandingPoints = 0;
 		foreach ($accounts as $a) {
-			if ((string)($a['status'] ?? '') === 'actief') {
+			if ((string)($a['status'] ?? '') === 'active') {
 				$activeAccounts++;
 			}
 

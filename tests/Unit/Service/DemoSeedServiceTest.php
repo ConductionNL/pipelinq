@@ -90,7 +90,7 @@ class DemoSeedServiceTest extends TestCase {
 		'leads' => ['22', 'title', 'title', null],
 		'requests' => [self::TICKET_SCHEMA_ID, 'title', 'title', 'request'],
 		'complaints' => [self::TICKET_SCHEMA_ID, 'title', 'title', 'complaint'],
-		'contactmomenten' => [self::TICKET_SCHEMA_ID, 'subject', 'title', 'contactmoment'],
+		'contactmomenten' => [self::TICKET_SCHEMA_ID, 'subject', 'title', 'interaction'],
 		'tasks' => ['28', 'subject', 'subject', null],
 		'contracts' => ['29', 'title', 'title', null],
 	];
@@ -415,7 +415,7 @@ class DemoSeedServiceTest extends TestCase {
 			array_filter($tickets, static fn (array $p): bool => $p['data']['ticketType'] === 'request')
 		);
 		$contactmomenten = array_values(
-			array_filter($tickets, static fn (array $p): bool => $p['data']['ticketType'] === 'contactmoment')
+			array_filter($tickets, static fn (array $p): bool => $p['data']['ticketType'] === 'interaction')
 		);
 		$complaints = array_values(
 			array_filter($tickets, static fn (array $p): bool => $p['data']['ticketType'] === 'complaint')

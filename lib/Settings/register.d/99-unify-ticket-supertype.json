@@ -40,12 +40,12 @@
                   "reason": "Complaint-type tickets carried no retention policy before the ticket merge; exempted here so the merge does not start auto-disposing them. Klacht retention is a separate DPO decision."
                 },
                 {
-                  "condition": "outcome == 'afgehandeld'",
+                  "condition": "outcome == 'handled'",
                   "retention": "P2Y",
                   "reason": "Resolved client contact moments (callback logs, counter/phone interactions) retained 2 years as the operational client-interaction record (VNG Klantinteracties), then disposed per ADR-024. DPO sign-off pending (task 4.1)."
                 },
                 {
-                  "condition": "outcome == 'doorverbonden'",
+                  "condition": "outcome == 'transferred'",
                   "retention": "P1Y",
                   "reason": "Transferred (doorverbonden) contact moments are short-lived routing records; 1-year retention before disposition. DPO sign-off pending."
                 }
@@ -178,7 +178,7 @@
             "type": "string",
             "title": "Ticket Type",
             "description": "Discriminator: request (demand/case), complaint (klacht) or contactmoment (logged interaction). Deliberately has NO default: it is `required`, so any create path that forgets to set it fails validation loudly rather than silently filing a complaint or contactmoment as a request. TicketService::save() always stamps it; manifest form dialogs render it as a required choice.",
-            "enum": ["request", "complaint", "contactmoment"],
+            "enum": ["request", "complaint", "interaction"],
             "facetable": true
           },
           "title": {
@@ -334,7 +334,7 @@
             "type": "string",
             "title": "Outcome",
             "description": "Disposition of a contactmoment interaction.",
-            "enum": ["afgehandeld", "doorverbonden", "terugbelverzoek", "vervolgactie", "opgelost", "doorverwezen"],
+            "enum": ["handled", "transferred", "callbackRequest", "followUpAction", "resolved", "referred"],
             "facetable": true
           },
           "duration": {

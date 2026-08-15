@@ -182,7 +182,7 @@ export default {
 			} catch (e) {
 				showError(
 					t('pipelinq', 'Completion failed: {error}', {
-						error: e.message || 'onbekend',
+						error: e.message || 'unknown',
 					}),
 				)
 			} finally {
@@ -226,7 +226,7 @@ export default {
 			} catch (e) {
 				showError(
 					t('pipelinq', 'Reversal failed: {error}', {
-						error: e.message || 'onbekend',
+						error: e.message || 'unknown',
 					}),
 				)
 			} finally {

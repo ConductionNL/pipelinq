@@ -67,7 +67,7 @@ class SlaDeadlineSweepJob extends TimedJob {
 	 */
 	private const TICKET_TYPE_LABELS = [
 		TicketService::TYPE_REQUEST => 'request',
-		TicketService::TYPE_COMPLAINT => 'klacht',
+		TicketService::TYPE_COMPLAINT => 'complaint',
 	];
 
 	/**
@@ -403,7 +403,7 @@ class SlaDeadlineSweepJob extends TimedJob {
 			// envelope. Re-check those here and log a warning for any open
 			// complaint whose deadline has passed, so overdue complaints are
 			// surfaced even when no escalation policy applies to them.
-			if ($type === 'klacht') {
+			if ($type === 'complaint') {
 				$this->checkComplaintDeadline(data: $data, uuid: $uuid, now: $now);
 			}
 

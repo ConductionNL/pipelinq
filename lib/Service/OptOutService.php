@@ -136,7 +136,7 @@ class OptOutService {
 			$today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 			$object = [
 				'bsnHash' => BsnValidationService::hash($rawBsn),
-				'type' => 'geheimhouding-gemeente',
+				'type' => 'confidentiality-municipality',
 				'source' => 'BRP',
 				'effectiveDate' => $today->format('Y-m-d'),
 				'limited' => ['commerciele-derden', 'kerkgenootschappen', 'derdeportalen'],
@@ -174,8 +174,8 @@ class OptOutService {
 			$today = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 			$object = [
 				'bsnHash' => BsnValidationService::hash($rawBsn),
-				'type' => 'lokale-contact-opt-out',
-				'source' => 'lokaal',
+				'type' => 'local-contact-opt-out',
+				'source' => 'local',
 				'effectiveDate' => $today->format('Y-m-d'),
 				'limited' => ['commerciele-derden'],
 				'localEnteredBy' => $actor,

@@ -96,7 +96,7 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 	public function testActivateConceptPassesTransitionGuardThenBusinessGuard(): void {
 		$service = $this->buildService(
 			programme: [
-				'status' => 'concept',
+				'status' => 'draft',
 				'startDate' => '2026-01-01',
 				'endDate' => '2026-12-31',
 			],
@@ -108,9 +108,9 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 		} catch (RuntimeException $e) {
 			// The transition guard ADMITTED concept -> actief; the only error left
 			// is the business guard. A transition rejection would mention "transition
-			// from 'concept'".
+			// from 'draft'".
 			$this->assertStringNotContainsString(
-				needle: "transition from 'concept'",
+				needle: "transition from 'draft'",
 				haystack: $e->getMessage()
 			);
 			$this->assertStringContainsString(needle: 'Cannot activate', haystack: $e->getMessage());
@@ -130,7 +130,7 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 			settingsDir: __DIR__ . '/../../../lib/Settings'
 		))->adjacencyFor(schemaSlug: 'loyaltyProgramme');
 
-		$this->assertContains(needle: 'actief', haystack: ($graph['concept'] ?? []));
+		$this->assertContains(needle: 'active', haystack: ($graph['draft'] ?? []));
 	}//end testSchemaDeclaresConceptToActiefEdge()
 
 	/**
@@ -141,12 +141,12 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 	public function testActivateFromTerminalStateIsRejected(): void {
 		$service = $this->buildService(
 			programme: [
-				'status' => 'beeindigd',
+				'status' => 'ended',
 			],
 		);
 
 		$this->expectException(exception: RuntimeException::class);
-		$this->expectExceptionMessage(message: "transition from 'beeindigd' to 'actief' is not allowed");
+		$this->expectExceptionMessage(message: "transition from 'ended' to 'active' is not allowed");
 
 		$service->activate(programmeId: 'prog-1', activatedBy: 'agent-1');
 	}//end testActivateFromTerminalStateIsRejected()
@@ -160,7 +160,7 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 	public function testActivateWithoutRulesStillRaisesBusinessGuard(): void {
 		$service = $this->buildService(
 			programme: [
-				'status' => 'concept',
+				'status' => 'draft',
 			],
 		);
 

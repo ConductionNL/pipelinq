@@ -209,7 +209,7 @@ class ScheduledTaskServiceTest extends TestCase {
 
 		$result = $service->createScheduledTask(
 			[
-				'type' => 'terugbelverzoek',
+				'type' => 'callbackRequest',
 				'subject' => 'Bel terug',
 				'deadline' => '2099-01-01T10:00:00+00:00',
 				'createdBy' => 'attacker',
@@ -232,7 +232,7 @@ class ScheduledTaskServiceTest extends TestCase {
 		$this->expectException(\InvalidArgumentException::class);
 		$service->createScheduledTask(
 			[
-				'type' => 'terugbelverzoek',
+				'type' => 'callbackRequest',
 				'deadline' => '2099-01-01T10:00:00+00:00',
 			]
 		);
@@ -350,7 +350,7 @@ class ScheduledTaskServiceTest extends TestCase {
 	}//end testAuthorizeAllowsGroupMember()
 
 	/**
-	 * Past-deadline open tasks must transition to 'verlopen' via processScheduledTasks.
+	 * Past-deadline open tasks must transition to 'expired' via processScheduledTasks.
 	 *
 	 * This covers C-W7-01: the expiry branch requires overdue tasks to be fetched
 	 * via getOverdueTasks() (deadline < now), not via getPendingTasks() which only
@@ -453,9 +453,9 @@ class ScheduledTaskServiceTest extends TestCase {
 		$service = $this->makeService();
 		$service->processScheduledTasks();
 
-		// The overdue task must have been saved with status 'verlopen'.
+		// The overdue task must have been saved with status 'expired'.
 		$this->assertNotEmpty($stub2->lastSaveArgs, 'saveObject was not called for the overdue task');
-		$this->assertSame('verlopen', $stub2->lastSaveArgs['object']['status']);
+		$this->assertSame('expired', $stub2->lastSaveArgs['object']['status']);
 	}//end testProcessScheduledTasksTransitionsOverdueTaskToVerlopen()
 
 	/**
@@ -537,7 +537,7 @@ class ScheduledTaskServiceTest extends TestCase {
 		$service = $this->makeService();
 		$service->processScheduledTasks();
 
-		$this->assertSame('verlopen', $stub2->lastSaveArgs['object']['status']);
+		$this->assertSame('expired', $stub2->lastSaveArgs['object']['status']);
 	}//end testExpiredTaskEscalatesToAssignee()
 
 	/**

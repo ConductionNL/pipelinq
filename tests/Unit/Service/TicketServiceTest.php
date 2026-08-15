@@ -144,7 +144,7 @@ class TicketServiceTest extends TestCase {
 		/** @var McpTool $instance */
 		$instance = $attributes[0]->newInstance();
 		$this->assertSame(expected: 'logContactmoment', actual: $instance->name);
-		$this->assertStringContainsString(needle: 'contactmoment', haystack: (string)$instance->description);
+		$this->assertStringContainsString(needle: 'interaction', haystack: (string)$instance->description);
 		$this->assertTrue(condition: $method->isPublic());
 
 		// ADR-063 hints/scope: save() is called with no uuid — always creates
@@ -254,7 +254,7 @@ class TicketServiceTest extends TestCase {
 			client: self::NIL_UUID,
 			channel: 'telefoon',
 			title: 'Booking change request',
-			outcome: 'afgehandeld',
+			outcome: 'handled',
 			notes: 'Customer wants to reschedule.'
 		);
 
@@ -263,7 +263,7 @@ class TicketServiceTest extends TestCase {
 		$this->assertSame(expected: self::NIL_UUID, actual: $captured['client']);
 		$this->assertSame(expected: 'telefoon', actual: $captured['channel']);
 		$this->assertSame(expected: 'Booking change request', actual: $captured['title']);
-		$this->assertSame(expected: 'afgehandeld', actual: $captured['outcome']);
+		$this->assertSame(expected: 'handled', actual: $captured['outcome']);
 		$this->assertSame(expected: 'Customer wants to reschedule.', actual: $captured['description']);
 		$this->assertSame(expected: self::NIL_UUID, actual: $result['ticketId']);
 	}//end testLogContactmomentWritesTicketAndReturnsUuid()

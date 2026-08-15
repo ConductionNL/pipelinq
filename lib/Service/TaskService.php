@@ -42,9 +42,9 @@ class TaskService {
 	 * @var array<string>
 	 */
 	public const VALID_TYPES = [
-		'terugbelverzoek',
-		'opvolgtaak',
-		'informatievraag',
+		'callbackRequest',
+		'followUpTask',
+		'informationRequest',
 	];
 
 	/**
@@ -54,9 +54,9 @@ class TaskService {
 	 */
 	public const VALID_STATUSES = [
 		'open',
-		'in_behandeling',
-		'afgerond',
-		'verlopen',
+		'in_progress',
+		'completed',
+		'expired',
 	];
 
 	/**
@@ -65,9 +65,9 @@ class TaskService {
 	 * @var array<string>
 	 */
 	public const VALID_PRIORITIES = [
-		'hoog',
-		'normaal',
-		'laag',
+		'high',
+		'normal',
+		'low',
 	];
 
 	/**

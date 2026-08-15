@@ -34,7 +34,7 @@ use Psr\Log\LoggerInterface;
  *
  * Runs every 15 minutes to check for:
  * 1. Tasks approaching their deadline (escalation notification)
- * 2. Tasks past their deadline (status change to "verlopen")
+ * 2. Tasks past their deadline (status change to "expired")
  *
  * The escalation threshold (hours before deadline) is admin-tunable via
  * `pipelinq.task_escalation.threshold_hours`.
@@ -93,7 +93,7 @@ class TaskEscalationJob extends TimedJob {
 
 		try {
 			// In production, this would query OpenRegister for tasks with
-			// status in ['open', 'in_behandeling'] and check deadlines.
+			// status in ['open', 'in_progress'] and check deadlines.
 			// For each task:
 			// 1. If deadline passed and status is open -> change to verlopen
 			// 2. If deadline approaching (within $thresholdHours) -> send

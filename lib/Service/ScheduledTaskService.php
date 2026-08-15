@@ -66,9 +66,9 @@ class ScheduledTaskService {
 	 * @var array<string>
 	 */
 	public const VALID_TYPES = [
-		'terugbelverzoek',
-		'opvolgtaak',
-		'informatievraag',
+		'callbackRequest',
+		'followUpTask',
+		'informationRequest',
 	];
 
 	/**
@@ -642,7 +642,7 @@ class ScheduledTaskService {
 		}
 
 		if ($deadline < $expiryCut) {
-			$task['status'] = 'verlopen';
+			$task['status'] = 'expired';
 			$attempts[] = [
 				'timestamp' => $timestamp,
 				'result' => 'expired',
@@ -652,7 +652,7 @@ class ScheduledTaskService {
 		}
 
 		if ($deadline >= $expiryCut) {
-			$task['status'] = 'in_behandeling';
+			$task['status'] = 'in_progress';
 			$attempts[] = [
 				'timestamp' => $timestamp,
 				'result' => 'notified',

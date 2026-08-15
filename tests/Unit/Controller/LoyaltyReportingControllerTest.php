@@ -170,8 +170,8 @@ class LoyaltyReportingControllerTest extends TestCase {
 	public function testLiabilityReturnsTheSeededOutstandingPointsAndValue(): void {
 		$service = $this->realReportingService(
 			accounts: [
-				['@self' => ['id' => 'acc-1'], 'programmeId' => 'prog-1', 'currentBalance' => 100, 'status' => 'actief'],
-				['@self' => ['id' => 'acc-2'], 'programmeId' => 'prog-1', 'currentBalance' => 250, 'status' => 'actief'],
+				['@self' => ['id' => 'acc-1'], 'programmeId' => 'prog-1', 'currentBalance' => 100, 'status' => 'active'],
+				['@self' => ['id' => 'acc-2'], 'programmeId' => 'prog-1', 'currentBalance' => 250, 'status' => 'active'],
 			],
 			programme: ['pointValue' => 0.02]
 		);
@@ -479,8 +479,8 @@ class LoyaltyReportingControllerTest extends TestCase {
 	public function testKpisReturnsTheFullEnvelopeOverSeededAccounts(): void {
 		$service = $this->realReportingService(
 			accounts: [
-				['@self' => ['id' => 'acc-1'], 'programmeId' => 'prog-1', 'currentBalance' => 100, 'currentTierId' => 'gold', 'status' => 'actief'],
-				['@self' => ['id' => 'acc-2'], 'programmeId' => 'prog-1', 'currentBalance' => 250, 'currentTierId' => 'gold', 'status' => 'actief'],
+				['@self' => ['id' => 'acc-1'], 'programmeId' => 'prog-1', 'currentBalance' => 100, 'currentTierId' => 'gold', 'status' => 'active'],
+				['@self' => ['id' => 'acc-2'], 'programmeId' => 'prog-1', 'currentBalance' => 250, 'currentTierId' => 'gold', 'status' => 'active'],
 				['@self' => ['id' => 'acc-3'], 'programmeId' => 'prog-1', 'currentBalance' => 50, 'status' => 'geblokkeerd'],
 			],
 			programme: ['pointValue' => 0.04]

@@ -88,7 +88,7 @@ class ReportingServiceTest extends TestCase {
 	/**
 	 * Test calculateFcr with mixed outcomes returns correct percentage.
 	 *
-	 * Given 10 contacts where 8 have outcome 'opgelost', FCR should be 80.0%.
+	 * Given 10 contacts where 8 have outcome 'resolved', FCR should be 80.0%.
 	 *
 	 * @return void
 	 *
@@ -96,16 +96,16 @@ class ReportingServiceTest extends TestCase {
 	 */
 	public function testCalculateFcrWithMixedOutcomes(): void {
 		$contactmomenten = [
-			['outcome' => 'opgelost'],
-			['outcome' => 'opgelost'],
-			['outcome' => 'opgelost'],
-			['outcome' => 'opgelost'],
-			['outcome' => 'opgelost'],
-			['outcome' => 'opgelost'],
-			['outcome' => 'opgelost'],
-			['outcome' => 'opgelost'],
-			['outcome' => 'doorverwezen'],
-			['outcome' => 'doorverwezen'],
+			['outcome' => 'resolved'],
+			['outcome' => 'resolved'],
+			['outcome' => 'resolved'],
+			['outcome' => 'resolved'],
+			['outcome' => 'resolved'],
+			['outcome' => 'resolved'],
+			['outcome' => 'resolved'],
+			['outcome' => 'resolved'],
+			['outcome' => 'referred'],
+			['outcome' => 'referred'],
 		];
 
 		$result = $this->service->calculateFcr($contactmomenten);
@@ -135,9 +135,9 @@ class ReportingServiceTest extends TestCase {
 	 */
 	public function testCalculateFcrAllResolvedReturnsHundred(): void {
 		$contactmomenten = [
-			['outcome' => 'opgelost'],
-			['outcome' => 'opgelost'],
-			['outcome' => 'opgelost'],
+			['outcome' => 'resolved'],
+			['outcome' => 'resolved'],
+			['outcome' => 'resolved'],
 		];
 
 		$result = $this->service->calculateFcr($contactmomenten);

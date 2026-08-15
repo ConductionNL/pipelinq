@@ -136,7 +136,7 @@ class ZgwNotificationControllerTest extends TestCase {
 		]);
 		$registers = $this->createMock(ZgwRegisterAccess::class);
 		$registers->method('findAll')->willReturn([
-			['callbackAuth' => 'right-bearer', 'actief' => true, 'endpointId' => 'ep-1'],
+			['callbackAuth' => 'right-bearer', 'active' => true, 'endpointId' => 'ep-1'],
 		]);
 		$api = $this->createMock(ZgwApiClient::class);
 		$api->method('resolveClientSecret')->willReturnArgument(0);
@@ -163,7 +163,7 @@ class ZgwNotificationControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testMatchingBearerDispatchesAndReturns202(): void {
-		$abonnement = ['callbackAuth' => 'right-bearer', 'actief' => true, 'endpointId' => 'ep-1'];
+		$abonnement = ['callbackAuth' => 'right-bearer', 'active' => true, 'endpointId' => 'ep-1'];
 		$request = $this->createMock(IRequest::class);
 		$request->method('getHeader')->willReturnMap([
 			['Authorization', 'Bearer right-bearer'],
@@ -206,7 +206,7 @@ class ZgwNotificationControllerTest extends TestCase {
 		]);
 		$registers = $this->createMock(ZgwRegisterAccess::class);
 		$registers->method('findAll')->willReturn([
-			['callbackAuth' => 'right-bearer', 'actief' => true, 'endpointId' => 'ep-1'],
+			['callbackAuth' => 'right-bearer', 'active' => true, 'endpointId' => 'ep-1'],
 		]);
 		$api = $this->createMock(ZgwApiClient::class);
 		$api->method('resolveClientSecret')->willReturnArgument(0);

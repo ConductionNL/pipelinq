@@ -163,7 +163,7 @@ export default {
 					programmeId: this.selectedProgramme.id,
 					currentBalance: 0,
 					lifetimePoints: 0,
-					status: 'actief',
+					status: 'active',
 					optInAccepted: true,
 					optInTimestamp: new Date().toISOString(),
 					optInTermsVersion: this.termsVersion,

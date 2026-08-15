@@ -245,7 +245,7 @@ class PortalContributionProvider {
 					'register' => self::REGISTER,
 					'schema' => 'ticket',
 					// Only the subject's CONTACTMOMENT tickets (see clientRequests).
-					'filter' => ['ticketType' => 'contactmoment'],
+					'filter' => ['ticketType' => 'interaction'],
 					'scopeField' => 'client',
 					'scopeClaim' => 'clientId',
 					'label' => 'My contact history',
