@@ -73,7 +73,11 @@ test('contactmomenten list renders seeded contactmoment tickets', async ({
 		'the Contactmomenten tab must show at least one seeded record',
 	).toBeGreaterThan(0)
 	for (let i = 0; i < count; i++) {
-		await expect(rows.nth(i)).toContainText(/contactmoment/i)
+		// The ticket TYPE is `interaction` now; `contactmoment` was its Dutch
+		// spelling. The value moved and this regex did not — a regex literal is
+		// not a position any rename pattern reaches, which is why it took an e2e
+		// run to find. The ROUTE and the surface keep their Dutch names.
+		await expect(rows.nth(i)).toContainText(/interaction/i)
 	}
 })
 
