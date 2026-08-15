@@ -32,14 +32,14 @@ final class OriginateResult {
 	 *
 	 * @param bool $success Whether the originate request was accepted.
 	 * @param string|null $externalCallId Platform's call UUID when allocated.
-	 * @param string|null $contactmomentId Pre-created contactmoment UUID.
+	 * @param string|null $interactionId Pre-created contactmoment UUID.
 	 * @param string|null $error Error message when $success is false.
 	 * @param string|null $platform Active CTI platform identifier.
 	 */
 	public function __construct(
 		public readonly bool $success,
 		public readonly ?string $externalCallId = null,
-		public readonly ?string $contactmomentId = null,
+		public readonly ?string $interactionId = null,
 		public readonly ?string $error = null,
 		public readonly ?string $platform = null,
 	) {
@@ -54,7 +54,7 @@ final class OriginateResult {
 		return [
 			'success' => $this->success,
 			'externalCallId' => $this->externalCallId,
-			'contactmomentId' => $this->contactmomentId,
+			'interactionId' => $this->interactionId,
 			'error' => $this->error,
 			'platform' => $this->platform,
 		];

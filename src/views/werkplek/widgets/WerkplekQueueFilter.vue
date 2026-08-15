@@ -75,10 +75,12 @@ export default {
 			if (!c) return null
 			return typeof c === 'object' && 'value' in c ? c.value : c
 		},
+
 		/** Currently-selected queue slug/id (empty = all). */
 		selectedQueue() {
 			return (this.workspaceCtx && this.workspaceCtx.selectedQueue) || ''
 		},
+
 		/** Sum of open-request counts across queues. */
 		totalCount() {
 			return Object.values(this.queueCounts).reduce(

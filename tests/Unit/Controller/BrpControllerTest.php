@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\BrpController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BrpCacheService;
 use OCA\Pipelinq\Service\BsnAuditService;
@@ -94,6 +95,32 @@ class BrpControllerTest extends TestCase {
 	 *
 	 * @spec openspec/changes/pipelinq-brp-via-or-leaf/specs/brp-lookup/spec.md
 	 */
+	/**
+	 * THE POINT OF THIS BRANCH. An authenticated but unprivileged caller is
+	 * REFUSED a BRP lookup.
+	 *
+	 * Before the CRM guard this endpoint was reachable by any account on the
+	 * instance. It resolves a BSN — the Dutch citizen service number, special
+	 * category personal data under the AVG — so "logged in" was never a
+	 * sufficient answer to "may you do this".
+	 *
+	 * Every other test in this class runs with a privileged caller and would
+	 * pass just as happily against the unguarded controller. This one would
+	 * not, which is what makes it the test worth having.
+	 *
+	 * @return void
+	 */
+	public function testLookupIsRefusedForAnUnprivilegedCaller(): void {
+		$controller = $this->buildController(remotePerson: [], privileged: false);
+
+		$this->assertSame(
+			Http::STATUS_FORBIDDEN,
+			$controller->lookup()->getStatus(),
+			'An unprivileged account must not be able to resolve a BSN.'
+		);
+
+	}//end testLookupIsRefusedForAnUnprivilegedCaller()
+
 	public function testLookupPersistsMetaIntoAuditRecord(): void {
 		$person = [
 			'givenNames' => 'Jan',
@@ -120,8 +147,8 @@ class BrpControllerTest extends TestCase {
 		self::assertNotNull($request, 'brpLookupVerzoek was not persisted');
 		self::assertSame('corr-shared-xyz', $request['haalcentraalCorrelationId']);
 		self::assertSame(142, $request['responseDurationMs']);
-		self::assertSame('geslaagd', $request['responseStatus']);
-		self::assertSame('Wet BRP', $request['doelbinding']);
+		self::assertSame('succeeded', $request['responseStatus']);
+		self::assertSame('Wet BRP', $request['purposeBinding']);
 		self::assertArrayHasKey('bsnHash', $request);
 		// The raw BSN must never be a field on the audit record.
 		self::assertArrayNotHasKey('bsn', $request);
@@ -168,14 +195,14 @@ class BrpControllerTest extends TestCase {
 	 *
 	 * @return BrpController
 	 */
-	private function buildController(array $remotePerson): BrpController {
+	private function buildController(array $remotePerson, bool $privileged = true): BrpController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
 			static function (string $key, $default = null) {
 				$params = [
 					'bsn' => self::DEMO_BSN,
 					'verzoekreden' => 'Adresverificatie',
-					'doelbinding' => 'Wet BRP',
+					'purposeBinding' => 'Wet BRP',
 					'basis' => 'Wet BRP art. 1.4',
 				];
 				return $params[$key] ?? $default;
@@ -267,6 +294,10 @@ class BrpControllerTest extends TestCase {
 		return new BrpController(
 			$request,
 			$userSession,
+			$this->createConfiguredMock(
+				ObjectOwnerAccessPolicy::class,
+				['isPrivileged' => $privileged, 'mayAccess' => $privileged]
+			),
 			$groupManager,
 			$l10n,
 			$appConfig,
@@ -368,11 +399,11 @@ class BrpControllerTest extends TestCase {
 		$this->assertSame('Hoofdstraat', $data['residence']['straat']);
 
 		$this->assertCount(1, $recorded, 'the reveal was not audited');
-		$this->assertSame('brp-adres-onthuld', $recorded[0]['action']);
-		$this->assertSame('adres-onthuld', $recorded[0]['uitkomst']);
+		$this->assertSame('brp-address-revealed', $recorded[0]['action']);
+		$this->assertSame('address-revealed', $recorded[0]['outcome']);
 		$this->assertSame('behandelaar1', $recorded[0]['actor']);
 		$this->assertSame('beheerder', $recorded[0]['actorRole']);
-		$this->assertStringContainsString('Wet BRP art. 3.3', $recorded[0]['doelbinding']);
+		$this->assertStringContainsString('Wet BRP art. 3.3', $recorded[0]['purposeBinding']);
 	}//end testRevealAddressReturnsTheResidenceAndWritesTheAuditEntry()
 
 	/**
@@ -724,9 +755,9 @@ class BrpControllerTest extends TestCase {
 				string $actor,
 				string $rawBsn,
 				string $verzoekreden,
-				string $doelbinding,
-				string $uitkomst,
-				string $action = 'brp-lookup-uitgevoerd',
+				string $purposeBinding,
+				string $outcome,
+				string $action = 'brp-lookup-executed',
 				?int $responseCode = null,
 				?string $haalcentraalCorrelationId = null,
 				?string $linkedRequest = null,
@@ -737,8 +768,8 @@ class BrpControllerTest extends TestCase {
 					'actor' => $actor,
 					'rawBsn' => $rawBsn,
 					'verzoekreden' => $verzoekreden,
-					'doelbinding' => $doelbinding,
-					'uitkomst' => $uitkomst,
+					'purposeBinding' => $purposeBinding,
+					'outcome' => $outcome,
 					'action' => $action,
 					'actorRole' => $actorRole,
 				];
@@ -850,6 +881,7 @@ class BrpControllerTest extends TestCase {
 		return new BrpController(
 			$request,
 			$userSession,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$groupManager,
 			$l10n,
 			$appConfig,
@@ -915,6 +947,7 @@ class BrpControllerTest extends TestCase {
 		return new BrpController(
 			$request,
 			$this->createMock(IUserSession::class),
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$this->createMock(IGroupManager::class),
 			$l10n,
 			$appConfig,

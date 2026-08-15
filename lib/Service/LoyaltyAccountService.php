@@ -92,7 +92,7 @@ class LoyaltyAccountService {
 			'programmeId' => $programmeId,
 			'currentBalance' => 0,
 			'lifetimePoints' => 0,
-			'status' => 'actief',
+			'status' => 'active',
 			'createdOn' => $now,
 			'lastActivityDate' => $now,
 			'optInAccepted' => true,
@@ -220,7 +220,7 @@ class LoyaltyAccountService {
 			return null;
 		}
 
-		$account['status'] = 'geblokkerd';
+		$account['status'] = 'blocked';
 		$this->logger->info(
 			'Pipelinq: loyalty account disabled',
 			['accountId' => $accountId, 'reason' => $reason]
@@ -245,7 +245,7 @@ class LoyaltyAccountService {
 		}
 
 		$account['customerId'] = null;
-		$account['status'] = 'gedeactiveerd';
+		$account['status'] = 'deactivated';
 		$account['anonymized'] = true;
 
 		$this->logger->info(

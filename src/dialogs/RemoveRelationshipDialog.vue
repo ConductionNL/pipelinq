@@ -40,6 +40,7 @@ export default {
 		NcButton,
 		NcDialog,
 	},
+
 	props: {
 		/**
 		 * Display name of the entity the relationship starts from.
@@ -48,6 +49,7 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		/**
 		 * Display name of the related entity.
 		 */
@@ -56,6 +58,7 @@ export default {
 			default: '',
 		},
 	},
+
 	emits: ['close', 'confirm'],
 }
 </script>

@@ -1,6 +1,6 @@
+import { objectTypeGroupsByKey, objectTypes } from '../config/objectTypes.js'
 import { useObjectStore } from './modules/object.js'
 import { useSettingsStore } from './modules/settings.js'
-import { objectTypes, objectTypeGroupsByKey } from '../config/objectTypes.js'
 
 // Memoised in-flight/resolved bootstrap. initializeStores() loads the app
 // settings once and registers the object types; the config does not change
@@ -51,6 +51,9 @@ export function registerObjectTypes() {
 	}
 }
 
+/**
+ *
+ */
 async function doInitializeStores() {
 	const settingsStore = useSettingsStore()
 	const objectStore = useObjectStore()

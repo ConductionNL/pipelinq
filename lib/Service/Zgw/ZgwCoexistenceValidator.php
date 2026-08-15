@@ -130,7 +130,7 @@ class ZgwCoexistenceValidator {
 		);
 		$ids = [];
 		foreach ($rows as $row) {
-			$actief = (bool)($row['actief'] ?? false);
+			$actief = (bool)($row['active'] ?? false);
 			$readOnly = (bool)($row['readOnly'] ?? false);
 			if ($actief === false || $readOnly === true) {
 				continue;

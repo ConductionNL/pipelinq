@@ -78,6 +78,7 @@ export default {
 	data() {
 		return { exportLink: '', closeMessage: '', confirming: false, error: '' }
 	},
+
 	methods: {
 		async requestExport() {
 			this.error = ''
@@ -91,6 +92,7 @@ export default {
 					e.message || t('pipelinq', 'Could not request the export.')
 			}
 		},
+
 		async requestClose() {
 			this.error = ''
 			try {

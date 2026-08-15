@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\BlastController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\SegmentService;
@@ -268,6 +269,7 @@ class BlastControllerTest extends TestCase {
 			container: $this->createMock(ContainerInterface::class),
 		),
 			userSession: $this->userSession,
+			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 	}//end buildController()
 

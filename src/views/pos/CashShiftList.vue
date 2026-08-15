@@ -17,18 +17,18 @@
 			:pagination="pagination"
 			:loading="loading"
 			:refreshing="refreshing"
-			:sort-key="sortKey"
-			:sort-order="sortOrder"
+			:sortKey="sortKey"
+			:sortOrder="sortOrder"
 			:selectable="true"
-			:include-columns="visibleColumns"
-			:empty-title="t('pipelinq', 'No shifts found')"
-			:empty-action-label="t('pipelinq', 'Open shift')"
+			:includeColumns="visibleColumns"
+			:emptyTitle="t('pipelinq', 'No shifts found')"
+			:emptyActionLabel="t('pipelinq', 'Open shift')"
 			@add="openShift"
-			@empty-action="openShift"
+			@emptyAction="openShift"
 			@refresh="onRefresh"
 			@sort="onSort"
 			@view="openDetail"
-			@page-changed="onPageChange" />
+			@pageChanged="onPageChange" />
 
 		<CashShiftOpenDialog
 			v-if="showOpen"
@@ -39,12 +39,12 @@
 </template>
 
 <script>
-import { inject } from 'vue'
+import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import { inject } from 'vue'
 import CashShiftOpenDialog from '../../modals/CashShiftOpenDialog.vue'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'CashShiftList',
@@ -52,11 +52,13 @@ export default {
 		CnIndexPage,
 		CashShiftOpenDialog,
 	},
+
 	setup() {
 		const sidebarState = inject('sidebarState', null)
 		const objectStore = useObjectStore()
 		return useListView('cashShift', { sidebarState, objectStore })
 	},
+
 	data() {
 		return {
 			showOpen: false,
@@ -64,6 +66,7 @@ export default {
 			refreshing: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * Columns shown on the list, in order.
@@ -82,6 +85,7 @@ export default {
 			]
 		},
 	},
+
 	methods: {
 		/**
 		 * Refresh handler for the Actions-menu Refresh item. Drives the
@@ -97,6 +101,7 @@ export default {
 				this.refreshing = false
 			}
 		},
+
 		/**
 		 * Navigate to a shift's detail.
 		 *
@@ -105,12 +110,14 @@ export default {
 		openDetail(row) {
 			this.$router.push({ name: 'CashShiftDetail', params: { id: row.id } })
 		},
+
 		/**
 		 * Open the float-declaration dialog to start a new shift.
 		 */
 		openShift() {
 			this.showOpen = true
 		},
+
 		/**
 		 * Create a new shift via the server-authoritative open endpoint.
 		 *

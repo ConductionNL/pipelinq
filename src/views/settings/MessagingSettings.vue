@@ -172,13 +172,13 @@
 				<NcSelect
 					v-model="providerForm.kind"
 					:options="kindOptions"
-					:input-label="t('pipelinq', 'Kind')"
+					:inputLabel="t('pipelinq', 'Kind')"
 					label="label"
 					:reduce="(o) => o.value" />
 				<NcSelect
 					v-model="providerForm.vendor"
 					:options="vendorOptions"
-					:input-label="t('pipelinq', 'Vendor')"
+					:inputLabel="t('pipelinq', 'Vendor')"
 					label="label"
 					:reduce="(o) => o.value" />
 				<NcTextField
@@ -198,10 +198,10 @@
 					:label="t('pipelinq', 'Phone number / account ID')"
 					placeholder="+31600000000" />
 				<NcTextField
-					:model-value="providerForm.webhookSecret"
+					:modelValue="providerForm.webhookSecret"
 					:label="t('pipelinq', 'Webhook secret')"
 					type="password"
-					@update:model-value="(v) => (providerForm.webhookSecret = v)" />
+					@update:modelValue="(v) => (providerForm.webhookSecret = v)" />
 				<NcTextField
 					v-model.number="providerForm.priority"
 					:label="t('pipelinq', 'Priority (lower wins failover)')"
@@ -287,7 +287,7 @@
 								<NcSelect
 									v-model="budget.period"
 									:options="periodOptions"
-									:input-label="t('pipelinq', 'Period')"
+									:inputLabel="t('pipelinq', 'Period')"
 									label="label"
 									:reduce="(o) => o.value" />
 							</td>
@@ -361,13 +361,13 @@
 				<NcSelect
 					v-model="budgetForm.providerId"
 					:options="providerOptions"
-					:input-label="t('pipelinq', 'Provider')"
+					:inputLabel="t('pipelinq', 'Provider')"
 					label="label"
 					:reduce="(o) => o.value" />
 				<NcSelect
 					v-model="budgetForm.period"
 					:options="periodOptions"
-					:input-label="t('pipelinq', 'Period')"
+					:inputLabel="t('pipelinq', 'Period')"
 					label="label"
 					:reduce="(o) => o.value" />
 				<NcTextField
@@ -457,20 +457,23 @@
 			v-if="pendingDeleteProvider"
 			:name="t('pipelinq', 'Delete provider')"
 			:message="deleteProviderMessage"
-			:confirm-label="t('pipelinq', 'Delete')"
+			:confirmLabel="t('pipelinq', 'Delete')"
 			@confirm="performDeleteProvider"
 			@cancel="pendingDeleteProvider = null" />
 		<ConfirmDialog
 			v-if="pendingDeleteBudget"
 			:name="t('pipelinq', 'Delete send budget')"
 			:message="t('pipelinq', 'Delete this send budget?')"
-			:confirm-label="t('pipelinq', 'Delete')"
+			:confirmLabel="t('pipelinq', 'Delete')"
 			@confirm="performDeleteBudget"
 			@cancel="pendingDeleteBudget = null" />
 	</div>
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -480,9 +483,6 @@ import {
 	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -509,27 +509,37 @@ const TEMPLATE_STATUS_CLASSES = {
 	disabled: 'messaging-settings__badge--off',
 }
 
-const DEFAULT_PROVIDER_FORM = () => ({
-	id: null,
-	displayName: '',
-	kind: 'sms',
-	vendor: 'twilio',
-	sourceId: '',
-	phoneNumber: '',
-	webhookSecret: '',
-	priority: 10,
-	active: true,
-	sandbox: false,
-})
+/**
+ *
+ */
+function DEFAULT_PROVIDER_FORM() {
+	return {
+		id: null,
+		displayName: '',
+		kind: 'sms',
+		vendor: 'twilio',
+		sourceId: '',
+		phoneNumber: '',
+		webhookSecret: '',
+		priority: 10,
+		active: true,
+		sandbox: false,
+	}
+}
 
-const DEFAULT_BUDGET_FORM = () => ({
-	tenantId: '',
-	providerId: null,
-	period: 'monthly',
-	maxMessages: 0,
-	maxCostEur: 0,
-	hardStop: false,
-})
+/**
+ *
+ */
+function DEFAULT_BUDGET_FORM() {
+	return {
+		tenantId: '',
+		providerId: null,
+		period: 'monthly',
+		maxMessages: 0,
+		maxCostEur: 0,
+		hardStop: false,
+	}
+}
 
 export default {
 	name: 'MessagingSettings',
@@ -544,6 +554,7 @@ export default {
 		NcTextField,
 		ContentCopy,
 	},
+
 	data() {
 		return {
 			providers: [],
@@ -566,10 +577,12 @@ export default {
 			testResults: {},
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * Built here rather than inline in the template so the t() key stays
 		 * byte-identical to the one the old window.confirm used. Escaping the
@@ -588,6 +601,7 @@ export default {
 				name: this.pendingDeleteProvider.displayName,
 			})
 		},
+
 		kindOptions() {
 			return [
 				{
@@ -598,6 +612,7 @@ export default {
 				{ value: 'sms', label: t('pipelinq', 'SMS') },
 			]
 		},
+
 		vendorOptions() {
 			return [
 				{ value: 'meta', label: t('pipelinq', 'Meta') },
@@ -608,6 +623,7 @@ export default {
 				{ value: 'vonage', label: t('pipelinq', 'Vonage') },
 			]
 		},
+
 		periodOptions() {
 			return [
 				{ value: 'daily', label: t('pipelinq', 'Daily') },
@@ -615,10 +631,12 @@ export default {
 				{ value: 'monthly', label: t('pipelinq', 'Monthly') },
 			]
 		},
+
 		providerOptions() {
 			return this.providers.map((p) => ({ value: p.id, label: p.displayName }))
 		},
 	},
+
 	async mounted() {
 		await Promise.all([
 			this.fetchProviders(),
@@ -626,13 +644,16 @@ export default {
 			this.fetchTemplates(),
 		])
 	},
+
 	methods: {
 		kindLabel(kind) {
 			return KIND_LABELS[kind] || kind || '—'
 		},
+
 		vendorLabel(vendor) {
 			return VENDOR_LABELS[vendor] || vendor || '—'
 		},
+
 		templateStatusLabel(status) {
 			const labels = {
 				approved: t('pipelinq', 'Approved'),
@@ -642,15 +663,18 @@ export default {
 			}
 			return labels[status] || status || '—'
 		},
+
 		templateStatusClass(status) {
 			return (
 				TEMPLATE_STATUS_CLASSES[status] || 'messaging-settings__badge--off'
 			)
 		},
+
 		providerDisplayName(providerId) {
 			const provider = this.providers.find((p) => p.id === providerId)
 			return provider ? provider.displayName : providerId || '—'
 		},
+
 		formatDate(value) {
 			if (!value) {
 				return '—'
@@ -661,6 +685,7 @@ export default {
 			}
 			return parsed.toLocaleString()
 		},
+
 		webhookUrl(provider) {
 			const channel = provider.kind === 'sms' ? 'sms' : 'whatsapp'
 			const path = generateUrl(
@@ -672,6 +697,7 @@ export default {
 			)
 			return window.location.origin + path
 		},
+
 		async copyWebhookUrl(provider) {
 			try {
 				await navigator.clipboard.writeText(this.webhookUrl(provider))
@@ -680,6 +706,7 @@ export default {
 				showError(t('pipelinq', 'Could not copy the webhook URL.'))
 			}
 		},
+
 		async fetchProviders() {
 			this.loadingProviders = true
 			try {
@@ -694,21 +721,25 @@ export default {
 				this.loadingProviders = false
 			}
 		},
+
 		startNewProvider() {
 			this.editingProvider = null
 			this.providerForm = DEFAULT_PROVIDER_FORM()
 			this.showProviderForm = true
 		},
+
 		editProvider(provider) {
 			this.editingProvider = provider
 			this.providerForm = { ...DEFAULT_PROVIDER_FORM(), ...provider }
 			this.showProviderForm = true
 		},
+
 		cancelProviderForm() {
 			this.showProviderForm = false
 			this.editingProvider = null
 			this.providerForm = DEFAULT_PROVIDER_FORM()
 		},
+
 		/**
 		 * Create or update a channel provider.
 		 *
@@ -731,6 +762,7 @@ export default {
 				this.savingProvider = false
 			}
 		},
+
 		/**
 		 * Open the delete confirmation for a provider.
 		 *
@@ -743,6 +775,7 @@ export default {
 		deleteProvider(provider) {
 			this.pendingDeleteProvider = provider
 		},
+
 		/**
 		 * Delete the pending provider once the dialog confirms.
 		 *
@@ -766,6 +799,7 @@ export default {
 				)
 			}
 		},
+
 		async testProviderConnection(provider) {
 			this.testingProviderId = provider.id
 			try {
@@ -785,6 +819,7 @@ export default {
 				this.testingProviderId = null
 			}
 		},
+
 		async fetchBudgets() {
 			this.loadingBudgets = true
 			try {
@@ -799,10 +834,12 @@ export default {
 				this.loadingBudgets = false
 			}
 		},
+
 		startNewBudget() {
 			this.budgetForm = DEFAULT_BUDGET_FORM()
 			this.showBudgetForm = true
 		},
+
 		/**
 		 * Close the send-budget form and reset it.
 		 *
@@ -814,6 +851,7 @@ export default {
 			this.showBudgetForm = false
 			this.budgetForm = DEFAULT_BUDGET_FORM()
 		},
+
 		/**
 		 * Create a message send budget.
 		 *
@@ -836,6 +874,7 @@ export default {
 				this.creatingBudget = false
 			}
 		},
+
 		async saveBudget(budget) {
 			this.savingBudgetId = budget.id
 			try {
@@ -847,6 +886,7 @@ export default {
 				this.savingBudgetId = null
 			}
 		},
+
 		/**
 		 * Open the delete confirmation for a send budget.
 		 *
@@ -859,6 +899,7 @@ export default {
 		deleteBudget(budget) {
 			this.pendingDeleteBudget = budget
 		},
+
 		/**
 		 * Delete the pending send budget once the dialog confirms.
 		 *
@@ -880,6 +921,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to delete the budget.'))
 			}
 		},
+
 		async fetchTemplates() {
 			this.loadingTemplates = true
 			try {

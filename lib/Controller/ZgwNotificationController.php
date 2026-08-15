@@ -45,6 +45,7 @@ use OCA\Pipelinq\Service\Zgw\ZgwApiClient;
 use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
@@ -81,6 +82,9 @@ class ZgwNotificationController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// ZGW notification receiver (Notificaties API). The publisher fans out to
+	// every subscriber and retries on failure, so bursts are the norm.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function inbox(): JSONResponse {
 		// Webhook authenticity is enforced by the per-abonnement bearer match
 		// below. The endpoint is #[PublicPage] because NRC cannot present a
@@ -139,9 +143,9 @@ class ZgwNotificationController extends Controller {
 	 * @return array<string, mixed>|null Matching abonnement, or null.
 	 */
 	private function resolveAbonnementByBearer(string $token): ?array {
-		$rows = $this->registers->findAll(ZgwRegisterAccess::SCHEMA_ABONN, ['actief' => true]);
+		$rows = $this->registers->findAll(ZgwRegisterAccess::SCHEMA_ABONN, ['active' => true]);
 		foreach ($rows as $row) {
-			if ((bool)($row['actief'] ?? false) === false) {
+			if ((bool)($row['active'] ?? false) === false) {
 				continue;
 			}
 

@@ -231,7 +231,7 @@ class OutboundMessagingContractTest extends TestCase {
 		$contactmomenten = $this->rowsBySchema(schema: 'ticket');
 		$this->assertCount(1, $contactmomenten, 'exactly one outbound contactmoment audit row expected');
 		$audit = $contactmomenten[0];
-		$this->assertSame('contactmoment', $audit['ticketType']);
+		$this->assertSame('interaction', $audit['ticketType']);
 		$this->assertSame('sms', $audit['channel']);
 		$this->assertSame('client-1', $audit['client']);
 		// Ticket field names: subject → title, summary → description, agent → assignee.

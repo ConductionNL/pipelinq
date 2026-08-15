@@ -107,7 +107,7 @@ class BrpMonitorJob extends TimedJob {
 			$records = $this->objectService->findAll(
 				config: [
 					'filters' => [
-						'action' => 'brp-lookup-uitgevoerd',
+						'action' => 'brp-lookup-executed',
 						'register' => $register,
 						'schema' => $schema,
 					],
@@ -221,12 +221,12 @@ class BrpMonitorJob extends TimedJob {
 			}
 
 			$total++;
-			$uitkomst = (string)($arr['uitkomst'] ?? '');
-			if ($uitkomst === 'fout' || $uitkomst === 'timeout') {
+			$outcome = (string)($arr['outcome'] ?? '');
+			if ($outcome === 'error' || $outcome === 'timeout') {
 				$errors++;
 			}
 
-			if ($uitkomst === 'geslaagd') {
+			if ($outcome === 'succeeded') {
 				$hits++;
 			}
 		}//end foreach

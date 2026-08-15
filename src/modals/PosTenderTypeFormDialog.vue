@@ -28,7 +28,7 @@
 				:disabled="!isNew"
 				:label="t('pipelinq', 'Code')"
 				:placeholder="t('pipelinq', 'CASH, CARD, VOUCHER, ...')"
-				:helper-text="
+				:helperText="
 					!isNew
 						? t('pipelinq', 'Code is immutable after creation')
 						: t(
@@ -90,8 +90,8 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -107,12 +107,14 @@ export default {
 		NcDialog,
 		NcTextField,
 	},
+
 	props: {
 		tenderType: {
 			type: Object,
 			default: null,
 		},
 	},
+
 	emits: ['close', 'saved'],
 	data() {
 		return {
@@ -121,14 +123,17 @@ export default {
 			errorMessage: '',
 		}
 	},
+
 	computed: {
 		isNew() {
 			return !this.tenderType || !this.idOf(this.tenderType)
 		},
+
 		canSave() {
 			return !!this.form.name && !!this.form.code && !!this.form.glAccount
 		},
 	},
+
 	methods: {
 		initialForm() {
 			const src = this.tenderType || {}
@@ -144,6 +149,7 @@ export default {
 				sortOrder: Number(src.sortOrder || 0),
 			}
 		},
+
 		async submit() {
 			this.saving = true
 			this.errorMessage = ''
@@ -174,6 +180,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		idOf(type) {
 			if (type?.['@self']?.id) {
 				return type['@self'].id

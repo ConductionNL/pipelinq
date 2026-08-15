@@ -66,6 +66,7 @@ export default {
 			error: '',
 		}
 	},
+
 	methods: {
 		async requestReset() {
 			this.message = ''
@@ -80,6 +81,7 @@ export default {
 				this.error = e.message
 			}
 		},
+
 		async doReset() {
 			this.message = ''
 			this.error = ''

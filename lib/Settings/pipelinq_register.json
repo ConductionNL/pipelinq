@@ -1036,10 +1036,10 @@
             "type": "string",
             "description": "Dutch BTW class. Governs receipt printing and invoice BTW labels and drives taxRate: hoog (21%), laag (9%), nul (0%), vrijgesteld (exempt, 0%).",
             "enum": [
-              "hoog",
-              "laag",
-              "nul",
-              "vrijgesteld"
+              "high",
+              "low",
+              "zero",
+              "exempt"
             ],
             "title": "BTW Class",
             "facetable": true
@@ -1415,27 +1415,27 @@
                 "from": [
                   "open"
                 ],
-                "to": "in_behandeling",
+                "to": "in_progress",
                 "description": "Pick up the task: caller becomes the assignee."
               },
               "complete": {
                 "from": [
-                  "in_behandeling"
+                  "in_progress"
                 ],
-                "to": "afgerond",
+                "to": "completed",
                 "description": "Mark the task as completed."
               },
               "expire": {
                 "from": [
-                  "in_behandeling"
+                  "in_progress"
                 ],
-                "to": "verlopen",
+                "to": "expired",
                 "description": "Mark the task as expired (deadline passed)."
               },
               "reopen": {
                 "from": [
-                  "afgerond",
-                  "verlopen"
+                  "completed",
+                  "expired"
                 ],
                 "to": "open",
                 "description": "Re-open a closed or expired task."
@@ -1447,12 +1447,12 @@
               "default": "P2Y",
               "rules": [
                 {
-                  "condition": "status == 'afgerond'",
+                  "condition": "status == 'completed'",
                   "retention": "P2Y",
                   "reason": "Completed task history (incl. callback requests / terugbelverzoeken) retained 2 years as operational record, then disposed per ADR-024. DPO sign-off pending (task 4.1)."
                 },
                 {
-                  "condition": "status == 'verlopen'",
+                  "condition": "status == 'expired'",
                   "retention": "P1Y",
                   "reason": "Expired (never-actioned) tasks carry little record value; 1-year retention for audit, then disposed. DPO sign-off pending."
                 }
@@ -1469,9 +1469,9 @@
             "type": "string",
             "description": "Task type — terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)",
             "enum": [
-              "terugbelverzoek",
-              "opvolgtaak",
-              "informatievraag"
+              "callbackRequest",
+              "followUpTask",
+              "informationRequest"
             ],
             "title": "Type",
             "facetable": true
@@ -1496,9 +1496,9 @@
             "description": "Task lifecycle status (VNG status)",
             "enum": [
               "open",
-              "in_behandeling",
-              "afgerond",
-              "verlopen"
+              "in_progress",
+              "completed",
+              "expired"
             ],
             "default": "open",
             "title": "Status",
@@ -1508,9 +1508,9 @@
             "type": "string",
             "description": "Task priority level",
             "enum": [
-              "laag",
-              "normaal",
-              "hoog"
+              "low",
+              "normal",
+              "high"
             ],
             "default": "normaal",
             "title": "Priority",
@@ -2941,13 +2941,13 @@
         "summary": "Resultaat van een 11-proef BSN-validatie",
         "description": "Onveranderlijk resultaat van een 11-proef controle (RvIG-algoritme). Wordt aangemaakt bij elke validatie-poging (server-side audit). BSN wordt gemaskeerd opgeslagen (***XXXX*) — raw BSN gaat NOOIT in een bsnValidatie-object.",
         "required": [
-          "ingevoerdBsn",
+          "enteredBsn",
           "isFormalValid",
           "validationMoment",
           "initiatedBy"
         ],
         "properties": {
-          "ingevoerdBsn": {
+          "enteredBsn": {
             "type": "string",
             "description": "Gemaskeerd BSN — pattern ***XXXX* (eerste 3 + laatste 1 vervangen door ***). Raw 9-cijferig BSN wordt NIET opgeslagen.",
             "maxLength": 16,
@@ -2959,7 +2959,7 @@
             "title": "Formally valid",
             "facetable": true
           },
-          "elfproefScore": {
+          "elevenTestScore": {
             "type": "integer",
             "description": "Intermediaire score (sum mod 11) voor debugging. 0 = geldig.",
             "title": "Eleven-test score"
@@ -2980,11 +2980,11 @@
             "type": "string",
             "description": "Waar de validatie gebeurde: contact-aanmaken, avg-request, vog-screening, brp-lookup",
             "enum": [
-              "contact-aanmaken",
+              "create-contact",
               "avg-request",
               "vog-screening",
               "brp-lookup",
-              "overig"
+              "other"
             ],
             "title": "Context",
             "facetable": true
@@ -3008,7 +3008,7 @@
         "required": [
           "bsnHash",
           "verzoekreden",
-          "doelbinding",
+          "purposeBinding",
           "basis",
           "requestedBy",
           "requestMoment",
@@ -3028,7 +3028,7 @@
             "title": "Request reason",
             "facetable": true
           },
-          "doelbinding": {
+          "purposeBinding": {
             "type": "string",
             "description": "Wettelijke grondslag (AVG art. 6, Wet BRP art. 3.3 lid 1, etc.)",
             "maxLength": 500,
@@ -3077,10 +3077,10 @@
             "type": "string",
             "description": "Resultaat van de lookup-poging",
             "enum": [
-              "geslaagd",
-              "niet-gevonden",
-              "fout",
-              "geweigerd-onbevoegd",
+              "succeeded",
+              "not-found",
+              "error",
+              "refused-unauthorised",
               "timeout"
             ],
             "title": "Response status",
@@ -3141,11 +3141,11 @@
           "givenNames",
           "surname",
           "dateOfBirth",
-          "geslacht",
+          "gender",
           "residence",
           "indicationSecret",
           "fetchedOn",
-          "bronsysteem",
+          "sourceSystem",
           "lookupRequestId",
           "gekoppeldContact",
           "retentionTo"
@@ -3205,13 +3205,13 @@
             "maxLength": 2,
             "title": "Birth Country"
           },
-          "geslacht": {
+          "gender": {
             "type": "string",
             "description": "schema:gender — man, vrouw, onbekend",
             "enum": [
-              "man",
-              "vrouw",
-              "onbekend"
+              "male",
+              "female",
+              "unknown"
             ],
             "title": "Gender",
             "facetable": true
@@ -3238,7 +3238,7 @@
             "format": "date-time",
             "title": "Retrieved At"
           },
-          "bronsysteem": {
+          "sourceSystem": {
             "type": "string",
             "description": "Bronsysteem-aanduiding (HaalCentraal-BRP-v2.0)",
             "maxLength": 64,
@@ -3280,7 +3280,7 @@
           "bsnHash",
           "actor",
           "moment",
-          "uitkomst",
+          "outcome",
           "retainUntil"
         ],
         "properties": {
@@ -3288,13 +3288,13 @@
             "type": "string",
             "description": "Type actie",
             "enum": [
-              "brp-lookup-uitgevoerd",
-              "brp-lookup-mislukt",
-              "brp-lookup-geweigerd",
+              "brp-lookup-executed",
+              "brp-lookup-failed",
+              "brp-lookup-refused",
               "brp-cache-invalidated",
-              "brp-adres-onthuld",
-              "brp-retentie-uitgevoerd",
-              "brp-rtbf-gepseudonimiseerd"
+              "brp-address-revealed",
+              "brp-retention-executed",
+              "brp-rtbf-pseudonymised"
             ],
             "title": "Action",
             "facetable": true
@@ -3331,23 +3331,23 @@
             "maxLength": 500,
             "title": "Request Reason"
           },
-          "doelbinding": {
+          "purposeBinding": {
             "type": "string",
             "description": "Gekopieerd uit BrpLookupVerzoek",
             "maxLength": 500,
             "title": "Purpose Binding"
           },
-          "uitkomst": {
+          "outcome": {
             "type": "string",
             "description": "Uitkomst van de bevraging",
             "enum": [
-              "geslaagd",
-              "niet-gevonden",
-              "fout",
-              "geweigerd-onbevoegd",
+              "succeeded",
+              "not-found",
+              "error",
+              "refused-unauthorised",
               "cache-invalidated",
-              "adres-onthuld",
-              "gepseudonimiseerd"
+              "address-revealed",
+              "pseudonymised"
             ],
             "title": "Outcome",
             "facetable": true
@@ -3357,7 +3357,7 @@
             "description": "HTTP status code van HaalCentraal (200, 404, 403, 503)",
             "title": "HTTP Response Code"
           },
-          "ipAdres": {
+          "ipAddress": {
             "type": "string",
             "description": "Requester IP, geanonimiseerd (laatste octet vervangen door 0)",
             "maxLength": 64,
@@ -3435,7 +3435,7 @@
             "description": "BRP (automatisch uit response) of lokaal (handmatig opgevoerd)",
             "enum": [
               "BRP",
-              "lokaal"
+              "local"
             ],
             "title": "Source",
             "facetable": true
@@ -3452,7 +3452,7 @@
             "format": "date",
             "title": "End Date"
           },
-          "beperkt": {
+          "limited": {
             "type": "array",
             "description": "Array van restricties: commerciele-derden, kerkgenootschappen, derdeportalen",
             "items": {
@@ -3881,7 +3881,7 @@
         "status": "active",
         "unit": "stuk",
         "taxRate": 9,
-        "vatClass": "laag",
+        "vatClass": "low",
         "modifierGroups": [
           {
             "name": "Melksoort",
@@ -3942,7 +3942,7 @@
         "status": "active",
         "unit": "stuk",
         "taxRate": 21,
-        "vatClass": "hoog",
+        "vatClass": "high",
         "variants": [
           {
             "sku": "TSH-S-WIT",
@@ -4027,7 +4027,7 @@
         "status": "active",
         "unit": "pak",
         "taxRate": 21,
-        "vatClass": "hoog",
+        "vatClass": "high",
         "priceTiers": [
           {
             "minQuantity": 1,
@@ -4060,7 +4060,7 @@
         "status": "active",
         "unit": "behandeling",
         "taxRate": 21,
-        "vatClass": "hoog",
+        "vatClass": "high",
         "duration": 60,
         "modifierGroups": [
           {
@@ -4100,7 +4100,7 @@
         "status": "active",
         "unit": "uur",
         "taxRate": 0,
-        "vatClass": "vrijgesteld",
+        "vatClass": "exempt",
         "duration": 60,
         "priceTiers": [
           {
@@ -4135,7 +4135,7 @@
         "status": "active",
         "unit": "fles",
         "taxRate": 21,
-        "vatClass": "hoog"
+        "vatClass": "high"
       },
       {
         "@self": {
@@ -4152,7 +4152,7 @@
         "status": "active",
         "unit": "pot",
         "taxRate": 21,
-        "vatClass": "hoog",
+        "vatClass": "high",
         "variants": [
           {
             "sku": "HAR-GEL-002-75",
@@ -4201,7 +4201,7 @@
         "status": "active",
         "unit": "flesje",
         "taxRate": 21,
-        "vatClass": "hoog",
+        "vatClass": "high",
         "variants": [
           {
             "sku": "NAG-LAK-001-RED",
@@ -4250,7 +4250,7 @@
         "status": "active",
         "unit": "tube",
         "taxRate": 9,
-        "vatClass": "laag"
+        "vatClass": "low"
       },
       {
         "@self": {
@@ -4267,7 +4267,7 @@
         "status": "active",
         "unit": "stuk",
         "taxRate": 21,
-        "vatClass": "hoog"
+        "vatClass": "high"
       },
       {
         "@self": {
@@ -4600,7 +4600,7 @@
         "subject": "Vraag over parkeervergunning",
         "channel": "telefoon",
         "agent": "uid:agent.bakker",
-        "outcome": "opgelost",
+        "outcome": "resolved",
         "contactedAt": "2026-04-14T09:15:00Z",
         "duration": "PT4M30S",
         "channelMetadata": {
@@ -4616,7 +4616,7 @@
         "subject": "Status aanvraag omgevingsvergunning",
         "channel": "email",
         "agent": "uid:agent.jansen",
-        "outcome": "opgelost",
+        "outcome": "resolved",
         "contactedAt": "2026-04-14T10:30:00Z",
         "duration": "PT2M00S",
         "channelMetadata": {
@@ -4632,7 +4632,7 @@
         "subject": "Afvalophaal gemist op Keizersgracht",
         "channel": "balie",
         "agent": "uid:agent.de_vries",
-        "outcome": "doorverwezen",
+        "outcome": "referred",
         "contactedAt": "2026-04-14T11:00:00Z",
         "duration": "PT8M15S",
         "channelMetadata": {
@@ -4648,7 +4648,7 @@
         "subject": "Klacht over wegenonderhoud Lijnbaansgracht",
         "channel": "chat",
         "agent": "uid:agent.bakker",
-        "outcome": "opgelost",
+        "outcome": "resolved",
         "contactedAt": "2026-04-14T13:45:00Z",
         "duration": "PT6M00S",
         "channelMetadata": {
@@ -4664,7 +4664,7 @@
         "subject": "Vraag over bijstandsuitkering",
         "channel": "telefoon",
         "agent": "uid:agent.jansen",
-        "outcome": "opgelost",
+        "outcome": "resolved",
         "contactedAt": "2026-04-15T14:20:00Z",
         "duration": "PT9M45S",
         "channelMetadata": {
@@ -4836,7 +4836,7 @@
         "subject": "Vraag over status vergunningsaanvraag",
         "summary": "Mevrouw Bakker belde in over de status van haar omgevingsvergunning. Verwachte afhandeling binnen 3 werkdagen toegezegd.",
         "channel": "telefoon",
-        "outcome": "afgehandeld",
+        "outcome": "handled",
         "agent": "mvanderberg",
         "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
         "contactedAt": "2026-04-14T09:12:00Z",
@@ -4855,7 +4855,7 @@
         "subject": "Klacht over aanslagbiljet gemeentelijke belasting",
         "summary": "De heer Jansen stuurde een e-mail met bezwaar tegen het aanslagbiljet. Doorverwezen naar de afdeling Belastingen.",
         "channel": "email",
-        "outcome": "doorverbonden",
+        "outcome": "transferred",
         "agent": "sdejong",
         "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
         "contactedAt": "2026-04-11T14:30:00Z",
@@ -4873,7 +4873,7 @@
         "subject": "Baliebezoek — aanvraag parkeervergunning",
         "summary": "Meneer Ahmed Hassan bezocht de balie voor een parkeervergunning bewonerszone C. Aanvraagformulier ingevuld en ingediend.",
         "channel": "balie",
-        "outcome": "afgehandeld",
+        "outcome": "handled",
         "agent": "lvanhouten",
         "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
         "contactedAt": "2026-04-10T10:45:00Z",
@@ -4890,7 +4890,7 @@
         "subject": "Chatgesprek — informatie over WMO-aanvraag",
         "summary": "Mevrouw Pieterse vroeg via de chat naar de benodigde documenten voor een WMO-aanvraag. Documentenlijst per e-mail verstuurd.",
         "channel": "chat",
-        "outcome": "afgehandeld",
+        "outcome": "handled",
         "agent": "kbosma",
         "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
         "contactedAt": "2026-04-09T11:20:00Z",
@@ -4907,7 +4907,7 @@
         "subject": "Brief — bezwaar bestemmingsplan",
         "summary": "De stichting Groen Amsterdam diende een formeel bezwaarschrift in per brief tegen het herziene bestemmingsplan Noord. Ontvangst bevestigd.",
         "channel": "brief",
-        "outcome": "vervolgactie",
+        "outcome": "followUpAction",
         "agent": "mvanderberg",
         "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
         "contactedAt": "2026-04-07T08:00:00Z",
@@ -4964,7 +4964,7 @@
         "status": "active",
         "unit": "project",
         "taxRate": 21,
-        "vatClass": "hoog",
+        "vatClass": "high",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e60"
       },
       {
@@ -4983,7 +4983,7 @@
         "status": "active",
         "unit": "dag",
         "taxRate": 21,
-        "vatClass": "hoog",
+        "vatClass": "high",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e61"
       },
       {
@@ -5002,7 +5002,7 @@
         "status": "active",
         "unit": "maand",
         "taxRate": 21,
-        "vatClass": "hoog",
+        "vatClass": "high",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
       },
       {
@@ -5021,7 +5021,7 @@
         "status": "active",
         "unit": "gebruiker/jaar",
         "taxRate": 21,
-        "vatClass": "hoog",
+        "vatClass": "high",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
       },
       {
@@ -5166,12 +5166,12 @@
         },
         "bsnHash": "63b1f7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1b2",
         "verzoekreden": "Behandeling AVG-inzageverzoek art. 15",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
         "basis": "Publieke taak (AVG art. 6 lid 1 sub e)",
         "requestedBy": "demo:m.devries",
         "requestedOnBehalfOf": "behandelaar-burgerzaken",
         "requestMoment": "2026-08-14T09:23:45+00:00",
-        "responseStatus": "geslaagd",
+        "responseStatus": "succeeded",
         "responseMoment": "2026-08-14T09:23:46+00:00",
         "responseDurationMs": 412,
         "haalcentraalCorrelationId": "hc-corr-7f3a9b2e",
@@ -5188,12 +5188,12 @@
         },
         "bsnHash": "12abf7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c188",
         "verzoekreden": "Reguliere verzoekbehandeling",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
         "basis": "Publieke taak (AVG art. 6 lid 1 sub e)",
         "requestedBy": "demo:j.smith",
         "requestedOnBehalfOf": "behandelaar-burgerzaken",
         "requestMoment": "2026-08-14T10:15:22+00:00",
-        "responseStatus": "niet-gevonden",
+        "responseStatus": "not-found",
         "responseMoment": "2026-08-14T10:15:23+00:00",
         "responseDurationMs": 305,
         "haalcentraalCorrelationId": "hc-corr-9e2b4c1f",
@@ -5214,7 +5214,7 @@
         "dateOfBirth": "1978-03-22",
         "birthPlace": "Utrecht",
         "birthCountry": "NL",
-        "geslacht": "vrouw",
+        "gender": "female",
         "residence": {
           "straat": "Lange Voorhout",
           "huisnummer": 14,
@@ -5225,7 +5225,7 @@
         },
         "indicationSecret": "0",
         "fetchedOn": "2026-08-14T09:23:46+00:00",
-        "bronsysteem": "HaalCentraal-BRP-v2.0",
+        "sourceSystem": "HaalCentraal-BRP-v2.0",
         "lookupRequestId": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e21",
         "gekoppeldContact": "00000000-0000-0000-0000-000000000000",
         "retentionTo": "2026-08-21T09:23:46+00:00"
@@ -5237,16 +5237,16 @@
           "slug": "bsn-audit-seed-success",
           "id": "d7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e41"
         },
-        "action": "brp-lookup-uitgevoerd",
+        "action": "brp-lookup-executed",
         "bsnHash": "63b1f7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1b2",
         "actor": "demo:m.devries",
         "actorRole": "behandelaar-burgerzaken",
         "moment": "2026-08-14T09:23:46+00:00",
         "verzoekreden": "Behandeling AVG-inzageverzoek art. 15",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
-        "uitkomst": "geslaagd",
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
+        "outcome": "succeeded",
         "responseCode": 200,
-        "ipAdres": "10.42.18.0",
+        "ipAddress": "10.42.18.0",
         "userAgent": "Pipelinq/pipelinq (Nextcloud)",
         "haalcentraalCorrelationId": "hc-corr-7f3a9b2e",
         "vogScreening": false,
@@ -5259,14 +5259,14 @@
           "slug": "bsn-audit-seed-notfound",
           "id": "d7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e42"
         },
-        "action": "brp-lookup-uitgevoerd",
+        "action": "brp-lookup-executed",
         "bsnHash": "12abf7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c188",
         "actor": "demo:j.smith",
         "actorRole": "behandelaar-burgerzaken",
         "moment": "2026-08-14T10:15:23+00:00",
         "verzoekreden": "Reguliere verzoekbehandeling",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
-        "uitkomst": "niet-gevonden",
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
+        "outcome": "not-found",
         "responseCode": 404,
         "haalcentraalCorrelationId": "hc-corr-9e2b4c1f",
         "vogScreening": false,
@@ -5283,7 +5283,7 @@
         "type": "geheimhouding-gemeente",
         "source": "BRP",
         "effectiveDate": "2024-11-01",
-        "beperkt": [
+        "limited": [
           "commerciele-derden",
           "kerkgenootschappen",
           "derdeportalen"
@@ -5501,14 +5501,14 @@
           "slug": "ticket-gv-contactmoment-telefoon-1",
           "id": "152f695c-2541-4d7c-a1f0-845c63da5e73"
         },
-        "ticketType": "contactmoment",
+        "ticketType": "interaction",
         "title": "Vraag over openingstijden balie",
         "description": "Inwoner belt met een vraag over de openingstijden van de publieksbalie.",
         "client": "994174bf-3e92-4bec-aea2-701b7131201f",
         "status": "new",
         "channel": "telefoon",
         "occurredAt": "2026-07-09T13:30:00+02:00",
-        "outcome": "afgehandeld"
+        "outcome": "handled"
       },
       {
         "@self": {
@@ -5517,14 +5517,14 @@
           "slug": "ticket-gv-contactmoment-balie-1",
           "id": "3f2317f0-f62d-45c2-abe4-544beb5cbe76"
         },
-        "ticketType": "contactmoment",
+        "ticketType": "interaction",
         "title": "Informatie afgifte reisdocument",
         "description": "Inwoner aan de balie geïnformeerd over de afgifte van een nieuw reisdocument.",
         "client": "994174bf-3e92-4bec-aea2-701b7131201f",
         "status": "new",
         "channel": "balie",
         "occurredAt": "2026-07-11T10:15:00+02:00",
-        "outcome": "afgehandeld"
+        "outcome": "handled"
       },
       {
         "@self": {
@@ -5552,14 +5552,14 @@
           "slug": "ticket-zr-contactmoment-boeking-vraag",
           "id": "50ad65e1-e45e-45e7-94a8-90cf2f36c810"
         },
-        "ticketType": "contactmoment",
+        "ticketType": "interaction",
         "title": "Vraag over bagagevoorwaarden boeking",
         "description": "Klant belt met een vraag over de bagagevoorwaarden van een lopende boeking.",
         "client": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb",
         "status": "new",
         "channel": "telefoon",
         "occurredAt": "2026-07-08T16:00:00+02:00",
-        "outcome": "afgehandeld"
+        "outcome": "handled"
       },
       {
         "@self": {
@@ -5568,14 +5568,14 @@
           "slug": "ticket-zr-contactmoment-annulering",
           "id": "ffc8a9e1-9282-48db-b586-9a1daa7dd1f1"
         },
-        "ticketType": "contactmoment",
+        "ticketType": "interaction",
         "title": "Verzoek annulering reis wegens ziekte",
         "description": "Klant vraagt naar de annuleringsvoorwaarden voor een geboekte reis wegens ziekte.",
         "client": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb",
         "status": "in_progress",
         "channel": "email",
         "occurredAt": "2026-07-10T08:45:00+02:00",
-        "outcome": "vervolgactie"
+        "outcome": "followUpAction"
       }
     ]
   }

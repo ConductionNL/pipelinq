@@ -15,9 +15,9 @@
 				<NcTextField
 					id="prospect-sbi-codes"
 					:label="t('pipelinq', 'SBI Codes')"
-					:model-value="sbiCodesText"
+					:modelValue="sbiCodesText"
 					:placeholder="t('pipelinq', 'e.g. 62, 72 (comma-separated)')"
-					@update:model-value="(v) => (sbiCodesText = v)" />
+					@update:modelValue="(v) => (sbiCodesText = v)" />
 				<p class="form-help">
 					{{
 						t(
@@ -34,9 +34,9 @@
 					<NcTextField
 						id="prospect-employee-count-min"
 						:label="t('pipelinq', 'Min Employees')"
-						:model-value="String(form.employeeCountMin)"
+						:modelValue="String(form.employeeCountMin)"
 						type="number"
-						@update:model-value="
+						@update:modelValue="
 							(v) => (form.employeeCountMin = Number(v))
 						" />
 				</div>
@@ -44,9 +44,9 @@
 					<NcTextField
 						id="prospect-employee-count-max"
 						:label="t('pipelinq', 'Max Employees')"
-						:model-value="String(form.employeeCountMax)"
+						:modelValue="String(form.employeeCountMax)"
 						type="number"
-						@update:model-value="
+						@update:modelValue="
 							(v) => (form.employeeCountMax = Number(v))
 						" />
 				</div>
@@ -60,7 +60,7 @@
 					:options="provinceOptions"
 					:aria-label-combobox="t('pipelinq', 'Provinces')"
 					:multiple="true"
-					:keep-open="true"
+					:keepOpen="true"
 					:placeholder="t('pipelinq', 'Select provinces')" />
 			</div>
 
@@ -72,7 +72,7 @@
 					:options="legalFormOptions"
 					:aria-label-combobox="t('pipelinq', 'Legal Forms')"
 					:multiple="true"
-					:keep-open="true"
+					:keepOpen="true"
 					:placeholder="t('pipelinq', 'Select legal forms')" />
 			</div>
 
@@ -92,11 +92,11 @@
 				<NcTextField
 					id="prospect-keywords"
 					:label="t('pipelinq', 'Keywords')"
-					:model-value="keywordsText"
+					:modelValue="keywordsText"
 					:placeholder="
 						t('pipelinq', 'e.g. software, IT (comma-separated)')
 					"
-					@update:model-value="(v) => (keywordsText = v)" />
+					@update:modelValue="(v) => (keywordsText = v)" />
 				<p class="form-help">
 					{{
 						t(
@@ -112,10 +112,10 @@
 				<NcTextField
 					id="prospect-kvk-api-key"
 					:label="t('pipelinq', 'KVK API Key')"
-					:model-value="form.kvkApiKey"
+					:modelValue="form.kvkApiKey"
 					type="password"
 					:placeholder="t('pipelinq', 'Enter your KVK API key')"
-					@update:model-value="(v) => (form.kvkApiKey = v)" />
+					@update:modelValue="(v) => (form.kvkApiKey = v)" />
 				<p class="form-help">
 					{{
 						t(
@@ -160,6 +160,7 @@
 
 <script>
 import { CnSettingsSection } from '@conduction/nextcloud-vue'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcLoadingIcon,
@@ -167,7 +168,6 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'ProspectSettings',
@@ -179,6 +179,7 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -196,6 +197,7 @@ export default {
 				kvkApiKey: '',
 				openCorporatesEnabled: false,
 			},
+
 			provinceOptions: [
 				'Drenthe',
 				'Flevoland',
@@ -210,6 +212,7 @@ export default {
 				'Zeeland',
 				'Zuid-Holland',
 			],
+
 			legalFormOptions: [
 				'BV',
 				'NV',
@@ -222,9 +225,11 @@ export default {
 			],
 		}
 	},
+
 	async mounted() {
 		await this.fetchSettings()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-65
@@ -254,6 +259,7 @@ export default {
 							data.kvkApiKey === '***configured***'
 								? '***configured***'
 								: '',
+
 						openCorporatesEnabled: data.openCorporatesEnabled || false,
 					}
 					this.sbiCodesText = (data.sbiCodes || []).join(', ')
@@ -265,6 +271,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-66
 		 */
@@ -278,6 +285,7 @@ export default {
 					.split(',')
 					.map((s) => s.trim())
 					.filter(Boolean),
+
 				keywords: this.keywordsText
 					.split(',')
 					.map((s) => s.trim())

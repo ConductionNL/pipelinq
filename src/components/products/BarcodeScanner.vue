@@ -5,9 +5,9 @@
 				ref="field"
 				class="barcode-scanner__field"
 				:label="t('pipelinq', 'Scan barcode')"
-				:model-value="value"
+				:modelValue="value"
 				:disabled="status === 'loading'"
-				@update:model-value="onInput"
+				@update:modelValue="onInput"
 				@keydown.enter="emitManual" />
 
 			<div class="barcode-scanner__status" aria-live="polite">
@@ -107,24 +107,28 @@ export default {
 		Check,
 		Close,
 	},
+
 	props: {
 		/** Autofocus the HID input on mount so a keyboard-wedge scanner types into it. */
 		autofocus: {
 			type: Boolean,
 			default: true,
 		},
+
 		/** Scan lifecycle status: idle | loading | found | error. */
 		status: {
 			type: String,
 			default: 'idle',
 			validator: (v) => ['idle', 'loading', 'found', 'error'].includes(v),
 		},
+
 		/** Error message shown when status is 'error'. */
 		errorMessage: {
 			type: String,
 			default: '',
 		},
 	},
+
 	emits: ['scan'],
 	setup(props, { emit }) {
 		const { supported, scanning, videoEl, startCamera, stopCamera } =
@@ -133,16 +137,19 @@ export default {
 			})
 		return { supported, scanning, videoEl, startCamera, stopCamera }
 	},
+
 	data() {
 		return {
 			value: '',
 		}
 	},
+
 	mounted() {
 		if (this.autofocus) {
 			this.focusField()
 		}
 	},
+
 	methods: {
 		/**
 		 * Focus the HID input.
@@ -155,6 +162,7 @@ export default {
 				}
 			})
 		},
+
 		/**
 		 * Track typed / scanned input.
 		 *
@@ -163,6 +171,7 @@ export default {
 		onInput(v) {
 			this.value = v
 		},
+
 		/**
 		 * Emit a manually typed/submitted barcode and reset the field.
 		 */
@@ -175,6 +184,7 @@ export default {
 			this.value = ''
 			this.focusField()
 		},
+
 		/**
 		 * Open the camera viewfinder.
 		 */
@@ -185,6 +195,7 @@ export default {
 				this.$emit('camera-error')
 			}
 		},
+
 		/**
 		 * Close the camera viewfinder without emitting a scan.
 		 */

@@ -33,6 +33,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Controller\LoyaltyReportingController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
 use OCA\Pipelinq\Service\LoyaltyReportingService;
@@ -80,7 +81,8 @@ class LoyaltyReportingControllerTest extends TestCase {
 		return new LoyaltyReportingController(
 			$this->createMock(IRequest::class),
 			$reportingService,
-			$userSession
+			$userSession,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
 		);
 	}//end buildController()
 
@@ -171,8 +173,8 @@ class LoyaltyReportingControllerTest extends TestCase {
 	public function testLiabilityReturnsTheSeededOutstandingPointsAndValue(): void {
 		$service = $this->realReportingService(
 			accounts: [
-				['@self' => ['id' => 'acc-1'], 'programmeId' => 'prog-1', 'currentBalance' => 100, 'status' => 'actief'],
-				['@self' => ['id' => 'acc-2'], 'programmeId' => 'prog-1', 'currentBalance' => 250, 'status' => 'actief'],
+				['@self' => ['id' => 'acc-1'], 'programmeId' => 'prog-1', 'currentBalance' => 100, 'status' => 'active'],
+				['@self' => ['id' => 'acc-2'], 'programmeId' => 'prog-1', 'currentBalance' => 250, 'status' => 'active'],
 			],
 			programme: ['pointValue' => 0.02]
 		);
@@ -480,8 +482,8 @@ class LoyaltyReportingControllerTest extends TestCase {
 	public function testKpisReturnsTheFullEnvelopeOverSeededAccounts(): void {
 		$service = $this->realReportingService(
 			accounts: [
-				['@self' => ['id' => 'acc-1'], 'programmeId' => 'prog-1', 'currentBalance' => 100, 'currentTierId' => 'gold', 'status' => 'actief'],
-				['@self' => ['id' => 'acc-2'], 'programmeId' => 'prog-1', 'currentBalance' => 250, 'currentTierId' => 'gold', 'status' => 'actief'],
+				['@self' => ['id' => 'acc-1'], 'programmeId' => 'prog-1', 'currentBalance' => 100, 'currentTierId' => 'gold', 'status' => 'active'],
+				['@self' => ['id' => 'acc-2'], 'programmeId' => 'prog-1', 'currentBalance' => 250, 'currentTierId' => 'gold', 'status' => 'active'],
 				['@self' => ['id' => 'acc-3'], 'programmeId' => 'prog-1', 'currentBalance' => 50, 'status' => 'geblokkeerd'],
 			],
 			programme: ['pointValue' => 0.04]

@@ -122,7 +122,7 @@ class NrcSubscriptionService {
 			'callbackUrl' => $callbackUrl,
 			'callbackAuth' => $bearer,
 			'kanalen' => $this->normaliseKanalen(kanalen: $kanalen),
-			'actief' => true,
+			'active' => true,
 		];
 
 		$saved = $this->registers->save(ZgwRegisterAccess::SCHEMA_ABONN, $record);
@@ -194,7 +194,7 @@ class NrcSubscriptionService {
 			}
 		}
 
-		$abonnement['actief'] = false;
+		$abonnement['active'] = false;
 		$uuid = (string)($abonnement['@self']['uuid'] ?? $abonnement['id'] ?? '');
 		$saveUuid = null;
 		if ($uuid !== '') {

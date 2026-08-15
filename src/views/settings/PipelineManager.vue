@@ -89,7 +89,7 @@
 		<DeletePipelineDialog
 			v-if="deletingPipeline"
 			:pipeline="deletingPipeline"
-			:affected-count="deleteAffectedCount"
+			:affectedCount="deleteAffectedCount"
 			@cancel="deletingPipeline = null"
 			@confirm="onDeleteConfirm" />
 	</CnSettingsSection>
@@ -97,18 +97,18 @@
 
 <script>
 import { CnSettingsSection } from '@conduction/nextcloud-vue'
-import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { useObjectStore } from '../../store/modules/object.js'
-import { resolveObjectType } from '../../services/pipelineUtils.js'
-import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
-import DeletePipelineDialog from '../../dialogs/DeletePipelineDialog.vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
+import DeletePipelineDialog from '../../dialogs/DeletePipelineDialog.vue'
+import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
+import { resolveObjectType } from '../../services/pipelineUtils.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'PipelineManager',
@@ -125,6 +125,7 @@ export default {
 		Star,
 		ViewColumn,
 	},
+
 	data() {
 		return {
 			showForm: false,
@@ -133,6 +134,7 @@ export default {
 			deleteAffectedCount: 0,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-46
@@ -140,12 +142,14 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-51
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-45
 		 */
@@ -153,9 +157,11 @@ export default {
 			return this.objectStore.loading.pipeline || false
 		},
 	},
+
 	async mounted() {
 		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 	},
+
 	methods: {
 		/**
 		 * @param pipeline
@@ -174,6 +180,7 @@ export default {
 			}
 			return labels[pipeline.entityType] || pipeline.entityType || ''
 		},
+
 		/**
 		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-53
@@ -182,6 +189,7 @@ export default {
 			const count = (pipeline.stages || []).length
 			return n('pipelinq', '%n stage', '%n stages', count)
 		},
+
 		/**
 		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-54
@@ -197,6 +205,7 @@ export default {
 			const last = sorted.slice(-2).map((s) => s.name)
 			return [...first, '...', ...last].join(' → ')
 		},
+
 		/**
 		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-49
@@ -205,6 +214,7 @@ export default {
 			this.editingPipeline = pipeline
 			this.showForm = true
 		},
+
 		/**
 		 * Open the form for a NEW pipeline.
 		 *
@@ -220,6 +230,7 @@ export default {
 			this.editingPipeline = null
 			this.showForm = true
 		},
+
 		/**
 		 * Close the pipeline form without saving. Extracted from an inline
 		 * multi-statement handler for the same reason as `onCreate()`.
@@ -230,6 +241,7 @@ export default {
 			this.editingPipeline = null
 			this.showForm = false
 		},
+
 		/**
 		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-47
@@ -257,6 +269,7 @@ export default {
 
 			this.deletingPipeline = pipeline
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-48
 		 */
@@ -267,6 +280,7 @@ export default {
 			await this.objectStore.deleteObject('pipeline', id)
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 		},
+
 		/**
 		 * @param pipelineData
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-50
@@ -320,6 +334,7 @@ export default {
 			this.editingPipeline = null
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 		},
+
 		/**
 		 * @param pipelineId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-44

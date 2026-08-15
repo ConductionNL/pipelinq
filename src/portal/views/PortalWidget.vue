@@ -9,8 +9,8 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 </template>
 
 <script>
-import PortalLogin from './PortalLogin.vue'
 import PortalDashboard from './PortalDashboard.vue'
+import PortalLogin from './PortalLogin.vue'
 import { getToken } from '../portalApi.js'
 
 export default {
@@ -19,14 +19,17 @@ export default {
 	data() {
 		return { observer: null }
 	},
+
 	computed: {
 		isEmbedded() {
 			return window.self !== window.top
 		},
+
 		innerView() {
 			return getToken() ? 'PortalDashboard' : 'PortalLogin'
 		},
 	},
+
 	mounted() {
 		this.postResize()
 		if (typeof ResizeObserver !== 'undefined') {
@@ -34,11 +37,13 @@ export default {
 			this.observer.observe(this.$refs.root)
 		}
 	},
+
 	beforeUnmount() {
 		if (this.observer) {
 			this.observer.disconnect()
 		}
 	},
+
 	methods: {
 		postResize() {
 			if (this.isEmbedded && this.$refs.root) {
@@ -48,6 +53,7 @@ export default {
 				)
 			}
 		},
+
 		onLogout() {
 			if (this.isEmbedded) {
 				window.parent.postMessage({ type: 'portal:logout' }, '*')

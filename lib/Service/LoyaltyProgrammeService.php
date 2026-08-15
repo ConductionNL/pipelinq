@@ -118,8 +118,8 @@ class LoyaltyProgrammeService {
 		// which OpenRegister's LifecycleValidationListener also enforces on save.
 		// We assert it here so an out-of-state activation surfaces with a clear
 		// message before the (more expensive) business validation runs.
-		$current = (string)($programme['status'] ?? 'concept');
-		$this->assertTransitionAllowed(from: $current, to: 'actief');
+		$current = (string)($programme['status'] ?? 'draft');
+		$this->assertTransitionAllowed(from: $current, to: 'active');
 
 		// Business activation guards stay in PHP: date-range coherence and the
 		// "at least one points rule" / "at least one redemption option" cross-object
@@ -129,7 +129,7 @@ class LoyaltyProgrammeService {
 			throw new RuntimeException(implode('; ', $errors));
 		}
 
-		$programme['status'] = 'actief';
+		$programme['status'] = 'active';
 		$this->logger->info(
 			'Pipelinq: loyalty programme activated',
 			['programmeId' => $programmeId, 'activatedBy' => $activatedBy]
@@ -157,7 +157,7 @@ class LoyaltyProgrammeService {
 		$graph = $this->lifecycleGraph->adjacencyFor(schemaSlug: self::PROGRAMME_SCHEMA_SLUG);
 		if ($graph === []) {
 			// Fallback mirrors the schema's concept -> actief edge.
-			$graph = ['concept' => ['actief']];
+			$graph = ['draft' => ['active']];
 		}
 
 		$allowed = ($graph[$from] ?? []);

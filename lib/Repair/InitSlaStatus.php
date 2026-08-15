@@ -221,7 +221,7 @@ class InitSlaStatus implements IRepairStep {
 				'ticketType' => TicketService::TYPE_REQUEST,
 			];
 			$surfaces[] = [
-				'type' => 'klacht',
+				'type' => 'complaint',
 				'schema' => $ticketSchemaId,
 				'ticketType' => TicketService::TYPE_COMPLAINT,
 			];

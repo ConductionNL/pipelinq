@@ -155,7 +155,7 @@
 								}
 							],
 							"defaults": {
-								"ticketType": "contactmoment"
+								"ticketType": "interaction"
 							},
 							"subjectField": "title"
 						}
@@ -214,7 +214,7 @@
 							"register": "pipelinq",
 							"schema": "ticket",
 							"filter": {
-								"ticketType": "contactmoment",
+								"ticketType": "interaction",
 								"client": "@workspace.selectedClient"
 							},
 							"sort": {

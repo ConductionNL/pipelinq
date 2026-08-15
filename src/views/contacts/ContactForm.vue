@@ -26,13 +26,13 @@
 			<label for="contact-name">{{ t('pipelinq', 'Name') }} *</label>
 			<NcTextField
 				id="contact-name"
-				label-outside
+				labelOutside
 				:label="t('pipelinq', 'Name')"
-				:model-value="form.name"
+				:modelValue="form.name"
 				:error="!!errors.name"
-				:helper-text="errors.name"
+				:helperText="errors.name"
 				:maxlength="255"
-				@update:model-value="
+				@update:modelValue="
 					(v) => {
 						form.name = v
 						validateField('name')
@@ -44,14 +44,14 @@
 			<label for="contact-client">{{ t('pipelinq', 'Client') }} *</label>
 			<NcSelect
 				v-model="selectedClient"
-				input-id="contact-client"
+				inputId="contact-client"
 				:aria-label-combobox="t('pipelinq', 'Client')"
 				:options="clientOptions"
 				:placeholder="t('pipelinq', 'Search for a client...')"
 				label="name"
 				:reduce="(c) => c.id"
 				@search="searchClients"
-				@update:model-value="validateField('client')" />
+				@update:modelValue="validateField('client')" />
 			<p v-if="errors.client" class="field-error">
 				{{ errors.client }}
 			</p>
@@ -62,22 +62,22 @@
 				<label for="contact-role">{{ t('pipelinq', 'Role') }}</label>
 				<NcTextField
 					id="contact-role"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Role')"
-					:model-value="form.role"
-					@update:model-value="(v) => (form.role = v)" />
+					:modelValue="form.role"
+					@update:modelValue="(v) => (form.role = v)" />
 			</div>
 			<div class="form-group">
 				<label for="contact-email">{{ t('pipelinq', 'Email') }}</label>
 				<NcTextField
 					id="contact-email"
-					label-outside
+					labelOutside
 					:label="t('pipelinq', 'Email')"
-					:model-value="form.email"
+					:modelValue="form.email"
 					:error="!!errors.email"
-					:helper-text="errors.email"
+					:helperText="errors.email"
 					type="email"
-					@update:model-value="
+					@update:modelValue="
 						(v) => {
 							form.email = v
 							validateField('email')
@@ -90,12 +90,12 @@
 			<label for="contact-phone">{{ t('pipelinq', 'Phone') }}</label>
 			<NcTextField
 				id="contact-phone"
-				label-outside
+				labelOutside
 				:label="t('pipelinq', 'Phone')"
-				:model-value="form.phone"
+				:modelValue="form.phone"
 				:error="!!errors.phone"
-				:helper-text="errors.phone"
-				@update:model-value="
+				:helperText="errors.phone"
+				@update:modelValue="
 					(v) => {
 						form.phone = v
 						validateField('phone')
@@ -115,7 +115,7 @@
 </template>
 
 <script>
-import { NcButton, NcTextField, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -128,16 +128,19 @@ export default {
 		NcTextField,
 		NcSelect,
 	},
+
 	props: {
 		contact: {
 			type: Object,
 			default: () => ({}),
 		},
+
 		preSelectedClient: {
 			type: String,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			form: {
@@ -147,17 +150,20 @@ export default {
 				email: '',
 				phone: '',
 			},
+
 			errors: {
 				name: '',
 				client: '',
 				email: '',
 				phone: '',
 			},
+
 			selectedClient: null,
 			clientOptions: [],
 			searchTimeout: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-46
@@ -165,6 +171,7 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-43
 		 */
@@ -175,6 +182,7 @@ export default {
 			return hasName && hasClient && noErrors
 		},
 	},
+
 	watch: {
 		contact: {
 			immediate: true,
@@ -188,6 +196,7 @@ export default {
 				}
 			},
 		},
+
 		/**
 		 * @param val
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-50
@@ -196,6 +205,7 @@ export default {
 			this.form.client = val
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-45
 	 */
@@ -206,6 +216,7 @@ export default {
 			await this.ensureClientInOptions(this.preSelectedClient)
 		}
 	},
+
 	methods: {
 		/**
 		 * @param data
@@ -225,6 +236,7 @@ export default {
 			}
 			this.errors = { name: '', client: '', email: '', phone: '' }
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-44
 		 */
@@ -237,6 +249,7 @@ export default {
 				name: c.name || c.id,
 			}))
 		},
+
 		/**
 		 * @param clientId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-41
@@ -259,6 +272,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * @param query
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-49
@@ -283,6 +297,7 @@ export default {
 				}
 			}, 300)
 		},
+
 		/**
 		 * @param field
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-52
@@ -319,6 +334,7 @@ export default {
 					break
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-51
 		 */
@@ -329,6 +345,7 @@ export default {
 			this.validateField('phone')
 			return this.isValid
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-47
 		 */

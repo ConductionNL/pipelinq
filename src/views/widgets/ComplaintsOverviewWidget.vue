@@ -50,11 +50,13 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		loading: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-17
@@ -64,24 +66,28 @@ export default {
 				(c) => c.status === 'new' || c.status === 'in_progress',
 			)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-19
 		 */
 		totalOpen() {
 			return this.openComplaints.length
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-16
 		 */
 		newCount() {
 			return this.complaints.filter((c) => c.status === 'new').length
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-15
 		 */
 		inProgressCount() {
 			return this.complaints.filter((c) => c.status === 'in_progress').length
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-18
 		 */

@@ -79,12 +79,14 @@ export default {
 		NcLoadingIcon,
 		QueueCreateDialog,
 	},
+
 	data() {
 		return {
 			showCreateDialog: false,
 			itemCounts: {},
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-19
@@ -92,18 +94,21 @@ export default {
 		queuesStore() {
 			return useQueuesStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-16
 		 */
 		loading() {
 			return this.queuesStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-18
 		 */
 		queues() {
 			return this.queuesStore.queues
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-21
 		 */
@@ -113,9 +118,11 @@ export default {
 			)
 		},
 	},
+
 	mounted() {
 		this.queuesStore.fetchQueues()
 	},
+
 	methods: {
 		/**
 		 * @param queue
@@ -124,12 +131,15 @@ export default {
 		openQueue(queue) {
 			this.$router.push({ name: 'QueueDetail', params: { id: queue.id } })
 		},
+
 		getItemCount(queue) {
 			return this.itemCounts[queue.id] || 0
 		},
+
 		getAgentCount(queue) {
 			return (queue.assignedAgents || []).length
 		},
+
 		/**
 		 * @param {object} newQueue Raw form fields emitted by QueueCreateDialog.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-15
@@ -158,6 +168,7 @@ export default {
 				this.resetCreateForm()
 			}
 		},
+
 		/**
 		 * Close the create dialog. `v-if` unmounts QueueCreateDialog, which owns
 		 * the form state, so closing is what clears the fields.

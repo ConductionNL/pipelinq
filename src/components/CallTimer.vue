@@ -30,6 +30,7 @@ export default {
 			interval: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-callback-ui/tasks.md#task-1
@@ -39,6 +40,7 @@ export default {
 			const s = this.seconds % 60
 			return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-callback-ui/tasks.md#task-2
 		 */
@@ -48,9 +50,11 @@ export default {
 			return `PT${m}M${s}S`
 		},
 	},
+
 	beforeUnmount() {
 		clearInterval(this.interval)
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-callback-ui/tasks.md#task-4
@@ -63,6 +67,7 @@ export default {
 				this.$emit('tick', this.isoDuration)
 			}, 1000)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-callback-ui/tasks.md#task-5
 		 */
@@ -71,6 +76,7 @@ export default {
 			clearInterval(this.interval)
 			this.$emit('stopped', this.isoDuration)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-callback-ui/tasks.md#task-3
 		 */

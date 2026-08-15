@@ -49,15 +49,18 @@ export default {
 			type: String,
 			default: 'xwiki',
 		},
+
 		page: {
 			type: String,
 			required: true,
 		},
 	},
+
 	emits: ['back'],
 	setup() {
 		return { store: useXwikiStore() }
 	},
+
 	watch: {
 		page: {
 			immediate: true,

@@ -21,7 +21,7 @@
 				v-model="reason"
 				:label="t('pipelinq', 'Reason')"
 				:error="showError"
-				:helper-text="
+				:helperText="
 					showError ? t('pipelinq', 'Enter a reason for the reversal') : ''
 				" />
 		</div>
@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextArea } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcTextArea } from '@nextcloud/vue'
 
 export default {
 	name: 'PosRefundDialog',
@@ -46,12 +46,14 @@ export default {
 		NcButton,
 		NcTextArea,
 	},
+
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -59,6 +61,7 @@ export default {
 			showError: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * Validate and emit the refund reason.

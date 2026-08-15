@@ -53,10 +53,10 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 const DEFAULT_AVAILABILITY = {
 	available: false,
@@ -71,9 +71,11 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The contract id (token-resolved from @objectId by CnBodySections). */
 		contractId: {
@@ -81,6 +83,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -89,6 +92,7 @@ export default {
 			lastInvoiceReference: '',
 		}
 	},
+
 	computed: {
 		/** The resolved contract id — prop wins, else the injected section context. */
 		resolvedId() {
@@ -100,15 +104,18 @@ export default {
 				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		/** Shown only when an ns#Invoice implementer exists AND the contract is active. */
 		showSendButton() {
 			return this.availability.canSend === true
 		},
+
 		/** Whether this section has anything to render at all (else it stays hidden). */
 		hasContent() {
 			return this.showSendButton || !!this.lastInvoiceReference
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -118,6 +125,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Fetch the current send-to-invoicing availability for this contract.
@@ -146,6 +154,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Send the active contract to the invoicing handoff endpoint.
 		 */
@@ -198,6 +207,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Copy the invoice reference UUID to the clipboard.
 		 */

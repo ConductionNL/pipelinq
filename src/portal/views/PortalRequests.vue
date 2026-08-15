@@ -113,9 +113,11 @@ export default {
 			submitting: false,
 		}
 	},
+
 	mounted() {
 		this.load()
 	},
+
 	methods: {
 		async load() {
 			this.error = ''
@@ -126,6 +128,7 @@ export default {
 				this.error = e.message || t('pipelinq', 'Could not load requests.')
 			}
 		},
+
 		async open(id) {
 			try {
 				this.detail = await portalApi.request(id)
@@ -133,6 +136,7 @@ export default {
 				this.error = e.message
 			}
 		},
+
 		async sendReply() {
 			try {
 				this.detail = await portalApi.replyRequest(
@@ -145,6 +149,7 @@ export default {
 				this.error = e.message
 			}
 		},
+
 		async submit() {
 			this.error = ''
 			this.submitMessage = ''

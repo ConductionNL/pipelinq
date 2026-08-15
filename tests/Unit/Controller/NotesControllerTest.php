@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\NotesController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
 use OCA\Pipelinq\Service\SettingsService;
@@ -134,6 +135,7 @@ class NotesControllerTest extends TestCase {
 			$groupManager,
 			$settingsService,
 			$ticketService,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 	}//end setUp()
 
@@ -310,6 +312,7 @@ class NotesControllerTest extends TestCase {
 			$groupManager,
 			$settingsService,
 			$ticketService,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 
 		$response = $controller->deleteAll('pipelinq_client', 'obj-1');

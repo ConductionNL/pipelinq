@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -53,6 +54,7 @@ class SegmentController extends Controller {
 		IRequest $request,
 		private readonly SegmentService $segmentService,
 		private readonly IUserSession $userSession,
+		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -69,8 +71,15 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. A segment is a saved query over
+		// the customer base; listing or evaluating one exposes who is in it.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$envelope = $this->segmentService->listSegments(page: $page, limit: $limit);
@@ -107,8 +116,15 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. A segment is a saved query over
+		// the customer base; listing or evaluating one exposes who is in it.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$segment = $this->segmentService->getSegmentById(segmentId: $id);
@@ -132,8 +148,15 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function members(string $id, int $limit = 50): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. A segment is a saved query over
+		// the customer base; listing or evaluating one exposes who is in it.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$rows = $this->segmentService->previewSegmentMembers(segmentId: $id, limit: $limit);
@@ -151,8 +174,15 @@ class SegmentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function refreshSize(string $id): JSONResponse {
-		if ($this->requireUser() === null) {
+		$uid = $this->requireUser();
+		if ($uid === null) {
 			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. A segment is a saved query over
+		// the customer base; listing or evaluating one exposes who is in it.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
 		}
 
 		$size = $this->segmentService->refreshSegmentSize(segmentId: $id);
@@ -172,6 +202,15 @@ class SegmentController extends Controller {
 
 		return $user->getUID();
 	}//end requireUser()
+
+	/**
+	 * Deny a caller who is authenticated but not a CRM user.
+	 *
+	 * @return JSONResponse The 403 response.
+	 */
+	private function forbidden(): JSONResponse {
+		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+	}//end forbidden()
 
 	/**
 	 * Collect a sanitised Segment create body.

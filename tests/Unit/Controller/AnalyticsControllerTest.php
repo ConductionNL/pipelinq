@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\AnalyticsController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
@@ -95,6 +96,7 @@ class AnalyticsControllerTest extends TestCase {
 			request: $this->request,
 			analyticsService: $this->service,
 			userSession: $this->userSession,
+			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			logger: $this->logger,
 		);
 	}
@@ -106,6 +108,11 @@ class AnalyticsControllerTest extends TestCase {
 	 */
 	public function testOverviewReturnsOkWithKpiShape(): void {
 		$user = $this->createMock(IUser::class);
+		// getUID() must be stubbed now that the CRM guard reads it — an
+		// unstubbed mock returns null, and IUser::getUID() is declared to
+		// return string, so the null is a test artefact rather than a shape
+		// the controller has to defend against.
+		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 		$this->request->method('getParam')->willReturn('month');
 
@@ -145,6 +152,11 @@ class AnalyticsControllerTest extends TestCase {
 	 */
 	public function testTrendsRejectsUnsupportedMetric(): void {
 		$user = $this->createMock(IUser::class);
+		// getUID() must be stubbed now that the CRM guard reads it — an
+		// unstubbed mock returns null, and IUser::getUID() is declared to
+		// return string, so the null is a test artefact rather than a shape
+		// the controller has to defend against.
+		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 		$this->request->method('getParam')->willReturn('unknown');
 
@@ -162,6 +174,11 @@ class AnalyticsControllerTest extends TestCase {
 	 */
 	public function testTrendsReturnsOkWithSeries(): void {
 		$user = $this->createMock(IUser::class);
+		// getUID() must be stubbed now that the CRM guard reads it — an
+		// unstubbed mock returns null, and IUser::getUID() is declared to
+		// return string, so the null is a test artefact rather than a shape
+		// the controller has to defend against.
+		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 		$this->request->method('getParam')->willReturn('leads');
 
@@ -184,6 +201,11 @@ class AnalyticsControllerTest extends TestCase {
 	 */
 	public function testOverviewReturnsServerErrorOnFailure(): void {
 		$user = $this->createMock(IUser::class);
+		// getUID() must be stubbed now that the CRM guard reads it — an
+		// unstubbed mock returns null, and IUser::getUID() is declared to
+		// return string, so the null is a test artefact rather than a shape
+		// the controller has to defend against.
+		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 		$this->request->method('getParam')->willReturn('month');
 
@@ -203,6 +225,11 @@ class AnalyticsControllerTest extends TestCase {
 	 */
 	public function testFunnelsReturnsBothFunnels(): void {
 		$user = $this->createMock(IUser::class);
+		// getUID() must be stubbed now that the CRM guard reads it — an
+		// unstubbed mock returns null, and IUser::getUID() is declared to
+		// return string, so the null is a test artefact rather than a shape
+		// the controller has to defend against.
+		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 
 		$this->service->method('getFunnels')->willReturn([
@@ -367,6 +394,7 @@ class AnalyticsControllerTest extends TestCase {
 		),
 			),
 			userSession: $this->userSession,
+			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			logger: $this->logger,
 		);
 	}
@@ -378,6 +406,11 @@ class AnalyticsControllerTest extends TestCase {
 	 */
 	public function testCommercialReturnsOkWithTheDocumentedKpiShape(): void {
 		$user = $this->createMock(IUser::class);
+		// getUID() must be stubbed now that the CRM guard reads it — an
+		// unstubbed mock returns null, and IUser::getUID() is declared to
+		// return string, so the null is a test artefact rather than a shape
+		// the controller has to defend against.
+		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 		$this->request->method('getParam')->willReturn('month');
 
@@ -422,6 +455,11 @@ class AnalyticsControllerTest extends TestCase {
 	 */
 	public function testCommercialRejectsAnInvalidPeriod(): void {
 		$user = $this->createMock(IUser::class);
+		// getUID() must be stubbed now that the CRM guard reads it — an
+		// unstubbed mock returns null, and IUser::getUID() is declared to
+		// return string, so the null is a test artefact rather than a shape
+		// the controller has to defend against.
+		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 		$this->request->method('getParam')->willReturn('fortnight');
 		$this->service->method('getCommercialOverview')
@@ -455,6 +493,11 @@ class AnalyticsControllerTest extends TestCase {
 	 */
 	public function testCommercialMapsBackendFailureToAStaticServerError(): void {
 		$user = $this->createMock(IUser::class);
+		// getUID() must be stubbed now that the CRM guard reads it — an
+		// unstubbed mock returns null, and IUser::getUID() is declared to
+		// return string, so the null is a test artefact rather than a shape
+		// the controller has to defend against.
+		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 		$this->request->method('getParam')->willReturn('month');
 		$this->service->method('getCommercialOverview')
@@ -477,6 +520,11 @@ class AnalyticsControllerTest extends TestCase {
 	 */
 	public function testCommercialAggregatesTheSeededLeadsAndPosTransactions(): void {
 		$user = $this->createMock(IUser::class);
+		// getUID() must be stubbed now that the CRM guard reads it — an
+		// unstubbed mock returns null, and IUser::getUID() is declared to
+		// return string, so the null is a test artefact rather than a shape
+		// the controller has to defend against.
+		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 		$this->request->method('getParam')->willReturn('month');
 
@@ -530,6 +578,11 @@ class AnalyticsControllerTest extends TestCase {
 	 */
 	public function testCommercialExcludesSoftDeletedLeads(): void {
 		$user = $this->createMock(IUser::class);
+		// getUID() must be stubbed now that the CRM guard reads it — an
+		// unstubbed mock returns null, and IUser::getUID() is declared to
+		// return string, so the null is a test artefact rather than a shape
+		// the controller has to defend against.
+		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 		$this->request->method('getParam')->willReturn('month');
 

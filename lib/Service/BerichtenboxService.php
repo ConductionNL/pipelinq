@@ -122,7 +122,7 @@ class BerichtenboxService {
 	 * Queue an outbound message for a zaak status transition.
 	 *
 	 * @param string $caseId External zaak id.
-	 * @param string|null $contactmomentId Linked Contactmoment id (optional).
+	 * @param string|null $interactionId Linked Contactmoment id (optional).
 	 * @param string $status New zaak status.
 	 * @param string $bsn Burger's plaintext BSN (validated upstream).
 	 * @param array|null $templateOverride Optional explicit BerichtenboxTemplate
@@ -141,7 +141,7 @@ class BerichtenboxService {
 	 */
 	public function queueOutboundMessage(
 		string $caseId,
-		?string $contactmomentId,
+		?string $interactionId,
 		string $status,
 		string $bsn,
 		?array $templateOverride = null,
@@ -180,7 +180,7 @@ class BerichtenboxService {
 			'uuid' => $messageUuid,
 			'bsn' => $this->encryption->encrypt($bsn, $tenantId),
 			'bsnHash' => $bsnHash,
-			'contactmomentId' => ($contactmomentId ?? ''),
+			'interactionId' => ($interactionId ?? ''),
 			'caseId' => $caseId,
 			'subject' => $rendered['subject'],
 			'body' => $rendered['body'],
@@ -411,10 +411,10 @@ class BerichtenboxService {
 			throw $e;
 		}
 
-		$contactmomentId = null;
+		$interactionId = null;
 		try {
-			$contactmomentId = $this->createContactmomentFromReply(parent: $parent, reply: $reply);
-			$reply['createdContactmomentId'] = $contactmomentId;
+			$interactionId = $this->createContactmomentFromReply(parent: $parent, reply: $reply);
+			$reply['createdInteractionId'] = $interactionId;
 			$reply['processedAt'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DATE_ATOM);
 			$this->saveReply(payload: $reply);
 		} catch (\Throwable $e) {

@@ -25,14 +25,14 @@
 		<CnFormDialog
 			v-if="showProjectForm"
 			ref="projectForm"
-			:dialog-title="
+			:dialogTitle="
 				isNew ? t('pipelinq', 'New project') : t('pipelinq', 'Edit project')
 			"
 			:fields="projectFields"
-			:initial-data="projectFormInitial"
-			:confirm-label="t('pipelinq', 'Save')"
-			:cancel-label="t('pipelinq', 'Cancel')"
-			name-field="name"
+			:initialData="projectFormInitial"
+			:confirmLabel="t('pipelinq', 'Save')"
+			:cancelLabel="t('pipelinq', 'Cancel')"
+			nameField="name"
 			@confirm="onProjectSaved"
 			@close="cancelEdit" />
 	</div>
@@ -41,13 +41,13 @@
 		v-else
 		:title="projectData.name || t('pipelinq', 'Project')"
 		:subtitle="t('pipelinq', 'Project')"
-		:back-route="{ name: 'Projects' }"
-		:back-label="t('pipelinq', 'Back to list')"
+		:backRoute="{ name: 'Projects' }"
+		:backLabel="t('pipelinq', 'Back to list')"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
-		object-type="pipelinq_project"
-		:object-id="projectId"
-		:sidebar-props="sidebarProps">
+		objectType="pipelinq_project"
+		:objectId="projectId"
+		:sidebarProps="sidebarProps">
 		<template #actions>
 			<NcButton variant="primary" @click="startEdit">
 				{{ t('pipelinq', 'Edit') }}
@@ -87,8 +87,8 @@
 					<label>{{ t('pipelinq', 'Billable') }}</label>
 					<span>
 						<span
+							class="billable-dot"
 							:class="[
-								'billable-dot',
 								projectData.billable === false
 									? 'billable-dot--off'
 									: 'billable-dot--on',
@@ -231,21 +231,21 @@
 				:phases="phases"
 				:tasks="tasks"
 				:activities="activities"
-				@add-phase="openPhaseDialog()"
-				@add-task="openTaskDialog($event.phase)"
-				@add-activity="openActivityDialog($event.task, $event.phase)" />
+				@addPhase="openPhaseDialog()"
+				@addTask="openTaskDialog($event.phase)"
+				@addActivity="openActivityDialog($event.task, $event.phase)" />
 		</CnDetailCard>
 
 		<!-- Fase dialog -->
 		<CnFormDialog
 			v-if="showPhaseDialog"
 			ref="phaseDialog"
-			:dialog-title="t('pipelinq', 'Add phase')"
+			:dialogTitle="t('pipelinq', 'Add phase')"
 			:fields="phaseFields"
-			:initial-data="phaseInitial"
-			:confirm-label="t('pipelinq', 'Save')"
-			:cancel-label="t('pipelinq', 'Cancel')"
-			name-field="name"
+			:initialData="phaseInitial"
+			:confirmLabel="t('pipelinq', 'Save')"
+			:cancelLabel="t('pipelinq', 'Cancel')"
+			nameField="name"
 			@confirm="onPhaseSaved"
 			@close="showPhaseDialog = false" />
 
@@ -253,12 +253,12 @@
 		<CnFormDialog
 			v-if="showTaskDialog"
 			ref="taskDialog"
-			:dialog-title="t('pipelinq', 'Add task')"
+			:dialogTitle="t('pipelinq', 'Add task')"
 			:fields="taskFields"
-			:initial-data="taskInitial"
-			:confirm-label="t('pipelinq', 'Save')"
-			:cancel-label="t('pipelinq', 'Cancel')"
-			name-field="name"
+			:initialData="taskInitial"
+			:confirmLabel="t('pipelinq', 'Save')"
+			:cancelLabel="t('pipelinq', 'Cancel')"
+			nameField="name"
 			@confirm="onTaskSaved"
 			@close="showTaskDialog = false" />
 
@@ -266,38 +266,38 @@
 		<CnFormDialog
 			v-if="showActivityDialog"
 			ref="activityDialog"
-			:dialog-title="t('pipelinq', 'Time entry')"
+			:dialogTitle="t('pipelinq', 'Time entry')"
 			:fields="activityFields"
-			:initial-data="activityInitial"
-			:confirm-label="t('pipelinq', 'Save')"
-			:cancel-label="t('pipelinq', 'Cancel')"
-			name-field="description"
+			:initialData="activityInitial"
+			:confirmLabel="t('pipelinq', 'Save')"
+			:cancelLabel="t('pipelinq', 'Cancel')"
+			nameField="description"
 			@confirm="onActivitySaved"
 			@close="showActivityDialog = false" />
 		<ConfirmDialog
 			v-if="showDeleteProjectConfirm"
 			:name="t('pipelinq', 'Delete project')"
 			:message="t('pipelinq', 'Are you sure you want to delete this project?')"
-			:confirm-label="t('pipelinq', 'Delete')"
+			:confirmLabel="t('pipelinq', 'Delete')"
 			@confirm="performDeleteProject"
 			@cancel="showDeleteProjectConfirm = false" />
 	</CnDetailPage>
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
-import { NcButton } from '@nextcloud/vue'
-import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { computed } from 'vue'
 import {
-	CnDetailPage,
 	CnDetailCard,
+	CnDetailPage,
 	CnFormDialog,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton } from '@nextcloud/vue'
+import { computed } from 'vue'
 import ProjectWbsTree from '../../components/ProjectWbsTree.vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -310,16 +310,19 @@ export default {
 		CnFormDialog,
 		ProjectWbsTree,
 	},
+
 	props: {
 		id: {
 			type: String,
 			default: null,
 		},
+
 		projectIdProp: {
 			type: String,
 			default: null,
 		},
 	},
+
 	/**
 	 * Live updates for the viewed project (nc-vue liveUpdatesPlugin,
 	 * default-on since beta.212): subscribe to or-object-{uuid}. Events
@@ -349,6 +352,7 @@ export default {
 		})
 		return {}
 	},
+
 	data() {
 		return {
 			editing: false,
@@ -370,23 +374,29 @@ export default {
 			ledgerRetrying: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		projectId() {
 			return this.id || this.projectIdProp || null
 		},
+
 		isNew() {
 			return !this.projectId || this.projectId === 'new'
 		},
+
 		loading() {
 			return this.objectStore.loading.project || false
 		},
+
 		projectData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('project', this.projectId) || {}
 		},
+
 		projectFormInitial() {
 			if (this.isNew) {
 				return {
@@ -396,6 +406,7 @@ export default {
 			}
 			return { ...this.projectData }
 		},
+
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.project || {}
 			return {
@@ -405,6 +416,7 @@ export default {
 				hiddenTabs: ['tasks'],
 			}
 		},
+
 		/**
 		 * CnFormDialog fields for creating / editing a project. Mirrors the
 		 * schema in lib/Settings/register.d/60-project-ledger.json so the
@@ -471,6 +483,7 @@ export default {
 				},
 			]
 		},
+
 		phaseFields() {
 			return [
 				{
@@ -509,6 +522,7 @@ export default {
 				{ key: 'endDate', label: t('pipelinq', 'End date'), widget: 'date' },
 			]
 		},
+
 		taskFields() {
 			return [
 				{
@@ -551,6 +565,7 @@ export default {
 				{ key: 'sequence', label: t('pipelinq', 'Order'), widget: 'number' },
 			]
 		},
+
 		activityFields() {
 			return [
 				{
@@ -588,6 +603,7 @@ export default {
 				},
 			]
 		},
+
 		statusOptions() {
 			return [
 				{ value: 'open', label: t('pipelinq', 'Open') },
@@ -597,6 +613,7 @@ export default {
 				{ value: 'cancelled', label: t('pipelinq', 'Cancelled') },
 			]
 		},
+
 		/**
 		 * Sum of logged hours across all project activities (REQ-PTH-007
 		 * Scenario 27 / REQ-PTH-008 Scenario 31).
@@ -610,6 +627,7 @@ export default {
 			)
 			return Math.round((minutes / 60) * 10) / 10
 		},
+
 		/**
 		 * Hours marked billable (with task/phase/project inheritance
 		 * applied) — REQ-PTH-008 Scenario 32.
@@ -619,6 +637,7 @@ export default {
 		billableHours() {
 			return this.computeBillableHours(true)
 		},
+
 		/**
 		 * Hours marked non-billable (with inheritance applied).
 		 *
@@ -627,12 +646,15 @@ export default {
 		nonBillableHours() {
 			return this.computeBillableHours(false)
 		},
+
 		plannedHours() {
 			return Number(this.projectData.budgetHours || 0)
 		},
+
 		overBudget() {
 			return this.plannedHours > 0 && this.loggedHours > this.plannedHours
 		},
+
 		/**
 		 * Convenience accessor for the ledger sync status on the project
 		 * payload (REQ-PLG-005). The shared object store preserves this
@@ -643,6 +665,7 @@ export default {
 		ledgerSyncStatus() {
 			return this.projectData.ledgerSyncStatus || null
 		},
+
 		/**
 		 * ISO timestamp of the last successful ledger dispatch.
 		 *
@@ -652,6 +675,7 @@ export default {
 			return this.projectData.ledgerSyncedAt || null
 		},
 	},
+
 	async mounted() {
 		if (this.isNew) {
 			this.showProjectForm = true
@@ -663,6 +687,7 @@ export default {
 			this.loadLedgerWebhookStatus()
 		}
 	},
+
 	methods: {
 		/**
 		 * Load phases / tasks / activities scoped to this project in
@@ -691,6 +716,7 @@ export default {
 			this.activities =
 				(activities.status === 'fulfilled' && activities.value) || []
 		},
+
 		async loadClientName() {
 			if (!this.projectData.client) {
 				this.clientName = '-'
@@ -707,6 +733,7 @@ export default {
 				this.clientName = t('pipelinq', '[Verwijderde client]')
 			}
 		},
+
 		/**
 		 * Resolve the effective billable value for an activity walking up
 		 * task → phase → project (REQ-PTH-005 Scenarios 19..21). Returns
@@ -732,6 +759,7 @@ export default {
 			}
 			return true
 		},
+
 		/**
 		 * Sum logged hours across activities whose resolved billable
 		 * value equals the requested filter (REQ-PTH-008 Scenario 32).
@@ -745,10 +773,12 @@ export default {
 				.reduce((sum, a) => sum + (Number(a.durationMinutes) || 0), 0)
 			return Math.round((minutes / 60) * 10) / 10
 		},
+
 		startEdit() {
 			this.showProjectForm = true
 			this.editing = true
 		},
+
 		cancelEdit() {
 			this.showProjectForm = false
 			this.editing = false
@@ -756,6 +786,7 @@ export default {
 				this.$router.push({ name: 'Projects' })
 			}
 		},
+
 		async onProjectSaved(formData) {
 			const payload = this.isNew
 				? { ...formData }
@@ -784,6 +815,7 @@ export default {
 				)
 			}
 		},
+
 		/**
 		 * Open the project delete confirmation.
 		 *
@@ -794,6 +826,7 @@ export default {
 		confirmDelete() {
 			this.showDeleteProjectConfirm = true
 		},
+
 		/**
 		 * Delete the project once the dialog confirms.
 		 *
@@ -816,12 +849,14 @@ export default {
 				)
 			}
 		},
+
 		goToActivities() {
 			this.$router.push({
 				name: 'ProjectActivities',
 				params: { id: this.projectId },
 			})
 		},
+
 		openPhaseDialog() {
 			const maxSequence = this.phases.reduce(
 				(m, p) => Math.max(m, Number(p.sequence || 0)),
@@ -834,6 +869,7 @@ export default {
 			}
 			this.showPhaseDialog = true
 		},
+
 		async onPhaseSaved(formData) {
 			const payload = { ...formData, project: this.projectId }
 			const result = await this.objectStore.saveObject('projectPhase', payload)
@@ -845,6 +881,7 @@ export default {
 				showError(t('pipelinq', 'Could not save phase. Please try again.'))
 			}
 		},
+
 		openTaskDialog(phase) {
 			const phaseTasks = this.tasks.filter((t) => t.phase === phase.id)
 			const maxSequence = phaseTasks.reduce(
@@ -859,6 +896,7 @@ export default {
 			}
 			this.showTaskDialog = true
 		},
+
 		async onTaskSaved(formData) {
 			const payload = {
 				...formData,
@@ -873,6 +911,7 @@ export default {
 				showError(t('pipelinq', 'Could not save task. Please try again.'))
 			}
 		},
+
 		openActivityDialog(task) {
 			this.activityInitial = {
 				task: task.id,
@@ -885,6 +924,7 @@ export default {
 			}
 			this.showActivityDialog = true
 		},
+
 		async onActivitySaved(formData) {
 			const payload = {
 				...formData,
@@ -905,6 +945,7 @@ export default {
 				)
 			}
 		},
+
 		/**
 		 * Async option loader for the project's client select.
 		 *
@@ -926,6 +967,7 @@ export default {
 				return []
 			}
 		},
+
 		statusLabel(status) {
 			const map = {
 				open: t('pipelinq', 'Open'),
@@ -936,6 +978,7 @@ export default {
 			}
 			return map[status] || status || '-'
 		},
+
 		formatDate(dateStr) {
 			if (!dateStr) return '-'
 			try {
@@ -944,16 +987,19 @@ export default {
 				return dateStr
 			}
 		},
+
 		formatHours(value) {
 			const n = Number(value)
 			if (Number.isNaN(n)) return '0u'
 			return n + 'u'
 		},
+
 		formatEur(value) {
 			const n = Number(value || 0)
 			if (Number.isNaN(n)) return '€ 0'
 			return '€ ' + n.toLocaleString('nl-NL', { maximumFractionDigits: 0 })
 		},
+
 		/**
 		 * Localised label for the ledger sync status (REQ-PLG-005). The
 		 * three keys are English source strings — Dutch translations live
@@ -970,6 +1016,7 @@ export default {
 			}
 			return map[status] || status || '-'
 		},
+
 		/**
 		 * Modifier class for the ledger card pill (mirrors the ProjectList
 		 * pill colours for visual consistency).
@@ -980,6 +1027,7 @@ export default {
 		ledgerPillClass(status) {
 			return 'ledger-card__pill--' + (status || 'unknown')
 		},
+
 		/**
 		 * Format an ISO timestamp as a locale date/time string, or "-" when
 		 * the value is missing.
@@ -995,6 +1043,7 @@ export default {
 				return value
 			}
 		},
+
 		/**
 		 * Resolve whether the admin has configured the Shillinq ledger
 		 * webhook URL. Drives the v-if on the ledger card (REQ-PLG-005-04:
@@ -1014,6 +1063,7 @@ export default {
 				this.ledgerWebhookConfigured = false
 			}
 		},
+
 		/**
 		 * Manually re-dispatch this project to the Shillinq ledger via
 		 * POST /apps/pipelinq/api/ledger/retry/{projectId} (REQ-PLG-005-03).

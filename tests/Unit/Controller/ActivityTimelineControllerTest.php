@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ActivityTimelineController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ActivityTimelineService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
@@ -127,6 +128,7 @@ class ActivityTimelineControllerTest extends TestCase {
 			userSession: $this->userSession,
 			logger: $this->createMock(LoggerInterface::class),
 			container: $container,
+			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 	}//end buildController()
 
@@ -168,7 +170,7 @@ class ActivityTimelineControllerTest extends TestCase {
 		$this->service->method('getTimeline')->willReturn(
 			[
 				'items' => [
-					['id' => 'a-1', 'type' => 'contactmoment', 'date' => '2026-06-02T10:00:00+00:00'],
+					['id' => 'a-1', 'type' => 'interaction', 'date' => '2026-06-02T10:00:00+00:00'],
 					['id' => 'a-2', 'type' => 'task', 'date' => '2026-06-01T10:00:00+00:00'],
 				],
 				'total' => 2,
@@ -184,7 +186,7 @@ class ActivityTimelineControllerTest extends TestCase {
 		$this->assertSame([2, 1, 1], [$data['total'], $data['page'], $data['pages']]);
 		$this->assertCount(2, $data['items']);
 		$this->assertSame('a-1', $data['items'][0]['id']);
-		$this->assertSame('contactmoment', $data['items'][0]['type']);
+		$this->assertSame('interaction', $data['items'][0]['type']);
 	}//end testGetTimelineReturnsOkWithThePaginatedEnvelope()
 
 	/**

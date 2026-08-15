@@ -290,7 +290,7 @@ class EntityActivityService {
 		$items = [];
 		foreach ($objects as $object) {
 			$items[] = [
-				'type' => 'contactmoment',
+				'type' => 'interaction',
 				'id' => (string)($object['id'] ?? $object['uuid'] ?? ''),
 				'subject' => (string)($object['title'] ?? ''),
 				'channel' => (string)($object['channel'] ?? ''),

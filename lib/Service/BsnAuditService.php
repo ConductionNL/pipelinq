@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -46,6 +47,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-005
  */
 class BsnAuditService {
+	use EntityAccessorTrait;
+
 	/**
 	 * Default retention for audit records (5 years per RvIG guideline).
 	 */
@@ -76,8 +79,8 @@ class BsnAuditService {
 	 * @param string $actor Actor user UID.
 	 * @param string $rawBsn Raw 9-digit BSN (hashed in-process; never stored).
 	 * @param string $verzoekreden Verzoekreden (compliance audit field).
-	 * @param string $doelbinding Doelbinding (compliance audit field).
-	 * @param string $uitkomst Outcome enum value (see schema).
+	 * @param string $purposeBinding Doelbinding (compliance audit field).
+	 * @param string $outcome Outcome enum value (see schema).
 	 * @param string $action Action enum value (default `brp-lookup-uitgevoerd`).
 	 * @param int|null $responseCode HTTP status from HaalCentraal (200, 404, 503).
 	 * @param string|null $haalcentraalCorrelationId Correlation ID for trace.
@@ -98,9 +101,9 @@ class BsnAuditService {
 		string $actor,
 		string $rawBsn,
 		string $verzoekreden,
-		string $doelbinding,
-		string $uitkomst,
-		string $action = 'brp-lookup-uitgevoerd',
+		string $purposeBinding,
+		string $outcome,
+		string $action = 'brp-lookup-executed',
 		?int $responseCode = null,
 		?string $haalcentraalCorrelationId = null,
 		?string $linkedRequest = null,
@@ -117,10 +120,10 @@ class BsnAuditService {
 			'actorRole' => $actorRole,
 			'moment' => $now->format(DATE_ATOM),
 			'verzoekreden' => $verzoekreden,
-			'doelbinding' => $doelbinding,
-			'uitkomst' => $uitkomst,
+			'purposeBinding' => $purposeBinding,
+			'outcome' => $outcome,
 			'responseCode' => $responseCode,
-			'ipAdres' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
+			'ipAddress' => self::anonymiseIp(ipAddress: $this->request->getRemoteAddress()),
 			'userAgent' => 'Pipelinq/' . (Application::APP_ID) . ' (Nextcloud)',
 			'haalcentraalCorrelationId' => $haalcentraalCorrelationId,
 			'linkedRequest' => $linkedRequest,
@@ -146,8 +149,12 @@ class BsnAuditService {
 			$uuid = '';
 			if (is_array($saved) === true) {
 				$uuid = (string)($saved['@self']['id'] ?? $saved['id'] ?? '');
-			} elseif (is_object($saved) === true && method_exists($saved, 'getUuid') === true) {
-				$uuid = (string)$saved->getUuid();
+			} elseif (is_object($saved) === true) {
+				// SaveObject() returns an ObjectEntity whose getUuid() is served by
+				// Entity::__call — method_exists() is FALSE for it, so every AVG/BSN
+				// audit record was written and its handle returned as ''
+				// (pipelinq#807); four callers consume that handle.
+				$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
 			}
 
 			$this->logger->info(
@@ -156,7 +163,7 @@ class BsnAuditService {
 					'action' => $action,
 					'actor' => $actor,
 					'bsn' => $maskedBsn,
-					'uitkomst' => $uitkomst,
+					'outcome' => $outcome,
 				]
 			);
 			return $uuid;
@@ -240,8 +247,8 @@ class BsnAuditService {
 
 				// Immutable schema: callers MUST go through the system pseudonym path.
 				$arr['bsnHash'] = $newHash;
-				$arr['action'] = 'brp-rtbf-gepseudonimiseerd';
-				$arr['uitkomst'] = 'gepseudonimiseerd';
+				$arr['action'] = 'brp-rtbf-pseudonymised';
+				$arr['outcome'] = 'pseudonymised';
 				$this->getObjectService()->saveObject(
 					object: $arr,
 					extend: [],

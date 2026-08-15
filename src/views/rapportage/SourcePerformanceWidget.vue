@@ -28,6 +28,7 @@ export default {
 			default: () => [],
 		},
 	},
+
 	computed: {
 		/**
 		 * Column descriptors consumed by CnDataTable. Each row is
@@ -67,6 +68,7 @@ export default {
 				},
 			]
 		},
+
 		rows() {
 			return Array.isArray(this.data) ? this.data : []
 		},

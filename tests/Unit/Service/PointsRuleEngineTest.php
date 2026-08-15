@@ -48,7 +48,7 @@ class PointsRuleEngineTest extends TestCase {
 
 	public function testCalculatePointsFixedFormula(): void {
 		$points = $this->engine->calculatePoints(
-			formule: ['type' => 'fixed', 'value' => 50],
+			formula: ['type' => 'fixed', 'value' => 50],
 			amount: 0
 		);
 		$this->assertSame(50, $points);
@@ -56,7 +56,7 @@ class PointsRuleEngineTest extends TestCase {
 
 	public function testCalculatePointsPercentageFormula(): void {
 		$points = $this->engine->calculatePoints(
-			formule: ['type' => 'percentage', 'value' => 1],
+			formula: ['type' => 'percentage', 'value' => 1],
 			amount: 45.50
 		);
 		$this->assertSame(45, $points, 'Percentage formule must floor 45.5 -> 45');
@@ -64,7 +64,7 @@ class PointsRuleEngineTest extends TestCase {
 
 	public function testCalculatePointsAppliesMultiplier(): void {
 		$points = $this->engine->calculatePoints(
-			formule: ['type' => 'percentage', 'value' => 1],
+			formula: ['type' => 'percentage', 'value' => 1],
 			amount: 100,
 			multiplier: 1.25
 		);
@@ -73,7 +73,7 @@ class PointsRuleEngineTest extends TestCase {
 
 	public function testCalculatePointsSteppedFormula(): void {
 		$points = $this->engine->calculatePoints(
-			formule: [
+			formula: [
 				'type' => 'stepped',
 				'brackets' => [
 					['amount' => 0,   'points' => 5],

@@ -567,6 +567,9 @@ class CashShiftServiceTest extends TestCase {
 		$this->assertCount(1, $tasks);
 		$task = array_values($tasks)[0];
 		$this->assertSame('clerk', $task['assigneeUserId']);
+		// Dutch PROSE in a user-facing description, not an enum value — the value
+		// pass rewrote this expectation and should not have. Translating the
+		// message itself is l10n work, not a value migration.
 		$this->assertStringContainsString('afgewezen', $task['description']);
 	}//end testRejectDiffReopensShiftAndCreatesTask()
 

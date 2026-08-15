@@ -94,7 +94,7 @@ class ZrcClientTest extends TestCase {
 		$registers = $this->createMock(ZgwRegisterAccess::class);
 		$registers->method('findClientForEndpoint')->willReturn([
 			'clientIdentifier' => 'pipelinq-zoetermeer',
-			'secretKluisRef' => 'vault://zgw/zoetermeer/client-secret',
+			'secretVaultRef' => 'vault://zgw/zoetermeer/client-secret',
 			'userId' => 'pipelinq',
 			'userRepresentation' => 'Pipelinq backend',
 		]);
@@ -209,7 +209,7 @@ class ZrcClientTest extends TestCase {
 		$registers = $this->createMock(ZgwRegisterAccess::class);
 		$registers->method('findClientForEndpoint')->willReturn([
 			'clientIdentifier' => 'pipelinq-zoetermeer',
-			'secretKluisRef' => 'vault://x',
+			'secretVaultRef' => 'vault://x',
 			'userId' => 'pipelinq',
 			'userRepresentation' => 'Pipelinq',
 		]);
@@ -266,7 +266,7 @@ class ZrcClientTest extends TestCase {
 		$registers = $this->createMock(ZgwRegisterAccess::class);
 		$registers->method('findClientForEndpoint')->willReturn([
 			'clientIdentifier' => 'pipelinq-zoetermeer',
-			'secretKluisRef' => 'vault://x',
+			'secretVaultRef' => 'vault://x',
 			'userId' => 'pipelinq',
 			'userRepresentation' => 'Pipelinq',
 		]);

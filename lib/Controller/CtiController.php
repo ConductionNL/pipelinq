@@ -24,9 +24,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\CtiService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
@@ -69,6 +71,7 @@ class CtiController extends Controller {
 		IRequest $request,
 		private CtiService $ctiService,
 		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $policy,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 	) {
@@ -89,6 +92,9 @@ class CtiController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// Telephony platform events — one per call state change, so a busy contact
+	// centre generates these steadily.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function webhook(string $platform): JSONResponse {
 		$rawBody = (string)file_get_contents('php://input');
 		$signature = (string)$this->request->getHeader('X-Pipelinq-Signature');
@@ -137,7 +143,7 @@ class CtiController extends Controller {
 		return new JSONResponse(
 			[
 				'ok' => true,
-				'contactmomentId' => ($result['contactmomentId'] ?? null),
+				'interactionId' => ($result['interactionId'] ?? null),
 			]
 		);
 	}//end webhook()
@@ -151,8 +157,16 @@ class CtiController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function screenPop(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
 			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// CTI surfaces resolve a caller's phone number to a customer record and
+		// attach call recordings — CRM data, not an any-authenticated-user
+		// capability. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		$fromNumber = (string)$this->request->getParam('fromNumber', '');
@@ -176,6 +190,14 @@ class CtiController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Placing an outbound call on the organisation's telephony account is a
+		// CRM capability. Its sibling webhook() on this controller was guarded
+		// in the first pass and clickToDial -- the one that actually DIALS --
+		// was not.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		$targetNumber = (string)$this->request->getParam('targetNumber', '');
@@ -217,6 +239,11 @@ class CtiController extends Controller {
 			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
+		// Same posture as screenPop()/attachRecording().
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
 		$subject = (string)$this->request->getParam('subject', '');
 		$outcome = (string)$this->request->getParam('outcome', '');
 		$notes = (string)$this->request->getParam('notes', '');
@@ -230,7 +257,7 @@ class CtiController extends Controller {
 
 		try {
 			$result = $this->ctiService->processDisposition(
-				contactmomentId: $id,
+				interactionId: $id,
 				subject: $subject,
 				outcome: $outcome,
 				notes: $notes,
@@ -263,8 +290,16 @@ class CtiController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function attachRecording(string $id): JSONResponse {
-		if ($this->userSession->getUser() === null) {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
 			return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// CTI surfaces resolve a caller's phone number to a customer record and
+		// attach call recordings — CRM data, not an any-authenticated-user
+		// capability. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		$recordingUrl = (string)$this->request->getParam('recordingUrl', '');

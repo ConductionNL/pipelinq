@@ -257,7 +257,7 @@ export function useBarcodeScanner(onScan) {
 			video: { facingMode: 'environment' },
 		})
 		scanning.value = true
-		// eslint-disable-next-line no-undef
+
 		detector = new BarcodeDetector({ formats: BARCODE_FORMATS })
 		// The <video> element is bound by the host component after scanning flips
 		// true; wait a tick so videoEl.value is populated before the first poll.

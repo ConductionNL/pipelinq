@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Service\Portal\PortalAuditService;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -64,6 +65,7 @@ class PortalAuditController extends PortalApiController {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 120, period: 60)]
 	public function index(): JSONResponse {
 		return $this->guarded(
 			handler: function (): array {

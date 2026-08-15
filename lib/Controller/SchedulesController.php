@@ -225,7 +225,7 @@ class SchedulesController extends Controller {
 			'subject' => $subject,
 			'deadline' => $deadline,
 			'description' => (string)$this->request->getParam('description', ''),
-			'priority' => (string)$this->request->getParam('priority', 'normaal'),
+			'priority' => (string)$this->request->getParam('priority', 'normal'),
 			'assigneeUserId' => $requestedAssignee,
 			'assigneeGroupId' => (string)$this->request->getParam('assigneeGroupId', ''),
 			'clientId' => (string)$this->request->getParam('clientId', ''),

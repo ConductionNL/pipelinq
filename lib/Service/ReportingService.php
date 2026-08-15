@@ -291,7 +291,7 @@ class ReportingService {
 	/**
 	 * Calculate first-call resolution rate from an array of contactmoment objects.
 	 *
-	 * FCR = count(outcome == 'opgelost') / count(total) * 100.
+	 * FCR = count(outcome == 'resolved') / count(total) * 100.
 	 * Returns 0.0 for an empty dataset.
 	 *
 	 * @param array<array<string, mixed>> $contactmomenten Array of contactmoment data arrays.
@@ -310,7 +310,7 @@ class ReportingService {
 		$resolved = count(
 			array_filter(
 				$contactmomenten,
-				static fn ($moment) => ($moment['outcome'] ?? '') === 'opgelost',
+				static fn ($moment) => ($moment['outcome'] ?? '') === 'resolved',
 			)
 		);
 

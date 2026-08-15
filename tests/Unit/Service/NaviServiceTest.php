@@ -332,7 +332,7 @@ class NaviServiceTest extends TestCase {
 				['category' => 'vergunningen'],
 			],
 			// Contactmoment tickets share the schema but must not leak in.
-			'ticket_schema:contactmoment' => [
+			'ticket_schema:interaction' => [
 				['category' => 'should-not-appear'],
 			],
 		]);

@@ -185,6 +185,7 @@ export default {
 		NcNoteCard,
 		NcSettingsSection,
 	},
+
 	data() {
 		return {
 			loading: true,
@@ -206,9 +207,11 @@ export default {
 			},
 		}
 	},
+
 	mounted() {
 		this.load()
 	},
+
 	methods: {
 		/**
 		 * Load the current forecast configuration.
@@ -230,6 +233,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Persist the forecast configuration.
 		 */

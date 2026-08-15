@@ -11,12 +11,21 @@
  *     incl/excl price-mode extraction, the per-rate tax breakdown, refund
  *     proportions, and the nl-NL EUR formatter (mirrors PosTransactionService
  *     / PosRefundService).
- *   • src/services/bsnValidation.js — the BSN 11-proef validator + masking
- *     (mirrors BsnValidationService).
+ *   • the SHARED BSN validator from @conduction/nextcloud-vue — the 11-proef
+ *     check + masking (mirrors BsnValidationService). It used to live here as
+ *     src/services/bsnValidation.js; the algorithm now belongs to the library,
+ *     which owns its tests. What bsnValidation.spec.js checks is the CONTRACT
+ *     pipelinq depends on — the exported symbols, the result field names
+ *     BrpContactPanel reads, and the error codes it branches on — because those
+ *     are what a version bump breaks silently.
  *
- * Both modules import nothing, so the environment is `node` and no stubs are
- * needed. Vitest only collects tests/vitest/**; the PHPUnit suite under
- * tests/Unit is untouched.
+ * Every module under test imports nothing, so the environment is `node` and no
+ * stubs are needed. That is why the BSN spec imports the validator's STANDALONE
+ * module path rather than the package root: the root pulls the whole component
+ * set and fails with `No "exports" main defined in @nextcloud/vue`.
+ *
+ * Vitest only collects tests/vitest/**; the PHPUnit suite under tests/Unit is
+ * untouched.
  */
 
 const path = require('path')

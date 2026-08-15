@@ -89,22 +89,22 @@
 
 			<CnDetailCard :title="t('pipelinq', 'Tax breakdown')">
 				<TaxBreakdownCard :transaction="transaction" />
-				<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
+				<PosTotalsPanel :lines="lines" :priceMode="priceMode" />
 			</CnDetailCard>
 
 			<CnDetailCard
 				v-if="canShowTenderPanel"
 				:title="t('pipelinq', 'Tenders')">
 				<TenderEntryPanel
-					:transaction-id="resolvedId"
-					:transaction-status="status"
+					:transactionId="resolvedId"
+					:transactionStatus="status"
 					@changed="onTenderChanged" />
 			</CnDetailCard>
 
 			<CnDetailCard v-if="hasPaymentInfo" :title="t('pipelinq', 'Payment')">
 				<PaymentStatusCard
 					:transaction="transaction"
-					:is-manager="canRefund"
+					:isManager="canRefund"
 					@updated="onPaymentUpdated" />
 			</CnDetailCard>
 
@@ -116,14 +116,14 @@
 
 			<PrintReceiptModal
 				v-if="showPrint"
-				:transaction-id="resolvedId"
+				:transactionId="resolvedId"
 				:templates="receiptTemplates"
 				@close="showPrint = false"
 				@printed="onReceiptIssued" />
 
 			<EmailReceiptModal
 				v-if="showEmail"
-				:transaction-id="resolvedId"
+				:transactionId="resolvedId"
 				:templates="receiptTemplates"
 				@close="showEmail = false"
 				@sent="onReceiptIssued" />
@@ -132,17 +132,17 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { CnDetailCard } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { CnDetailCard } from '@conduction/nextcloud-vue'
-import PosTotalsPanel from './PosTotalsPanel.vue'
-import TaxBreakdownCard from './TaxBreakdownCard.vue'
-import PaymentStatusCard from './PaymentStatusCard.vue'
-import TenderEntryPanel from './TenderEntryPanel.vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import EmailReceiptModal from '../../modals/EmailReceiptModal.vue'
 import PosRefundDialog from '../../modals/PosRefundDialog.vue'
 import PrintReceiptModal from '../../modals/PrintReceiptModal.vue'
-import EmailReceiptModal from '../../modals/EmailReceiptModal.vue'
+import PaymentStatusCard from './PaymentStatusCard.vue'
+import PosTotalsPanel from './PosTotalsPanel.vue'
+import TaxBreakdownCard from './TaxBreakdownCard.vue'
+import TenderEntryPanel from './TenderEntryPanel.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -159,9 +159,11 @@ export default {
 		PrintReceiptModal,
 		EmailReceiptModal,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The transaction id (token-resolved from @objectId by CnBodySections). */
 		transactionId: {
@@ -169,6 +171,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			transaction: {},
@@ -181,10 +184,12 @@ export default {
 			receiptTemplates: [],
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/** The resolved transaction id — prop wins, else the injected section context. */
 		resolvedId() {
 			if (this.transactionId) {
@@ -195,15 +200,19 @@ export default {
 				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		status() {
 			return this.transaction.status || 'draft'
 		},
+
 		priceMode() {
 			return this.transaction.priceMode === 'incl' ? 'incl' : 'excl'
 		},
+
 		lineCount() {
 			return this.lines.length
 		},
+
 		/**
 		 * Whether the current user is treated as a manager in the UI. Server-side
 		 * authorization is authoritative; this only hides the button for clearly
@@ -216,24 +225,31 @@ export default {
 				? window.OC.isUserAdmin()
 				: false
 		},
+
 		canEdit() {
 			return ['draft', 'parked'].includes(this.status)
 		},
+
 		canConfirm() {
 			return ['draft', 'parked'].includes(this.status)
 		},
+
 		canPark() {
 			return this.status === 'draft'
 		},
+
 		canResume() {
 			return this.status === 'parked'
 		},
+
 		canSettle() {
 			return this.status === 'confirmed'
 		},
+
 		canRefund() {
 			return ['confirmed', 'settled'].includes(this.status) && this.isManager
 		},
+
 		/**
 		 * Whether to render the tender entry panel. Shown whenever the transaction
 		 * has an id; the panel itself enforces read-only on settled/refunded.
@@ -245,12 +261,15 @@ export default {
 		canShowTenderPanel() {
 			return !!this.resolvedId
 		},
+
 		canRegisterReturn() {
 			return ['confirmed', 'settled'].includes(this.status)
 		},
+
 		canIssueReceipt() {
 			return ['confirmed', 'settled', 'refunded'].includes(this.status)
 		},
+
 		/**
 		 * Whether the transaction has any payment metadata to display.
 		 *
@@ -266,6 +285,7 @@ export default {
 				|| this.transaction.paymentMethod
 			)
 		},
+
 		/**
 		 * Whether any action button is visible for the current status.
 		 *
@@ -284,6 +304,7 @@ export default {
 			)
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -292,6 +313,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Load the transaction and its lines so the toolbar gating + totals render.
@@ -327,6 +349,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Load the active receipt templates for the print/email modal pickers.
 		 */
@@ -345,27 +368,33 @@ export default {
 				this.receiptTemplates = []
 			}
 		},
+
 		async onReceiptIssued() {
 			await this.load()
 		},
+
 		async onPaymentUpdated() {
 			await this.load()
 		},
+
 		async onTenderChanged() {
 			await this.load()
 		},
+
 		edit() {
 			this.$router.push({
 				name: 'PosTransactionEdit',
 				params: { id: this.resolvedId },
 			})
 		},
+
 		registerReturn() {
 			this.$router.push({
 				name: 'PosRefundNewFromTransaction',
 				params: { transactionId: this.resolvedId },
 			})
 		},
+
 		/**
 		 * Call a lifecycle action endpoint and reload.
 		 *
@@ -406,18 +435,23 @@ export default {
 				this.busy = false
 			}
 		},
+
 		confirm() {
 			this.lifecycle('confirm', {}, t('pipelinq', 'Transaction confirmed.'))
 		},
+
 		settle() {
 			this.lifecycle('settle', {}, t('pipelinq', 'Transaction settled.'))
 		},
+
 		park() {
 			this.lifecycle('park', {}, t('pipelinq', 'Transaction parked.'))
 		},
+
 		resume() {
 			this.lifecycle('resume', {}, t('pipelinq', 'Transaction resumed.'))
 		},
+
 		/**
 		 * Submit a refund with a reason.
 		 *

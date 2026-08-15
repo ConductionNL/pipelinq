@@ -3,44 +3,44 @@
 		<!-- Title -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.title"
+				:modelValue="form.title"
 				:label="t('pipelinq', 'Title')"
 				:error="!!errors.title"
-				:helper-text="errors.title"
-				@update:model-value="(v) => (form.title = v)" />
+				:helperText="errors.title"
+				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
 		<!-- Description -->
 		<div class="form-group">
 			<NcTextField
-				:model-value="form.description"
+				:modelValue="form.description"
 				:label="t('pipelinq', 'Description')"
-				@update:model-value="(v) => (form.description = v)" />
+				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
 		<!-- Value + Probability row -->
 		<div class="form-row">
 			<div class="form-group">
 				<NcTextField
-					:model-value="form.value === null ? '' : String(form.value)"
+					:modelValue="form.value === null ? '' : String(form.value)"
 					:label="t('pipelinq', 'Value (EUR)')"
 					type="number"
 					:error="!!errors.value"
-					:helper-text="errors.value"
-					@update:model-value="
+					:helperText="errors.value"
+					@update:modelValue="
 						(v) => (form.value = v === '' ? null : Number(v))
 					" />
 			</div>
 			<div class="form-group">
 				<NcTextField
-					:model-value="
+					:modelValue="
 						form.probability === null ? '' : String(form.probability)
 					"
 					:label="t('pipelinq', 'Probability %')"
 					type="number"
 					:error="!!errors.probability"
-					:helper-text="errors.probability"
-					@update:model-value="
+					:helperText="errors.probability"
+					@update:modelValue="
 						(v) => (form.probability = v === '' ? null : Number(v))
 					" />
 			</div>
@@ -71,10 +71,10 @@
 		<!-- Expected Close Date -->
 		<div class="form-group">
 			<NcDateTimePickerNative
-				:model-value="expectedCloseDateObj"
+				:modelValue="expectedCloseDateObj"
 				:label="t('pipelinq', 'Expected close date')"
 				type="date"
-				@update:model-value="expectedCloseDateObj = $event" />
+				@update:modelValue="expectedCloseDateObj = $event" />
 		</div>
 
 		<!-- Client -->
@@ -102,7 +102,7 @@
 					label="label"
 					:reduce="(o) => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
-					@update:model-value="onPipelineChange" />
+					@update:modelValue="onPipelineChange" />
 			</div>
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
@@ -139,9 +139,9 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
-import { toDateObject, toDateInputString } from '../../services/localeUtils.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'LeadForm',
@@ -151,11 +151,13 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	props: {
 		lead: {
 			type: Object,
 			default: null,
 		},
+
 		/**
 		 * Render the built-in Cancel / Save buttons. Set to `false` when the
 		 * host supplies its own action buttons (e.g. a parent NcDialog driving
@@ -166,6 +168,7 @@ export default {
 			default: true,
 		},
 	},
+
 	data() {
 		return {
 			form: {
@@ -180,9 +183,11 @@ export default {
 				pipeline: null,
 				stage: null,
 			},
+
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
 		}
 	},
+
 	computed: {
 		/**
 		 * Bridge the stored `expectedCloseDate` string to
@@ -192,37 +197,44 @@ export default {
 			get() {
 				return toDateObject(this.form.expectedCloseDate)
 			},
+
 			set(date) {
 				this.form.expectedCloseDate = toDateInputString(date)
 			},
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-48
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-47
 		 */
 		leadSourcesStore() {
 			return useLeadSourcesStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-54
 		 */
 		sourceOptions() {
 			return this.leadSourcesStore.sourceNames
 		},
+
 		isEdit() {
 			return !!this.lead?.id
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-52
 		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-46
 		 */
@@ -231,6 +243,7 @@ export default {
 				(p) => p.entityType === 'lead' || p.entityType === 'both',
 			)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-51
 		 */
@@ -240,6 +253,7 @@ export default {
 				label: p.title,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-53
 		 */
@@ -247,6 +261,7 @@ export default {
 			if (!this.form.pipeline) return null
 			return this.pipelines.find((p) => p.id === this.form.pipeline) || null
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-55
 		 */
@@ -256,12 +271,14 @@ export default {
 				.sort((a, b) => a.order - b.order)
 				.map((s) => s.name)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-43
 		 */
 		clients() {
 			return this.objectStore.collections.client || []
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-42
 		 */
@@ -271,6 +288,7 @@ export default {
 				label: c.name || c.id,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-45
 		 */
@@ -293,10 +311,12 @@ export default {
 			}
 			return errors
 		},
+
 		isValid() {
 			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
 		},
 	},
+
 	watch: {
 		// Surface validity so a host (e.g. a parent NcDialog) can enable or
 		// disable its own submit button.
@@ -307,6 +327,7 @@ export default {
 			},
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-44
 	 */
@@ -338,6 +359,7 @@ export default {
 			this.autoAssignDefaultPipeline()
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-41
@@ -355,6 +377,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-49
 		 */
@@ -372,6 +395,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-50
 		 */

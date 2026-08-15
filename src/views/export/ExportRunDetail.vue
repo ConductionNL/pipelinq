@@ -93,9 +93,9 @@
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
+import { CnDetailCard, CnDetailPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { CnDetailPage, CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { NcButton } from '@nextcloud/vue'
 import { exportApi } from '../../services/exportApi.js'
 
 const STATUS_LABELS = {
@@ -124,16 +124,19 @@ export default {
 		CnDetailCard,
 		CnStatusBadge,
 	},
+
 	props: {
 		exportRunId: {
 			type: String,
 			default: null,
 		},
+
 		id: {
 			type: String,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			run: {},
@@ -142,6 +145,7 @@ export default {
 			busy: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * The resolved run id from either prop name.
@@ -151,6 +155,7 @@ export default {
 		runId() {
 			return this.exportRunId || this.id || this.$route?.params?.id || null
 		},
+
 		/**
 		 * The file manifest (defensive default).
 		 *
@@ -161,6 +166,7 @@ export default {
 				? this.run.fileManifestJson
 				: []
 		},
+
 		/**
 		 * The human-readable status label.
 		 *
@@ -172,6 +178,7 @@ export default {
 				STATUS_LABELS[this.run.status] || this.run.status || 'Unknown',
 			)
 		},
+
 		/**
 		 * The status badge severity.
 		 *
@@ -180,6 +187,7 @@ export default {
 		badgeStatus() {
 			return BADGE_STATUS[this.run.status] || 'info'
 		},
+
 		/**
 		 * Whether the run can be retried.
 		 *
@@ -189,9 +197,11 @@ export default {
 			return ['failed', 'partial', 'skipped_overlap'].includes(this.run.status)
 		},
 	},
+
 	async mounted() {
 		await this.load()
 	},
+
 	methods: {
 		/**
 		 * Load the run + its snapshots.
@@ -211,6 +221,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Retry this run.
 		 */
@@ -226,6 +237,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Navigate back to the run list.
 		 */

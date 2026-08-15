@@ -48,6 +48,7 @@ export default {
 			required: true,
 		},
 	},
+
 	emits: ['select'],
 	methods: {
 		formatDate(iso) {

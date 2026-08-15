@@ -22,22 +22,22 @@
 		<template v-else>
 			<div class="pos-refund-form__fields">
 				<NcSelect
-					:model-value="selectedTransaction"
+					:modelValue="selectedTransaction"
 					:options="transactionOptions"
-					:input-label="t('pipelinq', 'Original transaction')"
+					:inputLabel="t('pipelinq', 'Original transaction')"
 					:placeholder="t('pipelinq', 'Choose a transaction…')"
 					label="label"
 					:clearable="false"
 					:disabled="lockedTransaction"
-					@update:model-value="onTransactionSelect" />
+					@update:modelValue="onTransactionSelect" />
 				<NcSelect
-					:model-value="selectedReason"
+					:modelValue="selectedReason"
 					:options="reasonOptions"
-					:input-label="t('pipelinq', 'Refund reason')"
+					:inputLabel="t('pipelinq', 'Refund reason')"
 					:placeholder="t('pipelinq', 'Choose a reason…')"
 					label="label"
 					:clearable="false"
-					@update:model-value="onReasonSelect" />
+					@update:modelValue="onReasonSelect" />
 				<NcTextField
 					v-model="refund.notes"
 					:label="t('pipelinq', 'Notes')" />
@@ -68,7 +68,7 @@
 						v-for="(candidate, index) in candidates"
 						:key="candidate.originalLine"
 						:line="candidate"
-						:original-line="originalLineFor(candidate.originalLine)"
+						:originalLine="originalLineFor(candidate.originalLine)"
 						:reasons="activeReasons"
 						@update:line="updateCandidate(index, $event)"
 						@remove="removeCandidate(index)" />
@@ -96,12 +96,12 @@
 </template>
 
 <script>
-import { NcButton, NcTextField, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import PosRefundLineRow from '../../components/pos/PosRefundLineRow.vue'
 import PosRefundTotalsPanel from '../../components/pos/PosRefundTotalsPanel.vue'
-import { useObjectStore } from '../../store/modules/object.js'
 import { refundLineAmounts } from '../../services/posTotals.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'PosRefundForm',
@@ -113,12 +113,14 @@ export default {
 		PosRefundLineRow,
 		PosRefundTotalsPanel,
 	},
+
 	props: {
 		posRefundId: {
 			type: String,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			refund: {
@@ -127,6 +129,7 @@ export default {
 				originalTransaction: null,
 				refundReason: null,
 			},
+
 			transactions: [],
 			originalLines: [],
 			reasons: [],
@@ -135,10 +138,12 @@ export default {
 			saving: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * The refund id from the prop or route (edit mode).
 		 *
@@ -147,6 +152,7 @@ export default {
 		refundId() {
 			return this.posRefundId || this.$route.params.id || null
 		},
+
 		/**
 		 * The transaction id passed when creating from a transaction.
 		 *
@@ -155,6 +161,7 @@ export default {
 		routeTransactionId() {
 			return this.$route.params.transactionId || null
 		},
+
 		/**
 		 * Whether this is an edit of an existing refund.
 		 *
@@ -163,6 +170,7 @@ export default {
 		isEdit() {
 			return !!this.refundId
 		},
+
 		/**
 		 * Whether the original transaction is locked (created from a transaction).
 		 *
@@ -171,6 +179,7 @@ export default {
 		lockedTransaction() {
 			return !!this.routeTransactionId || this.isEdit
 		},
+
 		/**
 		 * Transaction picker options (only refundable: confirmed / settled).
 		 *
@@ -181,6 +190,7 @@ export default {
 				.filter((tx) => ['confirmed', 'settled'].includes(tx.status))
 				.map((tx) => ({ id: tx.id, label: tx.reference || tx.id }))
 		},
+
 		/**
 		 * The selected transaction option.
 		 *
@@ -193,6 +203,7 @@ export default {
 				) || null
 			)
 		},
+
 		/**
 		 * Active refundReason objects for the pickers.
 		 *
@@ -201,6 +212,7 @@ export default {
 		activeReasons() {
 			return this.reasons.filter((r) => r.isActive !== false)
 		},
+
 		/**
 		 * Overall reason picker options.
 		 *
@@ -212,6 +224,7 @@ export default {
 				label: r.label || r.code,
 			}))
 		},
+
 		/**
 		 * The selected overall reason option.
 		 *
@@ -223,6 +236,7 @@ export default {
 				|| null
 			)
 		},
+
 		/**
 		 * Candidate lines that are selected for the refund (for the totals panel).
 		 *
@@ -232,6 +246,7 @@ export default {
 			return this.candidates.filter((c) => c.selected)
 		},
 	},
+
 	async mounted() {
 		this.loading = true
 		try {
@@ -247,6 +262,7 @@ export default {
 			this.loading = false
 		}
 	},
+
 	methods: {
 		/**
 		 * Load candidate transactions for the picker.
@@ -262,6 +278,7 @@ export default {
 				this.transactions = []
 			}
 		},
+
 		/**
 		 * Load the refund reasons.
 		 */
@@ -276,6 +293,7 @@ export default {
 				this.reasons = []
 			}
 		},
+
 		/**
 		 * Load an existing refund and its lines (edit mode).
 		 */
@@ -310,6 +328,7 @@ export default {
 				return this.blankCandidate(original)
 			})
 		},
+
 		/**
 		 * Load the original transaction's lines and build candidate rows.
 		 *
@@ -332,6 +351,7 @@ export default {
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 			this.candidates = this.originalLines.map((o) => this.blankCandidate(o))
 		},
+
 		/**
 		 * Build a blank (unselected) candidate for an original line.
 		 *
@@ -350,6 +370,7 @@ export default {
 				valid: true,
 			}
 		},
+
 		/**
 		 * Resolve the original line object for a candidate.
 		 *
@@ -359,6 +380,7 @@ export default {
 		originalLineFor(id) {
 			return this.originalLines.find((o) => o.id === id) || {}
 		},
+
 		/**
 		 * Replace a candidate after an edit.
 		 *
@@ -369,6 +391,7 @@ export default {
 			const current = this.candidates[index]
 			this.candidates[index] = { ...current, ...line }
 		},
+
 		/**
 		 * Remove (deselect) a candidate.
 		 *
@@ -378,6 +401,7 @@ export default {
 			const current = this.candidates[index]
 			this.candidates[index] = { ...current, selected: false }
 		},
+
 		/**
 		 * Select all lines with full original quantity.
 		 */
@@ -396,6 +420,7 @@ export default {
 				}
 			})
 		},
+
 		/**
 		 * Apply a transaction selection.
 		 *
@@ -414,6 +439,7 @@ export default {
 			}
 			await this.loadOriginalLines(this.refund.originalTransaction)
 		},
+
 		/**
 		 * Apply an overall reason selection.
 		 *
@@ -422,6 +448,7 @@ export default {
 		onReasonSelect(option) {
 			this.refund.refundReason = option ? option.id : null
 		},
+
 		/**
 		 * Persist the refund header and its selected lines.
 		 *
@@ -479,6 +506,7 @@ export default {
 						returnedQuantity: Number(candidate.returnedQuantity) || 0,
 						returnReason:
 							candidate.returnReason || this.refund.refundReason,
+
 						restock: candidate.restock ?? true,
 						taxAmount: amounts.taxAmount,
 						lineTotal: amounts.lineTotal,
@@ -500,6 +528,7 @@ export default {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Return to the refund list.
 		 */

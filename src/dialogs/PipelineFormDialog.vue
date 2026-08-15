@@ -21,18 +21,18 @@
 			<div class="form-section">
 				<div class="form-group">
 					<NcTextField
-						:model-value="form.title"
+						:modelValue="form.title"
 						:label="t('pipelinq', 'Title')"
 						:error="!!errors.title"
-						:helper-text="errors.title"
-						@update:model-value="(v) => (form.title = v)" />
+						:helperText="errors.title"
+						@update:modelValue="(v) => (form.title = v)" />
 				</div>
 
 				<div class="form-group">
 					<NcTextField
-						:model-value="form.description"
+						:modelValue="form.description"
 						:label="t('pipelinq', 'Description')"
-						@update:model-value="(v) => (form.description = v)" />
+						@update:modelValue="(v) => (form.description = v)" />
 				</div>
 
 				<div class="form-row">
@@ -66,10 +66,10 @@
 
 				<div class="form-group">
 					<NcTextField
-						:model-value="form.totalsLabel"
+						:modelValue="form.totalsLabel"
 						:label="t('pipelinq', 'Totals label')"
 						:placeholder="t('pipelinq', 'e.g. EUR, hours, items')"
-						@update:model-value="(v) => (form.totalsLabel = v)" />
+						@update:modelValue="(v) => (form.totalsLabel = v)" />
 					<span class="help-text">{{
 						t(
 							'pipelinq',
@@ -119,34 +119,34 @@
 						<div class="mapping-fields">
 							<div class="mapping-field">
 								<NcTextField
-									:model-value="mapping.schemaSlug"
+									:modelValue="mapping.schemaSlug"
 									:label="t('pipelinq', 'Schema slug')"
 									:placeholder="
 										t('pipelinq', 'e.g. lead, request')
 									"
-									@update:model-value="
+									@update:modelValue="
 										(v) => (mapping.schemaSlug = v)
 									" />
 							</div>
 							<div class="mapping-field">
 								<NcTextField
-									:model-value="mapping.columnProperty"
+									:modelValue="mapping.columnProperty"
 									:label="t('pipelinq', 'Column property')"
 									:placeholder="
 										t('pipelinq', 'e.g. stage, status')
 									"
-									@update:model-value="
+									@update:modelValue="
 										(v) => (mapping.columnProperty = v)
 									" />
 							</div>
 							<div class="mapping-field">
 								<NcTextField
-									:model-value="mapping.totalsProperty || ''"
+									:modelValue="mapping.totalsProperty || ''"
 									:label="t('pipelinq', 'Totals property')"
 									:placeholder="
 										t('pipelinq', 'e.g. value (optional)')
 									"
-									@update:model-value="
+									@update:modelValue="
 										(v) => (mapping.totalsProperty = v || null)
 									" />
 							</div>
@@ -200,10 +200,10 @@
 					it by `sortedStages` position, so validation messages attached to
 					the wrong row whenever the two orders differed.
 				-->
-				<draggable
+				<Draggable
 					v-else
 					v-model="form.stages"
-					item-key="order"
+					itemKey="order"
 					class="stages-list"
 					handle=".drag-handle"
 					@end="recomputeOrders">
@@ -248,23 +248,23 @@
 
 							<div class="stage-fields">
 								<NcTextField
-									:model-value="stage.name"
+									:modelValue="stage.name"
 									:label="t('pipelinq', 'Stage name')"
 									:error="!!stageErrors[index]?.name"
-									:helper-text="stageErrors[index]?.name"
+									:helperText="stageErrors[index]?.name"
 									class="stage-name-field"
-									@update:model-value="(v) => (stage.name = v)" />
+									@update:modelValue="(v) => (stage.name = v)" />
 
 								<NcTextField
-									:model-value="String(stage.probability ?? '')"
+									:modelValue="String(stage.probability ?? '')"
 									:label="t('pipelinq', 'Probability %')"
 									type="number"
 									:error="!!stageErrors[index]?.probability"
-									:helper-text="
+									:helperText="
 										stageErrors[index]?.probability || ''
 									"
 									class="stage-probability-field"
-									@update:model-value="
+									@update:modelValue="
 										(v) =>
 											(stage.probability =
 												v === '' ? null : Number(v))
@@ -318,7 +318,7 @@
 							</NcButton>
 						</div>
 					</template>
-				</draggable>
+				</Draggable>
 			</div>
 		</div>
 
@@ -356,18 +356,20 @@ export default {
 		NcDialog,
 		NcSelect,
 		NcTextField,
-		draggable,
+		Draggable: draggable,
 		ChevronDown,
 		ChevronUp,
 		Delete,
 		Plus,
 	},
+
 	props: {
 		pipeline: {
 			type: Object,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			form: {
@@ -379,14 +381,17 @@ export default {
 				propertyMappings: [],
 				stages: [],
 			},
+
 			views: [],
 			loadingViews: false,
 		}
 	},
+
 	computed: {
 		isEdit() {
 			return !!this.pipeline
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-43
 		 */
@@ -396,6 +401,7 @@ export default {
 				label: v.name || v.slug || v.id,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-33
 		 */
@@ -413,6 +419,7 @@ export default {
 			}
 			return errors
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-42
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-2.2
@@ -443,6 +450,7 @@ export default {
 				return Object.keys(errors).length > 0 ? errors : null
 			})
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-34
 		 */
@@ -453,6 +461,7 @@ export default {
 			return true
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-32
 	 */
@@ -468,6 +477,7 @@ export default {
 				propertyMappings: (this.pipeline.propertyMappings || []).map(
 					(m) => ({ ...m }),
 				),
+
 				stages: (this.pipeline.stages || []).map((s) => ({ ...s })),
 			}
 			// `form.stages` is now the display order (see recomputeOrders): the
@@ -478,6 +488,7 @@ export default {
 		}
 		await this.loadViews()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-35
@@ -528,6 +539,7 @@ export default {
 				color: null,
 			})
 		},
+
 		/**
 		 * @param index
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
@@ -540,6 +552,7 @@ export default {
 			}
 			this.recomputeOrders()
 		},
+
 		/**
 		 * @param stage
 		 * @param direction
@@ -564,6 +577,7 @@ export default {
 			stages.splice(targetIndex, 0, stages.splice(currentIndex, 1)[0])
 			this.recomputeOrders()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-38
 		 */
@@ -577,6 +591,7 @@ export default {
 				stage.order = i
 			})
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-37
 		 */
@@ -590,6 +605,7 @@ export default {
 					columnProperty: m.columnProperty,
 					totalsProperty: m.totalsProperty || null,
 				})),
+
 				stages: this.form.stages.map((s) => ({
 					name: s.name,
 					order: s.order,

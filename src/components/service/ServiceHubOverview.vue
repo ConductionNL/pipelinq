@@ -81,7 +81,7 @@ export default {
 					id: 'Contactmomenten',
 					label: t('pipelinq', 'Contact moments'),
 					route: 'Tickets',
-					query: { ticketType: 'contactmoment' },
+					query: { ticketType: 'interaction' },
 				},
 				{
 					id: 'Complaints',

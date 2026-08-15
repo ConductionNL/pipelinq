@@ -201,7 +201,7 @@ class RoutingServiceWorkloadTest extends TestCase {
 			['schema' => 'ticket', 'ticketType' => 'request', 'assignee' => 'user-1', 'status' => 'in_progress'],
 			['schema' => 'ticket', 'ticketType' => 'request', 'assignee' => 'user-1', 'status' => 'closed'],
 			// A contactmoment ticket for user-1 — another subtype, never counted.
-			['schema' => 'ticket', 'ticketType' => 'contactmoment', 'assignee' => 'user-1', 'status' => 'new'],
+			['schema' => 'ticket', 'ticketType' => 'interaction', 'assignee' => 'user-1', 'status' => 'new'],
 			// Leads for user-1 with status open: 3.
 			['schema' => 'lead', 'assignee' => 'user-1', 'status' => 'open'],
 			['schema' => 'lead', 'assignee' => 'user-1', 'status' => 'open'],

@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Listener;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\BerichtenboxService;
 use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -45,8 +46,12 @@ use Psr\Log\LoggerInterface;
  * Zaak status-change → Berichtenbox dispatch listener.
  *
  * @implements IEventListener<Event>
+ *
+ * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
  */
 class BerichtenboxZaakStatusListener implements IEventListener {
+	use EntityAccessorTrait;
+
 	/**
 	 * Statuses that trigger a Berichtenbox dispatch.
 	 *
@@ -54,10 +59,10 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 */
 	public const TRIGGER_STATUSES = [
 		'received',
-		'in-behandeling',
-		'meer-info-nodig',
-		'afgehandeld',
-		'afgewezen',
+		'in-progress',
+		'more-info-needed',
+		'handled',
+		'rejected',
 	];
 
 	/**
@@ -87,6 +92,8 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 * @param Event $event Event.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
 	 */
 	public function handle(Event $event): void {
 		if ($this->isCaseUpdate(event: $event) === false) {
@@ -113,7 +120,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			if ($bsn === '') {
 				// Try the linked Contactmoment.
 				$bsn = $this->resolveBsnViaContactmoment(
-					contactmomentId: (string)($newData['contactmomentId'] ?? '')
+					interactionId: (string)($newData['interactionId'] ?? '')
 				);
 			}
 
@@ -127,7 +134,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 
 			$this->berichtenbox->queueOutboundMessage(
 				caseId: (string)($newData['id'] ?? $newData['uuid'] ?? ''),
-				contactmomentId: (string)($newData['contactmomentId'] ?? null),
+				interactionId: (string)($newData['interactionId'] ?? null),
 				status: $newStatus,
 				bsn: $bsn,
 				templateOverride: null,
@@ -163,12 +170,19 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			return false;
 		}
 
+		// `getSchema()` is served by Entity::__call, so method_exists() is FALSE
+		// for it on a real ObjectEntity and this guard rejected every event
+		// (pipelinq#807). Note the second, independent kill switch below: no
+		// `zaak_schema` app-config key is written anywhere in this app and the
+		// register declares no `zaak` schema, so `$zaakSchema` is '' and the
+		// listener still cannot fire. That gap is a configuration/product
+		// decision and is deliberately NOT invented here.
 		$new = $event->getNewObject();
-		if ($new === null || method_exists($new, 'getSchema') === false) {
+		$schemaId = $this->readEntityValue(entity: $new, getter: 'getSchema');
+		if ($schemaId === '') {
 			return false;
 		}
 
-		$schemaId = (string)$new->getSchema();
 		$caseSchema = $this->appConfig->getValueString(
 			Application::APP_ID,
 			'zaak_schema',
@@ -218,12 +232,12 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 	 * schema through TicketService instead of the retired
 	 * `contactmoment_schema`.
 	 *
-	 * @param string $contactmomentId Contactmoment (ticket) uuid.
+	 * @param string $interactionId Contactmoment (ticket) uuid.
 	 *
 	 * @return string
 	 */
-	private function resolveBsnViaContactmoment(string $contactmomentId): string {
-		if ($contactmomentId === '') {
+	private function resolveBsnViaContactmoment(string $interactionId): string {
+		if ($interactionId === '') {
 			return '';
 		}
 
@@ -236,7 +250,7 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			$register = $this->ticketService->getRegisterId();
 			$schema = $this->ticketService->getSchemaId();
 
-			$row = $service->find(id: $contactmomentId, register: $register, schema: $schema);
+			$row = $service->find(id: $interactionId, register: $register, schema: $schema);
 			if ($row === null) {
 				return '';
 			}

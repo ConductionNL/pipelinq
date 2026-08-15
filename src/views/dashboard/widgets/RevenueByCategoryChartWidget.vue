@@ -20,8 +20,8 @@
 
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
-import { getAnalyticsTrend } from '../../../services/dashboardData.js'
 import { formatEur } from '../../../services/commercialFormat.js'
+import { getAnalyticsTrend } from '../../../services/dashboardData.js'
 import analyticsPeriodMixin from './analyticsPeriodMixin.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -36,6 +36,7 @@ export default {
 	components: {
 		CnChartWidget,
 	},
+
 	mixins: [analyticsPeriodMixin, dashboardRefreshMixin],
 	data() {
 		return {
@@ -43,19 +44,23 @@ export default {
 			trend: { series: [] },
 		}
 	},
+
 	computed: {
 		/** @return {boolean} Whether there is nothing to plot. */
 		isEmpty() {
 			return (this.trend?.series || []).length === 0
 		},
+
 		/** @return {Array<string>} Category labels. */
 		chartLabels() {
 			return (this.trend?.series || []).map((pt) => pt.date)
 		},
+
 		/** @return {Array<number>} Per-category revenue values (donut series). */
 		chartValues() {
 			return (this.trend?.series || []).map((pt) => pt.value)
 		},
+
 		/** @return {object} Donut options with euro tooltip. */
 		chartOptions() {
 			return {
@@ -64,6 +69,7 @@ export default {
 			}
 		},
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/specs/commercial-dashboard/spec.md

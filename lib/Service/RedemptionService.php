@@ -61,7 +61,7 @@ class RedemptionService {
 	}//end __construct()
 
 	/**
-	 * Initiate a redemption — reserve points + create a Redemption with status "gereserveerd".
+	 * Initiate a redemption — reserve points + create a Redemption with status "reserved".
 	 *
 	 * @param string $accountId The account UUID.
 	 * @param string $optionId The RedemptionOption UUID.
@@ -93,8 +93,8 @@ class RedemptionService {
 			'optionId' => $optionId,
 			'programmeId' => $option['programmeId'] ?? null,
 			'costInPoints' => $cost,
-			'beloningCode' => $code,
-			'status' => 'gereserveerd',
+			'rewardCode' => $code,
+			'status' => 'reserved',
 			'initiatedOn' => $now,
 			'validTo' => $this->codeExpiryDefault(),
 		];
@@ -108,7 +108,7 @@ class RedemptionService {
 				accountId: $accountId,
 				amount: $cost,
 				redemptionId: (string)$redemptionUuid,
-				brondocument: ['optionId' => $optionId, 'beloningCode' => $code],
+				sourceDocument: ['optionId' => $optionId, 'rewardCode' => $code],
 				processedBy: 'redemption-service'
 			);
 		} catch (\Throwable $e) {
@@ -140,7 +140,7 @@ class RedemptionService {
 	 * @throws RuntimeException On inactive account, invalid option, insufficient balance, or limit reached.
 	 */
 	private function assertRedemptionEligible(array $account, array $option, string $accountId, string $optionId): int {
-		if ((string)($account['status'] ?? '') !== 'actief') {
+		if ((string)($account['status'] ?? '') !== 'active') {
 			throw new RuntimeException('Account is not active.');
 		}
 
@@ -178,7 +178,7 @@ class RedemptionService {
 		}
 
 		$status = (string)($redemption['status'] ?? '');
-		if ($status !== 'gereserveerd') {
+		if ($status !== 'reserved') {
 			return ['valid' => false, 'redemption' => $redemption, 'reason' => 'Status is ' . $status];
 		}
 
@@ -208,11 +208,11 @@ class RedemptionService {
 		}
 
 		// Idempotent: if already used, return as-is.
-		if ((string)($redemption['status'] ?? '') === 'gebruikt') {
+		if ((string)($redemption['status'] ?? '') === 'used') {
 			return $redemption;
 		}
 
-		$redemption['status'] = 'gebruikt';
+		$redemption['status'] = 'used';
 		$redemption['usedOn'] = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('c');
 		$redemption['posTransactionId'] = $posTransactionId;
 
@@ -233,11 +233,11 @@ class RedemptionService {
 			throw new RuntimeException('Redemption not found.');
 		}
 
-		if ((string)($redemption['status'] ?? '') === 'geannuleerd') {
+		if ((string)($redemption['status'] ?? '') === 'cancelled') {
 			return $redemption;
 		}
 
-		if ((string)($redemption['status'] ?? '') === 'gereserveerd') {
+		if ((string)($redemption['status'] ?? '') === 'reserved') {
 			$accountId = (string)($redemption['accountId'] ?? '');
 			$cost = (int)($redemption['costInPoints'] ?? 0);
 			if ($accountId !== '' && $cost > 0) {
@@ -250,7 +250,7 @@ class RedemptionService {
 			}
 		}
 
-		$redemption['status'] = 'geannuleerd';
+		$redemption['status'] = 'cancelled';
 		$this->logger->info(
 			'Pipelinq: redemption cancelled',
 			['redemptionId' => $redemptionId, 'reason' => $reason]
@@ -368,7 +368,7 @@ class RedemptionService {
 			$rows = $this->getObjectService()->findAll(
 				config: [
 					'filters' => [
-						'beloningCode' => $code,
+						'rewardCode' => $code,
 						'register' => $register,
 						'schema' => $schema,
 					],
@@ -404,16 +404,16 @@ class RedemptionService {
 			return null;
 		}
 
-		if ((string)($redemption['status'] ?? '') === 'vervallen') {
+		if ((string)($redemption['status'] ?? '') === 'lapsed') {
 			return $redemption;
 		}
 
-		$redemption['status'] = 'vervallen';
+		$redemption['status'] = 'lapsed';
 		return $this->persist(payload: $redemption, uuid: $redemptionId);
 	}//end markExpired()
 
 	/**
-	 * Count "gebruikt" redemptions for an (account, option) pair.
+	 * Count "used" redemptions for an (account, option) pair.
 	 *
 	 * @param string $accountId The account UUID.
 	 * @param string $optionId The option UUID.
@@ -432,7 +432,7 @@ class RedemptionService {
 					'filters' => [
 						'accountId' => $accountId,
 						'optionId' => $optionId,
-						'status' => 'gebruikt',
+						'status' => 'used',
 						'register' => $register,
 						'schema' => $schema,
 					],

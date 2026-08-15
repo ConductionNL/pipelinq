@@ -58,10 +58,8 @@
 					</div>
 					<div class="info-field info-field--wide">
 						<span
-							:class="[
-								'cash-shift-section__tolerance',
-								toleranceClass,
-							]">
+							class="cash-shift-section__tolerance"
+							:class="[toleranceClass]">
 							{{ toleranceLabel }}
 						</span>
 					</div>
@@ -117,15 +115,15 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { CnDetailCard, CnStatusBadge } from '@conduction/nextcloud-vue'
-import { useObjectStore } from '../../store/modules/object.js'
-import { formatEur } from '../../services/posTotals.js'
-import CashShiftDropDialog from '../../modals/CashShiftDropDialog.vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import CashShiftCountDialog from '../../modals/CashShiftCountDialog.vue'
+import CashShiftDropDialog from '../../modals/CashShiftDropDialog.vue'
 import CashShiftRejectDialog from '../../modals/CashShiftRejectDialog.vue'
+import { formatEur } from '../../services/posTotals.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 const DIFF_STATUS_LABELS = {
 	pending: 'Pending',
@@ -144,9 +142,11 @@ export default {
 		CashShiftCountDialog,
 		CashShiftRejectDialog,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The shift id (token-resolved from @objectId by CnBodySections). */
 		shiftId: {
@@ -154,6 +154,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			shift: {},
@@ -165,10 +166,12 @@ export default {
 			showReject: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/** The resolved shift id — prop wins, else the injected section context. */
 		resolvedId() {
 			if (this.shiftId) {
@@ -179,13 +182,16 @@ export default {
 				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		status() {
 			return this.shift.status || 'open'
 		},
+
 		diffStatusLabel() {
 			const key = this.diff?.status || 'pending'
 			return t('pipelinq', DIFF_STATUS_LABELS[key] || key)
 		},
+
 		/**
 		 * Whether the current user is treated as a manager in the UI. Server-side
 		 * authorization is authoritative; this only hides the buttons for clearly
@@ -198,12 +204,15 @@ export default {
 				? window.OC.isUserAdmin()
 				: false
 		},
+
 		canDrop() {
 			return this.status === 'open'
 		},
+
 		canCount() {
 			return this.status === 'open'
 		},
+
 		canReconcile() {
 			return (
 				this.diff?.status === 'pending'
@@ -211,6 +220,7 @@ export default {
 				&& this.isManager
 			)
 		},
+
 		/**
 		 * Human label for the diff percentage (N/A when undefined).
 		 *
@@ -225,17 +235,20 @@ export default {
 			}
 			return `${this.diff.diffPercentage}%`
 		},
+
 		toleranceClass() {
 			return this.diff?.withinTolerance
 				? 'cash-shift-section__tolerance--ok'
 				: 'cash-shift-section__tolerance--warn'
 		},
+
 		toleranceLabel() {
 			return this.diff?.withinTolerance
 				? t('pipelinq', 'Within tolerance')
 				: t('pipelinq', 'Outside tolerance')
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -244,6 +257,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		formatEur,
 		/**
@@ -278,6 +292,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Pick the diff to display: prefer the pending one, else the most recent.
 		 *
@@ -294,6 +309,7 @@ export default {
 			}
 			return diffs[diffs.length - 1]
 		},
+
 		/**
 		 * POST to a shift lifecycle endpoint and reload on success.
 		 *
@@ -334,6 +350,7 @@ export default {
 				this.busy = false
 			}
 		},
+
 		/**
 		 * Record a mid-shift drop.
 		 *
@@ -349,6 +366,7 @@ export default {
 				this.showDrop = false
 			}
 		},
+
 		/**
 		 * Close the shift and record a blind count.
 		 *
@@ -364,6 +382,7 @@ export default {
 				this.showCount = false
 			}
 		},
+
 		/**
 		 * Approve the pending variance (manager only).
 		 */
@@ -374,6 +393,7 @@ export default {
 				t('pipelinq', 'Cash difference approved.'),
 			)
 		},
+
 		/**
 		 * Reject the pending variance with a reason (manager only).
 		 *

@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\SmsAdapter;
 use OCA\Pipelinq\Service\WhatsAppAdapter;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
@@ -83,6 +84,9 @@ class MessagingWebhookController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// Inbound message + delivery-status webhooks. A conversation burst is
+	// normal traffic here, not abuse.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function whatsapp(string $providerId): JSONResponse {
 		$rawBody = $this->readRawBody();
 		$signature = (string)$this->request->getHeader('X-Hub-Signature-256');
@@ -115,6 +119,7 @@ class MessagingWebhookController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function sms(string $providerId): JSONResponse {
 		$rawBody = $this->readRawBody();
 		$signatureRaw = $this->request->getHeader('X-Twilio-Signature');

@@ -30,9 +30,9 @@
 					autocomplete="off"
 					inputmode="numeric"
 					maxlength="9"
-					:helper-text="bsnFeedback || ' '"
-					:success="validation.isFormalValid"
-					:error="rawBsn.length > 0 && !validation.isFormalValid" />
+					:helperText="bsnFeedback || ' '"
+					:success="validation.isFormallyValid"
+					:error="rawBsn.length > 0 && !validation.isFormallyValid" />
 				<NcButton
 					variant="primary"
 					data-testid="brp-lookup-button"
@@ -74,7 +74,7 @@
 					<dt>{{ t('pipelinq', 'Place of birth') }}</dt>
 					<dd>{{ persoon.birth_place || '-' }}</dd>
 					<dt>{{ t('pipelinq', 'Gender') }}</dt>
-					<dd>{{ persoon.geslacht || '-' }}</dd>
+					<dd>{{ persoon.gender || '-' }}</dd>
 				</dl>
 				<div
 					v-if="persoon.indicationSecret === '1' && !revealedAddress"
@@ -105,12 +105,16 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
-import { CnDetailCard } from '@conduction/nextcloud-vue'
-import { generateUrl } from '@nextcloud/router'
+import {
+	BSN_ERROR_CHECKSUM,
+	BSN_ERROR_LENGTH,
+	CnDetailCard,
+	validateBsn,
+} from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { validateBsn } from '../services/bsnValidation.js'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import BrpDoelbindingModal from '../modals/BrpDoelbindingModal.vue'
 
 export default {
@@ -122,16 +126,19 @@ export default {
 		CnDetailCard,
 		BrpDoelbindingModal,
 	},
+
 	props: {
 		contactId: {
 			type: String,
 			required: true,
 		},
+
 		initialBsn: {
 			type: String,
 			default: '',
 		},
 	},
+
 	emits: ['contact-updated'],
 	data() {
 		return {
@@ -145,20 +152,34 @@ export default {
 			revealedVerblijfplaats: null,
 		}
 	},
+
 	computed: {
 		validation() {
 			return validateBsn(this.rawBsn)
 		},
+
 		bsnFeedback() {
 			if (!this.rawBsn) return ''
-			return (
-				this.validation.errorMessage
-				|| this.t('pipelinq', 'BSN passes the 11-check')
-			)
+
+			// The shared validator returns a stable errorCode and NO message,
+			// deliberately: the local copy this replaced returned hardcoded
+			// Dutch strings that never reached t(), so a Dutch sentence was
+			// shown to every user whatever their language.
+			if (this.validation.errorCode === BSN_ERROR_LENGTH) {
+				return this.t('pipelinq', 'A BSN is exactly 9 digits')
+			}
+
+			if (this.validation.errorCode === BSN_ERROR_CHECKSUM) {
+				return this.t('pipelinq', 'This BSN does not pass the 11-check')
+			}
+
+			return this.t('pipelinq', 'BSN passes the 11-check')
 		},
+
 		canLookup() {
-			return this.validation.isFormalValid && this.lookupState !== 'loading'
+			return this.validation.isFormallyValid && this.lookupState !== 'loading'
 		},
+
 		fullName() {
 			if (!this.persoon) return ''
 			const parts = [
@@ -168,6 +189,7 @@ export default {
 			].filter(Boolean)
 			return parts.join(' ')
 		},
+
 		address() {
 			if (!this.persoon) return null
 			if (this.persoon.indicationSecret === '1' && !this.revealedAddress)
@@ -176,12 +198,14 @@ export default {
 			return this.persoon.residence || null
 		},
 	},
+
 	methods: {
 		openDoelbinding() {
 			if (!this.canLookup) return
 			this.errorMessage = ''
 			this.showModal = true
 		},
+
 		async onLookup(payload) {
 			this.showModal = false
 			this.lookupState = 'loading'
@@ -191,7 +215,7 @@ export default {
 				const response = await axios.post(url, {
 					bsn: this.rawBsn,
 					verzoekreden: payload.verzoekreden,
-					doelbinding: payload.doelbinding,
+					purposeBinding: payload.purposeBinding,
 					basis: payload.basis,
 					gekoppeldContact: this.contactId,
 					vogScreening: payload.vogScreening,
@@ -216,6 +240,7 @@ export default {
 				showError(this.errorMessage)
 			}
 		},
+
 		async revealAddress() {
 			try {
 				const url = generateUrl(

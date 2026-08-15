@@ -61,7 +61,7 @@ class KvkResultMapperTest extends TestCase {
 				'postcode' => '1012AB',
 			],
 			'registratieDatum' => '2020-01-01',
-			'actief' => 'Ja',
+			'active' => 'Ja',
 		];
 
 		$result = $this->mapper->mapResult($item, '6201');
@@ -93,7 +93,7 @@ class KvkResultMapperTest extends TestCase {
 	public function testMapResultInactiveCompany(): void {
 		$item = [
 			'kvkNummer' => '99999999',
-			'actief' => 'Nee',
+			'active' => 'Nee',
 		];
 
 		$result = $this->mapper->mapResult($item, '62');

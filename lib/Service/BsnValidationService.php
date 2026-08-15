@@ -47,7 +47,7 @@ class BsnValidationService {
 	 *
 	 * Returns an associative array with:
 	 *  - isFormeelGeldig: bool
-	 *  - elfproefScore:   int (0 when valid)
+	 *  - elevenTestScore:   int (0 when valid)
 	 *  - errorCode:       null | self::ERROR_LENGTH | self::ERROR_CHECKSUM
 	 *  - errorMessage:    null | string (Dutch)
 	 *  - maskedBsn:       string (***XXXX* style — empty when input too short to mask)
@@ -57,7 +57,7 @@ class BsnValidationService {
 	 *
 	 * @param string $bsnInput Raw 9-digit BSN candidate (caller-trimmed).
 	 *
-	 * @return array{isFormalValid: bool, elfproefScore: int, errorCode: ?string, errorMessage: ?string, maskedBsn: string}
+	 * @return array{isFormalValid: bool, elevenTestScore: int, errorCode: ?string, errorMessage: ?string, maskedBsn: string}
 	 *
 	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001-01
 	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001-02
@@ -68,7 +68,7 @@ class BsnValidationService {
 		if (strlen($bsnInput) !== 9 || ctype_digit($bsnInput) === false) {
 			return [
 				'isFormalValid' => false,
-				'elfproefScore' => -1,
+				'elevenTestScore' => -1,
 				'errorCode' => self::ERROR_LENGTH,
 				'errorMessage' => 'Een BSN bestaat uit exact 9 cijfers.',
 				'maskedBsn' => self::mask(bsnInput: $bsnInput),
@@ -96,7 +96,7 @@ class BsnValidationService {
 
 		return [
 			'isFormalValid' => $isValid,
-			'elfproefScore' => $modulo,
+			'elevenTestScore' => $modulo,
 			'errorCode' => $errorCode,
 			'errorMessage' => $errorMessage,
 			'maskedBsn' => self::mask(bsnInput: $bsnInput),

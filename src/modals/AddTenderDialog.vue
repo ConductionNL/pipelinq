@@ -22,9 +22,9 @@
 			<NcSelect
 				v-model="selected"
 				:options="tenderTypes"
-				:input-label="t('pipelinq', 'Tender type')"
+				:inputLabel="t('pipelinq', 'Tender type')"
 				label="name"
-				track-by="code"
+				trackBy="code"
 				:reduce="(option) => idOf(option)"
 				:placeholder="t('pipelinq', 'Select a tender type')" />
 
@@ -99,8 +99,8 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
 import { formatEur } from '../services/posTotals.js'
 
@@ -112,19 +112,23 @@ export default {
 			type: String,
 			required: true,
 		},
+
 		transactionTotal: {
 			type: Number,
 			default: 0,
 		},
+
 		remaining: {
 			type: Number,
 			default: 0,
 		},
+
 		tenderTypes: {
 			type: Array,
 			default: () => [],
 		},
 	},
+
 	emits: ['close', 'added'],
 	data() {
 		return {
@@ -135,6 +139,7 @@ export default {
 			errorMessage: '',
 		}
 	},
+
 	computed: {
 		selectedType() {
 			if (!this.selected) {
@@ -145,12 +150,15 @@ export default {
 				|| null
 			)
 		},
+
 		requiresReference() {
 			return !!this.selectedType?.requiresReference
 		},
+
 		suggestedAmount() {
 			return Number((this.remaining || 0).toFixed(2))
 		},
+
 		canSubmit() {
 			if (!this.selected || !this.amount || this.amount < 0.01) {
 				return false
@@ -161,11 +169,13 @@ export default {
 			return true
 		},
 	},
+
 	mounted() {
 		if (this.suggestedAmount > 0) {
 			this.amount = this.suggestedAmount
 		}
 	},
+
 	methods: {
 		formatEur,
 		idOf(type) {
@@ -174,6 +184,7 @@ export default {
 			}
 			return type?.id || type?.uuid || ''
 		},
+
 		async submit() {
 			this.saving = true
 			this.errorMessage = ''

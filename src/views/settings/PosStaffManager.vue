@@ -26,15 +26,15 @@
 
 		<PosStaffFormDialog
 			v-if="dialogOpen"
-			:staff-id="editingId"
+			:staffId="editingId"
 			@done="closeDialog" />
 	</NcSettingsSection>
 </template>
 
 <script>
 import { NcSettingsSection } from '@nextcloud/vue'
-import PosStaffList from '../pos/PosStaffList.vue'
 import PosStaffFormDialog from '../../dialogs/PosStaffFormDialog.vue'
+import PosStaffList from '../pos/PosStaffList.vue'
 
 export default {
 	name: 'PosStaffManager',
@@ -43,6 +43,7 @@ export default {
 		PosStaffList,
 		PosStaffFormDialog,
 	},
+
 	data() {
 		return {
 			dialogOpen: false,
@@ -51,6 +52,7 @@ export default {
 			reloadKey: 0,
 		}
 	},
+
 	methods: {
 		/**
 		 * Open an existing staff member in the dialog.
@@ -62,6 +64,7 @@ export default {
 			this.editingId = id
 			this.dialogOpen = true
 		},
+
 		/**
 		 * Open an empty staff form.
 		 *
@@ -71,6 +74,7 @@ export default {
 			this.editingId = ''
 			this.dialogOpen = true
 		},
+
 		/**
 		 * Close the dialog and re-render the list so a save or delete shows up.
 		 *

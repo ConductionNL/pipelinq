@@ -102,8 +102,8 @@
 						</td>
 						<td>
 							<span
+								class="billable-dot"
 								:class="[
-									'billable-dot',
 									resolveBillable(row)
 										? 'billable-dot--on'
 										: 'billable-dot--off',
@@ -147,12 +147,14 @@ export default {
 	components: {
 		NcButton,
 	},
+
 	props: {
 		id: {
 			type: String,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			loading: true,
@@ -169,10 +171,12 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		projectId() {
 			return (
 				this.id
@@ -180,6 +184,7 @@ export default {
 				|| null
 			)
 		},
+
 		filteredActivities() {
 			return this.activities.filter((row) => {
 				if (this.filters.from && row.date && row.date < this.filters.from)
@@ -202,6 +207,7 @@ export default {
 				return true
 			})
 		},
+
 		totals() {
 			let billable = 0
 			let nonBillable = 0
@@ -220,9 +226,11 @@ export default {
 			}
 		},
 	},
+
 	async mounted() {
 		await this.loadAll()
 	},
+
 	methods: {
 		async loadAll() {
 			this.loading = true
@@ -250,6 +258,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Resolved billable value for an activity walking activity → task →
 		 * phase → project (REQ-PTH-005).
@@ -274,18 +283,22 @@ export default {
 			}
 			return true
 		},
+
 		taskName(taskId) {
 			if (!taskId) return '-'
 			const task = this.tasks.find((t) => t.id === taskId)
 			return task ? task.name || taskId : taskId
 		},
+
 		minutesToHours(minutes) {
 			return Math.round((Number(minutes) / 60) * 10) / 10
 		},
+
 		formatHours(value) {
 			const n = Number(value || 0)
 			return n + 'u'
 		},
+
 		formatDuration(minutes) {
 			const n = Number(minutes) || 0
 			const h = Math.floor(n / 60)
@@ -298,6 +311,7 @@ export default {
 			}
 			return h + 'u ' + m + 'min'
 		},
+
 		formatDate(dateStr) {
 			if (!dateStr) return '-'
 			try {

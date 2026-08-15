@@ -6,6 +6,7 @@ import { translate as t } from '@nextcloud/l10n'
 
 /**
  * Task type labels.
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-55
  */
 export function getTaskTypeLabels() {
@@ -18,6 +19,7 @@ export function getTaskTypeLabels() {
 
 /**
  * Task status labels.
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-53
  */
 export function getTaskStatusLabels() {
@@ -31,6 +33,7 @@ export function getTaskStatusLabels() {
 
 /**
  * Task priority labels.
+ *
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-51
  */
 export function getTaskPriorityLabels() {
@@ -92,11 +95,11 @@ export function getTaskPriorityLabel(priority) {
  */
 export function getTaskPriorityColor(priority) {
 	switch (priority) {
-		case 'hoog':
+		case 'high':
 			return 'var(--color-error)'
-		case 'normaal':
+		case 'normal':
 			return 'var(--color-text-maxcontrast)'
-		case 'laag':
+		case 'low':
 			return 'var(--color-text-lighter)'
 		default:
 			return 'var(--color-text-maxcontrast)'
@@ -112,7 +115,7 @@ export function getTaskPriorityColor(priority) {
  */
 export function isTaskOverdue(task) {
 	if (!task.deadline) return false
-	if (task.status === 'afgerond' || task.status === 'verlopen') return false
+	if (task.status === 'completed' || task.status === 'expired') return false
 	return new Date(task.deadline) < new Date()
 }
 

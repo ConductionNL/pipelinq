@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\SegmentController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Http;
@@ -101,7 +102,8 @@ class SegmentControllerTest extends TestCase {
 		$this->controller = new SegmentController(
 			$this->request,
 			$this->segmentService,
-			$this->userSession
+			$this->userSession,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
 		);
 	}//end setUp()
 
@@ -173,7 +175,12 @@ class SegmentControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('marketeer');
 		$session->method('getUser')->willReturn($user);
 
-		return new SegmentController($this->createMock(IRequest::class), $service, $session);
+		return new SegmentController(
+			$this->createMock(IRequest::class),
+			$service,
+			$session,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
+		);
 	}//end wiredController()
 
 	/**

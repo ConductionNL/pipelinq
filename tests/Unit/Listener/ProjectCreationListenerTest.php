@@ -80,15 +80,13 @@ class ProjectCreationListenerTest extends TestCase {
 	 * @return ObjectEntity The entity double.
 	 */
 	private function entity(string $schema, array $data): ObjectEntity {
-		// PHPUnit 10 requires onlyMethods() to configure any method, even abstract ones
-		// from the stub. Without it the mock is non-configuring by default.
-		$entity = $this->getMockBuilder(ObjectEntity::class)
-			->disableOriginalConstructor()
-			->onlyMethods(['getSchema', 'getUuid', 'getObject', 'jsonSerialize'])
-			->getMock();
-		$entity->method('getSchema')->willReturn($schema);
-		$entity->method('getUuid')->willReturn((string)($data['uuid'] ?? 'proj-1'));
-		$entity->method('getObject')->willReturn($data);
+		// A REAL entity, not a mock: getSchema()/getUuid() are served by
+		// Entity::__call in production and cannot be configured with onlyMethods()
+		// against a faithful stub (pipelinq#807).
+		$entity = new ObjectEntity();
+		$entity->setUuid((string)($data['uuid'] ?? 'proj-1'));
+		$entity->setSchema($schema);
+		$entity->setObject($data);
 		return $entity;
 	}//end entity()
 

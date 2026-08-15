@@ -77,7 +77,7 @@ class TicketService {
 	 *
 	 * @var string
 	 */
-	public const TYPE_CONTACTMOMENT = 'contactmoment';
+	public const TYPE_CONTACTMOMENT = 'interaction';
 
 	/**
 	 * Every ticket subtype, in discriminator order.
@@ -212,7 +212,7 @@ class TicketService {
 	 *
 	 * The subtype vocabulary belongs with the subtypes themselves, so callers
 	 * that read natural language (Navi) do not each carry their own copy of the
-	 * NL/EN words for "request" and "contactmoment".
+	 * NL/EN words for "request" and "interaction".
 	 *
 	 * @param string $text Free text, e.g. a natural-language query.
 	 *

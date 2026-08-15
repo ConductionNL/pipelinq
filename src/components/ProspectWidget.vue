@@ -86,7 +86,7 @@
 					v-for="prospect in prospectStore.prospects"
 					:key="prospect.kvkNumber"
 					:prospect="prospect"
-					@create-lead="onCreateLead" />
+					@createLead="onCreateLead" />
 
 				<div
 					v-if="prospectStore.cachedAt"
@@ -103,8 +103,8 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import ProspectCard from './ProspectCard.vue'
 import { useProspectStore } from '../store/modules/prospect.js'
@@ -117,11 +117,13 @@ export default {
 		Refresh,
 		ProspectCard,
 	},
+
 	data() {
 		return {
 			expanded: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-6
@@ -130,9 +132,11 @@ export default {
 			return useProspectStore()
 		},
 	},
+
 	mounted() {
 		this.prospectStore.fetchProspects()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-7
@@ -140,6 +144,7 @@ export default {
 		async refresh() {
 			await this.prospectStore.fetchProspects(true)
 		},
+
 		/**
 		 * @param prospect
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-5
@@ -162,6 +167,7 @@ export default {
 				}
 			}
 		},
+
 		/**
 		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-4

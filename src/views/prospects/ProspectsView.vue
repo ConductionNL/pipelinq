@@ -118,9 +118,9 @@
 //
 // @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
 import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
-import Refresh from 'vue-material-design-icons/Refresh.vue'
-import Magnify from 'vue-material-design-icons/Magnify.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
+import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useProspectStore } from '../../store/modules/prospect.js'
 
 export default {
@@ -133,6 +133,7 @@ export default {
 		Magnify,
 		AlertCircle,
 	},
+
 	/**
 	 * Expose the prospect Pinia store to the component.
 	 *
@@ -142,6 +143,7 @@ export default {
 	setup() {
 		return { prospectStore: useProspectStore() }
 	},
+
 	data() {
 		return {
 			sortKey: 'fitScore',
@@ -149,6 +151,7 @@ export default {
 			convertingKvk: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Prospects sorted by the active sort column/direction.
@@ -169,9 +172,11 @@ export default {
 			})
 		},
 	},
+
 	mounted() {
 		this.prospectStore.fetchProspects()
 	},
+
 	methods: {
 		/**
 		 * Force a fresh prospect fetch (bypass cache).
@@ -181,6 +186,7 @@ export default {
 		refresh() {
 			this.prospectStore.fetchProspects(true)
 		},
+
 		/**
 		 * Toggle/select the active sort column.
 		 *
@@ -195,6 +201,7 @@ export default {
 				this.sortAsc = false
 			}
 		},
+
 		/**
 		 * The sort arrow for a column header.
 		 *
@@ -206,6 +213,7 @@ export default {
 			if (this.sortKey !== key) return ''
 			return this.sortAsc ? ' ▲' : ' ▼'
 		},
+
 		/**
 		 * Map a fit score to a CSS severity class.
 		 *
@@ -219,6 +227,7 @@ export default {
 			if (s >= 40) return 'score--medium'
 			return 'score--low'
 		},
+
 		/**
 		 * Convert a prospect into a CRM lead via the prospect store.
 		 *

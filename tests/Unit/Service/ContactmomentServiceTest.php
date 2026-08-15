@@ -191,6 +191,54 @@ class ContactmomentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 */
+	public function testRecordOutboundMessageReturnsTheUuidWhenSaveReturnsAnEntity(): void {
+		$this->ticketService->method('isConfigured')->willReturn(true);
+		$this->ticketService->method('getRegisterId')->willReturn('reg-123');
+		$this->ticketService->method('getSchemaId')->willReturn('ticket-456');
+
+		// Production's ObjectService::saveObject() is typed `: ObjectEntity` — it
+		// never returns an array. The array-returning double above therefore only
+		// exercises a branch production cannot reach; this one takes the real
+		// shape, where the uuid arrives through the magic getUuid() accessor.
+		// Reverting the fix to `method_exists($saved, 'getUuid')` makes this
+		// assertion read null (pipelinq#807).
+		$objectService = new class {
+
+			/**
+			 * @param array<string, mixed> $object Payload.
+			 * @param mixed $register Register.
+			 * @param mixed $schema Schema.
+			 * @param string|null $uuid Uuid.
+			 *
+			 * @return \OCA\OpenRegister\Db\ObjectEntity The saved entity.
+			 */
+			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): \OCA\OpenRegister\Db\ObjectEntity {
+				$entity = new \OCA\OpenRegister\Db\ObjectEntity();
+				$entity->setUuid('ticket-uuid-2');
+				$entity->setObject($object);
+				return $entity;
+			}
+		};
+
+		$this->container->method('get')->willReturn($objectService);
+
+		$this->assertSame(
+			'ticket-uuid-2',
+			$this->service->recordOutboundMessage(
+				channel: 'sms',
+				subject: 'Outbound SMS',
+				summary: 'Your request is being handled.',
+				channelMetadata: ['platform' => 'sms', 'direction' => 'outbound'],
+			)
+		);
+	}//end testRecordOutboundMessageReturnsTheUuidWhenSaveReturnsAnEntity()
+
+	/**
+	 * The audit is log-and-continue: an unconfigured ticket schema returns null
+	 * instead of throwing.
+	 *
+	 * @return void
+	 */
 	public function testRecordOutboundMessageSkipsWhenUnconfigured(): void {
 		$this->ticketService->method('isConfigured')->willReturn(false);
 		$this->container->expects($this->never())->method('get');

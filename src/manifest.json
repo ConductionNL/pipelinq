@@ -565,7 +565,7 @@
 						"title": "Contactmomenten",
 						"register": "pipelinq",
 						"schema": "ticket",
-						"filter": { "ticketType": "contactmoment", "client": "@objectId" },
+						"filter": { "ticketType": "interaction", "client": "@objectId" },
 						"sort": { "field": "occurredAt", "dir": "desc" },
 						"columns": [
 							{ "key": "title", "label": "Subject" },
@@ -676,7 +676,7 @@
 					{ "label": "All", "filter": {}, "default": true },
 					{ "label": "Tickets", "filter": { "ticketType": "request" } },
 					{ "label": "Complaints", "filter": { "ticketType": "complaint" } },
-					{ "label": "Contactmomenten", "filter": { "ticketType": "contactmoment" } }
+					{ "label": "Contactmomenten", "filter": { "ticketType": "interaction" } }
 				],
 				"actions": [
 					{ "id": "view", "label": "View", "icon": "Eye", "handler": "navigate", "route": "TicketDetail" }

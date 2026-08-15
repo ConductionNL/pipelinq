@@ -69,6 +69,7 @@ export default {
 		NcButton,
 		NcDialog,
 	},
+
 	emits: ['close', 'create'],
 	data() {
 		return {

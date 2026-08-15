@@ -67,10 +67,10 @@ class ProductCatalogServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testBtwClassToRateMapsAllClasses(): void {
-		$this->assertSame(21, $this->service->btwClassToRate('hoog'));
-		$this->assertSame(9, $this->service->btwClassToRate('laag'));
-		$this->assertSame(0, $this->service->btwClassToRate('nul'));
-		$this->assertSame(0, $this->service->btwClassToRate('vrijgesteld'));
+		$this->assertSame(21, $this->service->btwClassToRate('high'));
+		$this->assertSame(9, $this->service->btwClassToRate('low'));
+		$this->assertSame(0, $this->service->btwClassToRate('zero'));
+		$this->assertSame(0, $this->service->btwClassToRate('exempt'));
 	}//end testBtwClassToRateMapsAllClasses()
 
 	/**
@@ -91,9 +91,12 @@ class ProductCatalogServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testIsValidBtwClass(): void {
-		$this->assertTrue($this->service->isValidBtwClass('hoog'));
-		$this->assertTrue($this->service->isValidBtwClass('vrijgesteld'));
-		$this->assertFalse($this->service->isValidBtwClass('high'));
+		$this->assertTrue($this->service->isValidBtwClass('high'));
+		$this->assertTrue($this->service->isValidBtwClass('exempt'));
+		// Was `'high'` — it asserted that the ENGLISH spelling was invalid, back
+		// when the classes were Dutch. Translating them inverts the assertion,
+		// so it needs a value that is genuinely not a class.
+		$this->assertFalse($this->service->isValidBtwClass('not-a-vat-class'));
 		$this->assertFalse($this->service->isValidBtwClass(null));
 	}//end testIsValidBtwClass()
 
@@ -155,7 +158,7 @@ class ProductCatalogServiceTest extends TestCase {
 	public function testResolveEffectivePriceAppliesTier(): void {
 		$product = [
 			'unitPrice' => 5.49,
-			'vatClass' => 'hoog',
+			'vatClass' => 'high',
 			'priceTiers' => [
 				['minQuantity' => 1, 'unitPrice' => 5.49, 'label' => 'Losse verpakking'],
 				['minQuantity' => 5, 'unitPrice' => 4.75, 'label' => 'Doos (5 pakken)'],
@@ -179,7 +182,7 @@ class ProductCatalogServiceTest extends TestCase {
 	public function testResolveEffectivePriceFallsBackToBase(): void {
 		$product = [
 			'unitPrice' => 5.49,
-			'vatClass' => 'hoog',
+			'vatClass' => 'high',
 			'priceTiers' => [
 				['minQuantity' => 1, 'unitPrice' => 5.49, 'label' => 'Losse verpakking'],
 				['minQuantity' => 5, 'unitPrice' => 4.75, 'label' => 'Doos'],
@@ -200,7 +203,7 @@ class ProductCatalogServiceTest extends TestCase {
 	public function testResolveEffectivePriceUsesVariantOverride(): void {
 		$product = [
 			'unitPrice' => 19.95,
-			'vatClass' => 'hoog',
+			'vatClass' => 'high',
 			'variants' => [
 				['sku' => 'TSH-L-WIT', 'unitPrice' => 19.95, 'status' => 'active'],
 				['sku' => 'TSH-L-ZWA', 'unitPrice' => 21.95, 'status' => 'active'],
@@ -236,12 +239,12 @@ class ProductCatalogServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testResolveEffectivePriceVrijgesteldZeroRate(): void {
-		$product = ['unitPrice' => 125.00, 'vatClass' => 'vrijgesteld'];
+		$product = ['unitPrice' => 125.00, 'vatClass' => 'exempt'];
 
 		$result = $this->service->resolveEffectivePrice($product, 1.0);
 
 		$this->assertSame(0, $result['taxRate']);
-		$this->assertSame('vrijgesteld', $result['vatClass']);
+		$this->assertSame('exempt', $result['vatClass']);
 	}//end testResolveEffectivePriceVrijgesteldZeroRate()
 
 	/**

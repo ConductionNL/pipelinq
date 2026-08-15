@@ -89,12 +89,14 @@ export default {
 		NcCheckboxRadioSwitch,
 		NcDialog,
 	},
+
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'confirm'],
 	data() {
 		const today = new Date()
@@ -106,6 +108,7 @@ export default {
 			errorMessage: '',
 		}
 	},
+
 	methods: {
 		/**
 		 * Format a Date object as YYYY-MM-DD.
@@ -119,6 +122,7 @@ export default {
 			const day = String(date.getDate()).padStart(2, '0')
 			return `${year}-${month}-${day}`
 		},
+
 		/**
 		 * Validate inputs and emit the confirm event with the selected range and format.
 		 */

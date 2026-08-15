@@ -127,8 +127,17 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function requestAvailability(string $id = ''): JSONResponse {
-		if ($this->userSession->getUser() === null) {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// This controller already authorises per object further down via
+		// accessPolicy->mayAccess(); these two entry points reach the handoff
+		// surface before any object is resolved, so the privileged-group half
+		// of the same policy is the check available here.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		$request = $this->loadRequestTicket(id: $id);
@@ -161,8 +170,17 @@ class SemanticHandoffController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function convertRequestToCase(string $id = ''): JSONResponse {
-		if ($this->userSession->getUser() === null) {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// This controller already authorises per object further down via
+		// accessPolicy->mayAccess(); these two entry points reach the handoff
+		// surface before any object is resolved, so the privileged-group half
+		// of the same policy is the check available here.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		$request = $this->loadRequestTicket(id: $id);

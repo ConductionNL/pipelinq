@@ -102,14 +102,14 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { CnDetailCard } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { CnDetailCard } from '@conduction/nextcloud-vue'
-import PosRefundTotalsPanel from './PosRefundTotalsPanel.vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import PosRefundRejectDialog from '../../modals/PosRefundRejectDialog.vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import PosRefundTotalsPanel from './PosRefundTotalsPanel.vue'
 import { formatEur } from '../../services/posTotals.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'PosRefundActionsSection',
@@ -120,9 +120,11 @@ export default {
 		PosRefundTotalsPanel,
 		PosRefundRejectDialog,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The refund id (token-resolved from @objectId by CnBodySections). */
 		refundId: {
@@ -130,6 +132,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			refund: {},
@@ -141,10 +144,12 @@ export default {
 			showReject: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/** The resolved refund id — prop wins, else the injected section context. */
 		resolvedId() {
 			if (this.refundId) {
@@ -155,9 +160,11 @@ export default {
 				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		status() {
 			return this.refund.status || 'pending'
 		},
+
 		/**
 		 * Whether the current user is treated as a manager in the UI. Server-side
 		 * authorization is authoritative; this only hides the buttons for clearly
@@ -170,15 +177,19 @@ export default {
 				? window.OC.isUserAdmin()
 				: false
 		},
+
 		canConfirm() {
 			return this.status === 'pending' && this.isManager
 		},
+
 		canReject() {
 			return this.status === 'pending' && this.isManager
 		},
+
 		hasActions() {
 			return this.canConfirm || this.canReject
 		},
+
 		/**
 		 * Display rows joining each refund line with its original transaction line.
 		 *
@@ -201,6 +212,7 @@ export default {
 			})
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -209,6 +221,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		formatEur,
 		/**
@@ -221,6 +234,7 @@ export default {
 			const reason = this.reasons.find((r) => r.id === id)
 			return reason ? reason.label || reason.code : id || '-'
 		},
+
 		/**
 		 * Load the refund, its lines, the original transaction lines and reasons.
 		 */
@@ -273,6 +287,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Call a lifecycle action endpoint and reload.
 		 *
@@ -313,9 +328,11 @@ export default {
 				this.busy = false
 			}
 		},
+
 		confirm() {
 			this.lifecycle('confirm', {}, t('pipelinq', 'Refund completed.'))
 		},
+
 		/**
 		 * Reject the refund with a reason.
 		 *

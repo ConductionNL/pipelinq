@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\Customer360Controller;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -108,6 +109,7 @@ class Customer360ControllerTest extends TestCase {
 			$summaryService,
 			$userSession,
 			$appConfig,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$container,
 			$logger ?? $this->createMock(LoggerInterface::class),
 		);

@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IRequest;
@@ -55,6 +56,7 @@ class PortalPageController extends Controller {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
+	#[AnonRateLimit(limit: 240, period: 60)]
 	public function index(): TemplateResponse {
 		$response = new TemplateResponse(
 			Application::APP_ID,
@@ -89,6 +91,10 @@ class PortalPageController extends Controller {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $path is a route-binding
 	 *  placeholder; the SPA shell is identical for every sub-path.
 	 */
+	// Generous, like index(): these two serve the portal's own HTML shell, and a
+	// tight ceiling here would break an ordinary browsing session rather than an
+	// attack.
+	#[AnonRateLimit(limit: 240, period: 60)]
 	public function subpath(string $path = ''): TemplateResponse {
 		return $this->index();
 	}//end subpath()

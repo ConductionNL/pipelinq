@@ -76,9 +76,11 @@ export default {
 			errorMessage: '',
 		}
 	},
+
 	async mounted() {
 		await Promise.all([this.loadStaff(), this.loadRoles()])
 	},
+
 	methods: {
 		async loadStaff() {
 			this.loading = true
@@ -95,6 +97,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		async loadRoles() {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/pos/roles')
@@ -104,10 +107,12 @@ export default {
 				this.roles = []
 			}
 		},
+
 		roleName(id) {
 			const role = this.roles.find((r) => r.id === id)
 			return role?.name || id || '—'
 		},
+
 		/**
 		 * Ask the host to open this row for editing.
 		 *
@@ -122,6 +127,7 @@ export default {
 		edit(row) {
 			this.$emit('edit', row.id)
 		},
+
 		/**
 		 * Ask the host to open an empty form.
 		 *

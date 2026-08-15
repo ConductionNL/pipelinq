@@ -21,7 +21,7 @@
 				v-model="reason"
 				:label="t('pipelinq', 'Rejection reason')"
 				:error="showError"
-				:helper-text="
+				:helperText="
 					showError
 						? t('pipelinq', 'Enter a reason for the rejection')
 						: ''
@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextArea } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcTextArea } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftRejectDialog',
@@ -48,12 +48,14 @@ export default {
 		NcButton,
 		NcTextArea,
 	},
+
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -61,6 +63,7 @@ export default {
 			showError: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * Validate and emit the rejection reason.

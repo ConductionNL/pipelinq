@@ -240,7 +240,7 @@ class CallbackServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testValidateStatusTransitionValid(): void {
-		$result = $this->service->validateStatusTransition('open', 'in_behandeling');
+		$result = $this->service->validateStatusTransition('open', 'in_progress');
 		$this->assertTrue($result['valid']);
 	}//end testValidateStatusTransitionValid()
 
@@ -250,7 +250,7 @@ class CallbackServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testValidateStatusTransitionToAfgerond(): void {
-		$result = $this->service->validateStatusTransition('in_behandeling', 'afgerond');
+		$result = $this->service->validateStatusTransition('in_progress', 'completed');
 		$this->assertTrue($result['valid']);
 	}//end testValidateStatusTransitionToAfgerond()
 
@@ -260,7 +260,7 @@ class CallbackServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testValidateStatusTransitionInvalid(): void {
-		$result = $this->service->validateStatusTransition('open', 'afgerond');
+		$result = $this->service->validateStatusTransition('open', 'completed');
 
 		$this->assertFalse($result['valid']);
 		$this->assertStringContainsString('not allowed', $result['reason']);
@@ -272,7 +272,7 @@ class CallbackServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testValidateStatusTransitionReopen(): void {
-		$result = $this->service->validateStatusTransition('afgerond', 'open');
+		$result = $this->service->validateStatusTransition('completed', 'open');
 		$this->assertTrue($result['valid']);
 	}//end testValidateStatusTransitionReopen()
 
@@ -288,7 +288,7 @@ class CallbackServiceTest extends TestCase {
 	 */
 	public function testTransitionGraphIsSourcedFromSchemaDeclaration(): void {
 		// open -> verlopen is not declared anywhere; must be rejected.
-		$result = $this->service->validateStatusTransition('open', 'verlopen');
+		$result = $this->service->validateStatusTransition('open', 'expired');
 		$this->assertFalse($result['valid']);
 		$this->assertStringContainsString('not allowed', $result['reason']);
 
@@ -311,7 +311,7 @@ class CallbackServiceTest extends TestCase {
 
 		$this->assertSame('agent-001', $result['assigneeUserId']);
 		$this->assertNull($result['assigneeGroupId']);
-		$this->assertSame('in_behandeling', $result['status']);
+		$this->assertSame('in_progress', $result['status']);
 	}//end testApplyClaimSetsUserAndStatus()
 
 	/**
@@ -320,11 +320,11 @@ class CallbackServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testApplyCompletionSetsStatusAndTimestamp(): void {
-		$taskData = ['status' => 'in_behandeling'];
+		$taskData = ['status' => 'in_progress'];
 
 		$result = $this->service->applyCompletion($taskData, 'Burger geinformeerd');
 
-		$this->assertSame('afgerond', $result['status']);
+		$this->assertSame('completed', $result['status']);
 		$this->assertSame('Burger geinformeerd', $result['resultText']);
 		$this->assertArrayHasKey('completedAt', $result);
 	}//end testApplyCompletionSetsStatusAndTimestamp()

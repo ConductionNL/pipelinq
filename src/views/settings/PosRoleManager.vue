@@ -25,15 +25,15 @@
 
 		<PosRoleFormDialog
 			v-if="dialogOpen"
-			:role-id="editingId"
+			:roleId="editingId"
 			@done="closeDialog" />
 	</NcSettingsSection>
 </template>
 
 <script>
 import { NcSettingsSection } from '@nextcloud/vue'
-import PosRoleList from '../pos/PosRoleList.vue'
 import PosRoleFormDialog from '../../dialogs/PosRoleFormDialog.vue'
+import PosRoleList from '../pos/PosRoleList.vue'
 
 export default {
 	name: 'PosRoleManager',
@@ -42,6 +42,7 @@ export default {
 		PosRoleList,
 		PosRoleFormDialog,
 	},
+
 	data() {
 		return {
 			dialogOpen: false,
@@ -50,6 +51,7 @@ export default {
 			reloadKey: 0,
 		}
 	},
+
 	methods: {
 		/**
 		 * Open an existing role in the dialog.
@@ -61,6 +63,7 @@ export default {
 			this.editingId = id
 			this.dialogOpen = true
 		},
+
 		/**
 		 * Open an empty role form.
 		 *
@@ -70,6 +73,7 @@ export default {
 			this.editingId = ''
 			this.dialogOpen = true
 		},
+
 		/**
 		 * Close the dialog and re-render the list so a save or delete shows up.
 		 *

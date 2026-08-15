@@ -16,31 +16,31 @@
 				v-model="form.retention_days"
 				type="number"
 				:label="t('pipelinq', 'Retention (days to keep runs)')"
-				:helper-text="
+				:helperText="
 					t(
 						'pipelinq',
 						'How long export-run audit records are kept. Default 365 days.',
 					)
 				" />
 			<NcSelect
-				:model-value="selectedCompression"
+				:modelValue="selectedCompression"
 				:options="compressionOptions"
-				:input-label="t('pipelinq', 'Default compression')"
+				:inputLabel="t('pipelinq', 'Default compression')"
 				label="label"
 				:clearable="false"
-				:helper-text="
+				:helperText="
 					t(
 						'pipelinq',
 						'Used when a destination does not specify its own compression.',
 					)
 				"
-				@update:model-value="
+				@update:modelValue="
 					(o) => (form.default_compression = o ? o.value : 'none')
 				" />
 			<NcTextField
 				v-model="form.failure_notification_email"
 				:label="t('pipelinq', 'Failure notification email')"
-				:helper-text="
+				:helperText="
 					t(
 						'pipelinq',
 						'Address to notify when an export run fails. Leave empty to disable.',
@@ -53,7 +53,7 @@
 				:label="
 					t('pipelinq', 'At-risk warning (hours without a successful run)')
 				"
-				:helper-text="
+				:helperText="
 					t(
 						'pipelinq',
 						'Triggers an at-risk warning if no run has succeeded in this many hours.',
@@ -77,6 +77,8 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcLoadingIcon,
@@ -85,8 +87,6 @@ import {
 	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
 
 const COMPRESSION_VALUES = ['none', 'gzip', 'snappy', 'zstd']
 
@@ -100,6 +100,7 @@ export default {
 		NcSettingsSection,
 		NcTextField,
 	},
+
 	props: {
 		/**
 		 * The current pipelinq settings config object (from SettingsService::getSettings()).
@@ -110,6 +111,7 @@ export default {
 			default: () => ({}),
 		},
 	},
+
 	emits: ['saved'],
 	data() {
 		return {
@@ -124,6 +126,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * Compression dropdown options.
@@ -133,6 +136,7 @@ export default {
 		compressionOptions() {
 			return COMPRESSION_VALUES.map((value) => ({ value, label: value }))
 		},
+
 		/**
 		 * The currently selected compression option.
 		 *
@@ -145,6 +149,7 @@ export default {
 				) || null
 			)
 		},
+
 		/**
 		 * Whether the form fails basic validation (negative numbers / malformed email).
 		 *
@@ -166,6 +171,7 @@ export default {
 			return false
 		},
 	},
+
 	watch: {
 		config: {
 			immediate: true,
@@ -188,6 +194,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Persist the form via the admin-gated settings endpoint.
@@ -207,9 +214,11 @@ export default {
 					'export.default_compression': String(
 						this.form.default_compression,
 					),
+
 					'export.failure_notification_email': (
 						this.form.failure_notification_email || ''
 					).trim(),
+
 					'export.at_risk_warning_hours': String(
 						this.form.at_risk_warning_hours,
 					),

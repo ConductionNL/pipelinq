@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\RapportageController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\RapportageService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
@@ -95,7 +96,7 @@ class RapportageControllerTest extends TestCase {
 			'avgDaysToClose' => 0.0,
 		]);
 
-		$controller = new RapportageController($this->request, $this->service, $this->userSession);
+		$controller = new RapportageController($this->request, $this->service, $this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]));
 		$response = $controller->getPipelineStats();
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$data = $response->getData();
@@ -114,7 +115,7 @@ class RapportageControllerTest extends TestCase {
 	public function testGetPipelineStatsReturnsUnauthorizedWithoutSession(): void {
 		$this->userSession->method('getUser')->willReturn(null);
 
-		$controller = new RapportageController($this->request, $this->service, $this->userSession);
+		$controller = new RapportageController($this->request, $this->service, $this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]));
 		$response = $controller->getPipelineStats();
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 
@@ -134,7 +135,7 @@ class RapportageControllerTest extends TestCase {
 
 		$this->service->method('getStageValues')->willThrowException(new \RuntimeException('boom'));
 
-		$controller = new RapportageController($this->request, $this->service, $this->userSession);
+		$controller = new RapportageController($this->request, $this->service, $this->userSession, $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]));
 		$response = $controller->getPipelineStats();
 		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
 		$data = $response->getData();

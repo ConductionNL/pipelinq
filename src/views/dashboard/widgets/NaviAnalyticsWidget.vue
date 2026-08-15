@@ -56,7 +56,7 @@
 							:type="resolveChartType(msg.chartData)"
 							:labels="msg.chartData.labels || []"
 							:series="resolveSeries(msg.chartData)"
-							:title="''"
+							title=""
 							class="navi-widget__chart" />
 						<CnDataTable
 							v-else-if="msg.resultType === 'table' && msg.tableData"
@@ -110,10 +110,10 @@
 </template>
 
 <script>
+import { CnChartWidget, CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcTextField } from '@nextcloud/vue'
-import { CnChartWidget, CnDataTable } from '@conduction/nextcloud-vue'
 
 /**
  * NaviAnalyticsWidget — conversational analytics chat panel.
@@ -129,6 +129,7 @@ export default {
 		CnChartWidget,
 		CnDataTable,
 	},
+
 	data() {
 		return {
 			query: '',
@@ -138,6 +139,7 @@ export default {
 			error: null,
 		}
 	},
+
 	methods: {
 		/**
 		 * Post the current query to /api/navi/query and append the response
@@ -181,6 +183,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Pre-fill the input with a suggestion and submit immediately.
 		 *
@@ -191,6 +194,7 @@ export default {
 			this.query = suggestion
 			this.submitQuery()
 		},
+
 		/**
 		 * Normalise the chart type to one accepted by CnChartWidget.
 		 *
@@ -204,6 +208,7 @@ export default {
 			}
 			return 'bar'
 		},
+
 		/**
 		 * Coerce the backend "series" payload into CnChartWidget's series array.
 		 *
@@ -218,6 +223,7 @@ export default {
 			}
 			return []
 		},
+
 		/**
 		 * Build a CnDataTable-compatible columns spec from the backend payload.
 		 *
@@ -233,6 +239,7 @@ export default {
 				label: col,
 			}))
 		},
+
 		/**
 		 * Build CnDataTable-compatible row objects keyed by `col{idx}`.
 		 *

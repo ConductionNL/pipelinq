@@ -62,10 +62,10 @@ class ProductCatalogService {
 	 * @var array<string, int>
 	 */
 	public const BTW_CLASS_RATES = [
-		'hoog' => 21,
-		'laag' => 9,
-		'nul' => 0,
-		'vrijgesteld' => 0,
+		'high' => 21,
+		'low' => 9,
+		'zero' => 0,
+		'exempt' => 0,
 	];
 
 	/**
@@ -96,7 +96,7 @@ class ProductCatalogService {
 	 */
 	public function btwClassToRate(?string $vatClass): int {
 		if ($this->isValidBtwClass(vatClass: $vatClass) === false) {
-			return self::BTW_CLASS_RATES['hoog'];
+			return self::BTW_CLASS_RATES['high'];
 		}
 
 		return self::BTW_CLASS_RATES[$vatClass];

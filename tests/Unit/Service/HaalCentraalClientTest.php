@@ -180,9 +180,9 @@ class HaalCentraalClientTest extends TestCase {
 		// yields for the same raw upstream data (the mapping is unchanged).
 		self::assertSame('Jan', $person['givenNames']);
 		self::assertSame('Jansen', $person['surname']);
-		self::assertSame('man', $person['geslacht']);
+		self::assertSame('male', $person['gender']);
 		self::assertSame('1990-01-01', $person['dateOfBirth']);
-		self::assertSame('HaalCentraal-BRP-v2.0', $person['bronsysteem']);
+		self::assertSame('HaalCentraal-BRP-v2.0', $person['sourceSystem']);
 		self::assertSame('Hoofdstraat', $person['residence']['straat']);
 	}//end testLookupUsesOpenRegisterLeafWithMeta()
 
@@ -402,7 +402,7 @@ class HaalCentraalClientTest extends TestCase {
 				'plaats' => ['omschrijving' => 'Utrecht'],
 				'land' => ['code' => '6030'],
 			],
-			'geslacht' => ['code' => 'M'],
+			'gender' => ['code' => 'M'],
 			'residence' => [
 				'verblijfadres' => [
 					'officieleStraatnaam' => 'Hoofdstraat',

@@ -100,17 +100,17 @@
 
 		<AddTenderDialog
 			v-if="showAdd"
-			:transaction-id="transactionId"
-			:transaction-total="validation.transactionTotal"
+			:transactionId="transactionId"
+			:transactionTotal="validation.transactionTotal"
 			:remaining="remainingAmount"
-			:tender-types="activeTenderTypes"
+			:tenderTypes="activeTenderTypes"
 			@close="showAdd = false"
 			@added="onTenderAdded" />
 		<ConfirmDialog
 			v-if="pendingRemoveTender"
 			:name="t('pipelinq', 'Remove tender')"
 			:message="t('pipelinq', 'Remove this tender?')"
-			:confirm-label="t('pipelinq', 'Remove')"
+			:confirmLabel="t('pipelinq', 'Remove')"
 			@confirm="performRemoveTender"
 			@cancel="pendingRemoveTender = null" />
 	</div>
@@ -118,11 +118,11 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import AddTenderDialog from '../../modals/AddTenderDialog.vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
+import AddTenderDialog from '../../modals/AddTenderDialog.vue'
 import { formatEur } from '../../services/posTotals.js'
 
 export default {
@@ -133,11 +133,13 @@ export default {
 			type: String,
 			required: true,
 		},
+
 		transactionStatus: {
 			type: String,
 			default: 'draft',
 		},
 	},
+
 	emits: ['changed'],
 	data() {
 		return {
@@ -149,12 +151,14 @@ export default {
 				variance: 0,
 				balanced: true,
 			},
+
 			loading: false,
 			showAdd: false,
 			errorMessage: '',
 			pendingRemoveTender: null,
 		}
 	},
+
 	computed: {
 		canEdit() {
 			return (
@@ -162,12 +166,15 @@ export default {
 				&& this.transactionStatus !== 'refunded'
 			)
 		},
+
 		activeTenderTypes() {
 			return this.tenderTypes.filter((type) => type.isActive !== false)
 		},
+
 		remainingAmount() {
 			return Math.max(0, Number(this.validation?.variance || 0))
 		},
+
 		remainingLabel() {
 			const variance = Number(this.validation?.variance || 0)
 			if (variance > 0) {
@@ -178,6 +185,7 @@ export default {
 			}
 			return t('pipelinq', 'Variance')
 		},
+
 		summaryClass() {
 			if (this.validation.balanced) {
 				return 'tender-panel__summary--ok'
@@ -187,9 +195,11 @@ export default {
 				: 'tender-panel__summary--error'
 		},
 	},
+
 	async mounted() {
 		await Promise.all([this.loadTenders(), this.loadTenderTypes()])
 	},
+
 	methods: {
 		formatEur,
 		tenderId(tender) {
@@ -198,6 +208,7 @@ export default {
 			}
 			return tender?.id || tender?.uuid || ''
 		},
+
 		tenderTypeLabel(tender) {
 			const id = tender?.tenderType || ''
 			const found = this.tenderTypes.find((t) => this.idOf(t) === id)
@@ -206,12 +217,14 @@ export default {
 			}
 			return id || t('pipelinq', 'Unknown')
 		},
+
 		idOf(type) {
 			if (type?.['@self']?.id) {
 				return type['@self'].id
 			}
 			return type?.id || type?.uuid || ''
 		},
+
 		async loadTenders() {
 			this.loading = true
 			this.errorMessage = ''
@@ -233,6 +246,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		async loadTenderTypes() {
 			try {
 				const url = generateUrl(
@@ -244,17 +258,20 @@ export default {
 				this.tenderTypes = []
 			}
 		},
+
 		openAddDialog() {
 			if (this.tenderTypes.length === 0) {
 				this.loadTenderTypes()
 			}
 			this.showAdd = true
 		},
+
 		async onTenderAdded() {
 			this.showAdd = false
 			await this.loadTenders()
 			this.$emit('changed')
 		},
+
 		/**
 		 * Open the remove confirmation for a tender.
 		 *
@@ -270,6 +287,7 @@ export default {
 			}
 			this.pendingRemoveTender = tender
 		},
+
 		/**
 		 * Remove the pending tender once the dialog confirms.
 		 *

@@ -38,6 +38,7 @@ use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\RedirectResponse;
 use OCP\IRequest;
+use OCP\Security\Bruteforce\IThrottler;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -99,7 +100,7 @@ class BlastTrackingControllerTest extends TestCase {
 		$tracking->method('verifyToken')->with('good-token')->willReturn(['d' => self::DELIVERY_ID, 'u' => null]);
 		$tracking->expects($this->once())->method('recordOpen')->with(self::DELIVERY_ID);
 
-		$controller = new BlastTrackingController($this->request, $tracking, $this->logger);
+		$controller = new BlastTrackingController($this->request, $tracking, $this->createMock(IThrottler::class), $this->logger);
 		$response = $controller->open('good-token');
 
 		$this->assertInstanceOf(DataDisplayResponse::class, $response);
@@ -121,7 +122,7 @@ class BlastTrackingControllerTest extends TestCase {
 		$tracking->method('verifyToken')->willReturn(null);
 		$tracking->expects($this->never())->method('recordOpen');
 
-		$controller = new BlastTrackingController($this->request, $tracking, $this->logger);
+		$controller = new BlastTrackingController($this->request, $tracking, $this->createMock(IThrottler::class), $this->logger);
 		$response = $controller->open('tampered-or-expired');
 
 		$this->assertInstanceOf(DataDisplayResponse::class, $response);
@@ -139,7 +140,7 @@ class BlastTrackingControllerTest extends TestCase {
 		$tracking->method('verifyToken')->willReturn(['d' => self::DELIVERY_ID, 'u' => null]);
 		$tracking->method('recordOpen')->willThrowException(new \RuntimeException('OpenRegister unavailable'));
 
-		$controller = new BlastTrackingController($this->request, $tracking, $this->logger);
+		$controller = new BlastTrackingController($this->request, $tracking, $this->createMock(IThrottler::class), $this->logger);
 		$response = $controller->open('good-token');
 
 		$this->assertInstanceOf(DataDisplayResponse::class, $response);
@@ -162,7 +163,7 @@ class BlastTrackingControllerTest extends TestCase {
 			->method('recordClick')
 			->with(self::DELIVERY_ID, 'https://pipelinq.nl/q4?utm_campaign=gemeente');
 
-		$controller = new BlastTrackingController($this->request, $tracking, $this->logger);
+		$controller = new BlastTrackingController($this->request, $tracking, $this->createMock(IThrottler::class), $this->logger);
 		$response = $controller->click('good-token');
 
 		$this->assertInstanceOf(RedirectResponse::class, $response);
@@ -180,7 +181,7 @@ class BlastTrackingControllerTest extends TestCase {
 		$tracking->method('verifyToken')->willReturn(null);
 		$tracking->expects($this->never())->method('recordClick');
 
-		$controller = new BlastTrackingController($this->request, $tracking, $this->logger);
+		$controller = new BlastTrackingController($this->request, $tracking, $this->createMock(IThrottler::class), $this->logger);
 		$response = $controller->click('tampered-token');
 
 		$this->assertInstanceOf(JSONResponse::class, $response);
@@ -198,7 +199,7 @@ class BlastTrackingControllerTest extends TestCase {
 		$tracking->method('verifyToken')->willReturn(['d' => self::DELIVERY_ID, 'u' => null]);
 		$tracking->expects($this->never())->method('recordClick');
 
-		$controller = new BlastTrackingController($this->request, $tracking, $this->logger);
+		$controller = new BlastTrackingController($this->request, $tracking, $this->createMock(IThrottler::class), $this->logger);
 		$response = $controller->click('open-token-used-at-click');
 
 		$this->assertInstanceOf(JSONResponse::class, $response);

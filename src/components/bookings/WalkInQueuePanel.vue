@@ -101,9 +101,9 @@ a Booking completes (member 04 -> member 09).
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
-import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton } from '@nextcloud/vue'
 
 /**
  * Pipelinq walk-in queue operator panel.
@@ -121,6 +121,7 @@ export default {
 			type: String,
 			required: true,
 		},
+
 		/**
 		 * OpenRegister schema slug/id for the walkInTicket schema.
 		 */
@@ -128,6 +129,7 @@ export default {
 			type: String,
 			required: true,
 		},
+
 		/**
 		 * Refresh interval in milliseconds (default 10s per design).
 		 */
@@ -136,6 +138,7 @@ export default {
 			default: 10000,
 		},
 	},
+
 	data() {
 		return {
 			tickets: [],
@@ -145,6 +148,7 @@ export default {
 			refreshTimer: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Tickets sorted by arrivedAt ascending (oldest first).
@@ -163,6 +167,7 @@ export default {
 				return leftIso < rightIso ? -1 : 1
 			})
 		},
+
 		/**
 		 * True when at least one waiting ticket exists.
 		 *
@@ -172,6 +177,7 @@ export default {
 			return this.sortedTickets.some((ticket) => ticket.status === 'waiting')
 		},
 	},
+
 	mounted() {
 		this.fetchTickets()
 		this.refreshTimer = window.setInterval(
@@ -179,12 +185,14 @@ export default {
 			this.refreshInterval,
 		)
 	},
+
 	beforeUnmount() {
 		if (this.refreshTimer) {
 			window.clearInterval(this.refreshTimer)
 			this.refreshTimer = null
 		}
 	},
+
 	methods: {
 		/**
 		 * Build the OpenRegister objects URL for the walkInTicket schema.
@@ -202,6 +210,7 @@ export default {
 					+ tail,
 			)
 		},
+
 		/**
 		 * A stable key for a ticket row.
 		 *
@@ -216,6 +225,7 @@ export default {
 			if (ticket.uuid) return String(ticket.uuid)
 			return ''
 		},
+
 		/**
 		 * Format an ISO datetime as a local short time (HH:MM).
 		 *
@@ -231,6 +241,7 @@ export default {
 				minute: '2-digit',
 			})
 		},
+
 		/**
 		 * Translate the raw status enum to a human-readable label.
 		 *
@@ -244,6 +255,7 @@ export default {
 			if (raw === 'abandoned') return t('pipelinq', 'Abandoned')
 			return raw || ''
 		},
+
 		/**
 		 * Fetch the open queue (waiting + called) from OpenRegister.
 		 *
@@ -274,6 +286,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Call the next waiting ticket (oldest arrivedAt).
 		 *
@@ -286,6 +299,7 @@ export default {
 			if (!next) return
 			await this.onCallTicket(next)
 		},
+
 		/**
 		 * Transition a specific ticket from `waiting` to `called`.
 		 *
@@ -295,6 +309,7 @@ export default {
 		async onCallTicket(ticket) {
 			await this.updateStatus(ticket, 'called', {})
 		},
+
 		/**
 		 * Transition a ticket to `served` (sets actualServedAt locally).
 		 *
@@ -305,6 +320,7 @@ export default {
 			const nowIso = new Date().toISOString()
 			await this.updateStatus(ticket, 'served', { actualServedAt: nowIso })
 		},
+
 		/**
 		 * Transition a ticket to `abandoned`.
 		 *
@@ -314,6 +330,7 @@ export default {
 		async onAbandon(ticket) {
 			await this.updateStatus(ticket, 'abandoned', {})
 		},
+
 		/**
 		 * Update a ticket via OpenRegister PUT and refresh the panel.
 		 *
@@ -327,12 +344,11 @@ export default {
 			if (!key) return
 			this.busyTicketId = key
 			try {
-				const payload = Object.assign(
-					{},
-					ticket,
-					{ status: nextStatus },
-					extra || {},
-				)
+				const payload = {
+					...ticket,
+					status: nextStatus,
+					...(extra || {}),
+				}
 				if (payload['@self']) {
 					delete payload['@self']
 				}

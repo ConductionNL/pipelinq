@@ -51,8 +51,8 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 export default {
 	name: 'EntityNotes',
@@ -60,16 +60,19 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 	},
+
 	props: {
 		objectType: {
 			type: String,
 			required: true,
 		},
+
 		objectId: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			notes: [],
@@ -78,6 +81,7 @@ export default {
 			submitting: false,
 		}
 	},
+
 	watch: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-14
@@ -86,9 +90,11 @@ export default {
 			this.fetchNotes()
 		},
 	},
+
 	mounted() {
 		this.fetchNotes()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-12

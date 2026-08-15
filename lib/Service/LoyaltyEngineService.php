@@ -156,7 +156,7 @@ class LoyaltyEngineService {
 		}
 
 		$accountId = (string)$this->extractUuid(object: $account);
-		if ((string)($account['status'] ?? '') !== 'actief') {
+		if ((string)($account['status'] ?? '') !== 'active') {
 			$this->logger->info(
 				'Pipelinq: account disabled, points credit skipped',
 				['accountId' => $accountId, 'customerId' => $customerId]
@@ -207,13 +207,13 @@ class LoyaltyEngineService {
 
 		$multiplier = $this->resolveTierMultiplier(account: $account, programmeId: $programmeId);
 
-		$formule = $rule['formule'] ?? [];
-		if (is_array($formule) === false) {
-			$formule = [];
+		$formula = $rule['formula'] ?? [];
+		if (is_array($formula) === false) {
+			$formula = [];
 		}
 
 		$rawPoints = $this->ruleEngine->calculatePoints(
-			formule: $formule,
+			formula: $formula,
 			amount: $context['amount'],
 			multiplier: $multiplier
 		);
@@ -347,7 +347,7 @@ class LoyaltyEngineService {
 			accountId: $accountId,
 			amount: $toAward,
 			ruleId: $this->extractUuid(object: $rule),
-			brondocument: [
+			sourceDocument: [
 				'transactionId' => $transaction['posTransactionId'] ?? null,
 				'amount' => $context['amount'],
 				'channel' => $context['channel'],
@@ -376,7 +376,7 @@ class LoyaltyEngineService {
 	}//end creditAndFinalize()
 
 	/**
-	 * Get all programmes whose status is "actief".
+	 * Get all programmes whose status is "active".
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
@@ -391,7 +391,7 @@ class LoyaltyEngineService {
 			$rows = $this->getObjectService()->findAll(
 				config: [
 					'filters' => [
-						'status' => 'actief',
+						'status' => 'active',
 						'register' => $register,
 						'schema' => $schema,
 					],

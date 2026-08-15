@@ -39,7 +39,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 
 <script>
 import PortalSessionWarning from './components/PortalSessionWarning.vue'
-import { portalApi, getToken, clearToken } from './portalApi.js'
+import { clearToken, getToken, portalApi } from './portalApi.js'
 import { isAuthenticated } from './portalRoutes.js'
 
 export default {
@@ -51,15 +51,18 @@ export default {
 				displayName: t('pipelinq', 'Customer portal'),
 				brandPrimaryColor: '#21468B',
 			},
+
 			isB2b: false,
 			embedded: window.self !== window.top,
 		}
 	},
+
 	computed: {
 		authenticated() {
 			return isAuthenticated()
 		},
 	},
+
 	async mounted() {
 		try {
 			this.branding = await portalApi.tenantConfig()
@@ -76,6 +79,7 @@ export default {
 			}
 		}
 	},
+
 	methods: {
 		applyBranding() {
 			const root = document.documentElement
@@ -92,6 +96,7 @@ export default {
 				)
 			}
 		},
+
 		async logout() {
 			try {
 				await portalApi.logout()
@@ -101,6 +106,7 @@ export default {
 			clearToken()
 			this.$router.push('/login')
 		},
+
 		hasToken() {
 			return !!getToken()
 		},

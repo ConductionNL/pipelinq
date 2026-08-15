@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -62,6 +63,7 @@ class Customer360Controller extends Controller {
 		private Customer360SummaryService $summaryService,
 		private IUserSession $userSession,
 		private IAppConfig $appConfig,
+		private ObjectOwnerAccessPolicy $accessPolicy,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
 	) {
@@ -91,6 +93,24 @@ class Customer360Controller extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// ADDED IN FRONT OF canReadClient(), NOT INSTEAD OF IT — and
+		// canReadClient() is deliberately left alone (see #805).
+		//
+		// That helper calls ObjectService::find($clientId, $register, $schema)
+		// POSITIONALLY and catches Throwable to return false. If those
+		// positions do not match the current signature the call raises, the
+		// catch swallows it, and the endpoint denies EVERYONE while reading
+		// like a working guard. "Fixing" the call is the one change that must
+		// not be made casually here: behind it sits `return $object !== null`,
+		// an EXISTENCE test, so a repair would turn a dead endpoint into a
+		// live IDOR over every client record.
+		//
+		// This check is strictly additive: it can only deny more, never less,
+		// so it is safe to land while #805 is still open.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
 		$clientId = (string)$this->request->getParam('clientId', '');

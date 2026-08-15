@@ -47,7 +47,7 @@
 				v-else-if="contactOptions.length !== 0"
 				v-model="selectedContactId"
 				:options="contactOptions"
-				:input-label="t('pipelinq', 'Contact')"
+				:inputLabel="t('pipelinq', 'Contact')"
 				label="label"
 				:reduce="(o) => o.id" />
 			<NcEmptyContent
@@ -126,8 +126,8 @@
 
 		<SendMessageModal
 			v-if="showComposer"
-			:contact-id="effectiveContactId"
-			:client-id="effectiveClientId"
+			:contactId="effectiveContactId"
+			:clientId="effectiveClientId"
 			:preflight="preflightForModal"
 			@sent="onSent"
 			@close="showComposer = false" />
@@ -135,11 +135,11 @@
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { useObjectStore } from '../../store/modules/object.js'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import SendMessageModal from '../../modals/SendMessageModal.vue'
+import { useObjectStore } from '../../store/modules/object.js'
 
 const EMPTY_PREFLIGHT = {
 	channels: { sms: false, whatsapp: false },
@@ -157,15 +157,18 @@ export default {
 		NcSelect,
 		SendMessageModal,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** Contact or client OpenRegister UUID for the page being viewed. */
 		entityId: {
 			type: String,
 			required: true,
 		},
+
 		/** Which kind of entity entityId refers to. */
 		entityType: {
 			type: String,
@@ -173,6 +176,7 @@ export default {
 			validator: (value) => ['client', 'contact'].includes(value),
 		},
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -186,36 +190,43 @@ export default {
 			showComposer: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/** The contactId every fetch/send in this component is keyed on. */
 		effectiveContactId() {
 			return this.entityType === 'contact'
 				? this.entityId
 				: this.selectedContactId
 		},
+
 		/** The clientId passed to the composer for the send-request audit trail. */
 		effectiveClientId() {
 			return this.entityType === 'client'
 				? this.entityId
 				: this.resolvedClientId
 		},
+
 		contactOptions() {
 			return this.linkedContacts.map((c) => ({
 				id: c.id,
 				label: c.name || c.id,
 			}))
 		},
+
 		preflightConsent() {
 			return (
 				(this.preflight && this.preflight.consent) || EMPTY_PREFLIGHT.consent
 			)
 		},
+
 		preflightForModal() {
 			return this.preflight || EMPTY_PREFLIGHT
 		},
+
 		/** Most recently active conversation thread for the current contact, if any. */
 		latestConversation() {
 			if (this.conversations.length === 0) {
@@ -228,6 +239,7 @@ export default {
 			})[0]
 		},
 	},
+
 	watch: {
 		effectiveContactId(newValue, oldValue) {
 			if (newValue === oldValue) {
@@ -238,6 +250,7 @@ export default {
 			this.fetchPreflight()
 		},
 	},
+
 	async mounted() {
 		if (this.entityType === 'contact') {
 			await this.resolveContactClient()
@@ -250,6 +263,7 @@ export default {
 			await this.fetchLinkedContacts()
 		}
 	},
+
 	methods: {
 		conversationStatusLabel(status) {
 			const labels = {
@@ -259,11 +273,13 @@ export default {
 			}
 			return labels[status] || status
 		},
+
 		directionLabel(direction) {
 			return direction === 'inbound'
 				? t('pipelinq', 'Received')
 				: t('pipelinq', 'Sent')
 		},
+
 		deliveryStatusClass(status) {
 			if (status === 'failed' || status === 'expired') {
 				return 'messaging-conversation__status--error'
@@ -273,6 +289,7 @@ export default {
 			}
 			return 'messaging-conversation__status--pending'
 		},
+
 		consentLabel(state) {
 			const labels = {
 				'opted-in': t('pipelinq', 'Opted in'),
@@ -281,6 +298,7 @@ export default {
 			}
 			return labels[state] || labels.unknown
 		},
+
 		consentClass(state) {
 			if (state === 'opted-in') {
 				return 'messaging-conversation__consent--ok'
@@ -290,6 +308,7 @@ export default {
 			}
 			return 'messaging-conversation__consent--warn'
 		},
+
 		formatDate(value) {
 			if (!value) {
 				return '—'
@@ -300,6 +319,7 @@ export default {
 			}
 			return parsed.toLocaleString()
 		},
+
 		async resolveContactClient() {
 			try {
 				const contact = await this.objectStore.fetchObject(
@@ -311,6 +331,7 @@ export default {
 				this.resolvedClientId = ''
 			}
 		},
+
 		async fetchLinkedContacts() {
 			this.loadingContacts = true
 			try {
@@ -328,6 +349,7 @@ export default {
 				this.loadingContacts = false
 			}
 		},
+
 		async fetchMessages() {
 			if (!this.effectiveContactId) {
 				this.messages = []
@@ -351,6 +373,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		async fetchConversations() {
 			if (!this.effectiveContactId) {
 				this.conversations = []
@@ -366,6 +389,7 @@ export default {
 				this.conversations = []
 			}
 		},
+
 		async fetchPreflight() {
 			if (!this.effectiveContactId) {
 				this.preflight = null
@@ -383,12 +407,14 @@ export default {
 				this.preflight = null
 			}
 		},
+
 		openComposer() {
 			if (!this.effectiveContactId) {
 				return
 			}
 			this.showComposer = true
 		},
+
 		onSent() {
 			this.showComposer = false
 			this.fetchMessages()

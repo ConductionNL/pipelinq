@@ -6,59 +6,59 @@
 	<tr class="pos-line-row">
 		<td class="pos-line-row__product">
 			<NcSelect
-				:model-value="selectedProduct"
+				:modelValue="selectedProduct"
 				:options="productOptions"
-				:input-label="t('pipelinq', 'Product')"
+				:inputLabel="t('pipelinq', 'Product')"
 				:placeholder="t('pipelinq', 'Search product…')"
 				label="label"
 				:clearable="true"
-				@update:model-value="onProductSelect" />
+				@update:modelValue="onProductSelect" />
 		</td>
 		<td class="pos-line-row__description">
 			<NcTextField
 				v-model="local.description"
 				:label="t('pipelinq', 'Description')"
-				:label-visible="false"
-				@update:model-value="emitUpdate" />
+				:labelVisible="false"
+				@update:modelValue="emitUpdate" />
 		</td>
 		<td class="pos-line-row__num">
 			<NcInputField
 				v-model="local.quantity"
 				type="number"
 				:label="t('pipelinq', 'Quantity')"
-				:label-visible="false"
+				:labelVisible="false"
 				min="0.001"
 				step="0.001"
-				@update:model-value="emitUpdate" />
+				@update:modelValue="emitUpdate" />
 		</td>
 		<td class="pos-line-row__num">
 			<NcInputField
 				v-model="local.unitPrice"
 				type="number"
 				:label="t('pipelinq', 'Unit price')"
-				:label-visible="false"
+				:labelVisible="false"
 				min="0"
 				step="0.01"
-				@update:model-value="emitUpdate" />
+				@update:modelValue="emitUpdate" />
 		</td>
 		<td class="pos-line-row__num">
 			<NcInputField
 				v-model="local.discount"
 				type="number"
 				:label="t('pipelinq', 'Discount %')"
-				:label-visible="false"
+				:labelVisible="false"
 				min="0"
 				max="100"
 				step="1"
-				@update:model-value="emitUpdate" />
+				@update:modelValue="emitUpdate" />
 		</td>
 		<td class="pos-line-row__num">
 			<NcSelect
-				:model-value="selectedTaxRate"
+				:modelValue="selectedTaxRate"
 				:options="taxRateOptions"
-				:input-label="t('pipelinq', 'VAT rate')"
+				:inputLabel="t('pipelinq', 'VAT rate')"
 				:clearable="false"
-				@update:model-value="onTaxRateSelect" />
+				@update:modelValue="onTaxRateSelect" />
 		</td>
 		<td class="pos-line-row__total">
 			{{ formatEur(computed.lineTotal) }}
@@ -77,9 +77,9 @@
 </template>
 
 <script>
-import { NcSelect, NcTextField, NcInputField, NcButton } from '@nextcloud/vue'
+import { NcButton, NcInputField, NcSelect, NcTextField } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
-import { recalculateLine, formatEur } from '../../services/posTotals.js'
+import { formatEur, recalculateLine } from '../../services/posTotals.js'
 
 export default {
 	name: 'PosLineItemRow',
@@ -90,20 +90,24 @@ export default {
 		NcButton,
 		Delete,
 	},
+
 	props: {
 		line: {
 			type: Object,
 			required: true,
 		},
+
 		products: {
 			type: Array,
 			default: () => [],
 		},
+
 		priceMode: {
 			type: String,
 			default: 'excl',
 		},
 	},
+
 	data() {
 		return {
 			local: {
@@ -116,6 +120,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * Product picker options derived from the catalog.
@@ -131,6 +136,7 @@ export default {
 				taxRate: p.taxRate,
 			}))
 		},
+
 		/**
 		 * The currently selected product option, if any.
 		 *
@@ -141,6 +147,7 @@ export default {
 				this.productOptions.find((o) => o.id === this.local.product) || null
 			)
 		},
+
 		/**
 		 * Available VAT rate options.
 		 *
@@ -153,6 +160,7 @@ export default {
 				{ id: 21, label: '21%' },
 			]
 		},
+
 		/**
 		 * The selected VAT rate option.
 		 *
@@ -164,6 +172,7 @@ export default {
 				|| this.taxRateOptions[2]
 			)
 		},
+
 		/**
 		 * Server-mirroring computed taxAmount + lineTotal for display.
 		 *
@@ -173,6 +182,7 @@ export default {
 			return recalculateLine(this.local, this.priceMode)
 		},
 	},
+
 	methods: {
 		formatEur,
 		/**
@@ -191,6 +201,7 @@ export default {
 			}
 			this.emitUpdate()
 		},
+
 		/**
 		 * Apply a VAT rate selection.
 		 *
@@ -200,6 +211,7 @@ export default {
 			this.local.taxRate = option ? option.id : 21
 			this.emitUpdate()
 		},
+
 		/**
 		 * Emit the recomputed line to the parent.
 		 */

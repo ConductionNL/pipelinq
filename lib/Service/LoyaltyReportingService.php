@@ -90,7 +90,7 @@ class LoyaltyReportingService {
 		$tierDistribution = [];
 		$outstandingPoints = 0;
 		foreach ($accounts as $a) {
-			if ((string)($a['status'] ?? '') === 'actief') {
+			if ((string)($a['status'] ?? '') === 'active') {
 				$activeAccounts++;
 			}
 
@@ -330,7 +330,7 @@ class LoyaltyReportingService {
 	/**
 	 * Estimate the programme cost percent: cost of redemptions / sales attached to the redemption.
 	 *
-	 * Approximation: sum each debit entry's optionId.kostBasisEur and divide by
+	 * Approximation: sum each debit entry's optionId.costBasisEur and divide by
 	 * matched POS transaction totaal (looked up via posTransaction_schema if
 	 * present). Returns 0.0 when sales data is unavailable.
 	 *
@@ -345,7 +345,7 @@ class LoyaltyReportingService {
 
 		$totalCost = 0.0;
 		foreach ($debits as $entry) {
-			$source = $entry['brondocument'] ?? [];
+			$source = $entry['sourceDocument'] ?? [];
 			if (is_array($source) === false || isset($source['optionId']) === false) {
 				continue;
 			}
@@ -355,7 +355,7 @@ class LoyaltyReportingService {
 				continue;
 			}
 
-			$totalCost += (float)($option['kostBasisEur'] ?? 0);
+			$totalCost += (float)($option['costBasisEur'] ?? 0);
 		}
 
 		// For now we approximate associated sales = totalCost / 0.10 (placeholder

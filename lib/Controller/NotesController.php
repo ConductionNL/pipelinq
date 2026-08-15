@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\NoteEventService;
 use OCA\Pipelinq\Service\NotesService;
 use OCA\Pipelinq\Service\SettingsService;
@@ -110,6 +111,7 @@ class NotesController extends Controller {
 		private IGroupManager $groupManager,
 		private SettingsService $settingsService,
 		private TicketService $ticketService,
+		private ObjectOwnerAccessPolicy $policy,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -243,6 +245,12 @@ class NotesController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
 		}
 
+		// Notes hang off CRM records and are read by objectType/objectId from
+		// the request — a CRM capability. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
+
 		if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Invalid object type')], 400);
 		}
@@ -279,6 +287,12 @@ class NotesController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Notes hang off CRM records and are read by objectType/objectId from
+		// the request — a CRM capability. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
 		if (in_array($objectType, NotesService::VALID_TYPES, true) === false) {
@@ -335,6 +349,12 @@ class NotesController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
 		}
 
+		// Notes hang off CRM records and are read by objectType/objectId from
+		// the request — a CRM capability. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
+
 		if ($this->groupManager->isAdmin($user->getUID()) === false) {
 			return new JSONResponse(['error' => $this->l10n->t('Admin privileges required')], Http::STATUS_FORBIDDEN);
 		}
@@ -374,6 +394,12 @@ class NotesController extends Controller {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
+
+		// Notes hang off CRM records and are read by objectType/objectId from
+		// the request — a CRM capability. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
 		}
 
 		try {

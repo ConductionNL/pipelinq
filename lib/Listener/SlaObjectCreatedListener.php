@@ -49,7 +49,7 @@ use Throwable;
  * @implements IEventListener<Event>
  */
 class SlaObjectCreatedListener implements IEventListener {
-	private const TRACKED_TYPES = ['request', 'complaint', 'klacht', 'callback'];
+	private const TRACKED_TYPES = ['request', 'complaint', 'complaint', 'callback'];
 
 	/**
 	 * Constructor.
@@ -91,10 +91,10 @@ class SlaObjectCreatedListener implements IEventListener {
 				return;
 			}
 
-			// Normalise 'complaint' → 'klacht' for policy matching, per spec wording.
+			// Normalise 'complaint' → 'complaint' for policy matching, per spec wording.
 			$matchType = $type;
 			if ($type === 'complaint') {
-				$matchType = 'klacht';
+				$matchType = 'complaint';
 			}
 
 			$data = $entity->getObject();

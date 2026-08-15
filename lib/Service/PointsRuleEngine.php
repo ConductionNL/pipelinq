@@ -278,25 +278,25 @@ class PointsRuleEngine {
 	 * Supported formule types: fixed {value}, percentage {value}, stepped
 	 * {brackets: [{amount,points}]}. Multiplier applied BEFORE floor rounding.
 	 *
-	 * @param array<string, mixed> $formule The formule.
+	 * @param array<string, mixed> $formula The formule.
 	 * @param float $amount Transaction amount in EUR.
 	 * @param float $multiplier Tier multiplier (default 1.0).
 	 *
 	 * @return int Points awarded (floored).
 	 */
-	public function calculatePoints(array $formule, float $amount, float $multiplier = 1.0): int {
-		$type = (string)($formule['type'] ?? '');
+	public function calculatePoints(array $formula, float $amount, float $multiplier = 1.0): int {
+		$type = (string)($formula['type'] ?? '');
 
 		$raw = 0.0;
 		switch ($type) {
 			case 'fixed':
-				$raw = (float)($formule['value'] ?? 0);
+				$raw = (float)($formula['value'] ?? 0);
 				break;
 			case 'percentage':
-				$raw = $amount * (float)($formule['value'] ?? 0);
+				$raw = $amount * (float)($formula['value'] ?? 0);
 				break;
 			case 'stepped':
-				$brackets = $formule['brackets'] ?? [];
+				$brackets = $formula['brackets'] ?? [];
 				if (is_array($brackets) === true) {
 					foreach ($brackets as $bracket) {
 						$bracketAmount = (float)($bracket['amount'] ?? 0);

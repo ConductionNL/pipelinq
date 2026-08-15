@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -46,6 +47,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
  */
 class CtiDispositionService {
+	use EntityAccessorTrait;
+
 	/**
 	 * Allowed disposition outcomes.
 	 *
@@ -79,19 +82,19 @@ class CtiDispositionService {
 	/**
 	 * Process the disposition for a completed contactmoment.
 	 *
-	 * @param string $contactmomentId The contactmoment UUID.
+	 * @param string $interactionId The contactmoment UUID.
 	 * @param string $subject Disposition subject (free text).
 	 * @param string $outcome One of self::OUTCOMES.
 	 * @param string $notes Free-text notes from the agent.
 	 *
-	 * @return array{outcome: string, contactmomentId: string, taskId: string|null}
+	 * @return array{outcome: string, interactionId: string, taskId: string|null}
 	 *
 	 * @throws \InvalidArgumentException When $outcome is not in self::OUTCOMES.
 	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.4
 	 */
 	public function processDisposition(
-		string $contactmomentId,
+		string $interactionId,
 		string $subject,
 		string $outcome,
 		string $notes,
@@ -101,7 +104,7 @@ class CtiDispositionService {
 		}
 
 		$this->updateContactmoment(
-			id: $contactmomentId,
+			id: $interactionId,
 			subject: $subject,
 			outcome: $outcome,
 			notes: $notes,
@@ -110,17 +113,17 @@ class CtiDispositionService {
 		$taskId = null;
 		if ($outcome === 'callback') {
 			$taskId = $this->createTask(
-				type: 'terugbelverzoek',
+				type: 'callbackRequest',
 				subject: $subject,
 				notes: $notes,
-				contactmomentId: $contactmomentId,
+				interactionId: $interactionId,
 			);
 		} elseif ($outcome === 'escalated') {
 			$taskId = $this->createTask(
-				type: 'opvolgtaak',
+				type: 'followUpTask',
 				subject: $subject,
 				notes: $notes,
-				contactmomentId: $contactmomentId,
+				interactionId: $interactionId,
 				queueName: $this->appConfig->getValueString(
 					Application::APP_ID,
 					'cti_escalation_queue',
@@ -131,7 +134,7 @@ class CtiDispositionService {
 
 		return [
 			'outcome' => $outcome,
-			'contactmomentId' => $contactmomentId,
+			'interactionId' => $interactionId,
 			'taskId' => $taskId,
 		];
 	}//end processDisposition()
@@ -178,7 +181,7 @@ class CtiDispositionService {
 	 * @param string $type Task type (terugbelverzoek|opvolgtaak).
 	 * @param string $subject Task subject.
 	 * @param string $notes Task notes.
-	 * @param string $contactmomentId Linked contactmoment UUID.
+	 * @param string $interactionId Linked contactmoment UUID.
 	 * @param string|null $queueName Optional queue (for escalation).
 	 *
 	 * @return string|null The created task UUID or null when creation failed.
@@ -187,7 +190,7 @@ class CtiDispositionService {
 		string $type,
 		string $subject,
 		string $notes,
-		string $contactmomentId,
+		string $interactionId,
 		?string $queueName = null,
 	): ?string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -207,7 +210,7 @@ class CtiDispositionService {
 						'description' => $notes,
 						'status' => 'open',
 						'queueName' => $queueName,
-						'contactmoment' => $contactmomentId,
+						'interaction' => $interactionId,
 					],
 					static fn ($value): bool => ($value !== null && $value !== '')
 				),
@@ -220,8 +223,14 @@ class CtiDispositionService {
 			$id = null;
 			if (is_array($saved) === true) {
 				$id = ($saved['id'] ?? ($saved['uuid'] ?? null));
-			} elseif (is_object($saved) === true && method_exists($saved, 'getUuid') === true) {
-				$id = $saved->getUuid();
+			} elseif (is_object($saved) === true) {
+				// SaveObject() returns an ObjectEntity whose getUuid() is served by
+				// Entity::__call — method_exists() is FALSE for it, so the follow-up
+				// task was written and its id thrown away (pipelinq#807).
+				$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
+				if ($uuid !== '') {
+					$id = $uuid;
+				}
 			}
 
 			if ($id !== null) {
@@ -232,7 +241,7 @@ class CtiDispositionService {
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI disposition: task save failed',
-				['exception' => $e->getMessage(), 'contactmomentId' => $contactmomentId]
+				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
 			);
 			return null;
 		}//end try

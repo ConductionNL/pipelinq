@@ -37,6 +37,7 @@ use DateTimeInterface;
 use DateTimeZone;
 use Exception;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use OCP\Notification\IManager as INotificationManager;
 use Psr\Container\ContainerInterface;
@@ -60,6 +61,8 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)     Policy + deadline + escalation logic, split into helpers, still one cohesive engine
  */
 class SlaEngineService {
+	use EntityAccessorTrait;
+
 	public const STATUS_ON_TRACK = 'on-track';
 	public const STATUS_AT_RISK = 'at-risk';
 	public const STATUS_BREACHED = 'breached';
@@ -1320,11 +1323,16 @@ class SlaEngineService {
 				register: $register,
 				schema: $schema,
 			);
+
 			$uuid = '';
-			if (is_object($saved) === true && method_exists($saved, 'getUuid') === true) {
-				$uuid = (string)$saved->getUuid();
-			} elseif (is_array($saved) === true) {
+			if (is_array($saved) === true) {
 				$uuid = (string)($saved['uuid'] ?? $saved['id'] ?? '');
+			} elseif (is_object($saved) === true) {
+				// SaveObject() returns an ObjectEntity whose getUuid() is served by
+				// Entity::__call — method_exists() is FALSE for it, so this branch
+				// never ran and the breach event's id was lost even though the row
+				// was written (pipelinq#807).
+				$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
 			}
 
 			if ($uuid === '') {

@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\ReportingController;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ReportingService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
@@ -239,6 +240,7 @@ class ReportingControllerTest extends TestCase {
 			request: $this->request,
 			reportingService: $this->reporting,
 			userSession: $this->userSession,
+			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 	}//end buildController()
 
@@ -277,11 +279,11 @@ class ReportingControllerTest extends TestCase {
 			'pipelinq',
 			'ticket',
 			[
-				'ticketType' => 'contactmoment',
+				'ticketType' => 'interaction',
 				'occurredAt' => '2026-06-10T09:00:00+00:00',
 				'assignee' => 'alice',
 				'channel' => 'telefoon',
-				'outcome' => 'opgelost',
+				'outcome' => 'resolved',
 				'duration' => 'PT5M',
 				'channelMetadata' => ['waitTime' => 10],
 			]
@@ -291,11 +293,11 @@ class ReportingControllerTest extends TestCase {
 			'pipelinq',
 			'ticket',
 			[
-				'ticketType' => 'contactmoment',
+				'ticketType' => 'interaction',
 				'occurredAt' => '2026-06-11T09:00:00+00:00',
 				'assignee' => 'alice',
 				'channel' => 'telefoon',
-				'outcome' => 'doorverwezen',
+				'outcome' => 'referred',
 				'duration' => 'PT15M',
 				'channelMetadata' => ['waitTime' => 900],
 			]
@@ -305,11 +307,11 @@ class ReportingControllerTest extends TestCase {
 			'pipelinq',
 			'ticket',
 			[
-				'ticketType' => 'contactmoment',
+				'ticketType' => 'interaction',
 				'occurredAt' => '2026-06-12T09:00:00+00:00',
 				'assignee' => 'bob',
 				'channel' => 'email',
-				'outcome' => 'opgelost',
+				'outcome' => 'resolved',
 				'duration' => 'PT30M',
 				'channelMetadata' => ['responseTimeHours' => 1],
 			]
@@ -467,11 +469,11 @@ class ReportingControllerTest extends TestCase {
 			'pipelinq',
 			'ticket',
 			[
-				'ticketType' => 'contactmoment',
+				'ticketType' => 'interaction',
 				'occurredAt' => '2026-06-10T09:00:00+00:00',
 				'assignee' => 'alice',
 				'channel' => 'telefoon',
-				'outcome' => 'opgelost',
+				'outcome' => 'resolved',
 				'_deleted' => ['deleted' => '2026-06-13T00:00:00+00:00'],
 			]
 		);
@@ -542,7 +544,7 @@ class ReportingControllerTest extends TestCase {
 			'pipelinq',
 			'ticket',
 			[
-				'ticketType' => 'contactmoment',
+				'ticketType' => 'interaction',
 				'occurredAt' => '2026-06-13T09:00:00+00:00',
 				'assignee' => '=cmd|calc!A1',
 				'channel' => 'telefoon',
@@ -585,7 +587,7 @@ class ReportingControllerTest extends TestCase {
 				['=cmd|calc!A1', 'Klant zei "prima", en vertrok'],
 				['+1234', '-SUM(A1)'],
 				['@here', "\tleading tab"],
-				['alice', 'opgelost'],
+				['alice', 'resolved'],
 			]
 		);
 

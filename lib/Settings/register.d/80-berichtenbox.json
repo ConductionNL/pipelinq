@@ -48,7 +48,7 @@
             "description": "Whether the burger has an active MijnOverheid mailbox.",
             "title": "Mailbox Available"
           },
-          "contactmomentId": {
+          "interactionId": {
             "type": "string",
             "description": "UUID reference to the linked Contactmoment.",
             "title": "Contactmoment ID"
@@ -207,7 +207,7 @@
             "description": "When the reply was processed (Contactmoment created, routed).",
             "title": "Processed At"
           },
-          "createdContactmomentId": {
+          "createdInteractionId": {
             "type": "string",
             "description": "UUID of the Contactmoment that was created.",
             "title": "Created Contactmoment ID"
@@ -242,10 +242,10 @@
             "type": "string",
             "enum": [
               "received",
-              "in-behandeling",
-              "meer-info-nodig",
-              "afgehandeld",
-              "afgewezen"
+              "in-progress",
+              "more-info-needed",
+              "handled",
+              "rejected"
             ],
             "description": "Zaaktype status the template applies to (indexed).",
             "title": "Status"

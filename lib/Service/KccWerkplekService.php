@@ -62,7 +62,7 @@ class KccWerkplekService {
 	 *
 	 * @var array<int, string>
 	 */
-	private const OPEN_TASK_STATUSES = ['open', 'in_behandeling'];
+	private const OPEN_TASK_STATUSES = ['open', 'in_progress'];
 
 	/**
 	 * Constructor.

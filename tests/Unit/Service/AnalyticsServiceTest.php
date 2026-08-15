@@ -163,7 +163,7 @@ class AnalyticsServiceTest extends TestCase {
 				['occurredAt' => $recent, 'resolvedAt' => $recent, 'status' => 'completed'],
 			],
 			// contactmoment.contactedAt -> ticket.occurredAt.
-			'ticket_schema:contactmoment' => [
+			'ticket_schema:interaction' => [
 				['occurredAt' => $recent],
 				['occurredAt' => $recent],
 				['occurredAt' => $earlier],

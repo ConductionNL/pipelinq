@@ -11,7 +11,7 @@
 		:title="t('pipelinq', 'Knowledge base')"
 		:space="defaultSpace"
 		:limit="5"
-		:show-search="true"
+		:showSearch="true"
 		@select="openExternal" />
 </template>
 
@@ -32,6 +32,7 @@ export default {
 			}
 		},
 	},
+
 	methods: {
 		openExternal(article) {
 			if (article && article.url) {

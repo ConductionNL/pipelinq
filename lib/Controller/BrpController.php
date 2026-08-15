@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Controller;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
 use OCA\Pipelinq\Service\BrpCacheService;
 use OCA\Pipelinq\Service\BsnAuditService;
@@ -37,6 +38,7 @@ use OCA\Pipelinq\Service\HaalCentraalException;
 use OCA\Pipelinq\Service\OptOutService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -97,6 +99,7 @@ class BrpController extends Controller {
 	public function __construct(
 		IRequest $request,
 		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $accessPolicy,
 		private IGroupManager $groupManager,
 		private IL10N $l10n,
 		private IAppConfig $appConfig,
@@ -113,44 +116,12 @@ class BrpController extends Controller {
 	}//end __construct()
 
 	/**
-	 * Server-side BSN validation endpoint (mirror of the client-side 11-proef).
-	 *
-	 * This endpoint exists so admin-tooling / API clients without a browser can verify a
-	 * BSN. The UI does NOT call this — it does the 11-proef locally (REQ-BSN-001-04). All
-	 * responses use the masked BSN; the raw BSN never echoes back.
-	 *
-	 * @return JSONResponse The validation result.
-	 *
-	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-001
-	 */
-	#[NoAdminRequired]
-	public function validate(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$raw = (string)$this->request->getParam('bsn', '');
-		$result = $this->validation->validate($raw);
-		// Never echo back the raw BSN — only the masked variant.
-		return new JSONResponse(
-			[
-				'isFormalValid' => $result['isFormalValid'],
-				'errorCode' => $result['errorCode'],
-				'errorMessage' => $result['errorMessage'],
-				'maskedBsn' => $result['maskedBsn'],
-			],
-			Http::STATUS_OK
-		);
-	}//end validate()
-
-	/**
 	 * POST /api/brp/lookup — execute a BRP lookup with doelbinding.
 	 *
 	 * Body params:
 	 *   - bsn:           string (required, 9 digits, must pass 11-proef)
 	 *   - verzoekreden:  string (required, non-empty)
-	 *   - doelbinding:   string (required, non-empty)
+	 *   - purposeBinding:   string (required, non-empty)
 	 *   - grondslag:     string (required, non-empty)
 	 *   - gekoppeldVerzoek: string (optional UUID)
 	 *   - gekoppeldContact: string (optional UUID)
@@ -180,16 +151,30 @@ class BrpController extends Controller {
 
 		$actor = $user->getUID();
 
+		// Resolving a BSN against the BRP is a CRM capability, not an
+		// any-authenticated-user one. This guard was MISSING while validate()
+		// had one, and gate-7 did not report it: the gate looks for an
+		// authorisation-shaped check in the body and this method already had
+		// several (doelbinding, verzoekreden, the actor-role resolution), none
+		// of which decides WHETHER THIS CALLER MAY LOOK ANYONE UP. A
+		// deny-path test found it; the gate's silence did not.
+		if ($this->accessPolicy->isPrivileged(uid: $actor) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Forbidden')],
+				Http::STATUS_FORBIDDEN
+			);
+		}
+
 		$rawBsn = (string)$this->request->getParam('bsn', '');
 		$verzoekreden = trim((string)$this->request->getParam('verzoekreden', ''));
-		$doelbinding = trim((string)$this->request->getParam('doelbinding', ''));
+		$purposeBinding = trim((string)$this->request->getParam('purposeBinding', ''));
 		$basis = trim((string)$this->request->getParam('basis', ''));
 		$requestId = (string)$this->request->getParam('linkedRequest', '');
 		$contactId = (string)$this->request->getParam('gekoppeldContact', '');
 		$vogScreening = (bool)$this->request->getParam('vogScreening', false);
 
 		// 1) Doelbinding presence (REQ-BSN-002-01).
-		if ($verzoekreden === '' || $doelbinding === '') {
+		if ($verzoekreden === '' || $purposeBinding === '') {
 			return new JSONResponse(
 				[
 					'errorCode' => 'doelbinding-missing',
@@ -200,7 +185,7 @@ class BrpController extends Controller {
 		}
 
 		if ($basis === '') {
-			$basis = $doelbinding;
+			$basis = $purposeBinding;
 		}
 
 		// 2) Permission check (REQ-BSN-005-03).
@@ -215,9 +200,9 @@ class BrpController extends Controller {
 				actor: $actor,
 				rawBsn: $rawBsn,
 				verzoekreden: $verzoekreden,
-				doelbinding: $doelbinding,
-				uitkomst: 'geweigerd-onbevoegd',
-				action: 'brp-lookup-geweigerd',
+				purposeBinding: $purposeBinding,
+				outcome: 'refused-unauthorised',
+				action: 'brp-lookup-refused',
 				responseCode: 403,
 				linkedRequest: $linkedRequest,
 				vogScreening: $vogScreening,
@@ -249,7 +234,7 @@ class BrpController extends Controller {
 		// 4) Cache lookup.
 		$cached = $this->cacheService->get($rawBsn);
 		$person = null;
-		$uitkomst = 'fout';
+		$outcome = 'error';
 		$responseCode = 0;
 		$correlationId = null;
 		$responseInCache = false;
@@ -258,7 +243,7 @@ class BrpController extends Controller {
 		if ($cached !== null) {
 			$person = $cached;
 			$responseInCache = true;
-			$uitkomst = 'geslaagd';
+			$outcome = 'succeeded';
 			$responseCode = 200;
 		}
 
@@ -271,7 +256,7 @@ class BrpController extends Controller {
 
 				$remote = $this->haalCentraal->lookupPersoon($rawBsn, $requestRef);
 				if ($remote === null) {
-					$uitkomst = 'niet-gevonden';
+					$outcome = 'not-found';
 					$responseCode = 404;
 				}
 
@@ -286,7 +271,7 @@ class BrpController extends Controller {
 					// Back-filled after verzoek save below.
 					$remote['gekoppeldContact'] = $contactId;
 					$person = $this->cacheService->set($remote);
-					$uitkomst = 'geslaagd';
+					$outcome = 'succeeded';
 
 					// Record opt-out side-effect.
 					$this->optOut->recordFromBrpResponse(
@@ -295,9 +280,9 @@ class BrpController extends Controller {
 					);
 				}//end if
 			} catch (HaalCentraalException $e) {
-				$uitkomst = 'fout';
+				$outcome = 'error';
 				if ($e->getStatusCode() === 0) {
-					$uitkomst = 'timeout';
+					$outcome = 'timeout';
 				}
 
 				$responseCode = $e->getStatusCode();
@@ -307,7 +292,7 @@ class BrpController extends Controller {
 					'Unexpected BRP lookup failure',
 					['error' => $e->getMessage()]
 				);
-				$uitkomst = 'fout';
+				$outcome = 'error';
 				$responseCode = 500;
 			}//end try
 		}//end if
@@ -331,14 +316,14 @@ class BrpController extends Controller {
 		$request = [
 			'bsnHash' => BsnValidationService::hash($rawBsn),
 			'verzoekreden' => $verzoekreden,
-			'doelbinding' => $doelbinding,
+			'purposeBinding' => $purposeBinding,
 			'basis' => $basis,
 			'requestedBy' => $actor,
 			'requestedOnBehalfOf' => $actorRole,
 			'requestMoment' => $now->format(DATE_ATOM),
 			'linkedRequest' => $gekoppeldRequestRef,
 			'gekoppeldContact' => $gekoppeldContactRef,
-			'responseStatus' => $uitkomst,
+			'responseStatus' => $outcome,
 			'responseMoment' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DATE_ATOM),
 			'responseDurationMs' => $responseDurationMs,
 			'haalcentraalCorrelationId' => $correlationId,
@@ -361,8 +346,8 @@ class BrpController extends Controller {
 			actor: $actor,
 			rawBsn: $rawBsn,
 			verzoekreden: $verzoekreden,
-			doelbinding: $doelbinding,
-			uitkomst: $uitkomst,
+			purposeBinding: $purposeBinding,
+			outcome: $outcome,
 			responseCode: $responseCode,
 			haalcentraalCorrelationId: $correlationId,
 			linkedRequest: $gekoppeldRequestRef,
@@ -384,7 +369,7 @@ class BrpController extends Controller {
 			unset($person['bsn']);
 		}
 
-		if ($uitkomst === 'niet-gevonden') {
+		if ($outcome === 'not-found') {
 			return new JSONResponse(
 				[
 					'errorCode' => 'not-found',
@@ -396,7 +381,7 @@ class BrpController extends Controller {
 			);
 		}
 
-		if ($uitkomst === 'fout' || $uitkomst === 'timeout') {
+		if ($outcome === 'error' || $outcome === 'timeout') {
 			return new JSONResponse(
 				[
 					'errorCode' => 'brp-unavailable',
@@ -464,9 +449,9 @@ class BrpController extends Controller {
 			actor: $actor,
 			rawBsn: '',
 			verzoekreden: 'Adres onthuld op behandelaarsverantwoording',
-			doelbinding: 'Wet BRP art. 3.3 (uitzondering geheimhouding)',
-			uitkomst: 'adres-onthuld',
-			action: 'brp-adres-onthuld',
+			purposeBinding: 'Wet BRP art. 3.3 (uitzondering geheimhouding)',
+			outcome: 'address-revealed',
+			action: 'brp-address-revealed',
 			responseCode: 200,
 			linkedRequest: null,
 			actorRole: $this->resolveActorRole(actor: $actor),
@@ -547,6 +532,10 @@ class BrpController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
+	// BRP mutation notifications. Volume ceiling only: the sender authenticates
+	// by its own credential, and refusing a citizen-record mutation because of
+	// a rate limit would leave this app's data silently stale.
+	#[AnonRateLimit(limit: 300, period: 60)]
 	public function mutationWebhook(): JSONResponse {
 		$rawBody = (string)file_get_contents('php://input');
 		$signature = (string)$this->request->getHeader('X-Signature');

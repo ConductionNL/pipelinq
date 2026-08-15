@@ -2,7 +2,7 @@
 	<CnStatsBlock
 		:title="t('pipelinq', 'Pipeline Value')"
 		:count="count"
-		count-label="EUR"
+		countLabel="EUR"
 		:icon="CurrencyEur"
 		variant="success"
 		horizontal
@@ -13,9 +13,9 @@
 import { CnStatsBlock } from '@conduction/nextcloud-vue'
 import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
 import {
+	getClosedStageNames,
 	getLeads,
 	getPipelines,
-	getClosedStageNames,
 } from '../../../services/dashboardData.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -24,6 +24,7 @@ export default {
 	components: {
 		CnStatsBlock,
 	},
+
 	mixins: [dashboardRefreshMixin],
 	data() {
 		return {
@@ -31,6 +32,7 @@ export default {
 			count: 0,
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-16

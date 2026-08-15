@@ -95,8 +95,8 @@ class CallbackOverdueJob extends TimedJob {
 		$this->logger->info('CallbackOverdueJob: starting overdue callback check');
 
 		// NOTE: In production, this queries OpenRegister for tasks with:
-		// - type = "terugbelverzoek"
-		// - status IN ("open", "in_behandeling")
+		// - type = "callbackRequest"
+		// - status IN ("open", "in_progress")
 		// - deadline < NOW()
 		// For each overdue task, it checks the notification cooldown and
 		// sends a reminder via NotificationService.
