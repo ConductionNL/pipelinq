@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
 use OCA\Pipelinq\Repair\RenameDutchPipelinqValues;
+use OCP\DB\IPreparedStatement;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
@@ -215,4 +216,53 @@ final class RenameDutchPipelinqValuesTest extends TestCase {
 		);
 
 	}//end testIsARepairStep()
+
+	/**
+	 * The happy path issues one UPDATE per mapped value on a matching column.
+	 *
+	 * Asserting the UPDATE actually fires matters more than it looks. A mocked
+	 * prepared statement that THROWS gets caught by the step's own try/catch and
+	 * the run reports "0 translated" — a broken migration that reads as a clean
+	 * no-op. This test fails loudly in that case instead.
+	 *
+	 * @return void
+	 */
+	public function testRewritesEveryMappedValueOnAMatchingColumn(): void {
+		$tables = $this->createMock(IPreparedStatement::class);
+		$tables->method('fetchAll')->willReturn([['table_name' => 'oc_openregister_table_1_2']]);
+
+		$columns = $this->createMock(IPreparedStatement::class);
+		$columns->method('fetchAll')->willReturn([['column_name' => 'vat_class']]);
+
+		$db = $this->createMock(IDBConnection::class);
+		$db->method('prepare')->willReturnOnConsecutiveCalls($tables, $columns);
+
+		$platform = new class {
+			/**
+			 * Quote an identifier.
+			 *
+			 * @param string $identifier Identifier.
+			 *
+			 * @return string
+			 */
+			public function quoteSingleIdentifier(string $identifier): string {
+				return '"' . $identifier . '"';
+			}
+		};
+		$db->method('getDatabasePlatform')->willReturn($platform);
+
+		// One UPDATE per value mapped onto `vatClass`, and none for any other
+		// property, because the table declares only that column.
+		$expected = count(RenameDutchPipelinqValues::VALUE_MAP['vatClass']);
+		$db->expects(self::exactly($expected))->method('executeStatement')->willReturn(1);
+
+		$step = new RenameDutchPipelinqValues($db, $this->createMock(LoggerInterface::class));
+
+		$output = $this->createMock(IOutput::class);
+		$output->expects(self::once())->method('info')
+			->with(self::stringContains((string)$expected . ' row value(s)'));
+
+		$step->run($output);
+
+	}//end testRewritesEveryMappedValueOnAMatchingColumn()
 }//end class
