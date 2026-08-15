@@ -183,8 +183,7 @@ class PipelineStageDataTest extends TestCase {
 	 * @return void
 	 */
 	public function testAllStagesHaveRequiredKeys(): void {
-		$allStages = array_merge(
-			$this->stageData->getSalesPipelineData()['stages'],
+		$allStages = array_merge($this->stageData->getSalesPipelineData()['stages'],
 			$this->stageData->getServiceRequestsPipelineData()['stages']
 		);
 
@@ -203,8 +202,7 @@ class PipelineStageDataTest extends TestCase {
 	 * @return void
 	 */
 	public function testStageColorsAreValidHex(): void {
-		$allStages = array_merge(
-			$this->stageData->getSalesPipelineData()['stages'],
+		$allStages = array_merge($this->stageData->getSalesPipelineData()['stages'],
 			$this->stageData->getServiceRequestsPipelineData()['stages']
 		);
 

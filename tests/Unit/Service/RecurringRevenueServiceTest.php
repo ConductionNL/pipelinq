@@ -49,8 +49,7 @@ class RecurringRevenueServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->service = new RecurringRevenueService(
-			$this->createMock(IAppConfig::class),
+		$this->service = new RecurringRevenueService($this->createMock(IAppConfig::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(LoggerInterface::class),
 		);

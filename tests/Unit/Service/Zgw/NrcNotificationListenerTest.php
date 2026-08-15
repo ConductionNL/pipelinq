@@ -96,8 +96,7 @@ class NrcNotificationListenerTest extends TestCase {
 		$ztc = $this->createMock(ZtcClient::class);
 		$ztc->method('resolveOmschrijvingFromUrl')->with($endpoint, $statustypeUrl)->willReturn('In behandeling');
 
-		$listener = new NrcNotificationListener(
-			$registers,
+		$listener = new NrcNotificationListener($registers,
 			$zrc,
 			$ztc,
 			$this->createMock(LoggerInterface::class)
@@ -128,8 +127,7 @@ class NrcNotificationListenerTest extends TestCase {
 			->method('invalidateCache')
 			->with($endpoint, ZtcClient::RESOURCE_ZAAKTYPE);
 
-		$listener = new NrcNotificationListener(
-			$registers,
+		$listener = new NrcNotificationListener($registers,
 			$zrc,
 			$ztc,
 			$this->createMock(LoggerInterface::class)
@@ -180,8 +178,7 @@ class NrcNotificationListenerTest extends TestCase {
 		$zrc->method('getStatus')->willThrowException(new \RuntimeException('boom'));
 		$ztc = $this->createMock(ZtcClient::class);
 
-		$listener = new NrcNotificationListener(
-			$registers,
+		$listener = new NrcNotificationListener($registers,
 			$zrc,
 			$ztc,
 			$this->createMock(LoggerInterface::class)

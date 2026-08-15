@@ -237,8 +237,7 @@ class PosBookkeepingServiceTest extends TestCase {
 			}
 		);
 
-		$this->service = new PosBookkeepingService(
-			$container,
+		$this->service = new PosBookkeepingService($container,
 			$this->appConfig,
 			$mailer,
 			$policy,
@@ -421,8 +420,7 @@ class PosBookkeepingServiceTest extends TestCase {
 
 		$keys = array_map(
 			fn (array $e): string => (string)($e['payload']['data']['idempotencyKey'] ?? ''),
-			array_filter(
-				$this->webhooks->events,
+			array_filter($this->webhooks->events,
 				fn (array $e): bool => $e['eventName'] === PosBookkeepingService::EVENT_JOURNAL_RAISE
 			)
 		);
@@ -444,8 +442,7 @@ class PosBookkeepingServiceTest extends TestCase {
 
 		$this->assertSame('pending', $result['bookkeepingStatus']);
 		$this->assertEmpty(
-			array_filter(
-				$this->webhooks->events,
+			array_filter($this->webhooks->events,
 				fn (array $e): bool => $e['eventName'] === PosBookkeepingService::EVENT_JOURNAL_RAISE
 			)
 		);

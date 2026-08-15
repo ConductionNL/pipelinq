@@ -209,8 +209,7 @@ class CashShiftServiceTest extends TestCase {
 			throw new \RuntimeException('unknown service ' . $id);
 		});
 
-		$this->service = new CashShiftService(
-			$container,
+		$this->service = new CashShiftService($container,
 			$this->appConfig,
 			$policy,
 			$this->createMock(LoggerInterface::class),
@@ -515,8 +514,7 @@ class CashShiftServiceTest extends TestCase {
 		$this->assertSame('reconciled', $shift['status']);
 		$this->assertSame('approved', $shift['reconciliationStatus']);
 
-		$events = array_values(array_filter(
-			$this->webhooks->events,
+		$events = array_values(array_filter($this->webhooks->events,
 			fn (array $e): bool => $e['eventName'] === CashShiftService::EVENT_CASH_DIFF_CONFIRMED
 		));
 		$this->assertCount(1, $events);

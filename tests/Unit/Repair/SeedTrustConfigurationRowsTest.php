@@ -63,8 +63,7 @@ final class RecordingObjectService {
 		unset($filters['register'], $filters['schema']);
 
 		return array_values(
-			array_filter(
-				$this->saved,
+			array_filter($this->saved,
 				static function (array $row) use ($filters): bool {
 					foreach ($filters as $key => $value) {
 						if (($row[$key] ?? null) !== $value) {

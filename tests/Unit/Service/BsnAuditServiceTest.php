@@ -90,7 +90,7 @@ class BsnAuditServiceTest extends TestCase {
 
 		$logger->expects(self::once())->method('error');
 
-		$service = new BsnAuditService($container, $appConfig, $request, $logger,
+		$service = new BsnAuditService($appConfig, $request, $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 		$uuid = $service->recordLookup(

@@ -165,8 +165,7 @@ class WhatsAppSendFlowTest extends TestCase {
 		$this->consentService = new ConsentService($this->container, $this->appConfig, $this->logger);
 		$this->budgetService = new BudgetService($this->container, $this->appConfig, $this->notificationService, $this->logger);
 
-		$this->adapter = new WhatsAppAdapter(
-			$this->container,
+		$this->adapter = new WhatsAppAdapter($this->container,
 			$this->appConfig,
 			$this->providerRepo,
 			$this->providerClient,

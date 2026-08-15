@@ -81,9 +81,7 @@ class ContactmomentServiceTest extends TestCase {
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new ContactmomentService(
-			$this->container,
-			$this->ticketService,
+		$this->service = new ContactmomentService($this->ticketService,
 			$this->groupManager,
 			$this->logger,
 			objectService: $objectService,
@@ -243,8 +241,7 @@ class ContactmomentServiceTest extends TestCase {
 		$this->ticketService->method('isConfigured')->willReturn(false);
 		$this->container->expects($this->never())->method('get');
 
-		$this->assertNull(
-			$this->service->recordOutboundMessage(
+		$this->assertNull($this->service->recordOutboundMessage(
 				channel: 'sms',
 				subject: 'Outbound SMS',
 				summary: 'Body',

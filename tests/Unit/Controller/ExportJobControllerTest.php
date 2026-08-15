@@ -160,8 +160,7 @@ class ExportJobControllerTest extends TestCase {
 		$this->policy = $this->createMock(ExportAccessPolicy::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
-		$this->controller = new ExportJobController(
-			$this->request,
+		$this->controller = new ExportJobController($this->request,
 			$this->jobs,
 			$this->destinations,
 			$this->policy,
@@ -238,8 +237,7 @@ class ExportJobControllerTest extends TestCase {
 
 		// A sink registry with no adapters: testConnection() then records an
 		// "invalid" status without opening a network connection.
-		$destinationService = new ExportDestinationService(
-			$container,
+		$destinationService = new ExportDestinationService($container,
 			$appConfig,
 			new ExportSinkRegistry([]),
 			$this->createMock(LoggerInterface::class)
@@ -248,8 +246,7 @@ class ExportJobControllerTest extends TestCase {
 		$data = $this->createMock(ExportDataService::class);
 		$data->method('schemaExists')->willReturn(true);
 
-		$jobService = new ExportJobService(
-			$container,
+		$jobService = new ExportJobService($container,
 			$appConfig,
 			$destinationService,
 			$data,
@@ -268,8 +265,7 @@ class ExportJobControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('analyst');
 		$session->method('getUser')->willReturn($user);
 
-		return new ExportJobController(
-			$request,
+		return new ExportJobController($request,
 			$jobService,
 			$destinationService,
 			$policy,

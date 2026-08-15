@@ -131,8 +131,7 @@ class BlastSendJobTest extends TestCase {
 	 * @return BlastSendJob
 	 */
 	private function buildJob(): BlastSendJob {
-		return new BlastSendJob(
-			$this->timeFactory,
+		return new BlastSendJob($this->timeFactory,
 			$this->appConfig,
 			$this->container,
 			$this->blastService,

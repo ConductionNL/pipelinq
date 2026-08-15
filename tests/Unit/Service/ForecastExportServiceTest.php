@@ -98,8 +98,7 @@ class ForecastExportServiceTest extends TestCase {
 
 				$sort = ($config['sort'] ?? []);
 				foreach ($sort as $field => $direction) {
-					usort(
-						$out,
+					usort($out,
 						static function (array $a, array $b) use ($field, $direction): int {
 							$cmp = strcmp((string)($a[$field] ?? ''), (string)($b[$field] ?? ''));
 							return (strtoupper((string)$direction) === 'DESC') ? -$cmp : $cmp;
@@ -166,9 +165,7 @@ class ForecastExportServiceTest extends TestCase {
 
 		$this->container->method('get')->willReturn($this->fakeObjectService($rows));
 
-		$service = new ForecastExportService(
-			$this->container,
-			$this->appConfig,
+		$service = new ForecastExportService($this->appConfig,
 			$this->createMock(ForecastService::class),
 			$this->createMock(ReportingService::class),
 			$this->createMock(LoggerInterface::class),

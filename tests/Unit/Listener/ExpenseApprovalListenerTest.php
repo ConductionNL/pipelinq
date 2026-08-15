@@ -266,8 +266,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 		$objects = new ApFakeObjectService();
 		$listener = $this->listener($schemaMap, $apService, $objects);
 
-		$listener->handle(new ObjectUpdatedEvent(
-			$this->entity('schema-expense', ['uuid' => 'exp-1', 'status' => 'draft']),
+		$listener->handle(new ObjectUpdatedEvent($this->entity('schema-expense', ['uuid' => 'exp-1', 'status' => 'draft']),
 			$this->entity('schema-expense', ['uuid' => 'exp-1', 'status' => 'draft'])
 		));
 		$this->assertCount(0, $objects->saved);
@@ -289,8 +288,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 		$objects = new ApFakeObjectService();
 		$listener = $this->listener($schemaMap, $apService, $objects);
 
-		$listener->handle(new ObjectCreatedEvent(
-			$this->entity('schema-expense', ['uuid' => 'exp-1', 'status' => 'approved'])
+		$listener->handle(new ObjectCreatedEvent($this->entity('schema-expense', ['uuid' => 'exp-1', 'status' => 'approved'])
 		));
 		$this->assertCount(0, $objects->saved);
 	}//end testNoopWhenUnconfigured()
@@ -374,8 +372,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 		$objects = new ApFakeObjectService();
 		$listener = $this->listener($schemaMap, $apService, $objects);
 
-		$listener->handle(new ObjectUpdatedEvent(
-			$this->entity('schema-expense', [
+		$listener->handle(new ObjectUpdatedEvent($this->entity('schema-expense', [
 				'uuid' => 'exp-1',
 				'status' => 'approved',
 				'apSyncStatus' => 'synced',

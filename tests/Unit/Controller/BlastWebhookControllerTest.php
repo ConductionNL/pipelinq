@@ -142,8 +142,7 @@ class BlastWebhookControllerTest extends TestCase {
 
 		$this->blastSendJob->expects($this->once())
 			->method('enqueueWebhookEvent')
-			->with(
-				$this->equalTo('sendgrid'),
+			->with($this->equalTo('sendgrid'),
 				$this->callback(function (array $event): bool {
 					return ($event['eventType'] ?? '') === 'delivered';
 				}),
@@ -181,8 +180,7 @@ class BlastWebhookControllerTest extends TestCase {
 
 		$this->blastSendJob->expects($this->once())
 			->method('enqueueWebhookEvent')
-			->with(
-				$this->equalTo('twilio'),
+			->with($this->equalTo('twilio'),
 				$this->callback(function (array $event): bool {
 					return ($event['channel'] ?? '') === 'sms'
 						&& ($event['providerId'] ?? '') === 'SM-1'
@@ -228,8 +226,7 @@ class BlastWebhookControllerTest extends TestCase {
 
 		$this->blastSendJob->expects($this->once())
 			->method('enqueueWebhookEvent')
-			->with(
-				$this->equalTo('ses'),
+			->with($this->equalTo('ses'),
 				$this->callback(function (array $event): bool {
 					return ($event['eventType'] ?? '') === 'bounce'
 						&& ($event['bounceType'] ?? '') === 'hard';

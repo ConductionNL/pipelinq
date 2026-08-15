@@ -99,8 +99,7 @@ class SegmentControllerTest extends TestCase {
 		$this->segmentService = $this->createMock(SegmentService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
-		$this->controller = new SegmentController(
-			$this->request,
+		$this->controller = new SegmentController($this->request,
 			$this->segmentService,
 			$this->userSession,
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
@@ -162,8 +161,7 @@ class SegmentControllerTest extends TestCase {
 			$cacheFactory->method('createLocal')->willReturn($cache);
 		}
 
-		$service = new SegmentService(
-			$container,
+		$service = new SegmentService($container,
 			$appConfig,
 			$this->createMock(SchemaMapService::class),
 			$cacheFactory,
@@ -175,8 +173,7 @@ class SegmentControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('marketeer');
 		$session->method('getUser')->willReturn($user);
 
-		return new SegmentController(
-			$this->createMock(IRequest::class),
+		return new SegmentController($this->createMock(IRequest::class),
 			$service,
 			$session,
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])

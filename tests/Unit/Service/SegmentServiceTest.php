@@ -227,8 +227,7 @@ class SegmentServiceTest extends TestCase {
 		$this->cacheFactory->method('createDistributed')->willReturn($cache);
 		$this->cacheFactory->method('createLocal')->willReturn($cache);
 
-		$this->service = new SegmentService(
-			$this->container,
+		$this->service = new SegmentService($this->container,
 			$this->appConfig,
 			$this->schemaMapService,
 			$this->cacheFactory,

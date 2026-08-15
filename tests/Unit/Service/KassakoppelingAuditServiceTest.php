@@ -263,8 +263,7 @@ class KassakoppelingAuditServiceTest extends TestCase {
 	public function testCreateEntryChainsPerRegister(): void {
 		$first = $this->service->createEntry(data: $this->saleInput());
 		$second = $this->service->createEntry(
-			data: array_merge(
-				$this->saleInput(),
+			data: array_merge($this->saleInput(),
 				[
 					'action' => 'void',
 					'timestamp' => '2026-05-20T08:18:15+00:00',
@@ -429,8 +428,7 @@ class KassakoppelingAuditServiceTest extends TestCase {
 	public function testExportForBelastingdienstStampsExportedAt(): void {
 		$this->service->createEntry(data: $this->saleInput());
 		$this->service->createEntry(
-			data: array_merge(
-				$this->saleInput(),
+			data: array_merge($this->saleInput(),
 				['action' => 'void', 'timestamp' => '2026-05-20T08:18:15+00:00']
 			)
 		);

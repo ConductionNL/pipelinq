@@ -261,8 +261,7 @@ class PosStaffServiceTest extends TestCase {
 		}
 
 		$stored = $this->os->store['sch-posStaff'][$saved['id']];
-		$this->assertNotEmpty(
-			$stored['lockedUntil'] ?? '',
+		$this->assertNotEmpty($stored['lockedUntil'] ?? '',
 			'Account must have lockedUntil set after 5 failed attempts'
 		);
 

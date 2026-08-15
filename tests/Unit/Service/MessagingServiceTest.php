@@ -65,8 +65,7 @@ class MessagingServiceTest extends TestCase {
 			}
 		);
 
-		$this->service = new MessagingService(
-			$this->createMock(ContainerInterface::class),
+		$this->service = new MessagingService($this->createMock(ContainerInterface::class),
 			$appConfig,
 			$this->providerRepo,
 			$this->smsAdapter,

@@ -182,8 +182,7 @@ class KvkApiClientTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$resultMapper = new KvkResultMapper();
 
-		$client = new KvkApiClient(
-			$clientService,
+		$client = new KvkApiClient($clientService,
 			$this->appConfigMock(apiBaseOverride: 'https://api.kvk.example/api/v2/'),
 			$logger,
 			$resultMapper,
@@ -240,8 +239,7 @@ class KvkApiClientTest extends TestCase {
 		$clientService = $this->createMock(IClientService::class);
 		$clientService->method('newClient')->willReturn($httpClient);
 
-		$client = new KvkApiClient(
-			$clientService,
+		$client = new KvkApiClient($clientService,
 			$this->appConfigMock(),
 			$this->createMock(LoggerInterface::class),
 			new KvkResultMapper(),
@@ -288,8 +286,7 @@ class KvkApiClientTest extends TestCase {
 		$clientService = $this->createMock(IClientService::class);
 		$clientService->method('newClient')->willReturn($httpClient);
 
-		$client = new KvkApiClient(
-			$clientService,
+		$client = new KvkApiClient($clientService,
 			$this->appConfigMock(),
 			$this->createMock(LoggerInterface::class),
 			new KvkResultMapper(),

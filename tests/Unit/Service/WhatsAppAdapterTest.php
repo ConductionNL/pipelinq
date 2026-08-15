@@ -148,8 +148,7 @@ class WhatsAppAdapterTest extends TestCase {
 			}
 		);
 
-		$this->adapter = new WhatsAppAdapter(
-			$this->container,
+		$this->adapter = new WhatsAppAdapter($this->container,
 			$this->appConfig,
 			$this->providerRepo,
 			$this->providerClient,

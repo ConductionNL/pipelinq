@@ -94,23 +94,20 @@ class AppointmentBookingRegisterTest extends TestCase {
 	 */
 	public function testAppointmentBookingSchemaMaterialises(string $slug, array $required): void {
 		$schemas = ($this->config['components']['schemas'] ?? []);
-		$this->assertArrayHasKey(
-			$slug,
+		$this->assertArrayHasKey($slug,
 			$schemas,
 			"Schema '{$slug}' MUST materialise in the merged register configuration."
 		);
 
 		$schema = $schemas[$slug];
-		$this->assertSame(
-			$slug,
+		$this->assertSame($slug,
 			($schema['slug'] ?? null),
 			"Schema '{$slug}' slug field MUST match the map key."
 		);
 
 		$declaredRequired = ($schema['required'] ?? []);
 		foreach ($required as $field) {
-			$this->assertContains(
-				$field,
+			$this->assertContains($field,
 				$declaredRequired,
 				"Schema '{$slug}' MUST list '{$field}' as required."
 			);
@@ -131,8 +128,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 
 		$this->assertIsArray($pipelinqSchemas, 'pipelinq register MUST declare schemas[].');
 		foreach (['service', 'resource', 'booking', 'walkInTicket', 'availabilityCache'] as $expected) {
-			$this->assertContains(
-				$expected,
+			$this->assertContains($expected,
 				$pipelinqSchemas,
 				"pipelinq register MUST list '{$expected}' (fragment merge contract)."
 			);
@@ -179,8 +175,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 		$objects = ($this->config['components']['objects'] ?? []);
 
 		$hits = $this->findObjects($objects, $register, $schema, []);
-		$this->assertGreaterThanOrEqual(
-			$minHits,
+		$this->assertGreaterThanOrEqual($minHits,
 			count($hits),
 			"Expected at least {$minHits} seed object(s) for {$register}/{$schema}."
 		);

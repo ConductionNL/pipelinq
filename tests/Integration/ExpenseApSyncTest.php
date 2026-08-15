@@ -387,8 +387,7 @@ class ExpenseApSyncTest extends TestCase {
 
 		$listener = $this->buildListener($objects, $webhooks, $dispatcher);
 
-		$listener->handle(new ObjectUpdatedEvent(
-			$this->expenseEntity([
+		$listener->handle(new ObjectUpdatedEvent($this->expenseEntity([
 				'uuid' => 'exp-int-2',
 				'status' => 'approved',
 				'apSyncStatus' => 'synced',

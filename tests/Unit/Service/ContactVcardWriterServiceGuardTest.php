@@ -86,8 +86,7 @@ class ContactVcardWriterServiceGuardTest extends TestCase {
 		$resolver = $this->createMock(RegisterResolverService::class);
 		$resolver->method('resolve')->willReturn($register);
 
-		return new ContactVcardWriterService(
-			$contacts,
+		return new ContactVcardWriterService($contacts,
 			$appConfig,
 			$container,
 			$this->createMock(LoggerInterface::class),

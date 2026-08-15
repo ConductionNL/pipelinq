@@ -167,7 +167,7 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetStageValuesAggregatesCountAndValue(): void {
-		$service = new RapportageService($this->container, $this->appConfig, $this->logger,
+		$service = new RapportageService($this->appConfig, $this->logger,
 			objectService: $default,
 		);
 		$rows = $service->getStageValues();
@@ -194,7 +194,7 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetSourcePerformanceComputesConversion(): void {
-		$service = new RapportageService($this->container, $this->appConfig, $this->logger,
+		$service = new RapportageService($this->appConfig, $this->logger,
 			objectService: $default,
 		);
 		$rows = $service->getSourcePerformance();
@@ -222,7 +222,7 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetWinLossAnalysisComputesWinRate(): void {
-		$service = new RapportageService($this->container, $this->appConfig, $this->logger,
+		$service = new RapportageService($this->appConfig, $this->logger,
 			objectService: $default,
 		);
 		$winLoss = $service->getWinLossAnalysis();
@@ -243,7 +243,7 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetAgingBucketsDistributesOpenLeads(): void {
-		$service = new RapportageService($this->container, $this->appConfig, $this->logger,
+		$service = new RapportageService($this->appConfig, $this->logger,
 			objectService: $default,
 		);
 		$rows = $service->getAgingBuckets();

@@ -60,8 +60,7 @@ class MessagingControllerTest extends TestCase {
 		$this->consentService = $this->createMock(ConsentService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
-		$this->controller = new MessagingController(
-			$this->createMock(IRequest::class),
+		$this->controller = new MessagingController($this->createMock(IRequest::class),
 			$this->messagingService,
 			$this->providerRepo,
 			$this->consentService,
@@ -409,8 +408,7 @@ class MessagingControllerTest extends TestCase {
 		$providerRepo = $this->createMock(ChannelProviderRepository::class);
 		$providerRepo->method('listActive')->willReturn([]);
 
-		$service = new MessagingService(
-			$container,
+		$service = new MessagingService($container,
 			$appConfig,
 			$providerRepo,
 			$this->createMock(\OCA\Pipelinq\Service\SmsAdapter::class),
@@ -424,8 +422,7 @@ class MessagingControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('agent-1');
 		$userSession->method('getUser')->willReturn($user);
 
-		$controller = new MessagingController(
-			$this->createMock(IRequest::class),
+		$controller = new MessagingController($this->createMock(IRequest::class),
 			$service,
 			$providerRepo,
 			$consent,

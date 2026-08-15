@@ -83,8 +83,7 @@ class PortalRequestServiceTest extends TestCase {
 		$dispatcher = $this->createMock(IEventDispatcher::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new PortalRequestService(
-			$this->reader,
+		$this->service = new PortalRequestService($this->reader,
 			$scope,
 			$audit,
 			$dispatcher,

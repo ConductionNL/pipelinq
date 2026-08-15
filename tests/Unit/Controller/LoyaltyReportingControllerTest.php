@@ -78,8 +78,7 @@ class LoyaltyReportingControllerTest extends TestCase {
 			$userSession->method('getUser')->willReturn(null);
 		}
 
-		return new LoyaltyReportingController(
-			$this->createMock(IRequest::class),
+		return new LoyaltyReportingController($this->createMock(IRequest::class),
 			$reportingService,
 			$userSession,
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
@@ -146,9 +145,7 @@ class LoyaltyReportingControllerTest extends TestCase {
 		$programmeService = $this->createMock(LoyaltyProgrammeService::class);
 		$programmeService->method('getProgramme')->willReturn($programme);
 
-		return new LoyaltyReportingService(
-			$this->container($runner),
-			$this->appConfig(),
+		return new LoyaltyReportingService($this->appConfig(),
 			$accountService,
 			$this->createMock(PointsLedgerService::class),
 			$programmeService,

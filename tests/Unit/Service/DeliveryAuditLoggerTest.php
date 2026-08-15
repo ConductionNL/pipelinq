@@ -79,9 +79,7 @@ class DeliveryAuditLoggerTest extends TestCase {
 			}
 		);
 
-		return new DeliveryAuditLogger(
-			$container,
-			$appConfig,
+		return new DeliveryAuditLogger($appConfig,
 			$this->createMock(LoggerInterface::class),
 			objectService: $objectService,
 		);

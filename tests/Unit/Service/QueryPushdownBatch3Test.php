@@ -211,8 +211,7 @@ class QueryPushdownBatch3Test extends TestCase {
 	 */
 	private function oracle(string $userId, array $tickets, array $tasks, array $agents, array $queues): array {
 		$requests = array_values(
-			array_filter(
-				$tickets,
+			array_filter($tickets,
 				static fn (array $ticket): bool => (string)($ticket['ticketType'] ?? '') === TicketService::TYPE_REQUEST
 			)
 		);

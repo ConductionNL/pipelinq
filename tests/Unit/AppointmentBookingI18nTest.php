@@ -54,8 +54,7 @@ class AppointmentBookingI18nTest extends TestCase {
 	public function testEnglishCatalogueHasAllBookingKeys(): void {
 		$en = $this->loadCatalogue('en');
 		foreach ($this->bookingKeys() as $key) {
-			$this->assertArrayHasKey(
-				$key,
+			$this->assertArrayHasKey($key,
 				$en,
 				sprintf('Missing English translation for booking string %s', var_export($key, true))
 			);
@@ -68,8 +67,7 @@ class AppointmentBookingI18nTest extends TestCase {
 	public function testDutchCatalogueHasAllBookingKeys(): void {
 		$nl = $this->loadCatalogue('nl');
 		foreach ($this->bookingKeys() as $key) {
-			$this->assertArrayHasKey(
-				$key,
+			$this->assertArrayHasKey($key,
 				$nl,
 				sprintf('Missing Dutch translation for booking string %s', var_export($key, true))
 			);

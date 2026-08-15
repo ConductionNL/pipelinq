@@ -129,7 +129,7 @@ class PosRoleServiceTest extends TestCase {
 	 */
 	private function buildService(object $objectService): PosRoleService {
 		$this->container->method('get')->willReturn($objectService);
-		return new PosRoleService($this->container, $this->appConfig, $this->logger,
+		return new PosRoleService($this->appConfig, $this->logger,
 			objectService: $objectService,
 		);
 	}//end buildService()

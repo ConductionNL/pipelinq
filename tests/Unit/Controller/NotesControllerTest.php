@@ -124,8 +124,7 @@ class NotesControllerTest extends TestCase {
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturn(true);
 
-		$this->controller = new NotesController(
-			$request,
+		$this->controller = new NotesController($request,
 			$this->notesService,
 			$noteEventService,
 			$userSession,
@@ -301,8 +300,7 @@ class NotesControllerTest extends TestCase {
 		$groupManager = $this->createMock(IGroupManager::class);
 		$groupManager->method('isAdmin')->willReturn(false);
 
-		$controller = new NotesController(
-			$request,
+		$controller = new NotesController($request,
 			$notesService,
 			$this->createMock(NoteEventService::class),
 			$userSession,

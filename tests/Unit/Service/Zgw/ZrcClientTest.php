@@ -129,8 +129,7 @@ class ZrcClientTest extends TestCase {
 			['status' => 201, 'headers' => ['location' => $caseUrl, 'etag' => 'W/"a1b2c3"'], 'body' => []],
 		]);
 
-		$mapping = $client->createZaak(
-			$this->endpoint,
+		$mapping = $client->createZaak($this->endpoint,
 			[
 				'bronorganisatie' => '002564440',
 				'caseType' => 'https://ztc/zaaktype/1',
@@ -164,8 +163,7 @@ class ZrcClientTest extends TestCase {
 		], grantScope: false);
 
 		$this->expectException(\OCA\Pipelinq\Service\Zgw\InsufficientScopeException::class);
-		$client->createZaak(
-			$this->endpoint,
+		$client->createZaak($this->endpoint,
 			['caseType' => 'https://ztc/zaaktype/1'],
 			'req-zoetermeer-test'
 		);
@@ -273,8 +271,7 @@ class ZrcClientTest extends TestCase {
 		$ac = $this->createMock(AcClient::class);
 		$client = new ZrcClient($api, $registers, $ac, $this->createMock(LoggerInterface::class));
 
-		$url = $client->linkInitiator(
-			$this->endpoint,
+		$url = $client->linkInitiator($this->endpoint,
 			['zgwUrl' => 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/abc'],
 			['bsn' => '123456789', 'name' => 'Jeroen van der Velde'],
 			'https://ztc/roltype/initiator'

@@ -70,8 +70,7 @@ class BerichtenboxServiceTest extends TestCase {
 	private function realEncryption(): EncryptionService {
 		$config = $this->createMock(IConfig::class);
 		$config->method('getSystemValue')->willReturn('berichtenbox-service-test-secret');
-		return new EncryptionService(
-			$config,
+		return new EncryptionService($config,
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end realEncryption()
@@ -167,8 +166,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$container->method('get')->willReturn($objectService);
 		$container->method('has')->willReturn(false);
 
-		return new BerichtenboxService(
-			$container,
+		return new BerichtenboxService($container,
 			($appConfig ?? $this->appConfigStub()),
 			$this->realEncryption(),
 			new TemplateRenderer($this->createMock(LoggerInterface::class)),
@@ -200,8 +198,7 @@ class BerichtenboxServiceTest extends TestCase {
 
 		$resolver = $this->createMock(MailboxResolver::class);
 		$email = $this->createMock(EmailFallbackSender::class);
-		$service = $this->buildService(
-			$this->captureObjectService(),
+		$service = $this->buildService($this->captureObjectService(),
 			$resolver,
 			$logius,
 			$email,
@@ -259,8 +256,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$email = $this->createMock(EmailFallbackSender::class);
 		$email->expects($this->never())->method('send');
 
-		$service = $this->buildService(
-			$this->captureObjectService(),
+		$service = $this->buildService($this->captureObjectService(),
 			$resolver,
 			$logius,
 			$email,
@@ -332,8 +328,7 @@ class BerichtenboxServiceTest extends TestCase {
 			}
 		);
 
-		$service = $this->buildService(
-			$this->captureObjectService(),
+		$service = $this->buildService($this->captureObjectService(),
 			$resolver,
 			$logius,
 			$email,
@@ -385,8 +380,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$audit->expects($this->once())->method('logFallback');
 		$audit->method('hashPayload')->willReturn('hash');
 
-		$service = $this->buildService(
-			$this->captureObjectService(),
+		$service = $this->buildService($this->captureObjectService(),
 			$resolver,
 			$logius,
 			$email,
@@ -434,8 +428,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$audit->expects($this->once())->method('logFailed');
 		$audit->method('hashPayload')->willReturn('hash');
 
-		$service = $this->buildService(
-			$this->captureObjectService(),
+		$service = $this->buildService($this->captureObjectService(),
 			$resolver,
 			$logius,
 			$this->createMock(EmailFallbackSender::class),
@@ -456,8 +449,7 @@ class BerichtenboxServiceTest extends TestCase {
 		]);
 
 		// Should be re-queued with retryCount=1 + nextRetryAt set.
-		$queuedRows = array_filter(
-			$this->savedMessages,
+		$queuedRows = array_filter($this->savedMessages,
 			fn ($r) => (($r['deliveryStatus'] ?? '') === 'queued' && ($r['retryCount'] ?? 0) === 1)
 		);
 		$this->assertNotEmpty($queuedRows);
@@ -486,8 +478,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$audit = $this->createMock(DeliveryAuditLogger::class);
 		$audit->method('hashPayload')->willReturn('hash');
 
-		$service = $this->buildService(
-			$this->captureObjectService(),
+		$service = $this->buildService($this->captureObjectService(),
 			$resolver,
 			$logius,
 			$this->createMock(EmailFallbackSender::class),
@@ -507,8 +498,7 @@ class BerichtenboxServiceTest extends TestCase {
 			'retryCount' => BerichtenboxService::MAX_RETRIES,
 		]);
 
-		$failedRows = array_filter(
-			$this->savedMessages,
+		$failedRows = array_filter($this->savedMessages,
 			fn ($r) => ($r['deliveryStatus'] ?? '') === 'failed'
 		);
 		$this->assertNotEmpty($failedRows);
@@ -548,8 +538,7 @@ class BerichtenboxServiceTest extends TestCase {
 		$container->method('get')->willReturn($objectService);
 		$container->method('has')->willReturn(false);
 
-		$service = new BerichtenboxService(
-			$container,
+		$service = new BerichtenboxService($container,
 			$this->appConfigStub(),
 			$this->realEncryption(),
 			new TemplateRenderer($this->createMock(LoggerInterface::class)),

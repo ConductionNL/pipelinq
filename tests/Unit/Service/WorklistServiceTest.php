@@ -149,8 +149,7 @@ class WorklistServiceTest extends TestCase {
 		$ticketService->method('getSchemaId')->willReturn('ticket_schema');
 		$ticketService->method('isConfigured')->willReturn($registerMissing === false);
 		$ticketService->method('findByType')->willReturnCallback(
-			function (string $ticketType, array $extraFilters = [], int $limit = 10000) use (
-				$byCollection,
+			function (string $ticketType, array $extraFilters = [], int $limit = 10000) use ($byCollection,
 				$registerMissing,
 				$throwFromObjectService
 			): array {

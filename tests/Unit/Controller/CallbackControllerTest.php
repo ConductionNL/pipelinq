@@ -112,8 +112,7 @@ class CallbackControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$this->controller = new CallbackController(
-			$this->request,
+		$this->controller = new CallbackController($this->request,
 			$this->callbackService,
 			$this->notificationService,
 			$this->scheduledTaskService,

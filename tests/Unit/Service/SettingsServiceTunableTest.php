@@ -56,8 +56,7 @@ class SettingsServiceTunableTest extends TestCase {
 	protected function setUp(): void {
 		$this->appConfig = $this->createMock(IAppConfig::class);
 
-		$this->service = new SettingsService(
-			$this->appConfig,
+		$this->service = new SettingsService($this->appConfig,
 			$this->createMock(IConfig::class),
 			$this->createMock(SettingsLoadService::class),
 			$this->createMock(DefaultPipelineService::class),

@@ -67,8 +67,7 @@ class ContactmomentControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$this->controller = new ContactmomentController(
-			$request,
+		$this->controller = new ContactmomentController($request,
 			$this->contactmomentService,
 			$this->userSession,
 			$l10n,

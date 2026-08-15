@@ -77,8 +77,7 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn([]);
 
-		$this->service = new ProspectDiscoveryService(
-			$this->icpConfig,
+		$this->service = new ProspectDiscoveryService($this->icpConfig,
 			$kvkClient,
 			$ocClient,
 			$scoring,

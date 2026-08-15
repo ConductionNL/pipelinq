@@ -197,8 +197,7 @@ class MessagingWebhookControllerTest extends TestCase {
 		$providerRepo = $this->createMock(ChannelProviderRepository::class);
 		$providerRepo->method('findById')->willReturn($providerRow);
 
-		$whatsApp = new WhatsAppAdapter(
-			$container,
+		$whatsApp = new WhatsAppAdapter($container,
 			$appConfig,
 			$providerRepo,
 			new WhatsAppProviderClient($container, $logger),
@@ -208,8 +207,7 @@ class MessagingWebhookControllerTest extends TestCase {
 			$logger,
 		);
 
-		$sms = new SmsAdapter(
-			$container,
+		$sms = new SmsAdapter($container,
 			$appConfig,
 			$providerRepo,
 			new SmsProviderFactory($container, $logger),
@@ -340,8 +338,7 @@ class MessagingWebhookControllerTest extends TestCase {
 			new \RuntimeException('pgsql: connection to 10.0.0.7 refused')
 		);
 
-		$controller = new MessagingWebhookController(
-			$this->request(),
+		$controller = new MessagingWebhookController($this->request(),
 			$whatsApp,
 			$this->createMock(SmsAdapter::class),
 			$this->createMock(LoggerInterface::class),
@@ -489,8 +486,7 @@ class MessagingWebhookControllerTest extends TestCase {
 			new \RuntimeException('twilio auth token AC123 rejected')
 		);
 
-		$controller = new MessagingWebhookController(
-			$this->request(),
+		$controller = new MessagingWebhookController($this->request(),
 			$this->createMock(WhatsAppAdapter::class),
 			$sms,
 			$this->createMock(LoggerInterface::class),

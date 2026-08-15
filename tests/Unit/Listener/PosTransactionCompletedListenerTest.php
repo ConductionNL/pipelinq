@@ -90,8 +90,7 @@ class PosTransactionCompletedListenerTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn($configuredPos);
 
-		return new PosTransactionCompletedListener(
-			$engine,
+		return new PosTransactionCompletedListener($engine,
 			$schemaMap,
 			$appConfig,
 			$this->createMock(LoggerInterface::class)

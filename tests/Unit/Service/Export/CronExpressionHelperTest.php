@@ -70,11 +70,9 @@ class CronExpressionHelperTest extends TestCase {
 	public function testIsDueAtScheduledMinute(): void {
 		$expression = '0 2 * * *';
 
-		$this->assertTrue(
-			$this->cron->isDue(expression: $expression, when: new DateTimeImmutable('2026-06-03 02:00:00'))
+		$this->assertTrue($this->cron->isDue(expression: $expression, when: new DateTimeImmutable('2026-06-03 02:00:00'))
 		);
-		$this->assertFalse(
-			$this->cron->isDue(expression: $expression, when: new DateTimeImmutable('2026-06-03 03:00:00'))
+		$this->assertFalse($this->cron->isDue(expression: $expression, when: new DateTimeImmutable('2026-06-03 03:00:00'))
 		);
 	}//end testIsDueAtScheduledMinute()
 
@@ -86,11 +84,9 @@ class CronExpressionHelperTest extends TestCase {
 	public function testIsDueStepField(): void {
 		$expression = '*/15 * * * *';
 
-		$this->assertTrue(
-			$this->cron->isDue(expression: $expression, when: new DateTimeImmutable('2026-06-03 10:30:00'))
+		$this->assertTrue($this->cron->isDue(expression: $expression, when: new DateTimeImmutable('2026-06-03 10:30:00'))
 		);
-		$this->assertFalse(
-			$this->cron->isDue(expression: $expression, when: new DateTimeImmutable('2026-06-03 10:31:00'))
+		$this->assertFalse($this->cron->isDue(expression: $expression, when: new DateTimeImmutable('2026-06-03 10:31:00'))
 		);
 	}//end testIsDueStepField()
 
@@ -113,8 +109,7 @@ class CronExpressionHelperTest extends TestCase {
 	 * @return void
 	 */
 	public function testInvalidExpressionNeverDue(): void {
-		$this->assertFalse(
-			$this->cron->isDue(expression: 'garbage', when: new DateTimeImmutable('2026-06-03 02:00:00'))
+		$this->assertFalse($this->cron->isDue(expression: 'garbage', when: new DateTimeImmutable('2026-06-03 02:00:00'))
 		);
 	}//end testInvalidExpressionNeverDue()
 

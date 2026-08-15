@@ -67,8 +67,7 @@ class SlaEngineServiceTest extends TestCase {
 		$holidays = new HolidayCalendarService($appConfig, $logger);
 		$this->businessHours = new BusinessHoursCalculator($holidays, $appConfig, $logger);
 
-		$this->engine = new SlaEngineService(
-			$holidays,
+		$this->engine = new SlaEngineService($holidays,
 			$this->businessHours,
 			$container,
 			$appConfig,
@@ -219,14 +218,12 @@ class SlaEngineServiceTest extends TestCase {
 		$status = $this->engine->initialiseStatus($policy, $start);
 
 		// Force consumption past 80% to trigger.
-		$status['targets'] = $this->engine->evaluateTargets(
-			$status['targets'],
+		$status['targets'] = $this->engine->evaluateTargets($status['targets'],
 			$policy,
 			new DateTimeImmutable('2026-05-15T10:45:00Z')
 		);
 
-		$result = $this->engine->executeEscalations(
-			$policy,
+		$result = $this->engine->executeEscalations($policy,
 			'request',
 			'object-1',
 			$status['targets'],
@@ -238,8 +235,7 @@ class SlaEngineServiceTest extends TestCase {
 		$this->assertSame(1, $result['level']);
 
 		// Re-fire with alreadyFired = 1 → no advance.
-		$second = $this->engine->executeEscalations(
-			$policy,
+		$second = $this->engine->executeEscalations($policy,
 			'request',
 			'object-1',
 			$status['targets'],
@@ -271,14 +267,12 @@ class SlaEngineServiceTest extends TestCase {
 		$status = $this->engine->initialiseStatus($policy, $start);
 
 		// Only 1 hour elapsed of a 4-hour target = 25% consumption.
-		$status['targets'] = $this->engine->evaluateTargets(
-			$status['targets'],
+		$status['targets'] = $this->engine->evaluateTargets($status['targets'],
 			$policy,
 			new DateTimeImmutable('2026-05-15T10:00:00Z')
 		);
 
-		$result = $this->engine->executeEscalations(
-			$policy,
+		$result = $this->engine->executeEscalations($policy,
 			'request',
 			'object-1',
 			$status['targets'],

@@ -105,8 +105,7 @@ class PortalAuthServiceTest extends TestCase {
 		$this->tenant->method('sessionTtlHours')->willReturn(8);
 		$this->tenant->method('mfaEnforced')->willReturn(false);
 
-		$this->auth = new PortalAuthService(
-			$this->repository,
+		$this->auth = new PortalAuthService($this->repository,
 			$this->hasher,
 			$sessions,
 			$mfa,

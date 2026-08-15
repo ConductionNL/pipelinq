@@ -244,8 +244,7 @@ class PosTransactionServicePhase0Test extends TestCase {
 			groupManager: $this->createMock(IGroupManager::class),
 		);
 
-		return new PosTransactionService(
-			$container,
+		return new PosTransactionService($container,
 			$appConfig,
 			$policy,
 			$this->createMock(LoggerInterface::class),

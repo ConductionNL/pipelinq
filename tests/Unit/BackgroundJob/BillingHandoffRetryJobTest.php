@@ -56,8 +56,7 @@ class BillingHandoffRetryJobTest extends TestCase {
 			->willReturn(['batch-a', 'batch-b']);
 		$service->expects($this->never())->method('sendToBilling');
 
-		$job = new BillingHandoffRetryJob(
-			$this->createMock(ITimeFactory::class),
+		$job = new BillingHandoffRetryJob($this->createMock(ITimeFactory::class),
 			$service,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -74,8 +73,7 @@ class BillingHandoffRetryJobTest extends TestCase {
 		$service = $this->createMock(TimeBillingHandoffService::class);
 		$service->method('notifyPendingFailures')->willReturn([]);
 
-		$job = new BillingHandoffRetryJob(
-			$this->createMock(ITimeFactory::class),
+		$job = new BillingHandoffRetryJob($this->createMock(ITimeFactory::class),
 			$service,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -98,8 +96,7 @@ class BillingHandoffRetryJobTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->once())->method('warning');
 
-		$job = new BillingHandoffRetryJob(
-			$this->createMock(ITimeFactory::class),
+		$job = new BillingHandoffRetryJob($this->createMock(ITimeFactory::class),
 			$service,
 			$logger,
 		);

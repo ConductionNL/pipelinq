@@ -60,8 +60,7 @@ class ObjectEventHandlerServiceTest extends TestCase {
 		$this->dispatcher = $this->createMock(ObjectEventDispatcher::class);
 		$diffService = new ObjectUpdateDiffService();
 
-		$this->service = new ObjectEventHandlerService(
-			$this->schemaMapService,
+		$this->service = new ObjectEventHandlerService($this->schemaMapService,
 			$this->dispatcher,
 			$diffService,
 		);

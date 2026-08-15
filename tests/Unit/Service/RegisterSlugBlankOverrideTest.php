@@ -71,8 +71,7 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 			}
 		);
 
-		return new MessagingService(
-			$container,
+		return new MessagingService($container,
 			$appConfig,
 			$this->createMock(ChannelProviderRepository::class),
 			$this->createMock(SmsAdapter::class),

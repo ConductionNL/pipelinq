@@ -444,8 +444,7 @@ class DemoSeedServiceTest extends TestCase {
 		// The parent-request link is written as parentTicket, pointing at a
 		// seeded request ticket.
 		$requestUuids = array_column($requests, 'uuid');
-		$linked = array_filter(
-			$contactmomenten,
+		$linked = array_filter($contactmomenten,
 			static fn (array $p): bool => isset($p['data']['parentTicket'])
 		);
 		self::assertNotEmpty($linked);

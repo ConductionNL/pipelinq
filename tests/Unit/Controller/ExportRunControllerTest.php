@@ -100,8 +100,7 @@ class ExportRunControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn (string $text): string => $text);
 
-		$this->controller = new ExportRunController(
-			$this->request,
+		$this->controller = new ExportRunController($this->request,
 			$this->runs,
 			$this->jobs,
 			$this->policy,

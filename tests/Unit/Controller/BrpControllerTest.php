@@ -291,8 +291,7 @@ class BrpControllerTest extends TestCase {
 		$container->method('get')->willReturn($objectService);
 		$this->requestHolder = $holder;
 
-		return new BrpController(
-			$request,
+		return new BrpController($request,
 			$userSession,
 			$this->createConfiguredMock(
 				ObjectOwnerAccessPolicy::class,
@@ -878,8 +877,7 @@ class BrpControllerTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
 
-		return new BrpController(
-			$request,
+		return new BrpController($request,
 			$userSession,
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$groupManager,
@@ -936,16 +934,14 @@ class BrpControllerTest extends TestCase {
 		$cacheDouble = ($cache ?? $this->createMock(BrpCacheService::class));
 
 		if ($listener === null) {
-			$listener = new BrpMutationWebhookListener(
-				$appConfig,
+			$listener = new BrpMutationWebhookListener($appConfig,
 				$cacheDouble,
 				$this->createMock(BsnAuditService::class),
 				$logger,
 			);
 		}
 
-		return new BrpController(
-			$request,
+		return new BrpController($request,
 			$this->createMock(IUserSession::class),
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			$this->createMock(IGroupManager::class),

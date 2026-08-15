@@ -83,8 +83,7 @@ class ContactSyncControllerTest extends TestCase {
 		$l10n->method('t')->willReturnArgument(0);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->controller = new ContactSyncController(
-			$this->request,
+		$this->controller = new ContactSyncController($this->request,
 			$this->syncService,
 			$userSession,
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
@@ -221,8 +220,7 @@ class ContactSyncControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		return new ContactSyncController(
-			$this->createMock(IRequest::class),
+		return new ContactSyncController($this->createMock(IRequest::class),
 			$this->syncService,
 			$session,
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
@@ -362,8 +360,7 @@ class ContactSyncControllerTest extends TestCase {
 		$this->assertSame('Jan Jansen', $payload['name']);
 		$this->assertSame('nc-uid-1', $payload['contactsUid']);
 		foreach (['email', 'phone', 'website', 'industry'] as $absent) {
-			$this->assertArrayNotHasKey(
-				$absent,
+			$this->assertArrayNotHasKey($absent,
 				$payload,
 				$absent . ' was sent as an empty value and would blank the stored field'
 			);
@@ -651,8 +648,7 @@ class ContactSyncControllerTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
 
-		return new ContactSyncService(
-			$contactsManager,
+		return new ContactSyncService($contactsManager,
 			new ContactImportService($appConfig, $container, new ContactDataBuilder(),
 			objectService: $objectService,
 		),

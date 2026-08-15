@@ -60,9 +60,7 @@ class GiftCardServiceConfigGuardTest extends TestCase {
 			}
 		);
 
-		return new GiftCardService(
-			$container,
-			$appConfig,
+		return new GiftCardService($appConfig,
 			$this->createMock(LoggerInterface::class),
 			objectService: $object,
 		);
@@ -122,7 +120,7 @@ class GiftCardServiceConfigGuardTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->atLeastOnce())->method('warning');
 
-		$service = new GiftCardService($container, $appConfig, $logger,
+		$service = new GiftCardService($appConfig, $logger,
 			objectService: $object,
 		);
 

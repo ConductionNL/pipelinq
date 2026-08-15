@@ -127,7 +127,6 @@ class OutboundMessagingContractTest extends TestCase {
 		);
 
 		$contactmomentService = new ContactmomentService(
-			$this->container,
 			new TicketService($this->container, $appConfig, $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		),
@@ -153,8 +152,7 @@ class OutboundMessagingContractTest extends TestCase {
 		$this->providerRepo = $this->createMock(ChannelProviderRepository::class);
 		$this->providerFactory = $this->createMock(SmsProviderFactory::class);
 
-		$this->adapter = new SmsAdapter(
-			$this->container,
+		$this->adapter = new SmsAdapter($this->container,
 			$appConfig,
 			$this->providerRepo,
 			$this->providerFactory,
@@ -267,7 +265,6 @@ class OutboundMessagingContractTest extends TestCase {
 		$store = $this->objectService;
 		$container = $this->createMock(ContainerInterface::class);
 		$contactmomentService = new ContactmomentService(
-			$container,
 			new TicketService($container, $appConfig, $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		),
@@ -289,8 +286,7 @@ class OutboundMessagingContractTest extends TestCase {
 			}
 		);
 
-		$adapter = new SmsAdapter(
-			$container,
+		$adapter = new SmsAdapter($container,
 			$appConfig,
 			$this->providerRepo,
 			$this->providerFactory,

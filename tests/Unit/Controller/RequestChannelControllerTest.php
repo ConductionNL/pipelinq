@@ -67,8 +67,7 @@ class RequestChannelControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('test-user');
 		$this->userSession->method('getUser')->willReturn($user);
 
-		$this->controller = new RequestChannelController(
-			$request,
+		$this->controller = new RequestChannelController($request,
 			$this->tagService,
 			$this->userSession,
 			$this->createMock(LoggerInterface::class),

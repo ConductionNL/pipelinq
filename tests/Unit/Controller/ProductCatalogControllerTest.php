@@ -85,8 +85,7 @@ class ProductCatalogControllerTest extends TestCase {
 		$this->policy = $this->createMock(PosAccessPolicy::class);
 		$this->session = $this->createMock(IUserSession::class);
 
-		$this->controller = new ProductCatalogController(
-			$this->request,
+		$this->controller = new ProductCatalogController($this->request,
 			$this->service,
 			$this->session,
 			$this->policy,
@@ -171,15 +170,13 @@ class ProductCatalogControllerTest extends TestCase {
 		$policy = $this->createMock(PosAccessPolicy::class);
 		$policy->method('isPosUser')->willReturn(true);
 
-		$service = new ProductCatalogService(
-			$this->createMock(ContainerInterface::class),
+		$service = new ProductCatalogService($this->createMock(ContainerInterface::class),
 			$this->createMock(IAppConfig::class),
 			$this->createMock(LoggerInterface::class),
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
-		return new ProductCatalogController(
-			$request,
+		return new ProductCatalogController($request,
 			$service,
 			$session,
 			$policy,

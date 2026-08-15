@@ -121,8 +121,7 @@ class SmsAdapterTest extends TestCase {
 			}
 		);
 
-		$this->adapter = new SmsAdapter(
-			$this->container,
+		$this->adapter = new SmsAdapter($this->container,
 			$this->appConfig,
 			$this->providerRepo,
 			$this->providerFactory,
@@ -203,8 +202,7 @@ class SmsAdapterTest extends TestCase {
 		$this->providerFactory
 			->expects($this->exactly(2))
 			->method('create')
-			->willReturnOnConsecutiveCalls(
-				$this->buildClient('messagebird', 'transient'),
+			->willReturnOnConsecutiveCalls($this->buildClient('messagebird', 'transient'),
 				$this->buildClient('twilio', 'success', 'twilio-sid'),
 			);
 
@@ -234,8 +232,7 @@ class SmsAdapterTest extends TestCase {
 
 		$this->providerFactory
 			->method('create')
-			->willReturnOnConsecutiveCalls(
-				$this->buildClient('messagebird', 'transient'),
+			->willReturnOnConsecutiveCalls($this->buildClient('messagebird', 'transient'),
 				$this->buildClient('twilio', 'transient'),
 			);
 
@@ -349,8 +346,7 @@ class SmsAdapterTest extends TestCase {
 		$this->consentService->method('isOptOutKeyword')->willReturn(true);
 		$this->consentService->expects($this->once())
 			->method('recordOptOut')
-			->with(
-				$this->isType('string'),
+			->with($this->isType('string'),
 				$this->equalTo('sms'),
 				$this->equalTo('keyword-stop'),
 				$this->stringContains('STOP'),

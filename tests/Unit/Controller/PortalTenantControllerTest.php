@@ -77,8 +77,7 @@ class PortalTenantControllerTest extends TestCase {
 		$this->guard = $this->createMock(PortalRequestGuard::class);
 		$this->tenant = $this->createMock(PortalTenantService::class);
 
-		$this->controller = new PortalTenantController(
-			$this->request,
+		$this->controller = new PortalTenantController($this->request,
 			$this->guard,
 			$this->createMock(LoggerInterface::class),
 			$this->tenant

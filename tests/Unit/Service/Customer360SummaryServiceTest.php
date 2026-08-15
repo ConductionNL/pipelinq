@@ -121,9 +121,7 @@ class Customer360SummaryServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new Customer360SummaryService(
-			$container,
-			$registerResolver,
+		$this->service = new Customer360SummaryService($registerResolver,
 			$appConfig,
 			$this->ticketService,
 			$this->activityTimeline,

@@ -152,8 +152,7 @@ class AttributionServiceTest extends TestCase {
 			}
 		);
 
-		$this->service = new AttributionService(
-			$this->container,
+		$this->service = new AttributionService($this->container,
 			$this->appConfig,
 			$this->logger,
 		);
@@ -284,8 +283,7 @@ class AttributionServiceTest extends TestCase {
 		$this->service->linkBlastToDeal('d1', 'deal-1');
 		$this->service->linkBlastToDeal('d1', 'deal-1');
 
-		$links = array_filter(
-			$this->objectService->saved,
+		$links = array_filter($this->objectService->saved,
 			fn (array $row): bool => ($row['blastId'] ?? null) === 'blast-1'
 				&& ($row['dealId'] ?? null) === 'deal-1',
 		);

@@ -167,8 +167,7 @@ class PortalDataControllerTest extends TestCase {
 
 		$scope = new PortalScopeResolver($this->repository, $this->delegations);
 
-		$this->controller = new PortalDataController(
-			$this->request,
+		$this->controller = new PortalDataController($this->request,
 			$this->guard,
 			$this->createMock(LoggerInterface::class),
 			new PortalInvoiceService($this->reader, $scope),
@@ -470,8 +469,7 @@ class PortalDataControllerTest extends TestCase {
 		);
 
 		$scope = new PortalScopeResolver($this->repository, $this->delegations);
-		$controller = new PortalDataController(
-			$paged,
+		$controller = new PortalDataController($paged,
 			$this->guard,
 			$this->createMock(LoggerInterface::class),
 			new PortalInvoiceService($this->reader, $scope),
@@ -568,8 +566,7 @@ class PortalDataControllerTest extends TestCase {
 		);
 
 		$scope = new PortalScopeResolver($this->repository, $delegations);
-		$controller = new PortalDataController(
-			$this->request,
+		$controller = new PortalDataController($this->request,
 			$this->guard,
 			$this->createMock(LoggerInterface::class),
 			new PortalInvoiceService($this->reader, $scope),
@@ -603,8 +600,7 @@ class PortalDataControllerTest extends TestCase {
 		);
 
 		$scope = new PortalScopeResolver($this->repository, $delegations);
-		$controller = new PortalDataController(
-			$this->request,
+		$controller = new PortalDataController($this->request,
 			$this->guard,
 			$this->createMock(LoggerInterface::class),
 			new PortalInvoiceService($this->reader, $scope),

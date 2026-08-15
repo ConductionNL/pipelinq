@@ -183,8 +183,7 @@ class ScheduledTaskServiceTest extends TestCase {
 	 * @return ScheduledTaskService The service under test.
 	 */
 	private function makeService(): ScheduledTaskService {
-		return new ScheduledTaskService(
-			$this->appConfig,
+		return new ScheduledTaskService($this->appConfig,
 			$this->userSession,
 			$this->groupManager,
 			$this->notificationService,

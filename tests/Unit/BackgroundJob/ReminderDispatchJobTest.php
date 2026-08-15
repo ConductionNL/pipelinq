@@ -92,8 +92,7 @@ class ReminderDispatchJobTest extends TestCase {
 	 * @return ReminderDispatchJob
 	 */
 	private function buildJob(): ReminderDispatchJob {
-		return new ReminderDispatchJob(
-			$this->timeFactory,
+		return new ReminderDispatchJob($this->timeFactory,
 			$this->appConfig,
 			$this->container,
 			$this->logger,
@@ -335,8 +334,7 @@ class ReminderDispatchJobTest extends TestCase {
 		$upper = '2026-05-24T15:00:00+00:00';
 
 		// Confirmed + no reminder + start in [lower, upper] → true.
-		$this->assertTrue(
-			$job->isDueForReminder(
+		$this->assertTrue($job->isDueForReminder(
 				booking: ['status' => 'confirmed', 'reminderSentAt' => '', 'startAt' => $lower],
 				windowStartIso: $lower,
 				windowEndIso: $upper
@@ -344,8 +342,7 @@ class ReminderDispatchJobTest extends TestCase {
 		);
 
 		// Wrong status → false.
-		$this->assertFalse(
-			$job->isDueForReminder(
+		$this->assertFalse($job->isDueForReminder(
 				booking: ['status' => 'pending-deposit', 'reminderSentAt' => '', 'startAt' => $lower],
 				windowStartIso: $lower,
 				windowEndIso: $upper
@@ -353,8 +350,7 @@ class ReminderDispatchJobTest extends TestCase {
 		);
 
 		// Already reminded → false.
-		$this->assertFalse(
-			$job->isDueForReminder(
+		$this->assertFalse($job->isDueForReminder(
 				booking: ['status' => 'confirmed', 'reminderSentAt' => $start, 'startAt' => $lower],
 				windowStartIso: $lower,
 				windowEndIso: $upper
@@ -362,8 +358,7 @@ class ReminderDispatchJobTest extends TestCase {
 		);
 
 		// Out-of-window → false.
-		$this->assertFalse(
-			$job->isDueForReminder(
+		$this->assertFalse($job->isDueForReminder(
 				booking: ['status' => 'confirmed', 'reminderSentAt' => '', 'startAt' => '2026-05-23T00:00:00+00:00'],
 				windowStartIso: $lower,
 				windowEndIso: $upper
@@ -371,8 +366,7 @@ class ReminderDispatchJobTest extends TestCase {
 		);
 
 		// Missing startAt → false.
-		$this->assertFalse(
-			$job->isDueForReminder(
+		$this->assertFalse($job->isDueForReminder(
 				booking: ['status' => 'confirmed', 'reminderSentAt' => '', 'startAt' => ''],
 				windowStartIso: $lower,
 				windowEndIso: $upper

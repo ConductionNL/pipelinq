@@ -145,8 +145,7 @@ class TrackingLinkServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return new TrackingLinkService(
-			$container,
+		return new TrackingLinkService($container,
 			$appConfig,
 			$timeFactory,
 			$secureRandom,

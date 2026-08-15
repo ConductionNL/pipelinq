@@ -111,8 +111,7 @@ class ZgwNotificationControllerTest extends TestCase {
 		$listener = $this->createMock(NrcNotificationListener::class);
 		$listener->expects(self::never())->method('dispatch');
 
-		$controller = $this->makeController(
-			$request,
+		$controller = $this->makeController($request,
 			$registers,
 			$api,
 			$listener,
@@ -144,8 +143,7 @@ class ZgwNotificationControllerTest extends TestCase {
 		$listener = $this->createMock(NrcNotificationListener::class);
 		$listener->expects(self::never())->method('dispatch');
 
-		$controller = $this->makeController(
-			$request,
+		$controller = $this->makeController($request,
 			$registers,
 			$api,
 			$listener,
@@ -181,8 +179,7 @@ class ZgwNotificationControllerTest extends TestCase {
 				self::callback(static fn (array $b): bool => ($b['channel'] ?? '') === 'zaken')
 			);
 
-		$controller = $this->makeController(
-			$request,
+		$controller = $this->makeController($request,
 			$registers,
 			$api,
 			$listener,
@@ -213,8 +210,7 @@ class ZgwNotificationControllerTest extends TestCase {
 		$listener = $this->createMock(NrcNotificationListener::class);
 		$listener->expects(self::never())->method('dispatch');
 
-		$controller = $this->makeController(
-			$request,
+		$controller = $this->makeController($request,
 			$registers,
 			$api,
 			$listener,

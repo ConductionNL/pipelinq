@@ -59,8 +59,7 @@ class NoteEventServiceTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new NoteEventService(
-			$notificationService,
+		$this->service = new NoteEventService($notificationService,
 			$activityService,
 			$settingsService,
 			$userSession,
@@ -121,8 +120,7 @@ class NoteEventServiceTest extends TestCase {
 			]
 		);
 
-		return new NoteEventService(
-			$this->createMock(NotificationService::class),
+		return new NoteEventService($this->createMock(NotificationService::class),
 			$activityService,
 			$settingsService,
 			$this->createMock(IUserSession::class),
@@ -152,8 +150,7 @@ class NoteEventServiceTest extends TestCase {
 
 		$this->logger->expects($this->once())
 			->method('warning')
-			->with(
-				$this->equalTo('Could not read note entity from OpenRegister'),
+			->with($this->equalTo('Could not read note entity from OpenRegister'),
 				$this->callback(
 					static fn (array $c): bool => $c['entityType'] === 'lead' && $c['objectId'] === 'lead-1'
 				)

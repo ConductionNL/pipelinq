@@ -76,8 +76,7 @@ class SlaEngineDispatchTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$holidays = new HolidayCalendarService($appConfig, $logger);
 
-		return new SlaEngineService(
-			$holidays,
+		return new SlaEngineService($holidays,
 			new BusinessHoursCalculator($holidays, $appConfig, $logger),
 			$container,
 			$appConfig,
@@ -185,8 +184,7 @@ class SlaEngineDispatchTest extends TestCase {
 	private function dispatch(SlaEngineService $engine, string $channel, string $notify, array $step = []): array {
 		$method = new ReflectionMethod(SlaEngineService::class, 'dispatchNotification');
 		$method->setAccessible(true);
-		return $method->invokeArgs(
-			$engine,
+		return $method->invokeArgs($engine,
 			[$channel, $notify, ['name' => 'Test policy'], 'request', 'req-1', 1, $step]
 		);
 	}//end dispatch()

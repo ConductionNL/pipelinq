@@ -175,8 +175,7 @@ class SemanticHandoffControllerTest extends TestCase {
 	}//end withPrivilegedCaller()
 
 	private function rebuildControllerWithGroupManager(IGroupManager $groupManager): void {
-		$this->controller = new SemanticHandoffController(
-			$this->createMock(IRequest::class),
+		$this->controller = new SemanticHandoffController($this->createMock(IRequest::class),
 			$this->handoffService,
 			$this->container,
 			$this->appConfig,

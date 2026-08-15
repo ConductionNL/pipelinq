@@ -60,8 +60,7 @@ class ComplaintSlaServiceTest extends TestCase {
 		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new ComplaintSlaService(
-			$this->appConfig,
+		$this->service = new ComplaintSlaService($this->appConfig,
 			$this->logger,
 		);
 	}//end setUp()

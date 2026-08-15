@@ -171,8 +171,7 @@ class PaymentFakeObjectService {
 		unset($filters['register'], $filters['schema']);
 
 		$matched = array_values(
-			array_filter(
-				$rows,
+			array_filter($rows,
 				static function (array $row) use ($filters): bool {
 					foreach ($filters as $key => $value) {
 						if (($row[$key] ?? null) !== $value) {

@@ -191,8 +191,7 @@ class PortalRequestControllerTest extends TestCase {
 			static fn (): \DateTime => new \DateTime('@' . self::NOW)
 		);
 
-		$requests = new PortalRequestService(
-			$this->reader,
+		$requests = new PortalRequestService($this->reader,
 			new PortalScopeResolver($repository, $delegations),
 			$this->createMock(PortalAuditService::class),
 			$this->createMock(IEventDispatcher::class),
@@ -205,8 +204,7 @@ class PortalRequestControllerTest extends TestCase {
 			fn (string $key, mixed $default = null): mixed => ($this->params[$key] ?? $default)
 		);
 
-		return new PortalRequestController(
-			$request,
+		return new PortalRequestController($request,
 			$this->guard,
 			$this->createMock(LoggerInterface::class),
 			$requests,

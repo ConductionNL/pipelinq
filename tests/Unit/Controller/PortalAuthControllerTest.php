@@ -198,8 +198,7 @@ class PortalAuthControllerTest extends TestCase {
 		?PasswordResetService $reset = null,
 		?PortalMfaService $mfa = null,
 	): PortalAuthController {
-		return new PortalAuthController(
-			$this->request(),
+		return new PortalAuthController($this->request(),
 			$this->guard,
 			$this->createMock(LoggerInterface::class),
 			($auth ?? $this->createMock(PortalAuthService::class)),
@@ -376,8 +375,7 @@ class PortalAuthControllerTest extends TestCase {
 		$hasher = $this->createMock(IHasher::class);
 		$hasher->method('hash')->willReturnCallback(static fn (string $plain): string => 'argon2id$' . $plain);
 
-		return new PasswordResetService(
-			$repository,
+		return new PasswordResetService($repository,
 			$this->tokenService(),
 			$hasher,
 			($mail ?? $this->createMock(PortalMailService::class)),
@@ -685,8 +683,7 @@ class PortalAuthControllerTest extends TestCase {
 		);
 
 		$mfa = $this->realMfaService();
-		$auth = new PortalAuthService(
-			$repository,
+		$auth = new PortalAuthService($repository,
 			$hasher,
 			$sessions,
 			$mfa,

@@ -207,8 +207,7 @@ class TenderFakeObjectService {
 		}
 
 		return array_values(
-			array_filter(
-				$rows,
+			array_filter($rows,
 				function (array $row) use ($filters): bool {
 					foreach ($filters as $key => $value) {
 						if (($row[$key] ?? null) !== $value) {

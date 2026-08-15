@@ -242,8 +242,7 @@ class SettingsControllerWriteTest extends TestCase {
 	 */
 	private function attributeNamesOf(string $method): array {
 		$reflection = new ReflectionClass(SettingsController::class);
-		$this->assertTrue(
-			$reflection->hasMethod($method),
+		$this->assertTrue($reflection->hasMethod($method),
 			sprintf('SettingsController::%s() does not exist', $method)
 		);
 
@@ -306,8 +305,7 @@ class SettingsControllerWriteTest extends TestCase {
 
 		$this->assertNotContains(NoAdminRequired::class, $attributes);
 
-		$this->assertSame(
-			$this->attributeNamesOf('update'),
+		$this->assertSame($this->attributeNamesOf('update'),
 			$attributes,
 			'create() and update() are the same instance-wide write and must share '
 			. 'an identical auth posture — the net privilege change of this conversion is zero.'

@@ -445,8 +445,7 @@ class HaalCentraalClientTest extends TestCase {
 			static fn (string $path): string => 'http://localhost' . $path
 		);
 
-		return new HaalCentraalClient(
-			$clientService,
+		return new HaalCentraalClient($clientService,
 			$appConfig,
 			$this->createMock(ICrypto::class),
 			($logger ?? $this->createMock(LoggerInterface::class)),

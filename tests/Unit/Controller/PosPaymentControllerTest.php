@@ -87,8 +87,7 @@ class PosPaymentControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$this->controller = new PosPaymentController(
-			$this->request,
+		$this->controller = new PosPaymentController($this->request,
 			$this->service,
 			$this->session,
 			$l10n,
@@ -201,8 +200,7 @@ class PosPaymentControllerTest extends TestCase {
 
 		$this->service->expects($this->once())
 			->method('handleWebhook')
-			->with(
-				$provider,
+			->with($provider,
 				$this->callback(
 					static fn (string $raw): bool => str_contains($raw, 'tr_1')
 				),

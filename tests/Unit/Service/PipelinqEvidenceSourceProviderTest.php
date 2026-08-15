@@ -109,8 +109,7 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase {
 				}
 
 				return array_values(
-					array_filter(
-						$rows,
+					array_filter($rows,
 						static fn (array $row): bool => (string)($row['ticketType'] ?? '') === (string)$filters['ticketType']
 					)
 				);

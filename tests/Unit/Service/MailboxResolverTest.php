@@ -50,8 +50,7 @@ class MailboxResolverTest extends TestCase {
 	private function makeEncryption(): EncryptionService {
 		$config = $this->createMock(IConfig::class);
 		$config->method('getSystemValue')->willReturn('unit-secret-for-mailbox-resolver-tests');
-		return new EncryptionService(
-			$config,
+		return new EncryptionService($config,
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end makeEncryption()
@@ -79,9 +78,7 @@ class MailboxResolverTest extends TestCase {
 			}
 		);
 
-		return new MailboxResolver(
-			$container,
-			$appConfig,
+		return new MailboxResolver($appConfig,
 			$this->makeEncryption(),
 			$connector,
 			$this->createMock(LoggerInterface::class),

@@ -255,8 +255,7 @@ class AppointmentDepositServiceTest extends TestCase {
 		$booking = $this->createMock(originalClassName: BookingService::class);
 		$booking->expects($this->once())
 			->method('confirmBooking')
-			->with(
-				$this->equalTo(value: 'b-1'),
+			->with($this->equalTo(value: 'b-1'),
 				$this->stringContains(string: 'Deposit payment confirmed')
 			);
 
@@ -358,8 +357,7 @@ class AppointmentDepositServiceTest extends TestCase {
 		$booking = $this->createMock(originalClassName: BookingService::class);
 		$booking->expects($this->once())
 			->method('cancelBooking')
-			->with(
-				$this->equalTo(value: 'b-1'),
+			->with($this->equalTo(value: 'b-1'),
 				$this->stringContains(string: 'Deposit not paid'),
 				$this->equalTo(value: BookingService::ACTOR_SYSTEM)
 			);

@@ -270,8 +270,7 @@ class ProductCatalogServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testVariantSkusUnique(): void {
-		$this->assertTrue(
-			$this->service->variantSkusUnique(
+		$this->assertTrue($this->service->variantSkusUnique(
 				[
 					['sku' => 'A'],
 					['sku' => 'B'],
@@ -279,8 +278,7 @@ class ProductCatalogServiceTest extends TestCase {
 			)
 		);
 
-		$this->assertFalse(
-			$this->service->variantSkusUnique(
+		$this->assertFalse($this->service->variantSkusUnique(
 				[
 					['sku' => 'A'],
 					['sku' => 'A'],
@@ -288,8 +286,7 @@ class ProductCatalogServiceTest extends TestCase {
 			)
 		);
 
-		$this->assertFalse(
-			$this->service->variantSkusUnique(
+		$this->assertFalse($this->service->variantSkusUnique(
 				[
 					['sku' => ''],
 				]

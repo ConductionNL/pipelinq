@@ -89,8 +89,7 @@ class SchedulesControllerTest extends TestCase {
 		$this->userSession = $this->createMock(IUserSession::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->controller = new SchedulesController(
-			$this->request,
+		$this->controller = new SchedulesController($this->request,
 			$this->tasks,
 			$this->groupManager,
 			$this->userSession,

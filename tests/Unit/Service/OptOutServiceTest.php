@@ -43,7 +43,7 @@ class OptOutServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$appConfig->method('getValueString')->willReturn('');
 
-		$service = new OptOutService($container, $appConfig, $logger,
+		$service = new OptOutService($appConfig, $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 		self::assertFalse($service->hasOptOut('123456782'));
@@ -62,7 +62,7 @@ class OptOutServiceTest extends TestCase {
 		// Container::get should never be called.
 		$container->expects(self::never())->method('get');
 
-		$service = new OptOutService($container, $appConfig, $logger,
+		$service = new OptOutService($appConfig, $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 		self::assertFalse($service->recordFromBrpResponse('123456782', '0'));

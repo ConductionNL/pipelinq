@@ -102,8 +102,7 @@ class ForecastControllerTest extends TestCase {
 		$this->overrideService = $this->createMock(ForecastOverrideService::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->controller = new ForecastController(
-			$this->request,
+		$this->controller = new ForecastController($this->request,
 			$this->userSession,
 			$this->accessPolicy,
 			$this->exportService,

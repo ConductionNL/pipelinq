@@ -78,8 +78,7 @@ class SettingsServiceTest extends TestCase {
 		};
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new SettingsService(
-			$this->appConfig,
+		$this->service = new SettingsService($this->appConfig,
 			$this->config,
 			$settingsLoadService,
 			$pipelineService,

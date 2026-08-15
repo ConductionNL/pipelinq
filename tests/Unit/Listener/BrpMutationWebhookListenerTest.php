@@ -79,8 +79,7 @@ class BrpMutationWebhookListenerTest extends TestCase {
 		$this->cache = $this->createMock(BrpCacheService::class);
 		$this->audit = $this->createMock(BsnAuditService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->listener = new BrpMutationWebhookListener(
-			$this->appConfig,
+		$this->listener = new BrpMutationWebhookListener($this->appConfig,
 			$this->cache,
 			$this->audit,
 			$this->logger,

@@ -295,8 +295,7 @@ class BlastControllerTest extends TestCase {
 		$this->objects->seed('blast-2', 'pipelinq', 'blast', ['name' => 'Other', 'status' => 'draft']);
 
 		foreach (['d-1' => 'delivered', 'd-2' => 'opened', 'd-3' => 'bounced'] as $uuid => $status) {
-			$this->objects->seed(
-				$uuid,
+			$this->objects->seed($uuid,
 				'pipelinq',
 				'blastDelivery',
 				['blastId' => 'blast-1', 'status' => $status, 'contactId' => 'c-' . $uuid]
