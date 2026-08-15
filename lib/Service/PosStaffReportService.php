@@ -50,7 +50,6 @@ class PosStaffReportService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param PosStaffService $posStaffService The POS staff service (for name lookup).
 	 * @param LoggerInterface $logger The logger.

@@ -54,7 +54,6 @@ class BsnAuditService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (OR ObjectService is optional at boot).
 	 * @param IAppConfig $appConfig App config for register/schema resolution.
 	 * @param IRequest $request Request scope for IP / UA enrichment.
 	 * @param LoggerInterface $logger Logger (raw BSN MUST never appear here).

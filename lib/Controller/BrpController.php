@@ -89,7 +89,6 @@ class BrpController extends Controller {
 	 * @param BsnAuditService $audit Audit service.
 	 * @param OptOutService $optOut Opt-out service.
 	 * @param BrpMutationWebhookListener $webhookListener Webhook listener.
-	 * @param ContainerInterface $container DI container.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Standard NC constructor injection; each

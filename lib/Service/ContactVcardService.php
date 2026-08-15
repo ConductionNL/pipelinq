@@ -50,7 +50,6 @@ class ContactVcardService {
 	 *
 	 * @param IContactsManager $contactsManager The contacts manager.
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container.
 	 * @param ContactVcardWriterService $writerService The vCard writer.
 	 * @param ContactVcardPropertyBuilder $propBuilder The property builder.
 	 * @param LoggerInterface $logger The logger.

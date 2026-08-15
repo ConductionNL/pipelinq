@@ -47,7 +47,6 @@ class BerichtenboxAdminController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request Request.
-	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig App config.
 	 */
 	public function __construct(

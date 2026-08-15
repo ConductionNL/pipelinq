@@ -49,7 +49,6 @@ class ContactmomentService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param TicketService $ticketService The unified ticket resolver.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.

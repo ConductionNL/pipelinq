@@ -95,7 +95,6 @@ class EntityActivityService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container, used to
 	 *                                      lazily resolve the OpenRegister
 	 *                                      `ObjectService` so an outage of
 	 *                                      OR cannot break Pipelinq DI.

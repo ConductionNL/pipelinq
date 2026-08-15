@@ -48,7 +48,6 @@ class BrpCacheService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig App config (cache_ttl_hours setting).
 	 * @param LoggerInterface $logger Logger.
 	 */

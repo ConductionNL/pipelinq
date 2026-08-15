@@ -90,7 +90,6 @@ class NaviService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (used to resolve OR services lazily).
 	 * @param IAppConfig $appConfig App configuration (register / schema IDs).
 	 * @param LoggerInterface $logger Logger.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.

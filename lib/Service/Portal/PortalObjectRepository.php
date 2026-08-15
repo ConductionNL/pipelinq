@@ -53,7 +53,6 @@ class PortalObjectRepository {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OR services).
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
 	 */

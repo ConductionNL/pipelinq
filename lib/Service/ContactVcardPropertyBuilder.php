@@ -35,7 +35,6 @@ class ContactVcardPropertyBuilder {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

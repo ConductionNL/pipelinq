@@ -65,7 +65,6 @@ class RoutingService {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container (for OpenRegister ObjectService).
 	 * @param TicketService $ticketService The unified ticket resolver.
 	 * @param LoggerInterface $logger The logger.
 	 */

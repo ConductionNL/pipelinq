@@ -73,7 +73,6 @@ class SnapshotGenerationService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param IGroupManager $groupManager The NC group manager.
 	 * @param ForecastRollupService $rollup The pure roll-up math service.

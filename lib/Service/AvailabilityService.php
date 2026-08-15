@@ -126,7 +126,6 @@ class AvailabilityService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ICacheFactory $cacheFactory For the per-request resource L1 cache.
 	 * @param LoggerInterface $logger The logger.

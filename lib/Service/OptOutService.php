@@ -46,7 +46,6 @@ class OptOutService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (OR lookup lazy).
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 */

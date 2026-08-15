@@ -75,7 +75,6 @@ class MdmObjectRepository {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig The app config (register/schema ids).
 	 * @param LoggerInterface $logger The logger.
 	 */

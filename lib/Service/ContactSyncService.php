@@ -42,7 +42,6 @@ class ContactSyncService {
 	 * @param ContactVcardService $contactVcardService The vCard sync service.
 	 * @param ContactLinkedUidsService $linkedUidsService The linked UIDs service.
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param ContainerInterface $container The service container.
 	 */
 	public function __construct(
 		private IContactsManager $contactsManager,

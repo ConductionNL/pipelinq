@@ -48,7 +48,6 @@ class TierService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoyaltyAccountService $accountService The loyalty account service.
 	 * @param IEventDispatcher $eventDispatcher The event dispatcher.

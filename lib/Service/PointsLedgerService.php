@@ -52,7 +52,6 @@ class PointsLedgerService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoyaltyAccountService $accountService The loyalty account service.
 	 * @param LoggerInterface $logger The logger.

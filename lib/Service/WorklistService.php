@@ -146,7 +146,6 @@ class WorklistService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig App configuration (register/schema IDs).
 	 * @param IL10N $l10n Localisation (request status labels).
 	 * @param LoggerInterface $logger The logger.

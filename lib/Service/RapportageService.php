@@ -56,7 +56,6 @@ class RapportageService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (lazy ObjectService lookup).
 	 * @param IAppConfig $appConfig The app config (register/schema slugs).
 	 * @param LoggerInterface $logger Logger for fallback paths.
 	 */

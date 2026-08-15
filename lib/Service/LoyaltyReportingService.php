@@ -55,7 +55,6 @@ class LoyaltyReportingService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoyaltyAccountService $accountService The account service.
 	 * @param PointsLedgerService $ledgerService The ledger service.

@@ -36,7 +36,6 @@ class DefaultPipelineService {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container.
 	 * @param PipelineStageData $stageData The stage data provider.
 	 * @param LoggerInterface $logger The logger.
 	 */

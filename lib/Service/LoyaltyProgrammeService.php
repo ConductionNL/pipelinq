@@ -47,7 +47,6 @@ class LoyaltyProgrammeService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
 	 * @param SchemaLifecycleGraph $lifecycleGraph Reads the programme status graph from its schema.

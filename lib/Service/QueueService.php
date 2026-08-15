@@ -47,7 +47,6 @@ class QueueService {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container.
 	 * @param LoggerInterface $logger The logger.
 	 * @param RegisterResolverService $registerResolver The register resolver.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.

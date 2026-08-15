@@ -55,7 +55,6 @@ class ForecastOverrideService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ForecastService $forecastService The forecast computation service.
 	 * @param LoggerInterface $logger The logger.

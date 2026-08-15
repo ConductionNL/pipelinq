@@ -92,7 +92,6 @@ class KassakoppelingAuditService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OR lookup).
 	 * @param IAppConfig $appConfig The app config.
 	 * @param KassakoppelingSignatureService $signature The signature primitive.
 	 * @param BelastingdienstExportService $exporter The export builder.

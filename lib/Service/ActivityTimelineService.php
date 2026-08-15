@@ -76,7 +76,6 @@ class ActivityTimelineService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (used to lazily fetch ObjectService).
 	 * @param IAppConfig $appConfig The app config service.
 	 * @param IUserSession $userSession The current user session.
 	 * @param LoggerInterface $logger The logger.

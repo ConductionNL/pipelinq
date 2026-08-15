@@ -54,7 +54,6 @@ class MailboxResolver {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (lazy OR object service).
 	 * @param IAppConfig $appConfig App config service.
 	 * @param EncryptionService $encryption Encryption service (BSN hashing + crypto).
 	 * @param LogiusConnector $logiusConnector Logius API wrapper.

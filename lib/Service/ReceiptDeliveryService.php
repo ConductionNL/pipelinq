@@ -74,7 +74,6 @@ class ReceiptDeliveryService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param ReceiptService $receiptService The receipt renderer.
 	 * @param InvoiceSequenceService $invoiceSequence The invoice number allocator.
 	 * @param IMailer $mailer The Nextcloud mailer.

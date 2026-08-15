@@ -59,7 +59,6 @@ class BrpMonitorJob extends TimedJob {
 	 *
 	 * @param ITimeFactory $time Time factory.
 	 * @param IAppConfig $appConfig App config.
-	 * @param ContainerInterface $container DI (OR lookup).
 	 * @param IGroupManager $groupManager Group manager.
 	 * @param INotificationManager $notificationManager NC notifications.
 	 * @param LoggerInterface $logger Logger.

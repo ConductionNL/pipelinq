@@ -71,7 +71,6 @@ class EligibilityService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param AvailabilityService $availabilityService The availability seam (member 02).
 	 * @param LoggerInterface $logger The logger.

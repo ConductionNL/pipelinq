@@ -84,7 +84,6 @@ class Customer360SummaryService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (OpenRegister ObjectService).
 	 * @param RegisterResolverService $registerResolver Resolves the pipelinq register id.
 	 * @param IAppConfig $appConfig App config (schema slugs).
 	 * @param TicketService $ticketService Unified ticket resolver (unify-ticket-supertype).

@@ -130,7 +130,6 @@ class PosBookkeepingService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param IMailer $mailer The mailer (alert dispatch).
 	 * @param PosAccessPolicy $policy The shared POS access policy.

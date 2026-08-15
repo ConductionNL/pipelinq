@@ -116,7 +116,6 @@ class WalkInQueueService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param AvailabilityService $availabilityService Member 02 — ETA computation source.
 	 * @param LoggerInterface $logger The logger.

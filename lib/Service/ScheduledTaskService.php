@@ -117,7 +117,6 @@ class ScheduledTaskService {
 	 * @param IUserSession $userSession User session (createdBy derivation).
 	 * @param IGroupManager $groupManager Group manager (admin + group checks).
 	 * @param NotificationService $notificationService Notification dispatch.
-	 * @param ContainerInterface $container Container for ObjectService lookup.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(

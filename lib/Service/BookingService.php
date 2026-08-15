@@ -163,7 +163,6 @@ class BookingService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param IUserSession $userSession The current user session (ADR-005).
 	 * @param AvailabilityService $availabilityService Member 02 — invalidated on every write.

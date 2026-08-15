@@ -69,7 +69,6 @@ class ForecastService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param QuotaService $quotaService The quota service.
 	 * @param ForecastRollupService $rollup The pure roll-up math service.

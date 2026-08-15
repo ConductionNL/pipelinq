@@ -80,7 +80,6 @@ class PosStaffService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param PosRoleService $posRoleService The POS role service (for permission lookup).
 	 * @param LoggerInterface $logger The logger.

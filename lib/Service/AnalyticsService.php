@@ -131,7 +131,6 @@ class AnalyticsService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig App configuration (register/schema IDs).
 	 * @param LoggerInterface $logger The logger.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.

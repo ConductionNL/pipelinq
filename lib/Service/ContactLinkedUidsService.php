@@ -34,7 +34,6 @@ class ContactLinkedUidsService {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(

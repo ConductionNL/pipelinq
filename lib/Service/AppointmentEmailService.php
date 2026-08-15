@@ -107,7 +107,6 @@ class AppointmentEmailService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig The app config.
 	 * @param IMailer $mailer The Nextcloud mailer.
 	 * @param IURLGenerator $urlGenerator The URL generator for signed links.

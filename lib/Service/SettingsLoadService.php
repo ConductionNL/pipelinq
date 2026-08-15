@@ -173,7 +173,6 @@ class SettingsLoadService {
 	 *
 	 * @param IAppConfig $appConfig The app config.
 	 * @param IAppManager $appManager The app manager.
-	 * @param ContainerInterface $container The container.
 	 * @param SettingsMapBuilder $mapBuilder The map builder.
 	 * @param ConfigFileLoaderService $fileLoader The file loader.
 	 */

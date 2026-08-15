@@ -77,7 +77,6 @@ class ProductVendorProviderService {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param ContainerInterface $container The DI container (ObjectService lookup).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(

@@ -103,7 +103,6 @@ class PosCustomerLinkService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OR lookup).
 	 * @param IAppConfig $appConfig The app config (register + schema IDs + admin settings).
 	 * @param LoggerInterface $logger The logger.
 	 */

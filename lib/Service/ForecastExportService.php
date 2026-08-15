@@ -49,7 +49,6 @@ class ForecastExportService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ForecastService $forecastService The forecast computation service.
 	 * @param ReportingService $reportingService The CSV rendering service.

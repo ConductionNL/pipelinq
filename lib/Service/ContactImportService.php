@@ -36,7 +36,6 @@ class ContactImportService {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container.
 	 * @param ContactDataBuilder $dataBuilder The data builder.
 	 */
 	public function __construct(
