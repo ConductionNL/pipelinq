@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCP\IAppConfig;
@@ -61,12 +62,12 @@ class AvailabilityServiceTest extends TestCase {
 	/**
 	 * Build a service with overridable mocks.
 	 *
-	 * @param ObjectService|null $objectService Optional pre-built mock.
+	 * @param ObjectServiceInterface|null $objectService Optional pre-built mock.
 	 *
 	 * @return array{0: AvailabilityService, 1: ObjectService}
 	 */
-	private function buildService(?ObjectService $objectService = null): array {
-		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectService::class));
+	private function buildService(?ObjectServiceInterface $objectService = null): array {
+		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectServiceInterface::class));
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
 
@@ -103,7 +104,7 @@ class AvailabilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testComputeAvailabilityReturnsFreeSlotsWhenResourceIsAvailable(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::RESOURCE_SARAH);
 		$object->method('findAll')->willReturn([]);
 
@@ -132,7 +133,7 @@ class AvailabilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testComputeAvailabilityExcludesBookedTimes(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			callback: static function (mixed $id) {
 				if ($id === 'res-sarah') {
@@ -181,7 +182,7 @@ class AvailabilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testComputeAvailabilityExcludesVacationDates(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::RESOURCE_SARAH);
 		$object->method('findAll')->willReturn([]);
 
@@ -232,7 +233,7 @@ class AvailabilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testBuffersAreAppliedAroundBookings(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			callback: static function (mixed $id) {
 				if ($id === 'res-sarah') {
@@ -293,7 +294,7 @@ class AvailabilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetOrComputeCacheReturnsFreshEntry(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$freshIso = (new DateTimeImmutable('+12 hours', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
 		$genIso = (new DateTimeImmutable('-1 hour', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
 
@@ -330,7 +331,7 @@ class AvailabilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetOrComputeCacheReturnsStaleEntryFlagged(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$oldIso = (new DateTimeImmutable('-25 hours', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
 		$genIso = (new DateTimeImmutable('-26 hours', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:sP');
 
@@ -365,7 +366,7 @@ class AvailabilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetOrComputeCachePersistsOnMiss(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::RESOURCE_SARAH);
 		$object->method('findAll')->willReturn([]);
 		$object->expects($this->once())->method('saveObject')->willReturn(['id' => 'new']);
@@ -386,7 +387,7 @@ class AvailabilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCalendarProviderBlocksAreMerged(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::RESOURCE_SARAH);
 		$object->method('findAll')->willReturn([]);
 
@@ -424,7 +425,7 @@ class AvailabilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testInvalidateCacheDeletesEntry(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('findAll')->willReturn(
 			value: [['@self' => ['id' => 'cache-zap'], 'resourceId' => 'res-sarah', 'date' => '2026-06-01']]
 		);

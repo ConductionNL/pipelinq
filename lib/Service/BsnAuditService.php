@@ -32,7 +32,7 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Append-only audit-trail service for BSN bevragingen.
@@ -63,7 +63,7 @@ class BsnAuditService {
 		private IAppConfig $appConfig,
 		private IRequest $request,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

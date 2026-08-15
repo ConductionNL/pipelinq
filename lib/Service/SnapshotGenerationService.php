@@ -31,7 +31,7 @@ use OCP\IAppConfig;
 use OCP\IGroupManager;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Snapshot generation orchestration.
@@ -92,7 +92,7 @@ class SnapshotGenerationService {
 		private QuotaService $quotaService,
 		private NotificationService $notifier,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

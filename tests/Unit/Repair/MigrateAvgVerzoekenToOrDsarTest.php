@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar;
 use OCP\IAppConfig;
@@ -62,9 +63,9 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 	/**
 	 * Mocked ObjectService.
 	 *
-	 * @var ObjectService&MockObject
+	 * @var ObjectServiceInterface&MockObject
 	 */
-	private ObjectService $objectService;
+	private ObjectServiceInterface $objectService;
 
 	/**
 	 * findAll store keyed by schema id.
@@ -101,7 +102,7 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->appConfig = $this->createMock(IAppConfig::class);
-		$this->objectService = $this->createMock(ObjectService::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->store = [];
 		$this->savedCases = [];
 		$this->markedSources = [];

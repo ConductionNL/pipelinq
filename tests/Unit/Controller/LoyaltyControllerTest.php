@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\LoyaltyController;
 use OCA\Pipelinq\Service\GiftCardService;
@@ -155,11 +156,11 @@ class LoyaltyControllerTest extends TestCase {
 	/**
 	 * Build a container resolving the OpenRegister ObjectService to the store.
 	 *
-	 * @param ObjectService $store The in-memory object store.
+	 * @param ObjectServiceInterface $store The in-memory object store.
 	 *
 	 * @return ContainerInterface
 	 */
-	private function containerWithStore(ObjectService $store): ContainerInterface {
+	private function containerWithStore(ObjectServiceInterface $store): ContainerInterface {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($store) {

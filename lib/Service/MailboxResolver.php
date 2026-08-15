@@ -36,7 +36,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Mailbox lookup with TTL cache.
@@ -65,7 +65,7 @@ class MailboxResolver {
 		private readonly EncryptionService $encryption,
 		private readonly LogiusConnector $logiusConnector,
 		private readonly LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -232,11 +232,11 @@ class MailboxResolver {
 	/**
 	 * Get OR ObjectService.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService
+	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface
 	 *
 	 * @throws RuntimeException If OR not available.
 	 */
-	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
+	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		try {
 			return $this->objectService;
 		} catch (\Throwable $e) {

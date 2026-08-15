@@ -37,7 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\PosCustomerController;
 use OCA\Pipelinq\Service\PosCustomerLinkService;
 use OCP\AppFramework\Http;
@@ -511,7 +511,7 @@ class PosCustomerControllerTest extends TestCase {
 		array $transaction,
 		array $params,
 	): PosCustomerController {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')
 			->willReturnCallback(
 				static function (string $id, string $register = '', string $schema = '') use ($contact, $transaction): ?array {

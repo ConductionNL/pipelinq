@@ -60,7 +60,7 @@ use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Service\WebhookService;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for the POS end-of-day pipeline + registry-mediated journal raise.
@@ -142,7 +142,7 @@ class PosBookkeepingService {
 		private PosAccessPolicy $policy,
 		private LoggerInterface $logger,
 		private readonly WebhookService $webhookService,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardWriterService;
 use OCA\Pipelinq\Service\RegisterResolverService;
@@ -46,14 +47,14 @@ class ContactVcardWriterServiceGuardTest extends TestCase {
 	 * returns a fresh UID so the write-back path is reached.
 	 *
 	 * @param array<string, string> $config The app-config contents.
-	 * @param ObjectService $object The ObjectService mock.
+	 * @param ObjectServiceInterface $object The ObjectService mock.
 	 * @param string $register The resolved register id.
 	 *
 	 * @return ContactVcardWriterService
 	 */
 	private function buildService(
 		array $config,
-		ObjectService $object,
+		ObjectServiceInterface $object,
 		string $register = 'reg-1',
 	): ContactVcardWriterService {
 		$addressBook = new class {
@@ -100,7 +101,7 @@ class ContactVcardWriterServiceGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testMissingSchemaRefusesTheWriteBack(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->never())->method('saveObject');
 
 		$service = $this->buildService([], $object);
@@ -117,7 +118,7 @@ class ContactVcardWriterServiceGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testMissingRegisterRefusesTheWriteBack(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->never())->method('saveObject');
 
 		$service = $this->buildService(['contact_schema' => 'sch-contact'], $object, '');
@@ -134,7 +135,7 @@ class ContactVcardWriterServiceGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testUnknownObjectTypeRefusesTheWriteBack(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->never())->method('saveObject');
 
 		$service = $this->buildService(['contact_schema' => 'sch-contact'], $object);
@@ -151,7 +152,7 @@ class ContactVcardWriterServiceGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testConfiguredWriteBackReachesOpenRegister(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->once())->method('saveObject');
 
 		$service = $this->buildService(['contact_schema' => 'sch-contact'], $object);

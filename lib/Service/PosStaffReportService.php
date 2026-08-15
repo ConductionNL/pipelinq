@@ -32,7 +32,7 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
@@ -59,7 +59,7 @@ class PosStaffReportService {
 		private IAppConfig $appConfig,
 		private PosStaffService $posStaffService,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly AggregationRunner $aggregationRunner,
 	) {
 	}//end __construct()

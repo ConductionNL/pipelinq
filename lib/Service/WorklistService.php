@@ -51,7 +51,7 @@ use OCP\IAppConfig;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * "My work" worklist aggregation service.
@@ -157,7 +157,7 @@ class WorklistService {
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 		private readonly TicketService $ticketService,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

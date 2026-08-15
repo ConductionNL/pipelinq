@@ -29,7 +29,7 @@ use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Programme activation + validation service.
@@ -55,7 +55,7 @@ class LoyaltyProgrammeService {
 	public function __construct(
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private SchemaLifecycleGraph $lifecycleGraph = new SchemaLifecycleGraph(),
 	) {
 	}//end __construct()

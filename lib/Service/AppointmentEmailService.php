@@ -39,7 +39,7 @@ use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * AppointmentEmailService — composes confirmation + reminder emails.
@@ -120,7 +120,7 @@ class AppointmentEmailService {
 		private IURLGenerator $urlGenerator,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

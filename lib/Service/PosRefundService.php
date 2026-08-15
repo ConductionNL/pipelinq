@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use RuntimeException;
 use OCA\OpenRegister\Service\WebhookService;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 
 /**
@@ -106,7 +106,7 @@ class PosRefundService {
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private readonly WebhookService $webhookService,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly TransitionEngine $transitionEngine,
 	) {
 	}//end __construct()

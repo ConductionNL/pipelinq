@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\GiftCardService;
 use OCP\IAppConfig;
@@ -44,11 +45,11 @@ class GiftCardServiceConfigGuardTest extends TestCase {
 	 * Build the service over a config map.
 	 *
 	 * @param array<string, string> $config The app-config contents.
-	 * @param ObjectService $object The OpenRegister ObjectService mock.
+	 * @param ObjectServiceInterface $object The OpenRegister ObjectService mock.
 	 *
 	 * @return GiftCardService
 	 */
-	private function buildService(array $config, ObjectService $object): GiftCardService {
+	private function buildService(array $config, ObjectServiceInterface $object): GiftCardService {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($object);
 
@@ -72,7 +73,7 @@ class GiftCardServiceConfigGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testMissingRegisterRefusesWithoutTouchingOpenRegister(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->never())->method('find');
 		$object->expects($this->never())->method('findAll');
 		$object->expects($this->never())->method('saveObject');
@@ -88,7 +89,7 @@ class GiftCardServiceConfigGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testMissingSchemaRefusesWithoutTouchingOpenRegister(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->never())->method('find');
 		$object->expects($this->never())->method('findAll');
 		$object->expects($this->never())->method('saveObject');
@@ -105,7 +106,7 @@ class GiftCardServiceConfigGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testUnconfiguredRegisterIsLogged(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($object);
@@ -132,7 +133,7 @@ class GiftCardServiceConfigGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testConfiguredInstanceReachesOpenRegister(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->once())->method('find')->willReturn(null);
 
 		$service = $this->buildService(

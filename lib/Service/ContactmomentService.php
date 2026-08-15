@@ -29,7 +29,7 @@ use OCP\Files\NotPermittedException;
 use OCP\IGroupManager;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for contactmoment business operations.
@@ -58,19 +58,19 @@ class ContactmomentService {
 		private TicketService $ticketService,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
 	/**
 	 * Get the OpenRegister ObjectService.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService The object service.
+	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface The object service.
 	 *
 	 * @throws \RuntimeException If OpenRegister is not available.
 	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-2
 	 */
-	public function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
+	public function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		try {
 			return $this->objectService;
 		} catch (\Exception $e) {

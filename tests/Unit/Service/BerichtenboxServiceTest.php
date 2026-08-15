@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\BerichtenboxService;
 use OCA\Pipelinq\Service\DeliveryAuditLogger;
@@ -123,11 +124,11 @@ class BerichtenboxServiceTest extends TestCase {
 	/**
 	 * Build an ObjectService that captures every save in $savedMessages.
 	 *
-	 * @return ObjectService
+	 * @return ObjectServiceInterface
 	 */
 	private function captureObjectService(): ObjectService {
 		$this->savedMessages = [];
-		$service = $this->createMock(ObjectService::class);
+		$service = $this->createMock(ObjectServiceInterface::class);
 		$service->method('saveObject')->willReturnCallback(
 			function (...$args) {
 				foreach ($args as $arg) {
@@ -146,7 +147,7 @@ class BerichtenboxServiceTest extends TestCase {
 	/**
 	 * Build the SUT.
 	 *
-	 * @param ObjectService $objectService Object service.
+	 * @param ObjectServiceInterface $objectService Object service.
 	 * @param MailboxResolver $resolver Resolver.
 	 * @param LogiusConnector $logius Connector.
 	 * @param EmailFallbackSender $email Email fallback.
@@ -155,7 +156,7 @@ class BerichtenboxServiceTest extends TestCase {
 	 * @return BerichtenboxService
 	 */
 	private function buildService(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		MailboxResolver $resolver,
 		LogiusConnector $logius,
 		EmailFallbackSender $email,
@@ -518,7 +519,7 @@ class BerichtenboxServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testHandleReadReceipt(): void {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('findAll')->willReturn([[
 			'uuid' => 'msg-5',
 			'logiusMessageId' => 'logius-77',

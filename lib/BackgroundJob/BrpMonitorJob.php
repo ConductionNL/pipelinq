@@ -36,7 +36,7 @@ use OCP\IGroupManager;
 use OCP\Notification\IManager as INotificationManager;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * BRP availability + SLA monitor.
@@ -70,7 +70,7 @@ class BrpMonitorJob extends TimedJob {
 		private IGroupManager $groupManager,
 		private INotificationManager $notificationManager,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 		parent::__construct(time: $time);
 		$this->setInterval(

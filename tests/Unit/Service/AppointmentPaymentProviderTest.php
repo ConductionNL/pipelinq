@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\AppointmentPaymentProvider;
 use OCP\IAppConfig;
@@ -54,16 +55,16 @@ class AppointmentPaymentProviderTest extends TestCase {
 	/**
 	 * Build a provider with overridable mocks.
 	 *
-	 * @param ObjectService|null $objectService Optional OR ObjectService mock.
+	 * @param ObjectServiceInterface|null $objectService Optional OR ObjectService mock.
 	 * @param mixed $paymentStub Optional payment seam stub.
 	 *
 	 * @return AppointmentPaymentProvider
 	 */
 	private function buildProvider(
-		?ObjectService $objectService = null,
+		?ObjectServiceInterface $objectService = null,
 		mixed $paymentStub = null,
 	): AppointmentPaymentProvider {
-		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectService::class));
+		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectServiceInterface::class));
 
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
@@ -149,7 +150,7 @@ class AppointmentPaymentProviderTest extends TestCase {
 	 */
 	public function testChargeNoShowFeeQueuesChargeWhenPaymentMethodOnFile(): void {
 		$captured = null;
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			function (string $id): array {
 				if ($id === 'b-1') {
@@ -213,7 +214,7 @@ class AppointmentPaymentProviderTest extends TestCase {
 	 * @return void
 	 */
 	public function testChargeNoShowFeeSkippedWhenNoPaymentMethod(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			function (string $id): array {
 				if ($id === 'b-2') {
@@ -243,7 +244,7 @@ class AppointmentPaymentProviderTest extends TestCase {
 	 */
 	public function testChargeCancellationFeeStampsCancellationField(): void {
 		$captured = null;
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			function (string $id): array {
 				if ($id === 'b-3') {
@@ -291,7 +292,7 @@ class AppointmentPaymentProviderTest extends TestCase {
 	 * @return void
 	 */
 	public function testChargeBookingFeeNoopOnNonPositiveAmount(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->expects($this->never())->method('find');
 
 		$stub = $this->paymentStub();
@@ -331,7 +332,7 @@ class AppointmentPaymentProviderTest extends TestCase {
 	public function testChargeBookingFeeSkippedWhenSourceUnconfigured(): void {
 		$this->appConfigStore['appointment_payment_source'] = '';
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			function (string $id): array {
 				if ($id === 'b-4') {
@@ -356,7 +357,7 @@ class AppointmentPaymentProviderTest extends TestCase {
 	 * @return void
 	 */
 	public function testChargeBookingFeeNoopWhenPaymentServiceUnavailable(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->expects($this->never())->method('find');
 
 		// No paymentStub → resolvePaymentService returns null.
@@ -374,7 +375,7 @@ class AppointmentPaymentProviderTest extends TestCase {
 	 * @return void
 	 */
 	public function testChargeBookingFeeRoundsHalfCentValues(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			function (string $id): array {
 				if ($id === 'b-5') {

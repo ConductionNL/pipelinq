@@ -36,7 +36,7 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Orchestrates the end-to-end loyalty credit flow on a POS-trigger.
@@ -67,7 +67,7 @@ class LoyaltyEngineService {
 		private TierService $tierService,
 		private IEventDispatcher $eventDispatcher,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

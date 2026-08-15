@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\PosCustomerLinkService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -56,9 +57,9 @@ class PosCustomerLinkServiceTest extends TestCase {
 	/**
 	 * Mock OR ObjectService.
 	 *
-	 * @var ObjectService&\PHPUnit\Framework\MockObject\MockObject
+	 * @var ObjectServiceInterface&\PHPUnit\Framework\MockObject\MockObject
 	 */
-	private ObjectService $objectService;
+	private ObjectServiceInterface $objectService;
 
 	/**
 	 * Set up the test.
@@ -68,7 +69,7 @@ class PosCustomerLinkServiceTest extends TestCase {
 	protected function setUp(): void {
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
-		$this->objectService = $this->createMock(originalClassName: ObjectService::class);
+		$this->objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
 		$container->method('get')

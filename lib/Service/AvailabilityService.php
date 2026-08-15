@@ -35,7 +35,7 @@ use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Compute per-resource per-day availability as 15-minute-aligned free blocks.
@@ -135,7 +135,7 @@ class AvailabilityService {
 		private IAppConfig $appConfig,
 		private ICacheFactory $cacheFactory,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

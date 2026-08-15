@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -49,11 +50,11 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 	 * Build MessagingService over a config map.
 	 *
 	 * @param array<string, string> $config The app-config contents.
-	 * @param ObjectService $object The ObjectService mock.
+	 * @param ObjectServiceInterface $object The ObjectService mock.
 	 *
 	 * @return MessagingService
 	 */
-	private function buildService(array $config, ObjectService $object): MessagingService {
+	private function buildService(array $config, ObjectServiceInterface $object): MessagingService {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($object);
 
@@ -93,7 +94,7 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 	public function testBlankRegisterOverrideFallsBackToBuiltInSlug(): void {
 		$seen = [];
 
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			static function (...$args) use (&$seen): ?array {
 				$seen[] = ($args[1] ?? null);
@@ -117,7 +118,7 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 	public function testAbsentRegisterKeyFallsBackToBuiltInSlug(): void {
 		$seen = [];
 
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			static function (...$args) use (&$seen): ?array {
 				$seen[] = ($args[1] ?? null);
@@ -142,7 +143,7 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 	public function testExplicitRegisterOverrideIsHonoured(): void {
 		$seen = [];
 
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			static function (...$args) use (&$seen): ?array {
 				$seen[] = ($args[1] ?? null);

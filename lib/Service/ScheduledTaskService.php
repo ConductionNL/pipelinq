@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Service\LanguageService;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for the Schedules API.
@@ -127,7 +127,7 @@ class ScheduledTaskService {
 		private readonly NotificationService $notificationService,
 		private readonly LoggerInterface $logger,
 		private readonly LanguageService $languageService,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

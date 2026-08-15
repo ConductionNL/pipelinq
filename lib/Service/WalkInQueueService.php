@@ -35,7 +35,7 @@ use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * WalkInQueueService — walk-in ticket lifecycle and queue rebalance.
@@ -125,7 +125,7 @@ class WalkInQueueService {
 		private IAppConfig $appConfig,
 		private AvailabilityService $availabilityService,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

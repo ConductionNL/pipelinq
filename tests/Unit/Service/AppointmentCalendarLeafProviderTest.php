@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
 use OCP\IAppConfig;
@@ -50,16 +51,16 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 	/**
 	 * Build a provider under test with overridable mocks.
 	 *
-	 * @param ObjectService|null $objectService Optional ObjectService mock.
+	 * @param ObjectServiceInterface|null $objectService Optional ObjectService mock.
 	 * @param IUserManager|null $userManager Optional user manager mock.
 	 *
 	 * @return array{0: AppointmentCalendarLeafProvider, 1: ObjectService}
 	 */
 	private function buildProvider(
-		?ObjectService $objectService = null,
+		?ObjectServiceInterface $objectService = null,
 		?IUserManager $userManager = null,
 	): array {
-		$objectService = ($objectService ?? $this->createMock(ObjectService::class));
+		$objectService = ($objectService ?? $this->createMock(ObjectServiceInterface::class));
 
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
@@ -191,7 +192,7 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetBlockedTimesEmptyWithoutCalendarSyncId(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('find')->willReturn([
 			'@self' => ['id' => 'res-sarah'],
 			'name' => 'Sarah',
@@ -210,7 +211,7 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetBlockedTimesConvertsLeafEventsToBlocks(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('find')->willReturn([
 			'@self' => ['id' => 'res-sarah'],
 			'name' => 'Sarah',
@@ -263,7 +264,7 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 			'userId' => 'sarah',
 		];
 
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			static function (string $id) use ($booking, $service, $resource): array {
 				if ($id === 'b-1') {
@@ -323,7 +324,7 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 			],
 		];
 
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('find')->willReturn($booking);
 
 		$leaf = $this->buildLeaf();
@@ -343,7 +344,7 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 	 * @return void
 	 */
 	public function testPushBookingEventSkipsUnconfirmedBookings(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('find')->willReturn([
 			'@self' => ['id' => 'b-pending'],
 			'status' => 'pending-deposit',

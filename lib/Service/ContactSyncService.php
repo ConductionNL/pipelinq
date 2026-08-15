@@ -28,7 +28,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for searching and importing Nextcloud contacts into Pipelinq.
@@ -50,7 +50,7 @@ class ContactSyncService {
 		private ContactVcardService $contactVcardService,
 		private ContactLinkedUidsService $linkedUidsService,
 		private IAppConfig $appConfig,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

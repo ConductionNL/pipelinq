@@ -45,7 +45,7 @@ use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Aggregates CRM activity data from multiple OpenRegister schemas.
@@ -89,7 +89,7 @@ class ActivityTimelineService {
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private TicketService $ticketService,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

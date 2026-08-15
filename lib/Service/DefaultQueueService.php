@@ -27,7 +27,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for creating default queues and skills.
@@ -114,7 +114,7 @@ class DefaultQueueService {
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private RegisterResolverService $registerResolver,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

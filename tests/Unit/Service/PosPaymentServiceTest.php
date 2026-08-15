@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\PosPaymentService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -288,7 +288,7 @@ class PosPaymentServiceTest extends TestCase {
 	 * @return PosPaymentService
 	 */
 	private function buildService(?object $object = null, array $opts = []): PosPaymentService {
-		$object = ($object ?? $this->createMock(originalClassName: ObjectService::class));
+		$object = ($object ?? $this->createMock(originalClassName: ObjectServiceInterface::class));
 		$webhooks = ($opts['webhooks'] ?? null);
 
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
@@ -468,7 +468,7 @@ class PosPaymentServiceTest extends TestCase {
 	}//end testRefundRequiresManager()
 
 	public function testRefundRejectsUnsettledTransaction(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn([
 			'@self' => ['id' => 'tx-1'],
 			'paymentStatus' => 'pending',
@@ -507,7 +507,7 @@ class PosPaymentServiceTest extends TestCase {
 	}//end testHandleWebhookUnknownProviderReturnsInvalid()
 
 	public function testInitiateRejectsUnconfirmedTransaction(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn([
 			'@self' => ['id' => 'tx-1'],
 			'status' => 'draft',
@@ -526,7 +526,7 @@ class PosPaymentServiceTest extends TestCase {
 			'paymentWebhookEventId' => 'evt-1',
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('findAll')->willReturn([$tx]);
 		$object->method('find')->willReturn($tx);
 		// saveObject MUST NOT be called for the duplicate webhook.
@@ -554,7 +554,7 @@ class PosPaymentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testHandleSettlementReportsAnUnknownSessionAsUnmatched(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('findAll')->willReturn([]);
 		$object->expects($this->never())->method('saveObject');
 
@@ -734,7 +734,7 @@ class PosPaymentServiceTest extends TestCase {
 	public function testUnconfiguredRegisterRefusesAndNeverCallsOpenRegister(): void {
 		unset($this->configStore['register'], $this->configStore['posTransaction_schema']);
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->expects($this->never())->method('findAll');
 		$object->expects($this->never())->method('saveObject');
 

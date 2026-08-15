@@ -50,7 +50,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Resolver + read/write facade for the unified ticket schema.
@@ -126,20 +126,20 @@ class TicketService {
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
 	/**
 	 * Get the OpenRegister ObjectService.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService The object service.
+	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface The object service.
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
 	 *
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
-	public function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
+	public function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		try {
 			return $this->objectService;
 		} catch (\Exception $e) {

@@ -27,7 +27,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for syncing Pipelinq objects to Nextcloud Contacts as vCards.
@@ -63,7 +63,7 @@ class ContactVcardService {
 		private ContactVcardPropertyBuilder $propBuilder,
 		private LoggerInterface $logger,
 		private RegisterResolverService $registerResolver,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

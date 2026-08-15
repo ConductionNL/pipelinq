@@ -34,7 +34,7 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Aggregates a client's open tickets (all `ticketType`s), SLA/queue status,
@@ -97,7 +97,7 @@ class Customer360SummaryService {
 		private readonly TicketService $ticketService,
 		private readonly ActivityTimelineService $activityTimeline,
 		private readonly LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -278,11 +278,11 @@ class Customer360SummaryService {
 	/**
 	 * Resolve the OpenRegister ObjectService lazily.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService The OpenRegister object service.
+	 * @return \OCA\OpenRegister\Service\ObjectServiceInterface The OpenRegister object service.
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
-	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
+	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		try {
 			return $this->objectService;
 		} catch (Throwable $e) {

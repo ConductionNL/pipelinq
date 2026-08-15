@@ -40,7 +40,7 @@ use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * BookingService — booking lifecycle service.
@@ -178,7 +178,7 @@ class BookingService {
 		private EligibilityService $eligibilityService,
 		private LoggerInterface $logger,
 		private IJobList $jobList,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

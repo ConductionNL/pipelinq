@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for importing Nextcloud contacts into Pipelinq objects.
@@ -42,7 +42,7 @@ class ContactImportService {
 	public function __construct(
 		private IAppConfig $appConfig,
 		private ContactDataBuilder $dataBuilder,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

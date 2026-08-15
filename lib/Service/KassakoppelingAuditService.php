@@ -47,7 +47,7 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for the POS Kassakoppeling audit log.
@@ -103,7 +103,7 @@ class KassakoppelingAuditService {
 		private KassakoppelingSignatureService $signature,
 		private BelastingdienstExportService $exporter,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

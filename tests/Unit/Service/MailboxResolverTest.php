@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\EncryptionService;
 use OCA\Pipelinq\Service\LogiusConnector;
@@ -58,12 +59,12 @@ class MailboxResolverTest extends TestCase {
 	/**
 	 * Build a resolver wired to mocks and capture saved rows in $savedRows.
 	 *
-	 * @param ObjectService $objectService Object service mock.
+	 * @param ObjectServiceInterface $objectService Object service mock.
 	 * @param LogiusConnector $connector Connector mock.
 	 *
 	 * @return MailboxResolver
 	 */
-	private function buildResolver(ObjectService $objectService, LogiusConnector $connector): MailboxResolver {
+	private function buildResolver(ObjectServiceInterface $objectService, LogiusConnector $connector): MailboxResolver {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
 
@@ -93,7 +94,7 @@ class MailboxResolverTest extends TestCase {
 	 * @return void
 	 */
 	public function testCacheMissCallsLogius(): void {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('findAll')->willReturn([]);
 		// saveObject must be called once with mailboxAvailable=true.
 		$captured = null;
@@ -132,7 +133,7 @@ class MailboxResolverTest extends TestCase {
 	public function testCacheHitSkipsLogius(): void {
 		$future = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->modify('+1 hour');
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('findAll')->willReturn([[
 			'bsnHash' => str_repeat('a', 64),
 			'mailboxAvailable' => true,
@@ -158,7 +159,7 @@ class MailboxResolverTest extends TestCase {
 	public function testExpiredCacheFallsThrough(): void {
 		$past = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->modify('-1 hour');
 
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('findAll')->willReturn([[
 			'bsnHash' => 'expired-hash',
 			'mailboxAvailable' => true,
@@ -184,7 +185,7 @@ class MailboxResolverTest extends TestCase {
 	 */
 	public function testMarkOptedOut(): void {
 		$captured = null;
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(function (...$args) use (&$captured) {

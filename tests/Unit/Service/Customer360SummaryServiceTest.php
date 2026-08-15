@@ -60,7 +60,7 @@ class Customer360SummaryServiceTest extends TestCase {
 	 *
 	 * @var \OCA\OpenRegister\Service\ObjectService&MockObject
 	 */
-	private \OCA\OpenRegister\Service\ObjectService $objectService;
+	private \OCA\OpenRegister\Service\ObjectServiceInterface $objectService;
 
 	/**
 	 * Leads returned by the mocked ObjectService for `findAll(lead)`.

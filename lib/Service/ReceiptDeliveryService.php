@@ -41,7 +41,7 @@ use OCP\IL10N;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for receipt rendering, email delivery and thermal output.
@@ -91,7 +91,7 @@ class ReceiptDeliveryService {
 		private PosAccessPolicy $policy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

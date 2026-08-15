@@ -48,7 +48,7 @@ use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Service\WebhookService;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
@@ -111,7 +111,7 @@ class CashShiftService {
 		private PosAccessPolicy $policy,
 		private LoggerInterface $logger,
 		private readonly WebhookService $webhookService,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly AggregationRunner $aggregationRunner,
 	) {
 	}//end __construct()

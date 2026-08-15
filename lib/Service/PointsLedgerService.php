@@ -35,7 +35,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
@@ -61,7 +61,7 @@ class PointsLedgerService {
 		private IAppConfig $appConfig,
 		private LoyaltyAccountService $accountService,
 		private LoggerInterface $logger,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 		private readonly AggregationRunner $aggregationRunner,
 	) {
 	}//end __construct()

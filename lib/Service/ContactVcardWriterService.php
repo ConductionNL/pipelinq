@@ -27,7 +27,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for writing vCard data to Nextcloud addressbooks.
@@ -49,7 +49,7 @@ class ContactVcardWriterService {
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private RegisterResolverService $registerResolver,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 

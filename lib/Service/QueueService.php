@@ -35,7 +35,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for queue operations such as capacity checks, overflow routing, and item assignment.
@@ -57,7 +57,7 @@ class QueueService {
 		private LoggerInterface $logger,
 		private RegisterResolverService $registerResolver,
 		private readonly TicketService $ticketService,
-		private readonly ObjectService $objectService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
