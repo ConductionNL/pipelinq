@@ -215,6 +215,7 @@ class CashShiftServiceTest extends TestCase {
 			$policy,
 			$this->createMock(LoggerInterface::class),
 			objectService: $key,
+			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);
 	}//end setUp()
 

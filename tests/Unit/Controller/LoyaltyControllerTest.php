@@ -193,6 +193,7 @@ class LoyaltyControllerTest extends TestCase {
 		);
 		$ledgerService = new PointsLedgerService($container, $appConfig, $accountService, $logger,
 			objectService: $key,
+			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);
 
 		return $this->buildController(

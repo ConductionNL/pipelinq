@@ -238,7 +238,8 @@ class SlaAttainmentControllerTest extends TestCase {
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		),
 				logger: $logger,
-			),
+			container: $this->createMock(ContainerInterface::class),
+		),
 			userSession: $this->userSession,
 			logger: $logger,
 		);

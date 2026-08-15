@@ -76,6 +76,11 @@ class SettingsControllerTest extends TestCase {
 			request: $this->request,
 			settingsService: $this->settingsService,
 			userSession: $this->userSession,
+			container: $this->createMock(ContainerInterface::class),
+			appManager: $this->createMock(IAppManager::class),
+			groupManager: $this->createMock(IGroupManager::class),
+			l10n: $this->createMock(IL10N::class),
+			logger: $this->createMock(LoggerInterface::class),
 		);
 
 	}//end setUp()

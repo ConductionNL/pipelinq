@@ -27,7 +27,28 @@ namespace OCA\OpenRegister\Db;
  * them with `onlyMethods(['getSchema', ...])`; PHPUnit's createMock() overrides
  * the bodies anyway.
  */
-class ObjectEntity {
+class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityInterface {
+		/**
+		 * @return ?string
+		 */
+		public function getRegister(): ?string {
+			return $this->register ?? null;
+		}
+
+		/**
+		 * @return ?string
+		 */
+		public function getOrganisation(): ?string {
+			return $this->organisation ?? null;
+		}
+
+		/**
+		 * @return ?string
+		 */
+		public function getOwner(): ?string {
+			return $this->owner ?? null;
+		}
+
 
 	/**
 	 * Return the raw object data as an array.
