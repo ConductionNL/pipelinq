@@ -51,6 +51,8 @@ class StripeAdapterTest extends TestCase {
 				'apiSecret' => 'sk_test_dummy',
 				'webhookSecret' => 'whsec_test_signature',
 			],
+			config: ['environment' => 'sandbox'],
+			logger: $logger,
 			http: $transport
 		);
 

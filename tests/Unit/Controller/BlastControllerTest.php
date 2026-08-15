@@ -257,8 +257,15 @@ class BlastControllerTest extends TestCase {
 		return new BlastController(
 			request: $this->createMock(IRequest::class),
 			blastService: new BlastService(
+				appConfig: $appConfig,
+				segmentService: $this->createMock(SegmentService::class),
+				logger: $logger,
+			container: $this->createMock(ContainerInterface::class),
 		),
 			attributionService: new AttributionService(
+				appConfig: $appConfig,
+				logger: $logger,
+			container: $this->createMock(ContainerInterface::class),
 		),
 			userSession: $this->userSession,
 		);
