@@ -648,10 +648,8 @@ class WorklistService {
 	 * @throws RuntimeException When OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->objectService;
-		} catch (\Throwable $e) {
-			throw new RuntimeException(message: 'OpenRegister ObjectService is unavailable.', code: 0, previous: $e);
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

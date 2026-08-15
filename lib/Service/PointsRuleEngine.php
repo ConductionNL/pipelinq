@@ -502,10 +502,8 @@ class PointsRuleEngine {
 	 * @return object The object service.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->objectService;
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

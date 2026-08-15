@@ -237,11 +237,9 @@ class MailboxResolver {
 	 * @throws RuntimeException If OR not available.
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
-		try {
-			return $this->objectService;
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister service unavailable: ' . $e->getMessage(), 0, $e);
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

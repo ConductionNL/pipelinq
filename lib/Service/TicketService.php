@@ -140,11 +140,9 @@ class TicketService {
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-ticket-supertype-schema
 	 */
 	public function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
-		try {
-			return $this->objectService;
-		} catch (\Exception $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

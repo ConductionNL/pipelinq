@@ -71,11 +71,9 @@ class ContactmomentService {
 	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-2
 	 */
 	public function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
-		try {
-			return $this->objectService;
-		} catch (\Exception $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**
@@ -277,14 +275,13 @@ class ContactmomentService {
 		// field. Any caller with OR write-access can stamp `assignee: victim_uid`;
 		// `createdBy` is protected by the platform and cannot be overwritten via
 		// the public API.
-		$createdBy = '';
-		if (is_array($object) === true) {
-			$createdBy = ($object['createdBy'] ?? '');
-		}
-
-		if (is_array($object) === false) {
-			$createdBy = ($object->getCreatedBy() ?? '');
-		}
+		// ObjectServiceInterface::find() returns an ObjectEntityInterface, so the
+		// array arm was dead and getCreatedBy() is not on the contract — the
+		// value lives in the payload. Both facts came from phpstan:
+		//   Call to an undefined method ObjectEntityInterface::getCreatedBy()
+		//   Call to is_array() with ObjectEntityInterface will always evaluate to false
+		$payload = $object->getObject();
+		$createdBy = (string)($payload['createdBy'] ?? '');
 
 		$isCreator = ($createdBy !== '' && $createdBy === $currentUserId);
 		$isAdmin = $this->groupManager->isAdmin($currentUserId);

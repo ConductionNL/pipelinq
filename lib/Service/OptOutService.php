@@ -287,10 +287,8 @@ class OptOutService {
 	 * @throws RuntimeException When OR is not available.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->objectService;
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

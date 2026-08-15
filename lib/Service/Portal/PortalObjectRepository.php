@@ -289,10 +289,8 @@ class PortalObjectRepository {
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function objectService(): object {
-		try {
-			return $this->objectService;
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end objectService()
 }//end class
