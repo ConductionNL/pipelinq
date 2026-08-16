@@ -32,7 +32,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\LoyaltyController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -1400,14 +1402,39 @@ class LoyaltyObjectStoreFake extends ObjectService {
 	/**
 	 * Find a single object by UUID within a schema.
 	 *
-	 * @param string $id The object UUID.
-	 * @param string $register The register id (unused; single-register fake).
-	 * @param string $schema The schema key.
+	 * @param int|string $id The object UUID.
+	 * @param array<string, mixed>|null $_extend Unused.
+	 * @param bool $files Unused.
+	 * @param string|int|null $register The register id (unused; single-register fake).
+	 * @param string|int|null $schema The schema key.
+	 * @param bool $_rbac Unused.
+	 * @param bool $_multitenancy Unused.
+	 * @param bool $_render Unused.
+	 * @param bool $_audit Unused.
 	 *
-	 * @return array<string, mixed>|object|null
+	 * @return ObjectEntityInterface|null
 	 */
-	public function find(string $id, string $register = '', string $schema = ''): array|object|null {
-		return ($this->tables[$schema][$id] ?? null);
+	public function find(
+		int|string $id,
+		?array $_extend = [],
+		bool $files = false,
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
+	): ?ObjectEntityInterface {
+		$row = ($this->tables[(string) $schema][(string) $id] ?? null);
+		if ($row === null) {
+			return null;
+		}
+
+		$entity = new ObjectEntity();
+		$entity->setUuid((string) $id);
+		$entity->setObject($row);
+
+		return $entity;
 	}//end find()
 
 	/**
@@ -1458,7 +1485,7 @@ class LoyaltyObjectStoreFake extends ObjectService {
 	 * @return array<string, mixed>|object
 	 */
 	public function saveObject(
-		array|object $object,
+		array $object,
 		?array $extend = [],
 		string|int|null $register = null,
 		string|int|null $schema = null,
@@ -1466,9 +1493,11 @@ class LoyaltyObjectStoreFake extends ObjectService {
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $silent = false,
+		bool $_validation = true,
 		?array $uploadedFiles = null,
-		?object $currentUser = null,
-	): array|object {
+		?IUser $currentUser = null,
+		bool $failIfExists = false,
+	): ObjectEntityInterface {
 		$schemaKey = (string)$schema;
 		$payload = (array)$object;
 
@@ -1481,7 +1510,15 @@ class LoyaltyObjectStoreFake extends ObjectService {
 		$payload['@self'] = ['id' => $key];
 		$this->tables[$schemaKey][$key] = $payload;
 
-		return $payload;
+		// The contract returns an entity, not the payload. Wrapping here keeps
+		// the fake's own storage array-shaped (which every seed() and read in
+		// this file depends on) while handing callers what ObjectService now
+		// hands them.
+		$entity = new ObjectEntity();
+		$entity->setUuid($key);
+		$entity->setObject($payload);
+
+		return $entity;
 	}//end saveObject()
 
 	/**
