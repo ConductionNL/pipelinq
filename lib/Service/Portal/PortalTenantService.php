@@ -280,8 +280,10 @@ class PortalTenantService {
 	 * feature on a live schema field — but it must not be mistaken for
 	 * enforcement, and the fix for the gate-6 finding it raises is to BUILD
 	 * the flow and call this from it, never to invent an account-creation
-	 * endpoint just to give the predicate a caller. See pipelinq#401 and the
-	 * archived `2026-07-16-orphan-auth-remediation` change.
+	 * endpoint just to give the predicate a caller. Tracked in pipelinq#764
+	 * ("Decision needed: consume-or-remove the 7 dormant capabilities behind
+	 * gate-6 and gate-57"), which carries the full per-finding evidence; see
+	 * also the archived `2026-07-16-orphan-auth-remediation` change.
 	 *
 	 * @param string $tenantId The tenant id.
 	 *
