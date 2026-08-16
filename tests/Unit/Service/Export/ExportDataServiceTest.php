@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Export;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\Export\ExportDataService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -52,7 +53,7 @@ class ExportDataServiceTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$appConfig = $this->createMock(IAppConfig::class);
 
-		$this->service = new ExportDataService($container, $appConfig);
+		$this->service = new ExportDataService($container, $appConfig, $this->createMock(ObjectServiceInterface::class));
 	}//end setUp()
 
 	/**
