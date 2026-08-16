@@ -166,3 +166,14 @@ if (file_exists(__DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php')
 if (file_exists(__DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php') === true) {
 	require_once __DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php';
 }
+
+// ADR-078 deferral test helpers — same reason as the portal doubles above:
+// the Tests namespace has no PSR-4 mapping, and PHPUnit only auto-loads files
+// whose name ends in `Test.php`.
+if (file_exists(__DIR__ . '/Unit/Listener/RecordingDeferralService.php') === true) {
+	require_once __DIR__ . '/Unit/Listener/RecordingDeferralService.php';
+}
+
+if (file_exists(__DIR__ . '/Unit/Listener/DeferredJobDrain.php') === true) {
+	require_once __DIR__ . '/Unit/Listener/DeferredJobDrain.php';
+}

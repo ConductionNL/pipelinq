@@ -66,8 +66,37 @@ class ApFakeObjectService {
 	 */
 	public function saveObject($object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
 		$this->saved[(string)$uuid] = (array)$object;
+		$this->stored[(string)$uuid] = (array)$object;
 		return (array)$object;
 	}//end saveObject()
+
+	/**
+	 * Objects readable by find(), keyed by uuid.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	public array $stored = [];
+
+	/**
+	 * Serve the deferred pass's re-read of current state.
+	 *
+	 * @param string $id The object uuid.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 *
+	 * @return ObjectEntity|null
+	 */
+	public function find(string $id, string $register = '', string $schema = ''): ?ObjectEntity {
+		if (isset($this->stored[$id]) === false) {
+			return null;
+		}
+
+		$entity = new ObjectEntity();
+		$entity->setUuid($id);
+		$entity->setSchema($schema);
+		$entity->setObject($this->stored[$id]);
+		return $entity;
+	}//end find()
 }//end class
 
 /**
@@ -145,6 +174,24 @@ class ReDispatchingApFakeObjectService extends ApFakeObjectService {
  * Tests for ExpenseApprovalListener.
  */
 class ExpenseApprovalListenerTest extends TestCase {
+
+	/**
+	 * The deferral double the last-built listener was wired with.
+	 *
+	 * @var RecordingDeferralService|null
+	 */
+	private ?RecordingDeferralService $deferral = null;
+
+	/**
+	 * Clear the shared re-entrancy guard between tests.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		\OCA\Pipelinq\Listener\DeferredWorkGuard::reset();
+	}//end setUp()
+
 	/**
 	 * Build an ObjectEntity double for the given schema and data.
 	 *
@@ -205,6 +252,8 @@ class ExpenseApprovalListenerTest extends TestCase {
 			}
 		);
 
+		$this->deferral = new RecordingDeferralService();
+
 		return new ExpenseApprovalListener(
 			schemaMapService: $schemaMap,
 			apService: $apService,
@@ -212,9 +261,23 @@ class ExpenseApprovalListenerTest extends TestCase {
 			eventDispatcher: $this->createMock(IEventDispatcher::class),
 			container: $container,
 			appConfig: $appConfig,
+			deferral: $this->deferral,
 			logger: $this->createMock(LoggerInterface::class),
 		);
 	}//end listener()
+
+	/**
+	 * Run every entry the listener queued, through the real background job.
+	 *
+	 * @param ExpenseApprovalListener $listener The listener under test.
+	 *
+	 * @return void
+	 */
+	private function drain(ExpenseApprovalListener $listener): void {
+		if ($this->deferral !== null) {
+			DeferredJobDrain::run($this, $this->deferral, $listener);
+		}
+	}//end drain()
 
 	/**
 	 * A non-ObjectCreatedEvent / ObjectUpdatedEvent is ignored.
@@ -307,17 +370,26 @@ class ExpenseApprovalListenerTest extends TestCase {
 		$apService->method('dispatchApEvent')->willReturn(true);
 		$apService->method('now')->willReturn('2026-05-15T14:35:00Z');
 
-		$objects = new ApFakeObjectService();
-		$listener = $this->listener($schemaMap, $apService, $objects);
-
-		$listener->handle(new ObjectCreatedEvent($this->entity('schema-expense', [
+		$expense = [
 			'uuid' => 'exp-1',
 			'title' => 'Hotel',
 			'amount' => 185.50,
 			'status' => 'approved',
 			'approvedBy' => 'alice',
 			'approvedAt' => '2026-05-15T14:30:00Z',
-		])));
+		];
+
+		$objects = new ApFakeObjectService();
+		$objects->stored['exp-1'] = $expense;
+		$listener = $this->listener($schemaMap, $apService, $objects);
+
+		$listener->handle(new ObjectCreatedEvent($this->entity('schema-expense', $expense)));
+
+		// ADR-078: nothing written and nothing dispatched on the request.
+		$this->assertCount(1, $this->deferral->entries);
+		$this->assertCount(0, $objects->saved);
+
+		$this->drain($listener);
 
 		$this->assertArrayHasKey('exp-1', $objects->saved);
 		$this->assertSame('synced', $objects->saved['exp-1']['apSyncStatus']);
@@ -341,17 +413,21 @@ class ExpenseApprovalListenerTest extends TestCase {
 		$notify = $this->createMock(ApSyncNotifier::class);
 		$notify->expects($this->once())->method('notifyFailure');
 
-		$objects = new ApFakeObjectService();
-		$listener = $this->listener($schemaMap, $apService, $objects, $notify);
-
-		$listener->handle(new ObjectCreatedEvent($this->entity('schema-expense', [
+		$expense = [
 			'uuid' => 'exp-1',
 			'title' => 'Catering',
 			'amount' => 78.30,
 			'status' => 'approved',
 			'approvedBy' => 'alice',
 			'approvedAt' => '2026-05-10T11:20:00Z',
-		])));
+		];
+
+		$objects = new ApFakeObjectService();
+		$objects->stored['exp-1'] = $expense;
+		$listener = $this->listener($schemaMap, $apService, $objects, $notify);
+
+		$listener->handle(new ObjectCreatedEvent($this->entity('schema-expense', $expense)));
+		$this->drain($listener);
 
 		$this->assertSame('failed', $objects->saved['exp-1']['apSyncStatus']);
 	}//end testFailedDispatchMarksFailedAndNotifies()
@@ -428,20 +504,31 @@ class ExpenseApprovalListenerTest extends TestCase {
 			}
 		);
 
-		$objects = new ReDispatchingApFakeObjectService();
-		$listener = $this->listener($schemaMap, $apService, $objects);
-
-		$objects->listener = $listener;
-		$objects->entityFactory = fn (array $data): ObjectEntity => $this->entity('schema-expense', $data);
-
-		$listener->handle(new ObjectCreatedEvent($this->entity('schema-expense', [
+		$expense = [
 			'uuid' => 'exp-1',
 			'title' => 'Hotel',
 			'amount' => 185.50,
 			'status' => 'approved',
 			'approvedBy' => 'alice',
 			'approvedAt' => '2026-05-15T14:30:00Z',
-		])));
+		];
+
+		$objects = new ReDispatchingApFakeObjectService();
+		$objects->stored['exp-1'] = $expense;
+		$listener = $this->listener($schemaMap, $apService, $objects);
+
+		$objects->listener = $listener;
+		$objects->entityFactory = fn (array $data): ObjectEntity => $this->entity('schema-expense', $data);
+
+		$listener->handle(new ObjectCreatedEvent($this->entity('schema-expense', $expense)));
+
+		// ADR-078: the approval only QUEUES on the request.
+		$this->assertCount(1, $this->deferral->entries);
+		$this->assertSame(0, $dispatches);
+
+		// The job runs the work — and its writes come straight back through the
+		// dispatcher into handle(), exactly as MagicMapper::update() does.
+		$this->drain($listener);
 
 		// One outbound AP webhook for one approval, however many times our own
 		// write comes back around.
@@ -454,5 +541,12 @@ class ExpenseApprovalListenerTest extends TestCase {
 		// The re-dispatch actually happened — otherwise this test asserts
 		// nothing and would pass with the guard deleted.
 		$this->assertGreaterThan(0, $objects->reDispatches);
+
+		// THE DEFERRED-ERA HALF OF THE SAME BUG: a re-entrant handle() that
+		// deferred again would put a NEW entry on the queue, and cron — which
+		// runs one job per web call — would grind on this expense for ever,
+		// starving every other job. The recorder was emptied by the drain, so a
+		// non-empty list here is that loop.
+		$this->assertCount(0, $this->deferral->entries);
 	}//end testOwnWriteDoesNotReEnterTheListener()
 }//end class

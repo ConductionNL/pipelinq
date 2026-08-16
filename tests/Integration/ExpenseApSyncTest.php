@@ -93,9 +93,42 @@ class IntegrationFakeObjectService {
 	public function saveObject($object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
 		$data = (array)$object;
 		$this->saved[(string)$uuid] = $data;
+		$this->stored[(string)$uuid] = $data;
 		$this->trail[] = ['uuid' => (string)$uuid, 'data' => $data];
 		return $data;
 	}//end saveObject()
+
+	/**
+	 * Objects readable by find(), keyed by uuid.
+	 *
+	 * ADR-078: the AP dispatch runs in a background job now, and the job
+	 * re-reads the expense rather than trusting the dispatch-time payload, so
+	 * the fake has to be able to serve that read.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	public array $stored = [];
+
+	/**
+	 * Serve the deferred pass's re-read of current state.
+	 *
+	 * @param string $id The object uuid.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 *
+	 * @return ObjectEntity|null
+	 */
+	public function find(string $id, string $register = '', string $schema = ''): ?ObjectEntity {
+		if (isset($this->stored[$id]) === false) {
+			return null;
+		}
+
+		$entity = new ObjectEntity();
+		$entity->setUuid($id);
+		$entity->setSchema($schema);
+		$entity->setObject($this->stored[$id]);
+		return $entity;
+	}//end find()
 }//end class
 
 /**
@@ -220,6 +253,24 @@ class IntegrationFakeEventDispatcher implements IEventDispatcher {
  * Integration tests for the expense-approval -> Shillinq AP flow.
  */
 class ExpenseApSyncTest extends TestCase {
+
+	/**
+	 * The deferral recorder the last-built listener was wired with.
+	 *
+	 * @var \OCA\Pipelinq\Tests\Unit\Listener\RecordingDeferralService|null
+	 */
+	private ?\OCA\Pipelinq\Tests\Unit\Listener\RecordingDeferralService $deferral = null;
+
+	/**
+	 * Clear the shared re-entrancy guard between tests.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		\OCA\Pipelinq\Listener\DeferredWorkGuard::reset();
+	}//end setUp()
+
 	/**
 	 * Build an ObjectEntity double for the expense schema with the given data.
 	 *
@@ -297,6 +348,8 @@ class ExpenseApSyncTest extends TestCase {
 		$schemaMap = $this->createMock(SchemaMapService::class);
 		$schemaMap->method('resolveEntityType')->willReturn('expense');
 
+		$this->deferral = new \OCA\Pipelinq\Tests\Unit\Listener\RecordingDeferralService();
+
 		return new ExpenseApprovalListener(
 			schemaMapService: $schemaMap,
 			apService: $apService,
@@ -304,9 +357,28 @@ class ExpenseApSyncTest extends TestCase {
 			eventDispatcher: $dispatcher,
 			container: $container,
 			appConfig: $appConfig,
+			deferral: $this->deferral,
 			logger: $logger,
 		);
 	}//end buildListener()
+
+	/**
+	 * Run whatever the listener queued, through the real background job.
+	 *
+	 * ADR-078 moved the AP dispatch off the approval request. The end-to-end
+	 * flow this file asserts is therefore approval -> queued entry -> job ->
+	 * domain event + pending + CloudEvent + synced; running the job is part of
+	 * the flow, not a test convenience.
+	 *
+	 * @param ExpenseApprovalListener $listener The listener under test.
+	 *
+	 * @return void
+	 */
+	private function runQueuedWork(ExpenseApprovalListener $listener): void {
+		if ($this->deferral !== null) {
+			\OCA\Pipelinq\Tests\Unit\Listener\DeferredJobDrain::run($this, $this->deferral, $listener);
+		}
+	}//end runQueuedWork()
 
 	/**
 	 * Successful flow: approval -> domain event -> pending -> CloudEvent dispatch -> synced.
@@ -320,7 +392,7 @@ class ExpenseApSyncTest extends TestCase {
 
 		$listener = $this->buildListener($objects, $webhooks, $dispatcher);
 
-		$listener->handle(new ObjectCreatedEvent($this->expenseEntity([
+		$expense = [
 			'uuid' => 'exp-int-1',
 			'title' => 'Hotel Den Haag',
 			'amount' => 185.50,
@@ -332,7 +404,19 @@ class ExpenseApSyncTest extends TestCase {
 			'status' => 'approved',
 			'approvedBy' => 'alice',
 			'approvedAt' => '2026-05-15T14:30:00Z',
-		])));
+		];
+		$objects->stored['exp-int-1'] = $expense;
+
+		$listener->handle(new ObjectCreatedEvent($this->expenseEntity($expense)));
+
+		// 0. ADR-078: the approval request itself does NOTHING but queue. No
+		//    domain event, no write, no outbound CloudEvent on the user's write.
+		$this->assertCount(1, $this->deferral->entries, 'The approval MUST queue exactly one entry.');
+		$this->assertCount(0, $dispatcher->dispatched, 'No domain event on the request path.');
+		$this->assertCount(0, $objects->saved, 'No write on the request path.');
+		$this->assertCount(0, $webhooks->dispatched, 'No outbound webhook on the request path.');
+
+		$this->runQueuedWork($listener);
 
 		// 1. Domain ExpenseApprovedEvent was fanned out (REQ-AP-002 consumer contract).
 		$this->assertCount(1, $dispatcher->dispatched, 'ExpenseApprovedEvent MUST fan out exactly once.');
@@ -402,7 +486,9 @@ class ExpenseApSyncTest extends TestCase {
 				'amount' => 100.0,
 			])
 		));
+		$this->runQueuedWork($listener);
 
+		$this->assertCount(0, $this->deferral->entries, 'Replay MUST NOT queue any work.');
 		$this->assertCount(0, $webhooks->dispatched, 'Replay MUST NOT dispatch a duplicate AP voucher.');
 		$this->assertCount(0, $objects->saved, 'Replay MUST NOT mutate the synced expense.');
 		$this->assertCount(0, $dispatcher->dispatched, 'Replay MUST NOT re-emit the domain event.');
@@ -426,14 +512,18 @@ class ExpenseApSyncTest extends TestCase {
 
 		$listener = $this->buildListener($objects, $webhooks, $dispatcher, $notifier);
 
-		$listener->handle(new ObjectCreatedEvent($this->expenseEntity([
+		$expense = [
 			'uuid' => 'exp-int-3',
 			'title' => 'Catering',
 			'amount' => 78.30,
 			'status' => 'approved',
 			'approvedBy' => 'bob',
 			'approvedAt' => '2026-05-10T11:20:00Z',
-		])));
+		];
+		$objects->stored['exp-int-3'] = $expense;
+
+		$listener->handle(new ObjectCreatedEvent($this->expenseEntity($expense)));
+		$this->runQueuedWork($listener);
 
 		$this->assertSame('failed', $objects->saved['exp-int-3']['apSyncStatus']);
 		$this->assertArrayNotHasKey(
@@ -463,7 +553,9 @@ class ExpenseApSyncTest extends TestCase {
 			'approvedBy' => 'carol',
 			'approvedAt' => '2026-05-11T09:00:00Z',
 		])));
+		$this->runQueuedWork($listener);
 
+		$this->assertCount(0, $this->deferral->entries);
 		$this->assertCount(0, $webhooks->dispatched);
 		$this->assertCount(0, $objects->saved);
 		$this->assertCount(0, $dispatcher->dispatched);
