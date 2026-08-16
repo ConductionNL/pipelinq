@@ -288,6 +288,11 @@ class PortalTenantService {
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return bool True when self-signup is allowed.
+	 *
+	 * @orphan-auth exclude reads a live schema field for a self-signup flow that is not built yet. The
+	 * fix is to BUILD that flow and call this from it — never to invent an
+	 * account-creation endpoint just to give the predicate a caller. Decision
+	 * pending in pipelinq#764.
 	 */
 	public function isSelfSignupAllowed(string $tenantId): bool {
 		$config = $this->getConfig(tenantId: $tenantId);

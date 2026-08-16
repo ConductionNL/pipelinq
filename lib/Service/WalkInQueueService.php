@@ -146,6 +146,15 @@ class WalkInQueueService {
 	 * @throws RuntimeException If OpenRegister is unavailable.
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
+	 *
+	 * @orphaned-write-capability exclude redundant, not missing —
+	 * src/components/bookings/WalkInQueuePanel.vue reads and writes walkInTicket
+	 * objects DIRECTLY against OpenRegister (ADR-022), so this wrapper has no
+	 * caller by design rather than by omission. callNext, callTicket,
+	 * serveTicket and abandonTicket are equally caller-less; only rebalance()
+	 * is live. Deleting the five wrappers is the agreed remedy and means
+	 * deleting their unit tests too, which is not a change to make on a gate's
+	 * say-so — pipelinq#764 item 5 carries that decision.
 	 */
 	public function createTicket(array $data): string {
 		$displayName = trim((string)($data['displayName'] ?? ''));

@@ -91,6 +91,11 @@ class ZgwCoexistenceValidator {
 	 * @return void
 	 *
 	 * @throws DoubleWritePathException When both ZGW + StUF are write-enabled.
+	 *
+	 * @orphan-auth exclude guards against two write paths being active for one gemeente at once. It
+	 * throws rather than returning, so wiring it changes behaviour on a live
+	 * ZGW/StUF coexistence path and is a decision, not a refactor. Pending in
+	 * pipelinq#764.
 	 */
 	public function validateWritePath(string $municipalityCode): void {
 		if ($municipalityCode === '') {
