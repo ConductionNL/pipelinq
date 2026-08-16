@@ -97,6 +97,16 @@ class KccWerkplekService {
 	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
+		// Availability established before the reach (ADR-083). The container
+		// lookup below names OpenRegister only as a string, so without this the
+		// dependency is declared nowhere a reader or a gate can see it — and a
+		// missing app is indistinguishable from a container that failed for
+		// some other reason. See pipelinq#1160: the ADR's preferred shape is a
+		// typed constructor property, which is a larger change than this one.
+		if (class_exists('\OCA\OpenRegister\Service\ObjectService') === false) {
+			throw new RuntimeException('The OpenRegister app is not installed');
+		}
+
 		try {
 			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 		} catch (\Throwable $e) {

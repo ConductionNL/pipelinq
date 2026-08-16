@@ -1446,6 +1446,14 @@ class PosTransactionService {
 	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
 	 */
 	private function getObjectService(): object {
+		// Availability established before the reach (ADR-083) — the lookup names
+		// OpenRegister only as a string, so without this the dependency is
+		// declared nowhere a reader or a gate can see it. Converting to a typed
+		// constructor property is the ADR's preferred shape: pipelinq#1160.
+		if (class_exists('\OCA\OpenRegister\Service\ObjectService') === false) {
+			throw new RuntimeException('The OpenRegister app is not installed');
+		}
+
 		try {
 			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (\Throwable $e) {
