@@ -411,6 +411,9 @@ export default {
 		 * covering every vendor connector — Twilio/MessageBird/CM.com/WhatsApp
 		 * included); the Source schema has no distinct `email`/`sms` channel
 		 * value, so filtering on one would silently return zero results again.
+		 *
+		 * @spec exclude bug fix restoring already-intended behaviour after
+		 * OpenConnector's API moved — no new requirement introduced
 		 */
 		async loadConnectorSources() {
 			this.connectorSourcesLoading = true
@@ -419,7 +422,7 @@ export default {
 				const { data } = await axios.get(
 					generateUrl(
 						'/apps/openregister/api/objects/openconnector/source'
-						+ '?type=api&isEnabled=true&_limit=200',
+							+ '?type=api&isEnabled=true&_limit=200',
 					),
 				)
 				const list = data?.results || data?.data || data || []
