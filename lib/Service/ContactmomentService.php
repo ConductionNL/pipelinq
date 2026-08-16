@@ -28,9 +28,9 @@ use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
 use OCP\IGroupManager;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for contactmoment business operations.
@@ -52,33 +52,30 @@ class ContactmomentService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param TicketService $ticketService The unified ticket resolver.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private TicketService $ticketService,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
 	/**
 	 * Get the OpenRegister ObjectService.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService The object service.
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface The object service.
 	 *
 	 * @throws \RuntimeException If OpenRegister is not available.
 	 * @spec   openspec/changes/reverse-2026-05-26-be-contact-comms/tasks.md#task-2
 	 */
-	public function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Exception $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+	public function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**
@@ -226,7 +223,6 @@ class ContactmomentService {
 	 */
 	private function objectServiceLoose(): ?object {
 		try {
-			$service = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -287,14 +283,13 @@ class ContactmomentService {
 		// field. Any caller with OR write-access can stamp `assignee: victim_uid`;
 		// `createdBy` is protected by the platform and cannot be overwritten via
 		// the public API.
-		$createdBy = '';
-		if (is_array($object) === true) {
-			$createdBy = ($object['createdBy'] ?? '');
-		}
-
-		if (is_array($object) === false) {
-			$createdBy = ($object->getCreatedBy() ?? '');
-		}
+		// ObjectServiceInterface::find() returns an ObjectEntityInterface, so the
+		// array arm was dead and getCreatedBy() is not on the contract — the
+		// value lives in the payload. Both facts came from phpstan:
+		//   Call to an undefined method ObjectEntityInterface::getCreatedBy()
+		//   Call to is_array() with ObjectEntityInterface will always evaluate to false
+		$payload = $object->getObject();
+		$createdBy = (string)($payload['createdBy'] ?? '');
 
 		$isCreator = ($createdBy !== '' && $createdBy === $currentUserId);
 		$isAdmin = $this->groupManager->isAdmin($currentUserId);

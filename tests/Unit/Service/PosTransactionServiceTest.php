@@ -77,8 +77,7 @@ class PosTransactionServiceTest extends TestCase {
 			groupManager: $this->groupManager,
 		);
 
-		$this->service = new PosTransactionService(
-			$container,
+		$this->service = new PosTransactionService($container,
 			$this->appConfig,
 			$policy,
 			$logger,
@@ -271,8 +270,7 @@ class PosTransactionServiceTest extends TestCase {
 		$this->assertSame($excl['subtotal'], $incl['subtotal']);
 		$this->assertSame($excl['totalTax'], $incl['totalTax']);
 		$this->assertSame($excl['total'], $incl['total']);
-		$this->assertSame(
-			$excl['taxBreakdown'][0]['base'],
+		$this->assertSame($excl['taxBreakdown'][0]['base'],
 			$incl['taxBreakdown'][0]['base']
 		);
 	}//end testInclusiveAndExclusiveAgreeOnTaxSplit()

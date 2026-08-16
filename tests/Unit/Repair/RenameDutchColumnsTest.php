@@ -155,8 +155,7 @@ final class RenameDutchColumnsTest extends TestCase {
 		}
 
 		$target = (string)array_key_first($ambiguous);
-		self::assertTrue(
-			$this->call('hasCollision', [$ambiguous[$target], $target]),
+		self::assertTrue($this->call('hasCollision', [$ambiguous[$target], $target]),
 			'two sources for one destination must be refused, not merged'
 		);
 	}//end testRefusesAmbiguousRename()

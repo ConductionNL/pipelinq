@@ -247,8 +247,7 @@ class ExportWorkerJobTest extends TestCase {
 		$this->execution
 			->expects($this->exactly(2))
 			->method('executeRun')
-			->willReturnOnConsecutiveCalls(
-				$this->throwException(new RuntimeException('boom')),
+			->willReturnOnConsecutiveCalls($this->throwException(new RuntimeException('boom')),
 				['id' => 'run-2', 'status' => 'succeeded'],
 			);
 

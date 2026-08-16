@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\PointsRuleEngine;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -39,9 +40,9 @@ class PointsRuleEngineTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$this->engine = new PointsRuleEngine(
-			container: $container,
 			appConfig: $appConfig,
-			logger: $logger
+			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end setUp()
 
@@ -86,14 +87,12 @@ class PointsRuleEngineTest extends TestCase {
 	}//end testCalculatePointsSteppedFormula()
 
 	public function testEvaluateConditionEmptyConditionMatches(): void {
-		$this->assertTrue(
-			$this->engine->evaluateCondition(condition: [], context: ['category' => 'food'])
+		$this->assertTrue($this->engine->evaluateCondition(condition: [], context: ['category' => 'food'])
 		);
 	}//end testEvaluateConditionEmptyConditionMatches()
 
 	public function testEvaluateConditionExcludeCategoryFiltersOut(): void {
-		$this->assertFalse(
-			$this->engine->evaluateCondition(
+		$this->assertFalse($this->engine->evaluateCondition(
 				condition: ['excludeCategory' => ['gift-card']],
 				context: ['category' => 'gift-card']
 			)
@@ -101,8 +100,7 @@ class PointsRuleEngineTest extends TestCase {
 	}//end testEvaluateConditionExcludeCategoryFiltersOut()
 
 	public function testEvaluateConditionIncludeCategoryMatches(): void {
-		$this->assertTrue(
-			$this->engine->evaluateCondition(
+		$this->assertTrue($this->engine->evaluateCondition(
 				condition: ['category' => ['food', 'drink']],
 				context: ['category' => 'food']
 			)
@@ -111,14 +109,12 @@ class PointsRuleEngineTest extends TestCase {
 
 	public function testEvaluateConditionDayOfWeek(): void {
 		// Pick a known Tuesday.
-		$this->assertTrue(
-			$this->engine->evaluateCondition(
+		$this->assertTrue($this->engine->evaluateCondition(
 				condition: ['dayOfWeek' => 'tuesday'],
 				context: ['timestamp' => '2026-05-19T10:00:00Z']
 			)
 		);
-		$this->assertFalse(
-			$this->engine->evaluateCondition(
+		$this->assertFalse($this->engine->evaluateCondition(
 				condition: ['dayOfWeek' => 'tuesday'],
 				context: ['timestamp' => '2026-05-20T10:00:00Z'] // Wednesday
 			)
@@ -126,14 +122,12 @@ class PointsRuleEngineTest extends TestCase {
 	}//end testEvaluateConditionDayOfWeek()
 
 	public function testEvaluateConditionTimeRange(): void {
-		$this->assertTrue(
-			$this->engine->evaluateCondition(
+		$this->assertTrue($this->engine->evaluateCondition(
 				condition: ['timeRange' => '14:00-18:00'],
 				context: ['timestamp' => '2026-05-19T15:00:00Z']
 			)
 		);
-		$this->assertFalse(
-			$this->engine->evaluateCondition(
+		$this->assertFalse($this->engine->evaluateCondition(
 				condition: ['timeRange' => '14:00-18:00'],
 				context: ['timestamp' => '2026-05-19T13:00:00Z']
 			)

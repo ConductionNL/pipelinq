@@ -103,8 +103,7 @@ class BrokerHttpTransportTest extends TestCase {
 		$strip = (new ReflectionClass($transport))->getMethod('stripBrokerOwnedHeaders');
 		$strip->setAccessible(true);
 
-		$out = $strip->invoke(
-			$transport,
+		$out = $strip->invoke($transport,
 			[
 				'Content-Type' => 'application/json',
 				'Authorization' => 'Bearer ' . AbstractPaymentAdapter::BROKER_MANAGED_SECRET,

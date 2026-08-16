@@ -183,8 +183,7 @@ class IngestProductVendorMasterTest extends TestCase {
 		$vcard = $this->createMock(ContactVcardService::class);
 		$vcard->method('syncToContacts')->willReturn('');
 
-		return new IngestProductVendorMaster(
-			$this->createMock(IAppManager::class),
+		return new IngestProductVendorMaster($this->createMock(IAppManager::class),
 			$appConfig,
 			$vcard,
 			$container,

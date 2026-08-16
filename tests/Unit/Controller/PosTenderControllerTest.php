@@ -78,8 +78,7 @@ class PosTenderControllerTest extends TestCase {
 		$this->service = $this->createMock(PosTenderService::class);
 		$this->session = $this->createMock(IUserSession::class);
 
-		$this->controller = new PosTenderController(
-			$this->request,
+		$this->controller = new PosTenderController($this->request,
 			$this->service,
 			$this->session,
 			$this->createMock(LoggerInterface::class),

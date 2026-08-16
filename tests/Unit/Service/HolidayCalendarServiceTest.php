@@ -60,8 +60,7 @@ class HolidayCalendarServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testKoningsdagIsHoliday(): void {
-		$this->assertTrue(
-			$this->service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-04-27'))
+		$this->assertTrue($this->service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-04-27'))
 		);
 	}//end testKoningsdagIsHoliday()
 
@@ -71,8 +70,7 @@ class HolidayCalendarServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testRegularDayIsNotHoliday(): void {
-		$this->assertFalse(
-			$this->service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-05-13'))
+		$this->assertFalse($this->service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-05-13'))
 		);
 	}//end testRegularDayIsNotHoliday()
 
@@ -94,8 +92,7 @@ class HolidayCalendarServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTweedePaasdag2026(): void {
-		$this->assertTrue(
-			$this->service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-04-06'))
+		$this->assertTrue($this->service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-04-06'))
 		);
 	}//end testTweedePaasdag2026()
 
@@ -106,12 +103,10 @@ class HolidayCalendarServiceTest extends TestCase {
 	 */
 	public function testBevrijdingsdagLustrum(): void {
 		// 2025 is divisible by 5 → holiday.
-		$this->assertTrue(
-			$this->service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2025-05-05'))
+		$this->assertTrue($this->service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2025-05-05'))
 		);
 		// 2026 is NOT divisible by 5 → not a holiday by default.
-		$this->assertFalse(
-			$this->service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-05-05'))
+		$this->assertFalse($this->service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-05-05'))
 		);
 	}//end testBevrijdingsdagLustrum()
 
@@ -131,8 +126,7 @@ class HolidayCalendarServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCompositeCalendarUnion(): void {
-		$this->assertTrue(
-			$this->service->isHoliday('nl-feestdagen-rijksoverheid,be-feestdagen', new DateTimeImmutable('2026-07-21'))
+		$this->assertTrue($this->service->isHoliday('nl-feestdagen-rijksoverheid,be-feestdagen', new DateTimeImmutable('2026-07-21'))
 		);
 	}//end testCompositeCalendarUnion()
 
@@ -155,8 +149,7 @@ class HolidayCalendarServiceTest extends TestCase {
 		);
 
 		$service = new HolidayCalendarService($appConfig, $logger);
-		$this->assertTrue(
-			$service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-05-05'))
+		$this->assertTrue($service->isHoliday('nl-feestdagen-rijksoverheid', new DateTimeImmutable('2026-05-05'))
 		);
 	}//end testLustrumTenantOverride()
 }//end class

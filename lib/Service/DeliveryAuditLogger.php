@@ -35,9 +35,9 @@ use DateTimeInterface;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Append-only audit logger.
@@ -55,14 +55,13 @@ class DeliveryAuditLogger {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -358,16 +357,14 @@ class DeliveryAuditLogger {
 	/**
 	 * Resolve OR ObjectService.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface
 	 *
 	 * @throws RuntimeException If OR is unavailable.
 	 */
-	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister service unavailable.', 0, $e);
-		}
+	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

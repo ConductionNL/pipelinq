@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Controller\ExportJobController;
@@ -159,8 +160,7 @@ class ExportJobControllerTest extends TestCase {
 		$this->policy = $this->createMock(ExportAccessPolicy::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
-		$this->controller = new ExportJobController(
-			$this->request,
+		$this->controller = new ExportJobController($this->request,
 			$this->jobs,
 			$this->destinations,
 			$this->policy,
@@ -206,12 +206,12 @@ class ExportJobControllerTest extends TestCase {
 	 * Build a controller backed by the REAL export services and a mocked
 	 * OpenRegister ObjectService.
 	 *
-	 * @param ObjectService&MockObject $objects The mocked object service.
+	 * @param ObjectServiceInterface&MockObject $objects The mocked object service.
 	 * @param array<string, mixed> $body The request body parameters.
 	 *
 	 * @return ExportJobController The wired controller.
 	 */
-	private function wiredController(ObjectService $objects, array $body = []): ExportJobController {
+	private function wiredController(ObjectServiceInterface $objects, array $body = []): ExportJobController {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($objects): object {
@@ -237,8 +237,7 @@ class ExportJobControllerTest extends TestCase {
 
 		// A sink registry with no adapters: testConnection() then records an
 		// "invalid" status without opening a network connection.
-		$destinationService = new ExportDestinationService(
-			$container,
+		$destinationService = new ExportDestinationService($container,
 			$appConfig,
 			new ExportSinkRegistry([]),
 			$this->createMock(LoggerInterface::class)
@@ -247,8 +246,7 @@ class ExportJobControllerTest extends TestCase {
 		$data = $this->createMock(ExportDataService::class);
 		$data->method('schemaExists')->willReturn(true);
 
-		$jobService = new ExportJobService(
-			$container,
+		$jobService = new ExportJobService($container,
 			$appConfig,
 			$destinationService,
 			$data,
@@ -267,8 +265,7 @@ class ExportJobControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('analyst');
 		$session->method('getUser')->willReturn($user);
 
-		return new ExportJobController(
-			$request,
+		return new ExportJobController($request,
 			$jobService,
 			$destinationService,
 			$policy,
@@ -836,7 +833,7 @@ class ExportJobControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testUpdateJobPreservesFieldsTheClientDidNotResend(): void {
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(self::STORED_JOB);
 
 		$persisted = null;
@@ -873,7 +870,7 @@ class ExportJobControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testUpdateDestinationPreservesFieldsTheClientDidNotResend(): void {
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(self::STORED_DESTINATION);
 
 		$writes = [];
@@ -906,7 +903,7 @@ class ExportJobControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateDestinationDoesNotPersistClientSuppliedCredentials(): void {
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(self::STORED_DESTINATION);
 
 		$writes = [];
@@ -959,7 +956,7 @@ class ExportJobControllerTest extends TestCase {
 			. '- see coordinator report'
 		);
 
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(self::STORED_DESTINATION);
 
 		$writes = [];
@@ -1000,7 +997,7 @@ class ExportJobControllerTest extends TestCase {
 	public function testDeleteJobRemovesItFromTheList(): void {
 		$live = [self::STORED_JOB];
 
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(self::STORED_JOB);
 		$objects->expects($this->once())
 			->method('deleteObject')

@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\RapportageService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -166,7 +167,9 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetStageValuesAggregatesCountAndValue(): void {
-		$service = new RapportageService($this->container, $this->appConfig, $this->logger);
+		$service = new RapportageService($this->appConfig, $this->logger,
+			objectService: $default,
+		);
 		$rows = $service->getStageValues();
 		$byStage = [];
 		foreach ($rows as $row) {
@@ -191,7 +194,9 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetSourcePerformanceComputesConversion(): void {
-		$service = new RapportageService($this->container, $this->appConfig, $this->logger);
+		$service = new RapportageService($this->appConfig, $this->logger,
+			objectService: $default,
+		);
 		$rows = $service->getSourcePerformance();
 		$bySrc = [];
 		foreach ($rows as $row) {
@@ -217,7 +222,9 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetWinLossAnalysisComputesWinRate(): void {
-		$service = new RapportageService($this->container, $this->appConfig, $this->logger);
+		$service = new RapportageService($this->appConfig, $this->logger,
+			objectService: $default,
+		);
 		$winLoss = $service->getWinLossAnalysis();
 
 		$this->assertSame(1, $winLoss['wonCount']);
@@ -236,7 +243,9 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetAgingBucketsDistributesOpenLeads(): void {
-		$service = new RapportageService($this->container, $this->appConfig, $this->logger);
+		$service = new RapportageService($this->appConfig, $this->logger,
+			objectService: $default,
+		);
 		$rows = $service->getAgingBuckets();
 		$byBucket = [];
 		foreach ($rows as $row) {

@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
@@ -94,9 +95,9 @@ class TicketServiceTest extends TestCase {
 	 */
 	private function buildService(): TicketService {
 		return new TicketService(
-			container: $this->container,
 			appConfig: $this->appConfig,
 			logger: $this->logger,
+			objectService: $objectService,
 		);
 	}//end buildService()
 
@@ -117,10 +118,10 @@ class TicketServiceTest extends TestCase {
 	/**
 	 * Build an ObjectService mock and wire it as the container's resolved service.
 	 *
-	 * @return ObjectService&MockObject
+	 * @return ObjectServiceInterface&MockObject
 	 */
 	private function mockObjectService(): ObjectService {
-		$objectService = $this->createMock(originalClassName: ObjectService::class);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->container->method('get')->willReturn($objectService);
 
 		return $objectService;

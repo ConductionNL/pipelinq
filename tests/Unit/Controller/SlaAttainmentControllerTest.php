@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\SlaAttainmentController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SlaAttainmentService;
@@ -231,15 +232,15 @@ class SlaAttainmentControllerTest extends TestCase {
 		return new SlaAttainmentController(
 			request: $this->request,
 			attainment: new SlaAttainmentService(
-				container: $container,
 				appConfig: $appConfig,
 				ticketService: new TicketService(
-					container: $container,
 					appConfig: $appConfig,
 					logger: $logger,
-				),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 				logger: $logger,
-			),
+			container: $this->createMock(ContainerInterface::class),
+		),
 			userSession: $this->userSession,
 			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 			logger: $logger,

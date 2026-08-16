@@ -56,7 +56,6 @@ class CcvAdapterTest extends TestCase {
 				'terminalId' => 'kassa-01',
 				'merchantId' => 'merchant-1',
 			],
-			logger: $logger,
 			http: $transport
 		);
 

@@ -93,8 +93,7 @@ class FakePortalObjectRepository extends PortalObjectRepository {
 			return $rows;
 		}
 
-		return array_values(array_filter(
-			$rows,
+		return array_values(array_filter($rows,
 			static function (array $row) use ($filters): bool {
 				foreach ($filters as $key => $value) {
 					if (($row[$key] ?? null) !== $value) {

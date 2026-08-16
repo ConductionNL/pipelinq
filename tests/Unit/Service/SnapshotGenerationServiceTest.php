@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ExchangeRateService;
 use OCA\Pipelinq\Service\FiscalPeriodService;
 use OCA\Pipelinq\Service\ForecastRollupService;
@@ -65,7 +66,6 @@ class SnapshotGenerationServiceTest extends TestCase {
 		$quota->method('getQuotaAmount')->willReturn(null);
 
 		$this->service = new SnapshotGenerationService(
-			container: $this->createMock(ContainerInterface::class),
 			appConfig: $appConfig,
 			groupManager: $this->createMock(IGroupManager::class),
 			rollup: $rollup,
@@ -73,7 +73,8 @@ class SnapshotGenerationServiceTest extends TestCase {
 			period: new FiscalPeriodService(),
 			quotaService: $quota,
 			notifier: $this->createMock(NotificationService::class),
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			objectService: $d,
 		);
 	}//end setUp()
 

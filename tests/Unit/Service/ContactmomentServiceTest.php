@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IGroupManager;
@@ -80,11 +81,10 @@ class ContactmomentServiceTest extends TestCase {
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new ContactmomentService(
-			$this->container,
-			$this->ticketService,
+		$this->service = new ContactmomentService($this->ticketService,
 			$this->groupManager,
 			$this->logger,
+			objectService: $objectService,
 		);
 	}//end setUp()
 
@@ -241,8 +241,7 @@ class ContactmomentServiceTest extends TestCase {
 		$this->ticketService->method('isConfigured')->willReturn(false);
 		$this->container->expects($this->never())->method('get');
 
-		$this->assertNull(
-			$this->service->recordOutboundMessage(
+		$this->assertNull($this->service->recordOutboundMessage(
 				channel: 'sms',
 				subject: 'Outbound SMS',
 				summary: 'Body',

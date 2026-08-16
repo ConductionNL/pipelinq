@@ -56,8 +56,7 @@ class ProspectSettingsControllerTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$this->icpConfig = $this->createMock(IcpConfigService::class);
 
-		$this->controller = new ProspectSettingsController(
-			$request,
+		$this->controller = new ProspectSettingsController($request,
 			$container,
 			$appManager,
 			$this->icpConfig,
@@ -94,8 +93,7 @@ class ProspectSettingsControllerTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$appManager = $this->createMock(IAppManager::class);
 
-		$controller = new ProspectSettingsController(
-			$request, $container, $appManager, $this->icpConfig
+		$controller = new ProspectSettingsController($request, $container, $appManager, $this->icpConfig
 		);
 
 		$response = $controller->update();
@@ -119,8 +117,7 @@ class ProspectSettingsControllerTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$appManager = $this->createMock(IAppManager::class);
 
-		$controller = new ProspectSettingsController(
-			$request, $container, $appManager, $this->icpConfig
+		$controller = new ProspectSettingsController($request, $container, $appManager, $this->icpConfig
 		);
 
 		$response = $controller->update();

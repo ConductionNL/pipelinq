@@ -132,8 +132,7 @@ class EmailMatchJobTest extends TestCase {
 
 		$service->expects($this->once())
 			->method('writeStatus')
-			->with(
-				$this->equalTo('alice'),
+			->with($this->equalTo('alice'),
 				$this->equalTo(0),
 				$this->equalTo(0),
 				$this->equalTo('Match run failed')

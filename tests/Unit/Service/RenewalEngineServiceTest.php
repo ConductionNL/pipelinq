@@ -103,8 +103,7 @@ class RenewalEngineServiceTest extends TestCase {
 		// Real ContractService wired to the same fake OR, so saves land in $os too.
 		$contractService = new ContractService($appConfig, $container, $this->createMock(LoggerInterface::class));
 
-		return new RenewalEngineService(
-			$appConfig,
+		return new RenewalEngineService($appConfig,
 			$container,
 			$contractService,
 			$this->createMock(LoggerInterface::class),

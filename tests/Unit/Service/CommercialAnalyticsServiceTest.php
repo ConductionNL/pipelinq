@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
@@ -98,10 +99,10 @@ class CommercialAnalyticsServiceTest extends TestCase {
 		$ticketService->method('findByType')->willReturn([]);
 
 		return new AnalyticsService(
-			container: $container,
 			appConfig: $appConfig,
 			logger: $logger,
-			ticketService: $ticketService
+			ticketService: $ticketService,
+			objectService: $objectService,
 		);
 	}
 

@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\AnalyticsController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AnalyticsService;
@@ -384,14 +385,13 @@ class AnalyticsControllerTest extends TestCase {
 		return new AnalyticsController(
 			request: $this->request,
 			analyticsService: new AnalyticsService(
-				container: $container,
 				appConfig: $appConfig,
 				logger: $this->logger,
 				ticketService: new TicketService(
-					container: $container,
 					appConfig: $appConfig,
 					logger: $this->logger,
-				),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		),
 			),
 			userSession: $this->userSession,
 			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),

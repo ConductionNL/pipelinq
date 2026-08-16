@@ -29,8 +29,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Read-aggregation service that produces a ranked shortlist of agents for an
@@ -65,15 +65,14 @@ class RoutingService {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container (for OpenRegister ObjectService).
 	 * @param TicketService $ticketService The unified ticket resolver.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private ContainerInterface $container,
 		private TicketService $ticketService,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -456,6 +455,6 @@ class RoutingService {
 	 * @return object The object service.
 	 */
 	private function getObjectService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

@@ -179,8 +179,7 @@ class PortalDocumentControllerTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn('fixed-per-instance-signing-key');
 
-		return new DocumentSigningService(
-			$appConfig,
+		return new DocumentSigningService($appConfig,
 			$this->createMock(ISecureRandom::class),
 			$this->timeFactory($now)
 		);
@@ -208,8 +207,7 @@ class PortalDocumentControllerTest extends TestCase {
 
 		$scope = new PortalScopeResolver($this->repository, $delegations);
 
-		return new PortalDocumentController(
-			$request,
+		return new PortalDocumentController($request,
 			$this->guard,
 			$this->createMock(LoggerInterface::class),
 			($signing ?? $this->signingService()),

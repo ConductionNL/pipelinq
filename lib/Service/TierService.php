@@ -32,9 +32,9 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\EventDispatcher\GenericEvent;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Tier classification and benefits service.
@@ -48,18 +48,17 @@ class TierService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoyaltyAccountService $accountService The loyalty account service.
 	 * @param IEventDispatcher $eventDispatcher The event dispatcher.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoyaltyAccountService $accountService,
 		private IEventDispatcher $eventDispatcher,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -442,10 +441,8 @@ class TierService {
 	 * @return object The object service.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

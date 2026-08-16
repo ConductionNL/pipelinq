@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -131,13 +132,13 @@ class AppointmentEmailServiceTest extends TestCase {
 	 * @return AppointmentEmailService
 	 */
 	private function buildService(): AppointmentEmailService {
-		return new AppointmentEmailService(
-			$this->container,
+		return new AppointmentEmailService($this->container,
 			$this->appConfig,
 			$this->mailer,
 			$this->urlGenerator,
 			$this->l10n,
 			$this->logger,
+			objectService: $default,
 		);
 	}//end buildService()
 

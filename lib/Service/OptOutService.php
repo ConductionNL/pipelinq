@@ -28,10 +28,10 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Opt-out lookup + recording service.
@@ -46,14 +46,13 @@ class OptOutService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (OR lookup lazy).
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -287,10 +286,8 @@ class OptOutService {
 	 * @throws RuntimeException When OR is not available.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

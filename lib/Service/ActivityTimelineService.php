@@ -42,10 +42,10 @@ use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Aggregates CRM activity data from multiple OpenRegister schemas.
@@ -76,7 +76,6 @@ class ActivityTimelineService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (used to lazily fetch ObjectService).
 	 * @param IAppConfig $appConfig The app config service.
 	 * @param IUserSession $userSession The current user session.
 	 * @param LoggerInterface $logger The logger.
@@ -85,11 +84,11 @@ class ActivityTimelineService {
 	 *                                     `ticketType=contactmoment`, not their own schema.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
 		private TicketService $ticketService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -101,11 +100,9 @@ class ActivityTimelineService {
 	 * @throws \RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

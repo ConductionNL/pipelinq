@@ -111,8 +111,7 @@ class InvoiceSequenceServiceTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$appConfig = $this->createMock(IAppConfig::class);
-		$service = new InMemoryInvoiceSequenceService(
-			$this->createMock(IDBConnection::class),
+		$service = new InMemoryInvoiceSequenceService($this->createMock(IDBConnection::class),
 			$appConfig,
 			$this->createMock(LoggerInterface::class)
 		);

@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\DemoSeedService;
@@ -112,9 +113,9 @@ class DemoSeedServiceTest extends TestCase {
 	/**
 	 * Mocked OpenRegister ObjectService.
 	 *
-	 * @var ObjectService&MockObject
+	 * @var ObjectServiceInterface&MockObject
 	 */
-	private ObjectService $objectService;
+	private ObjectServiceInterface $objectService;
 
 	/**
 	 * Mocked contact-first identity provisioner.
@@ -147,7 +148,7 @@ class DemoSeedServiceTest extends TestCase {
 
 		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->container = $this->createMock(ContainerInterface::class);
-		$this->objectService = $this->createMock(ObjectService::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->contactVcardService = $this->createMock(ContactVcardService::class);
 		$this->ticketService = $this->createMock(TicketService::class);
 
@@ -443,8 +444,7 @@ class DemoSeedServiceTest extends TestCase {
 		// The parent-request link is written as parentTicket, pointing at a
 		// seeded request ticket.
 		$requestUuids = array_column($requests, 'uuid');
-		$linked = array_filter(
-			$contactmomenten,
+		$linked = array_filter($contactmomenten,
 			static fn (array $p): bool => isset($p['data']['parentTicket'])
 		);
 		self::assertNotEmpty($linked);

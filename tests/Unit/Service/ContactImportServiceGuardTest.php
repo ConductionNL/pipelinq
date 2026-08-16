@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactDataBuilder;
 use OCA\Pipelinq\Service\ContactImportService;
@@ -45,11 +46,11 @@ class ContactImportServiceGuardTest extends TestCase {
 	 * Build the service over a config map.
 	 *
 	 * @param array<string, string> $config The app-config contents.
-	 * @param ObjectService $object The OpenRegister ObjectService mock.
+	 * @param ObjectServiceInterface $object The OpenRegister ObjectService mock.
 	 *
 	 * @return ContactImportService
 	 */
-	private function buildService(array $config, ObjectService $object): ContactImportService {
+	private function buildService(array $config, ObjectServiceInterface $object): ContactImportService {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($object);
 
@@ -64,7 +65,9 @@ class ContactImportServiceGuardTest extends TestCase {
 		$builder->method('buildClientImportData')->willReturn(['name' => 'Acme']);
 		$builder->method('buildContactImportData')->willReturn(['name' => 'Alice']);
 
-		return new ContactImportService($appConfig, $container, $builder);
+		return new ContactImportService($appConfig, $builder,
+			objectService: $object,
+		);
 	}//end buildService()
 
 	/**
@@ -73,7 +76,7 @@ class ContactImportServiceGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testImportAsClientRefusesWithoutClientSchema(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->never())->method('saveObject');
 
 		$service = $this->buildService(['register' => 'reg-1'], $object);
@@ -88,7 +91,7 @@ class ContactImportServiceGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testImportAsContactRefusesWithoutContactSchema(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->never())->method('saveObject');
 
 		$service = $this->buildService(['register' => 'reg-1'], $object);
@@ -104,7 +107,7 @@ class ContactImportServiceGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testImportRefusesWithoutRegisterEvenWhenSchemaIsSet(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->never())->method('saveObject');
 
 		$service = $this->buildService(['client_schema' => 'sch-client'], $object);
@@ -120,7 +123,7 @@ class ContactImportServiceGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testConfiguredImportReachesOpenRegister(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->expects($this->once())->method('saveObject')->willReturn(['id' => 'obj-1']);
 
 		$service = $this->buildService(

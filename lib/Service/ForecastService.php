@@ -26,9 +26,9 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Forecast computation engine.
@@ -69,18 +69,17 @@ class ForecastService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param QuotaService $quotaService The quota service.
 	 * @param ForecastRollupService $rollup The pure roll-up math service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private QuotaService $quotaService,
 		private ForecastRollupService $rollup,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -405,10 +404,8 @@ class ForecastService {
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

@@ -47,8 +47,7 @@ class LoyaltyRegisterFragmentTest extends TestCase {
 			'giftCardTransaction',
 		];
 		foreach ($expected as $slug) {
-			$this->assertArrayHasKey(
-				$slug,
+			$this->assertArrayHasKey($slug,
 				$schemas,
 				"Missing loyalty schema: {$slug}"
 			);
@@ -57,8 +56,7 @@ class LoyaltyRegisterFragmentTest extends TestCase {
 		// Verify register registration.
 		$registers = $data['components']['registers']['pipelinq']['schemas'] ?? [];
 		foreach ($expected as $slug) {
-			$this->assertContains(
-				$slug,
+			$this->assertContains($slug,
 				$registers,
 				"Register 'pipelinq' must list schema: {$slug}"
 			);

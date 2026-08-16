@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\EligibilityService;
@@ -137,11 +138,11 @@ class EligibilityServiceTest extends TestCase {
 	 * same mock so the availability-intersection test exercises the genuine
 	 * composition path.
 	 *
-	 * @param ObjectService $objectService The mock.
+	 * @param ObjectServiceInterface $objectService The mock.
 	 *
 	 * @return EligibilityService
 	 */
-	private function buildService(ObjectService $objectService): EligibilityService {
+	private function buildService(ObjectServiceInterface $objectService): EligibilityService {
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
 
@@ -163,17 +164,17 @@ class EligibilityServiceTest extends TestCase {
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
 		$availability = new AvailabilityService(
-			container: $container,
 			appConfig: $appConfig,
 			cacheFactory: $cacheFactory,
-			logger: $logger
+			logger: $logger,
+			objectService: $objectService,
 		);
 
 		return new EligibilityService(
-			container: $container,
 			appConfig: $appConfig,
 			availabilityService: $availability,
-			logger: $logger
+			logger: $logger,
+			objectService: $objectService,
 		);
 	}//end buildService()
 
@@ -186,12 +187,12 @@ class EligibilityServiceTest extends TestCase {
 	 * In both cases args[0] is the id and the schema is in either args[2]
 	 * (stub) or args[4] (real OR).
 	 *
-	 * @param ObjectService $mock The mock to wire.
+	 * @param ObjectServiceInterface $mock The mock to wire.
 	 * @param array<string, array<string, mixed>> $bySchema Per-schema id->entity map.
 	 *
 	 * @return void
 	 */
-	private function wireFind(ObjectService $mock, array $bySchema): void {
+	private function wireFind(ObjectServiceInterface $mock, array $bySchema): void {
 		$mock->method('find')->willReturnCallback(
 			callback: static function (mixed ...$args) use ($bySchema): ?array {
 				$id = (string)($args[0] ?? '');
@@ -216,12 +217,12 @@ class EligibilityServiceTest extends TestCase {
 	 * Uses `mixed ...$args` for the same reason as {@see wireFind()}; the
 	 * first positional arg is the `$config` array in every signature.
 	 *
-	 * @param ObjectService $mock The mock to wire.
+	 * @param ObjectServiceInterface $mock The mock to wire.
 	 * @param array<string, array<int, array<string, mixed>>> $bySchema Per-schema row list.
 	 *
 	 * @return void
 	 */
-	private function wireFindAll(ObjectService $mock, array $bySchema): void {
+	private function wireFindAll(ObjectServiceInterface $mock, array $bySchema): void {
 		$mock->method('findAll')->willReturnCallback(
 			callback: static function (mixed ...$args) use ($bySchema): array {
 				$config = ($args[0] ?? []);
@@ -258,7 +259,7 @@ class EligibilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testEligibleResourcesExcludesUncertifiedForSkillRequiredService(): void {
-		$mock = $this->createMock(originalClassName: ObjectService::class);
+		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->wireFind(mock: $mock, bySchema: ['service' => ['svc-color' => self::SERVICE_COLOR_REQUIRED]]);
 		$this->wireFindAll(mock: $mock, bySchema: ['resource' => [self::RESOURCE_SARAH, self::RESOURCE_MIA, self::RESOURCE_TOM]]);
 
@@ -281,7 +282,7 @@ class EligibilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testResourceWithNoSkillsIsEligibleForNoSkillService(): void {
-		$mock = $this->createMock(originalClassName: ObjectService::class);
+		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->wireFind(mock: $mock, bySchema: ['service' => ['svc-trim' => self::SERVICE_NO_SKILL]]);
 		$this->wireFindAll(mock: $mock, bySchema: ['resource' => [self::RESOURCE_TOM]]);
 
@@ -300,7 +301,7 @@ class EligibilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testMultiStepServiceAppliesStepSpecificSkillFilters(): void {
-		$mock = $this->createMock(originalClassName: ObjectService::class);
+		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->wireFind(mock: $mock, bySchema: ['service' => ['svc-color-cut' => self::SERVICE_MULTISTEP]]);
 		$this->wireFindAll(mock: $mock, bySchema: ['resource' => [self::RESOURCE_SARAH, self::RESOURCE_MIA, self::RESOURCE_TOM]]);
 
@@ -336,7 +337,7 @@ class EligibilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testMatchesSkillRequirementsAppliesSubsetSemantics(): void {
-		$mock = $this->createMock(originalClassName: ObjectService::class);
+		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$service = $this->buildService(objectService: $mock);
 
 		$this->assertTrue(condition: $service->matchesSkillRequirements(resource: ['skills' => []], requiredSkills: []));
@@ -361,7 +362,7 @@ class EligibilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testEligibleResourcesForSlotExcludesUnavailableResources(): void {
-		$mock = $this->createMock(originalClassName: ObjectService::class);
+		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->wireFind(
 			mock: $mock,
 			bySchema: [
@@ -398,7 +399,7 @@ class EligibilityServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testEmptyAndUnknownServiceIdReturnsEmptyList(): void {
-		$mock = $this->createMock(originalClassName: ObjectService::class);
+		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->wireFind(mock: $mock, bySchema: ['service' => []]);
 		$this->wireFindAll(mock: $mock, bySchema: ['resource' => [self::RESOURCE_SARAH]]);
 

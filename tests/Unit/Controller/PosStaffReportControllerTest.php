@@ -75,8 +75,7 @@ class PosStaffReportControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$this->controller = new PosStaffReportController(
-			$this->createMock(IRequest::class),
+		$this->controller = new PosStaffReportController($this->createMock(IRequest::class),
 			$this->service,
 			$this->policy,
 			$this->session,

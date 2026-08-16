@@ -26,8 +26,8 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for syncing Pipelinq objects to Nextcloud Contacts as vCards.
@@ -50,7 +50,6 @@ class ContactVcardService {
 	 *
 	 * @param IContactsManager $contactsManager The contacts manager.
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container.
 	 * @param ContactVcardWriterService $writerService The vCard writer.
 	 * @param ContactVcardPropertyBuilder $propBuilder The property builder.
 	 * @param LoggerInterface $logger The logger.
@@ -59,11 +58,11 @@ class ContactVcardService {
 	public function __construct(
 		private IContactsManager $contactsManager,
 		private IAppConfig $appConfig,
-		private ContainerInterface $container,
 		private ContactVcardWriterService $writerService,
 		private ContactVcardPropertyBuilder $propBuilder,
 		private LoggerInterface $logger,
 		private RegisterResolverService $registerResolver,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -279,6 +278,6 @@ class ContactVcardService {
 	 * @return object The object service.
 	 */
 	private function getObjectService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

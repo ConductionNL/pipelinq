@@ -30,10 +30,10 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
 use OCP\IRequest;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Append-only audit-trail service for BSN bevragingen.
@@ -57,16 +57,15 @@ class BsnAuditService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (OR ObjectService is optional at boot).
 	 * @param IAppConfig $appConfig App config for register/schema resolution.
 	 * @param IRequest $request Request scope for IP / UA enrichment.
 	 * @param LoggerInterface $logger Logger (raw BSN MUST never appear here).
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IRequest $request,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -334,10 +333,8 @@ class BsnAuditService {
 	 * @throws RuntimeException If OR is unavailable.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

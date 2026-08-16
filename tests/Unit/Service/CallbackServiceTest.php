@@ -81,8 +81,7 @@ class CallbackServiceTest extends TestCase {
 		$this->user->method('getUID')->willReturn('agent-001');
 		$this->userSession->method('getUser')->willReturn($this->user);
 
-		$this->service = new CallbackService(
-			$this->groupManager,
+		$this->service = new CallbackService($this->groupManager,
 			$this->userSession,
 			$this->logger,
 		);

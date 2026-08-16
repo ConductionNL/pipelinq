@@ -23,8 +23,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for finding already-linked contact UIDs.
@@ -34,13 +34,12 @@ class ContactLinkedUidsService {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private ContainerInterface $container,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -141,6 +140,6 @@ class ContactLinkedUidsService {
 	 * @return object The object service.
 	 */
 	private function getObjectService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

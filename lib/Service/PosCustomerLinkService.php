@@ -43,10 +43,10 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Pipelinq contact lookup, attachment, history and consent sync for the POS.
@@ -103,14 +103,13 @@ class PosCustomerLinkService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OR lookup).
 	 * @param IAppConfig $appConfig The app config (register + schema IDs + admin settings).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -775,10 +774,8 @@ class PosCustomerLinkService {
 	 * @throws RuntimeException When OR is unavailable.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

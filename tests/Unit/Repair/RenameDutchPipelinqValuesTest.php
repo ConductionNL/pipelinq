@@ -132,8 +132,7 @@ final class RenameDutchPipelinqValuesTest extends TestCase {
 			$sources = array_keys($values);
 			foreach ($values as $old => $new) {
 				self::assertNotSame($old, $new, "`$old` on `$property` maps to itself");
-				self::assertNotContains(
-					$new,
+				self::assertNotContains($new,
 					$sources,
 					sprintf("target '%s' on '%s' is also a source, so map order would decide the result", $new, $property)
 				);

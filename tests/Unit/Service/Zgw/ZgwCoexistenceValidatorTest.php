@@ -133,8 +133,7 @@ class ZgwCoexistenceValidatorTest extends TestCase {
 	 * @return void
 	 */
 	public function testEmptyGemeenteCodeSkipsValidation(): void {
-		$validator = new ZgwCoexistenceValidator(
-			$this->createMock(ZgwRegisterAccess::class),
+		$validator = new ZgwCoexistenceValidator($this->createMock(ZgwRegisterAccess::class),
 			$this->createMock(LoggerInterface::class)
 		);
 		$validator->validateWritePath('');

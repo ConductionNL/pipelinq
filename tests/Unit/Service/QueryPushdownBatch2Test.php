@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\LoyaltyAccountService;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
 use OCA\Pipelinq\Service\LoyaltyReportingService;
@@ -114,11 +115,11 @@ class QueryPushdownBatch2Test extends TestCase {
 		}
 
 		$runner = new FakeAggregationRunner($rows);
-		$service = new PointsLedgerService(
-			$this->containerWithRunner($runner),
-			$this->appConfig(),
+		$service = new PointsLedgerService($this->appConfig(),
 			$this->createMock(LoyaltyAccountService::class),
 			$this->createMock(LoggerInterface::class),
+			objectService: $key,
+			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);
 
 		self::assertSame(120, $phpBalance);
@@ -133,11 +134,11 @@ class QueryPushdownBatch2Test extends TestCase {
 	 */
 	public function testGetAccountBalanceEmptyIsZero(): void {
 		$runner = new FakeAggregationRunner([]);
-		$service = new PointsLedgerService(
-			$this->containerWithRunner($runner),
-			$this->appConfig(),
+		$service = new PointsLedgerService($this->appConfig(),
 			$this->createMock(LoyaltyAccountService::class),
 			$this->createMock(LoggerInterface::class),
+			objectService: $key,
+			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);
 
 		self::assertSame(0, $service->getAccountBalance(accountId: 'nobody'));
@@ -178,13 +179,13 @@ class QueryPushdownBatch2Test extends TestCase {
 		}
 
 		$runner = new FakeAggregationRunner($accounts);
-		$service = new LoyaltyReportingService(
-			$this->containerWithRunner($runner),
-			$this->appConfig(),
+		$service = new LoyaltyReportingService($this->appConfig(),
 			$this->createMock(LoyaltyAccountService::class),
 			$this->createMock(PointsLedgerService::class),
 			$this->createMock(LoyaltyProgrammeService::class),
 			$this->createMock(LoggerInterface::class),
+			objectService: $key,
+			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);
 
 		$report = $service->getTierReport(programmeId: 'p1');
@@ -249,11 +250,11 @@ class QueryPushdownBatch2Test extends TestCase {
 		);
 
 		$runner = new FakeAggregationRunner($rows);
-		$service = new PosStaffReportService(
-			$this->containerWithRunner($runner),
-			$this->appConfig(),
+		$service = new PosStaffReportService($this->appConfig(),
 			$staffService,
 			$this->createMock(LoggerInterface::class),
+			objectService: $key,
+			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);
 
 		$report = $service->staffSalesReport();

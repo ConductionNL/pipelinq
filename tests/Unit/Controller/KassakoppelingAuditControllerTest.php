@@ -100,8 +100,7 @@ class KassakoppelingAuditControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(fn (string $text): string => $text);
 
-		$this->controller = new KassakoppelingAuditController(
-			$this->request,
+		$this->controller = new KassakoppelingAuditController($this->request,
 			$this->service,
 			$this->userSession,
 			$this->groupManager,

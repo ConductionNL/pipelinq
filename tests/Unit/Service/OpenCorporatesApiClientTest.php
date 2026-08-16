@@ -122,8 +122,7 @@ class OpenCorporatesApiClientTest extends TestCase {
 		$clientService = $this->createMock(IClientService::class);
 		$clientService->method('newClient')->willReturn($httpClient);
 
-		$client = new OpenCorporatesApiClient(
-			$clientService,
+		$client = new OpenCorporatesApiClient($clientService,
 			$this->appConfigMock(),
 			$this->createMock(LoggerInterface::class),
 			new OpenCorporatesResultMapper(),
@@ -170,8 +169,7 @@ class OpenCorporatesApiClientTest extends TestCase {
 		$clientService = $this->createMock(IClientService::class);
 		$clientService->method('newClient')->willReturn($httpClient);
 
-		$client = new OpenCorporatesApiClient(
-			$clientService,
+		$client = new OpenCorporatesApiClient($clientService,
 			$this->appConfigMock(),
 			$this->createMock(LoggerInterface::class),
 			new OpenCorporatesResultMapper(),

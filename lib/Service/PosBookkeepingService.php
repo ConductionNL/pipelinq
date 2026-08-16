@@ -57,9 +57,10 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Service\WebhookService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for the POS end-of-day pipeline + registry-mediated journal raise.
@@ -129,18 +130,18 @@ class PosBookkeepingService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param IMailer $mailer The mailer (alert dispatch).
 	 * @param PosAccessPolicy $policy The shared POS access policy.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IMailer $mailer,
 		private PosAccessPolicy $policy,
 		private LoggerInterface $logger,
+		private readonly WebhookService $webhookService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -661,9 +662,8 @@ class PosBookkeepingService {
 	 */
 	private function dispatch(string $eventName, array $payload): bool {
 		try {
-			$webhookService = $this->container->get('OCA\OpenRegister\Service\WebhookService');
 			$event = new Event();
-			$webhookService->dispatchEvent(
+			$this->webhookService->dispatchEvent(
 				_event: $event,
 				eventName: $eventName,
 				payload: $payload
@@ -906,11 +906,9 @@ class PosBookkeepingService {
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

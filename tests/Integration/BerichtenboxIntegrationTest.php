@@ -47,8 +47,7 @@ class BerichtenboxIntegrationTest extends TestCase {
 	 * @return LogiusConnector
 	 */
 	private function buildConnector(): LogiusConnector {
-		return new LogiusConnector(
-			$this->createMock(IClientService::class),
+		return new LogiusConnector($this->createMock(IClientService::class),
 			$this->createMock(IAppConfig::class),
 			$this->createMock(LoggerInterface::class)
 		);

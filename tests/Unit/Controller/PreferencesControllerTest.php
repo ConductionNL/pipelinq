@@ -62,8 +62,7 @@ class PreferencesControllerTest extends TestCase {
 		$this->config = $this->createMock(IConfig::class);
 		$this->session = $this->createMock(IUserSession::class);
 
-		$this->controller = new PreferencesController(
-			$this->createMock(IRequest::class),
+		$this->controller = new PreferencesController($this->createMock(IRequest::class),
 			$this->config,
 			$this->session,
 		);

@@ -104,8 +104,7 @@ class Customer360ControllerTest extends TestCase {
 			$summaryService->method('getSummary')->willReturn($summaryOrThrow ?? []);
 		}
 
-		return new Customer360Controller(
-			$request,
+		return new Customer360Controller($request,
 			$summaryService,
 			$userSession,
 			$appConfig,
@@ -202,8 +201,7 @@ class Customer360ControllerTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->once())
 			->method('info')
-			->with(
-				$this->stringContains('Customer 360 accessed'),
+			->with($this->stringContains('Customer 360 accessed'),
 				$this->callback(
 					static function (array $context): bool {
 						return ($context['actor'] ?? null) === 'agent-1'

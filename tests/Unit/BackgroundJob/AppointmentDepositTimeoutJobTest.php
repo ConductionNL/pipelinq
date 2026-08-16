@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob;
 use OCA\Pipelinq\Service\AppointmentDepositService;
@@ -43,13 +44,13 @@ class AppointmentDepositTimeoutJobTest extends TestCase {
 	/**
 	 * Build a job whose protected run() we invoke directly via reflection.
 	 *
-	 * @param ObjectService $objectService OR ObjectService mock.
+	 * @param ObjectServiceInterface $objectService OR ObjectService mock.
 	 * @param AppointmentDepositService $depositService Deposit service mock.
 	 *
 	 * @return AppointmentDepositTimeoutJob
 	 */
 	private function buildJob(
-		ObjectService $objectService,
+		ObjectServiceInterface $objectService,
 		AppointmentDepositService $depositService,
 	): AppointmentDepositTimeoutJob {
 		$time = $this->createMock(originalClassName: ITimeFactory::class);
@@ -115,7 +116,7 @@ class AppointmentDepositTimeoutJobTest extends TestCase {
 		// Long-expired.
 		$fresh = (new \DateTimeImmutable('-1 minute'))->format('Y-m-d\TH:i:sP');
 
-		$objectService = $this->createMock(originalClassName: ObjectService::class);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objectService->method('findAll')->willReturn(
 			[
 				['@self' => ['id' => 'b-expired', 'created' => $expired], 'status' => 'pending-deposit'],
@@ -144,7 +145,7 @@ class AppointmentDepositTimeoutJobTest extends TestCase {
 	 * @return void
 	 */
 	public function testRunNoopOnEmptyResult(): void {
-		$objectService = $this->createMock(originalClassName: ObjectService::class);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objectService->method('findAll')->willReturn([]);
 
 		$depositService = $this->createMock(originalClassName: AppointmentDepositService::class);
@@ -161,7 +162,7 @@ class AppointmentDepositTimeoutJobTest extends TestCase {
 	 * @return void
 	 */
 	public function testRunSkipsRowsWithoutIdOrCreatedAt(): void {
-		$objectService = $this->createMock(originalClassName: ObjectService::class);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objectService->method('findAll')->willReturn(
 			[
 				// No id field on this row.
@@ -189,7 +190,7 @@ class AppointmentDepositTimeoutJobTest extends TestCase {
 	 * @return void
 	 */
 	public function testRunContinuesAfterReleaseFailure(): void {
-		$objectService = $this->createMock(originalClassName: ObjectService::class);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objectService->method('findAll')->willReturn(
 			[
 				['@self' => ['id' => 'b-1', 'created' => '2020-01-01T00:00:00+00:00']],

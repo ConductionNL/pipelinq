@@ -183,8 +183,7 @@ class PortalControllerTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$controller = new PortalController(
-			$request,
+		$controller = new PortalController($request,
 			$booking,
 			$deposit,
 			$appConfig,

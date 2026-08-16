@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Service\WorklistService;
 use OCP\IAppConfig;
@@ -148,8 +149,7 @@ class WorklistServiceTest extends TestCase {
 		$ticketService->method('getSchemaId')->willReturn('ticket_schema');
 		$ticketService->method('isConfigured')->willReturn($registerMissing === false);
 		$ticketService->method('findByType')->willReturnCallback(
-			function (string $ticketType, array $extraFilters = [], int $limit = 10000) use (
-				$byCollection,
+			function (string $ticketType, array $extraFilters = [], int $limit = 10000) use ($byCollection,
 				$registerMissing,
 				$throwFromObjectService
 			): array {
@@ -168,11 +168,11 @@ class WorklistServiceTest extends TestCase {
 		);
 
 		return new WorklistService(
-			container: $container,
 			appConfig: $appConfig,
 			l10n: $l10n,
 			logger: $logger,
-			ticketService: $ticketService
+			ticketService: $ticketService,
+			objectService: $this->objectService,
 		);
 	}
 

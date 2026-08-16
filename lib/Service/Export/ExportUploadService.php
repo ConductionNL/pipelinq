@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -55,16 +56,22 @@ class ExportUploadService extends AbstractExportService {
 	 *
 	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
+	 * @param ObjectServiceInterface $objectService The published OpenRegister contract.
 	 * @param ExportSinkRegistry $sinks The sink adapter registry.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ContainerInterface $container,
 		IAppConfig $appConfig,
+		ObjectServiceInterface $objectService,
 		private ExportSinkRegistry $sinks,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(container: $container, appConfig: $appConfig);
+		parent::__construct(
+			container: $container,
+			appConfig: $appConfig,
+			objectService: $objectService
+		);
 	}//end __construct()
 
 	/**

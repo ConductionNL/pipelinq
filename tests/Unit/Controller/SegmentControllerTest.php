@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\SegmentController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -98,8 +99,7 @@ class SegmentControllerTest extends TestCase {
 		$this->segmentService = $this->createMock(SegmentService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
-		$this->controller = new SegmentController(
-			$this->request,
+		$this->controller = new SegmentController($this->request,
 			$this->segmentService,
 			$this->userSession,
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
@@ -128,12 +128,12 @@ class SegmentControllerTest extends TestCase {
 	 * Build a controller backed by the REAL SegmentService and a mocked
 	 * OpenRegister ObjectService.
 	 *
-	 * @param ObjectService&MockObject $objects The mocked object service.
+	 * @param ObjectServiceInterface&MockObject $objects The mocked object service.
 	 * @param ICache|null $cache Optional estimate cache.
 	 *
 	 * @return SegmentController The wired controller.
 	 */
-	private function wiredController(ObjectService $objects, ?ICache $cache = null): SegmentController {
+	private function wiredController(ObjectServiceInterface $objects, ?ICache $cache = null): SegmentController {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($objects): object {
@@ -161,8 +161,7 @@ class SegmentControllerTest extends TestCase {
 			$cacheFactory->method('createLocal')->willReturn($cache);
 		}
 
-		$service = new SegmentService(
-			$container,
+		$service = new SegmentService($container,
 			$appConfig,
 			$this->createMock(SchemaMapService::class),
 			$cacheFactory,
@@ -174,8 +173,7 @@ class SegmentControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('marketeer');
 		$session->method('getUser')->willReturn($user);
 
-		return new SegmentController(
-			$this->createMock(IRequest::class),
+		return new SegmentController($this->createMock(IRequest::class),
 			$service,
 			$session,
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
@@ -252,7 +250,7 @@ class SegmentControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testMembersReturnsSeededContactsThroughRealService(): void {
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
 			[
 				'id' => 'seg-1',
@@ -303,7 +301,7 @@ class SegmentControllerTest extends TestCase {
 			$contacts[] = ['id' => 'c' . $i, 'email' => 'c' . $i . '@example.org', 'country' => 'NL'];
 		}
 
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
 			['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE]
 		);
@@ -357,7 +355,7 @@ class SegmentControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRefreshSizeRecomputesAndPersistsThroughRealService(): void {
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
 			['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE, 'estimatedSize' => 0]
 		);
@@ -404,7 +402,7 @@ class SegmentControllerTest extends TestCase {
 		// A pre-edit count still sitting in the estimate cache.
 		$cache->method('get')->willReturn(99);
 
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
 			['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE]
 		);
@@ -435,7 +433,7 @@ class SegmentControllerTest extends TestCase {
 			. '200 with the new count - see coordinator report'
 		);
 
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
 			['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE]
 		);

@@ -39,8 +39,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Integration-registry provider for the pipelinq Product and Supplier masters.
@@ -77,13 +77,12 @@ class ProductVendorProviderService {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
-	 * @param ContainerInterface $container The DI container (ObjectService lookup).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private ContainerInterface $container,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -233,7 +232,6 @@ class ProductVendorProviderService {
 	 */
 	private function fetchObjectBySchemaAndId(string $schema, string $idField, string $idValue): ?array {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 			$schemaId = $this->appConfig->getValueString(Application::APP_ID, "{$schema}_schema", '');
 
@@ -245,7 +243,7 @@ class ProductVendorProviderService {
 				return null;
 			}
 
-			$results = $objectService->findAll(
+			$results = $this->objectService->findAll(
 				config: [
 					'filters' => [
 						$idField => $idValue,

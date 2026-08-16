@@ -31,10 +31,10 @@ use DateTimeImmutable;
 use Exception;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Aggregates a client's open tickets (all `ticketType`s), SLA/queue status,
@@ -84,7 +84,6 @@ class Customer360SummaryService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (OpenRegister ObjectService).
 	 * @param RegisterResolverService $registerResolver Resolves the pipelinq register id.
 	 * @param IAppConfig $appConfig App config (schema slugs).
 	 * @param TicketService $ticketService Unified ticket resolver (unify-ticket-supertype).
@@ -92,12 +91,12 @@ class Customer360SummaryService {
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
 		private readonly RegisterResolverService $registerResolver,
 		private readonly IAppConfig $appConfig,
 		private readonly TicketService $ticketService,
 		private readonly ActivityTimelineService $activityTimeline,
 		private readonly LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -278,16 +277,14 @@ class Customer360SummaryService {
 	/**
 	 * Resolve the OpenRegister ObjectService lazily.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService The OpenRegister object service.
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface The OpenRegister object service.
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
-	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is not available', 0, $e);
-		}
+	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

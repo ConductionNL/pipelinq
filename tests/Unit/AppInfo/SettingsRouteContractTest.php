@@ -104,8 +104,7 @@ class SettingsRouteContractTest extends TestCase {
 	public function testCanonicalPutSettingsRouteIsDeclared(): void {
 		$routes = $this->routes();
 
-		$this->assertNotNull(
-			$this->indexOfRoute($routes, 'settings#update', '/api/settings', 'PUT'),
+		$this->assertNotNull($this->indexOfRoute($routes, 'settings#update', '/api/settings', 'PUT'),
 			'appinfo/routes.php does not declare the canonical ADR-066 write '
 			. '["name" => "settings#update", "url" => "/api/settings", "verb" => "PUT"]. '
 			. 'Without it PUT /api/settings answers 405 Method Not Allowed.'
@@ -127,14 +126,12 @@ class SettingsRouteContractTest extends TestCase {
 	public function testLegacyPostSettingsRouteIsPreserved(): void {
 		$routes = $this->routes();
 
-		$this->assertNotNull(
-			$this->indexOfRoute($routes, 'settings#create', '/api/settings', 'POST'),
+		$this->assertNotNull($this->indexOfRoute($routes, 'settings#create', '/api/settings', 'POST'),
 			'The legacy POST /api/settings route was removed — the settings store '
 			. 'and ExportConfigurationSettings.vue still call it.'
 		);
 
-		$this->assertNotNull(
-			$this->indexOfRoute($routes, 'settings#index', '/api/settings', 'GET'),
+		$this->assertNotNull($this->indexOfRoute($routes, 'settings#index', '/api/settings', 'GET'),
 			'The GET /api/settings read route was removed.'
 		);
 
@@ -161,8 +158,7 @@ class SettingsRouteContractTest extends TestCase {
 		$update = $this->indexOfRoute($routes, 'settings#update', '/api/settings', 'PUT');
 		$this->assertNotNull($update, 'settings#update PUT is not declared.');
 
-		$this->assertLessThan(
-			$catchAll,
+		$this->assertLessThan($catchAll,
 			$update,
 			'settings#update must be declared BEFORE the SPA wildcard catch-all (ADR-016).'
 		);
@@ -202,8 +198,7 @@ class SettingsRouteContractTest extends TestCase {
 				continue;
 			}
 
-			$this->assertTrue(
-				$reflection->getMethod($method)->isPublic(),
+			$this->assertTrue($reflection->getMethod($method)->isPublic(),
 				sprintf('SettingsController::%s() must be public to be dispatchable', $method)
 			);
 		}//end foreach

@@ -133,8 +133,7 @@ final class ProjectTaskHierarchyTest extends TestCase {
 			return isset($p['client']) && $p['client'] !== '';
 		});
 
-		$this->assertNotEmpty(
-			$linked,
+		$this->assertNotEmpty($linked,
 			'at least one seeded project must reference a client (powers ClientDetail Projecten section)'
 		);
 	}
@@ -162,8 +161,7 @@ final class ProjectTaskHierarchyTest extends TestCase {
 
 		foreach ($this->seedsByType()['projectPhase'] ?? [] as $phase) {
 			$parent = $this->resolveRef($phase['project']);
-			$this->assertContains(
-				$parent,
+			$this->assertContains($parent,
 				$projectSlugs,
 				"phase '{$phase['@self']['slug']}' must point at a known project ($parent)"
 			);
@@ -173,19 +171,16 @@ final class ProjectTaskHierarchyTest extends TestCase {
 			$parentPhase = $this->resolveRef($task['phase'] ?? '');
 			$parentProject = $this->resolveRef($task['project'] ?? '');
 
-			$this->assertContains(
-				$parentPhase,
+			$this->assertContains($parentPhase,
 				$phaseSlugs,
 				"task '{$task['@self']['slug']}' must point at a known phase ($parentPhase)"
 			);
-			$this->assertContains(
-				$parentProject,
+			$this->assertContains($parentProject,
 				$projectSlugs,
 				"task '{$task['@self']['slug']}' must denormalise a known project ($parentProject)"
 			);
 			$phase = $this->seedBySlug('projectPhase', $parentPhase);
-			$this->assertSame(
-				$this->resolveRef($phase['project']),
+			$this->assertSame($this->resolveRef($phase['project']),
 				$parentProject,
 				"task '{$task['@self']['slug']}' denormalised project must equal its phase's project"
 			);
@@ -214,15 +209,13 @@ final class ProjectTaskHierarchyTest extends TestCase {
 			$taskSlug = $this->resolveRef($activity['task'] ?? '');
 			$projectSlug = $this->resolveRef($activity['project'] ?? '');
 
-			$this->assertContains(
-				$taskSlug,
+			$this->assertContains($taskSlug,
 				$taskSlugs,
 				"activity '{$activity['@self']['slug']}' must point at a known task"
 			);
 
 			$task = $this->seedBySlug('projectTask', $taskSlug);
-			$this->assertSame(
-				$this->resolveRef($task['project']),
+			$this->assertSame($this->resolveRef($task['project']),
 				$projectSlug,
 				"activity '{$activity['@self']['slug']}' denormalised project must match its task's project"
 			);
@@ -254,28 +247,23 @@ final class ProjectTaskHierarchyTest extends TestCase {
 		$task = []; // unset → inherit from phase
 		$activity = []; // unset → inherit from task → phase
 
-		$this->assertFalse(
-			$this->resolveBillable('phase', $phase, ['project' => $project]),
+		$this->assertFalse($this->resolveBillable('phase', $phase, ['project' => $project]),
 			'explicit phase value (false) must win over project (true)'
 		);
-		$this->assertFalse(
-			$this->resolveBillable('task', $task, ['project' => $project, 'phase' => $phase]),
+		$this->assertFalse($this->resolveBillable('task', $task, ['project' => $project, 'phase' => $phase]),
 			'task without an explicit billable must inherit phase=false'
 		);
-		$this->assertFalse(
-			$this->resolveBillable('activity', $activity, ['project' => $project, 'phase' => $phase, 'task' => $task]),
+		$this->assertFalse($this->resolveBillable('activity', $activity, ['project' => $project, 'phase' => $phase, 'task' => $task]),
 			'activity without an explicit billable must inherit task→phase=false'
 		);
 
 		// Sanity: when nothing is set anywhere, the chain defaults to true.
-		$this->assertTrue(
-			$this->resolveBillable('phase', [], ['project' => []]),
+		$this->assertTrue($this->resolveBillable('phase', [], ['project' => []]),
 			'inheritance default (everything unset) must be true'
 		);
 
 		// Sanity: an explicit activity override wins over the phase chain.
-		$this->assertTrue(
-			$this->resolveBillable('activity', ['billable' => true], ['project' => $project, 'phase' => $phase, 'task' => $task]),
+		$this->assertTrue($this->resolveBillable('activity', ['billable' => true], ['project' => $project, 'phase' => $phase, 'task' => $task]),
 			'explicit activity override must beat phase=false'
 		);
 	}

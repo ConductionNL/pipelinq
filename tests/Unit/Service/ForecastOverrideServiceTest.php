@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ForecastOverrideService;
 use OCA\Pipelinq\Service\ForecastService;
 use OCP\IAppConfig;
@@ -44,10 +45,10 @@ class ForecastOverrideServiceTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->service = new ForecastOverrideService(
-			container: $this->createMock(ContainerInterface::class),
 			appConfig: $this->createMock(IAppConfig::class),
 			forecastService: $this->createMock(ForecastService::class),
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end setUp()
 

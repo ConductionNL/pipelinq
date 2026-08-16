@@ -212,8 +212,7 @@ class ComplianceServiceTest extends TestCase {
 			}
 		);
 
-		$this->service = new ComplianceService(
-			$this->container,
+		$this->service = new ComplianceService($this->container,
 			$this->appConfig,
 			$this->segmentService,
 			$this->logger,
@@ -446,8 +445,7 @@ class ComplianceServiceTest extends TestCase {
 		$this->service->recordConsentWithdrawal('c-x', 'email', 'user-unsubscribed', 'b-1');
 
 		// ConsentRecord update was issued with a withdrawnAt + reason.
-		$consentUpdates = array_filter(
-			$this->objectService->updates,
+		$consentUpdates = array_filter($this->objectService->updates,
 			fn (array $row) => ($row['schema'] ?? null) === 'consentRecord',
 		);
 		$this->assertNotEmpty($consentUpdates, 'ConsentRecord update must be issued');
@@ -458,8 +456,7 @@ class ComplianceServiceTest extends TestCase {
 		// Queued delivery for the same contact was flipped to
 		// unsubscribed-before-send; sent rows + other-contact rows
 		// remained untouched.
-		$deliveryUpdates = array_filter(
-			$this->objectService->updates,
+		$deliveryUpdates = array_filter($this->objectService->updates,
 			fn (array $row) => ($row['schema'] ?? null) === 'blastDelivery',
 		);
 		$touchedIds = array_map(
@@ -470,8 +467,7 @@ class ComplianceServiceTest extends TestCase {
 		$this->assertNotContains('d-sent', $touchedIds, 'sent rows must not transition');
 		$this->assertNotContains('d-other', $touchedIds, 'other contact must not transition');
 
-		$touchedObject = array_values(array_filter(
-			$deliveryUpdates,
+		$touchedObject = array_values(array_filter($deliveryUpdates,
 			fn (array $row) => $row['id'] === 'd-queued',
 		))[0]['object'];
 		$this->assertSame('unsubscribed-before-send', $touchedObject['status']);
@@ -511,12 +507,10 @@ class ComplianceServiceTest extends TestCase {
 
 		$this->service->recordConsentWithdrawal('c-y', 'email', 'complaint', 'b-3');
 
-		$consentUpdates = array_filter(
-			$this->objectService->updates,
+		$consentUpdates = array_filter($this->objectService->updates,
 			fn (array $row) => ($row['schema'] ?? null) === 'consentRecord',
 		);
-		$this->assertEmpty(
-			$consentUpdates,
+		$this->assertEmpty($consentUpdates,
 			'already-withdrawn ConsentRecord must not be patched (preserves first-withdrawal timestamp)',
 		);
 	}//end testRecordConsentWithdrawalKeepsFirstWithdrawalTimestamp()

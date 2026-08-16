@@ -26,7 +26,7 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
+use OCA\OpenRegister\Service\ConfigurationService;
 
 /**
  * Service for loading and importing Pipelinq configuration.
@@ -173,16 +173,15 @@ class SettingsLoadService {
 	 *
 	 * @param IAppConfig $appConfig The app config.
 	 * @param IAppManager $appManager The app manager.
-	 * @param ContainerInterface $container The container.
 	 * @param SettingsMapBuilder $mapBuilder The map builder.
 	 * @param ConfigFileLoaderService $fileLoader The file loader.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private IAppManager $appManager,
-		private ContainerInterface $container,
 		private SettingsMapBuilder $mapBuilder,
 		private ConfigFileLoaderService $fileLoader,
+		private readonly ConfigurationService $configurationService,
 	) {
 	}//end __construct()
 
@@ -345,6 +344,6 @@ class SettingsLoadService {
 	 * @return object The configuration service.
 	 */
 	private function getConfigurationService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
+		return $this->configurationService;
 	}//end getConfigurationService()
 }//end class

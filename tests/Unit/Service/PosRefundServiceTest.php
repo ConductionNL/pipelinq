@@ -28,7 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Lifecycle\GuardResult;
+use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Service\PosRefundService;
@@ -252,10 +254,11 @@ class PosRefundServiceTest extends TestCase {
 			throw new \RuntimeException('unknown service ' . $id);
 		});
 
-		$this->service = new PosRefundService(
-			$container,
+		$this->service = new PosRefundService($container,
 			$this->appConfig,
 			$logger,
+			objectService: $key,
+			transitionEngine: $this->createMock(TransitionEngine::class),
 		);
 	}//end setUp()
 
@@ -499,8 +502,7 @@ class PosRefundServiceTest extends TestCase {
 
 		$this->service->confirmRefund('ref-1', 'boss');
 
-		$reversal = array_values(array_filter(
-			$this->webhooks->events,
+		$reversal = array_values(array_filter($this->webhooks->events,
 			fn (array $e): bool => $e['eventName'] === PosRefundService::EVENT_REFUND_COMPLETED
 		));
 		$this->assertCount(1, $reversal);
@@ -545,8 +547,7 @@ class PosRefundServiceTest extends TestCase {
 		$this->groupManager->method('isAdmin')->willReturn(true);
 		$this->service->confirmRefund('ref-1', 'boss');
 
-		$movements = array_values(array_filter(
-			$this->webhooks->events,
+		$movements = array_values(array_filter($this->webhooks->events,
 			fn (array $e): bool => $e['eventName'] === PosRefundService::EVENT_STOCK_MOVEMENT
 		));
 		$this->assertCount(1, $movements);

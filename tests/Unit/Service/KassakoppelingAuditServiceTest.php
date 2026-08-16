@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\BelastingdienstExportService;
 use OCA\Pipelinq\Service\KassakoppelingAuditService;
 use OCA\Pipelinq\Service\KassakoppelingSignatureService;
@@ -179,11 +180,11 @@ class KassakoppelingAuditServiceTest extends TestCase {
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
 		$this->service = new KassakoppelingAuditService(
-			container: $container,
 			appConfig: $appConfig,
 			signature: $signature,
 			exporter: $exporter,
 			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 	}//end setUp()
@@ -262,8 +263,7 @@ class KassakoppelingAuditServiceTest extends TestCase {
 	public function testCreateEntryChainsPerRegister(): void {
 		$first = $this->service->createEntry(data: $this->saleInput());
 		$second = $this->service->createEntry(
-			data: array_merge(
-				$this->saleInput(),
+			data: array_merge($this->saleInput(),
 				[
 					'action' => 'void',
 					'timestamp' => '2026-05-20T08:18:15+00:00',
@@ -428,8 +428,7 @@ class KassakoppelingAuditServiceTest extends TestCase {
 	public function testExportForBelastingdienstStampsExportedAt(): void {
 		$this->service->createEntry(data: $this->saleInput());
 		$this->service->createEntry(
-			data: array_merge(
-				$this->saleInput(),
+			data: array_merge($this->saleInput(),
 				['action' => 'void', 'timestamp' => '2026-05-20T08:18:15+00:00']
 			)
 		);

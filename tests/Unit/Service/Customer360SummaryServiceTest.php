@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ActivityTimelineService;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCA\Pipelinq\Service\RegisterResolverService;
@@ -58,9 +59,9 @@ class Customer360SummaryServiceTest extends TestCase {
 	/**
 	 * The mocked OpenRegister ObjectService (leads + queues).
 	 *
-	 * @var \OCA\OpenRegister\Service\ObjectService&MockObject
+	 * @var \OCA\OpenRegister\Service\ObjectServiceInterface&MockObject
 	 */
-	private \OCA\OpenRegister\Service\ObjectService $objectService;
+	private \OCA\OpenRegister\Contract\ObjectServiceInterface $objectService;
 
 	/**
 	 * Leads returned by the mocked ObjectService for `findAll(lead)`.
@@ -120,13 +121,12 @@ class Customer360SummaryServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new Customer360SummaryService(
-			$container,
-			$registerResolver,
+		$this->service = new Customer360SummaryService($registerResolver,
 			$appConfig,
 			$this->ticketService,
 			$this->activityTimeline,
 			$logger,
+			objectService: $this->objectService,
 		);
 	}//end setUp()
 

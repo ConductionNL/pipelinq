@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ProductVendorProviderService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -103,10 +104,9 @@ class ProductVendorProviderServiceTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($os);
 
-		return new ProductVendorProviderService(
-			$appConfig,
-			$container,
+		return new ProductVendorProviderService($appConfig,
 			$this->createMock(LoggerInterface::class),
+			objectService: $os,
 		);
 	}//end makeService()
 

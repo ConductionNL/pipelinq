@@ -131,8 +131,7 @@ class CtiControllerTest extends TestCase {
 	 * @return CtiController The controller.
 	 */
 	private function controller(CtiService $service, ?string $uid = 'agent-1'): CtiController {
-		return new CtiController(
-			$this->request(),
+		return new CtiController($this->request(),
 			$service,
 			$this->session($uid),
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
@@ -277,8 +276,7 @@ class CtiControllerTest extends TestCase {
 		$normaliser = new PhoneNormaliser($appConfig, $logger);
 		$matcher = new CtiContactMatcher($container, $appConfig, $normaliser, $logger);
 
-		$service = new CtiService(
-			$container,
+		$service = new CtiService($container,
 			$appConfig,
 			$this->createMock(AdapterRegistry::class),
 			$normaliser,
@@ -623,8 +621,7 @@ class CtiControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_OK, $first->getStatus());
 		$this->assertSame(Http::STATUS_OK, $second->getStatus());
-		$this->assertSame(
-			$first->getData()['interactionId'],
+		$this->assertSame($first->getData()['interactionId'],
 			$second->getData()['interactionId'],
 			'a replayed delivery must resolve to the same contactmoment'
 		);
@@ -971,8 +968,7 @@ class CtiControllerTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		return new CtiService(
-			$this->createMock(ContainerInterface::class),
+		return new CtiService($this->createMock(ContainerInterface::class),
 			$appConfig,
 			$registry,
 			new PhoneNormaliser($appConfig, $logger),

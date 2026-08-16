@@ -211,8 +211,7 @@ class PortalAccountControllerTest extends TestCase {
 			fn (string $key, mixed $default = null): mixed => ($this->params[$key] ?? $default)
 		);
 
-		return new PortalAccountController(
-			$request,
+		return new PortalAccountController($request,
 			$this->guard,
 			$this->createMock(LoggerInterface::class),
 			new PortalProfileService($repository, $tokens, $mail, $audit, $l10n),

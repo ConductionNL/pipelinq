@@ -62,8 +62,7 @@ class PhoneNormaliserTest extends TestCase {
 
 		$this->appConfig->method('getValueString')->willReturn('NL');
 
-		$this->normaliser = new PhoneNormaliser(
-			$this->appConfig,
+		$this->normaliser = new PhoneNormaliser($this->appConfig,
 			$this->logger,
 		);
 	}//end setUp()

@@ -49,10 +49,10 @@ use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Controller for the BRP-lookup REST surface.
@@ -91,7 +91,6 @@ class BrpController extends Controller {
 	 * @param BsnAuditService $audit Audit service.
 	 * @param OptOutService $optOut Opt-out service.
 	 * @param BrpMutationWebhookListener $webhookListener Webhook listener.
-	 * @param ContainerInterface $container DI container.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Standard NC constructor injection; each
@@ -110,8 +109,8 @@ class BrpController extends Controller {
 		private BsnAuditService $audit,
 		private OptOutService $optOut,
 		private BrpMutationWebhookListener $webhookListener,
-		private ContainerInterface $container,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -836,10 +835,8 @@ class BrpController extends Controller {
 	 * @throws \RuntimeException When OR is unavailable.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

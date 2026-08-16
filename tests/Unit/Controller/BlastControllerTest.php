@@ -258,16 +258,16 @@ class BlastControllerTest extends TestCase {
 		return new BlastController(
 			request: $this->createMock(IRequest::class),
 			blastService: new BlastService(
-				container: $container,
 				appConfig: $appConfig,
 				segmentService: $this->createMock(SegmentService::class),
 				logger: $logger,
-			),
+			container: $this->createMock(ContainerInterface::class),
+		),
 			attributionService: new AttributionService(
-				container: $container,
 				appConfig: $appConfig,
 				logger: $logger,
-			),
+			container: $this->createMock(ContainerInterface::class),
+		),
 			userSession: $this->userSession,
 			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
@@ -295,8 +295,7 @@ class BlastControllerTest extends TestCase {
 		$this->objects->seed('blast-2', 'pipelinq', 'blast', ['name' => 'Other', 'status' => 'draft']);
 
 		foreach (['d-1' => 'delivered', 'd-2' => 'opened', 'd-3' => 'bounced'] as $uuid => $status) {
-			$this->objects->seed(
-				$uuid,
+			$this->objects->seed($uuid,
 				'pipelinq',
 				'blastDelivery',
 				['blastId' => 'blast-1', 'status' => $status, 'contactId' => 'c-' . $uuid]

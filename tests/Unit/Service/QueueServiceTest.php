@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\QueueService;
 use OCA\Pipelinq\Service\RegisterResolverService;
@@ -92,10 +93,10 @@ class QueueServiceTest extends TestCase {
 	private function buildService(): QueueService {
 		return new QueueService(
 			appConfig: $this->appConfig,
-			container: $this->container,
 			logger: $this->logger,
 			registerResolver: new RegisterResolverService(appConfig: $this->appConfig),
 			ticketService: $this->ticketService,
+			objectService: $mock,
 		);
 	}//end buildService()
 
@@ -183,8 +184,7 @@ class QueueServiceTest extends TestCase {
 		$objectService = $this->createObjectServiceMock();
 		$objectService->expects($this->once())
 			->method('count')
-			->with(
-				$this->callback(
+			->with($this->callback(
 					static function (array $config): bool {
 						$filters = ($config['filters'] ?? []);
 						return ($filters['queue'] ?? null) === 'queue-123'
@@ -282,8 +282,7 @@ class QueueServiceTest extends TestCase {
 		$this->ticketService
 			->expects($this->once())
 			->method('save')
-			->with(
-				$this->equalTo(value: TicketService::TYPE_REQUEST),
+			->with($this->equalTo(value: TicketService::TYPE_REQUEST),
 				$this->equalTo(value: ['id' => 'request-123', 'queue' => 'queue-456']),
 				$this->isNull(),
 			)
@@ -304,8 +303,7 @@ class QueueServiceTest extends TestCase {
 		$this->ticketService
 			->expects($this->once())
 			->method('save')
-			->with(
-				$this->equalTo(value: TicketService::TYPE_REQUEST),
+			->with($this->equalTo(value: TicketService::TYPE_REQUEST),
 				$this->equalTo(value: ['id' => 'request-123', 'queue' => null]),
 				$this->isNull(),
 			)

@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Controller\BookingAdminController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -170,10 +171,10 @@ class BookingAdminControllerTest extends TestCase {
 		$this->request = $this->createMock(IRequest::class);
 
 		$this->walkIn = new WalkInQueueService(
-			container: $container,
 			appConfig: $appConfig,
 			availabilityService: $availability,
 			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		$this->collaborators = [
@@ -212,13 +213,13 @@ class BookingAdminControllerTest extends TestCase {
 	 */
 	private function buildBookingService(IJobList $jobList): BookingService {
 		return new BookingService(
-			container: $this->collaborators['container'],
 			appConfig: $this->collaborators['appConfig'],
 			userSession: $this->userSession,
 			availabilityService: $this->collaborators['availability'],
 			eligibilityService: $this->createMock(EligibilityService::class),
 			logger: $this->collaborators['logger'],
 			jobList: $jobList,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildBookingService()
 

@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\CashShiftService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -208,11 +209,12 @@ class CashShiftServiceTest extends TestCase {
 			throw new \RuntimeException('unknown service ' . $id);
 		});
 
-		$this->service = new CashShiftService(
-			$container,
+		$this->service = new CashShiftService($container,
 			$this->appConfig,
 			$policy,
 			$this->createMock(LoggerInterface::class),
+			objectService: $key,
+			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);
 	}//end setUp()
 
@@ -512,8 +514,7 @@ class CashShiftServiceTest extends TestCase {
 		$this->assertSame('reconciled', $shift['status']);
 		$this->assertSame('approved', $shift['reconciliationStatus']);
 
-		$events = array_values(array_filter(
-			$this->webhooks->events,
+		$events = array_values(array_filter($this->webhooks->events,
 			fn (array $e): bool => $e['eventName'] === CashShiftService::EVENT_CASH_DIFF_CONFIRMED
 		));
 		$this->assertCount(1, $events);

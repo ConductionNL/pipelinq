@@ -519,8 +519,7 @@ final class PortalContributionProviderTest extends TestCase {
 			foreach ($manifest['collections'] as $collection) {
 				$schema = $collection['schema'];
 				$this->assertArrayHasKey($schema, $schemaProperties, "Schema '{$schema}' must exist in the shipped register config");
-				$this->assertContains(
-					$collection['scopeField'],
+				$this->assertContains($collection['scopeField'],
 					$schemaProperties[$schema],
 					"scopeField '{$collection['scopeField']}' must exist on schema '{$schema}'"
 				);
@@ -528,8 +527,7 @@ final class PortalContributionProviderTest extends TestCase {
 				// Field-projected collections: every whitelisted read field must
 				// exist on the schema, else projection silently drops a column.
 				foreach (($collection['fields'] ?? []) as $field) {
-					$this->assertContains(
-						$field,
+					$this->assertContains($field,
 						$schemaProperties[$schema],
 						"Projected field '{$field}' must exist on schema '{$schema}'"
 					);
@@ -538,8 +536,7 @@ final class PortalContributionProviderTest extends TestCase {
 				// A narrowing filter over a property the schema does not have would
 				// silently match nothing (or, worse, be ignored) — pin it too.
 				foreach (array_keys(($collection['filter'] ?? [])) as $property) {
-					$this->assertContains(
-						$property,
+					$this->assertContains($property,
 						$schemaProperties[$schema],
 						"Filter property '{$property}' must exist on schema '{$schema}'"
 					);
@@ -556,8 +553,7 @@ final class PortalContributionProviderTest extends TestCase {
 				// Server-side defaults are written to OR verbatim — an unknown
 				// property here would fail schema validation at create time.
 				foreach (array_keys(($action['defaults'] ?? [])) as $property) {
-					$this->assertContains(
-						$property,
+					$this->assertContains($property,
 						$schemaProperties[$schema],
 						"Default property '{$property}' must exist on schema '{$schema}'"
 					);

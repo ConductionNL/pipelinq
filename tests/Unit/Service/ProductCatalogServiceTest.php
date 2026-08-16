@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ProductCatalogService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\IAppConfig;
@@ -55,7 +56,9 @@ class ProductCatalogServiceTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new ProductCatalogService($container, $appConfig, $logger);
+		$this->service = new ProductCatalogService($container, $appConfig, $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
 	}//end setUp()
 
 	/**
@@ -267,8 +270,7 @@ class ProductCatalogServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testVariantSkusUnique(): void {
-		$this->assertTrue(
-			$this->service->variantSkusUnique(
+		$this->assertTrue($this->service->variantSkusUnique(
 				[
 					['sku' => 'A'],
 					['sku' => 'B'],
@@ -276,8 +278,7 @@ class ProductCatalogServiceTest extends TestCase {
 			)
 		);
 
-		$this->assertFalse(
-			$this->service->variantSkusUnique(
+		$this->assertFalse($this->service->variantSkusUnique(
 				[
 					['sku' => 'A'],
 					['sku' => 'A'],
@@ -285,8 +286,7 @@ class ProductCatalogServiceTest extends TestCase {
 			)
 		);
 
-		$this->assertFalse(
-			$this->service->variantSkusUnique(
+		$this->assertFalse($this->service->variantSkusUnique(
 				[
 					['sku' => ''],
 				]

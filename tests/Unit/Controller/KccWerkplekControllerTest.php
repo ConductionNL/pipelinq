@@ -88,8 +88,7 @@ class KccWerkplekControllerTest extends TestCase {
 			$session->method('getUser')->willReturn($user);
 		}
 
-		return new KccWerkplekController(
-			$request,
+		return new KccWerkplekController($request,
 			$this->service,
 			$session,
 			$this->createMock(LoggerInterface::class),

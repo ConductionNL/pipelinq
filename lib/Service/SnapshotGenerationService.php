@@ -29,9 +29,9 @@ use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Snapshot generation orchestration.
@@ -73,7 +73,6 @@ class SnapshotGenerationService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param IGroupManager $groupManager The NC group manager.
 	 * @param ForecastRollupService $rollup The pure roll-up math service.
@@ -84,7 +83,6 @@ class SnapshotGenerationService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IGroupManager $groupManager,
 		private ForecastRollupService $rollup,
@@ -93,6 +91,7 @@ class SnapshotGenerationService {
 		private QuotaService $quotaService,
 		private NotificationService $notifier,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -523,10 +522,8 @@ class SnapshotGenerationService {
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

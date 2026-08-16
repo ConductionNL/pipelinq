@@ -78,8 +78,7 @@ class ReportingServiceTest extends TestCase {
 		// must still return zero-value data rather than throwing.
 		$this->ticketService->method('findByType')->willReturn([]);
 
-		$this->service = new ReportingService(
-			$this->appConfig,
+		$this->service = new ReportingService($this->appConfig,
 			$this->logger,
 			$this->ticketService,
 		);

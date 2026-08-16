@@ -82,8 +82,7 @@ class PosReceiptControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$this->controller = new PosReceiptController(
-			$this->request,
+		$this->controller = new PosReceiptController($this->request,
 			$this->service,
 			$this->session,
 			$l10n,

@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\LoyaltyController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -120,8 +121,7 @@ class LoyaltyControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		return new LoyaltyController(
-			$request,
+		return new LoyaltyController($request,
 			($accountService ?? $this->createMock(LoyaltyAccountService::class)),
 			($ledgerService ?? $this->createMock(PointsLedgerService::class)),
 			($redemptionService ?? $this->createMock(RedemptionService::class)),
@@ -157,11 +157,11 @@ class LoyaltyControllerTest extends TestCase {
 	/**
 	 * Build a container resolving the OpenRegister ObjectService to the store.
 	 *
-	 * @param ObjectService $store The in-memory object store.
+	 * @param ObjectServiceInterface $store The in-memory object store.
 	 *
 	 * @return ContainerInterface
 	 */
-	private function containerWithStore(ObjectService $store): ContainerInterface {
+	private function containerWithStore(ObjectServiceInterface $store): ContainerInterface {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($store) {
@@ -189,13 +189,20 @@ class LoyaltyControllerTest extends TestCase {
 		$container = $this->containerWithStore($store);
 		$appConfig = $this->appConfig();
 		$logger = $this->createMock(LoggerInterface::class);
-		$accountService = new LoyaltyAccountService($container, $appConfig, $logger);
-		$ledgerService = new PointsLedgerService($container, $appConfig, $accountService, $logger);
+		$accountService = new LoyaltyAccountService($appConfig, $logger,
+			objectService: $key,
+		);
+		$ledgerService = new PointsLedgerService($appConfig, $accountService, $logger,
+			objectService: $key,
+			aggregationRunner: $this->createMock(AggregationRunner::class),
+		);
 
 		return $this->buildController(
 			accountService: $accountService,
 			ledgerService: $ledgerService,
-			redemptionService: new RedemptionService($container, $appConfig, $accountService, $ledgerService, $logger),
+			redemptionService: new RedemptionService($appConfig, $accountService, $ledgerService, $logger,
+			objectService: $key,
+		),
 			params: $params
 		);
 	}//end realRedemptionController()
@@ -210,11 +217,10 @@ class LoyaltyControllerTest extends TestCase {
 	 */
 	private function realGiftCardController(LoyaltyObjectStoreFake $store, array $params = []): LoyaltyController {
 		return $this->buildController(
-			giftCardService: new GiftCardService(
-				$this->containerWithStore($store),
-				$this->appConfig(),
-				$this->createMock(LoggerInterface::class)
-			),
+			giftCardService: new GiftCardService($this->appConfig(),
+				$this->createMock(LoggerInterface::class),
+			objectService: $key,
+		),
 			params: $params
 		);
 	}//end realGiftCardController()
@@ -963,8 +969,7 @@ class LoyaltyControllerTest extends TestCase {
 			]
 		);
 
-		$controller = $this->realGiftCardController(
-			$store,
+		$controller = $this->realGiftCardController($store,
 			['giftCardId' => 'gc-1', 'pin' => '123456', 'amount' => '15.00', 'posTransactionId' => 'pos-1']
 		);
 		$response = $controller->redeemGiftCard();
@@ -1002,8 +1007,7 @@ class LoyaltyControllerTest extends TestCase {
 			]
 		);
 
-		$controller = $this->realGiftCardController(
-			$store,
+		$controller = $this->realGiftCardController($store,
 			['giftCardId' => 'gc-1', 'pin' => '123456', 'amount' => '25.00']
 		);
 		$response = $controller->redeemGiftCard();
@@ -1038,8 +1042,7 @@ class LoyaltyControllerTest extends TestCase {
 			]
 		);
 
-		$controller = $this->realGiftCardController(
-			$store,
+		$controller = $this->realGiftCardController($store,
 			['giftCardId' => 'gc-1', 'pin' => '123456', 'amount' => '10.00']
 		);
 
@@ -1071,8 +1074,7 @@ class LoyaltyControllerTest extends TestCase {
 			]
 		);
 
-		$controller = $this->realGiftCardController(
-			$store,
+		$controller = $this->realGiftCardController($store,
 			['giftCardId' => 'gc-1', 'pin' => '123456', 'amount' => '25.00', 'posTransactionId' => 'pos-retry-1']
 		);
 
@@ -1106,8 +1108,7 @@ class LoyaltyControllerTest extends TestCase {
 			]
 		);
 
-		$controller = $this->realGiftCardController(
-			$store,
+		$controller = $this->realGiftCardController($store,
 			['giftCardId' => 'gc-1', 'pin' => '000000', 'amount' => '15.00']
 		);
 		$response = $controller->redeemGiftCard();
@@ -1426,8 +1427,7 @@ class LoyaltyObjectStoreFake extends ObjectService {
 		$rows = array_values($this->tables[$schema] ?? []);
 		foreach ($filters as $key => $value) {
 			$rows = array_values(
-				array_filter(
-					$rows,
+				array_filter($rows,
 					static fn (array $row): bool => (($row[$key] ?? null) === $value)
 				)
 			);

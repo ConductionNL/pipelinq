@@ -236,8 +236,7 @@ class TimeBillingHandoffServiceTest extends TestCase {
 
 		$this->notifier = $this->createMock(BillingHandoffNotifier::class);
 
-		$this->service = new TimeBillingHandoffService(
-			$appConfig,
+		$this->service = new TimeBillingHandoffService($appConfig,
 			$appManager,
 			$userSession,
 			$container,
@@ -476,8 +475,7 @@ class TimeBillingHandoffServiceTest extends TestCase {
 	public function testTransientFailureMarksFailedAndNotifiesAdmins(): void {
 		$this->seedTwoApprovedEntries();
 		$this->intake->outcome = 'transport';
-		$this->notifier->expects($this->once())->method('notifyFailure')->with(
-			$this->equalTo('Gemeente Voorbeeld'),
+		$this->notifier->expects($this->once())->method('notifyFailure')->with($this->equalTo('Gemeente Voorbeeld'),
 			$this->equalTo(self::CLIENT_ID),
 			$this->isType('string')
 		);
@@ -548,8 +546,7 @@ class TimeBillingHandoffServiceTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willThrowException(new \RuntimeException('should not be resolved'));
 
-		$service = new TimeBillingHandoffService(
-			$appConfig,
+		$service = new TimeBillingHandoffService($appConfig,
 			$appManager,
 			$userSession,
 			$container,
@@ -617,8 +614,7 @@ class TimeBillingHandoffServiceTest extends TestCase {
 			'billingSyncStatus' => 'synced', 'billingBatchId' => 'batch-b',
 		];
 
-		$this->notifier->expects($this->once())->method('notifyFailure')->with(
-			$this->equalTo('Gemeente Voorbeeld'),
+		$this->notifier->expects($this->once())->method('notifyFailure')->with($this->equalTo('Gemeente Voorbeeld'),
 			$this->equalTo(self::CLIENT_ID),
 			$this->equalTo('batch-a')
 		);

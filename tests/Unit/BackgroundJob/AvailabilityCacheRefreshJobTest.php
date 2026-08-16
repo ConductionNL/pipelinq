@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\BackgroundJob;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\BackgroundJob\AvailabilityCacheRefreshJob;
 use OCA\Pipelinq\Service\AvailabilityService;
@@ -45,18 +46,18 @@ class AvailabilityCacheRefreshJobTest extends TestCase {
 	/**
 	 * Build a job under test with overridable mocks.
 	 *
-	 * @param ObjectService|null $objectService Optional ObjectService mock.
+	 * @param ObjectServiceInterface|null $objectService Optional ObjectService mock.
 	 * @param AvailabilityService|null $availability Optional AvailabilityService mock.
 	 *
 	 * @return array{0: AvailabilityCacheRefreshJob, 1: ObjectService, 2: AvailabilityService, 3: LoggerInterface}
 	 */
 	private function buildJob(
-		?ObjectService $objectService = null,
+		?ObjectServiceInterface $objectService = null,
 		?AvailabilityService $availability = null,
 	): array {
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(time());
-		$objectService = ($objectService ?? $this->createMock(ObjectService::class));
+		$objectService = ($objectService ?? $this->createMock(ObjectServiceInterface::class));
 		$availability = ($availability ?? $this->createMock(AvailabilityService::class));
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -106,7 +107,7 @@ class AvailabilityCacheRefreshJobTest extends TestCase {
 	 * @return void
 	 */
 	public function testJobInvalidatesEveryResourceAcrossHorizon(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('findAll')->willReturn([
 			['@self' => ['id' => 'res-sarah'], 'status' => 'active'],
 			['@self' => ['id' => 'res-bob'], 'status' => 'active'],
@@ -126,7 +127,7 @@ class AvailabilityCacheRefreshJobTest extends TestCase {
 	 * @return void
 	 */
 	public function testJobContinuesPastPerResourceErrors(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('findAll')->willReturn([
 			['@self' => ['id' => 'res-sarah']],
 			['@self' => ['id' => 'res-bob']],
@@ -154,7 +155,7 @@ class AvailabilityCacheRefreshJobTest extends TestCase {
 	 * @return void
 	 */
 	public function testJobIsNoOpWhenNoResources(): void {
-		$object = $this->createMock(ObjectService::class);
+		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('findAll')->willReturn([]);
 
 		$availability = $this->createMock(AvailabilityService::class);

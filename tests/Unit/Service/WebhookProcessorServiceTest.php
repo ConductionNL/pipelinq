@@ -225,8 +225,7 @@ class WebhookProcessorServiceTest extends TestCase {
 
 		$this->complianceService->expects($this->once())
 			->method('recordConsentWithdrawal')
-			->with(
-				$this->equalTo('contact-2'),
+			->with($this->equalTo('contact-2'),
 				$this->equalTo('email'),
 				$this->equalTo('bounce-hard'),
 				$this->equalTo('blast-1'),
@@ -268,8 +267,7 @@ class WebhookProcessorServiceTest extends TestCase {
 		// Expect recordConsentWithdrawal called EXACTLY ONCE on the 5th hit.
 		$this->complianceService->expects($this->once())
 			->method('recordConsentWithdrawal')
-			->with(
-				$this->equalTo('contact-soft'),
+			->with($this->equalTo('contact-soft'),
 				$this->equalTo('email'),
 				$this->equalTo('bounce-soft-x5'),
 				$this->equalTo('blast-soft'),
@@ -303,8 +301,7 @@ class WebhookProcessorServiceTest extends TestCase {
 
 		$this->complianceService->expects($this->once())
 			->method('recordConsentWithdrawal')
-			->with(
-				$this->equalTo('contact-u'),
+			->with($this->equalTo('contact-u'),
 				$this->equalTo('email'),
 				$this->equalTo('user-unsubscribed'),
 				$this->equalTo('blast-u'),
@@ -336,8 +333,7 @@ class WebhookProcessorServiceTest extends TestCase {
 
 		$this->attributionService->expects($this->once())
 			->method('recordClick')
-			->with(
-				$this->equalTo('delivery-c'),
+			->with($this->equalTo('delivery-c'),
 				$this->callback(function (array $payload) use ($url): bool {
 					return $payload['url'] === $url
 						&& $payload['utmCampaign'] === 'blast-spring-2026';

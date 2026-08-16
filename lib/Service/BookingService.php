@@ -38,9 +38,9 @@ use OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph;
 use OCP\BackgroundJob\IJobList;
 use OCP\IAppConfig;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * BookingService — booking lifecycle service.
@@ -163,7 +163,6 @@ class BookingService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param IUserSession $userSession The current user session (ADR-005).
 	 * @param AvailabilityService $availabilityService Member 02 — invalidated on every write.
@@ -172,13 +171,13 @@ class BookingService {
 	 * @param IJobList $jobList The background-job list (member 09 rebalance is deferred to it).
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IUserSession $userSession,
 		private AvailabilityService $availabilityService,
 		private EligibilityService $eligibilityService,
 		private LoggerInterface $logger,
 		private IJobList $jobList,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -1575,10 +1574,8 @@ class BookingService {
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

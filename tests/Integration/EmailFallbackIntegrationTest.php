@@ -70,8 +70,7 @@ class EmailFallbackIntegrationTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn('');
 
-		$sender = new EmailFallbackSender(
-			$mailer,
+		$sender = new EmailFallbackSender($mailer,
 			$appConfig,
 			$this->createMock(LoggerInterface::class)
 		);
@@ -111,8 +110,7 @@ class EmailFallbackIntegrationTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn('');
 
-		$sender = new EmailFallbackSender(
-			$mailer,
+		$sender = new EmailFallbackSender($mailer,
 			$appConfig,
 			$this->createMock(LoggerInterface::class)
 		);
@@ -133,8 +131,7 @@ class EmailFallbackIntegrationTest extends TestCase {
 	public function testInvalidRecipientThrows(): void {
 		$mailer = $this->createMock(IMailer::class);
 		$mailer->method('validateMailAddress')->willReturn(false);
-		$sender = new EmailFallbackSender(
-			$mailer,
+		$sender = new EmailFallbackSender($mailer,
 			$this->createMock(IAppConfig::class),
 			$this->createMock(LoggerInterface::class)
 		);

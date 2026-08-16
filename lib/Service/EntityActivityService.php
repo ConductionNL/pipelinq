@@ -31,10 +31,10 @@ namespace OCA\Pipelinq\Service;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Builds the merged, paginated activity feed for an entity.
@@ -95,7 +95,6 @@ class EntityActivityService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container, used to
 	 *                                      lazily resolve the OpenRegister
 	 *                                      `ObjectService` so an outage of
 	 *                                      OR cannot break Pipelinq DI.
@@ -107,10 +106,10 @@ class EntityActivityService {
 	 *                                     tickets after unify-ticket-supertype.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly TicketService $ticketService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -599,10 +598,8 @@ class EntityActivityService {
 	 * @throws RuntimeException When OpenRegister is not installed.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

@@ -37,7 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\PosCustomerController;
 use OCA\Pipelinq\Service\PosCustomerLinkService;
 use OCP\AppFramework\Http;
@@ -95,8 +95,7 @@ class PosCustomerControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$this->controller = new PosCustomerController(
-			$this->request,
+		$this->controller = new PosCustomerController($this->request,
 			$this->service,
 			$this->session,
 			$l10n,
@@ -511,7 +510,7 @@ class PosCustomerControllerTest extends TestCase {
 		array $transaction,
 		array $params,
 	): PosCustomerController {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')
 			->willReturnCallback(
 				static function (string $id, string $register = '', string $schema = '') use ($contact, $transaction): ?array {
@@ -564,14 +563,13 @@ class PosCustomerControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$service = new PosCustomerLinkService(
-			$container,
+		$service = new PosCustomerLinkService($container,
 			$appConfig,
 			$this->createMock(LoggerInterface::class),
+			objectService: $objectService,
 		);
 
-		return new PosCustomerController(
-			$request,
+		return new PosCustomerController($request,
 			$service,
 			$session,
 			$l10n,

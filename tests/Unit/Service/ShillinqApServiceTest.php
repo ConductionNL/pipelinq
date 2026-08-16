@@ -239,8 +239,7 @@ class ShillinqApServiceTest extends TestCase {
 	public function testDispatchReturnsFalseOnWebhookFailure(): void {
 		$service = $this->makeService('https://shillinq.example.com/ap-webhook');
 		$this->webhooks->throw = true;
-		$this->assertFalse(
-			$service->dispatchApEvent(['uuid' => 'x', 'amount' => 1.0], 'alice', '2026-01-01T00:00:00Z')
+		$this->assertFalse($service->dispatchApEvent(['uuid' => 'x', 'amount' => 1.0], 'alice', '2026-01-01T00:00:00Z')
 		);
 	}//end testDispatchReturnsFalseOnWebhookFailure()
 

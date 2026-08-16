@@ -29,10 +29,10 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Cache wrapper around the brpPersoon schema.
@@ -48,14 +48,13 @@ class BrpCacheService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig App config (cache_ttl_hours setting).
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -280,10 +279,8 @@ class BrpCacheService {
 	 * @throws RuntimeException When OR is unavailable.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

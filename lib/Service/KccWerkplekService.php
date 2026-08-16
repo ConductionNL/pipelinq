@@ -90,13 +90,13 @@ class KccWerkplekService {
 	/**
 	 * Resolve the OpenRegister ObjectService lazily.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService The OpenRegister object service.
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface The OpenRegister object service.
 	 *
 	 * @throws RuntimeException If the OpenRegister app is not installed.
 	 *
 	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
 	 */
-	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
+	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		try {
 			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 		} catch (\Throwable $e) {

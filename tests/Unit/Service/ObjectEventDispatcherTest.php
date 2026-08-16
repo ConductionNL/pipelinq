@@ -65,8 +65,7 @@ class ObjectEventDispatcherTest extends TestCase {
 		$user->method('getUID')->willReturn('admin');
 		$userSession->method('getUser')->willReturn($user);
 
-		$this->dispatcher = new ObjectEventDispatcher(
-			$this->notifyService,
+		$this->dispatcher = new ObjectEventDispatcher($this->notifyService,
 			$this->activityService,
 			$userSession,
 		);

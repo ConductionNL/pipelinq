@@ -50,8 +50,7 @@ class ContractServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->service = new ContractService(
-			$this->createMock(IAppConfig::class),
+		$this->service = new ContractService($this->createMock(IAppConfig::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(LoggerInterface::class),
 		);
@@ -167,8 +166,7 @@ class ContractServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testTerminalImmutabilityFallsBackWhenSchemaUnreadable(): void {
-		$service = new ContractService(
-			$this->createMock(IAppConfig::class),
+		$service = new ContractService($this->createMock(IAppConfig::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(LoggerInterface::class),
 			new \OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph(settingsDir: '/nonexistent/Settings'),

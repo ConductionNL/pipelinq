@@ -30,13 +30,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use Psr\Container\ContainerInterface;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Base class for the BI export services.
@@ -59,6 +60,7 @@ abstract class AbstractExportService {
 	public function __construct(
 		protected ContainerInterface $container,
 		protected IAppConfig $appConfig,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -183,11 +185,9 @@ abstract class AbstractExportService {
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	protected function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

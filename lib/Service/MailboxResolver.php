@@ -34,9 +34,9 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Mailbox lookup with TTL cache.
@@ -54,18 +54,17 @@ class MailboxResolver {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (lazy OR object service).
 	 * @param IAppConfig $appConfig App config service.
 	 * @param EncryptionService $encryption Encryption service (BSN hashing + crypto).
 	 * @param LogiusConnector $logiusConnector Logius API wrapper.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
 		private readonly EncryptionService $encryption,
 		private readonly LogiusConnector $logiusConnector,
 		private readonly LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -232,16 +231,14 @@ class MailboxResolver {
 	/**
 	 * Get OR ObjectService.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface
 	 *
 	 * @throws RuntimeException If OR not available.
 	 */
-	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister service unavailable: ' . $e->getMessage(), 0, $e);
-		}
+	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

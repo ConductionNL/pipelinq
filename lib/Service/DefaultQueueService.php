@@ -26,8 +26,8 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for creating default queues and skills.
@@ -106,15 +106,14 @@ class DefaultQueueService {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container.
 	 * @param LoggerInterface $logger The logger.
 	 * @param RegisterResolverService $registerResolver The register resolver.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private ContainerInterface $container,
 		private LoggerInterface $logger,
 		private RegisterResolverService $registerResolver,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -232,6 +231,6 @@ class DefaultQueueService {
 	 * @return object The object service.
 	 */
 	private function getObjectService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->objectService;
 	}//end getObjectService()
 }//end class

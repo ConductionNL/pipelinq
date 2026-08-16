@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -57,6 +58,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
+	 * @param ObjectServiceInterface $objectService The published OpenRegister contract.
 	 * @param ExportDestinationService $destinations The destination service.
 	 * @param ExportDataService $data The data extraction service.
 	 * @param CronExpressionHelper $cron The cron helper.
@@ -65,12 +67,17 @@ class ExportJobService extends AbstractExportService {
 	public function __construct(
 		ContainerInterface $container,
 		IAppConfig $appConfig,
+		ObjectServiceInterface $objectService,
 		private ExportDestinationService $destinations,
 		private ExportDataService $data,
 		private CronExpressionHelper $cron,
 		private LoggerInterface $logger,
 	) {
-		parent::__construct(container: $container, appConfig: $appConfig);
+		parent::__construct(
+			container: $container,
+			appConfig: $appConfig,
+			objectService: $objectService
+		);
 	}//end __construct()
 
 	/**

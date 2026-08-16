@@ -200,8 +200,7 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$this->service = new BlastService(
-			$this->container,
+		$this->service = new BlastService($this->container,
 			$this->appConfig,
 			$this->segmentService,
 			$this->logger,
@@ -535,8 +534,7 @@ class BlastServiceTest extends TestCase {
 				throw new \RuntimeException('not registered: ' . $id);
 			}
 		);
-		$this->service = new BlastService(
-			$this->container,
+		$this->service = new BlastService($this->container,
 			$this->appConfig,
 			$this->segmentService,
 			$this->logger,
@@ -551,8 +549,7 @@ class BlastServiceTest extends TestCase {
 		$this->assertSame(0, $summary['variantB']);
 
 		// The one queued delivery row carries the compliant contact id.
-		$deliveryRows = array_filter(
-			$this->objectService->saved,
+		$deliveryRows = array_filter($this->objectService->saved,
 			fn (array $row) => ($row['status'] ?? null) === 'queued',
 		);
 		$this->assertCount(1, $deliveryRows);
@@ -560,8 +557,7 @@ class BlastServiceTest extends TestCase {
 		$this->assertSame('c-yes', $deliveryRow['contactId']);
 
 		// Blast transitioned to sending.
-		$blastSaves = array_filter(
-			$this->objectService->saved,
+		$blastSaves = array_filter($this->objectService->saved,
 			fn (array $row) => ($row['uuid'] ?? null) === 'blast-q4',
 		);
 		$finalBlast = end($blastSaves);
@@ -615,8 +611,7 @@ class BlastServiceTest extends TestCase {
 				throw new \RuntimeException('not registered: ' . $id);
 			}
 		);
-		$this->service = new BlastService(
-			$this->container,
+		$this->service = new BlastService($this->container,
 			$this->appConfig,
 			$this->segmentService,
 			$this->logger,
@@ -633,8 +628,7 @@ class BlastServiceTest extends TestCase {
 		// Variant child Blast was created with abVariantOf = parent id.
 		$variantId = $summary['variantBlastId'];
 		$variantRow = array_values(
-			array_filter(
-				$this->objectService->saved,
+			array_filter($this->objectService->saved,
 				fn (array $row) => ($row['uuid'] ?? null) === $variantId && isset($row['abVariantOf']),
 			)
 		);
@@ -767,8 +761,7 @@ class BlastServiceTest extends TestCase {
 		}
 
 		// Each row was flipped to `sent` with a providerId.
-		$sentRows = array_filter(
-			$this->objectService->saved,
+		$sentRows = array_filter($this->objectService->saved,
 			fn (array $row) => ($row['status'] ?? null) === 'sent',
 		);
 		$this->assertCount(3, $sentRows);
@@ -817,8 +810,7 @@ class BlastServiceTest extends TestCase {
 		$dispatched = $this->service->dispatchBlastDeliveries('blast-no-oc', 100);
 		$this->assertSame(0, $dispatched);
 
-		$sentRows = array_filter(
-			$this->objectService->saved,
+		$sentRows = array_filter($this->objectService->saved,
 			fn (array $row) => ($row['status'] ?? null) === 'sent',
 		);
 		$this->assertCount(0, $sentRows, 'no deliveries should flip to sent when SourceService is unavailable');

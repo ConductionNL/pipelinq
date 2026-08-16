@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -182,13 +183,13 @@ class ScheduledTaskServiceTest extends TestCase {
 	 * @return ScheduledTaskService The service under test.
 	 */
 	private function makeService(): ScheduledTaskService {
-		return new ScheduledTaskService(
-			$this->appConfig,
+		return new ScheduledTaskService($this->appConfig,
 			$this->userSession,
 			$this->groupManager,
 			$this->notificationService,
 			$this->container,
 			$this->logger,
+			objectService: $stub,
 		);
 	}//end makeService()
 

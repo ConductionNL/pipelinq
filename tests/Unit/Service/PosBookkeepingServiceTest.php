@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosBookkeepingService;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -236,12 +237,12 @@ class PosBookkeepingServiceTest extends TestCase {
 			}
 		);
 
-		$this->service = new PosBookkeepingService(
-			$container,
+		$this->service = new PosBookkeepingService($container,
 			$this->appConfig,
 			$mailer,
 			$policy,
 			$this->createMock(LoggerInterface::class),
+			objectService: $key,
 		);
 	}//end setUp()
 
@@ -419,8 +420,7 @@ class PosBookkeepingServiceTest extends TestCase {
 
 		$keys = array_map(
 			fn (array $e): string => (string)($e['payload']['data']['idempotencyKey'] ?? ''),
-			array_filter(
-				$this->webhooks->events,
+			array_filter($this->webhooks->events,
 				fn (array $e): bool => $e['eventName'] === PosBookkeepingService::EVENT_JOURNAL_RAISE
 			)
 		);
@@ -442,8 +442,7 @@ class PosBookkeepingServiceTest extends TestCase {
 
 		$this->assertSame('pending', $result['bookkeepingStatus']);
 		$this->assertEmpty(
-			array_filter(
-				$this->webhooks->events,
+			array_filter($this->webhooks->events,
 				fn (array $e): bool => $e['eventName'] === PosBookkeepingService::EVENT_JOURNAL_RAISE
 			)
 		);

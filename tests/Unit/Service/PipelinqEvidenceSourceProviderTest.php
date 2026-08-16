@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\PipelinqEvidenceSourceProvider;
 use OCA\Pipelinq\Service\TicketService;
@@ -66,9 +67,9 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase {
 	/**
 	 * Mocked ObjectService.
 	 *
-	 * @var ObjectService&MockObject
+	 * @var ObjectServiceInterface&MockObject
 	 */
-	private ObjectService $objectService;
+	private ObjectServiceInterface $objectService;
 
 	/**
 	 * Rows served by findAll, keyed by schema id.
@@ -91,7 +92,7 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->appConfig = $this->createMock(IAppConfig::class);
-		$this->objectService = $this->createMock(ObjectService::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->store = [];
 
 		$store = &$this->store;
@@ -108,8 +109,7 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase {
 				}
 
 				return array_values(
-					array_filter(
-						$rows,
+					array_filter($rows,
 						static fn (array $row): bool => (string)($row['ticketType'] ?? '') === (string)$filters['ticketType']
 					)
 				);
@@ -124,10 +124,10 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase {
 			container: $container,
 			logger: new NullLogger(),
 			ticketService: new TicketService(
-				container: $container,
 				appConfig: $this->appConfig,
 				logger: new NullLogger(),
-			),
+			objectService: $this->objectService,
+		),
 		);
 	}//end setUp()
 

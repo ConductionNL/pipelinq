@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\Controller\LoyaltyReportingController;
@@ -77,8 +78,7 @@ class LoyaltyReportingControllerTest extends TestCase {
 			$userSession->method('getUser')->willReturn(null);
 		}
 
-		return new LoyaltyReportingController(
-			$this->createMock(IRequest::class),
+		return new LoyaltyReportingController($this->createMock(IRequest::class),
 			$reportingService,
 			$userSession,
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
@@ -145,13 +145,13 @@ class LoyaltyReportingControllerTest extends TestCase {
 		$programmeService = $this->createMock(LoyaltyProgrammeService::class);
 		$programmeService->method('getProgramme')->willReturn($programme);
 
-		return new LoyaltyReportingService(
-			$this->container($runner),
-			$this->appConfig(),
+		return new LoyaltyReportingService($this->appConfig(),
 			$accountService,
 			$this->createMock(PointsLedgerService::class),
 			$programmeService,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			objectService: $key,
+			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);
 	}//end realReportingService()
 

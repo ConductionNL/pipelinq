@@ -67,8 +67,7 @@ class StockMovedFakeObjectService {
 
 		if (isset($filters['transaction']) === true) {
 			$rows = array_values(
-				array_filter(
-					$rows,
+				array_filter($rows,
 					static fn (array $row): bool => ($row['transaction'] ?? null) === $filters['transaction']
 				)
 			);

@@ -39,9 +39,9 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\Mail\IMailer;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for receipt rendering, email delivery and thermal output.
@@ -74,7 +74,6 @@ class ReceiptDeliveryService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
 	 * @param ReceiptService $receiptService The receipt renderer.
 	 * @param InvoiceSequenceService $invoiceSequence The invoice number allocator.
 	 * @param IMailer $mailer The Nextcloud mailer.
@@ -84,7 +83,6 @@ class ReceiptDeliveryService {
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private ReceiptService $receiptService,
 		private InvoiceSequenceService $invoiceSequence,
 		private IMailer $mailer,
@@ -92,6 +90,7 @@ class ReceiptDeliveryService {
 		private PosAccessPolicy $policy,
 		private IL10N $l10n,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -661,11 +660,9 @@ class ReceiptDeliveryService {
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

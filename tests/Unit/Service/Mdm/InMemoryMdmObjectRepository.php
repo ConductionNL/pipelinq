@@ -108,8 +108,7 @@ final class InMemoryMdmObjectRepository extends MdmObjectRepository {
 		}
 
 		return array_values(
-			array_filter(
-				$objects,
+			array_filter($objects,
 				static function (array $object) use ($filters): bool {
 					foreach ($filters as $key => $value) {
 						if (($object[$key] ?? null) !== $value) {

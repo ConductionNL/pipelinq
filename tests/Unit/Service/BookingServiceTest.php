@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Service\AvailabilityService;
@@ -93,7 +94,7 @@ class BookingServiceTest extends TestCase {
 	/**
 	 * Build a BookingService with overridable mocks.
 	 *
-	 * @param ObjectService|null $objectService Optional pre-built ObjectService mock.
+	 * @param ObjectServiceInterface|null $objectService Optional pre-built ObjectService mock.
 	 * @param AvailabilityService|null $availability Optional pre-built AvailabilityService mock.
 	 * @param EligibilityService|null $eligibility Optional pre-built EligibilityService mock.
 	 * @param IUserSession|null $userSession Optional pre-built user session mock.
@@ -102,13 +103,13 @@ class BookingServiceTest extends TestCase {
 	 * @return array{0: BookingService, 1: ObjectService, 2: AvailabilityService, 3: EligibilityService, 4: IJobList}
 	 */
 	private function buildService(
-		?ObjectService $objectService = null,
+		?ObjectServiceInterface $objectService = null,
 		?AvailabilityService $availability = null,
 		?EligibilityService $eligibility = null,
 		?IUserSession $userSession = null,
 		?IJobList $jobList = null,
 	): array {
-		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectService::class));
+		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectServiceInterface::class));
 		$availability = ($availability ?? $this->createMock(originalClassName: AvailabilityService::class));
 		$eligibility = ($eligibility ?? $this->createMock(originalClassName: EligibilityService::class));
 
@@ -141,13 +142,13 @@ class BookingServiceTest extends TestCase {
 		$jobList = ($jobList ?? $this->createMock(originalClassName: IJobList::class));
 
 		$service = new BookingService(
-			container: $container,
 			appConfig: $appConfig,
 			userSession: $userSession,
 			availabilityService: $availability,
 			eligibilityService: $eligibility,
 			logger: $logger,
-			jobList: $jobList
+			jobList: $jobList,
+			objectService: $objectService,
 		);
 
 		return [$service, $objectService, $availability, $eligibility, $jobList];
@@ -160,7 +161,7 @@ class BookingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateBookingCreatesConfirmedWhenNoDeposit(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::SERVICE_FREE_HAIRCUT);
 
 		$captured = null;
@@ -215,7 +216,7 @@ class BookingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateBookingCreatesPendingDepositWhenDepositRequired(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::SERVICE_DEPOSIT_REQUIRED);
 
 		$captured = null;
@@ -287,7 +288,7 @@ class BookingServiceTest extends TestCase {
 			'notes' => 'Graag iets korter',
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($original);
 
 		$saved = [];
@@ -362,7 +363,7 @@ class BookingServiceTest extends TestCase {
 			'depositAmount' => 0.0,
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			callback: function (string $id) use ($booking): array|null {
 				if ($id === 'b-free') {
@@ -468,7 +469,7 @@ class BookingServiceTest extends TestCase {
 			'depositAmount' => 0.0,
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			callback: function (string $id) use ($booking, $alwaysChargeService): array|null {
 				if ($id === 'b-late') {
@@ -551,7 +552,7 @@ class BookingServiceTest extends TestCase {
 			'depositAmount' => 20.0,
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			callback: function (string $id) use ($booking, $alwaysChargeService): array|null {
 				if ($id === 'b-staff') {
@@ -645,7 +646,7 @@ class BookingServiceTest extends TestCase {
 		$customer = ['@self' => ['id' => 'cust-99'], 'noShowCount' => 2];
 
 		$saves = [];
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
 			callback: function (string $id) use ($booking, $customer): array|null {
 				if ($id === 'b-shown') {
@@ -772,7 +773,7 @@ class BookingServiceTest extends TestCase {
 			'depositAmount' => 0.0,
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($booking);
 		$object->expects($this->never())->method('saveObject');
 
@@ -810,7 +811,7 @@ class BookingServiceTest extends TestCase {
 			'depositAmount' => 20.0,
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($booking);
 
 		$captured = null;
@@ -867,7 +868,7 @@ class BookingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateBookingInvalidatesAvailabilityCache(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::SERVICE_FREE_HAIRCUT);
 		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-new']]);
 
@@ -915,7 +916,7 @@ class BookingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetAvailableSlotsDelegatesToAvailabilityService(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::SERVICE_FREE_HAIRCUT);
 
 		$eligibility = $this->createMock(originalClassName: EligibilityService::class);
@@ -963,7 +964,7 @@ class BookingServiceTest extends TestCase {
 	 * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
 	 */
 	public function testCreateBookingFiresCalendarPushSeamWhenConfirmed(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::SERVICE_FREE_HAIRCUT);
 		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-new']]);
 
@@ -1023,7 +1024,7 @@ class BookingServiceTest extends TestCase {
 	 * @spec openspec/changes/appointment-booking-10-calendar-sync/specs/appointment-booking/spec.md#req-apt-018
 	 */
 	public function testPendingDepositBookingSkipsCalendarPushSeam(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(self::SERVICE_DEPOSIT_REQUIRED);
 		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-pending']]);
 
@@ -1093,7 +1094,7 @@ class BookingServiceTest extends TestCase {
 			'depositAmount' => 20.0,
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($booking);
 		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-pending']]);
 
@@ -1145,7 +1146,7 @@ class BookingServiceTest extends TestCase {
 			'depositAmount' => 0.0,
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($booking);
 		$object->expects($this->never())->method('saveObject');
 
@@ -1185,7 +1186,7 @@ class BookingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCompleteBookingSchedulesWalkInQueueRebalanceJob(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($this->completableBooking());
 		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-finish']]);
 
@@ -1218,7 +1219,7 @@ class BookingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCompleteBookingWritesOnlyTheBookingItself(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($this->completableBooking());
 		$object->expects($this->once())
 			->method('saveObject')
@@ -1239,7 +1240,7 @@ class BookingServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCompleteBookingSurvivesAnUnavailableJobList(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($this->completableBooking());
 		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-finish']]);
 

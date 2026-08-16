@@ -70,8 +70,7 @@ class ProspectControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$this->controller = new ProspectController(
-			$this->request,
+		$this->controller = new ProspectController($this->request,
 			$this->discoveryService,
 			$userSession,
 			$l10n,

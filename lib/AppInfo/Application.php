@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\AppInfo;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
@@ -123,6 +124,22 @@ class Application extends App implements IBootstrap {
 	 *  avoid.
 	 */
 	public function register(IRegistrationContext $context): void {
+
+		// ADR-084: services type-hint OpenRegister's PUBLISHED interface, never its
+		// concrete class, so this app's unit tests can mock a type they are able to
+		// load. Nextcloud autowires concrete classes across apps but not interfaces,
+		// so the binding has to be stated — and the composition root is where this
+		// app says how it is wired.
+		//
+		// An ALIAS, not a factory: it resolves when something actually asks for the
+		// interface, so an instance without OpenRegister fails at the route that
+		// needed the data rather than at registration. Both names are strings and
+		// neither triggers an autoload, which is what keeps ADR-083 rule 3's promise
+		// that the start screen still boots.
+		$context->registerServiceAlias(
+			ObjectServiceInterface::class,
+			'OCA\OpenRegister\Service\ObjectService'
+		);
 		// LOAD-ORDER HAZARD: OC_App::getEnabledApps() sort()s the app list and
 		// Coordinator::registerApps() calls registerAutoloading() then register()
 		// one app at a time, so an app's register() runs before the PSR-4 prefix

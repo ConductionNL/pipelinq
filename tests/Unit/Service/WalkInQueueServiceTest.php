@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\WalkInQueueService;
@@ -37,16 +38,16 @@ class WalkInQueueServiceTest extends TestCase {
 	/**
 	 * Build a WalkInQueueService with overridable mocks.
 	 *
-	 * @param ObjectService|null $objectService Optional pre-built ObjectService mock.
+	 * @param ObjectServiceInterface|null $objectService Optional pre-built ObjectService mock.
 	 * @param AvailabilityService|null $availability Optional pre-built AvailabilityService mock.
 	 *
 	 * @return array{0: WalkInQueueService, 1: ObjectService, 2: AvailabilityService}
 	 */
 	private function buildService(
-		?ObjectService $objectService = null,
+		?ObjectServiceInterface $objectService = null,
 		?AvailabilityService $availability = null,
 	): array {
-		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectService::class));
+		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectServiceInterface::class));
 		$availability = ($availability ?? $this->createMock(originalClassName: AvailabilityService::class));
 
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
@@ -68,10 +69,10 @@ class WalkInQueueServiceTest extends TestCase {
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
 		$service = new WalkInQueueService(
-			container: $container,
 			appConfig: $appConfig,
 			availabilityService: $availability,
 			logger: $logger,
+			objectService: $objectService,
 		);
 
 		return [$service, $objectService, $availability];
@@ -95,7 +96,7 @@ class WalkInQueueServiceTest extends TestCase {
 			['@self' => ['id' => 'res-b'], 'type' => 'staff', 'status' => 'active', 'bookable' => true],
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($service);
 		$object->method('findAll')->willReturn($resources);
 
@@ -153,7 +154,7 @@ class WalkInQueueServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateTicketWithoutServiceLeavesEtaUnset(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
 			function (
@@ -185,7 +186,7 @@ class WalkInQueueServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateTicketRejectsEmptyDisplayName(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->expects($this->never())->method('saveObject');
 
 		[$walkIn] = $this->buildService(objectService: $object);
@@ -208,7 +209,7 @@ class WalkInQueueServiceTest extends TestCase {
 			['@self' => ['id' => 't-middle'], 'status' => 'waiting', 'arrivedAt' => '2026-06-15T10:15:00+00:00'],
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('findAll')->willReturn($rows);
 
 		$captured = null;
@@ -244,7 +245,7 @@ class WalkInQueueServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCallNextReturnsEmptyWhenQueueIsEmpty(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('findAll')->willReturn([]);
 		$object->expects($this->never())->method('saveObject');
 
@@ -267,7 +268,7 @@ class WalkInQueueServiceTest extends TestCase {
 			'displayName' => 'Mr. Jansen',
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($ticket);
 
 		$captured = null;
@@ -307,7 +308,7 @@ class WalkInQueueServiceTest extends TestCase {
 			'arrivedAt' => '2026-06-15T10:00:00+00:00',
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($ticket);
 
 		$captured = null;
@@ -344,7 +345,7 @@ class WalkInQueueServiceTest extends TestCase {
 			'arrivedAt' => '2026-06-15T10:00:00+00:00',
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn($ticket);
 		$object->expects($this->never())->method('saveObject');
 
@@ -415,7 +416,7 @@ class WalkInQueueServiceTest extends TestCase {
 			['@self' => ['id' => 'res-a'], 'type' => 'staff', 'status' => 'active', 'bookable' => true],
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('findAll')->willReturnCallback(
 			callback: function (array $config = []) use ($waiting, $resources): array {
 				$schema = (string)($config['schema'] ?? '');
@@ -470,7 +471,7 @@ class WalkInQueueServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testRebalanceWithNoWaitingTickets(): void {
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('findAll')->willReturn([]);
 		$object->expects($this->never())->method('saveObject');
 
@@ -526,7 +527,7 @@ class WalkInQueueServiceTest extends TestCase {
 			['@self' => ['id' => 'res-a'], 'type' => 'staff', 'status' => 'active', 'bookable' => true],
 		];
 
-		$object = $this->createMock(originalClassName: ObjectService::class);
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(
 			[
 				'@self' => ['id' => 'svc-haircut'],

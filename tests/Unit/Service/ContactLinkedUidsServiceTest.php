@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ContactLinkedUidsService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -49,7 +50,9 @@ class ContactLinkedUidsServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$service = new ContactLinkedUidsService($appConfig, $container, $logger);
+		$service = new ContactLinkedUidsService($appConfig, $logger,
+			objectService: $objectService,
+		);
 
 		// With empty register/schema, should return empty.
 		$this->assertSame([], $service->getLinkedContactsUids());

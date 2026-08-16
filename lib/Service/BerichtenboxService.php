@@ -42,6 +42,7 @@ use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Berichtenbox message lifecycle service.
@@ -113,6 +114,7 @@ class BerichtenboxService {
 		private readonly DutchHolidayCalendar $holidayCalendar,
 		private readonly TicketService $ticketService,
 		private readonly LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -1038,16 +1040,14 @@ class BerichtenboxService {
 	/**
 	 * Get OR ObjectService.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface
 	 *
 	 * @throws RuntimeException If OR is unavailable.
 	 */
-	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister service unavailable.', 0, $e);
-		}
+	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

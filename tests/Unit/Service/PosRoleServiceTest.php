@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\PosRoleService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -128,7 +129,9 @@ class PosRoleServiceTest extends TestCase {
 	 */
 	private function buildService(object $objectService): PosRoleService {
 		$this->container->method('get')->willReturn($objectService);
-		return new PosRoleService($this->container, $this->appConfig, $this->logger);
+		return new PosRoleService($this->appConfig, $this->logger,
+			objectService: $objectService,
+		);
 	}//end buildService()
 
 	/**

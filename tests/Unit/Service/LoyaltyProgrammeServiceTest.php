@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -44,7 +44,7 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 	private function buildService(
 		?array $programme,
 	): LoyaltyProgrammeService {
-		$objectService = $this->createMock(originalClassName: ObjectService::class);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 
 		$objectService->method('find')->willReturn($programme);
 		$objectService->method('findAll')->willReturn([]);
@@ -73,9 +73,9 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
 		return new LoyaltyProgrammeService(
-			container: $container,
 			appConfig: $appConfig,
 			logger: $logger,
+			objectService: $objectService,
 		);
 	}//end buildService()
 

@@ -69,8 +69,7 @@ class NotesServiceTest extends TestCase {
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->userManager = $this->createMock(IUserManager::class);
 
-		$this->service = new NotesService(
-			$this->commentsManager,
+		$this->service = new NotesService($this->commentsManager,
 			$this->userSession,
 			$this->userManager,
 		);

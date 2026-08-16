@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\DefaultQueueService;
 use OCA\Pipelinq\Service\RegisterResolverService;
@@ -72,9 +73,9 @@ class DefaultQueueServiceTest extends TestCase {
 	private function buildService(): DefaultQueueService {
 		return new DefaultQueueService(
 			appConfig: $this->appConfig,
-			container: $this->container,
 			logger: $this->logger,
 			registerResolver: new RegisterResolverService(appConfig: $this->appConfig),
+			objectService: $objectServiceMock,
 		);
 	}//end buildService()
 

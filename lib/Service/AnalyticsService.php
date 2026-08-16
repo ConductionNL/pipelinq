@@ -39,9 +39,9 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Cross-module analytics summary service.
@@ -131,16 +131,15 @@ class AnalyticsService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OpenRegister lookup).
 	 * @param IAppConfig $appConfig App configuration (register/schema IDs).
 	 * @param LoggerInterface $logger The logger.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private readonly TicketService $ticketService,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -250,11 +249,9 @@ class AnalyticsService {
 	 * @throws RuntimeException When OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException(message: 'OpenRegister ObjectService is unavailable.', code: 0, previous: $e);
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end getObjectService()
 
 	/**

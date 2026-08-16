@@ -31,9 +31,9 @@ use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Repository helper for MDM OpenRegister objects.
@@ -75,14 +75,13 @@ class MdmObjectRepository {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OR ObjectService).
 	 * @param IAppConfig $appConfig The app config (register/schema ids).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -332,10 +331,8 @@ class MdmObjectRepository {
 	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function objectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
+		// Injected (ADR-083): a property read throws nothing, so the old
+		// catch was unreachable — phpstan reports it as a dead catch.
+		return $this->objectService;
 	}//end objectService()
 }//end class

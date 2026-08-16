@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
@@ -100,13 +101,13 @@ class AnalyticsServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		return new AnalyticsService(
-			container: $container,
 			appConfig: $appConfig,
 			logger: $logger,
 			ticketService: $this->createTicketService(
 				byCollection: $byCollection,
 				registerMissing: $registerMissing
-			)
+			),
+			objectService: $objectService,
 		);
 	}
 

@@ -41,9 +41,9 @@ class ProspectSettingsController extends Controller {
 	/**
 	 * The OpenRegister object service.
 	 *
-	 * @var \OCA\OpenRegister\Service\ObjectService|null The OpenRegister object service.
+	 * @var \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister object service.
 	 */
-	private ?\OCA\OpenRegister\Service\ObjectService $objectService = null;
+	private ?\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService = null;
 
 	/**
 	 * Constructor.
@@ -65,11 +65,11 @@ class ProspectSettingsController extends Controller {
 	/**
 	 * Attempts to retrieve the OpenRegister service from the container.
 	 *
-	 * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available, null otherwise.
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister service if available, null otherwise.
 	 * @throws \RuntimeException If the service is not available.
 	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-4
 	 */
-	public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService {
+	public function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
 		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
 			$this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			return $this->objectService;

@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\PosRoleService;
 use OCA\Pipelinq\Service\PosStaffService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -154,16 +155,16 @@ class PosStaffServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$this->roleService = new PosRoleService(
-			container: $container,
 			appConfig: $this->appConfig,
 			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		$this->service = new PosStaffService(
-			container: $container,
 			appConfig: $this->appConfig,
 			posRoleService: $this->roleService,
 			logger: $logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 
 		// Seed a role.
@@ -260,8 +261,7 @@ class PosStaffServiceTest extends TestCase {
 		}
 
 		$stored = $this->os->store['sch-posStaff'][$saved['id']];
-		$this->assertNotEmpty(
-			$stored['lockedUntil'] ?? '',
+		$this->assertNotEmpty($stored['lockedUntil'] ?? '',
 			'Account must have lockedUntil set after 5 failed attempts'
 		);
 

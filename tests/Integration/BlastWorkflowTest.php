@@ -268,21 +268,18 @@ class BlastWorkflowTest extends TestCase {
 
 		// Build the three services and wire them through the container so
 		// BlastService → ComplianceService lookup succeeds.
-		$segmentService = new SegmentService(
-			$this->container,
+		$segmentService = new SegmentService($this->container,
 			$this->appConfig,
 			$this->schemaMapService,
 			$this->cacheFactory,
 			$this->logger,
 		);
-		$complianceService = new ComplianceService(
-			$this->container,
+		$complianceService = new ComplianceService($this->container,
 			$this->appConfig,
 			$segmentService,
 			$this->logger,
 		);
-		$blastService = new BlastService(
-			$this->container,
+		$blastService = new BlastService($this->container,
 			$this->appConfig,
 			$segmentService,
 			$this->logger,

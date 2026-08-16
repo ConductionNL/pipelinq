@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\DeliveryAuditLogger;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -51,7 +51,7 @@ class DeliveryAuditLoggerTest extends TestCase {
 	 */
 	private function buildLogger(): DeliveryAuditLogger {
 		$this->captured = [];
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$args) {
 				foreach ($args as $arg) {
@@ -79,10 +79,9 @@ class DeliveryAuditLoggerTest extends TestCase {
 			}
 		);
 
-		return new DeliveryAuditLogger(
-			$container,
-			$appConfig,
-			$this->createMock(LoggerInterface::class)
+		return new DeliveryAuditLogger($appConfig,
+			$this->createMock(LoggerInterface::class),
+			objectService: $objectService,
 		);
 	}//end buildLogger()
 

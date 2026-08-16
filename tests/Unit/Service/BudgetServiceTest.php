@@ -128,8 +128,7 @@ class BudgetServiceTest extends TestCase {
 			}
 		);
 
-		$this->service = new BudgetService(
-			$this->container,
+		$this->service = new BudgetService($this->container,
 			$this->appConfig,
 			$this->notificationService,
 			$this->logger,

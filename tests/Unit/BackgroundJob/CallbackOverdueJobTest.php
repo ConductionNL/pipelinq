@@ -80,8 +80,7 @@ class CallbackOverdueJobTest extends TestCase {
 	 * @return CallbackOverdueJob
 	 */
 	private function buildJob(): CallbackOverdueJob {
-		return new CallbackOverdueJob(
-			$this->timeFactory,
+		return new CallbackOverdueJob($this->timeFactory,
 			$this->appConfig,
 			$this->notificationService,
 			$this->logger,

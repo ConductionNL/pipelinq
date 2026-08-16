@@ -25,7 +25,7 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for building vCard properties from Pipelinq object data.
@@ -35,11 +35,10 @@ class ContactVcardPropertyBuilder {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
-	 * @param ContainerInterface $container The container.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
-		private ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
 
@@ -191,6 +190,6 @@ class ContactVcardPropertyBuilder {
 	 * @return object The object service.
 	 */
 	private function getObjectService(): object {
-		return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		return $this->objectService;
 	}//end getObjectService()
 }//end class
