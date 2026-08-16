@@ -241,6 +241,33 @@ class CashFakeWebhookService extends WebhookService {
 	public array $events = [];
 
 	/**
+	 * Deliberately does NOT call parent::__construct().
+	 *
+	 * `WebhookService` is one of OpenRegister's CONCRETE classes, not part of
+	 * the ADR-084 published contract, and pipelinq's bundled stub for it has no
+	 * constructor. But tests/bootstrap.php only pre-declares three stubs
+	 * (ObjectEntity, ObjectService, MessageDispatchProvider) — everything else
+	 * "falls through to the real app". So in CI, where openregister IS checked
+	 * out, this subclass binds to the REAL WebhookService, whose constructor
+	 * requires six collaborators (WebhookMapper, LoggerInterface,
+	 * WebhookLogMapper, MappingService, MappingMapper, IJobList). Without an
+	 * explicit constructor here, `new CashFakeWebhookService()` inherits the
+	 * parent's and dies with:
+	 *
+	 *   ArgumentCountError: Too few arguments to function
+	 *   OCA\OpenRegister\Service\WebhookService::__construct(), 0 passed
+	 *
+	 * A bare local run never sees this, because it only ever has the stub.
+	 * Declaring an empty constructor makes the double behave identically in both
+	 * environments. Nothing here calls a parent method — `dispatchEvent()` is
+	 * fully overridden — so the uninitialised parent state is never read.
+	 *
+	 * Same pattern as `FakeRefundTransitionEngine` in PosRefundServiceTest.
+	 */
+	public function __construct() {
+	}//end __construct()
+
+	/**
 	 * @param array<string, mixed> $payload
 	 */
 	public function dispatchEvent(object $_event, string $eventName, array $payload): void {
