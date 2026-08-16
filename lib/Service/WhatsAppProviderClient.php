@@ -187,52 +187,17 @@ class WhatsAppProviderClient {
 		];
 	}//end sendFreeForm()
 
-	/**
-	 * Download a media file by Meta media id.
+	/*
+	 * NO MEDIA TRANSFER HERE.
 	 *
-	 * @param array<string, mixed> $channelProvider Provider row.
-	 * @param string $mediaId Meta media id.
-	 *
-	 * @return array{url: string, mimeType: string, sha256?: string} Media handle.
-	 *
-	 * @throws TransientSmsProviderException On transient.
-	 * @throws PermanentSmsProviderException On permanent.
+	 * `downloadMedia()` and `uploadMedia()` used to sit between `sendFreeForm()`
+	 * and `listTemplates()`. Neither had a caller: `uploadMedia()` had none at
+	 * all, and `downloadMedia()`'s only one was `MediaAttachmentService`, whose
+	 * whole class was equally unreferenced and is removed in the same change.
+	 * The WhatsApp media pipeline was never wired into a live path, and no
+	 * current spec requires it — the only reference is the archived
+	 * `whatsapp-sms-channel-adapter` task list.
 	 */
-	public function downloadMedia(array $channelProvider, string $mediaId): array {
-		$result = $this->dispatch(
-			channelProvider: $channelProvider,
-			action: 'download-media',
-			payload: ['mediaId' => $mediaId],
-		);
-
-		return [
-			'url' => (string)($result['url'] ?? ''),
-			'mimeType' => (string)($result['mime_type'] ?? ($result['mimeType'] ?? '')),
-			'sha256' => (string)($result['sha256'] ?? ''),
-		];
-	}//end downloadMedia()
-
-	/**
-	 * Upload a media file to the provider.
-	 *
-	 * @param array<string, mixed> $channelProvider Provider row.
-	 * @param string $filePath Local file path.
-	 * @param string $mimeType Mime type.
-	 *
-	 * @return string Provider media id.
-	 *
-	 * @throws TransientSmsProviderException On transient.
-	 * @throws PermanentSmsProviderException On permanent.
-	 */
-	public function uploadMedia(array $channelProvider, string $filePath, string $mimeType): string {
-		$result = $this->dispatch(
-			channelProvider: $channelProvider,
-			action: 'upload-media',
-			payload: ['filePath' => $filePath, 'mimeType' => $mimeType],
-		);
-
-		return (string)($result['id'] ?? '');
-	}//end uploadMedia()
 
 	/**
 	 * List remote templates for the approval-sync job.

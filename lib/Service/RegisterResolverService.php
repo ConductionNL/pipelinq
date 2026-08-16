@@ -106,17 +106,15 @@ class RegisterResolverService {
 		return $registerId;
 	}//end resolve()
 
-	/**
-	 * Clear the memoised register id.
+	/*
+	 * NO flush() HERE.
 	 *
-	 * Primarily for tests and for callers that change the register config
-	 * mid-request and need the next {@see resolve()} to re-read it.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/pipelinq-or-register-resolver/tasks.md#task-1.9
+	 * It cleared the memo below and was documented as "primarily for tests".
+	 * It had no production caller in any of the five consumers
+	 * (ContactVcardService, ContactVcardWriterService, Customer360SummaryService,
+	 * DefaultQueueService, QueueService) — which is exactly the shape gate-57
+	 * exists to catch: implemented, unit-tested by calling the class directly,
+	 * never reached from a live path. The memo is request-scoped, so nothing
+	 * outlives the request that would need clearing.
 	 */
-	public function flush(): void {
-		$this->cache = [];
-	}//end flush()
 }//end class

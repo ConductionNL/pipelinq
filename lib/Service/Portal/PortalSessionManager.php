@@ -149,22 +149,17 @@ class PortalSessionManager {
 		return $session;
 	}//end validateSession()
 
-	/**
-	 * Mark a half-open (MFA-pending) session as fully authenticated.
+	/*
+	 * NO MFA-PENDING CLEARER HERE, AND DELIBERATELY SO.
 	 *
-	 * @param string $sessionId The session id.
-	 *
-	 * @return void
+	 * `clearMfaPending()` flipped a session from half-open to fully
+	 * authenticated. It had no caller, and there is nothing for it to clear:
+	 * `PortalAuthService` verifies the TOTP code in `completeMfaStage()` and
+	 * only calls `createSession()` afterwards, so no half-open session is ever
+	 * created. Giving this method a caller would have introduced the one
+	 * primitive that promotes a session past MFA — a widening of the auth
+	 * surface, for a state the live flow never enters.
 	 */
-	public function clearMfaPending(string $sessionId): void {
-		$session = $this->repository->find(self::SCHEMA, $sessionId);
-		if ($session === null) {
-			return;
-		}
-
-		$session['mfaPending'] = false;
-		$this->repository->save(self::SCHEMA, $session, $sessionId);
-	}//end clearMfaPending()
 
 	/**
 	 * Extend a session's TTL from now.

@@ -784,34 +784,21 @@ class PosTenderService {
 		return $eventId;
 	}//end emitSingleTenderPosted()
 
-	/**
-	 * Mark a tender as confirmed-posted by Shillinq (idempotent).
+	/*
+	 * NO GL-POSTED CONFIRMATION WRITER HERE.
 	 *
-	 * @param string $tenderId The tender UUID.
+	 * `markTenderGlPosted()` set `glPosted = true` on receipt of a
+	 * confirmation from Shillinq. It had no caller, and pipelinq has no
+	 * inbound acknowledgement surface for the `nl.pipelinq.pos.tender.posted`
+	 * CloudEvent — REQ-PST-006 specifies emission only, and states that
+	 * posting failure does not block settlement. Giving this a caller would
+	 * have meant inventing an inbound endpoint, i.e. a new externally
+	 * reachable write surface, to feed it.
 	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-006
+	 * Nothing changes for the retry path: `listUnpostedTenders()` still reads
+	 * `glPosted` (schema default false) and `emitSingleTenderPosted()` still
+	 * caps re-emission at MAX_GL_POST_ATTEMPTS via `glPostAttempts`.
 	 */
-	public function markTenderGlPosted(string $tenderId): void {
-		if ($tenderId === '') {
-			return;
-		}
-
-		try {
-			$tender = $this->fetchTender(id: $tenderId);
-		} catch (Throwable $e) {
-			return;
-		}
-
-		if (($tender['glPosted'] ?? false) === true) {
-			return;
-		}
-
-		unset($tender['@self']);
-		$tender['glPosted'] = true;
-		$this->saveTender(id: $tenderId, payload: $tender);
-	}//end markTenderGlPosted()
 
 	/**
 	 * List tenders for which the GL CloudEvent has not yet been confirmed

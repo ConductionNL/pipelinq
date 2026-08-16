@@ -176,35 +176,8 @@ class MailboxResolverTest extends TestCase {
 		$this->assertSame('logius', $result['source']);
 	}//end testExpiredCacheFallsThrough()
 
-	/**
-	 * markOptedOut saves with optedOut=true.
-	 *
-	 * @return void
-	 */
-	public function testMarkOptedOut(): void {
-		$captured = null;
-		$objectService = $this->createMock(ObjectServiceInterface::class);
-		$objectService->expects($this->once())
-			->method('saveObject')
-			->willReturnCallback(function (...$args) use (&$captured) {
-				$captured = $args[0] ?? func_get_arg(0);
-				// saveObject is called with named args; the first positional may be the array.
-				if (is_array($captured) === false) {
-					foreach (func_get_args() as $arg) {
-						if (is_array($arg) === true && isset($arg['optedOut']) === true) {
-							$captured = $arg;
-							break;
-						}
-					}
-				}
-				return $captured;
-			});
-
-		$connector = $this->createMock(LogiusConnector::class);
-		$resolver = $this->buildResolver($objectService, $connector);
-		$resolver->markOptedOut('123456789', 'tenant-a');
-
-		$this->assertNotNull($captured);
-		$this->assertTrue($captured['optedOut'] ?? false);
-	}//end testMarkOptedOut()
+	// testMarkOptedOut was removed with MailboxResolver::markOptedOut(). The
+	// opt-out record is written by OptOutService (recordLocalOptOut /
+	// recordFromBrpResponse), which is the live, routed path; the resolver
+	// never had a caller for its own copy.
 }//end class

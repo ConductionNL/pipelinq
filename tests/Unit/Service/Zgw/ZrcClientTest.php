@@ -3,9 +3,7 @@
 /**
  * Unit tests for ZrcClient.
  *
- * Covers REQ-ZGW-002 (createZaak → ZgwResourceMapping), REQ-ZGW-009
- * (PATCH preserves ETag, 412 → OptimisticLockException with both states),
- * REQ-ZGW-010 (idempotent linkInitiator) and contact identification.
+ * Covers REQ-ZGW-010 (idempotent linkInitiator) and contact identification.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service\Zgw
@@ -31,7 +29,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service\Zgw;
 
 use OCA\Pipelinq\Service\Zgw\AcClient;
-use OCA\Pipelinq\Service\Zgw\OptimisticLockException;
 use OCA\Pipelinq\Service\Zgw\ZgwApiClient;
 use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
 use OCA\Pipelinq\Service\Zgw\ZrcClient;
@@ -50,13 +47,6 @@ class ZrcClientTest extends TestCase {
 	 * @var array<string, mixed>
 	 */
 	private array $endpoint;
-
-	/**
-	 * Captured saves emitted via ZgwRegisterAccess::save().
-	 *
-	 * @var array<int, array{schema:string, data:array<string,mixed>, uuid:?string}>
-	 */
-	private array $saves = [];
 
 	/**
 	 * Set up.
@@ -79,159 +69,12 @@ class ZrcClientTest extends TestCase {
 		];
 	}//end setUp()
 
-	/**
-	 * Build the collaborators with controllable responses.
-	 *
-	 * @param array<int, array<string, mixed>> $responses Responses from callComponent (FIFO).
-	 * @param bool $grantScope When false, AcClient::require() raises.
-	 *
-	 * @return ZrcClient
-	 */
-	private function buildClient(array $responses, bool $grantScope = true): ZrcClient {
-		$api = $this->createMock(ZgwApiClient::class);
-		$api->method('callComponent')->willReturnOnConsecutiveCalls(...$responses);
-
-		$registers = $this->createMock(ZgwRegisterAccess::class);
-		$registers->method('findClientForEndpoint')->willReturn([
-			'clientIdentifier' => 'pipelinq-zoetermeer',
-			'secretVaultRef' => 'vault://zgw/zoetermeer/client-secret',
-			'userId' => 'pipelinq',
-			'userRepresentation' => 'Pipelinq backend',
-		]);
-		$registers->method('save')->willReturnCallback(
-			function (string $schema, array $data, ?string $uuid = null): array {
-				$this->saves[] = ['schema' => $schema, 'data' => $data, 'uuid' => $uuid];
-				return $data;
-			}
-		);
-
-		$ac = $this->createMock(AcClient::class);
-		if ($grantScope === true) {
-			$ac->method('require')->willReturnCallback(static fn () => null);
-		} else {
-			$ac->method('require')->willThrowException(
-				new \OCA\Pipelinq\Service\Zgw\InsufficientScopeException('zaken.aanmaken', 'https://ztc/zaaktype/1')
-			);
-		}
-
-		return new ZrcClient($api, $registers, $ac, $this->createMock(LoggerInterface::class));
-	}//end buildClient()
-
-	/**
-	 * createZaak persists URL mapping (REQ-ZGW-002).
-	 *
-	 * @return void
-	 */
-	public function testCreateZaakPersistsMapping(): void {
-		$caseUrl = 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/3f9a4f1e-1a0d-4d10-9b22-c1ef0b8fbb2a';
-
-		$client = $this->buildClient([
-			['status' => 201, 'headers' => ['location' => $caseUrl, 'etag' => 'W/"a1b2c3"'], 'body' => []],
-		]);
-
-		$mapping = $client->createZaak($this->endpoint,
-			[
-				'bronorganisatie' => '002564440',
-				'caseType' => 'https://ztc/zaaktype/1',
-				'verantwoordelijkeOrganisatie' => '002564440',
-				'startDate' => '2026-05-21',
-				'registratiedatum' => '2026-05-21',
-				'omschrijving' => 'Aanvraag evenementenvergunning Stadshart Run',
-			],
-			'req-2026-evenement-zoetermeer-0456'
-		);
-
-		self::assertSame('zaak', $mapping['zgwResourceType']);
-		self::assertSame($caseUrl, $mapping['zgwUrl']);
-		self::assertSame('3f9a4f1e-1a0d-4d10-9b22-c1ef0b8fbb2a', $mapping['zgwUuid']);
-		self::assertSame('W/"a1b2c3"', $mapping['etag']);
-		self::assertSame('zgw-ep-zoetermeer-openzaak', $mapping['endpointId']);
-		self::assertSame('req-2026-evenement-zoetermeer-0456', $mapping['pipelinqId']);
-
-		self::assertCount(1, $this->saves);
-		self::assertSame(ZgwRegisterAccess::SCHEMA_MAPPING, $this->saves[0]['schema']);
-	}//end testCreateZaakPersistsMapping()
-
-	/**
-	 * Missing scope blocks createZaak (REQ-ZGW-006 cross-check).
-	 *
-	 * @return void
-	 */
-	public function testMissingScopeBlocksCreateZaak(): void {
-		$client = $this->buildClient([
-			['status' => 201, 'headers' => [], 'body' => []],
-		], grantScope: false);
-
-		$this->expectException(\OCA\Pipelinq\Service\Zgw\InsufficientScopeException::class);
-		$client->createZaak($this->endpoint,
-			['caseType' => 'https://ztc/zaaktype/1'],
-			'req-zoetermeer-test'
-		);
-	}//end testMissingScopeBlocksCreateZaak()
-
-	/**
-	 * 412 → OptimisticLockException carrying both states (REQ-ZGW-009).
-	 *
-	 * @return void
-	 */
-	public function testUpdateZaak412RaisesOptimisticLockException(): void {
-		$api = $this->createMock(ZgwApiClient::class);
-		$api->method('callComponent')->willReturnCallback(
-			static function (
-				string $componentUrl,
-				string $method,
-				string $path,
-				array $client,
-				?array $body = null,
-				array $extraHeaders = [],
-				array $query = [],
-			): array {
-				if ($method === 'PATCH') {
-					throw new OptimisticLockException(
-						'precond-failed',
-						staleRepresentation: [],
-						freshRepresentation: []
-					);
-				}
-				if ($method === 'GET') {
-					return [
-						'status' => 200,
-						'headers' => ['etag' => 'W/"server-fresh"'],
-						'body' => ['omschrijving' => 'Server-updated', 'caseType' => 'https://ztc/zaaktype/1'],
-					];
-				}
-				return ['status' => 200, 'headers' => [], 'body' => []];
-			}
-		);
-
-		$registers = $this->createMock(ZgwRegisterAccess::class);
-		$registers->method('findClientForEndpoint')->willReturn([
-			'clientIdentifier' => 'pipelinq-zoetermeer',
-			'secretVaultRef' => 'vault://x',
-			'userId' => 'pipelinq',
-			'userRepresentation' => 'Pipelinq',
-		]);
-		$ac = $this->createMock(AcClient::class);
-		$ac->method('require')->willReturnCallback(static fn () => null);
-
-		$client = new ZrcClient($api, $registers, $ac, $this->createMock(LoggerInterface::class));
-
-		$mapping = [
-			'zgwUrl' => 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/aaa',
-			'zgwResourceType' => 'zaak',
-			'etag' => 'W/"stale"',
-			'caseType' => 'https://ztc/zaaktype/1',
-		];
-
-		try {
-			$client->updateZaak($this->endpoint, $mapping, ['omschrijving' => 'Local edit']);
-			self::fail('expected OptimisticLockException');
-		} catch (OptimisticLockException $e) {
-			self::assertSame(['omschrijving' => 'Local edit'], $e->staleRepresentation);
-			self::assertSame('Server-updated', $e->freshRepresentation['omschrijving']);
-			self::assertNotSame('', $e->getMessage());
-		}
-	}//end testUpdateZaak412RaisesOptimisticLockException()
+	// The three createZaak / updateZaak cases that stood here were removed with
+	// the methods they called. `lib/Settings/register.d/80-zgw-api-bridge.json`
+	// records that the ZGW write bridge is not wired in this app and that ZGW
+	// writes are routed via the openconnector ZGW connector (ADR-085), so both
+	// methods had zero callers. The optimistic-lock and scope-guard behaviours
+	// they asserted belong with the client that actually issues the writes.
 
 	/**
 	 * linkInitiator: existing rol → skip POST (REQ-ZGW-010 idempotency).

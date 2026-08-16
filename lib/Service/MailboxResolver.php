@@ -58,6 +58,7 @@ class MailboxResolver {
 	 * @param EncryptionService $encryption Encryption service (BSN hashing + crypto).
 	 * @param LogiusConnector $logiusConnector Logius API wrapper.
 	 * @param LoggerInterface $logger Logger.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
@@ -120,28 +121,15 @@ class MailboxResolver {
 		];
 	}//end resolve()
 
-	/**
-	 * Mark a BSN as opted-out (REQ-OPTIN-011).
+	/*
+	 * NO OPT-OUT WRITER HERE.
 	 *
-	 * @param string $bsn Plaintext BSN.
-	 * @param string $tenantId Tenant identifier.
-	 *
-	 * @return void
+	 * `markOptedOut()` used to write an opted-out row into this resolver's own
+	 * cache. It had no caller. Recording an opt-out is already live under
+	 * `OptOutService` — `recordLocalOptOut()` reached through
+	 * `BrpController`, and `recordFromBrpResponse()` from the BRP response —
+	 * so this was a second writer for the same fact in a second store.
 	 */
-	public function markOptedOut(string $bsn, string $tenantId): void {
-		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);
-		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-		$row = [
-			'bsn' => $this->encryption->encrypt($bsn, $tenantId),
-			'bsnHash' => $bsnHash,
-			'mailboxAvailable' => false,
-			'resolvedAt' => $now->format(DATE_ATOM),
-			'expiresAt' => $now->modify('+10 years')->format(DATE_ATOM),
-			'optedOut' => true,
-		];
-
-		$this->writeCache(row: $row);
-	}//end markOptedOut()
 
 	/**
 	 * Look up a cached resolution by bsnHash.
