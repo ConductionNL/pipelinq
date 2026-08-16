@@ -98,21 +98,47 @@ webpackConfig.entry = {
 // Vue 3 app. Opt IN explicitly (USE_LOCAL_LIB=true) and hard-fail if the local
 // tree is not on the Vue 3 major.
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
-const useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
+let useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
 if (useLocalLib) {
-	const localPkg = JSON.parse(
-		fs.readFileSync(
-			path.resolve(__dirname, '../nextcloud-vue/package.json'),
-			'utf8',
-		),
-	)
-	const localVue =
-		(localPkg.peerDependencies && localPkg.peerDependencies.vue) || ''
-	if (!/\^?3\./.test(localVue)) {
-		throw new Error(
-			`USE_LOCAL_LIB=true but ../nextcloud-vue declares peer vue "${localVue}" — that is the Vue 2 line. `
-				+ 'Building against it would silently compile Vue 2 sources into this Vue 3 app. Refusing.',
+	// The peer-vue test this replaces asked the wrong question. The sibling's
+	// `peerDependencies.vue` is ^3.5.0 — it IS a Vue 3 library — so the check
+	// passed, while the sibling was still 2.0.5 against a declared ^2.3.0. Being
+	// on the Vue 3 line and being the version this app asked for are different
+	// things, and only the second one is safe to alias in.
+	//
+	// Fail CLOSED: if the check cannot run, the sibling is refused.
+	let localVersion = 'unreadable'
+	let satisfied = false
+	try {
+		// eslint-disable-next-line n/no-extraneous-require
+		const semver = require('semver')
+		const required =
+			require('./package.json').dependencies['@conduction/nextcloud-vue']
+		localVersion = String(
+			JSON.parse(
+				fs.readFileSync(
+					path.resolve(__dirname, '../nextcloud-vue/package.json'),
+					'utf8',
+				),
+			).version || '',
 		)
+		satisfied = semver.satisfies(localVersion, required, {
+			includePrerelease: true,
+		})
+	} catch (e) {
+		satisfied = false
+	}
+
+	if (!satisfied) {
+		// Warn rather than throw: refusing the sibling still produces a complete
+		// build against the pinned npm package, so there is nothing to repair
+		// before the build can proceed.
+		// eslint-disable-next-line no-console
+		console.warn(
+			`[pipelinq] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
+				+ "it does not satisfy this app's declared range. Building against the npm dist.",
+		)
+		useLocalLib = false
 	}
 }
 
