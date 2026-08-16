@@ -20,12 +20,12 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\RoutingService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,13 +38,6 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-6
  */
 class RoutingServiceWorkloadTest extends TestCase {
-
-	/**
-	 * The DI container mock.
-	 *
-	 * @var ContainerInterface&MockObject
-	 */
-	private ContainerInterface $container;
 
 	/**
 	 * The app config mock.
@@ -73,7 +66,6 @@ class RoutingServiceWorkloadTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->container = $this->createMock(ContainerInterface::class);
 		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->ticketService = $this->createMock(TicketService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
@@ -133,12 +125,17 @@ class RoutingServiceWorkloadTest extends TestCase {
 	 * count returns the number of rows matching the filters (used by the
 	 * open-leads leg, which is fully pushed down).
 	 *
+	 * Extends OpenRegister's ObjectService so the double satisfies the
+	 * `ObjectServiceInterface` type-hint the service now declares; the overrides
+	 * repeat the parent signatures EXACTLY, because PHP checks compatibility at
+	 * class-load time.
+	 *
 	 * @param array<int, array<string, mixed>> $rows Object rows keyed by schema.
 	 *
-	 * @return object The fake ObjectService.
+	 * @return ObjectServiceInterface The fake ObjectService.
 	 */
-	private function fakeObjectService(array $rows): object {
-		return new class($rows) {
+	private function fakeObjectService(array $rows): ObjectServiceInterface {
+		return new class($rows) extends ObjectService {
 			/**
 			 * @param array<int, array<string, mixed>> $rows Rows.
 			 */
@@ -148,11 +145,17 @@ class RoutingServiceWorkloadTest extends TestCase {
 			}//end __construct()
 
 			/**
-			 * @param array<string, mixed> $config Config with `filters`.
+			 * @param array<string, mixed> $config        Config with `filters`.
+			 * @param bool                 $_rbac         Whether to enforce RBAC checks.
+			 * @param bool                 $_multitenancy Whether to enforce tenant scoping.
 			 *
 			 * @return array<int, array<string, mixed>> Matching rows.
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(
+				array $config = [],
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): array {
 				return $this->match(($config['filters'] ?? []));
 			}//end findAll()
 
@@ -212,10 +215,12 @@ class RoutingServiceWorkloadTest extends TestCase {
 			['schema' => 'lead', 'assignee' => 'user-2', 'status' => 'open'],
 		];
 
-		$this->container->method('get')->willReturn($this->fakeObjectService($rows));
 		$this->mockTicketRows($rows);
-		$service = new RoutingService($this->appConfig, $this->ticketService, $this->logger,
-			objectService: $out,
+		$service = new RoutingService(
+			appConfig: $this->appConfig,
+			ticketService: $this->ticketService,
+			logger: $this->logger,
+			objectService: $this->fakeObjectService($rows),
 		);
 
 		// 2 open request tickets + 3 open leads = 5.
@@ -228,10 +233,12 @@ class RoutingServiceWorkloadTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetAgentWorkloadEmptyUserReturnsZero(): void {
-		$this->container->method('get')->willReturn($this->fakeObjectService([]));
 		$this->mockTicketRows([]);
-		$service = new RoutingService($this->appConfig, $this->ticketService, $this->logger,
-			objectService: $out,
+		$service = new RoutingService(
+			appConfig: $this->appConfig,
+			ticketService: $this->ticketService,
+			logger: $this->logger,
+			objectService: $this->fakeObjectService([]),
 		);
 
 		$this->assertSame(0, $service->getAgentWorkload(userId: ''));

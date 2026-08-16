@@ -86,9 +86,9 @@ class QueryPushdownBatch3Test extends TestCase {
 	 *
 	 * @param array<string, array<int, array<string, mixed>>> $bySchema Rows per schema slug.
 	 *
-	 * @return object The fake ObjectService.
+	 * @return ObjectServiceInterface The fake ObjectService.
 	 */
-	private function fakeObjectService(array $bySchema): object {
+	private function fakeObjectService(array $bySchema): ObjectServiceInterface {
 		// Extends the autoloaded OR stub so KccWerkplekService::getObjectService()'s
 		// `: \OCA\OpenRegister\Service\ObjectService` return type is satisfied.
 		return new class($bySchema) extends \OCA\OpenRegister\Service\ObjectService {
@@ -327,8 +327,10 @@ class QueryPushdownBatch3Test extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$appConfig = $this->appConfig();
 
-		$ticketService = new TicketService(container: $container, appConfig: $appConfig, logger: $logger,
-			objectService: $key,
+		$ticketService = new TicketService(
+			appConfig: $appConfig,
+			logger: $logger,
+			objectService: $objectService,
 		);
 
 		$service = new KccWerkplekService(

@@ -26,7 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Repair;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar;
 use OCP\IAppConfig;
@@ -155,29 +157,23 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 	}//end setUp()
 
 	/**
-	 * Build an entity exposing getUuid().
+	 * Build the entity saveObject() returns.
+	 *
+	 * A bespoke anonymous class exposing only getUuid() no longer satisfies
+	 * the contract: since ADR-084 `saveObject()` is declared to return
+	 * `ObjectEntityInterface`, so the mock raised a TypeError on the way out —
+	 * which the repair step's own `catch (\Throwable)` recorded as a failed
+	 * migration. The real entity is used instead.
 	 *
 	 * @param string $uuid The uuid.
 	 *
-	 * @return object The entity double.
+	 * @return ObjectEntityInterface The entity.
 	 */
-	private static function entity(string $uuid): object {
-		return new class($uuid) {
-			/**
-			 * @param string $uuid The uuid.
-			 */
-			public function __construct(
-				private string $uuid,
-			) {
-			}
+	private static function entity(string $uuid): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
 
-			/**
-			 * @return string The uuid.
-			 */
-			public function getUuid(): string {
-				return $this->uuid;
-			}
-		};
+		return $entity;
 	}//end entity()
 
 	/**

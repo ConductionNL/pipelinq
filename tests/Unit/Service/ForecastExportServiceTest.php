@@ -20,13 +20,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ForecastExportService;
 use OCA\Pipelinq\Service\ForecastService;
 use OCA\Pipelinq\Service\ReportingService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -35,13 +35,6 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-8
  */
 class ForecastExportServiceTest extends TestCase {
-
-	/**
-	 * The DI container mock.
-	 *
-	 * @var ContainerInterface&MockObject
-	 */
-	private ContainerInterface $container;
 
 	/**
 	 * The app config mock.
@@ -56,7 +49,6 @@ class ForecastExportServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->container = $this->createMock(ContainerInterface::class);
 		$this->appConfig = $this->createMock(IAppConfig::class);
 
 		$this->appConfig->method('getValueString')->willReturnCallback(
@@ -74,12 +66,17 @@ class ForecastExportServiceTest extends TestCase {
 	 * Build a fake OR ObjectService whose findAll honours sort/limit/offset and
 	 * whose count returns the full matching total (ignoring paging).
 	 *
+	 * Extends OpenRegister's ObjectService so the double satisfies the
+	 * `ObjectServiceInterface` type-hint the service now declares; the overrides
+	 * repeat the parent signatures EXACTLY, because PHP checks compatibility at
+	 * class-load time.
+	 *
 	 * @param array<int, array<string, mixed>> $rows Snapshot rows.
 	 *
-	 * @return object The fake ObjectService.
+	 * @return ObjectServiceInterface The fake ObjectService.
 	 */
-	private function fakeObjectService(array $rows): object {
-		return new class($rows) {
+	private function fakeObjectService(array $rows): ObjectServiceInterface {
+		return new class($rows) extends ObjectService {
 			/**
 			 * @param array<int, array<string, mixed>> $rows Rows.
 			 */
@@ -89,11 +86,17 @@ class ForecastExportServiceTest extends TestCase {
 			}//end __construct()
 
 			/**
-			 * @param array<string, mixed> $config Config with filters/sort/limit/offset.
+			 * @param array<string, mixed> $config        Config with filters/sort/limit/offset.
+			 * @param bool                 $_rbac         Whether to enforce RBAC checks.
+			 * @param bool                 $_multitenancy Whether to enforce tenant scoping.
 			 *
 			 * @return array<int, array<string, mixed>> Page of matching rows.
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(
+				array $config = [],
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): array {
 				$out = $this->match(($config['filters'] ?? []));
 
 				$sort = ($config['sort'] ?? []);
@@ -163,13 +166,12 @@ class ForecastExportServiceTest extends TestCase {
 			['owner_id' => 't1', 'level' => 'team', 'period_id' => 'p1', 'as_of_date' => '2026-01-15'],
 		];
 
-		$this->container->method('get')->willReturn($this->fakeObjectService($rows));
-
-		$service = new ForecastExportService($this->appConfig,
-			$this->createMock(ForecastService::class),
-			$this->createMock(ReportingService::class),
-			$this->createMock(LoggerInterface::class),
-			objectService: $this->createMock(ObjectServiceInterface::class),
+		$service = new ForecastExportService(
+			appConfig: $this->appConfig,
+			forecastService: $this->createMock(ForecastService::class),
+			reportingService: $this->createMock(ReportingService::class),
+			logger: $this->createMock(LoggerInterface::class),
+			objectService: $this->fakeObjectService($rows),
 		);
 
 		$result = $service->exportSnapshots(periodId: 'p1', level: 'rep', ownerId: null, limit: 2, offset: 1);

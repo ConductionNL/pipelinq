@@ -32,8 +32,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\BerichtenboxService;
 use OCA\Pipelinq\Service\DeliveryAuditLogger;
 use OCA\Pipelinq\Service\DutchHolidayCalendar;
@@ -121,22 +122,48 @@ class BerichtenboxServiceTest extends TestCase {
 	}//end ticketServiceStub()
 
 	/**
+	 * Wrap a saved payload the way OpenRegister does.
+	 *
+	 * `saveObject()` returns an ENTITY (ADR-084), never the array it was handed;
+	 * a double returning the array is a shape the real system cannot produce and
+	 * the mock now refuses it outright.
+	 *
+	 * @param array $payload The payload that was saved.
+	 *
+	 * @return ObjectEntityInterface The stored object.
+	 */
+	private static function storedEntity(array $payload): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$uuid = ($payload['uuid'] ?? $payload['id'] ?? null);
+		if (is_string($uuid) === true) {
+			$entity->setUuid($uuid);
+		}
+
+		$entity->setObject($payload);
+		return $entity;
+	}//end storedEntity()
+
+	/**
 	 * Build an ObjectService that captures every save in $savedMessages.
 	 *
-	 * @return ObjectServiceInterface
+	 * The declared return type is the CONTRACT: the double is a mock of
+	 * `ObjectServiceInterface`, so a helper still declaring OpenRegister's
+	 * concrete `Service\ObjectService` raises a TypeError on return (ADR-084).
+	 *
+	 * @return ObjectServiceInterface The capturing double.
 	 */
-	private function captureObjectService(): ObjectService {
+	private function captureObjectService(): ObjectServiceInterface {
 		$this->savedMessages = [];
 		$service = $this->createMock(ObjectServiceInterface::class);
 		$service->method('saveObject')->willReturnCallback(
-			function (...$args) {
+			function (...$args): ObjectEntityInterface {
 				foreach ($args as $arg) {
 					if (is_array($arg) === true) {
 						$this->savedMessages[] = $arg;
-						return $arg;
+						return self::storedEntity($arg);
 					}
 				}
-				return [];
+				return self::storedEntity([]);
 			}
 		);
 		$service->method('findAll')->willReturn([]);
@@ -519,14 +546,14 @@ class BerichtenboxServiceTest extends TestCase {
 		]]);
 		$captured = [];
 		$objectService->method('saveObject')->willReturnCallback(
-			static function (...$args) use (&$captured) {
+			static function (...$args) use (&$captured): ObjectEntityInterface {
 				foreach ($args as $arg) {
 					if (is_array($arg) === true) {
 						$captured[] = $arg;
-						return $arg;
+						return self::storedEntity($arg);
 					}
 				}
-				return [];
+				return self::storedEntity([]);
 			}
 		);
 

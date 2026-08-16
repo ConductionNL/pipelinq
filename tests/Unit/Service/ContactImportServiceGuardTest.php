@@ -24,12 +24,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\ContactDataBuilder;
 use OCA\Pipelinq\Service\ContactImportService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use RuntimeException;
 
 /**
@@ -51,9 +50,6 @@ class ContactImportServiceGuardTest extends TestCase {
 	 * @return ContactImportService
 	 */
 	private function buildService(array $config, ObjectServiceInterface $object): ContactImportService {
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($object);
-
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			static function (string $app, string $key, string $default = '') use ($config): string {
@@ -123,8 +119,15 @@ class ContactImportServiceGuardTest extends TestCase {
 	 * @return void
 	 */
 	public function testConfiguredImportReachesOpenRegister(): void {
+		// saveObject() returns an ENTITY (ADR-084), and ContactImportService
+		// serialises it with jsonSerialize() — so the uuid is what surfaces as
+		// the result's `id`, and the stored payload comes back alongside it.
+		$created = new ObjectEntity();
+		$created->setUuid('obj-1');
+		$created->setObject(['name' => 'Acme']);
+
 		$object = $this->createMock(ObjectServiceInterface::class);
-		$object->expects($this->once())->method('saveObject')->willReturn(['id' => 'obj-1']);
+		$object->expects($this->once())->method('saveObject')->willReturn($created);
 
 		$service = $this->buildService(
 			[
@@ -134,6 +137,9 @@ class ContactImportServiceGuardTest extends TestCase {
 			$object
 		);
 
-		$this->assertSame(['id' => 'obj-1'], $service->importAsClient(['FN' => 'Acme'], 'uid-4'));
+		$result = $service->importAsClient(['FN' => 'Acme'], 'uid-4');
+
+		$this->assertSame('obj-1', $result['id']);
+		$this->assertSame('Acme', $result['name']);
 	}//end testConfiguredImportReachesOpenRegister()
 }//end class

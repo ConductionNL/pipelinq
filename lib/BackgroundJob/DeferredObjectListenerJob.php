@@ -122,11 +122,11 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 	 * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
 	 */
 	protected function runDeferred(DeferredListenerContext $context): void {
+		// DeferredListenerContext::getEntries() is declared
+		// `array<int, array<string, mixed>>` upstream, so an `is_array($entry)`
+		// guard here is provably dead — phpstan: "Strict comparison using ===
+		// between true and false will always evaluate to false".
 		foreach ($context->getEntries() as $entry) {
-			if (is_array($entry) === false) {
-				continue;
-			}
-
 			$this->runEntry(entry: $entry);
 		}
 	}//end runDeferred()
@@ -137,6 +137,11 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 	 * @param array<string, mixed> $entry The entry captured at dispatch time.
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
 	 */
 	private function runEntry(array $entry): void {
 		$handler = ($entry['handler'] ?? '');

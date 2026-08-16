@@ -65,10 +65,19 @@ class EntityAccessorTraitTest extends TestCase {
 	 *
 	 * `getObject()` and `jsonSerialize()` are DECLARED on the production entity,
 	 * so `method_exists()` must be true for them — that is the positive control
-	 * proving the probe itself works. `getSchema()` / `getUuid()` are served by
-	 * `Entity::__call`, so `method_exists()` must be FALSE while the accessor
-	 * still resolves. If this test ever goes red, the test double has drifted
-	 * away from production and every listener guard below it is unmeasured.
+	 * proving the probe itself works. If this test ever goes red, the test double
+	 * has drifted away from production and every listener guard below it is
+	 * unmeasured.
+	 *
+	 * `getSchema()` / `getUuid()` USED to be false here: production declared them
+	 * only as `@method` tags and served them through `Entity::__call`. Under
+	 * ADR-084 (openregister#2498) `Db\ObjectEntity` implements
+	 * `Contract\ObjectEntityInterface`, and magic does not satisfy an interface —
+	 * PHP counts only DECLARED methods — so production now spells all five
+	 * contract getters out and `method_exists()` is TRUE for them. The stub's own
+	 * header records the same cutover. The control has not weakened: it now fails
+	 * if the stub DROPS the concrete getters, which is the drift that is possible
+	 * today.
 	 *
 	 * @return void
 	 */
@@ -79,9 +88,13 @@ class EntityAccessorTraitTest extends TestCase {
 		$this->assertTrue(method_exists($entity, 'getObject'));
 		$this->assertTrue(method_exists($entity, 'jsonSerialize'));
 
-		// The defect: declared only as @method, served through __call.
-		$this->assertFalse(method_exists($entity, 'getSchema'));
-		$this->assertFalse(method_exists($entity, 'getUuid'));
+		// Declared since ADR-084, because the contract interface demands it.
+		$this->assertTrue(method_exists($entity, 'getSchema'));
+		$this->assertTrue(method_exists($entity, 'getUuid'));
+
+		// Negative control: a name the entity has never heard of is still not a
+		// declared method, so the probe is discriminating rather than always-true.
+		$this->assertFalse(method_exists($entity, 'getThisAccessorDoesNotExist'));
 
 		// And why is_callable() is not the fix — it is true for a name the
 		// entity has never heard of, so it cannot decide membership.

@@ -199,7 +199,7 @@ class PosRoleService {
 		[$register, $schema] = $this->config(schemaKey: 'posRole_schema');
 
 		try {
-			$this->getObjectService()->deleteObject(id: $id, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to delete posRole', ['exception' => $e->getMessage()]);
 			throw new OCSNotFoundException('POS-rol kon niet worden verwijderd.');

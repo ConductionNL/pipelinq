@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\DemoSeedService;
@@ -275,25 +276,17 @@ class DemoSeedServiceTest extends TestCase {
 	 *
 	 * @param string $uuid The uuid.
 	 *
-	 * @return object Object exposing getUuid().
+	 * ADR-084: saveObject() declares `ObjectEntityInterface`, so a bare
+	 * getUuid()-exposing anonymous double no longer satisfies the return type —
+	 * the real entity is used instead.
+	 *
+	 * @return ObjectEntity Entity carrying the uuid.
 	 */
-	private static function savedEntity(string $uuid): object {
-		return new class($uuid) {
-			/**
-			 * @param string $uuid The uuid to expose.
-			 */
-			public function __construct(
-				private string $uuid,
-			) {
-			}
+	private static function savedEntity(string $uuid): ObjectEntity {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
 
-			/**
-			 * @return string The uuid.
-			 */
-			public function getUuid(): string {
-				return $this->uuid;
-			}
-		};
+		return $entity;
 	}//end savedEntity()
 
 	/**

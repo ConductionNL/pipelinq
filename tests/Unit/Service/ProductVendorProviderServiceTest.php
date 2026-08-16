@@ -30,17 +30,19 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ProductVendorProviderService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * A fake OpenRegister ObjectService returning a canned result set.
+ *
+ * Extends the ObjectService stub so it satisfies the `ObjectServiceInterface`
+ * type-hint ProductVendorProviderService now declares (ADR-084).
  */
-class FakePvmObjectService {
+class FakePvmObjectService extends ObjectService {
 	/**
 	 * Result rows returned by findAll().
 	 *
@@ -61,10 +63,15 @@ class FakePvmObjectService {
 	 * Mirrors OR's real ObjectService::findAll(array $config).
 	 *
 	 * @param array<string,mixed> $config Ignored (config with `filters`, `limit`, `offset`).
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
 	 *
 	 * @return array<int, array<string,mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
-	public function findAll(array $config = []): array {
+	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 		if ($this->throw === true) {
 			throw new \RuntimeException('object service unavailable');
 		}
@@ -101,11 +108,9 @@ class ProductVendorProviderServiceTest extends TestCase {
 			}
 		);
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($os);
-
-		return new ProductVendorProviderService($appConfig,
-			$this->createMock(LoggerInterface::class),
+		return new ProductVendorProviderService(
+			appConfig: $appConfig,
+			logger: $this->createMock(LoggerInterface::class),
 			objectService: $os,
 		);
 	}//end makeService()

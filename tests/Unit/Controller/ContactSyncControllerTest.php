@@ -19,7 +19,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\ContactSyncController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContactDataBuilder;
@@ -607,7 +608,7 @@ class ContactSyncControllerTest extends TestCase {
 			}
 		);
 
-		$objectService = new class($captured) {
+		$objectService = new class($captured) extends \OCA\OpenRegister\Service\ObjectService {
 			/**
 			 * @param array<int, array<string, mixed>> $captured Capture sink, by reference.
 			 */
@@ -619,28 +620,61 @@ class ContactSyncControllerTest extends TestCase {
 			/**
 			 * Capture and echo back the saved object.
 			 *
-			 * @param array<string, mixed> $object The object.
-			 * @param array<int, mixed> $extend Extend list.
-			 * @param string $register Register.
-			 * @param string $schema Schema.
-			 * @param string|null $uuid Uuid.
+			 * Mirrors ObjectService::saveObject() exactly — twelve parameters and
+			 * a non-nullable `ObjectEntityInterface` return (ADR-084). PHP checks
+			 * signature compatibility at CLASS-LOAD time, so a narrower override
+			 * is a fatal before test 1 rather than a test failure.
 			 *
-			 * @return array<string, mixed> The saved object.
+			 * @param array<string, mixed> $object The object.
+			 * @param array<string, mixed>|null $extend Extend list.
+			 * @param string|int|null $register Register.
+			 * @param string|int|null $schema Schema.
+			 * @param string|null $uuid Uuid.
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $silent Unused.
+			 * @param bool $_validation Unused.
+			 * @param array<string, mixed>|null $uploadedFiles Unused.
+			 * @param IUser|null $currentUser Unused.
+			 * @param bool $failIfExists Unused.
+			 *
+			 * @return ObjectEntityInterface The saved object, wrapped as an entity.
 			 */
-			public function saveObject(array $object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
-				$this->captured[] = ['object' => $object, 'uuid' => $uuid, 'schema' => $schema];
-				$object['id'] = 'obj-' . count($this->captured);
-				return $object;
+			public function saveObject(
+				array $object,
+				?array $extend = [],
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				?string $uuid = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $silent = false,
+				bool $_validation = true,
+				?array $uploadedFiles = null,
+				?IUser $currentUser = null,
+				bool $failIfExists = false,
+			): ObjectEntityInterface {
+				$this->captured[] = ['object' => $object, 'uuid' => $uuid, 'schema' => (string)$schema];
+
+				$entity = new ObjectEntity();
+				$entity->setUuid(($uuid ?? ('obj-' . count($this->captured))));
+				$entity->setRegister((string)$register);
+				$entity->setSchema((string)$schema);
+				$entity->setObject($object);
+
+				return $entity;
 			}//end saveObject()
 
 			/**
 			 * No stored objects.
 			 *
 			 * @param array<string, mixed> $config The config.
+			 * @param bool $_rbac RBAC posture.
+			 * @param bool $_multitenancy Tenancy posture.
 			 *
 			 * @return array<int, mixed> Empty.
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 				return [];
 			}//end findAll()
 		};

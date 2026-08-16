@@ -22,10 +22,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\LoyaltyProgrammeService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -46,16 +46,16 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 	): LoyaltyProgrammeService {
 		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 
-		$objectService->method('find')->willReturn($programme);
+		// ADR-084: find()/saveObject() return an ObjectEntityInterface, not a row.
+		$objectService->method('find')->willReturn(
+			$programme === null ? null : $this->entity(uuid: 'prog-1', row: $programme)
+		);
 		$objectService->method('findAll')->willReturn([]);
 		$objectService->method('saveObject')->willReturnCallback(
-			callback: static function (array $object): array {
-				return $object;
+			callback: function (array $object): ObjectEntity {
+				return $this->entity(uuid: 'prog-1', row: $object);
 			}
 		);
-
-		$container = $this->createMock(originalClassName: ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
 
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
@@ -78,6 +78,22 @@ class LoyaltyProgrammeServiceTest extends TestCase {
 			objectService: $objectService,
 		);
 	}//end buildService()
+
+	/**
+	 * Wrap a row in an ObjectEntity, as OpenRegister now returns (ADR-084).
+	 *
+	 * @param string $uuid The object UUID.
+	 * @param array<string, mixed> $row The stored payload.
+	 *
+	 * @return ObjectEntity
+	 */
+	private function entity(string $uuid, array $row): ObjectEntity {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
 
 	/**
 	 * A concept programme passes the schema-declared transition guard and proceeds

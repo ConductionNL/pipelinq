@@ -37,7 +37,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\PosCustomerController;
 use OCA\Pipelinq\Service\PosCustomerLinkService;
 use OCP\AppFramework\Http;
@@ -511,27 +513,69 @@ class PosCustomerControllerTest extends TestCase {
 		array $params,
 	): PosCustomerController {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
+		// Both callbacks mirror the ADR-084 signatures: nine parameters and an
+		// `?ObjectEntityInterface` for find(), twelve and a non-nullable one for
+		// saveObject(). The service calls them with NAMED arguments and PHP
+		// fills the gaps with the declared defaults, so a short callback bound
+		// `[]` to `string $register` and raised inside the double.
 		$objectService->method('find')
 			->willReturnCallback(
-				static function (string $id, string $register = '', string $schema = '') use ($contact, $transaction): ?array {
-					if ($schema === 'contact-schema') {
-						return ($id === (string)$contact['id']) ? $contact : null;
+				static function (
+					int|string $id,
+					?array $_extend = [],
+					bool $files = false,
+					string|int|null $register = null,
+					string|int|null $schema = null,
+					bool $_rbac = true,
+					bool $_multitenancy = true,
+					bool $_render = true,
+					bool $_audit = true,
+				) use ($contact, $transaction): ?ObjectEntityInterface {
+					$row = null;
+					if ((string)$schema === 'contact-schema') {
+						$row = ((string)$id === (string)$contact['id']) ? $contact : null;
+					} elseif ((string)$id === (string)$transaction['id']) {
+						$row = $transaction;
 					}
 
-					return ($id === (string)$transaction['id']) ? $transaction : null;
+					if ($row === null) {
+						return null;
+					}
+
+					$entity = new ObjectEntity();
+					$entity->setUuid((string)$id);
+					$entity->setRegister((string)$register);
+					$entity->setSchema((string)$schema);
+					$entity->setObject($row);
+
+					return $entity;
 				}
 			);
 		$objectService->method('saveObject')
 			->willReturnCallback(
 				function (
-					array|object $object,
+					array $object,
 					?array $extend = [],
 					string|int|null $register = null,
 					string|int|null $schema = null,
 					?string $uuid = null,
-				): array {
-					$this->saves[] = [(string)$schema, (string)$uuid, (array)$object];
-					return (array)$object;
+					bool $_rbac = true,
+					bool $_multitenancy = true,
+					bool $silent = false,
+					bool $_validation = true,
+					?array $uploadedFiles = null,
+					?IUser $currentUser = null,
+					bool $failIfExists = false,
+				): ObjectEntityInterface {
+					$this->saves[] = [(string)$schema, (string)$uuid, $object];
+
+					$entity = new ObjectEntity();
+					$entity->setUuid((string)$uuid);
+					$entity->setRegister((string)$register);
+					$entity->setSchema((string)$schema);
+					$entity->setObject($object);
+
+					return $entity;
 				}
 			);
 

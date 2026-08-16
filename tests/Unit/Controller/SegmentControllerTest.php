@@ -30,7 +30,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\SegmentController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -123,6 +125,27 @@ class SegmentControllerTest extends TestCase {
 		$user->method('getUID')->willReturn($uid);
 		$this->userSession->method('getUser')->willReturn($user);
 	}//end authenticate()
+
+	/**
+	 * Wrap a fixture row as the entity ObjectService now returns.
+	 *
+	 * Since ADR-084 `find()` returns `?ObjectEntityInterface` and
+	 * `saveObject()` a non-nullable one, so a mock configured with a bare
+	 * array is rejected before the test body runs. SegmentService reads the
+	 * payload back with `jsonSerialize()`, which this entity answers with the
+	 * row it was given.
+	 *
+	 * @param array<string, mixed> $row The fixture row.
+	 *
+	 * @return ObjectEntityInterface The wrapped row.
+	 */
+	private static function entity(array $row): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$entity->setUuid((string)($row['id'] ?? ''));
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
 
 	/**
 	 * Build a controller backed by the REAL SegmentService and a mocked
@@ -252,12 +275,14 @@ class SegmentControllerTest extends TestCase {
 	public function testMembersReturnsSeededContactsThroughRealService(): void {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
-			[
-				'id' => 'seg-1',
-				'name' => 'Dutch contacts',
-				'entityType' => 'contact',
-				'rules' => self::COUNTRY_RULE,
-			]
+			self::entity(
+				[
+					'id' => 'seg-1',
+					'name' => 'Dutch contacts',
+					'entityType' => 'contact',
+					'rules' => self::COUNTRY_RULE,
+				]
+			)
 		);
 		$objects->expects($this->once())
 			->method('findAll')
@@ -303,7 +328,7 @@ class SegmentControllerTest extends TestCase {
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
-			['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE]
+			self::entity(['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE])
 		);
 		$objects->method('findAll')->willReturn($contacts);
 
@@ -357,7 +382,9 @@ class SegmentControllerTest extends TestCase {
 	public function testRefreshSizeRecomputesAndPersistsThroughRealService(): void {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
-			['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE, 'estimatedSize' => 0]
+			self::entity(
+				['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE, 'estimatedSize' => 0]
+			)
 		);
 		$objects->method('findAll')->willReturn(
 			[
@@ -371,9 +398,9 @@ class SegmentControllerTest extends TestCase {
 		$objects->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(
-				static function (array $object, ...$rest) use (&$persisted): array {
+				static function (array $object, ...$rest) use (&$persisted): ObjectEntityInterface {
 					$persisted = $object;
-					return $object;
+					return self::entity($object);
 				}
 			);
 
@@ -404,7 +431,7 @@ class SegmentControllerTest extends TestCase {
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
-			['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE]
+			self::entity(['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE])
 		);
 		$objects->method('findAll')->willReturn(
 			[
@@ -412,7 +439,9 @@ class SegmentControllerTest extends TestCase {
 				['id' => 'c2', 'country' => 'BE'],
 			]
 		);
-		$objects->method('saveObject')->willReturnArgument(0);
+		$objects->method('saveObject')->willReturnCallback(
+			static fn (array $object, ...$rest): ObjectEntityInterface => self::entity($object)
+		);
 
 		$response = $this->wiredController($objects, $cache)->refreshSize('seg-1');
 
@@ -435,7 +464,7 @@ class SegmentControllerTest extends TestCase {
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
-			['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE]
+			self::entity(['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE])
 		);
 		$objects->method('findAll')->willReturn([['id' => 'c1', 'country' => 'NL']]);
 		$objects->method('saveObject')->willThrowException(new \RuntimeException('write failed'));

@@ -30,13 +30,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Service\SettingsMapBuilder;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 
 /**
  * Tests that loadSettings() provisions the POS + billingCategory schema keys.
@@ -61,35 +61,25 @@ class SettingsLoadServicePosSchemasTest extends TestCase {
 
 		// The import returns the pipelinq register and the three schemas under
 		// test (plus an unrelated one to prove only listed slugs are written).
-		$configService = new class {
-			/**
-			 * Echo a fixed import result for the test.
-			 *
-			 * @param string $appId The app id.
-			 * @param array<string, mixed> $data The config data.
-			 * @param string $version The app version.
-			 * @param bool $force Force flag.
-			 *
-			 * @return array<string, mixed>
-			 */
-			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
-				return [
-					'registers' => [
-						['slug' => 'pipelinq', 'id' => 16],
-					],
-					'schemas' => [
-						['slug' => 'billingCategory', 'id' => 30],
-						['slug' => 'posTransaction', 'id' => 41],
-						['slug' => 'posTransactionLine', 'id' => 42],
-						['slug' => 'notProvisioned', 'id' => 99],
-					],
-					'views' => [],
-				];
-			}//end importFromApp()
-		};
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($configService);
+		//
+		// ConfigurationService is now a constructor-injected, concretely typed
+		// dependency (ADR-083) rather than a container lookup, so the in-test
+		// anonymous class this used to pass no longer satisfies the type-hint.
+		$configService = $this->createMock(ConfigurationService::class);
+		$configService->method('importFromApp')->willReturn(
+			[
+				'registers' => [
+					['slug' => 'pipelinq', 'id' => 16],
+				],
+				'schemas' => [
+					['slug' => 'billingCategory', 'id' => 30],
+					['slug' => 'posTransaction', 'id' => 41],
+					['slug' => 'posTransactionLine', 'id' => 42],
+					['slug' => 'notProvisioned', 'id' => 99],
+				],
+				'views' => [],
+			]
+		);
 
 		// Capture every setValueString(app, key, value) call.
 		$written = [];
@@ -101,7 +91,13 @@ class SettingsLoadServicePosSchemasTest extends TestCase {
 			}
 		);
 
-		$service = new SettingsLoadService($appConfig, $appManager, $container, $mapBuilder, $fileLoader);
+		$service = new SettingsLoadService(
+			appConfig: $appConfig,
+			appManager: $appManager,
+			mapBuilder: $mapBuilder,
+			fileLoader: $fileLoader,
+			configurationService: $configService,
+		);
 		$service->loadSettings();
 
 		// The billingCategory + POS types are provisioned with their numeric ids.

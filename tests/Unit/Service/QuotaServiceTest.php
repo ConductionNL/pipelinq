@@ -23,7 +23,6 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\QuotaService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -49,11 +48,13 @@ class QuotaServiceTest extends TestCase {
 				return $d;
 			}
 		);
-		$container = $this->createMock(ContainerInterface::class);
+		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new QuotaService(appConfig: $appConfig, logger: $logger,
-			objectService: $d,
+		$this->service = new QuotaService(
+			appConfig: $appConfig,
+			logger: $logger,
+			objectService: $objectService,
 		);
 	}//end setUp()
 

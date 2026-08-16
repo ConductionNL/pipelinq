@@ -281,7 +281,10 @@ class TicketService {
 	 * @param array<string, mixed> $payload The ticket fields.
 	 * @param string|null $uuid Existing ticket uuid, or null to create.
 	 *
-	 * @return \OCA\OpenRegister\Db\ObjectEntity The saved ticket.
+	 * @return \OCA\OpenRegister\Contract\ObjectEntityInterface The saved ticket.
+	 *   ObjectServiceInterface::saveObject() is declared against the CONTRACT,
+	 *   not the concrete Db\ObjectEntity — narrowing it here was a phpstan error
+	 *   and would have broken any alternative entity implementation.
 	 *
 	 * @throws RuntimeException If the ticket surface is unconfigured.
 	 *

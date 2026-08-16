@@ -27,7 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\RoutingController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\RoutingService;
@@ -119,19 +121,44 @@ class RoutingControllerTest extends TestCase {
 			/**
 			 * Read one row.
 			 *
-			 * @param string|int $id Object id.
-			 * @param mixed $arg2 Extend list (upstream) or register (stub).
-			 * @param mixed $arg3 Files flag (upstream) or schema (stub).
+			 * Mirrors ObjectService::find() exactly — the parent declares nine
+			 * parameters and an `?ObjectEntityInterface` return, and PHP checks
+			 * signature compatibility at CLASS-LOAD time, so a narrower override
+			 * killed the whole suite with a fatal before test 1 (ADR-084).
 			 *
-			 * @return array<string, mixed>|object|null
+			 * @param string|int $id Object id.
+			 * @param array<string, mixed>|null $_extend Unused.
+			 * @param bool $files Unused.
+			 * @param string|int|null $register Unused (single-register store).
+			 * @param string|int|null $schema Unused (single-schema store).
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $_render Unused.
+			 * @param bool $_audit Unused.
+			 *
+			 * @return ObjectEntityInterface|null The row, wrapped as an entity.
 			 */
-			public function find(string|int $id, mixed $arg2 = '', mixed $arg3 = ''): array|object|null {
+			public function find(
+				int|string $id,
+				?array $_extend = [],
+				bool $files = false,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $_render = true,
+				bool $_audit = true,
+			): ?ObjectEntityInterface {
 				$row = ($this->store[(string)$id] ?? null);
 				if ($row === null || ($row['_deleted'] ?? null) !== null) {
 					return null;
 				}
 
-				return $row;
+				$entity = new ObjectEntity();
+				$entity->setUuid((string)$id);
+				$entity->setObject($row);
+
+				return $entity;
 			}//end find()
 
 			/**
@@ -245,9 +272,10 @@ class RoutingControllerTest extends TestCase {
 				ticketService: new TicketService(
 					appConfig: $appConfig,
 					logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
-		),
+					objectService: $this->objects,
+				),
 				logger: $logger,
+				objectService: $this->objects,
 			),
 			userSession: $this->userSession,
 			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
@@ -526,16 +554,17 @@ class RoutingControllerTest extends TestCase {
 		$this->signIn();
 		$this->withParams(['entityType' => 'request', 'entityId' => 'req-1']);
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willThrowException(new \RuntimeException('postgres: FATAL password authentication failed'));
-
+		// The failure is raised on the config read, which RoutingService performs
+		// OUTSIDE its own try/catch — so it propagates to the controller, which
+		// is the boundary under test. Throwing from the injected ObjectService
+		// would not do: RoutingService catches find()/findAll() itself and
+		// degrades to `noMatch`, a 200.
 		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturnCallback(
-			static function (string $app, string $key, string $default = ''): string {
-				$map = ['register' => 'pipelinq', 'ticket_schema' => 'ticket'];
-				return ($map[$key] ?? $default);
-			}
+		$appConfig->method('getValueString')->willThrowException(
+			new \RuntimeException('postgres: FATAL password authentication failed')
 		);
+
+		$failing = $this->createMock(ObjectServiceInterface::class);
 
 		$logger = $this->createMock(LoggerInterface::class);
 		$controller = new RoutingController(
@@ -545,9 +574,10 @@ class RoutingControllerTest extends TestCase {
 				ticketService: new TicketService(
 					appConfig: $appConfig,
 					logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
-		),
+					objectService: $failing,
+				),
 				logger: $logger,
+				objectService: $failing,
 			),
 			userSession: $this->userSession,
 			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),

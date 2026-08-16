@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\NotesController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\NoteEventService;
@@ -108,13 +110,31 @@ class NotesControllerTest extends TestCase {
 		// lookup, which makes objectExists() return true so subsequent controller logic
 		// runs; the scope of every lookup is recorded so the tests can assert which
 		// register+schema an object type resolved to.
+		// The callback mirrors ObjectService::find()'s nine-parameter signature
+		// (ADR-084). The controller calls it with NAMED arguments, and PHP fills
+		// the gaps with the declared defaults, so a three-parameter callback
+		// received `[]` where it expected the register string and raised inside
+		// the double — which reads as "the object does not exist".
 		$objectServiceMock = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
-		$entityMock = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
-		$entityMock->method('getObject')->willReturnCallback(fn (): array => $this->ticketPayload);
 		$objectServiceMock->method('find')->willReturnCallback(
-			function (string $id, string $register = '', string $schema = '') use ($entityMock) {
-				$this->findCalls[] = ['register' => $register, 'schema' => $schema];
-				return $entityMock;
+			function (
+				int|string $id,
+				?array $_extend = [],
+				bool $files = false,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $_render = true,
+				bool $_audit = true,
+			): ?ObjectEntityInterface {
+				$this->findCalls[] = ['register' => (string)$register, 'schema' => (string)$schema];
+
+				$entity = new ObjectEntity();
+				$entity->setUuid((string)$id);
+				$entity->setObject($this->ticketPayload);
+
+				return $entity;
 			}
 		);
 

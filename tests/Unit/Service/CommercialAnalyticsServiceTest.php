@@ -33,11 +33,11 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -65,28 +65,7 @@ class CommercialAnalyticsServiceTest extends TestCase {
 			}
 		);
 
-		$objectService = new class($byCollection) {
-			/**
-			 * @param array<string, array<int, array<string, mixed>>> $byCollection Fixtures.
-			 */
-			public function __construct(
-				private array $byCollection,
-			) {
-			}
-
-			/**
-			 * @param array{filters?: array<string, mixed>} $config Query config.
-			 *
-			 * @return array<int, array<string, mixed>>
-			 */
-			public function findAll(array $config): array {
-				$schema = (string)($config['filters']['schema'] ?? '');
-				return $this->byCollection[$schema] ?? [];
-			}
-		};
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
+		$objectService = $this->createFakeObjectService(byCollection: $byCollection);
 
 		$logger = $this->createMock(LoggerInterface::class);
 
@@ -104,6 +83,45 @@ class CommercialAnalyticsServiceTest extends TestCase {
 			ticketService: $ticketService,
 			objectService: $objectService,
 		);
+	}
+
+	/**
+	 * A fixture-backed ObjectService satisfying the ADR-084 contract.
+	 *
+	 * Extends OpenRegister's ObjectService so the double satisfies the
+	 * `ObjectServiceInterface` type-hint; `findAll()` repeats the parent
+	 * signature EXACTLY, because PHP checks compatibility at class-load time.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $byCollection Per-schema fixture rows.
+	 *
+	 * @return ObjectServiceInterface
+	 */
+	private function createFakeObjectService(array $byCollection): ObjectServiceInterface {
+		return new class($byCollection) extends ObjectService {
+			/**
+			 * @param array<string, array<int, array<string, mixed>>> $byCollection Fixtures.
+			 */
+			public function __construct(
+				private array $byCollection,
+			) {
+			}
+
+			/**
+			 * @param array<string, mixed> $config        Query config.
+			 * @param bool                 $_rbac         Whether to enforce RBAC checks.
+			 * @param bool                 $_multitenancy Whether to enforce tenant scoping.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(
+				array $config = [],
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): array {
+				$schema = (string)($config['filters']['schema'] ?? '');
+				return $this->byCollection[$schema] ?? [];
+			}
+		};
 	}
 
 	/**

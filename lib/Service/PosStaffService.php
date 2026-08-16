@@ -311,7 +311,7 @@ class PosStaffService {
 		[$register, $schema] = $this->config(schemaKey: 'posStaff_schema');
 
 		try {
-			$this->getObjectService()->deleteObject(id: $id, register: $register, schema: $schema);
+			$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to delete posStaff', ['exception' => $e->getMessage()]);
 			throw new OCSNotFoundException('Medewerker kon niet worden verwijderd.');

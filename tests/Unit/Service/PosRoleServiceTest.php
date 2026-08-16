@@ -20,11 +20,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\PosRoleService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -33,13 +33,6 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/pipelinq-query-pushdown-batch-1/tasks.md#task-3
  */
 class PosRoleServiceTest extends TestCase {
-
-	/**
-	 * The DI container mock.
-	 *
-	 * @var ContainerInterface&MockObject
-	 */
-	private ContainerInterface $container;
 
 	/**
 	 * The app config mock.
@@ -61,7 +54,6 @@ class PosRoleServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->container = $this->createMock(ContainerInterface::class);
 		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
@@ -84,10 +76,13 @@ class PosRoleServiceTest extends TestCase {
 	 *
 	 * @param array<int, array<string, mixed>> $staff Staff rows.
 	 *
-	 * @return object The fake ObjectService.
+	 * @return ObjectServiceInterface The fake ObjectService.
 	 */
-	private function fakeObjectService(array $staff): object {
-		return new class($staff) {
+	private function fakeObjectService(array $staff): ObjectServiceInterface {
+		// Extends the ObjectService stub so it satisfies the contract type-hint
+		// PosRoleService now declares (ADR-084); a bare anonymous class is a
+		// different type wearing the same method names.
+		return new class($staff) extends ObjectService {
 			/**
 			 * @param array<int, array<string, mixed>> $staff Staff rows.
 			 */
@@ -98,10 +93,15 @@ class PosRoleServiceTest extends TestCase {
 
 			/**
 			 * @param array<string, mixed> $config Config with `filters`.
+			 * @param boolean $_rbac Unused.
+			 * @param boolean $_multitenancy Unused.
 			 *
 			 * @return array<int, array<string, mixed>> Matching rows.
+			 *
+			 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+			 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 				$filters = ($config['filters'] ?? []);
 				unset($filters['register'], $filters['schema']);
 				$out = [];
@@ -123,13 +123,14 @@ class PosRoleServiceTest extends TestCase {
 	/**
 	 * Build the service with the given fake ObjectService.
 	 *
-	 * @param object $objectService The fake ObjectService.
+	 * @param ObjectServiceInterface $objectService The fake ObjectService.
 	 *
 	 * @return PosRoleService
 	 */
-	private function buildService(object $objectService): PosRoleService {
-		$this->container->method('get')->willReturn($objectService);
-		return new PosRoleService($this->appConfig, $this->logger,
+	private function buildService(ObjectServiceInterface $objectService): PosRoleService {
+		return new PosRoleService(
+			appConfig: $this->appConfig,
+			logger: $this->logger,
 			objectService: $objectService,
 		);
 	}//end buildService()

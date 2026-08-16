@@ -31,7 +31,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Integration;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -43,6 +45,7 @@ use OCA\Pipelinq\Service\SmsProviderFactory;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -69,19 +72,45 @@ class OutboundMessagingContractTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->objectService = new class {
+		// The double EXTENDS the ObjectService stub, so it satisfies the
+		// injected `ObjectServiceInterface` type hint the services now carry
+		// (ADR-084). Both overrides reproduce the contract signatures exactly —
+		// PHP checks compatibility at CLASS-LOAD time, so a narrower one is a
+		// fatal before test 1 rather than a test failure.
+		$this->objectService = new class extends \OCA\OpenRegister\Service\ObjectService {
 			/** @var array<string, array<string, mixed>> */
 			public array $store = [];
 
 			/**
 			 * @param array<string, mixed> $object Payload.
-			 * @param mixed $register Register.
-			 * @param mixed $schema Schema.
+			 * @param array<string, mixed>|null $extend Extend list.
+			 * @param string|int|null $register Register.
+			 * @param string|int|null $schema Schema.
 			 * @param string|null $uuid Id.
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $silent Unused.
+			 * @param bool $_validation Unused.
+			 * @param array<string, mixed>|null $uploadedFiles Unused.
+			 * @param IUser|null $currentUser Unused.
+			 * @param bool $failIfExists Unused.
 			 *
-			 * @return array<string, mixed>
+			 * @return ObjectEntityInterface The stored row, wrapped as an entity.
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(
+				array $object,
+				?array $extend = [],
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				?string $uuid = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $silent = false,
+				bool $_validation = true,
+				?array $uploadedFiles = null,
+				?IUser $currentUser = null,
+				bool $failIfExists = false,
+			): ObjectEntityInterface {
 				if ($uuid === null || $uuid === '') {
 					$uuid = ('row-' . count($this->store));
 				}
@@ -89,28 +118,64 @@ class OutboundMessagingContractTest extends TestCase {
 				$object['uuid'] = $uuid;
 				$object['_schema'] = (string)$schema;
 				$this->store[$uuid] = $object;
-				return $object;
+
+				$entity = new ObjectEntity();
+				$entity->setUuid($uuid);
+				$entity->setRegister((string)$register);
+				$entity->setSchema((string)$schema);
+				$entity->setObject($object);
+
+				return $entity;
 			}
 
 			/**
-			 * @param string $id Id.
-			 * @param mixed $register Register.
-			 * @param mixed $schema Schema.
+			 * @param int|string $id Id.
+			 * @param array<string, mixed>|null $_extend Unused.
+			 * @param bool $files Unused.
+			 * @param string|int|null $register Register.
+			 * @param string|int|null $schema Schema.
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $_render Unused.
+			 * @param bool $_audit Unused.
 			 *
-			 * @return array<string, mixed>|null
+			 * @return ObjectEntityInterface|null The row, wrapped as an entity.
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
-				return ($this->store[$id] ?? null);
+			public function find(
+				int|string $id,
+				?array $_extend = [],
+				bool $files = false,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $_render = true,
+				bool $_audit = true,
+			): ?ObjectEntityInterface {
+				$row = ($this->store[(string)$id] ?? null);
+				if ($row === null) {
+					return null;
+				}
+
+				$entity = new ObjectEntity();
+				$entity->setUuid((string)$id);
+				$entity->setRegister((string)$register);
+				$entity->setSchema((string)$schema);
+				$entity->setObject($row);
+
+				return $entity;
 			}
 
 			/**
 			 * Mirrors OR's real ObjectService::findAll(array $config).
 			 *
 			 * @param array<string, mixed> $config Config with a `filters` map.
+			 * @param bool $_rbac RBAC posture.
+			 * @param bool $_multitenancy Tenancy posture.
 			 *
 			 * @return array<int, array<string, mixed>>
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 				return [];
 			}
 		};
@@ -128,11 +193,11 @@ class OutboundMessagingContractTest extends TestCase {
 
 		$contactmomentService = new ContactmomentService(
 			new TicketService($appConfig, $logger,
-				objectService: $this->createMock(ObjectServiceInterface::class),
+				objectService: $this->objectService,
 			),
 			$this->createMock(IGroupManager::class),
 			$logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->objectService,
 		);
 
 		$this->container->method('get')->willReturnCallback(

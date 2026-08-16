@@ -32,7 +32,6 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -110,32 +109,22 @@ class NaviServiceTest extends TestCase {
 			}
 		);
 
-		$objectService = new class($byCollection) {
-			/**
-			 * @param array<string, array<int, array<string, mixed>>> $byCollection
-			 */
-			public function __construct(
-				private array $byCollection,
-			) {
-			}
-
-			/**
-			 * @param array{filters?: array<string, mixed>} $config
-			 *
-			 * @return array<int, array<string, mixed>>
-			 */
-			public function findAll(array $config): array {
+		// The fake is a mock of the CONTRACT, not an in-test anonymous class:
+		// NaviService type-hints ObjectServiceInterface (ADR-084), and a bare
+		// `new class { … }` is rejected at construction. Mocking the interface
+		// also means findAll()'s signature comes from the contract itself and
+		// cannot drift from it.
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('findAll')->willReturnCallback(
+			static function (array $config = [], bool $_rbac = true, bool $_multitenancy = true) use ($byCollection): array {
 				$filters = ($config['filters'] ?? []);
 				$key = (string)($filters['schema'] ?? '');
 				if (isset($filters['ticketType']) === true) {
 					$key .= ':' . (string)$filters['ticketType'];
 				}
-				return $this->byCollection[$key] ?? [];
+				return $byCollection[$key] ?? [];
 			}
-		};
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
+		);
 
 		$logger = $this->createMock(LoggerInterface::class);
 

@@ -58,6 +58,12 @@ use Psr\Log\LoggerInterface;
  * @implements IEventListener<Event>
  *
  * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-002
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Measured 13, threshold 13.
+ *  An ADR-078 deferred listener necessarily names both halves of the contract —
+ *  the event and entity types it reacts to, and the deferral/job types it hands
+ *  work to. The count is the contract's width, not an accumulation of
+ *  responsibilities.
  */
 class ProjectPhaseStatusListener implements IEventListener, DeferredObjectWork {
 
@@ -100,6 +106,11 @@ class ProjectPhaseStatusListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 *
 	 * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-002-01
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatedEvent) === false) {
@@ -133,17 +144,11 @@ class ProjectPhaseStatusListener implements IEventListener, DeferredObjectWork {
 
 		// A phase change is attributed to its parent project; the lookup itself
 		// is a read and belongs in the job, so only the reference travels.
-		$subjectUuid = (string)$newEntity->getUuid();
-		$projectRef = '';
-		if ($entityType === 'projectPhase') {
-			$projectRef = (string)($newData['project'] ?? '');
-			if ($projectRef === '') {
-				return;
-			}
-
-			$subjectUuid = $projectRef;
-		}
-
+		$subjectUuid = $this->resolveSubjectUuid(
+			entityType: $entityType,
+			ownUuid: (string)$newEntity->getUuid(),
+			newData: $newData
+		);
 		if ($subjectUuid === '') {
 			return;
 		}
@@ -165,6 +170,31 @@ class ProjectPhaseStatusListener implements IEventListener, DeferredObjectWork {
 			dedupeKey: self::HANDLER_KEY . '|' . $subjectUuid . '|' . $oldStatus . '|' . $newStatus
 		);
 	}//end handle()
+
+	/**
+	 * Resolve the uuid the status change is attributed to.
+	 *
+	 * A `projectPhase` change is attributed to its parent project, so the phase's
+	 * own uuid is replaced by the `project` reference. Returns '' when there is
+	 * nothing dispatchable — a phase with no parent reference, or a missing uuid.
+	 *
+	 * Extracted from handle() to bring that method back under the phpmd
+	 * thresholds it had crossed (Cyclomatic 11 > 10, NPath 576 > 200); the guard
+	 * chain reads the same, it just no longer all lives in one method.
+	 *
+	 * @param string $entityType The resolved entity type.
+	 * @param string $ownUuid The changed object's own uuid.
+	 * @param array<string, mixed> $newData The changed object's payload.
+	 *
+	 * @return string The subject uuid, or '' when not dispatchable.
+	 */
+	private function resolveSubjectUuid(string $entityType, string $ownUuid, array $newData): string {
+		if ($entityType === 'projectPhase') {
+			return (string)($newData['project'] ?? '');
+		}
+
+		return $ownUuid;
+	}//end resolveSubjectUuid()
 
 	/**
 	 * Dispatch the status change to the ledger and record the outcome.

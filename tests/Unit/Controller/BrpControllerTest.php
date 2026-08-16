@@ -31,7 +31,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\BrpController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
@@ -257,7 +259,7 @@ class BrpControllerTest extends TestCase {
 		// ObjectService stub captures the brpLookupVerzoek payload into an
 		// ArrayObject holder so the reference survives back to the test.
 		$holder = new \ArrayObject();
-		$objectService = new class($holder) {
+		$objectService = new class($holder) extends \OCA\OpenRegister\Service\ObjectService {
 			/**
 			 * @param \ArrayObject<string,mixed> $holder Capture holder.
 			 */
@@ -269,21 +271,51 @@ class BrpControllerTest extends TestCase {
 			/**
 			 * Capture the first verzoek-shaped save (has verzoekreden), echo it back.
 			 *
-			 * @param array<string,mixed> $object The object to save.
-			 * @param array<int,mixed> $extend Extend list.
-			 * @param string $register Register id.
-			 * @param string $schema Schema id.
-			 * @param string|null $uuid Optional uuid.
+			 * Mirrors ObjectService::saveObject() exactly — twelve parameters and
+			 * a non-nullable `ObjectEntityInterface` return (ADR-084). PHP checks
+			 * signature compatibility at CLASS-LOAD time, so a narrower override
+			 * is a fatal before test 1 rather than a test failure.
 			 *
-			 * @return array<string,mixed>
+			 * @param array<string,mixed> $object The object to save.
+			 * @param array<string,mixed>|null $extend Extend list.
+			 * @param string|int|null $register Register id.
+			 * @param string|int|null $schema Schema id.
+			 * @param string|null $uuid Optional uuid.
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $silent Unused.
+			 * @param bool $_validation Unused.
+			 * @param array<string,mixed>|null $uploadedFiles Unused.
+			 * @param IUser|null $currentUser Unused.
+			 * @param bool $failIfExists Unused.
+			 *
+			 * @return ObjectEntityInterface The saved row, wrapped as an entity.
 			 */
-			public function saveObject(array $object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+			public function saveObject(
+				array $object,
+				?array $extend = [],
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				?string $uuid = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $silent = false,
+				bool $_validation = true,
+				?array $uploadedFiles = null,
+				?IUser $currentUser = null,
+				bool $failIfExists = false,
+			): ObjectEntityInterface {
 				if (isset($object['verzoekreden']) === true && $this->holder->count() === 0) {
 					$this->holder['verzoek'] = $object;
 				}
 
-				$object['@self'] = ['id' => 'saved-uuid'];
-				return $object;
+				$entity = new ObjectEntity();
+				$entity->setUuid('saved-uuid');
+				$entity->setRegister((string)$register);
+				$entity->setSchema((string)$schema);
+				$entity->setObject($object);
+
+				return $entity;
 			}//end saveObject()
 		};
 
@@ -852,7 +884,7 @@ class BrpControllerTest extends TestCase {
 		);
 
 		$rows = ($persons ?? []);
-		$objectService = new class($rows) {
+		$objectService = new class($rows) extends \OCA\OpenRegister\Service\ObjectService {
 			/**
 			 * @param array<int, array<string, mixed>> $rows Stored BRP persons.
 			 */
@@ -865,12 +897,57 @@ class BrpControllerTest extends TestCase {
 			 * Return the stored rows.
 			 *
 			 * @param array<string, mixed> $config The findAll config.
+			 * @param bool $_rbac RBAC posture.
+			 * @param bool $_multitenancy Tenancy posture.
 			 *
 			 * @return array<int, array<string, mixed>> The rows.
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 				return $this->rows;
 			}//end findAll()
+
+			/**
+			 * Echo the payload back as the entity the real service returns.
+			 *
+			 * Mirrors ObjectService::saveObject() exactly (ADR-084).
+			 *
+			 * @param array<string,mixed> $object The object to save.
+			 * @param array<string,mixed>|null $extend Extend list.
+			 * @param string|int|null $register Register id.
+			 * @param string|int|null $schema Schema id.
+			 * @param string|null $uuid Optional uuid.
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $silent Unused.
+			 * @param bool $_validation Unused.
+			 * @param array<string,mixed>|null $uploadedFiles Unused.
+			 * @param IUser|null $currentUser Unused.
+			 * @param bool $failIfExists Unused.
+			 *
+			 * @return ObjectEntityInterface The saved row, wrapped as an entity.
+			 */
+			public function saveObject(
+				array $object,
+				?array $extend = [],
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				?string $uuid = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $silent = false,
+				bool $_validation = true,
+				?array $uploadedFiles = null,
+				?IUser $currentUser = null,
+				bool $failIfExists = false,
+			): ObjectEntityInterface {
+				$entity = new ObjectEntity();
+				$entity->setUuid(($uuid ?? 'saved-uuid'));
+				$entity->setRegister((string)$register);
+				$entity->setSchema((string)$schema);
+				$entity->setObject($object);
+
+				return $entity;
+			}//end saveObject()
 		};
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -952,7 +1029,7 @@ class BrpControllerTest extends TestCase {
 			$this->createMock(OptOutService::class),
 			$listener,
 			$logger,
-			objectService: $objectService,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildWebhookController()
 }//end class
