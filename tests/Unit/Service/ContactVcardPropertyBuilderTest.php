@@ -45,7 +45,7 @@ class ContactVcardPropertyBuilderTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$container = $this->createMock(ContainerInterface::class);
 
-		$this->builder = new ContactVcardPropertyBuilder($appConfig, $container,
+		$this->builder = new ContactVcardPropertyBuilder($appConfig,
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end setUp()

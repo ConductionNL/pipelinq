@@ -88,7 +88,6 @@ class ContactVcardWriterServiceGuardTest extends TestCase {
 
 		return new ContactVcardWriterService($contacts,
 			$appConfig,
-			$container,
 			$this->createMock(LoggerInterface::class),
 			$resolver,
 			objectService: $object,

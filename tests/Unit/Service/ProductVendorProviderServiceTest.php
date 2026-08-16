@@ -105,7 +105,6 @@ class ProductVendorProviderServiceTest extends TestCase {
 		$container->method('get')->willReturn($os);
 
 		return new ProductVendorProviderService($appConfig,
-			$container,
 			$this->createMock(LoggerInterface::class),
 			objectService: $os,
 		);

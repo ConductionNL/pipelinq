@@ -214,7 +214,7 @@ class RoutingServiceWorkloadTest extends TestCase {
 
 		$this->container->method('get')->willReturn($this->fakeObjectService($rows));
 		$this->mockTicketRows($rows);
-		$service = new RoutingService($this->appConfig, $this->container, $this->ticketService, $this->logger,
+		$service = new RoutingService($this->appConfig, $this->ticketService, $this->logger,
 			objectService: $out,
 		);
 
@@ -230,7 +230,7 @@ class RoutingServiceWorkloadTest extends TestCase {
 	public function testGetAgentWorkloadEmptyUserReturnsZero(): void {
 		$this->container->method('get')->willReturn($this->fakeObjectService([]));
 		$this->mockTicketRows([]);
-		$service = new RoutingService($this->appConfig, $this->container, $this->ticketService, $this->logger,
+		$service = new RoutingService($this->appConfig, $this->ticketService, $this->logger,
 			objectService: $out,
 		);
 

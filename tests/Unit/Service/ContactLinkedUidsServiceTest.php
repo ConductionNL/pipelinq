@@ -50,7 +50,7 @@ class ContactLinkedUidsServiceTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$service = new ContactLinkedUidsService($appConfig, $container, $logger,
+		$service = new ContactLinkedUidsService($appConfig, $logger,
 			objectService: $objectService,
 		);
 

@@ -46,7 +46,7 @@ class DefaultPipelineServiceTest extends TestCase {
 
 		$logger->expects($this->once())->method('warning');
 
-		$service = new DefaultPipelineService($appConfig, $container, $stageData, $logger,
+		$service = new DefaultPipelineService($appConfig, $stageData, $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 		$service->createDefaultPipelines();
@@ -68,7 +68,7 @@ class DefaultPipelineServiceTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->once())->method('error');
 
-		$service = new DefaultPipelineService($appConfig, $container, $stageData, $logger,
+		$service = new DefaultPipelineService($appConfig, $stageData, $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 		$service->createDefaultPipelines();

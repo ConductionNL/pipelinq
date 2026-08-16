@@ -306,7 +306,6 @@ class BrpControllerTest extends TestCase {
 			$audit,
 			$optOut,
 			$webhookListener,
-			$container,
 			$this->createMock(LoggerInterface::class),
 			objectService: $objectService,
 		);
@@ -889,7 +888,6 @@ class BrpControllerTest extends TestCase {
 			($audit ?? $this->createMock(BsnAuditService::class)),
 			($optOut ?? $this->createMock(OptOutService::class)),
 			$this->createMock(BrpMutationWebhookListener::class),
-			$container,
 			$this->createMock(LoggerInterface::class),
 			objectService: $objectService,
 		);
