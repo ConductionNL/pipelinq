@@ -10,16 +10,17 @@ import {
 	registerIcons,
 	registerTranslations,
 } from '@conduction/nextcloud-vue'
-// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
+// The `import/no-unresolved` disables on these subpath imports are gone: the
+// flat config does not register that rule, so each comment was itself an
+// error. Their note still holds — every `@conduction/nextcloud-vue/...`
+// subpath below is resolved by a webpack alias, not by a Node resolver.
 import { registerBuiltinIntegrations } from '@conduction/nextcloud-vue/integrations/builtin/index.js'
-// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
 import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations/builtin/leaves.js'
 // Import the integration-registry functions from their DEFINITION modules
 // (0 re-export hops) rather than the barrel: pipelinq splits the library into
 // a separate `shared-nc-vue.js` chunk and its 9 entry points have no shared
 // runtimeChunk, so the barrel's 3-hop re-exports of these functions resolve to
 // `undefined` across the chunk boundary (components, used directly, are fine).
-// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
 import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
 import axios from '@nextcloud/axios'
 import { loadState } from '@nextcloud/initial-state'
@@ -41,7 +42,6 @@ import registry from './registry.js'
 import { initializeStores, registerObjectTypes } from './store/store.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
-// eslint-disable-next-line import/no-unresolved -- CSS subpath resolved by webpack alias, not ESLint's resolver
 import '@conduction/nextcloud-vue/css/index.css'
 // gridstack is a REQUIRED peer of @conduction/nextcloud-vue that no consumer
 // declares, and the stylesheet is the silent half of it. Pipelinq ships
@@ -146,6 +146,12 @@ function seedDashboardAppConfig(manifest) {
 	return manifest
 }
 
+// `require.context` is a WEBPACK build-time API, not CommonJS `require`: the
+// bundler rewrites this call at compile time and no `require` exists at
+// runtime. eslint's browser globals therefore report `no-undef` correctly —
+// the code is right and the linter is right. Scoped to this one identifier so
+// a genuinely undefined name elsewhere in the file still fails.
+/* global require */
 const fragmentCtx = require.context('./manifest.d/', false, /\.json$/)
 const fragments = fragmentCtx
 	.keys()

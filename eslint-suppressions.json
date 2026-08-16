@@ -291,14 +291,8 @@
     }
   },
   "src/main.js": {
-    "import/no-unresolved": {
-      "count": 4
-    },
     "no-console": {
       "count": 2
-    },
-    "no-undef": {
-      "count": 1
     }
   },
   "src/modals/AddTenderDialog.vue": {
