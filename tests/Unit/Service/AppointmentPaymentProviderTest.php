@@ -26,8 +26,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\AppointmentPaymentProvider;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -99,6 +100,33 @@ class AppointmentPaymentProviderTest extends TestCase {
 	}//end buildProvider()
 
 	/**
+	 * Wrap a fixture row as the ObjectEntity OpenRegister actually returns.
+	 *
+	 * Since ADR-084 `find()` is declared `?ObjectEntityInterface` and
+	 * `saveObject()` `ObjectEntityInterface`, not the bare arrays these fixtures
+	 * are written as.
+	 *
+	 * @param array<string, mixed> $row The fixture row.
+	 *
+	 * @return ObjectEntity The row as an entity.
+	 */
+	private static function entity(array $row): ObjectEntity {
+		$self = ($row['@self'] ?? []);
+		$id = '';
+		if (is_array($self) === true && isset($self['id']) === true) {
+			$id = (string)$self['id'];
+		} elseif (isset($row['id']) === true) {
+			$id = (string)$row['id'];
+		}
+
+		$entity = new ObjectEntity();
+		$entity->setUuid($id);
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
+
+	/**
 	 * Build a stub PaymentService that captures the chargeCustomer call.
 	 *
 	 * @return object
@@ -152,23 +180,23 @@ class AppointmentPaymentProviderTest extends TestCase {
 		$captured = null;
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			function (string $id): array {
+			function (string|int $id): ?ObjectEntityInterface {
 				if ($id === 'b-1') {
-					return [
+					return self::entity([
 						'@self' => ['id' => 'b-1'],
 						'customerId' => 'cust-1',
 						'status' => 'no-show',
-					];
+					]);
 				}
 
 				if ($id === 'cust-1') {
-					return [
+					return self::entity([
 						'@self' => ['id' => 'cust-1'],
 						'paymentMethodToken' => 'pm_token_123',
-					];
+					]);
 				}
 
-				return [];
+				return null;
 			}
 		);
 
@@ -179,13 +207,13 @@ class AppointmentPaymentProviderTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$captured): array {
+			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
 				if (is_array($payload) === true) {
-					return $payload;
+					return self::entity($payload);
 				}
 
-				return (array)$payload;
+				return self::entity((array)$payload);
 			}
 		);
 
@@ -216,13 +244,13 @@ class AppointmentPaymentProviderTest extends TestCase {
 	public function testChargeNoShowFeeSkippedWhenNoPaymentMethod(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			function (string $id): array {
+			function (string|int $id): ?ObjectEntityInterface {
 				if ($id === 'b-2') {
-					return ['@self' => ['id' => 'b-2'], 'customerId' => 'cust-2'];
+					return self::entity(['@self' => ['id' => 'b-2'], 'customerId' => 'cust-2']);
 				}
 
 				// No paymentMethodToken on the customer mirror.
-				return ['@self' => ['id' => 'cust-2']];
+				return self::entity(['@self' => ['id' => 'cust-2']]);
 			}
 		);
 
@@ -246,12 +274,12 @@ class AppointmentPaymentProviderTest extends TestCase {
 		$captured = null;
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			function (string $id): array {
+			function (string|int $id): ?ObjectEntityInterface {
 				if ($id === 'b-3') {
-					return ['@self' => ['id' => 'b-3'], 'customerId' => 'cust-3'];
+					return self::entity(['@self' => ['id' => 'b-3'], 'customerId' => 'cust-3']);
 				}
 
-				return ['@self' => ['id' => 'cust-3'], 'paymentMethodToken' => 'pm_x'];
+				return self::entity(['@self' => ['id' => 'cust-3'], 'paymentMethodToken' => 'pm_x']);
 			}
 		);
 
@@ -262,13 +290,13 @@ class AppointmentPaymentProviderTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$captured): array {
+			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
 				if (is_array($payload) === true) {
-					return $payload;
+					return self::entity($payload);
 				}
 
-				return (array)$payload;
+				return self::entity((array)$payload);
 			}
 		);
 
@@ -334,12 +362,12 @@ class AppointmentPaymentProviderTest extends TestCase {
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			function (string $id): array {
+			function (string|int $id): ?ObjectEntityInterface {
 				if ($id === 'b-4') {
-					return ['@self' => ['id' => 'b-4'], 'customerId' => 'cust-4'];
+					return self::entity(['@self' => ['id' => 'b-4'], 'customerId' => 'cust-4']);
 				}
 
-				return ['@self' => ['id' => 'cust-4'], 'paymentMethodToken' => 'pm_x'];
+				return self::entity(['@self' => ['id' => 'cust-4'], 'paymentMethodToken' => 'pm_x']);
 			}
 		);
 
@@ -377,12 +405,12 @@ class AppointmentPaymentProviderTest extends TestCase {
 	public function testChargeBookingFeeRoundsHalfCentValues(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			function (string $id): array {
+			function (string|int $id): ?ObjectEntityInterface {
 				if ($id === 'b-5') {
-					return ['@self' => ['id' => 'b-5'], 'customerId' => 'cust-5'];
+					return self::entity(['@self' => ['id' => 'b-5'], 'customerId' => 'cust-5']);
 				}
 
-				return ['@self' => ['id' => 'cust-5'], 'paymentMethodToken' => 'pm_x'];
+				return self::entity(['@self' => ['id' => 'cust-5'], 'paymentMethodToken' => 'pm_x']);
 			}
 		);
 

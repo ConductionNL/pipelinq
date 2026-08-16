@@ -25,24 +25,17 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\RapportageService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Tests for RapportageService analytics aggregation.
  */
 class RapportageServiceTest extends TestCase {
-
-	/**
-	 * The container mock.
-	 *
-	 * @var ContainerInterface&MockObject
-	 */
-	private ContainerInterface $container;
 
 	/**
 	 * The app config mock.
@@ -59,11 +52,11 @@ class RapportageServiceTest extends TestCase {
 	private LoggerInterface $logger;
 
 	/**
-	 * The fake ObjectService stub returned via the container.
+	 * The fixture-backed ObjectService injected into the service.
 	 *
-	 * @var object
+	 * @var ObjectServiceInterface
 	 */
-	private object $objectService;
+	private ObjectServiceInterface $objectService;
 
 	/**
 	 * Set up the test fixtures with a fixed lead dataset.
@@ -71,7 +64,6 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->container = $this->createMock(ContainerInterface::class);
 		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
@@ -91,10 +83,14 @@ class RapportageServiceTest extends TestCase {
 			);
 
 		$leads = $this->fixtureLeads();
-		$this->objectService = new class($leads) {
+
+		// ADR-084: the service now takes an injected ObjectServiceInterface, so the
+		// double extends OpenRegister's ObjectService and repeats the findAll()
+		// signature EXACTLY (PHP checks compatibility at class-load time).
+		$this->objectService = new class($leads) extends ObjectService {
 
 			/**
-			 * @param array<int, array<string, mixed>> $leads
+			 * @param array<int, array<string, mixed>> $leads The lead fixtures.
 			 */
 			public function __construct(
 				private array $leads,
@@ -102,24 +98,20 @@ class RapportageServiceTest extends TestCase {
 			}
 
 			/**
-			 * @param array<string, mixed> $config
+			 * @param array<string, mixed> $config        The query configuration.
+			 * @param bool                 $_rbac         Whether to enforce RBAC checks.
+			 * @param bool                 $_multitenancy Whether to enforce tenant scoping.
+			 *
 			 * @return array<int, array<string, mixed>>
 			 */
-			public function findAll(array $config): array {
+			public function findAll(
+				array $config = [],
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): array {
 				return $this->leads;
 			}
 		};
-
-		$this->container->method('get')
-			->willReturnCallback(
-				function (string $id): object {
-					if ($id === 'OCA\OpenRegister\Service\ObjectService') {
-						return $this->objectService;
-					}
-
-					throw new \RuntimeException('Unknown service: ' . $id);
-				}
-			);
 
 	}//end setUp()
 
@@ -167,8 +159,10 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetStageValuesAggregatesCountAndValue(): void {
-		$service = new RapportageService($this->appConfig, $this->logger,
-			objectService: $default,
+		$service = new RapportageService(
+			appConfig: $this->appConfig,
+			logger: $this->logger,
+			objectService: $this->objectService,
 		);
 		$rows = $service->getStageValues();
 		$byStage = [];
@@ -194,8 +188,10 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetSourcePerformanceComputesConversion(): void {
-		$service = new RapportageService($this->appConfig, $this->logger,
-			objectService: $default,
+		$service = new RapportageService(
+			appConfig: $this->appConfig,
+			logger: $this->logger,
+			objectService: $this->objectService,
 		);
 		$rows = $service->getSourcePerformance();
 		$bySrc = [];
@@ -222,8 +218,10 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetWinLossAnalysisComputesWinRate(): void {
-		$service = new RapportageService($this->appConfig, $this->logger,
-			objectService: $default,
+		$service = new RapportageService(
+			appConfig: $this->appConfig,
+			logger: $this->logger,
+			objectService: $this->objectService,
 		);
 		$winLoss = $service->getWinLossAnalysis();
 
@@ -243,8 +241,10 @@ class RapportageServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetAgingBucketsDistributesOpenLeads(): void {
-		$service = new RapportageService($this->appConfig, $this->logger,
-			objectService: $default,
+		$service = new RapportageService(
+			appConfig: $this->appConfig,
+			logger: $this->logger,
+			objectService: $this->objectService,
 		);
 		$rows = $service->getAgingBuckets();
 		$byBucket = [];

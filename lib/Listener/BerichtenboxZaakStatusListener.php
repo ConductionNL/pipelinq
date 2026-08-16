@@ -255,10 +255,10 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 				return '';
 			}
 
-			$data = $row;
-			if (is_array($row) === false) {
-				$data = ($row->getObject() ?? []);
-			}
+			// The find() contract returns an ObjectEntityInterface, whose
+			// getObject() is a non-nullable array — so both the array arm and
+			// the `?? []` were dead code (phpstan flagged each of them).
+			$data = $row->getObject();
 
 			return (string)($data['bsn'] ?? '');
 		} catch (\Throwable $e) {

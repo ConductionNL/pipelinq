@@ -21,14 +21,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\EligibilityService;
 use OCP\IAppConfig;
 use OCP\ICacheFactory;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -143,9 +143,6 @@ class EligibilityServiceTest extends TestCase {
 	 * @return EligibilityService
 	 */
 	private function buildService(ObjectServiceInterface $objectService): EligibilityService {
-		$container = $this->createMock(originalClassName: ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
-
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			callback: static function (string $app, string $key, string $default = ''): string {
@@ -194,7 +191,7 @@ class EligibilityServiceTest extends TestCase {
 	 */
 	private function wireFind(ObjectServiceInterface $mock, array $bySchema): void {
 		$mock->method('find')->willReturnCallback(
-			callback: static function (mixed ...$args) use ($bySchema): ?array {
+			callback: static function (mixed ...$args) use ($bySchema): ?ObjectEntityInterface {
 				$id = (string)($args[0] ?? '');
 				$schema = '';
 				if (isset($args[4]) === true && is_string($args[4]) === true) {
@@ -206,10 +203,41 @@ class EligibilityServiceTest extends TestCase {
 				}
 
 				$bucket = ($bySchema[$schema] ?? []);
-				return ($bucket[$id] ?? null);
+				$row = ($bucket[$id] ?? null);
+				if (is_array($row) === false) {
+					return null;
+				}
+
+				return self::entity($row);
 			}
 		);
 	}//end wireFind()
+
+	/**
+	 * Wrap a fixture row as the ObjectEntity OpenRegister actually returns.
+	 *
+	 * Since ADR-084 `find()` is declared `?ObjectEntityInterface`, not the bare
+	 * array these fixtures are written as.
+	 *
+	 * @param array<string, mixed> $row The fixture row.
+	 *
+	 * @return ObjectEntity The row as an entity.
+	 */
+	private static function entity(array $row): ObjectEntity {
+		$self = ($row['@self'] ?? []);
+		$id = '';
+		if (is_array($self) === true && isset($self['id']) === true) {
+			$id = (string)$self['id'];
+		} elseif (isset($row['id']) === true) {
+			$id = (string)$row['id'];
+		}
+
+		$entity = new ObjectEntity();
+		$entity->setUuid($id);
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
 
 	/**
 	 * Stub the ObjectService::findAll call to return the right collection per schema.

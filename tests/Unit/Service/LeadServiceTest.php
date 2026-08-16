@@ -20,8 +20,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\LeadService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -113,9 +114,13 @@ class LeadServiceTest extends TestCase {
 	/**
 	 * Build an ObjectService mock and wire it as the container's resolved service.
 	 *
+	 * The declared return type is the CONTRACT: the double is a mock of
+	 * `ObjectServiceInterface`, so a helper still declaring OpenRegister's
+	 * concrete `Service\ObjectService` raises a TypeError on return (ADR-084).
+	 *
 	 * @return ObjectServiceInterface&MockObject
 	 */
-	private function mockObjectService(): ObjectService {
+	private function mockObjectService(): ObjectServiceInterface {
 		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->container->method('get')->willReturn($objectService);
 
@@ -264,14 +269,27 @@ class LeadServiceTest extends TestCase {
 		$captured = [];
 		$objectService = $this->mockObjectService();
 		$objectService->method('saveObject')->willReturnCallback(
-			static function (array $object, ?array $extend, $register, $schema, ?string $uuid) use (&$captured): array {
+			static function (
+				array $object,
+				?array $extend = [],
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				?string $uuid = null,
+			) use (&$captured): ObjectEntityInterface {
 				$captured = [
 					'object' => $object,
 					'register' => $register,
 					'schema' => $schema,
 					'uuid' => $uuid,
 				];
-				return array_merge($object, ['id' => self::NIL_UUID, 'qualificationScore' => 45, 'winProbability' => 36.0]);
+
+				// saveObject() returns an ENTITY (ADR-084). The materialised
+				// calculations come back on the stored payload, which is what
+				// LeadService::toArray() reads through getObject().
+				$entity = new ObjectEntity();
+				$entity->setUuid(self::NIL_UUID);
+				$entity->setObject(array_merge($object, ['qualificationScore' => 45, 'winProbability' => 36.0]));
+				return $entity;
 			}
 		);
 

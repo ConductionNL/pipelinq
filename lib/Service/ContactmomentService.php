@@ -153,17 +153,19 @@ class ContactmomentService {
 			return null;
 		}
 
-		// Resolve the object service loosely (duck-typed) so the audit path
-		// never depends on the concrete OpenRegister class being loadable —
-		// it is a best-effort side-channel, not a hard dependency. That is why
-		// the write is issued here rather than through TicketService::save(),
-		// which resolves the concrete ObjectService type; TicketService still
-		// owns the schema resolution and the ticketType discriminator.
-		$objectService = $this->objectServiceLoose();
-		if ($objectService === null) {
-			$this->logger->info('ContactmomentService.recordOutboundMessage: audit skipped (OpenRegister unavailable)');
-			return null;
-		}
+		// The write is issued directly against the injected ObjectService rather
+		// than through TicketService::save(), because this is a best-effort audit
+		// side-channel; TicketService still owns the schema resolution and the
+		// ticketType discriminator.
+		//
+		// This used to go through a duck-typed `objectServiceLoose()` that
+		// resolved the service from the container and returned null when
+		// OpenRegister was absent. The service is now a constructor-injected,
+		// non-nullable ObjectServiceInterface, so that helper's try block had
+		// been emptied — leaving a dead catch and a read of an undefined
+		// `$service` (phpstan/psalm/phpmd all flagged it). Container-absence is
+		// now a construction-time failure, so there is nothing to degrade to.
+		$objectService = $this->objectService;
 
 		$payload = [
 			'ticketType' => TicketService::TYPE_CONTACTMOMENT,
@@ -196,43 +198,20 @@ class ContactmomentService {
 			return null;
 		}
 
-		if (is_array($saved) === true) {
-			return (string)($saved['uuid'] ?? ($saved['id'] ?? ''));
-		}
-
-		if (is_object($saved) === true) {
-			// SaveObject() returns an ObjectEntity whose getUuid() is served by
-			// Entity::__call — method_exists() is FALSE for it, so the outbound
-			// message row was persisted and this returned null (pipelinq#807).
-			$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
-			if ($uuid !== '') {
-				return $uuid;
-			}
+		// The saveObject() contract returns an ObjectEntityInterface, so the array
+		// arm was dead (phpstan: "Call to function is_array() with
+		// ObjectEntityInterface will always evaluate to false"). Note that
+		// getUuid() on a Db\ObjectEntity is
+		// served by Entity::__call, so method_exists() is FALSE for it — the
+		// outbound message row was persisted and this still returned null
+		// (pipelinq#807); readEntityValue() is what handles that.
+		$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
+		if ($uuid !== '') {
+			return $uuid;
 		}
 
 		return null;
 	}//end recordOutboundMessage()
-
-	/**
-	 * Resolve the OpenRegister ObjectService without a strict return type.
-	 *
-	 * Used only by the best-effort outbound audit path so it degrades quietly
-	 * (returns null) when OpenRegister is absent, rather than throwing.
-	 *
-	 * @return object|null The object service, or null.
-	 */
-	private function objectServiceLoose(): ?object {
-		try {
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if (is_object($service) === false || method_exists($service, 'saveObject') === false) {
-			return null;
-		}
-
-		return $service;
-	}//end objectServiceLoose()
 
 	/**
 	 * Delete a contactmoment with permission checking.

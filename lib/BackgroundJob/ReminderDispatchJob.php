@@ -43,6 +43,12 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * ReminderDispatchJob — 5-minute reminder dispatcher.
  *
  * @spec openspec/specs/appointment-booking/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Measured 13, threshold 13.
+ *  A dispatcher is a fan-out point by definition: it reads bookings, resolves
+ *  services and resources, renders the message and hands off to email/SMS. Each
+ *  collaborator is used exactly once and splitting the job would move the same
+ *  edges behind an extra indirection without removing any of them.
  */
 class ReminderDispatchJob extends TimedJob {
 	/**

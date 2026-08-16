@@ -813,20 +813,17 @@ class CashShiftService {
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.
 	 *
-	 * Resolves the runner from the DI container the same way the ObjectService
-	 * is resolved, so reporting paths can push SUM/COUNT/group work down into
-	 * OpenRegister (ADR-022) instead of hydrating and reducing in PHP.
+	 * The runner is constructor-injected, so reporting paths can push
+	 * SUM/COUNT/group work down into OpenRegister (ADR-022) instead of hydrating
+	 * and reducing in PHP. It used to be resolved from the DI container inside a
+	 * try/catch; since the migration to injection the catch was unreachable —
+	 * phpstan: "Dead catch - Throwable is never thrown in the try block".
+	 * OpenRegister-absence is now a construction-time failure.
 	 *
 	 * @return object The aggregation runner.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getAggregationRunner(): object {
-		try {
-			return $this->aggregationRunner;
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister aggregation runner is not available.');
-		}
+		return $this->aggregationRunner;
 	}//end getAggregationRunner()
 
 	/**

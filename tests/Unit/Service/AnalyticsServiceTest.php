@@ -26,12 +26,12 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -67,36 +67,10 @@ class AnalyticsServiceTest extends TestCase {
 			}
 		);
 
-		$objectService = new class($byCollection, $throwFromObjectService) {
-			/**
-			 * @param array<string, array<int, array<string, mixed>>> $byCollection
-			 */
-			public function __construct(
-				private array $byCollection,
-				private bool $throwAlways,
-			) {
-			}
-
-			/**
-			 * @param array{filters?: array<string, mixed>} $config
-			 *
-			 * @return array<int, array<string, mixed>>
-			 */
-			public function findAll(array $config): array {
-				if ($this->throwAlways === true) {
-					throw new \RuntimeException('boom');
-				}
-				$filters = ($config['filters'] ?? []);
-				$key = (string)($filters['schema'] ?? '');
-				if (isset($filters['ticketType']) === true) {
-					$key .= ':' . (string)$filters['ticketType'];
-				}
-				return $this->byCollection[$key] ?? [];
-			}
-		};
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
+		$objectService = $this->createFakeObjectService(
+			byCollection: $byCollection,
+			throwAlways: $throwFromObjectService
+		);
 
 		$logger = $this->createMock(LoggerInterface::class);
 
@@ -109,6 +83,56 @@ class AnalyticsServiceTest extends TestCase {
 			),
 			objectService: $objectService,
 		);
+	}
+
+	/**
+	 * A fixture-backed ObjectService satisfying the ADR-084 contract.
+	 *
+	 * Extends OpenRegister's ObjectService so the double satisfies the
+	 * `ObjectServiceInterface` type-hint the service now declares; `findAll()`
+	 * is overridden with the parent signature EXACTLY, because PHP checks
+	 * compatibility at class-load time.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $byCollection Per-collection fixture rows.
+	 * @param bool $throwAlways Force the fake to throw on findAll.
+	 *
+	 * @return ObjectServiceInterface
+	 */
+	private function createFakeObjectService(array $byCollection, bool $throwAlways): ObjectServiceInterface {
+		return new class($byCollection, $throwAlways) extends ObjectService {
+			/**
+			 * @param array<string, array<int, array<string, mixed>>> $byCollection Per-collection fixture rows.
+			 * @param bool $throwAlways Force the fake to throw on findAll.
+			 */
+			public function __construct(
+				private array $byCollection,
+				private bool $throwAlways,
+			) {
+			}
+
+			/**
+			 * @param array<string, mixed> $config        The query configuration.
+			 * @param bool                 $_rbac         Whether to enforce RBAC checks.
+			 * @param bool                 $_multitenancy Whether to enforce tenant scoping.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(
+				array $config = [],
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): array {
+				if ($this->throwAlways === true) {
+					throw new \RuntimeException('boom');
+				}
+				$filters = ($config['filters'] ?? []);
+				$key = (string)($filters['schema'] ?? '');
+				if (isset($filters['ticketType']) === true) {
+					$key .= ':' . (string)$filters['ticketType'];
+				}
+				return $this->byCollection[$key] ?? [];
+			}
+		};
 	}
 
 	/**

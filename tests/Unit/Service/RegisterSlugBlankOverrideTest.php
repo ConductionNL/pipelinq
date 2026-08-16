@@ -23,8 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\MessagingService;
@@ -82,6 +82,37 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 	}//end buildService()
 
 	/**
+	 * An ObjectService double that records the register every find() is scoped to.
+	 *
+	 * The register is read from the NAMED parameter, not from a positional
+	 * index. `ObjectServiceInterface::find()` declares nine parameters and the
+	 * register is the FOURTH — these tests used to read `$args[1]`, which under
+	 * the current contract is `$_extend` and always came back as `[]`, so all
+	 * three assertions compared a register slug against an empty array.
+	 *
+	 * @param array<int, mixed> $seen Collects the register of every call.
+	 *
+	 * @return ObjectServiceInterface The recording double.
+	 */
+	private function registerRecordingObjectService(array &$seen): ObjectServiceInterface {
+		$object = $this->createMock(ObjectServiceInterface::class);
+		$object->method('find')->willReturnCallback(
+			static function (
+				int|string $id,
+				?array $_extend = [],
+				bool $files = false,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+			) use (&$seen): ?ObjectEntityInterface {
+				$seen[] = $register;
+				return null;
+			}
+		);
+
+		return $object;
+	}//end registerRecordingObjectService()
+
+	/**
 	 * A BLANK `register` override still resolves to the built-in slug, so the
 	 * lookup proceeds scoped instead of being abandoned.
 	 *
@@ -93,13 +124,7 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 	public function testBlankRegisterOverrideFallsBackToBuiltInSlug(): void {
 		$seen = [];
 
-		$object = $this->createMock(ObjectServiceInterface::class);
-		$object->method('find')->willReturnCallback(
-			static function (...$args) use (&$seen): ?array {
-				$seen[] = ($args[1] ?? null);
-				return null;
-			}
-		);
+		$object = $this->registerRecordingObjectService($seen);
 
 		$service = $this->buildService(['register' => ''], $object);
 
@@ -117,13 +142,7 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 	public function testAbsentRegisterKeyFallsBackToBuiltInSlug(): void {
 		$seen = [];
 
-		$object = $this->createMock(ObjectServiceInterface::class);
-		$object->method('find')->willReturnCallback(
-			static function (...$args) use (&$seen): ?array {
-				$seen[] = ($args[1] ?? null);
-				return null;
-			}
-		);
+		$object = $this->registerRecordingObjectService($seen);
 
 		$service = $this->buildService([], $object);
 
@@ -142,13 +161,7 @@ class RegisterSlugBlankOverrideTest extends TestCase {
 	public function testExplicitRegisterOverrideIsHonoured(): void {
 		$seen = [];
 
-		$object = $this->createMock(ObjectServiceInterface::class);
-		$object->method('find')->willReturnCallback(
-			static function (...$args) use (&$seen): ?array {
-				$seen[] = ($args[1] ?? null);
-				return null;
-			}
-		);
+		$object = $this->registerRecordingObjectService($seen);
 
 		$service = $this->buildService(['register' => 'custom-reg'], $object);
 

@@ -116,12 +116,18 @@ class RoutingService {
 			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
 		}
 
-		if (is_array($entity) === false) {
-			// Try array fallback.
-			$entity = (array)$entity;
+		// ObjectServiceInterface::find() returns an ObjectEntityInterface, so a
+		// plain `(array)$entity` cast produced the MANGLED private-property keys
+		// of the entity object and `category` was therefore always '' — every
+		// suggestion request short-circuited to noMatch. Read the payload
+		// through the entity contract instead.
+		if ($entity === null) {
+			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
 		}
 
-		$category = (string)($entity['category'] ?? '');
+		$data = $entity->getObject();
+
+		$category = (string)($data['category'] ?? '');
 		if ($category === '') {
 			return ['suggestions' => [], 'atCapacity' => 0, 'noMatch' => true];
 		}
@@ -450,11 +456,16 @@ class RoutingService {
 	}//end isAgentAtCapacity()
 
 	/**
-	 * Get the OpenRegister ObjectService via the container.
+	 * Get the injected OpenRegister ObjectService.
 	 *
-	 * @return object The object service.
+	 * Typed against the CONTRACT rather than the bare `object` it used to
+	 * return, so static analysis can see that `find()` yields a nullable
+	 * ObjectEntityInterface — which is how the `(array)$entity` bug above went
+	 * unnoticed for as long as it did.
+	 *
+	 * @return ObjectServiceInterface The object service.
 	 */
-	private function getObjectService(): object {
+	private function getObjectService(): ObjectServiceInterface {
 		return $this->objectService;
 	}//end getObjectService()
 }//end class

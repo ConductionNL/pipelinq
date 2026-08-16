@@ -47,6 +47,10 @@ use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
  *  movement type (credit/debit/expiry/adjustment/refund) plus balance/history
  *  reads as small, single-purpose methods delegating to one shared
  *  append-and-update core.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Measured 13, threshold 13.
+ *  Same cause as above: one class owns every movement type, so it names each
+ *  movement's request/result type once. Splitting by movement would duplicate
+ *  the append-and-update core five times.
  */
 class PointsLedgerService {
 	/**
@@ -547,19 +551,15 @@ class PointsLedgerService {
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.
 	 *
-	 * Resolved from the DI container the same way ObjectService is, so the
-	 * full-ledger balance SUM is computed by OpenRegister (ADR-022) instead of
-	 * hydrating the whole ledger and reducing in PHP.
+	 * Constructor-injected the same way ObjectService is, so the full-ledger
+	 * balance SUM is computed by OpenRegister (ADR-022) instead of hydrating the
+	 * whole ledger and reducing in PHP. It was formerly resolved from the DI
+	 * container inside a try/catch; since the migration to injection that catch
+	 * was unreachable — phpstan reports it as a dead catch.
 	 *
 	 * @return object The aggregation runner.
-	 *
-	 * @throws RuntimeException If OpenRegister is unavailable.
 	 */
 	private function getAggregationRunner(): object {
-		try {
-			return $this->aggregationRunner;
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister aggregation runner is unavailable.', 0, $e);
-		}
+		return $this->aggregationRunner;
 	}//end getAggregationRunner()
 }//end class

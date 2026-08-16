@@ -29,7 +29,6 @@ use OCA\Pipelinq\Service\SnapshotGenerationService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -74,7 +73,7 @@ class SnapshotGenerationServiceTest extends TestCase {
 			quotaService: $quota,
 			notifier: $this->createMock(NotificationService::class),
 			logger: $this->createMock(LoggerInterface::class),
-			objectService: $d,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end setUp()
 

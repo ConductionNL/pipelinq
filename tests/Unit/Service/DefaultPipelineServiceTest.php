@@ -24,7 +24,6 @@ use OCA\Pipelinq\Service\DefaultPipelineService;
 use OCA\Pipelinq\Service\PipelineStageData;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -40,7 +39,6 @@ class DefaultPipelineServiceTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn('');
 
-		$container = $this->createMock(ContainerInterface::class);
 		$stageData = new PipelineStageData();
 		$logger = $this->createMock(LoggerInterface::class);
 
@@ -55,22 +53,30 @@ class DefaultPipelineServiceTest extends TestCase {
 	/**
 	 * Test createDefaultPipelines catches exceptions.
 	 *
+	 * The failure is raised by the OpenRegister call itself. It used to be
+	 * raised by the container lookup, but the service takes an injected
+	 * ObjectServiceInterface now (ADR-083/084), so a container that refuses to
+	 * resolve never reaches this method — the throw moved to the only place
+	 * that can still fail at runtime.
+	 *
 	 * @return void
 	 */
 	public function testCatchesExceptions(): void {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturn('1');
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willThrowException(new \RuntimeException('Not found'));
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('findAll')->willThrowException(new \RuntimeException('OpenRegister unreachable'));
 
 		$stageData = new PipelineStageData();
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->once())->method('error');
 
 		$service = new DefaultPipelineService($appConfig, $stageData, $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService,
 		);
+
+		// The point of the test: the throw is swallowed, not propagated.
 		$service->createDefaultPipelines();
 	}//end testCatchesExceptions()
 }//end class

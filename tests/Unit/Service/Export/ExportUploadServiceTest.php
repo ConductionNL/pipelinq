@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Export;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Service\Export\ExportUploadService;
@@ -54,7 +55,13 @@ class ExportUploadServiceTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$service = new ExportUploadService($container, $appConfig, $registry, $logger);
+		$service = new ExportUploadService(
+			container: $container,
+			appConfig: $appConfig,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+			sinks: $registry,
+			logger: $logger,
+		);
 		// Never sleep in tests.
 		$service->setSleepBetweenRetries(false);
 

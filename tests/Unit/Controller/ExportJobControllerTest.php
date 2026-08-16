@@ -33,7 +33,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Controller\ExportJobController;
@@ -203,6 +205,27 @@ class ExportJobControllerTest extends TestCase {
 	}//end authenticate()
 
 	/**
+	 * Wrap a fixture row as the entity ObjectService now returns.
+	 *
+	 * Since ADR-084 `find()` returns `?ObjectEntityInterface` and
+	 * `saveObject()` returns a non-nullable one, so a mock configured with a
+	 * bare array is rejected by PHPUnit before the test body runs. The export
+	 * services read the payload back with `jsonSerialize()`, which this
+	 * entity answers with the row it was given.
+	 *
+	 * @param array<string, mixed> $row The fixture row.
+	 *
+	 * @return ObjectEntityInterface The wrapped row.
+	 */
+	private static function entity(array $row): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$entity->setUuid((string)($row['id'] ?? ''));
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
+
+	/**
 	 * Build a controller backed by the REAL export services and a mocked
 	 * OpenRegister ObjectService.
 	 *
@@ -237,21 +260,25 @@ class ExportJobControllerTest extends TestCase {
 
 		// A sink registry with no adapters: testConnection() then records an
 		// "invalid" status without opening a network connection.
-		$destinationService = new ExportDestinationService($container,
-			$appConfig,
-			new ExportSinkRegistry([]),
-			$this->createMock(LoggerInterface::class)
+		$destinationService = new ExportDestinationService(
+			container: $container,
+			appConfig: $appConfig,
+			objectService: $objects,
+			sinks: new ExportSinkRegistry([]),
+			logger: $this->createMock(LoggerInterface::class),
 		);
 
 		$data = $this->createMock(ExportDataService::class);
 		$data->method('schemaExists')->willReturn(true);
 
-		$jobService = new ExportJobService($container,
-			$appConfig,
-			$destinationService,
-			$data,
-			new CronExpressionHelper(),
-			$this->createMock(LoggerInterface::class)
+		$jobService = new ExportJobService(
+			container: $container,
+			appConfig: $appConfig,
+			objectService: $objects,
+			destinations: $destinationService,
+			data: $data,
+			cron: new CronExpressionHelper(),
+			logger: $this->createMock(LoggerInterface::class),
 		);
 
 		$request = $this->createMock(IRequest::class);
@@ -834,15 +861,15 @@ class ExportJobControllerTest extends TestCase {
 	 */
 	public function testUpdateJobPreservesFieldsTheClientDidNotResend(): void {
 		$objects = $this->createMock(ObjectServiceInterface::class);
-		$objects->method('find')->willReturn(self::STORED_JOB);
+		$objects->method('find')->willReturn(self::entity(self::STORED_JOB));
 
 		$persisted = null;
 		$objects->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(
-				static function (array $object, ...$rest) use (&$persisted): array {
+				static function (array $object, ...$rest) use (&$persisted): ObjectEntityInterface {
 					$persisted = $object;
-					return $object;
+					return self::entity($object);
 				}
 			);
 
@@ -871,13 +898,13 @@ class ExportJobControllerTest extends TestCase {
 	 */
 	public function testUpdateDestinationPreservesFieldsTheClientDidNotResend(): void {
 		$objects = $this->createMock(ObjectServiceInterface::class);
-		$objects->method('find')->willReturn(self::STORED_DESTINATION);
+		$objects->method('find')->willReturn(self::entity(self::STORED_DESTINATION));
 
 		$writes = [];
 		$objects->method('saveObject')->willReturnCallback(
-			static function (array $object, ...$rest) use (&$writes): array {
+			static function (array $object, ...$rest) use (&$writes): ObjectEntityInterface {
 				$writes[] = $object;
-				return $object;
+				return self::entity($object);
 			}
 		);
 
@@ -904,13 +931,13 @@ class ExportJobControllerTest extends TestCase {
 	 */
 	public function testCreateDestinationDoesNotPersistClientSuppliedCredentials(): void {
 		$objects = $this->createMock(ObjectServiceInterface::class);
-		$objects->method('find')->willReturn(self::STORED_DESTINATION);
+		$objects->method('find')->willReturn(self::entity(self::STORED_DESTINATION));
 
 		$writes = [];
 		$objects->method('saveObject')->willReturnCallback(
-			static function (array $object, ...$rest) use (&$writes): array {
+			static function (array $object, ...$rest) use (&$writes): ObjectEntityInterface {
 				$writes[] = $object;
-				return array_merge($object, ['id' => 'dest-1']);
+				return self::entity(array_merge($object, ['id' => 'dest-1']));
 			}
 		);
 
@@ -957,13 +984,13 @@ class ExportJobControllerTest extends TestCase {
 		);
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
-		$objects->method('find')->willReturn(self::STORED_DESTINATION);
+		$objects->method('find')->willReturn(self::entity(self::STORED_DESTINATION));
 
 		$writes = [];
 		$objects->method('saveObject')->willReturnCallback(
-			static function (array $object, ...$rest) use (&$writes): array {
+			static function (array $object, ...$rest) use (&$writes): ObjectEntityInterface {
 				$writes[] = $object;
-				return array_merge($object, ['id' => 'dest-1']);
+				return self::entity(array_merge($object, ['id' => 'dest-1']));
 			}
 		);
 
@@ -998,7 +1025,7 @@ class ExportJobControllerTest extends TestCase {
 		$live = [self::STORED_JOB];
 
 		$objects = $this->createMock(ObjectServiceInterface::class);
-		$objects->method('find')->willReturn(self::STORED_JOB);
+		$objects->method('find')->willReturn(self::entity(self::STORED_JOB));
 		$objects->expects($this->once())
 			->method('deleteObject')
 			->willReturnCallback(

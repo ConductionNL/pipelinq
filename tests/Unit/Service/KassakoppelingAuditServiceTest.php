@@ -29,7 +29,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\BelastingdienstExportService;
 use OCA\Pipelinq\Service\KassakoppelingAuditService;
 use OCA\Pipelinq\Service\KassakoppelingSignatureService;
@@ -37,16 +39,19 @@ use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use OCP\IConfig;
+use OCP\IUser;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * In-memory ObjectService double for the audit-service tests. Saves are
  * captured for assertions; finds and findAll are filtered by schema slug
  * and (for findAll) the configured filter map.
+ *
+ * Extends the ObjectService stub so it satisfies the `ObjectServiceInterface`
+ * type-hint KassakoppelingAuditService now declares (ADR-084).
  */
-class FakeAuditObjectService {
+class FakeAuditObjectService extends ObjectService {
 
 	/**
 	 * Keyed [schema][uuid] => array.
@@ -70,18 +75,55 @@ class FakeAuditObjectService {
 	private int $cursor = 0;
 
 	/**
-	 * @return array<string, mixed>|null
+	 * Read one row from the schema table.
+	 *
+	 * @param integer|string $id The object UUID.
+	 * @param array<string, mixed>|null $_extend Unused.
+	 * @param boolean $files Unused.
+	 * @param string|int|null $register Unused — single-register fake.
+	 * @param string|int|null $schema The schema slug.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $_render Unused.
+	 * @param boolean $_audit Unused.
+	 *
+	 * @return ObjectEntityInterface|null
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
-	public function find(string $id, string $register = '', string $schema = ''): ?array {
-		return $this->store[$schema][$id] ?? null;
+	public function find(
+		int|string $id,
+		?array $_extend = [],
+		bool $files = false,
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
+	): ?ObjectEntityInterface {
+		$row = ($this->store[(string)$schema][(string)$id] ?? null);
+		if ($row === null) {
+			return null;
+		}
+
+		return self::entity(uuid: (string)$id, row: $row);
 	}//end find()
 
 	/**
-	 * @param array<string, mixed> $config
+	 * Read every row for the schema named in the reserved `schema` filter.
+	 *
+	 * @param array<string, mixed> $config The findAll config.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
-	public function findAll(array $config = []): array {
+	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 		$filters = ($config['filters'] ?? []);
 		$schema = (string)($filters['schema'] ?? '');
 
@@ -89,18 +131,41 @@ class FakeAuditObjectService {
 	}//end findAll()
 
 	/**
-	 * @param array<string, mixed>|object $object
+	 * Upsert a row; an absent uuid mints a new opaque one.
 	 *
-	 * @return array<string, mixed>
+	 * @param array<string, mixed> $object The payload.
+	 * @param array<string, mixed>|null $extend Unused.
+	 * @param string|int|null $register Unused.
+	 * @param string|int|null $schema The schema slug.
+	 * @param string|null $uuid The row UUID, or null/'' to create.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $silent Unused.
+	 * @param boolean $_validation Unused.
+	 * @param array<string, mixed>|null $uploadedFiles Unused.
+	 * @param IUser|null $currentUser Unused.
+	 * @param boolean $failIfExists Unused.
+	 *
+	 * @return ObjectEntityInterface
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
 	public function saveObject(
-		array|object $object,
+		array $object,
 		?array $extend = [],
 		string|int|null $register = null,
 		string|int|null $schema = null,
 		?string $uuid = null,
-	): array {
-		$arrayObject = is_array($object) === true ? $object : (array)$object;
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $silent = false,
+		bool $_validation = true,
+		?array $uploadedFiles = null,
+		?IUser $currentUser = null,
+		bool $failIfExists = false,
+	): ObjectEntityInterface {
 		$schemaKey = (string)$schema;
 		$resolvedUuid = $uuid;
 		if ($resolvedUuid === null || $resolvedUuid === '') {
@@ -108,17 +173,33 @@ class FakeAuditObjectService {
 			$resolvedUuid = 'aud-' . $this->cursor;
 		}
 
-		$arrayObject['id'] = $resolvedUuid;
-		$arrayObject['uuid'] = $resolvedUuid;
-		$this->store[$schemaKey][$resolvedUuid] = $arrayObject;
+		$object['id'] = $resolvedUuid;
+		$object['uuid'] = $resolvedUuid;
+		$this->store[$schemaKey][$resolvedUuid] = $object;
 		$this->saves[] = [
 			'schema' => $schemaKey,
 			'uuid' => $resolvedUuid,
-			'object' => $arrayObject,
+			'object' => $object,
 		];
 
-		return $arrayObject;
+		return self::entity(uuid: $resolvedUuid, row: $object);
 	}//end saveObject()
+
+	/**
+	 * Wrap a stored row in the entity the contract now returns.
+	 *
+	 * @param string $uuid The object UUID.
+	 * @param array<string, mixed> $row The stored row.
+	 *
+	 * @return ObjectEntityInterface
+	 */
+	private static function entity(string $uuid, array $row): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
 
 }//end class
 
@@ -154,11 +235,6 @@ class KassakoppelingAuditServiceTest extends TestCase {
 	protected function setUp(): void {
 		$this->objects = new FakeAuditObjectService();
 
-		$container = $this->createMock(originalClassName: ContainerInterface::class);
-		$container->method('get')
-			->with('OCA\OpenRegister\Service\ObjectService')
-			->willReturn($this->objects);
-
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')
 			->willReturnCallback(
@@ -184,7 +260,7 @@ class KassakoppelingAuditServiceTest extends TestCase {
 			signature: $signature,
 			exporter: $exporter,
 			logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->objects,
 		);
 
 	}//end setUp()

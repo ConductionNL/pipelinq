@@ -56,6 +56,12 @@ use Throwable;
  * `now`, which is when the SLA clock is armed.
  *
  * @implements IEventListener<Event>
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Measured 14, threshold 13.
+ *  An ADR-078 deferred listener necessarily names both halves of the contract —
+ *  the event and entity types it reacts to, and the deferral/job types it hands
+ *  work to. The count is the contract's width, not an accumulation of
+ *  responsibilities.
  */
 class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 
@@ -98,6 +104,15 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 *
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Measured 10, threshold 10.
+	 *  A flat chain of independent preconditions — event type, schema, SLA policy
+	 *  presence, re-entrancy — each with its own early return. Extracting them
+	 *  would hide which condition refused the dispatch.
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatedEvent) === false) {

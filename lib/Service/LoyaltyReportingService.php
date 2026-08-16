@@ -444,20 +444,16 @@ class LoyaltyReportingService {
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.
 	 *
-	 * Resolved from the DI container the same way ObjectService is, so the
-	 * per-tier account COUNT is computed by OpenRegister (ADR-022) instead of
-	 * hydrating every account and bucketing in PHP.
+	 * Constructor-injected the same way ObjectService is, so the per-tier account
+	 * COUNT is computed by OpenRegister (ADR-022) instead of hydrating every
+	 * account and bucketing in PHP. It was formerly resolved from the DI
+	 * container inside a try/catch; since the migration to injection that catch
+	 * was unreachable — phpstan reports it as a dead catch.
 	 *
 	 * @return object The aggregation runner.
-	 *
-	 * @throws RuntimeException If OpenRegister is unavailable.
 	 */
 	private function getAggregationRunner(): object {
-		try {
-			return $this->aggregationRunner;
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister aggregation runner is unavailable.', 0, $e);
-		}
+		return $this->aggregationRunner;
 	}//end getAggregationRunner()
 
 	/**

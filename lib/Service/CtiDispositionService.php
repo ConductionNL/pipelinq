@@ -185,6 +185,11 @@ class CtiDispositionService {
 	 * @param string|null $queueName Optional queue (for escalation).
 	 *
 	 * @return string|null The created task UUID or null when creation failed.
+	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Measured 10, threshold 10.
+	 *  Each branch is one optional field on the task payload (queue, notes,
+	 *  linked interaction, due date). Extracting them would scatter the payload
+	 *  shape across helpers without removing a single decision.
 	 */
 	private function createTask(
 		string $type,

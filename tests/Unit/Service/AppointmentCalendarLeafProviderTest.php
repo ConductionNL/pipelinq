@@ -28,8 +28,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -54,7 +55,7 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 	 * @param ObjectServiceInterface|null $objectService Optional ObjectService mock.
 	 * @param IUserManager|null $userManager Optional user manager mock.
 	 *
-	 * @return array{0: AppointmentCalendarLeafProvider, 1: ObjectService}
+	 * @return array{0: AppointmentCalendarLeafProvider, 1: ObjectServiceInterface}
 	 */
 	private function buildProvider(
 		?ObjectServiceInterface $objectService = null,
@@ -101,6 +102,33 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 
 		return [$provider, $objectService];
 	}//end buildProvider()
+
+	/**
+	 * Wrap a fixture row as the ObjectEntity OpenRegister actually returns.
+	 *
+	 * Since ADR-084 `find()` is declared `?ObjectEntityInterface`, not the bare
+	 * array these fixtures are written as. The UUID comes from the fixture's own
+	 * `@self.id`, which `jsonSerialize()` rebuilds the `@self` envelope from.
+	 *
+	 * @param array<string, mixed> $row The fixture row.
+	 *
+	 * @return ObjectEntity The row as an entity.
+	 */
+	private static function entity(array $row): ObjectEntity {
+		$self = ($row['@self'] ?? []);
+		$id = '';
+		if (is_array($self) === true && isset($self['id']) === true) {
+			$id = (string)$self['id'];
+		} elseif (isset($row['id']) === true) {
+			$id = (string)$row['id'];
+		}
+
+		$entity = new ObjectEntity();
+		$entity->setUuid($id);
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
 
 	/**
 	 * Build a leaf double that captures createEvent + unlinkEventsForObject calls.
@@ -193,10 +221,10 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 	 */
 	public function testGetBlockedTimesEmptyWithoutCalendarSyncId(): void {
 		$object = $this->createMock(ObjectServiceInterface::class);
-		$object->method('find')->willReturn([
+		$object->method('find')->willReturn(self::entity([
 			'@self' => ['id' => 'res-sarah'],
 			'name' => 'Sarah',
-		]);
+		]));
 
 		[$provider] = $this->buildProvider(objectService: $object);
 		$provider->setLeaf(leaf: $this->buildLeaf());
@@ -212,11 +240,11 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 	 */
 	public function testGetBlockedTimesConvertsLeafEventsToBlocks(): void {
 		$object = $this->createMock(ObjectServiceInterface::class);
-		$object->method('find')->willReturn([
+		$object->method('find')->willReturn(self::entity([
 			'@self' => ['id' => 'res-sarah'],
 			'name' => 'Sarah',
 			'calendarSyncId' => 'sarah-cal-uuid',
-		]);
+		]));
 
 		$leaf = $this->buildLeaf(eventsForObject: [
 			['dtstart' => '2026-06-01T12:00:00+00:00', 'dtend' => '2026-06-01T13:00:00+00:00'],
@@ -266,20 +294,20 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 
 		$object = $this->createMock(ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			static function (string $id) use ($booking, $service, $resource): array {
+			static function (string|int $id) use ($booking, $service, $resource): ?ObjectEntityInterface {
 				if ($id === 'b-1') {
-					return $booking;
+					return self::entity($booking);
 				}
 
 				if ($id === 'svc-haircut') {
-					return $service;
+					return self::entity($service);
 				}
 
 				if ($id === 'res-sarah') {
-					return $resource;
+					return self::entity($resource);
 				}
 
-				return [];
+				return null;
 			}
 		);
 
@@ -325,7 +353,7 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 		];
 
 		$object = $this->createMock(ObjectServiceInterface::class);
-		$object->method('find')->willReturn($booking);
+		$object->method('find')->willReturn(self::entity($booking));
 
 		$leaf = $this->buildLeaf();
 
@@ -345,10 +373,10 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 	 */
 	public function testPushBookingEventSkipsUnconfirmedBookings(): void {
 		$object = $this->createMock(ObjectServiceInterface::class);
-		$object->method('find')->willReturn([
+		$object->method('find')->willReturn(self::entity([
 			'@self' => ['id' => 'b-pending'],
 			'status' => 'pending-deposit',
-		]);
+		]));
 
 		$leaf = $this->buildLeaf();
 		[$provider] = $this->buildProvider(objectService: $object);

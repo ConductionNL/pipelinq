@@ -26,11 +26,18 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Fake aggregation runner backed by an in-memory row list.
+ *
+ * Extends the AggregationRunner stub: the POS services now take an INJECTED
+ * `AggregationRunner` (ADR-084) rather than resolving one through a container,
+ * so a duck-typed double is a different type wearing the same method name and
+ * fails the constructor type-hint. `runAdhocByRef()` below already carries the
+ * parent's exact signature, so this is purely additive.
  */
-class FakeAggregationRunner {
+class FakeAggregationRunner extends AggregationRunner {
 	/**
 	 * @var array<int, array<string, mixed>> The rows to aggregate over.
 	 */

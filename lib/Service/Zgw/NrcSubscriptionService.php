@@ -39,7 +39,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Zgw;
 
-use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -49,14 +48,18 @@ class NrcSubscriptionService {
 	/**
 	 * Constructor.
 	 *
+	 * No logger is injected: every failure path in this service raises
+	 * NrcSubscriptionFailedException, which the caller logs with its own
+	 * context. A logger was injected here and never read — phpstan: "Property
+	 * ...::$logger is never read, only written." Re-inject it together with the
+	 * first call that actually writes a log line.
+	 *
 	 * @param ZgwApiClient $api Base transport.
 	 * @param ZgwRegisterAccess $registers Register facade.
-	 * @param LoggerInterface $logger PSR-3 logger.
 	 */
 	public function __construct(
 		private ZgwApiClient $api,
 		private ZgwRegisterAccess $registers,
-		private LoggerInterface $logger,
 	) {
 	}//end __construct()
 

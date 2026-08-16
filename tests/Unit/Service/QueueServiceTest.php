@@ -30,7 +30,6 @@ use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -50,11 +49,11 @@ class QueueServiceTest extends TestCase {
 	private IAppConfig $appConfig;
 
 	/**
-	 * The container mock.
+	 * The injected OpenRegister object service mock.
 	 *
-	 * @var ContainerInterface&MockObject
+	 * @var ObjectServiceInterface&MockObject
 	 */
-	private ContainerInterface $container;
+	private ObjectServiceInterface $objectService;
 
 	/**
 	 * The logger mock.
@@ -77,7 +76,7 @@ class QueueServiceTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
-		$this->container = $this->createMock(originalClassName: ContainerInterface::class);
+		$this->objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$this->ticketService = $this->createMock(originalClassName: TicketService::class);
 	}//end setUp()
@@ -96,7 +95,7 @@ class QueueServiceTest extends TestCase {
 			logger: $this->logger,
 			registerResolver: new RegisterResolverService(appConfig: $this->appConfig),
 			ticketService: $this->ticketService,
-			objectService: $mock,
+			objectService: $this->objectService,
 		);
 	}//end buildService()
 
@@ -140,18 +139,16 @@ class QueueServiceTest extends TestCase {
 	}//end configureAppConfig()
 
 	/**
-	 * Create a mock ObjectService.
+	 * The injected ObjectService double.
 	 *
-	 * @return MockObject
+	 * Since ADR-084 the service takes ObjectServiceInterface as a constructor
+	 * argument, so there is no container hop left to intercept: the double the
+	 * test configures IS the one the service uses.
+	 *
+	 * @return ObjectServiceInterface&MockObject
 	 */
 	private function createObjectServiceMock(): MockObject {
-		$mock = $this->getMockBuilder(className: \stdClass::class)
-			->addMethods(['findAll', 'count', 'saveObject'])
-			->getMock();
-
-		$this->container->method('get')->willReturn($mock);
-
-		return $mock;
+		return $this->objectService;
 	}//end createObjectServiceMock()
 
 	/**
@@ -211,7 +208,7 @@ class QueueServiceTest extends TestCase {
 	public function testGetQueueDepthReturnsZeroOnException(): void {
 		$this->configureAppConfig();
 
-		$this->container->method('get')->willThrowException(new RuntimeException('service unavailable'));
+		$this->objectService->method('count')->willThrowException(new RuntimeException('service unavailable'));
 		$this->logger->expects($this->once())->method('error');
 
 		$result = $this->buildService()->getQueueDepth(queueId: 'queue-123');

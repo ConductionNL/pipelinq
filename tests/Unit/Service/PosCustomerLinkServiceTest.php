@@ -26,13 +26,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\PosCustomerLinkService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -67,22 +67,33 @@ class PosCustomerLinkServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$this->objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 
-		$container->method('get')
-			->with('OCA\OpenRegister\Service\ObjectService')
-			->willReturn($this->objectService);
-
 		$this->service = new PosCustomerLinkService(
 			appConfig: $this->appConfig,
 			logger: $logger,
-			objectService: $default,
+			objectService: $this->objectService,
 		);
 
 	}//end setUp()
+
+	/**
+	 * Wrap a row in the entity `find()` / `saveObject()` now return (ADR-084).
+	 *
+	 * @param array<string, mixed> $row The object data.
+	 *
+	 * @return ObjectEntityInterface The entity carrying the row.
+	 */
+	private static function entity(array $row): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$entity->setUuid((string)($row['id'] ?? ''));
+		$entity->setObject($row);
+
+		return $entity;
+
+	}//end entity()
 
 	/**
 	 * Default-config app config reads: register, contact_schema,
@@ -274,7 +285,7 @@ class PosCustomerLinkServiceTest extends TestCase {
 		$this->stubAppConfig();
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->willReturn(['id' => 'c1', 'marketingConsent' => true]);
+			->willReturn(self::entity(['id' => 'c1', 'marketingConsent' => true]));
 
 		$status = $this->service->syncConsent(
 			contact: [
@@ -462,7 +473,7 @@ class PosCustomerLinkServiceTest extends TestCase {
 	 */
 	public function testDetachRefusesClosedTransaction(): void {
 		$this->stubAppConfig();
-		$this->objectService->method('find')->willReturn(['id' => 't1', 'status' => 'settled']);
+		$this->objectService->method('find')->willReturn(self::entity(['id' => 't1', 'status' => 'settled']));
 
 		$this->expectException(exception: OCSBadRequestException::class);
 		$this->service->detachCustomer(transactionId: 't1');
@@ -476,13 +487,17 @@ class PosCustomerLinkServiceTest extends TestCase {
 	 */
 	public function testAttachRefusesClosedTransaction(): void {
 		$this->stubAppConfig();
+		// `find()` is invoked with named arguments, so the callback must accept
+		// the CONTRACT's parameter order — a `(string $id, string $register)`
+		// callback receives `$_extend` (an array) in slot 2 and TypeErrors,
+		// which the service's `catch (Throwable)` then hides as a 404.
 		$this->objectService->method('find')->willReturnCallback(
-			static function (string $id, string $register = '', string $schema = '') {
+			static function (int|string $id) {
 				if ($id === 'c1') {
-					return ['id' => 'c1', 'name' => 'Maria', 'doNotContact' => false];
+					return self::entity(['id' => 'c1', 'name' => 'Maria', 'doNotContact' => false]);
 				}
 
-				return ['id' => 't1', 'status' => 'settled'];
+				return self::entity(['id' => 't1', 'status' => 'settled']);
 			}
 		);
 
@@ -500,19 +515,19 @@ class PosCustomerLinkServiceTest extends TestCase {
 	public function testAttachWritesCustomerAndConsent(): void {
 		$this->stubAppConfig();
 		$this->objectService->method('find')->willReturnCallback(
-			static function (string $id, string $register = '', string $schema = '') {
+			static function (int|string $id) {
 				if ($id === 'c1') {
-					return ['id' => 'c1', 'name' => 'Maria', 'doNotContact' => false];
+					return self::entity(['id' => 'c1', 'name' => 'Maria', 'doNotContact' => false]);
 				}
 
-				return ['id' => 't1', 'status' => 'draft'];
+				return self::entity(['id' => 't1', 'status' => 'draft']);
 			}
 		);
 		$this->objectService->expects($this->atLeastOnce())
 			->method('saveObject')
 			->willReturnCallback(
 				static function (array $object) {
-					return $object;
+					return self::entity($object);
 				}
 			);
 

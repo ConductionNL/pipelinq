@@ -23,32 +23,68 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\PosRoleService;
 use OCA\Pipelinq\Service\PosStaffService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IAppConfig;
+use OCP\IUser;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * In-memory object service stub for the staff + role tests.
  *
- * Implements the OR ObjectService API surface PosStaff/RoleService depends on
- * (find / findAll / saveObject / deleteObject) with positional + named-arg
- * compatibility.
+ * Extends the ObjectService stub so it satisfies the `ObjectServiceInterface`
+ * type-hint PosStaffService / PosRoleService now declare (ADR-084). Every
+ * override carries the parent's exact signature — PHP checks compatibility at
+ * class-load time, so drift is a fatal before test 1.
  */
-class StaffFakeObjectService {
+class StaffFakeObjectService extends ObjectService {
 
 	/**
 	 * @var array<string, array<string, array<string, mixed>>>
 	 */
 	public array $store = [];
 
-	public function find(string $id, string $register, string $schema): ?array {
-		return $this->store[$schema][$id] ?? null;
+	/**
+	 * Read one row from the schema table.
+	 *
+	 * @param integer|string $id The object UUID.
+	 * @param array<string, mixed>|null $_extend Unused.
+	 * @param boolean $files Unused.
+	 * @param string|int|null $register Unused — single-register fake.
+	 * @param string|int|null $schema The schema key.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $_render Unused.
+	 * @param boolean $_audit Unused.
+	 *
+	 * @return ObjectEntityInterface|null
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
+	 */
+	public function find(
+		int|string $id,
+		?array $_extend = [],
+		bool $files = false,
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
+	): ?ObjectEntityInterface {
+		$row = ($this->store[(string)$schema][(string)$id] ?? null);
+		if ($row === null) {
+			return null;
+		}
+
+		return self::entity(uuid: (string)$id, row: $row);
 	}//end find()
 
 	/**
@@ -57,10 +93,15 @@ class StaffFakeObjectService {
 	 * field filters (e.g. posRole) in-memory.
 	 *
 	 * @param array<string, mixed> $config Config with `filters`, `limit`.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
-	public function findAll(array $config = []): array {
+	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 		$filters = ($config['filters'] ?? []);
 		$schema = (string)($filters['schema'] ?? '');
 		unset($filters['register'], $filters['schema']);
@@ -96,19 +137,95 @@ class StaffFakeObjectService {
 	}//end count()
 
 	/**
-	 * @param array<string, mixed> $object
+	 * Upsert a row into a schema table.
 	 *
-	 * @return array<string, mixed>
+	 * @param array<string, mixed> $object The payload.
+	 * @param array<string, mixed>|null $extend Unused.
+	 * @param string|int|null $register Unused.
+	 * @param string|int|null $schema The schema key.
+	 * @param string|null $uuid The row UUID.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $silent Unused.
+	 * @param boolean $_validation Unused.
+	 * @param array<string, mixed>|null $uploadedFiles Unused.
+	 * @param IUser|null $currentUser Unused.
+	 * @param boolean $failIfExists Unused.
+	 *
+	 * @return ObjectEntityInterface
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
-	public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array {
-		$object['id'] = $uuid;
-		$this->store[$schema][$uuid] = $object;
-		return $object;
+	public function saveObject(
+		array $object,
+		?array $extend = [],
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		?string $uuid = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $silent = false,
+		bool $_validation = true,
+		?array $uploadedFiles = null,
+		?IUser $currentUser = null,
+		bool $failIfExists = false,
+	): ObjectEntityInterface {
+		$key = (string)$uuid;
+		$object['id'] = $key;
+		$this->store[(string)$schema][$key] = $object;
+
+		return self::entity(uuid: $key, row: $object);
 	}//end saveObject()
 
-	public function deleteObject(string $id, string $register, string $schema): void {
-		unset($this->store[$schema][$id]);
+	/**
+	 * Remove a row from a schema table.
+	 *
+	 * @param string $uuid The object UUID.
+	 * @param string|int|null $register Unused.
+	 * @param string|int|null $schema The schema key.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $_retentionSweep Unused.
+	 * @param IUser|null $currentUser Unused.
+	 * @param boolean $permanent Unused — an in-memory table has no soft-delete.
+	 *
+	 * @return boolean
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
+	 */
+	public function deleteObject(
+		string $uuid,
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
+		?IUser $currentUser = null,
+		bool $permanent = false,
+	): bool {
+		unset($this->store[(string)$schema][$uuid]);
+
+		return true;
 	}//end deleteObject()
+
+	/**
+	 * Wrap a stored row in the entity the contract now returns.
+	 *
+	 * @param string $uuid The object UUID.
+	 * @param array<string, mixed> $row The stored row.
+	 *
+	 * @return ObjectEntityInterface
+	 */
+	private static function entity(string $uuid, array $row): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
 }//end class
 
 /**
@@ -141,30 +258,23 @@ class PosStaffServiceTest extends TestCase {
 			}
 		);
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(
-			function (string $id) {
-				if ($id === 'OCA\OpenRegister\Service\ObjectService') {
-					return $this->os;
-				}
-
-				throw new \RuntimeException('unknown service ' . $id);
-			}
-		);
-
 		$logger = $this->createMock(LoggerInterface::class);
 
+		// Both services read the SAME in-memory store: the staff service looks
+		// its role up through the role service, so handing either of them an
+		// unprogrammed mock makes every lookup return null ("POS-rol niet
+		// gevonden") rather than exercising the behaviour under test.
 		$this->roleService = new PosRoleService(
 			appConfig: $this->appConfig,
 			logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->os,
 		);
 
 		$this->service = new PosStaffService(
 			appConfig: $this->appConfig,
 			posRoleService: $this->roleService,
 			logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->os,
 		);
 
 		// Seed a role.
@@ -344,6 +454,39 @@ class PosStaffServiceTest extends TestCase {
 		$this->expectException(OCSForbiddenException::class);
 		$this->roleService->deleteRole(id: $this->roleId);
 	}//end testDeleteRoleBlockedWhenStaffStillAssigned()
+
+	/**
+	 * A permitted delete actually REMOVES the row.
+	 *
+	 * Regression cover for an ADR-084 drift no existing test could see: both
+	 * services called `deleteObject(id: ...)`, but the contract's first
+	 * parameter is `$uuid`. PHP raises "Unknown named parameter $id", the
+	 * service's `catch (\Throwable)` swallows it, and the caller is handed a
+	 * plausible-looking "kon niet worden verwijderd" 404 — so delete was
+	 * inert in production while nothing in the suite disagreed. Asserting the
+	 * row is GONE, rather than that no exception was thrown, is what makes the
+	 * difference visible.
+	 *
+	 * @return void
+	 */
+	public function testDeleteRemovesTheRowForBothStaffAndRole(): void {
+		$saved = $this->service->saveStaff(
+			data: [
+				'displayName' => 'Anna',
+				'posRole' => $this->roleId,
+				'pin' => '1234',
+			]
+		);
+		$staffId = (string)$saved['id'];
+		$this->assertArrayHasKey($staffId, $this->os->store['sch-posStaff']);
+
+		$this->service->deleteStaff(id: $staffId);
+		$this->assertArrayNotHasKey($staffId, $this->os->store['sch-posStaff']);
+
+		// With no staff left referencing it, the role deletes too.
+		$this->roleService->deleteRole(id: $this->roleId);
+		$this->assertArrayNotHasKey($this->roleId, $this->os->store['sch-posRole']);
+	}//end testDeleteRemovesTheRowForBothStaffAndRole()
 
 	public function testMaxDiscountPercentBoundsAreEnforced(): void {
 		$this->expectException(OCSBadRequestException::class);
