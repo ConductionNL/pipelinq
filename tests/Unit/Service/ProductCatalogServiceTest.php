@@ -56,7 +56,7 @@ class ProductCatalogServiceTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new ProductCatalogService($container, $appConfig, $logger,
+		$this->service = new ProductCatalogService($appConfig, $logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end setUp()

@@ -52,7 +52,7 @@ class QuotaServiceTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$this->service = new QuotaService(container: $container, appConfig: $appConfig, logger: $logger,
+		$this->service = new QuotaService(appConfig: $appConfig, logger: $logger,
 			objectService: $d,
 		);
 	}//end setUp()

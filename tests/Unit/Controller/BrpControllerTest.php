@@ -951,7 +951,6 @@ class BrpControllerTest extends TestCase {
 			$this->createMock(BsnAuditService::class),
 			$this->createMock(OptOutService::class),
 			$listener,
-			$this->createMock(ContainerInterface::class),
 			$logger,
 			objectService: $objectService,
 		);
