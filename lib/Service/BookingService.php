@@ -340,6 +340,17 @@ class BookingService {
 			return [];
 		}
 
+		// A service that is not offered online has no public availability to
+		// report. The portal's `services()` list already filters on
+		// `bookableOnline: true`, and `createBookingFromPortal()` refuses a
+		// service without it -- but this path did neither, so an anonymous
+		// caller who supplied any serviceId could read the free/busy pattern
+		// of a service the portal never offers. Same check its two siblings
+		// make, applied here.
+		if (($service['bookableOnline'] ?? false) !== true) {
+			return [];
+		}
+
 		$duration = (int)($service['durationMinutes'] ?? 0);
 		if ($duration <= 0) {
 			return [];

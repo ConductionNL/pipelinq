@@ -70,6 +70,11 @@ class BookingServiceTest extends TestCase {
 		'cancellationPolicy' => 'free',
 		'cancellationHoursBefore' => 24,
 		'status' => 'active',
+		// The portal only ever offers services carrying this flag. It was
+		// absent here, which is part of why getAvailableSlots() could go so
+		// long without checking it: no fixture distinguished a service the
+		// public may see from one it may not.
+		'bookableOnline' => true,
 	];
 
 	/**
@@ -953,6 +958,50 @@ class BookingServiceTest extends TestCase {
 		$this->assertNotContains(needle: 'res-c', haystack: $resourceIds);
 
 	}//end testGetAvailableSlotsDelegatesToAvailabilityService()
+
+	/**
+	 * A service that is not offered online has no public availability.
+	 *
+	 * `GET /portal/availability` is `@PublicPage` and takes `serviceId`
+	 * straight from the caller, so without this check an anonymous request
+	 * naming any service id could read that service's free/busy pattern —
+	 * including services the portal's own `services()` list, which filters on
+	 * `bookableOnline: true`, deliberately never shows. The booking path
+	 * already refused such a service; this path did not.
+	 *
+	 * The assertion is that the resources are never even consulted: a refusal
+	 * that still computed availability and then discarded it would leak the
+	 * same information through timing, and would pass a count-only test.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
+	public function testGetAvailableSlotsRefusesAServiceNotBookableOnline(): void {
+		$offline = self::SERVICE_FREE_HAIRCUT;
+		$offline['bookableOnline'] = false;
+
+		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$object->method('find')->willReturn($offline);
+
+		$eligibility = $this->createMock(originalClassName: EligibilityService::class);
+		$eligibility->expects($this->never())->method('getEligibleResources');
+
+		$availability = $this->createMock(originalClassName: AvailabilityService::class);
+		$availability->expects($this->never())->method('computeAvailability');
+
+		[$service] = $this->buildService(
+			objectService: $object,
+			availability: $availability,
+			eligibility: $eligibility
+		);
+
+		$this->assertSame(
+			expected: [],
+			actual: $service->getAvailableSlots(serviceId: 'svc-haircut', date: '2026-06-15')
+		);
+
+	}//end testGetAvailableSlotsRefusesAServiceNotBookableOnline()
 
 	/**
 	 * A confirmed-from-creation Booking pushes a VEVENT through the calendar
