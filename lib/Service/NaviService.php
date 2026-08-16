@@ -565,7 +565,9 @@ class NaviService {
 		}
 
 		$objects = [];
-		foreach (($results ?? []) as $result) {
+		// The findAll() contract returns a non-nullable array, so the `?? []`
+		// that used to sit here was dead code (reported by phpstan).
+		foreach ($results as $result) {
 			$normalized = $this->normalizeFindObjectsResult(result: $result);
 			if ($normalized !== null) {
 				$objects[] = $normalized;

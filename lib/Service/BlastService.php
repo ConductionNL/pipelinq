@@ -347,6 +347,9 @@ class BlastService {
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential throttle/dispatch guard
 	 *  clauses over the delivery batch; extraction adds no clarity.
+	 * @SuppressWarnings(PHPMD.NPathComplexity) Measured 320, threshold 200. Same
+	 *  cause as the cyclomatic suppression above: the guards are INDEPENDENT, so
+	 *  NPath multiplies out even though no two of them nest.
 	 */
 	public function dispatchBlastDeliveries(string $blastId, int $maxPerSecond = 100): int {
 		$blast = $this->loadBlast(blastId: $blastId);

@@ -28,7 +28,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\CashShiftService;
@@ -36,16 +40,22 @@ use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IUser;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+
+// There is no PSR-4 mapping for `OCA\Pipelinq\Tests\`, and PHPUnit only loads
+// files matching its `*Test.php` suffix — so this helper is NOT autoloadable.
+// Without this require the runner call throws "class not found", the service's
+// catch swallows it, and every pushed-down sales SUM silently reads 0.00.
+require_once __DIR__ . '/FakeAggregationRunner.php';
 
 /**
  * A fake OpenRegister ObjectService capturing saves and answering finds from an
  * in-memory store keyed by schema id + object id. New objects (empty uuid) get a
  * deterministic generated id so the lifecycle can chain count -> diff -> approve.
  */
-class CashFakeObjectService {
+class CashFakeObjectService extends ObjectService {
 	/** @var array<string, array<string, array<string, mixed>>> */
 	public array $store = [];
 
@@ -53,18 +63,59 @@ class CashFakeObjectService {
 	private int $seq = 0;
 
 	/**
-	 * @return array<string, mixed>|null
+	 * Read one row from the schema table.
+	 *
+	 * Everything after `$schema` exists to match the parent signature — PHP
+	 * checks compatibility at CLASS-LOAD time, so a narrowed override is a
+	 * fatal before test 1 rather than a test failure.
+	 *
+	 * @param integer|string $id The object UUID.
+	 * @param array<string, mixed>|null $_extend Unused.
+	 * @param boolean $files Unused.
+	 * @param string|int|null $register Unused — single-register fake.
+	 * @param string|int|null $schema The schema key.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $_render Unused.
+	 * @param boolean $_audit Unused.
+	 *
+	 * @return ObjectEntityInterface|null
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
-	public function find(string $id, string $register, string $schema): ?array {
-		return $this->store[$schema][$id] ?? null;
+	public function find(
+		int|string $id,
+		?array $_extend = [],
+		bool $files = false,
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
+	): ?ObjectEntityInterface {
+		$row = ($this->store[(string)$schema][(string)$id] ?? null);
+		if ($row === null) {
+			return null;
+		}
+
+		return self::entity(uuid: (string)$id, row: $row);
 	}
 
 	/**
-	 * @param array<string, mixed> $config
+	 * Query rows within a schema table.
+	 *
+	 * @param array<string, mixed> $config The findAll config.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
-	public function findAll(array $config): array {
+	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 		$filters = $config['filters'] ?? [];
 		$schema = (string)($filters['schema'] ?? '');
 		$rows = array_values($this->store[$schema] ?? []);
@@ -81,22 +132,106 @@ class CashFakeObjectService {
 	}
 
 	/**
-	 * @param array<string, mixed> $object
+	 * Upsert a row into a schema table; an empty uuid creates.
 	 *
-	 * @return array<string, mixed>
+	 * @param array<string, mixed> $object The payload.
+	 * @param array<string, mixed>|null $extend Unused.
+	 * @param string|int|null $register Unused.
+	 * @param string|int|null $schema The schema key.
+	 * @param string|null $uuid The row UUID, or null/'' to create.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $silent Unused.
+	 * @param boolean $_validation Unused.
+	 * @param array<string, mixed>|null $uploadedFiles Unused.
+	 * @param IUser|null $currentUser Unused.
+	 * @param boolean $failIfExists Unused.
+	 *
+	 * @return ObjectEntityInterface
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
-	public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array {
-		if ($uuid === '') {
+	public function saveObject(
+		array $object,
+		?array $extend = [],
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		?string $uuid = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $silent = false,
+		bool $_validation = true,
+		?array $uploadedFiles = null,
+		?IUser $currentUser = null,
+		bool $failIfExists = false,
+	): ObjectEntityInterface {
+		$schemaKey = (string)$schema;
+		$key = (string)$uuid;
+		if ($key === '') {
 			$this->seq++;
-			$uuid = $schema . '-' . $this->seq;
+			$key = $schemaKey . '-' . $this->seq;
 		}
 
-		$object['id'] = $uuid;
-		$this->store[$schema][$uuid] = $object;
+		$object['id'] = $key;
+		$this->store[$schemaKey][$key] = $object;
 
-		return $object;
+		return self::entity(uuid: $key, row: $object);
+	}
+
+	/**
+	 * Wrap a stored row in the entity the contract now returns.
+	 *
+	 * @param string $uuid The object UUID.
+	 * @param array<string, mixed> $row The stored row.
+	 *
+	 * @return ObjectEntityInterface
+	 */
+	private static function entity(string $uuid, array $row): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setObject($row);
+
+		return $entity;
 	}
 }
+
+/**
+ * An AggregationRunner that aggregates over the LIVE posTransaction store.
+ *
+ * The runner used to be resolved from the container on every call, so it always
+ * saw the rows seeded by the time of the call. It is now injected ONCE in
+ * setUp() — before any test seeds anything — so it must read the store lazily
+ * rather than snapshot it at construction, or every pushed-down SUM would be
+ * computed over an empty row set and quietly return null.
+ */
+class CashLiveAggregationRunner extends AggregationRunner {
+	/**
+	 * Constructor.
+	 *
+	 * @param CashFakeObjectService $objects The live in-memory object store.
+	 */
+	public function __construct(private CashFakeObjectService $objects) {
+	}//end __construct()
+
+	/**
+	 * Aggregate over the posTransaction rows present RIGHT NOW.
+	 *
+	 * @param string $registerRef The register ref.
+	 * @param string $schemaRef The schema ref.
+	 * @param AggregationQuery $query The query value object.
+	 *
+	 * @return array<string, mixed> The result envelope.
+	 */
+	public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query): array {
+		$runner = new FakeAggregationRunner(
+			array_values($this->objects->store['posTransaction_schema'] ?? [])
+		);
+
+		return $runner->runAdhocByRef($registerRef, $schemaRef, $query);
+	}//end runAdhocByRef()
+}//end class
 
 /**
  * A fake WebhookService capturing dispatched CloudEvents.
@@ -189,33 +324,13 @@ class CashShiftServiceTest extends TestCase {
 			groupManager: $this->groupManager,
 		);
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(function (string $id) {
-			if ($id === 'OCA\OpenRegister\Service\ObjectService') {
-				return $this->objects;
-			}
-
-			if ($id === 'OCA\OpenRegister\Service\WebhookService') {
-				return $this->webhooks;
-			}
-
-			if ($id === 'OCA\OpenRegister\Service\Aggregation\AggregationRunner') {
-				// Aggregate over the live posTransaction store so the pushed-down
-				// SUM is computed from the same rows the PHP path used to read.
-				return new FakeAggregationRunner(
-					array_values($this->objects->store['posTransaction_schema'] ?? [])
-				);
-			}
-
-			throw new \RuntimeException('unknown service ' . $id);
-		});
-
-		$this->service = new CashShiftService($this->appConfig,
-			$policy,
-			$this->createMock(LoggerInterface::class),
+		$this->service = new CashShiftService(
+			appConfig: $this->appConfig,
+			policy: $policy,
+			logger: $this->createMock(LoggerInterface::class),
 			webhookService: $this->webhooks,
-			objectService: $key,
-			aggregationRunner: $this->createMock(AggregationRunner::class),
+			objectService: $this->objects,
+			aggregationRunner: new CashLiveAggregationRunner(objects: $this->objects),
 		);
 	}//end setUp()
 

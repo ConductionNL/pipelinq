@@ -19,12 +19,14 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IGroupManager;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -43,18 +45,15 @@ class ContactmomentServiceTest extends TestCase {
 	private ContactmomentService $service;
 
 	/**
-	 * Mock ObjectService contract.
+	 * The injected OpenRegister object service.
 	 *
-	 * @var ObjectServiceInterface
+	 * ContactmomentService no longer resolves OpenRegister through a DI
+	 * container: it takes a non-nullable ObjectServiceInterface (ADR-083/084),
+	 * so the container mock this file used to hold went with it.
+	 *
+	 * @var ObjectServiceInterface&MockObject
 	 */
 	private ObjectServiceInterface $objectService;
-
-	/**
-	 * Mock container.
-	 *
-	 * @var ContainerInterface
-	 */
-	private ContainerInterface $container;
 
 	/**
 	 * Mock unified ticket resolver.
@@ -83,26 +82,10 @@ class ContactmomentServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->ticketService = $this->createMock(TicketService::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
-		// ADR-084: this read `objectService: $objectService` — an undefined local,
-		// so PHP passed null into a non-nullable ObjectServiceInterface parameter
-		// and all 19 tests in this class died in setUp() with a TypeError before
-		// asserting anything.
-		$this->objectService = $this->createMock(ObjectServiceInterface::class);
-
-		// STILL OWED, and deliberately not fixed here: three tests below drive
-		// this container mock, which the service no longer consults —
-		// testRecordOutboundMessageWritesContactmomentTicket,
-		// ...ReturnsTheUuidWhenSaveReturnsAnEntity and
-		// testGetObjectServiceThrowsWhenUnavailable. The first two need their
-		// duck-typed doubles rebuilt against the contract; the third asserts a
-		// throw-on-unavailable path that ADR-084 deleted, so it is a decision
-		// (delete the test, or restore the behaviour) rather than a repair. The
-		// mock stays initialised so those three fail on their own merits instead
-		// of on an uninitialised property.
-		$this->container = $this->createMock(ContainerInterface::class);
 
 		$this->service = new ContactmomentService($this->ticketService,
 			$this->groupManager,
@@ -152,28 +135,27 @@ class ContactmomentServiceTest extends TestCase {
 		$this->ticketService->method('getRegisterId')->willReturn('reg-123');
 		$this->ticketService->method('getSchemaId')->willReturn('ticket-456');
 
-		// The audit write is issued through the duck-typed OpenRegister probe
-		// (it must never depend on the concrete OR class being loadable).
-		$objectService = new class {
-			/** @var array<int, array<string, mixed>> */
-			public array $saves = [];
+		// The audit write goes through the injected ObjectServiceInterface, so
+		// the double is a mock of the CONTRACT — an in-test anonymous class no
+		// longer satisfies the type-hint (ADR-084), and saveObject() must return
+		// an entity rather than the array it was handed.
+		$saves = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (
+				array $object,
+				?array $extend = [],
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				?string $uuid = null,
+			) use (&$saves): ObjectEntityInterface {
+				$saves[] = ['payload' => $object, 'register' => $register, 'schema' => $schema];
 
-			/**
-			 * @param array<string, mixed> $object Payload.
-			 * @param mixed $register Register.
-			 * @param mixed $schema Schema.
-			 * @param string|null $uuid Uuid.
-			 *
-			 * @return array<string, mixed> The saved row.
-			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
-				$this->saves[] = ['payload' => $object, 'register' => $register, 'schema' => $schema];
-				$object['uuid'] = 'ticket-uuid-1';
-				return $object;
+				$entity = new ObjectEntity();
+				$entity->setUuid('ticket-uuid-1');
+				$entity->setObject($object);
+				return $entity;
 			}
-		};
-
-		$this->container->method('get')->willReturn($objectService);
+		);
 
 		$uuid = $this->service->recordOutboundMessage(
 			channel: 'sms',
@@ -185,9 +167,9 @@ class ContactmomentServiceTest extends TestCase {
 		);
 
 		$this->assertSame('ticket-uuid-1', $uuid);
-		$this->assertCount(1, $objectService->saves);
+		$this->assertCount(1, $saves);
 
-		$save = $objectService->saves[0];
+		$save = $saves[0];
 		$this->assertSame('reg-123', $save['register']);
 		$this->assertSame('ticket-456', $save['schema']);
 
@@ -217,31 +199,16 @@ class ContactmomentServiceTest extends TestCase {
 		$this->ticketService->method('getRegisterId')->willReturn('reg-123');
 		$this->ticketService->method('getSchemaId')->willReturn('ticket-456');
 
-		// Production's ObjectService::saveObject() is typed `: ObjectEntity` — it
-		// never returns an array. The array-returning double above therefore only
-		// exercises a branch production cannot reach; this one takes the real
-		// shape, where the uuid arrives through the magic getUuid() accessor.
-		// Reverting the fix to `method_exists($saved, 'getUuid')` makes this
-		// assertion read null (pipelinq#807).
-		$objectService = new class {
+		// ObjectServiceInterface::saveObject() is typed `: ObjectEntityInterface`
+		// — it never returns an array, which is why the array arm that used to
+		// sit alongside this one in production is gone. The uuid arrives through
+		// getUuid(); reverting the fix to `method_exists($saved, 'getUuid')`
+		// makes this assertion read null (pipelinq#807).
+		$saved = new ObjectEntity();
+		$saved->setUuid('ticket-uuid-2');
+		$saved->setObject(['ticketType' => TicketService::TYPE_CONTACTMOMENT]);
 
-			/**
-			 * @param array<string, mixed> $object Payload.
-			 * @param mixed $register Register.
-			 * @param mixed $schema Schema.
-			 * @param string|null $uuid Uuid.
-			 *
-			 * @return \OCA\OpenRegister\Db\ObjectEntity The saved entity.
-			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): \OCA\OpenRegister\Db\ObjectEntity {
-				$entity = new \OCA\OpenRegister\Db\ObjectEntity();
-				$entity->setUuid('ticket-uuid-2');
-				$entity->setObject($object);
-				return $entity;
-			}
-		};
-
-		$this->container->method('get')->willReturn($objectService);
+		$this->objectService->method('saveObject')->willReturn($saved);
 
 		$this->assertSame(
 			'ticket-uuid-2',
@@ -262,7 +229,11 @@ class ContactmomentServiceTest extends TestCase {
 	 */
 	public function testRecordOutboundMessageSkipsWhenUnconfigured(): void {
 		$this->ticketService->method('isConfigured')->willReturn(false);
-		$this->container->expects($this->never())->method('get');
+
+		// Nothing may reach OpenRegister. The container hop this used to assert
+		// against is gone (the service is injected), so the assertion moved onto
+		// the write itself — which is the thing that must not happen.
+		$this->objectService->expects($this->never())->method('saveObject');
 
 		$this->assertNull($this->service->recordOutboundMessage(
 				channel: 'sms',
@@ -274,18 +245,24 @@ class ContactmomentServiceTest extends TestCase {
 	}//end testRecordOutboundMessageSkipsWhenUnconfigured()
 
 	/**
-	 * Test getObjectService throws when OpenRegister is unavailable.
+	 * getObjectService() hands back the injected service.
+	 *
+	 * FINDING (reported, not edited away): this test used to assert that an
+	 * unresolvable container made getObjectService() throw
+	 * `RuntimeException: OpenRegister service is not available.` That runtime
+	 * failure mode no longer exists — under ADR-083/ADR-084 the service is a
+	 * non-nullable constructor dependency, so "OpenRegister is unavailable" is
+	 * a CONSTRUCTION-time failure the DI container raises before any method
+	 * runs, and the old catch was dead code phpstan flagged. The guarantee
+	 * therefore moved rather than disappeared, and this asserts where it now
+	 * lives: the accessor returns exactly the injected instance, never null and
+	 * never a re-resolved one.
 	 *
 	 * @return void
 	 */
-	public function testGetObjectServiceThrowsWhenUnavailable(): void {
-		$this->container->method('get')->willThrowException(new \Exception('Not found'));
-
-		$this->expectException(\RuntimeException::class);
-		$this->expectExceptionMessage('OpenRegister service is not available.');
-
-		$this->service->getObjectService();
-	}//end testGetObjectServiceThrowsWhenUnavailable()
+	public function testGetObjectServiceReturnsTheInjectedService(): void {
+		$this->assertSame($this->objectService, $this->service->getObjectService());
+	}//end testGetObjectServiceReturnsTheInjectedService()
 
 	/**
 	 * Test delete by the creating agent succeeds.
@@ -295,11 +272,6 @@ class ContactmomentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testDeleteByCreatorSucceeds(): void {
-		$mockObject = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
-		$mockObject->method('getObject')->willReturn(['agent' => 'agent-user']);
-
-		$objectService = $this->createMock(\stdClass::class);
-
 		// We can't mock ObjectService directly since it may not be loaded,
 		// so we test the service's config and permission logic separately.
 		// The integration with ObjectService is tested at the integration level.

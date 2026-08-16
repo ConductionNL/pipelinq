@@ -24,13 +24,13 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCP\IAppConfig;
 use OCP\ICacheFactory;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -64,12 +64,10 @@ class AvailabilityServiceTest extends TestCase {
 	 *
 	 * @param ObjectServiceInterface|null $objectService Optional pre-built mock.
 	 *
-	 * @return array{0: AvailabilityService, 1: ObjectService}
+	 * @return array{0: AvailabilityService, 1: ObjectServiceInterface}
 	 */
 	private function buildService(?ObjectServiceInterface $objectService = null): array {
 		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectServiceInterface::class));
-		$container = $this->createMock(originalClassName: ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
 
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
@@ -99,13 +97,40 @@ class AvailabilityServiceTest extends TestCase {
 	}//end buildService()
 
 	/**
+	 * Wrap a fixture row as the ObjectEntity OpenRegister actually returns.
+	 *
+	 * Since ADR-084 `find()` is declared `?ObjectEntityInterface` and
+	 * `saveObject()` `ObjectEntityInterface`, not the bare arrays these fixtures
+	 * are written as.
+	 *
+	 * @param array<string, mixed> $row The fixture row.
+	 *
+	 * @return ObjectEntity The row as an entity.
+	 */
+	private static function entity(array $row): ObjectEntity {
+		$self = ($row['@self'] ?? []);
+		$id = '';
+		if (is_array($self) === true && isset($self['id']) === true) {
+			$id = (string)$self['id'];
+		} elseif (isset($row['id']) === true) {
+			$id = (string)$row['id'];
+		}
+
+		$entity = new ObjectEntity();
+		$entity->setUuid($id);
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
+
+	/**
 	 * Free slots are emitted between 09:00 and 17:30 when no bookings exist.
 	 *
 	 * @return void
 	 */
 	public function testComputeAvailabilityReturnsFreeSlotsWhenResourceIsAvailable(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn(self::RESOURCE_SARAH);
+		$object->method('find')->willReturn(self::entity(self::RESOURCE_SARAH));
 		$object->method('findAll')->willReturn([]);
 
 		[$service] = $this->buildService(objectService: $object);
@@ -135,12 +160,12 @@ class AvailabilityServiceTest extends TestCase {
 	public function testComputeAvailabilityExcludesBookedTimes(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			callback: static function (mixed $id) {
+			callback: static function (mixed $id): ?ObjectEntityInterface {
 				if ($id === 'res-sarah') {
-					return self::RESOURCE_SARAH;
+					return self::entity(self::RESOURCE_SARAH);
 				}
 
-				return ['bufferBeforeMinutes' => 0, 'bufferAfterMinutes' => 0];
+				return self::entity(['bufferBeforeMinutes' => 0, 'bufferAfterMinutes' => 0]);
 			}
 		);
 		$object->method('findAll')->willReturnCallback(
@@ -183,7 +208,7 @@ class AvailabilityServiceTest extends TestCase {
 	 */
 	public function testComputeAvailabilityExcludesVacationDates(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn(self::RESOURCE_SARAH);
+		$object->method('find')->willReturn(self::entity(self::RESOURCE_SARAH));
 		$object->method('findAll')->willReturn([]);
 
 		[$service] = $this->buildService(objectService: $object);
@@ -235,18 +260,18 @@ class AvailabilityServiceTest extends TestCase {
 	public function testBuffersAreAppliedAroundBookings(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			callback: static function (mixed $id) {
+			callback: static function (mixed $id): ?ObjectEntityInterface {
 				if ($id === 'res-sarah') {
-					return [
+					return self::entity([
 						'@self' => ['id' => 'res-sarah'],
 						'workingHours' => [
 							['day' => 'monday', 'openTime' => '09:00', 'closeTime' => '12:00'],
 						],
 						'vacations' => [],
-					];
+					]);
 				}
 
-				return ['bufferBeforeMinutes' => 10, 'bufferAfterMinutes' => 5];
+				return self::entity(['bufferBeforeMinutes' => 10, 'bufferAfterMinutes' => 5]);
 			}
 		);
 		$object->method('findAll')->willReturnCallback(
@@ -367,9 +392,9 @@ class AvailabilityServiceTest extends TestCase {
 	 */
 	public function testGetOrComputeCachePersistsOnMiss(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn(self::RESOURCE_SARAH);
+		$object->method('find')->willReturn(self::entity(self::RESOURCE_SARAH));
 		$object->method('findAll')->willReturn([]);
-		$object->expects($this->once())->method('saveObject')->willReturn(['id' => 'new']);
+		$object->expects($this->once())->method('saveObject')->willReturn(self::entity(['id' => 'new']));
 
 		[$service] = $this->buildService(objectService: $object);
 
@@ -388,7 +413,7 @@ class AvailabilityServiceTest extends TestCase {
 	 */
 	public function testCalendarProviderBlocksAreMerged(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn(self::RESOURCE_SARAH);
+		$object->method('find')->willReturn(self::entity(self::RESOURCE_SARAH));
 		$object->method('findAll')->willReturn([]);
 
 		[$service] = $this->buildService(objectService: $object);

@@ -26,7 +26,6 @@ use OCA\Pipelinq\Service\RegisterResolverService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,11 +40,11 @@ class DefaultQueueServiceTest extends TestCase {
 	private IAppConfig $appConfig;
 
 	/**
-	 * The container mock.
+	 * The injected OpenRegister object service mock.
 	 *
-	 * @var ContainerInterface&MockObject
+	 * @var ObjectServiceInterface&MockObject
 	 */
-	private ContainerInterface $container;
+	private ObjectServiceInterface $objectService;
 
 	/**
 	 * The logger mock.
@@ -61,7 +60,7 @@ class DefaultQueueServiceTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->appConfig = $this->createMock(IAppConfig::class);
-		$this->container = $this->createMock(ContainerInterface::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 	}//end setUp()
 
@@ -75,7 +74,7 @@ class DefaultQueueServiceTest extends TestCase {
 			appConfig: $this->appConfig,
 			logger: $this->logger,
 			registerResolver: new RegisterResolverService(appConfig: $this->appConfig),
-			objectService: $objectServiceMock,
+			objectService: $this->objectService,
 		);
 	}//end buildService()
 
@@ -93,7 +92,8 @@ class DefaultQueueServiceTest extends TestCase {
 			]);
 
 		$this->logger->expects($this->once())->method('warning');
-		$this->container->expects($this->never())->method('get');
+		$this->objectService->expects($this->never())->method('findAll');
+		$this->objectService->expects($this->never())->method('saveObject');
 
 		$this->buildService()->createDefaultQueues();
 	}//end testCreateDefaultQueuesSkipsWhenRegisterNotConfigured()
@@ -122,8 +122,6 @@ class DefaultQueueServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateDefaultQueuesSkipsWhenQueuesAlreadyExist(): void {
-		$this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
 		$this->appConfig
 			->method('getValueString')
 			->willReturnMap([
@@ -131,17 +129,13 @@ class DefaultQueueServiceTest extends TestCase {
 				[Application::APP_ID, 'queue_schema', '', 'schema-id'],
 			]);
 
-		$objectServiceMock = $this->getMockBuilder(\stdClass::class)
-			->addMethods(['findAll', 'saveObject'])
-			->getMock();
-		$objectServiceMock
+		$this->objectService
 			->method('findAll')
 			->willReturn([['id' => 'existing-queue']]);
-		$objectServiceMock
+		$this->objectService
 			->expects($this->never())
 			->method('saveObject');
 
-		$this->container->method('get')->willReturn($objectServiceMock);
 		$this->logger->expects($this->once())->method('info');
 
 		$this->buildService()->createDefaultQueues();
@@ -153,8 +147,6 @@ class DefaultQueueServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateDefaultQueuesCreatesDefaultQueues(): void {
-		$this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
 		$this->appConfig
 			->method('getValueString')
 			->willReturnMap([
@@ -162,18 +154,13 @@ class DefaultQueueServiceTest extends TestCase {
 				[Application::APP_ID, 'queue_schema', '', 'schema-id'],
 			]);
 
-		$objectServiceMock = $this->getMockBuilder(\stdClass::class)
-			->addMethods(['findAll', 'saveObject'])
-			->getMock();
-		$objectServiceMock
+		$this->objectService
 			->method('findAll')
 			->willReturn([]);
 		// 3 default queues defined in DEFAULT_QUEUES constant.
-		$objectServiceMock
+		$this->objectService
 			->expects($this->exactly(3))
 			->method('saveObject');
-
-		$this->container->method('get')->willReturn($objectServiceMock);
 
 		$this->buildService()->createDefaultQueues();
 	}//end testCreateDefaultQueuesCreatesDefaultQueues()
@@ -202,8 +189,6 @@ class DefaultQueueServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateDefaultSkillsCreatesDefaultSkills(): void {
-		$this->markTestSkipped('See https://github.com/ConductionNL/pipelinq/issues/286 — ObjectService API mismatch.');
-
 		$this->appConfig
 			->method('getValueString')
 			->willReturnMap([
@@ -211,14 +196,9 @@ class DefaultQueueServiceTest extends TestCase {
 				[Application::APP_ID, 'skill_schema', '', 'skill-schema-id'],
 			]);
 
-		$objectServiceMock = $this->getMockBuilder(\stdClass::class)
-			->addMethods(['findAll', 'saveObject'])
-			->getMock();
-		$objectServiceMock->method('findAll')->willReturn([]);
+		$this->objectService->method('findAll')->willReturn([]);
 		// 5 default skills defined in DEFAULT_SKILLS constant.
-		$objectServiceMock->expects($this->exactly(5))->method('saveObject');
-
-		$this->container->method('get')->willReturn($objectServiceMock);
+		$this->objectService->expects($this->exactly(5))->method('saveObject');
 
 		$this->buildService()->createDefaultSkills();
 	}//end testCreateDefaultSkillsCreatesDefaultSkills()
@@ -236,7 +216,7 @@ class DefaultQueueServiceTest extends TestCase {
 				[Application::APP_ID, 'queue_schema', '', 'schema-id'],
 			]);
 
-		$this->container->method('get')->willThrowException(new \RuntimeException('container error'));
+		$this->objectService->method('findAll')->willThrowException(new \RuntimeException('object service error'));
 		$this->logger->expects($this->once())->method('error');
 
 		$this->buildService()->createDefaultQueues();

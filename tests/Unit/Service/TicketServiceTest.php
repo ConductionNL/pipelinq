@@ -27,13 +27,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 
@@ -57,11 +57,15 @@ class TicketServiceTest extends TestCase {
 	private const NIL_UUID = '00000000-0000-0000-0000-000000000000';
 
 	/**
-	 * The DI container mock.
+	 * The OpenRegister object service double.
 	 *
-	 * @var ContainerInterface&MockObject
+	 * Injected directly (ADR-083/ADR-084) — TicketService no longer resolves it
+	 * through a DI container, so the container mock this file used to hold is
+	 * gone with it.
+	 *
+	 * @var ObjectServiceInterface&MockObject
 	 */
-	private ContainerInterface $container;
+	private ObjectServiceInterface $objectService;
 
 	/**
 	 * The app config mock (register / ticket_schema resolution).
@@ -83,7 +87,7 @@ class TicketServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->container = $this->createMock(originalClassName: ContainerInterface::class);
+		$this->objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
 	}//end setUp()
@@ -97,7 +101,7 @@ class TicketServiceTest extends TestCase {
 		return new TicketService(
 			appConfig: $this->appConfig,
 			logger: $this->logger,
-			objectService: $objectService,
+			objectService: $this->objectService,
 		);
 	}//end buildService()
 
@@ -116,15 +120,17 @@ class TicketServiceTest extends TestCase {
 	}//end stubConfigured()
 
 	/**
-	 * Build an ObjectService mock and wire it as the container's resolved service.
+	 * The ObjectService double the service under test is built with.
+	 *
+	 * The declared return type is the CONTRACT, not OpenRegister's concrete
+	 * `Service\ObjectService`: the double is a mock of
+	 * `ObjectServiceInterface`, and a helper still declaring the class returns
+	 * a TypeError before a single assertion runs (ADR-084).
 	 *
 	 * @return ObjectServiceInterface&MockObject
 	 */
-	private function mockObjectService(): ObjectService {
-		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$this->container->method('get')->willReturn($objectService);
-
-		return $objectService;
+	private function mockObjectService(): ObjectServiceInterface {
+		return $this->objectService;
 	}//end mockObjectService()
 
 	// =========================================================================
@@ -245,9 +251,16 @@ class TicketServiceTest extends TestCase {
 		$captured = [];
 		$objectService = $this->mockObjectService();
 		$objectService->method('saveObject')->willReturnCallback(
-			static function (array $object) use (&$captured): object {
+			static function (array $object) use (&$captured): ObjectEntityInterface {
 				$captured = $object;
-				return (object)array_merge($object, ['id' => self::NIL_UUID]);
+
+				// saveObject() returns an ENTITY, not a plain object (ADR-084);
+				// the uuid is what TicketService reads back as the ticket id.
+				$entity = new ObjectEntity();
+				$entity->setUuid(self::NIL_UUID);
+				$entity->setObject($object);
+
+				return $entity;
 			}
 		);
 

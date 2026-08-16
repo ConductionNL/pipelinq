@@ -31,22 +31,31 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosBookkeepingService;
 use OCP\AppFramework\OCS\OCSForbiddenException;
+use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IUser;
 use OCP\Mail\IMailer;
 use OCP\Mail\IMessage;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * In-memory fake of the OR ObjectService.
+ *
+ * Extends the ObjectService stub so it satisfies the `ObjectServiceInterface`
+ * type-hint PosBookkeepingService now declares (ADR-084). Every overridden
+ * signature must match the parent EXACTLY — PHP checks compatibility at
+ * class-load time, so drift is a fatal before test 1, not a test failure.
  */
-class BookkeepingFakeObjectService {
+class BookkeepingFakeObjectService extends ObjectService {
 
 	/**
 	 * @var array<string, array<string, array<string, mixed>>>
@@ -59,44 +68,129 @@ class BookkeepingFakeObjectService {
 	private int $seq = 0;
 
 	/**
-	 * @return array<string, mixed>|null
+	 * Find a single object by UUID within a schema table.
+	 *
+	 * @param int|string $id The object UUID.
+	 * @param array<string, mixed>|null $_extend Unused.
+	 * @param boolean $files Unused.
+	 * @param string|int|null $register Unused — single-register fake.
+	 * @param string|int|null $schema The schema key.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $_render Unused.
+	 * @param boolean $_audit Unused.
+	 *
+	 * @return ObjectEntityInterface|null
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
-	public function find(string $id, string $register, string $schema): ?array {
-		return $this->store[$schema][$id] ?? null;
+	public function find(
+		int|string $id,
+		?array $_extend = [],
+		bool $files = false,
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
+	): ?ObjectEntityInterface {
+		$row = ($this->store[(string)$schema][(string)$id] ?? null);
+		if ($row === null) {
+			return null;
+		}
+
+		return $this->entity(uuid: (string)$id, row: $row);
 	}//end find()
 
 	/**
-	 * @param array<string, mixed> $config
+	 * Read every row for the schema named in the reserved `schema` filter.
+	 *
+	 * @param array<string, mixed> $config The findAll config.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
-	public function findAll(array $config): array {
-		$filters = $config['filters'] ?? [];
+	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+		$filters = ($config['filters'] ?? []);
 		$schema = (string)($filters['schema'] ?? '');
 		return array_values($this->store[$schema] ?? []);
 	}//end findAll()
 
 	/**
-	 * @param array<string, mixed> $object
+	 * Upsert an object into a schema table.
 	 *
-	 * @return array<string, mixed>
+	 * @param array<string, mixed> $object The payload.
+	 * @param array<string, mixed>|null $extend Unused.
+	 * @param string|int|null $register Unused.
+	 * @param string|int|null $schema The schema key.
+	 * @param string|null $uuid Update target, or null/'' to create.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $silent Unused.
+	 * @param boolean $_validation Unused.
+	 * @param array<string, mixed>|null $uploadedFiles Unused.
+	 * @param IUser|null $currentUser Unused.
+	 * @param boolean $failIfExists Unused.
+	 *
+	 * @return ObjectEntityInterface
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
-	public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array {
-		if ($uuid === '') {
+	public function saveObject(
+		array $object,
+		?array $extend = [],
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		?string $uuid = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $silent = false,
+		bool $_validation = true,
+		?array $uploadedFiles = null,
+		?IUser $currentUser = null,
+		bool $failIfExists = false,
+	): ObjectEntityInterface {
+		$schemaKey = (string)$schema;
+		$key = (string)$uuid;
+		if ($key === '') {
 			$this->seq++;
-			$uuid = $schema . '-' . $this->seq;
+			$key = $schemaKey . '-' . $this->seq;
 		}
 
-		$object['id'] = $uuid;
-		$this->store[$schema][$uuid] = $object;
-		return $object;
+		$object['id'] = $key;
+		$this->store[$schemaKey][$key] = $object;
+
+		return $this->entity(uuid: $key, row: $object);
 	}//end saveObject()
+
+	/**
+	 * Wrap a stored row in the entity the contract now returns.
+	 *
+	 * @param string $uuid The object UUID.
+	 * @param array<string, mixed> $row The stored row.
+	 *
+	 * @return ObjectEntityInterface
+	 */
+	private function entity(string $uuid, array $row): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setObject($row);
+		return $entity;
+	}//end entity()
 }//end class
 
 /**
  * Fake WebhookService capturing dispatched CloudEvents (optionally failing).
  */
-class BookkeepingFakeWebhookService {
+class BookkeepingFakeWebhookService extends WebhookService {
 
 	/**
 	 * @var array<int, array{eventName: string, payload: array<string, mixed>}>
@@ -109,9 +203,15 @@ class BookkeepingFakeWebhookService {
 	public bool $fail = false;
 
 	/**
-	 * @param array<string, mixed> $payload
+	 * Capture a dispatched CloudEvent.
+	 *
+	 * @param Event $_event The originating event.
+	 * @param string $eventName The webhook event name.
+	 * @param array<string, mixed> $payload The CloudEvent payload.
+	 *
+	 * @return void
 	 */
-	public function dispatchEvent(object $_event, string $eventName, array $payload): void {
+	public function dispatchEvent(Event $_event, string $eventName, array $payload): void {
 		if ($this->fail === true) {
 			throw new \RuntimeException('webhook delivery failed');
 		}
@@ -193,21 +293,6 @@ class PosBookkeepingServiceTest extends TestCase {
 			groupManager: $this->groupManager,
 		);
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(
-			function (string $id) {
-				if ($id === 'OCA\OpenRegister\Service\ObjectService') {
-					return $this->objects;
-				}
-
-				if ($id === 'OCA\OpenRegister\Service\WebhookService') {
-					return $this->webhooks;
-				}
-
-				throw new \RuntimeException('unknown service ' . $id);
-			}
-		);
-
 		$mailer = $this->createMock(IMailer::class);
 		$message = $this->createMock(IMessage::class);
 		$captured = ['to' => '', 'subject' => '', 'body' => ''];
@@ -237,12 +322,13 @@ class PosBookkeepingServiceTest extends TestCase {
 			}
 		);
 
-		$this->service = new PosBookkeepingService($container,
-			$this->appConfig,
-			$mailer,
-			$policy,
-			$this->createMock(LoggerInterface::class),
-			objectService: $key,
+		$this->service = new PosBookkeepingService(
+			appConfig: $this->appConfig,
+			mailer: $mailer,
+			policy: $policy,
+			logger: $this->createMock(LoggerInterface::class),
+			webhookService: $this->webhooks,
+			objectService: $this->objects,
 		);
 	}//end setUp()
 

@@ -33,7 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Controller\BookingAdminController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -174,7 +175,7 @@ class BookingAdminControllerTest extends TestCase {
 			appConfig: $appConfig,
 			availabilityService: $availability,
 			logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->objects,
 		);
 
 		$this->collaborators = [
@@ -219,7 +220,7 @@ class BookingAdminControllerTest extends TestCase {
 			eligibilityService: $this->createMock(EligibilityService::class),
 			logger: $this->collaborators['logger'],
 			jobList: $jobList,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $this->objects,
 		);
 	}//end buildBookingService()
 
@@ -241,7 +242,7 @@ class BookingAdminControllerTest extends TestCase {
 	 * @return object The store.
 	 */
 	private function buildObjectStore(): object {
-		return new class {
+		return new class extends \OCA\OpenRegister\Service\ObjectService {
 			/**
 			 * When true the double ALSO honours a register/schema supplied at
 			 * the top level of the config array. The real OpenRegister service
@@ -297,28 +298,59 @@ class BookingAdminControllerTest extends TestCase {
 			/**
 			 * Read one row by id.
 			 *
-			 * @param int|string $id Object id.
-			 * @param array|null $_extend Extend list.
-			 * @param bool $files Include files.
-			 * @param mixed $register Register context.
-			 * @param mixed $schema Schema context.
+			 * Mirrors ObjectService::find() exactly — the parent declares nine
+			 * parameters and an `?ObjectEntityInterface` return, and PHP checks
+			 * signature compatibility at CLASS-LOAD time, so a narrower override
+			 * is a fatal before test 1 rather than a test failure (ADR-084).
 			 *
-			 * @return array<string, mixed>|null
+			 * @param int|string $id Object id.
+			 * @param array<string, mixed>|null $_extend Unused.
+			 * @param bool $files Unused.
+			 * @param string|int|null $register Register context.
+			 * @param string|int|null $schema Schema context.
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $_render Unused.
+			 * @param bool $_audit Unused.
+			 *
+			 * @return ObjectEntityInterface|null The row, wrapped as an entity.
 			 */
 			public function find(
 				int|string $id,
 				?array $_extend = [],
 				bool $files = false,
-				mixed $register = null,
-				mixed $schema = null,
-			): ?array {
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $_render = true,
+				bool $_audit = true,
+			): ?ObjectEntityInterface {
 				$row = ($this->store[(string)$id] ?? null);
 				if ($row === null || ($row['_deleted'] ?? null) !== null) {
 					return null;
 				}
 
-				return $row;
+				return $this->toEntity((string)$id, $row);
 			}//end find()
+
+			/**
+			 * Wrap a stored row as the entity the real service returns.
+			 *
+			 * @param string $uuid Row uuid.
+			 * @param array<string, mixed> $row Row body.
+			 *
+			 * @return ObjectEntityInterface The entity.
+			 */
+			private function toEntity(string $uuid, array $row): ObjectEntityInterface {
+				$entity = new ObjectEntity();
+				$entity->setUuid($uuid);
+				$entity->setRegister((string)($row['@self']['register'] ?? ''));
+				$entity->setSchema((string)($row['@self']['schema'] ?? ''));
+				$entity->setObject($row);
+
+				return $entity;
+			}//end toEntity()
 
 			/**
 			 * Query rows.
@@ -411,21 +443,38 @@ class BookingAdminControllerTest extends TestCase {
 			/**
 			 * Write one row.
 			 *
-			 * @param array<string, mixed> $object Payload.
-			 * @param array|null $extend Extend list.
-			 * @param mixed $register Register context.
-			 * @param mixed $schema Schema context.
-			 * @param string|null $uuid Target uuid.
+			 * Mirrors ObjectService::saveObject() exactly — twelve parameters
+			 * and a non-nullable `ObjectEntityInterface` return (ADR-084).
 			 *
-			 * @return array<string, mixed>
+			 * @param array<string, mixed> $object Payload.
+			 * @param array<string, mixed>|null $extend Extend list.
+			 * @param string|int|null $register Register context.
+			 * @param string|int|null $schema Schema context.
+			 * @param string|null $uuid Target uuid.
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $silent Unused.
+			 * @param bool $_validation Unused.
+			 * @param array<string, mixed>|null $uploadedFiles Unused.
+			 * @param IUser|null $currentUser Unused.
+			 * @param bool $failIfExists Unused.
+			 *
+			 * @return ObjectEntityInterface The saved row, wrapped as an entity.
 			 */
 			public function saveObject(
 				array $object,
 				?array $extend = [],
-				mixed $register = null,
-				mixed $schema = null,
+				string|int|null $register = null,
+				string|int|null $schema = null,
 				?string $uuid = null,
-			): array {
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $silent = false,
+				bool $_validation = true,
+				?array $uploadedFiles = null,
+				?IUser $currentUser = null,
+				bool $failIfExists = false,
+			): ObjectEntityInterface {
 				$key = ($uuid ?? ('new-' . (count($this->store) + 1)));
 				$object['id'] = $key;
 				$object['uuid'] = $key;
@@ -436,7 +485,8 @@ class BookingAdminControllerTest extends TestCase {
 				];
 				$this->store[$key] = $object;
 				$this->saves[] = $object;
-				return $object;
+
+				return $this->toEntity($key, $object);
 			}//end saveObject()
 		};
 	}//end buildObjectStore()

@@ -361,20 +361,16 @@ class PosStaffReportService {
 	/**
 	 * Get the OpenRegister ad-hoc AggregationRunner.
 	 *
-	 * Resolved from the DI container the same way ObjectService is, so the
-	 * per-staff COUNT and signed SUMs are computed by OpenRegister (ADR-022)
-	 * instead of hydrating every transaction and reducing in PHP.
+	 * Constructor-injected the same way ObjectService is, so the per-staff COUNT
+	 * and signed SUMs are computed by OpenRegister (ADR-022) instead of hydrating
+	 * every transaction and reducing in PHP. It was formerly resolved from the DI
+	 * container inside a try/catch; since the migration to injection that catch
+	 * was unreachable — phpstan reports it as a dead catch.
 	 *
 	 * @return object The aggregation runner.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getAggregationRunner(): object {
-		try {
-			return $this->aggregationRunner;
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister aggregation runner is not available.');
-		}
+		return $this->aggregationRunner;
 	}//end getAggregationRunner()
 
 	/**

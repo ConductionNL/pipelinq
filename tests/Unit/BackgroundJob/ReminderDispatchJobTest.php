@@ -73,6 +73,17 @@ class ReminderDispatchJobTest extends TestCase {
 	private LoggerInterface $logger;
 
 	/**
+	 * The injected OpenRegister object service.
+	 *
+	 * Since ADR-084 the job takes this as a constructor argument; the container
+	 * is now only consulted for the AppointmentEmailService seam, so the booking
+	 * query must be configured on THIS double, not through `container->get()`.
+	 *
+	 * @var ObjectServiceInterface&MockObject
+	 */
+	private ObjectServiceInterface $objectService;
+
+	/**
 	 * Set up the test.
 	 *
 	 * @return void
@@ -82,6 +93,7 @@ class ReminderDispatchJobTest extends TestCase {
 		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->container = $this->createMock(ContainerInterface::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 
 		$this->timeFactory->method('getTime')->willReturn(time());
 	}//end setUp()
@@ -92,11 +104,12 @@ class ReminderDispatchJobTest extends TestCase {
 	 * @return ReminderDispatchJob
 	 */
 	private function buildJob(): ReminderDispatchJob {
-		return new ReminderDispatchJob($this->timeFactory,
-			$this->appConfig,
-			$this->container,
-			$this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+		return new ReminderDispatchJob(
+			time: $this->timeFactory,
+			appConfig: $this->appConfig,
+			container: $this->container,
+			logger: $this->logger,
+			objectService: $this->objectService,
 		);
 	}//end buildJob()
 
@@ -126,7 +139,8 @@ class ReminderDispatchJobTest extends TestCase {
 			]
 		);
 
-		// The container must NOT be consulted at all when we skip.
+		// Neither the object service nor the container may be touched on a skip.
+		$this->objectService->expects($this->never())->method('findAll');
 		$this->container->expects($this->never())->method('get');
 
 		$this->runJob(job: $this->buildJob());
@@ -145,6 +159,7 @@ class ReminderDispatchJobTest extends TestCase {
 			]
 		);
 
+		$this->objectService->expects($this->never())->method('findAll');
 		$this->container->expects($this->never())->method('get');
 
 		$this->runJob(job: $this->buildJob());
@@ -191,32 +206,9 @@ class ReminderDispatchJobTest extends TestCase {
 			'startAt' => $dueIso,
 		];
 
-		// Build object-service mock that exposes findAll.
-		$objectService = new class([$dueBooking, $earlyBooking, $remindedBooking]) {
-
-			/**
-			 * @var array<int, array<string, mixed>>
-			 */
-			public array $rows;
-
-			/**
-			 * @param array<int, array<string, mixed>> $rows Seeded rows.
-			 */
-			public function __construct(array $rows) {
-				$this->rows = $rows;
-			}//end __construct()
-
-			/**
-			 * Mock findAll that returns the seeded rows verbatim.
-			 *
-			 * @param array<string, mixed> $config Filter config (ignored in tests).
-			 *
-			 * @return array<int, array<string, mixed>>
-			 */
-			public function findAll(array $config): array {
-				return $this->rows;
-			}//end findAll()
-		};
+		$this->objectService->method('findAll')->willReturn(
+			[$dueBooking, $earlyBooking, $remindedBooking]
+		);
 
 		$emailService = $this->createMock(AppointmentEmailService::class);
 		$emailService->expects($this->once())
@@ -225,11 +217,7 @@ class ReminderDispatchJobTest extends TestCase {
 			->willReturn(true);
 
 		$this->container->method('get')->willReturnCallback(
-			function (string $id) use ($objectService, $emailService): object {
-				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
-					return $objectService;
-				}
-
+			function (string $id) use ($emailService): object {
 				if ($id === AppointmentEmailService::class) {
 					return $emailService;
 				}
@@ -263,31 +251,7 @@ class ReminderDispatchJobTest extends TestCase {
 			['id' => 'c', 'status' => 'confirmed', 'reminderSentAt' => '', 'startAt' => $dueIso],
 		];
 
-		$objectService = new class($bookings) {
-
-			/**
-			 * @var array<int, array<string, mixed>>
-			 */
-			public array $rows;
-
-			/**
-			 * @param array<int, array<string, mixed>> $rows Seeded rows.
-			 */
-			public function __construct(array $rows) {
-				$this->rows = $rows;
-			}//end __construct()
-
-			/**
-			 * Mock findAll.
-			 *
-			 * @param array<string, mixed> $config Ignored.
-			 *
-			 * @return array<int, array<string, mixed>>
-			 */
-			public function findAll(array $config): array {
-				return $this->rows;
-			}//end findAll()
-		};
+		$this->objectService->method('findAll')->willReturn($bookings);
 
 		$emailService = $this->createMock(AppointmentEmailService::class);
 		$emailService->expects($this->exactly(3))
@@ -303,11 +267,7 @@ class ReminderDispatchJobTest extends TestCase {
 			);
 
 		$this->container->method('get')->willReturnCallback(
-			function (string $id) use ($objectService, $emailService): object {
-				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
-					return $objectService;
-				}
-
+			function (string $id) use ($emailService): object {
 				if ($id === AppointmentEmailService::class) {
 					return $emailService;
 				}
@@ -387,26 +347,13 @@ class ReminderDispatchJobTest extends TestCase {
 			]
 		);
 
-		$objectService = new class {
-			/**
-			 * Mock findAll that always throws.
-			 *
-			 * @param array<string, mixed> $config Ignored.
-			 *
-			 * @return array<int, mixed>
-			 */
-			public function findAll(array $config): array {
-				throw new RuntimeException('OR unavailable');
-			}//end findAll()
-		};
+		$this->objectService->method('findAll')->willThrowException(
+			new RuntimeException('OR unavailable')
+		);
 
 		$this->container->method('get')->willReturnCallback(
-			function (string $id) use ($objectService): object {
-				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
-					return $objectService;
-				}
-
-				throw new RuntimeException('unexpected lookup');
+			static function (string $id): object {
+				throw new RuntimeException('unexpected lookup: ' . $id);
 			}
 		);
 

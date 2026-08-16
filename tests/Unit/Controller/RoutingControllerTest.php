@@ -27,7 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\RoutingController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\RoutingService;
@@ -85,7 +87,9 @@ class RoutingControllerTest extends TestCase {
 	 *
 	 * Register/schema context is taken ONLY from `$config['filters']`, exactly
 	 * as ObjectService::prepareFindAllConfig() does; the remaining filter keys
-	 * are object-field equality filters; soft-deleted rows are excluded.
+	 * are object-field equality filters; soft-deleted rows are excluded. The
+	 * `find()` signature is widened so both the upstream call shape
+	 * (`find($id, $extendArray)`) and the bundled stub's are accepted.
 	 *
 	 * @return object The store.
 	 */
@@ -114,24 +118,48 @@ class RoutingControllerTest extends TestCase {
 				$this->store[$uuid] = $data;
 			}//end seed()
 
-			// ADR-084: this double used to override find() with a WIDENED signature
-			// — `find(string|int $id, mixed $arg2 = '', mixed $arg3 = ''):
-			// array|object|null` — so it could absorb two call shapes at once. The
-			// contract now declares
-			// `find(int|string, ?array, bool, string|int|null, string|int|null,
-			// bool, bool, bool, bool): ?ObjectEntityInterface`, and PHP refuses to
-			// DECLARE an incompatible override. That is a fatal at class-declaration
-			// time, not a failing test: the whole 2231-test run aborted at roughly
-			// 30% with "Declaration of ...@anonymous::find() must be compatible",
-			// and PHPUnit never printed a summary — so nothing reported how many
-			// tests had actually run.
-			//
-			// The override is deleted rather than re-widened because NOTHING calls
-			// it: `git grep '->find('` over this file and over RoutingController
-			// matches only the declaration itself. The bundled stub's own
-			// `find(): ?ObjectEntityInterface` is inherited instead. Re-widening
-			// would only reintroduce the drift, since the contract is the thing that
-			// moved.
+			/**
+			 * Read one row.
+			 *
+			 * Mirrors ObjectService::find() exactly — the parent declares nine
+			 * parameters and an `?ObjectEntityInterface` return, and PHP checks
+			 * signature compatibility at CLASS-LOAD time, so a narrower override
+			 * killed the whole suite with a fatal before test 1 (ADR-084).
+			 *
+			 * @param string|int $id Object id.
+			 * @param array<string, mixed>|null $_extend Unused.
+			 * @param bool $files Unused.
+			 * @param string|int|null $register Unused (single-register store).
+			 * @param string|int|null $schema Unused (single-schema store).
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $_render Unused.
+			 * @param bool $_audit Unused.
+			 *
+			 * @return ObjectEntityInterface|null The row, wrapped as an entity.
+			 */
+			public function find(
+				int|string $id,
+				?array $_extend = [],
+				bool $files = false,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $_render = true,
+				bool $_audit = true,
+			): ?ObjectEntityInterface {
+				$row = ($this->store[(string)$id] ?? null);
+				if ($row === null || ($row['_deleted'] ?? null) !== null) {
+					return null;
+				}
+
+				$entity = new ObjectEntity();
+				$entity->setUuid((string)$id);
+				$entity->setObject($row);
+
+				return $entity;
+			}//end find()
 
 			/**
 			 * Query rows.
@@ -244,9 +272,10 @@ class RoutingControllerTest extends TestCase {
 				ticketService: new TicketService(
 					appConfig: $appConfig,
 					logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
-		),
+					objectService: $this->objects,
+				),
 				logger: $logger,
+				objectService: $this->objects,
 			),
 			userSession: $this->userSession,
 			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
@@ -525,16 +554,17 @@ class RoutingControllerTest extends TestCase {
 		$this->signIn();
 		$this->withParams(['entityType' => 'request', 'entityId' => 'req-1']);
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willThrowException(new \RuntimeException('postgres: FATAL password authentication failed'));
-
+		// The failure is raised on the config read, which RoutingService performs
+		// OUTSIDE its own try/catch — so it propagates to the controller, which
+		// is the boundary under test. Throwing from the injected ObjectService
+		// would not do: RoutingService catches find()/findAll() itself and
+		// degrades to `noMatch`, a 200.
 		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturnCallback(
-			static function (string $app, string $key, string $default = ''): string {
-				$map = ['register' => 'pipelinq', 'ticket_schema' => 'ticket'];
-				return ($map[$key] ?? $default);
-			}
+		$appConfig->method('getValueString')->willThrowException(
+			new \RuntimeException('postgres: FATAL password authentication failed')
 		);
+
+		$failing = $this->createMock(ObjectServiceInterface::class);
 
 		$logger = $this->createMock(LoggerInterface::class);
 		$controller = new RoutingController(
@@ -544,9 +574,10 @@ class RoutingControllerTest extends TestCase {
 				ticketService: new TicketService(
 					appConfig: $appConfig,
 					logger: $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
-		),
+					objectService: $failing,
+				),
 				logger: $logger,
+				objectService: $failing,
 			),
 			userSession: $this->userSession,
 			accessPolicy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),

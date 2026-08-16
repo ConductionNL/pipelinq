@@ -53,6 +53,12 @@ use Psr\Log\LoggerInterface;
  * @implements IEventListener<Event>
  *
  * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-001
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Measured 14, threshold 13.
+ *  An ADR-078 deferred listener necessarily names both halves of the contract —
+ *  the event and entity types it reacts to, and the deferral/job types it hands
+ *  work to. The count is the contract's width, not an accumulation of
+ *  responsibilities.
  */
 class ProjectCreationListener implements IEventListener, DeferredObjectWork {
 
@@ -95,6 +101,11 @@ class ProjectCreationListener implements IEventListener, DeferredObjectWork {
 	 * @return void
 	 *
 	 * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-001-01
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) DeferredWorkGuard is a process-scoped
+	 *  re-entrancy guard: its `$inFlight` map MUST be shared across every listener
+	 *  instance in the request, which is exactly what an injected per-instance
+	 *  service cannot give. Static is the mechanism, not an accident.
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatedEvent) === false) {

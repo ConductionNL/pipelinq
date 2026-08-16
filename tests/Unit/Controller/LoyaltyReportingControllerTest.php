@@ -45,7 +45,6 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -106,52 +105,38 @@ class LoyaltyReportingControllerTest extends TestCase {
 	}//end appConfig()
 
 	/**
-	 * Build a container that resolves the aggregation runner (when given) and
-	 * refuses everything else, so the reporting service exercises either the
-	 * pushdown path or its documented PHP fallback.
-	 *
-	 * @param ?object $runner The aggregation runner, or null for none.
-	 *
-	 * @return ContainerInterface
-	 */
-	private function container(?object $runner = null): ContainerInterface {
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(
-			static function (string $id) use ($runner) {
-				if ($runner !== null && $id === 'OCA\OpenRegister\Service\Aggregation\AggregationRunner') {
-					return $runner;
-				}
-
-				throw new \RuntimeException('unexpected service ' . $id);
-			}
-		);
-
-		return $container;
-	}//end container()
-
-	/**
 	 * Wire the REAL reporting service over seeded accounts and programme.
+	 *
+	 * The AggregationRunner is INJECTED (ADR-083/084) rather than pulled from
+	 * a container, so a test that wants the OpenRegister grouped-count
+	 * pushdown hands its own runner in; omitting it leaves a bare double whose
+	 * empty envelope drives the documented PHP fallback.
 	 *
 	 * @param array<int, array<string, mixed>> $accounts The seeded accounts.
 	 * @param array<string, mixed> $programme The seeded programme.
-	 * @param ?object $runner Optional aggregation runner.
+	 * @param ?AggregationRunner $runner Optional aggregation runner.
 	 *
 	 * @return LoyaltyReportingService
 	 */
-	private function realReportingService(array $accounts, array $programme = [], ?object $runner = null): LoyaltyReportingService {
+	private function realReportingService(
+		array $accounts,
+		array $programme = [],
+		?AggregationRunner $runner = null,
+	): LoyaltyReportingService {
 		$accountService = $this->createMock(LoyaltyAccountService::class);
 		$accountService->method('listAccountsForProgramme')->willReturn($accounts);
 
 		$programmeService = $this->createMock(LoyaltyProgrammeService::class);
 		$programmeService->method('getProgramme')->willReturn($programme);
 
-		return new LoyaltyReportingService($this->appConfig(),
-			$accountService,
-			$this->createMock(PointsLedgerService::class),
-			$programmeService,
-			$this->createMock(LoggerInterface::class),
-			objectService: $key,
-			aggregationRunner: $this->createMock(AggregationRunner::class),
+		return new LoyaltyReportingService(
+			appConfig: $this->appConfig(),
+			accountService: $accountService,
+			ledgerService: $this->createMock(PointsLedgerService::class),
+			programmeService: $programmeService,
+			logger: $this->createMock(LoggerInterface::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+			aggregationRunner: ($runner ?? $this->createMock(AggregationRunner::class)),
 		);
 	}//end realReportingService()
 
@@ -314,13 +299,23 @@ class LoyaltyReportingControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testTierDistributionFallsBackToRealCounts(): void {
+		// The runner is injected now (ADR-083), so "unavailable" can no longer
+		// be modelled by a container that refuses to resolve it. It is modelled
+		// where the service actually observes it: getTierReport() falls back
+		// only when runAdhocByRef() RAISES, which is what an unreachable
+		// OpenRegister aggregation backend does.
+		$runner = $this->createMock(AggregationRunner::class);
+		$runner->method('runAdhocByRef')
+			->willThrowException(new \RuntimeException('OpenRegister aggregation unavailable'));
+
 		$service = $this->realReportingService(
 			accounts: [
 				['programmeId' => 'prog-1', 'currentTierId' => 'gold'],
 				['programmeId' => 'prog-1', 'currentTierId' => 'gold'],
 				['programmeId' => 'prog-1', 'currentTierId' => 'silver'],
 				['programmeId' => 'prog-1'],
-			]
+			],
+			runner: $runner,
 		);
 
 		$response = $this->buildController($service)->tierDistribution(programmeId: 'prog-1');

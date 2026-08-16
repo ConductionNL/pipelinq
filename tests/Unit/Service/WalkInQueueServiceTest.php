@@ -22,13 +22,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\WalkInQueueService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,7 +41,7 @@ class WalkInQueueServiceTest extends TestCase {
 	 * @param ObjectServiceInterface|null $objectService Optional pre-built ObjectService mock.
 	 * @param AvailabilityService|null $availability Optional pre-built AvailabilityService mock.
 	 *
-	 * @return array{0: WalkInQueueService, 1: ObjectService, 2: AvailabilityService}
+	 * @return array{0: WalkInQueueService, 1: ObjectServiceInterface, 2: AvailabilityService}
 	 */
 	private function buildService(
 		?ObjectServiceInterface $objectService = null,
@@ -49,9 +49,6 @@ class WalkInQueueServiceTest extends TestCase {
 	): array {
 		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectServiceInterface::class));
 		$availability = ($availability ?? $this->createMock(originalClassName: AvailabilityService::class));
-
-		$container = $this->createMock(originalClassName: ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
 
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
@@ -79,6 +76,35 @@ class WalkInQueueServiceTest extends TestCase {
 	}//end buildService()
 
 	/**
+	 * Wrap a fixture row as the ObjectEntity OpenRegister actually returns.
+	 *
+	 * Since ADR-084 `find()` returns `?ObjectEntityInterface` and
+	 * `saveObject()` returns `ObjectEntityInterface`, not the bare arrays these
+	 * fixtures are written as. The UUID is taken from the fixture's own
+	 * `@self.id` because the entity's `jsonSerialize()` rebuilds the `@self`
+	 * envelope from it.
+	 *
+	 * @param array<string, mixed> $row The fixture row.
+	 *
+	 * @return ObjectEntity The row as an entity.
+	 */
+	private static function entity(array $row): ObjectEntity {
+		$self = ($row['@self'] ?? []);
+		$id = '';
+		if (is_array($self) === true && isset($self['id']) === true) {
+			$id = (string)$self['id'];
+		} elseif (isset($row['id']) === true) {
+			$id = (string)$row['id'];
+		}
+
+		$entity = new ObjectEntity();
+		$entity->setUuid($id);
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
+
+	/**
 	 * The createTicket() call seats a walk-in with status=waiting + arrivedAt populated,
 	 * and derives estimatedReadyAt from the earliest AvailabilityService gap.
 	 *
@@ -97,7 +123,7 @@ class WalkInQueueServiceTest extends TestCase {
 		];
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($service);
+		$object->method('find')->willReturn(self::entity($service));
 		$object->method('findAll')->willReturn($resources);
 
 		$captured = null;
@@ -108,9 +134,9 @@ class WalkInQueueServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$captured): array {
+			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
-				return ['@self' => ['id' => 't-1']];
+				return self::entity(['@self' => ['id' => 't-1']]);
 			}
 		);
 
@@ -163,9 +189,9 @@ class WalkInQueueServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$captured): array {
+			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
-				return ['@self' => ['id' => 't-anon']];
+				return self::entity(['@self' => ['id' => 't-anon']]);
 			}
 		);
 
@@ -221,10 +247,10 @@ class WalkInQueueServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$captured, &$capturedUuid): array {
+			) use (&$captured, &$capturedUuid): ObjectEntityInterface {
 				$captured = $payload;
 				$capturedUuid = $uuid;
-				return ['@self' => ['id' => $uuid]];
+				return self::entity(['@self' => ['id' => $uuid]]);
 			}
 		);
 
@@ -269,7 +295,7 @@ class WalkInQueueServiceTest extends TestCase {
 		];
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($ticket);
+		$object->method('find')->willReturn(self::entity($ticket));
 
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
@@ -279,9 +305,9 @@ class WalkInQueueServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$captured): array {
+			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
-				return ['@self' => ['id' => 't-called']];
+				return self::entity(['@self' => ['id' => 't-called']]);
 			}
 		);
 
@@ -309,7 +335,7 @@ class WalkInQueueServiceTest extends TestCase {
 		];
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($ticket);
+		$object->method('find')->willReturn(self::entity($ticket));
 
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
@@ -319,9 +345,9 @@ class WalkInQueueServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$captured): array {
+			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
-				return ['@self' => ['id' => 't-gone']];
+				return self::entity(['@self' => ['id' => 't-gone']]);
 			}
 		);
 
@@ -346,7 +372,7 @@ class WalkInQueueServiceTest extends TestCase {
 		];
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($ticket);
+		$object->method('find')->willReturn(self::entity($ticket));
 		$object->expects($this->never())->method('saveObject');
 
 		[$walkIn] = $this->buildService(objectService: $object);
@@ -427,7 +453,7 @@ class WalkInQueueServiceTest extends TestCase {
 				return $waiting;
 			}
 		);
-		$object->method('find')->willReturn($service);
+		$object->method('find')->willReturn(self::entity($service));
 
 		$saved = [];
 		$object->method('saveObject')->willReturnCallback(
@@ -437,9 +463,9 @@ class WalkInQueueServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$saved): array {
+			) use (&$saved): ObjectEntityInterface {
 				$saved[] = ['uuid' => $uuid, 'payload' => $payload];
-				return ['@self' => ['id' => $uuid]];
+				return self::entity(['@self' => ['id' => $uuid]]);
 			}
 		);
 
@@ -529,11 +555,13 @@ class WalkInQueueServiceTest extends TestCase {
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturn(
-			[
-				'@self' => ['id' => 'svc-haircut'],
-				'durationMinutes' => 30,
-				'requiredResourceTypes' => ['staff'],
-			]
+			self::entity(
+				[
+					'@self' => ['id' => 'svc-haircut'],
+					'durationMinutes' => 30,
+					'requiredResourceTypes' => ['staff'],
+				]
+			)
 		);
 		$object->method('findAll')->willReturnCallback(
 			static function (array $config) use ($waiting, $resources): array {
@@ -553,9 +581,9 @@ class WalkInQueueServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$writes): array {
+			) use (&$writes): ObjectEntityInterface {
 				$writes++;
-				return ['@self' => ['id' => (string)$uuid]];
+				return self::entity(['@self' => ['id' => (string)$uuid]]);
 			}
 		);
 

@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\BlastController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AttributionService;
@@ -84,7 +86,7 @@ class BlastControllerTest extends TestCase {
 	 * @return object The store.
 	 */
 	private function buildObjectStore(): object {
-		return new class {
+		return new class extends \OCA\OpenRegister\Service\ObjectService {
 			/**
 			 * Rows keyed by uuid.
 			 *
@@ -111,27 +113,44 @@ class BlastControllerTest extends TestCase {
 			/**
 			 * Read one row.
 			 *
-			 * @param int|string $id Object id.
-			 * @param array|null $_extend Extend list.
-			 * @param bool $files Include files.
-			 * @param mixed $register Register context.
-			 * @param mixed $schema Schema context.
+			 * Mirrors ObjectService::find() exactly — the parent declares nine
+			 * parameters and an `?ObjectEntityInterface` return, and PHP checks
+			 * signature compatibility at CLASS-LOAD time, so a narrower override
+			 * is a fatal before test 1 rather than a test failure (ADR-084).
 			 *
-			 * @return array<string, mixed>|null
+			 * @param int|string $id Object id.
+			 * @param array<string, mixed>|null $_extend Unused.
+			 * @param bool $files Unused.
+			 * @param string|int|null $register Unused (single-register store).
+			 * @param string|int|null $schema Unused (single-schema store).
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $_render Unused.
+			 * @param bool $_audit Unused.
+			 *
+			 * @return ObjectEntityInterface|null The row, wrapped as an entity.
 			 */
 			public function find(
 				int|string $id,
 				?array $_extend = [],
 				bool $files = false,
-				mixed $register = null,
-				mixed $schema = null,
-			): ?array {
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $_render = true,
+				bool $_audit = true,
+			): ?ObjectEntityInterface {
 				$row = ($this->store[(string)$id] ?? null);
 				if ($row === null || ($row['_deleted'] ?? null) !== null) {
 					return null;
 				}
 
-				return $row;
+				$entity = new ObjectEntity();
+				$entity->setUuid((string)$id);
+				$entity->setObject($row);
+
+				return $entity;
 			}//end find()
 
 			/**
@@ -261,13 +280,13 @@ class BlastControllerTest extends TestCase {
 				appConfig: $appConfig,
 				segmentService: $this->createMock(SegmentService::class),
 				logger: $logger,
-			container: $this->createMock(ContainerInterface::class),
-		),
+				container: $container,
+			),
 			attributionService: new AttributionService(
 				appConfig: $appConfig,
 				logger: $logger,
-			container: $this->createMock(ContainerInterface::class),
-		),
+				container: $container,
+			),
 			userSession: $this->userSession,
 			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);

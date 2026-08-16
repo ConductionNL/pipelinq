@@ -19,13 +19,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Service\SettingsMapBuilder;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 
 /**
  * Tests for SettingsLoadService.
@@ -39,7 +39,6 @@ class SettingsLoadServiceTest extends TestCase {
 	public function testLoadSettingsCallsConfigurationService(): void {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appManager = $this->createMock(IAppManager::class);
-		$container = $this->createMock(ContainerInterface::class);
 		$mapBuilder = new SettingsMapBuilder();
 		$fileLoader = $this->createMock(ConfigFileLoaderService::class);
 
@@ -47,16 +46,23 @@ class SettingsLoadServiceTest extends TestCase {
 		$fileLoader->method('ensureSourceType')->willReturnArgument(0);
 		$appManager->method('getAppVersion')->willReturn('1.0.0');
 
-		$configService = new class {
-			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
-				return ['registers' => [], 'schemas' => [], 'views' => []];
-			}
-		};
+		// ConfigurationService is now a constructor-injected, concretely typed
+		// dependency (ADR-083) rather than a container lookup, so the in-test
+		// anonymous class this used to pass no longer satisfies the type-hint.
+		$configService = $this->createMock(ConfigurationService::class);
+		$configService->method('importFromApp')->willReturn(
+			['registers' => [], 'schemas' => [], 'views' => []]
+		);
 
-		$container->method('get')->willReturn($configService);
 		$appConfig->method('setValueString');
 
-		$service = new SettingsLoadService($appConfig, $appManager, $container, $mapBuilder, $fileLoader);
+		$service = new SettingsLoadService(
+			appConfig: $appConfig,
+			appManager: $appManager,
+			mapBuilder: $mapBuilder,
+			fileLoader: $fileLoader,
+			configurationService: $configService,
+		);
 		$result = $service->loadSettings();
 
 		$this->assertIsArray($result);

@@ -114,7 +114,9 @@ class BrpMonitorJob extends TimedJob {
 				]
 			);
 
-			$audit = $this->aggregateAuditRecords(records: ($records ?? []), window: $window);
+			// The findAll() contract returns a non-nullable array, so the `?? []`
+		// that used to sit here was dead code (reported by phpstan).
+		$audit = $this->aggregateAuditRecords(records: $records, window: $window);
 			$total = $audit['total'];
 			$errors = $audit['errors'];
 			$hits = $audit['hits'];
@@ -259,7 +261,9 @@ class BrpMonitorJob extends TimedJob {
 				],
 			]
 		);
-		foreach (($verzoeken ?? []) as $rec) {
+		// The findAll() contract returns a non-nullable array, so the `?? []`
+		// that used to sit here was dead code (reported by phpstan).
+		foreach ($verzoeken as $rec) {
 			$arr = $this->recordToArray(rec: $rec);
 			$moment = (string)($arr['requestMoment'] ?? '');
 			try {

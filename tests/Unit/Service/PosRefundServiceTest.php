@@ -28,9 +28,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
@@ -39,6 +41,7 @@ use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -47,7 +50,7 @@ use Psr\Log\LoggerInterface;
  * A fake OpenRegister ObjectService capturing saves and answering finds from
  * an in-memory store keyed by schema id + object id.
  */
-class FakeObjectService {
+class FakeObjectService extends ObjectService {
 	/** @var array<string, array<string, array<string, mixed>>> */
 	public array $store = [];
 
@@ -55,18 +58,59 @@ class FakeObjectService {
 	public array $saves = [];
 
 	/**
-	 * @param array<string, mixed> $object
+	 * Read one row from the schema table.
+	 *
+	 * Every parameter after `$schema` exists only to match the parent
+	 * signature — PHP checks compatibility at CLASS-LOAD time, so a narrowed
+	 * override is a fatal before test 1 rather than a test failure.
+	 *
+	 * @param integer|string $id The object UUID.
+	 * @param array<string, mixed>|null $_extend Unused.
+	 * @param boolean $files Unused.
+	 * @param string|int|null $register Unused — single-register fake.
+	 * @param string|int|null $schema The schema key.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $_render Unused.
+	 * @param boolean $_audit Unused.
+	 *
+	 * @return ObjectEntityInterface|null
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
-	public function find(string $id, string $register, string $schema): ?array {
-		return $this->store[$schema][$id] ?? null;
+	public function find(
+		int|string $id,
+		?array $_extend = [],
+		bool $files = false,
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_render = true,
+		bool $_audit = true,
+	): ?ObjectEntityInterface {
+		$row = ($this->store[(string)$schema][(string)$id] ?? null);
+		if ($row === null) {
+			return null;
+		}
+
+		return self::entity(uuid: (string)$id, row: $row);
 	}
 
 	/**
-	 * @param array<string, mixed> $config
+	 * Query rows within a schema table.
+	 *
+	 * @param array<string, mixed> $config The findAll config.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
 	 */
-	public function findAll(array $config): array {
+	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 		$filters = $config['filters'] ?? [];
 		$schema = (string)($filters['schema'] ?? '');
 		$rows = array_values($this->store[$schema] ?? []);
@@ -83,16 +127,65 @@ class FakeObjectService {
 	}
 
 	/**
-	 * @param array<string, mixed> $object
+	 * Upsert a row into a schema table.
 	 *
-	 * @return array<string, mixed>
+	 * @param array<string, mixed> $object The payload.
+	 * @param array<string, mixed>|null $extend Unused.
+	 * @param string|int|null $register Unused.
+	 * @param string|int|null $schema The schema key.
+	 * @param string|null $uuid The row UUID.
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 * @param boolean $silent Unused.
+	 * @param boolean $_validation Unused.
+	 * @param array<string, mixed>|null $uploadedFiles Unused.
+	 * @param IUser|null $currentUser Unused.
+	 * @param boolean $failIfExists Unused.
+	 *
+	 * @return ObjectEntityInterface
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent signature.
 	 */
-	public function saveObject(array $object, array $extend, string $register, string $schema, string $uuid): array {
-		$object['id'] = $uuid;
-		$this->store[$schema][$uuid] = $object;
-		$this->saves[] = ['schema' => $schema, 'uuid' => $uuid, 'object' => $object];
+	public function saveObject(
+		array $object,
+		?array $extend = [],
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		?string $uuid = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $silent = false,
+		bool $_validation = true,
+		?array $uploadedFiles = null,
+		?IUser $currentUser = null,
+		bool $failIfExists = false,
+	): ObjectEntityInterface {
+		$schemaKey = (string)$schema;
+		$key = (string)$uuid;
 
-		return $object;
+		$object['id'] = $key;
+		$this->store[$schemaKey][$key] = $object;
+		$this->saves[] = ['schema' => $schemaKey, 'uuid' => $key, 'object' => $object];
+
+		return self::entity(uuid: $key, row: $object);
+	}
+
+	/**
+	 * Wrap a stored row in the entity the contract now returns.
+	 *
+	 * @param string $uuid The object UUID.
+	 * @param array<string, mixed> $row The stored row.
+	 *
+	 * @return ObjectEntityInterface
+	 */
+	private static function entity(string $uuid, array $row): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setObject($row);
+
+		return $entity;
 	}
 }
 
@@ -119,7 +212,7 @@ class FakeWebhookService extends WebhookService {
  * thrown as a RuntimeException carrying the guard message, exactly as OR's
  * HookStoppedException would, so the service's error mapping is exercised.
  */
-class FakeRefundTransitionEngine {
+class FakeRefundTransitionEngine extends TransitionEngine {
 	/**
 	 * @param FakeObjectService $objects The in-memory object store.
 	 * @param PosRefundManagerGuard $guard The real guard under test.
@@ -255,11 +348,12 @@ class PosRefundServiceTest extends TestCase {
 			throw new \RuntimeException('unknown service ' . $id);
 		});
 
-		$this->service = new PosRefundService($this->appConfig,
-			$logger,
+		$this->service = new PosRefundService(
+			appConfig: $this->appConfig,
+			logger: $logger,
 			webhookService: $this->webhooks,
-			objectService: $key,
-			transitionEngine: $this->createMock(TransitionEngine::class),
+			objectService: $this->objects,
+			transitionEngine: $engine,
 		);
 	}//end setUp()
 

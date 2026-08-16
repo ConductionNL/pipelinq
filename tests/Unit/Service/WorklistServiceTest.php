@@ -32,13 +32,12 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Service\WorklistService;
 use OCP\IAppConfig;
 use OCP\IL10N;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -91,7 +90,12 @@ class WorklistServiceTest extends TestCase {
 			}
 		);
 
-		$this->objectService = new class($byCollection, $throwFromObjectService) {
+		// Extends the ObjectService stub so the double satisfies the
+		// ObjectServiceInterface type hint WorklistService now declares
+		// (ADR-084). findAll() must repeat the parent signature verbatim —
+		// PHP checks compatibility at class-load time, so a narrowed override
+		// is a fatal, not a test failure.
+		$this->objectService = new class($byCollection, $throwFromObjectService) extends ObjectService {
 			/**
 			 * Captured findAll() configs, in call order.
 			 *
@@ -110,10 +114,16 @@ class WorklistServiceTest extends TestCase {
 
 			/**
 			 * @param array{filters?: array<string, mixed>, limit?: int} $config
+			 * @param boolean                                           $_rbac         Whether to enforce RBAC checks.
+			 * @param boolean                                           $_multitenancy Whether to enforce tenant scoping.
 			 *
 			 * @return array<int, array<string, mixed>>
 			 */
-			public function findAll(array $config): array {
+			public function findAll(
+				array $config = [],
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+			): array {
 				$this->calls[] = $config;
 				if ($this->throwAlways === true) {
 					throw new \RuntimeException('boom');
@@ -126,9 +136,6 @@ class WorklistServiceTest extends TestCase {
 				return $this->byCollection[$key] ?? [];
 			}
 		};
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($this->objectService);
 
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(

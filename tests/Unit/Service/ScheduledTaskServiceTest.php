@@ -24,7 +24,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\LanguageService;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -34,7 +38,6 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -66,89 +69,30 @@ class ScheduledTaskServiceTest extends TestCase {
 	private NotificationService $notificationService;
 
 	/**
-	 * @var ContainerInterface&MockObject
-	 */
-	private ContainerInterface $container;
-
-	/**
 	 * @var LoggerInterface&MockObject
 	 */
 	private LoggerInterface $logger;
 
 	/**
-	 * Build a fresh stub ObjectService double for each test.
+	 * The recording LanguageService double injected into the service.
 	 *
-	 * @return object Stub object exposing the methods we exercise.
+	 * @var RecordingLanguageService
 	 */
-	private function makeObjectServiceStub(): object {
-		return new class {
-			/**
-			 * @var array<string, mixed>
-			 */
-			public array $lastSaveArgs = [];
+	private RecordingLanguageService $languageService;
 
-			public mixed $saveReturn = [];
-
-			/**
-			 * @var array<int, mixed>
-			 */
-			public array $findAllReturn = [];
-
-			/**
-			 * @param array<string, mixed> $config
-			 * @return array<int, mixed>
-			 */
-			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
-				return $this->findAllReturn;
-			}//end findAll()
-
-			/**
-			 * @param array<string, mixed>|object $object
-			 * @param array<int|string, mixed> $extend
-			 * @return mixed
-			 */
-			public function saveObject(
-				array|object $object,
-				?array $extend = [],
-				$register = null,
-				$schema = null,
-				?string $uuid = null,
-				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $silent = false,
-				?array $uploadedFiles = null,
-			) {
-				$this->lastSaveArgs = [
-					'object' => $object,
-					'register' => $register,
-					'schema' => $schema,
-					'uuid' => $uuid,
-				];
-
-				if ($this->saveReturn === []) {
-					return $object;
-				}
-
-				return $this->saveReturn;
-			}//end saveObject()
-
-			/**
-			 * @return mixed
-			 */
-			public function findObject(
-				string $id,
-				$register,
-				$schema,
-				bool $_rbac = true,
-				bool $_multitenancy = true,
-			) {
-				return null;
-			}//end findObject()
-
-			public function deleteObject(string $id, bool $_rbac = true, bool $_multitenancy = true): bool {
-				return true;
-			}//end deleteObject()
-		};
+	/**
+	 * Build a fresh recording ObjectService double for each test.
+	 *
+	 * The double extends OpenRegister's ObjectService (ADR-084) so it satisfies
+	 * the `ObjectServiceInterface` constructor type-hint, and every override
+	 * repeats the parent signature EXACTLY — PHP checks declaration
+	 * compatibility at class-load time, so a narrowed override is a fatal that
+	 * kills the run before the first test.
+	 *
+	 * @return RecordingObjectService The recording double.
+	 */
+	private function makeObjectServiceStub(): RecordingObjectService {
+		return new RecordingObjectService();
 	}//end makeObjectServiceStub()
 
 	/**
@@ -161,8 +105,8 @@ class ScheduledTaskServiceTest extends TestCase {
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->notificationService = $this->createMock(NotificationService::class);
-		$this->container = $this->createMock(ContainerInterface::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->languageService = new RecordingLanguageService();
 
 		$this->appConfig->method('getValueString')->willReturnCallback(
 			static function (string $app, string $key, string $default = ''): string {
@@ -180,16 +124,23 @@ class ScheduledTaskServiceTest extends TestCase {
 	}//end setUp()
 
 	/**
+	 * Wire the service under test with NAMED arguments, so a future parameter
+	 * insertion cannot silently shift the wiring.
+	 *
+	 * @param ObjectServiceInterface|null $objectService The OR double; a fresh
+	 *                                                   recording stub when null.
+	 *
 	 * @return ScheduledTaskService The service under test.
 	 */
-	private function makeService(): ScheduledTaskService {
-		return new ScheduledTaskService($this->appConfig,
-			$this->userSession,
-			$this->groupManager,
-			$this->notificationService,
-			$this->container,
-			$this->logger,
-			objectService: $stub,
+	private function makeService(?ObjectServiceInterface $objectService = null): ScheduledTaskService {
+		return new ScheduledTaskService(
+			appConfig: $this->appConfig,
+			userSession: $this->userSession,
+			groupManager: $this->groupManager,
+			notificationService: $this->notificationService,
+			logger: $this->logger,
+			languageService: $this->languageService,
+			objectService: ($objectService ?? $this->makeObjectServiceStub()),
 		);
 	}//end makeService()
 
@@ -204,9 +155,8 @@ class ScheduledTaskServiceTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn($user);
 
 		$stub = $this->makeObjectServiceStub();
-		$this->container->method('get')->willReturn($stub);
 
-		$service = $this->makeService();
+		$service = $this->makeService(objectService: $stub);
 
 		$result = $service->createScheduledTask(
 			[
@@ -269,9 +219,8 @@ class ScheduledTaskServiceTest extends TestCase {
 			['id' => '1', 'status' => 'open', 'subject' => 'A'],
 			['id' => '2', 'status' => 'open', 'subject' => 'B'],
 		];
-		$this->container->method('get')->willReturn($stub);
 
-		$service = $this->makeService();
+		$service = $this->makeService(objectService: $stub);
 
 		// 9999 minutes — service must clamp to 1440 without erroring.
 		$items = $service->getPendingTasks(9999);
@@ -363,14 +312,6 @@ class ScheduledTaskServiceTest extends TestCase {
 		// Task with a deadline 24 hours in the past — well past the expiryCut of 4 h.
 		$pastDeadline = (new \DateTimeImmutable('-24 hours'))->format(\DateTimeInterface::ATOM);
 
-		$stub = $this->makeObjectServiceStub();
-
-		// findAll is called twice: once for getOverdueTasks (returns our task),
-		// once for getPendingTasks (returns empty, all future).
-		$callCount = 0;
-		$stub->findAllReturn = [];
-
-		// We override findAll via a custom anonymous class to handle two calls.
 		$overdueTask = [
 			'id' => 'task-overdue-1',
 			'status' => 'open',
@@ -379,79 +320,20 @@ class ScheduledTaskServiceTest extends TestCase {
 			'attempts' => [],
 		];
 
-		$stub2 = new class($overdueTask) {
+		// findAll is called twice: once for getOverdueTasks (returns our task),
+		// once for getPendingTasks (returns empty, all future). getOverdueTasks
+		// uses a '<' deadline filter; getPendingTasks uses '>='/'<='.
+		$stub2 = $this->makeObjectServiceStub();
+		$stub2->findAllCallback = static function (array $config) use ($overdueTask): array {
+			$deadlineFilter = ($config['filters']['deadline'] ?? []);
+			if (isset($deadlineFilter['<']) === true) {
+				return [$overdueTask];
+			}
 
-			public array $lastSaveArgs = [];
-
-			public mixed $saveReturn = [];
-
-			/**
-			 * @var array<string, mixed>
-			 */
-			private array $overdueTask;
-
-			private int $callCount = 0;
-
-			public function __construct(array $overdueTask) {
-				$this->overdueTask = $overdueTask;
-			}//end __construct()
-
-			/**
-			 * @param array<string, mixed> $config
-			 * @return array<int, mixed>
-			 */
-			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
-				$this->callCount++;
-				$deadlineFilter = $config['filters']['deadline'] ?? [];
-
-				// getOverdueTasks uses '<' filter; getPendingTasks uses '>='/'<=' filter.
-				if (isset($deadlineFilter['<']) === true) {
-					return [$this->overdueTask];
-				}
-
-				return [];
-			}//end findAll()
-
-			/**
-			 * @param array<string, mixed>|object $object
-			 * @param array<int|string, mixed> $extend
-			 * @return mixed
-			 */
-			public function saveObject(
-				array|object $object,
-				?array $extend = [],
-				$register = null,
-				$schema = null,
-				?string $uuid = null,
-				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $silent = false,
-				?array $uploadedFiles = null,
-			) {
-				$this->lastSaveArgs = [
-					'object' => $object,
-					'register' => $register,
-					'schema' => $schema,
-					'uuid' => $uuid,
-				];
-				return $object;
-			}//end saveObject()
-
-			/**
-			 * @return mixed
-			 */
-			public function findObject(string $id, $register, $schema, bool $_rbac = true, bool $_multitenancy = true) {
-				return null;
-			}//end findObject()
-
-			public function deleteObject(string $id, bool $_rbac = true, bool $_multitenancy = true): bool {
-				return true;
-			}//end deleteObject()
+			return [];
 		};
 
-		$this->container->method('get')->willReturn($stub2);
-
-		$service = $this->makeService();
+		$service = $this->makeService(objectService: $stub2);
 		$service->processScheduledTasks();
 
 		// The overdue task must have been saved with status 'expired'.
@@ -481,78 +363,40 @@ class ScheduledTaskServiceTest extends TestCase {
 			'attempts' => [],
 		];
 
-		$stub2 = new class($overdueTask) {
+		$stub2 = $this->makeObjectServiceStub();
+		$stub2->findAllCallback = static function (array $config) use ($overdueTask): array {
+			$deadlineFilter = ($config['filters']['deadline'] ?? []);
+			if (isset($deadlineFilter['<']) === true) {
+				return [$overdueTask];
+			}
 
-			public array $lastSaveArgs = [];
-
-			/**
-			 * @var array<string, mixed>
-			 */
-			private array $overdueTask;
-
-			public function __construct(array $overdueTask) {
-				$this->overdueTask = $overdueTask;
-			}//end __construct()
-
-			/**
-			 * @param array<string, mixed> $config
-			 * @return array<int, mixed>
-			 */
-			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
-				$deadlineFilter = $config['filters']['deadline'] ?? [];
-				if (isset($deadlineFilter['<']) === true) {
-					return [$this->overdueTask];
-				}
-
-				return [];
-			}//end findAll()
-
-			/**
-			 * @param array<string, mixed>|object $object
-			 * @param array<int|string, mixed> $extend
-			 * @return mixed
-			 */
-			public function saveObject(
-				array|object $object,
-				?array $extend = [],
-				$register = null,
-				$schema = null,
-				?string $uuid = null,
-				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $silent = false,
-				?array $uploadedFiles = null,
-			) {
-				$this->lastSaveArgs = ['object' => $object];
-				return $object;
-			}//end saveObject()
+			return [];
 		};
-
-		$this->container->method('get')->willReturn($stub2);
 
 		// The assignee MUST be escalated exactly once with the expiry details.
 		$this->notificationService->expects($this->once())
 			->method('notifyTaskExpired')
 			->with('Overdue with assignee', 'alice', 'task-overdue-2', $pastDeadline);
 
-		$service = $this->makeService();
+		$service = $this->makeService(objectService: $stub2);
 		$service->processScheduledTasks();
 
 		$this->assertSame('expired', $stub2->lastSaveArgs['object']['status']);
 	}//end testExpiredTaskEscalatesToAssignee()
 
 	/**
-	 * applyAcceptLanguage no-ops on an empty header (container is never queried).
+	 * applyAcceptLanguage no-ops on an empty header (LanguageService is never touched).
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
 	 */
 	public function testApplyAcceptLanguageNoOpsOnEmptyHeader(): void {
-		$this->container->expects($this->never())->method('get');
-
 		$service = $this->makeService();
 		$service->applyAcceptLanguage(acceptLanguage: '');
+
+		$this->assertSame(0, $this->languageService->callCount);
+		$this->assertNull($this->languageService->capturedLanguage);
 	}//end testApplyAcceptLanguageNoOpsOnEmptyHeader()
 
 	/**
@@ -565,23 +409,10 @@ class ScheduledTaskServiceTest extends TestCase {
 	 * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
 	 */
 	public function testApplyAcceptLanguageForwardsPreferredTagToOrLanguageService(): void {
-		$capturedLang = null;
-
-		$languageServiceStub = new class($capturedLang) {
-
-			public ?string $capturedLanguage = null;
-
-			public function setPreferredLanguage(string $language): void {
-				$this->capturedLanguage = $language;
-			}//end setPreferredLanguage()
-		};
-
-		$this->container->method('get')->willReturn($languageServiceStub);
-
 		$service = $this->makeService();
 		$service->applyAcceptLanguage(acceptLanguage: 'nl-NL,nl;q=0.9,en;q=0.8');
 
-		$this->assertSame('nl-NL', $languageServiceStub->capturedLanguage);
+		$this->assertSame('nl-NL', $this->languageService->capturedLanguage);
 	}//end testApplyAcceptLanguageForwardsPreferredTagToOrLanguageService()
 
 	/**
@@ -594,39 +425,202 @@ class ScheduledTaskServiceTest extends TestCase {
 	 * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
 	 */
 	public function testApplyAcceptLanguageStripsQWeightFromSingleEntry(): void {
-		$languageServiceStub = new class {
-
-			public ?string $capturedLanguage = null;
-
-			public function setPreferredLanguage(string $language): void {
-				$this->capturedLanguage = $language;
-			}//end setPreferredLanguage()
-		};
-
-		$this->container->method('get')->willReturn($languageServiceStub);
-
 		$service = $this->makeService();
 		$service->applyAcceptLanguage(acceptLanguage: 'en-US;q=0.9');
 
-		$this->assertSame('en-US', $languageServiceStub->capturedLanguage);
+		$this->assertSame('en-US', $this->languageService->capturedLanguage);
 	}//end testApplyAcceptLanguageStripsQWeightFromSingleEntry()
 
 	/**
-	 * applyAcceptLanguage silently swallows exceptions from the container.
+	 * applyAcceptLanguage silently swallows exceptions from the LanguageService.
 	 *
-	 * OR's LanguageService may not be available on environments that do not
-	 * have OpenRegister installed. The controller must not 500.
+	 * OR's LanguageService may not be usable on environments that do not have
+	 * OpenRegister fully wired. The controller must not 500.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/pipelinq-manifest-i18n-tenant/tasks.md#task-9.3
 	 */
 	public function testApplyAcceptLanguageSwallowsContainerException(): void {
-		$this->container->method('get')->willThrowException(new \RuntimeException('OR not installed'));
+		$this->languageService->throwOnSet = true;
 		$this->logger->expects($this->once())->method('debug');
 
 		$service = $this->makeService();
 		// Must not throw.
 		$service->applyAcceptLanguage(acceptLanguage: 'nl');
 	}//end testApplyAcceptLanguageSwallowsContainerException()
+}//end class
+
+/**
+ * A recording ObjectService double for the ScheduledTaskService tests.
+ *
+ * Extends OpenRegister's ObjectService (ADR-084) so it satisfies the
+ * `ObjectServiceInterface` constructor type-hint; every override repeats the
+ * parent signature EXACTLY because PHP checks declaration compatibility at
+ * class-load time.
+ */
+class RecordingObjectService extends ObjectService {
+	/**
+	 * The arguments of the most recent saveObject() call.
+	 *
+	 * @var array<string, mixed>
+	 */
+	public array $lastSaveArgs = [];
+
+	/**
+	 * Rows findAll() returns when no callback is configured.
+	 *
+	 * @var array<int, mixed>
+	 */
+	public array $findAllReturn = [];
+
+	/**
+	 * Optional per-call findAll() behaviour, receiving the query config.
+	 *
+	 * @var callable|null
+	 */
+	public $findAllCallback = null;
+
+	/**
+	 * Whether deleteObject() was called.
+	 *
+	 * @var bool
+	 */
+	public bool $deleted = false;
+
+	/**
+	 * @param array<string, mixed> $config        The query configuration.
+	 * @param bool                 $_rbac         Whether to enforce RBAC checks.
+	 * @param bool                 $_multitenancy Whether to enforce tenant scoping.
+	 *
+	 * @return array<int, mixed> The matching rows.
+	 */
+	public function findAll(
+		array $config = [],
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+	): array {
+		if ($this->findAllCallback !== null) {
+			return ($this->findAllCallback)($config);
+		}
+
+		return $this->findAllReturn;
+	}//end findAll()
+
+	/**
+	 * @param array<string, mixed>      $object        The data to persist.
+	 * @param array<string, mixed>|null $extend        Additional field values.
+	 * @param string|int|null           $register      Register slug or ID.
+	 * @param string|int|null           $schema        Schema slug or ID.
+	 * @param string|null               $uuid          UUID for update; null for create.
+	 * @param bool                      $_rbac         Whether to enforce RBAC checks.
+	 * @param bool                      $_multitenancy Whether to enforce tenant scoping.
+	 * @param bool                      $silent        Whether to suppress side-effects.
+	 * @param bool                      $_validation   Whether to validate against the schema.
+	 * @param array<string, mixed>|null $uploadedFiles Files to attach.
+	 * @param IUser|null                $currentUser   Acting user for folder access.
+	 * @param bool                      $failIfExists  Whether a duplicate is an error.
+	 *
+	 * @return ObjectEntityInterface The stored object.
+	 */
+	public function saveObject(
+		array $object,
+		?array $extend = [],
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		?string $uuid = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $silent = false,
+		bool $_validation = true,
+		?array $uploadedFiles = null,
+		?IUser $currentUser = null,
+		bool $failIfExists = false,
+	): ObjectEntityInterface {
+		$this->lastSaveArgs = [
+			'object' => $object,
+			'register' => $register,
+			'schema' => $schema,
+			'uuid' => $uuid,
+		];
+
+		$entity = new ObjectEntity();
+		$entity->setUuid(($uuid ?? (string)($object['id'] ?? '')));
+		$entity->setObject($object);
+
+		return $entity;
+	}//end saveObject()
+
+	/**
+	 * @param string          $uuid            The object UUID.
+	 * @param string|int|null $register        Register slug or ID.
+	 * @param string|int|null $schema          Schema slug or ID.
+	 * @param bool            $_rbac           Whether to enforce RBAC checks.
+	 * @param bool            $_multitenancy   Whether to enforce tenant scoping.
+	 * @param bool            $_retentionSweep Whether this is a retention sweep.
+	 * @param IUser|null      $currentUser     Acting user.
+	 * @param bool            $permanent       Whether to delete permanently.
+	 *
+	 * @return bool Always true.
+	 */
+	public function deleteObject(
+		string $uuid,
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
+		?IUser $currentUser = null,
+		bool $permanent = false,
+	): bool {
+		$this->deleted = true;
+
+		return true;
+	}//end deleteObject()
+}//end class
+
+/**
+ * A recording LanguageService double.
+ *
+ * The service now takes an INJECTED `LanguageService` rather than resolving one
+ * through the container, so the assertion moves from "the container was asked"
+ * to "this exact tag was forwarded" — a strictly stronger check.
+ */
+class RecordingLanguageService extends LanguageService {
+	/**
+	 * The last language forwarded, or null when none was.
+	 *
+	 * @var string|null
+	 */
+	public ?string $capturedLanguage = null;
+
+	/**
+	 * How many times setPreferredLanguage() was called.
+	 *
+	 * @var int
+	 */
+	public int $callCount = 0;
+
+	/**
+	 * Whether setPreferredLanguage() should throw (OR unavailable).
+	 *
+	 * @var bool
+	 */
+	public bool $throwOnSet = false;
+
+	/**
+	 * Record (or refuse) the preferred language.
+	 *
+	 * @param string $language The BCP-47 tag.
+	 *
+	 * @return void
+	 */
+	public function setPreferredLanguage(string $language): void {
+		$this->callCount++;
+		if ($this->throwOnSet === true) {
+			throw new \RuntimeException('OR not installed');
+		}
+
+		$this->capturedLanguage = $language;
+	}//end setPreferredLanguage()
 }//end class

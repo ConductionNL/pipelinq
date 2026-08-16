@@ -25,7 +25,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\PosPaymentService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -272,6 +274,21 @@ class PosPaymentServiceTest extends TestCase {
 	];
 
 	/**
+	 * Wrap a row in the entity `find()` returns since ADR-084.
+	 *
+	 * @param array<string, mixed> $row The transaction row.
+	 *
+	 * @return ObjectEntityInterface The entity carrying the row.
+	 */
+	private static function entity(array $row): ObjectEntityInterface {
+		$entity = new ObjectEntity();
+		$entity->setUuid((string)($row['@self']['id'] ?? ($row['id'] ?? '')));
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
+
+	/**
 	 * Build a service with overridable mocks.
 	 *
 	 * `$object` is typed `object`, not `ObjectService`, so a test can supply
@@ -468,10 +485,10 @@ class PosPaymentServiceTest extends TestCase {
 
 	public function testRefundRejectsUnsettledTransaction(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn([
+		$object->method('find')->willReturn(self::entity([
 			'@self' => ['id' => 'tx-1'],
 			'paymentStatus' => 'pending',
-		]);
+		]));
 
 		$service = $this->buildService(object: $object, opts: ['isManager' => true]);
 
@@ -507,10 +524,10 @@ class PosPaymentServiceTest extends TestCase {
 
 	public function testInitiateRejectsUnconfirmedTransaction(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn([
+		$object->method('find')->willReturn(self::entity([
 			'@self' => ['id' => 'tx-1'],
 			'status' => 'draft',
-		]);
+		]));
 
 		$service = $this->buildService(object: $object);
 
@@ -527,7 +544,7 @@ class PosPaymentServiceTest extends TestCase {
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('findAll')->willReturn([$tx]);
-		$object->method('find')->willReturn($tx);
+		$object->method('find')->willReturn(self::entity($tx));
 		// saveObject MUST NOT be called for the duplicate webhook.
 		$object->expects($this->never())->method('saveObject');
 

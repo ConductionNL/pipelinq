@@ -29,7 +29,6 @@ use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -50,11 +49,11 @@ class AppointmentEmailServiceTest extends TestCase {
 	private IAppConfig $appConfig;
 
 	/**
-	 * Mock DI container.
+	 * Mock OpenRegister object service.
 	 *
-	 * @var ContainerInterface&MockObject
+	 * @var ObjectServiceInterface&MockObject
 	 */
-	private ContainerInterface $container;
+	private ObjectServiceInterface $objectService;
 
 	/**
 	 * Mock mailer.
@@ -98,7 +97,7 @@ class AppointmentEmailServiceTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->appConfig = $this->createMock(IAppConfig::class);
-		$this->container = $this->createMock(ContainerInterface::class);
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->mailer = $this->createMock(IMailer::class);
 		$this->urlGenerator = $this->createMock(IURLGenerator::class);
 		$this->l10n = $this->createMock(IL10N::class);
@@ -132,12 +131,13 @@ class AppointmentEmailServiceTest extends TestCase {
 	 * @return AppointmentEmailService
 	 */
 	private function buildService(): AppointmentEmailService {
-		return new AppointmentEmailService($this->appConfig,
-			$this->mailer,
-			$this->urlGenerator,
-			$this->l10n,
-			$this->logger,
-			objectService: $default,
+		return new AppointmentEmailService(
+			appConfig: $this->appConfig,
+			mailer: $this->mailer,
+			urlGenerator: $this->urlGenerator,
+			l10n: $this->l10n,
+			logger: $this->logger,
+			objectService: $this->objectService,
 		);
 	}//end buildService()
 

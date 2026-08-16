@@ -29,8 +29,9 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\BackgroundJob\WalkInQueueRebalanceJob;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\BookingService;
@@ -40,7 +41,6 @@ use OCP\IAppConfig;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -105,7 +105,7 @@ class BookingServiceTest extends TestCase {
 	 * @param IUserSession|null $userSession Optional pre-built user session mock.
 	 * @param IJobList|null $jobList Optional pre-built background-job list mock.
 	 *
-	 * @return array{0: BookingService, 1: ObjectService, 2: AvailabilityService, 3: EligibilityService, 4: IJobList}
+	 * @return array{0: BookingService, 1: ObjectServiceInterface, 2: AvailabilityService, 3: EligibilityService, 4: IJobList}
 	 */
 	private function buildService(
 		?ObjectServiceInterface $objectService = null,
@@ -117,9 +117,6 @@ class BookingServiceTest extends TestCase {
 		$objectService = ($objectService ?? $this->createMock(originalClassName: ObjectServiceInterface::class));
 		$availability = ($availability ?? $this->createMock(originalClassName: AvailabilityService::class));
 		$eligibility = ($eligibility ?? $this->createMock(originalClassName: EligibilityService::class));
-
-		$container = $this->createMock(originalClassName: ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
 
 		$appConfig = $this->createMock(originalClassName: IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
@@ -160,6 +157,35 @@ class BookingServiceTest extends TestCase {
 	}//end buildService()
 
 	/**
+	 * Wrap a fixture row as the ObjectEntity OpenRegister actually returns.
+	 *
+	 * Since ADR-084 `find()` / `saveObject()` are declared to return
+	 * `ObjectEntityInterface`, not the bare array the fixtures are written as.
+	 * The UUID is taken from the fixture's own `@self.id` so the entity's
+	 * `jsonSerialize()` envelope — which OVERWRITES `@self` — reproduces the id
+	 * the assertions expect rather than a blank one.
+	 *
+	 * @param array<string, mixed> $row The fixture row.
+	 *
+	 * @return ObjectEntity The row as an entity.
+	 */
+	private static function entity(array $row): ObjectEntity {
+		$self = ($row['@self'] ?? []);
+		$id = '';
+		if (is_array($self) === true && isset($self['id']) === true) {
+			$id = (string)$self['id'];
+		} elseif (isset($row['id']) === true) {
+			$id = (string)$row['id'];
+		}
+
+		$entity = new ObjectEntity();
+		$entity->setUuid($id);
+		$entity->setObject($row);
+
+		return $entity;
+	}//end entity()
+
+	/**
 	 * Confirms createBooking returns a `confirmed` booking when no deposit is
 	 * required and stamps a single statusHistory entry signed by the user UID.
 	 *
@@ -167,7 +193,7 @@ class BookingServiceTest extends TestCase {
 	 */
 	public function testCreateBookingCreatesConfirmedWhenNoDeposit(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn(self::SERVICE_FREE_HAIRCUT);
+		$object->method('find')->willReturn(self::entity(self::SERVICE_FREE_HAIRCUT));
 
 		$captured = null;
 		$object->expects($this->once())->method('saveObject')->willReturnCallback(
@@ -177,9 +203,9 @@ class BookingServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$captured): array {
+			) use (&$captured): ObjectEntityInterface {
 				$captured = $bookingObject;
-				return ['@self' => ['id' => 'b-new']];
+				return self::entity(['@self' => ['id' => 'b-new']]);
 			}
 		);
 
@@ -222,7 +248,7 @@ class BookingServiceTest extends TestCase {
 	 */
 	public function testCreateBookingCreatesPendingDepositWhenDepositRequired(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn(self::SERVICE_DEPOSIT_REQUIRED);
+		$object->method('find')->willReturn(self::entity(self::SERVICE_DEPOSIT_REQUIRED));
 
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
@@ -232,9 +258,9 @@ class BookingServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$captured): array {
+			) use (&$captured): ObjectEntityInterface {
 				$captured = $bookingObject;
-				return ['@self' => ['id' => 'b-pending']];
+				return self::entity(['@self' => ['id' => 'b-pending']]);
 			}
 		);
 
@@ -294,7 +320,7 @@ class BookingServiceTest extends TestCase {
 		];
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($original);
+		$object->method('find')->willReturn(self::entity($original));
 
 		$saved = [];
 		$object->method('saveObject')->willReturnCallback(
@@ -304,15 +330,15 @@ class BookingServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$saved): array {
+			) use (&$saved): ObjectEntityInterface {
 				// First call = new booking (uuid null); second = update of original.
 				if ($uuid === null) {
 					$saved['new'] = $payload;
-					return ['@self' => ['id' => 'b-new']];
+					return self::entity(['@self' => ['id' => 'b-new']]);
 				}
 
 				$saved['update'] = ['payload' => $payload, 'uuid' => $uuid];
-				return ['@self' => ['id' => $uuid]];
+				return self::entity(['@self' => ['id' => $uuid]]);
 			}
 		);
 
@@ -370,13 +396,13 @@ class BookingServiceTest extends TestCase {
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			callback: function (string $id) use ($booking): array|null {
+			callback: function (string|int $id) use ($booking): ?ObjectEntityInterface {
 				if ($id === 'b-free') {
-					return $booking;
+					return self::entity($booking);
 				}
 
 				if ($id === 'svc-haircut') {
-					return self::SERVICE_FREE_HAIRCUT;
+					return self::entity(self::SERVICE_FREE_HAIRCUT);
 				}
 
 				return null;
@@ -391,9 +417,9 @@ class BookingServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$saved): array {
+			) use (&$saved): ObjectEntityInterface {
 				$saved = $payload;
-				return ['@self' => ['id' => 'b-free']];
+				return self::entity(['@self' => ['id' => 'b-free']]);
 			}
 		);
 
@@ -476,19 +502,19 @@ class BookingServiceTest extends TestCase {
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			callback: function (string $id) use ($booking, $alwaysChargeService): array|null {
+			callback: function (string|int $id) use ($booking, $alwaysChargeService): ?ObjectEntityInterface {
 				if ($id === 'b-late') {
-					return $booking;
+					return self::entity($booking);
 				}
 
 				if ($id === 'svc-strict') {
-					return $alwaysChargeService;
+					return self::entity($alwaysChargeService);
 				}
 
 				return null;
 			}
 		);
-		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-late']]);
+		$object->method('saveObject')->willReturn(self::entity(['@self' => ['id' => 'b-late']]));
 
 		$payment = new class {
 
@@ -559,13 +585,13 @@ class BookingServiceTest extends TestCase {
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			callback: function (string $id) use ($booking, $alwaysChargeService): array|null {
+			callback: function (string|int $id) use ($booking, $alwaysChargeService): ?ObjectEntityInterface {
 				if ($id === 'b-staff') {
-					return $booking;
+					return self::entity($booking);
 				}
 
 				if ($id === 'svc-color') {
-					return $alwaysChargeService;
+					return self::entity($alwaysChargeService);
 				}
 
 				return null;
@@ -580,9 +606,9 @@ class BookingServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$saved): array {
+			) use (&$saved): ObjectEntityInterface {
 				$saved = $payload;
-				return ['@self' => ['id' => 'b-staff']];
+				return self::entity(['@self' => ['id' => 'b-staff']]);
 			}
 		);
 
@@ -653,17 +679,17 @@ class BookingServiceTest extends TestCase {
 		$saves = [];
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$object->method('find')->willReturnCallback(
-			callback: function (string $id) use ($booking, $customer): array|null {
+			callback: function (string|int $id) use ($booking, $customer): ?ObjectEntityInterface {
 				if ($id === 'b-shown') {
-					return $booking;
+					return self::entity($booking);
 				}
 
 				if ($id === 'svc-haircut') {
-					return self::SERVICE_FREE_HAIRCUT;
+					return self::entity(self::SERVICE_FREE_HAIRCUT);
 				}
 
 				if ($id === 'cust-99') {
-					return $customer;
+					return self::entity($customer);
 				}
 
 				return null;
@@ -676,9 +702,9 @@ class BookingServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$saves): array {
+			) use (&$saves): ObjectEntityInterface {
 				$saves[] = ['payload' => $payload, 'schema' => $schema, 'uuid' => $uuid];
-				return ['@self' => ['id' => $uuid ?? 'new']];
+				return self::entity(['@self' => ['id' => ($uuid ?? 'new')]]);
 			}
 		);
 
@@ -779,7 +805,7 @@ class BookingServiceTest extends TestCase {
 		];
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($booking);
+		$object->method('find')->willReturn(self::entity($booking));
 		$object->expects($this->never())->method('saveObject');
 
 		[$service] = $this->buildService(objectService: $object);
@@ -817,7 +843,7 @@ class BookingServiceTest extends TestCase {
 		];
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($booking);
+		$object->method('find')->willReturn(self::entity($booking));
 
 		$captured = null;
 		$object->method('saveObject')->willReturnCallback(
@@ -827,9 +853,9 @@ class BookingServiceTest extends TestCase {
 				string|int|null $register = null,
 				string|int|null $schema = null,
 				?string $uuid = null,
-			) use (&$captured): array {
+			) use (&$captured): ObjectEntityInterface {
 				$captured = $payload;
-				return ['@self' => ['id' => 'b-pending']];
+				return self::entity(['@self' => ['id' => 'b-pending']]);
 			}
 		);
 
@@ -874,8 +900,8 @@ class BookingServiceTest extends TestCase {
 	 */
 	public function testCreateBookingInvalidatesAvailabilityCache(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn(self::SERVICE_FREE_HAIRCUT);
-		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-new']]);
+		$object->method('find')->willReturn(self::entity(self::SERVICE_FREE_HAIRCUT));
+		$object->method('saveObject')->willReturn(self::entity(['@self' => ['id' => 'b-new']]));
 
 		$availability = $this->createMock(originalClassName: AvailabilityService::class);
 		$availability->expects($this->exactly(count: 2))
@@ -922,7 +948,7 @@ class BookingServiceTest extends TestCase {
 	 */
 	public function testGetAvailableSlotsDelegatesToAvailabilityService(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn(self::SERVICE_FREE_HAIRCUT);
+		$object->method('find')->willReturn(self::entity(self::SERVICE_FREE_HAIRCUT));
 
 		$eligibility = $this->createMock(originalClassName: EligibilityService::class);
 		$eligibility->method('getEligibleResources')->willReturn(
@@ -982,7 +1008,7 @@ class BookingServiceTest extends TestCase {
 		$offline['bookableOnline'] = false;
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($offline);
+		$object->method('find')->willReturn(self::entity($offline));
 
 		$eligibility = $this->createMock(originalClassName: EligibilityService::class);
 		$eligibility->expects($this->never())->method('getEligibleResources');
@@ -1014,8 +1040,8 @@ class BookingServiceTest extends TestCase {
 	 */
 	public function testCreateBookingFiresCalendarPushSeamWhenConfirmed(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn(self::SERVICE_FREE_HAIRCUT);
-		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-new']]);
+		$object->method('find')->willReturn(self::entity(self::SERVICE_FREE_HAIRCUT));
+		$object->method('saveObject')->willReturn(self::entity(['@self' => ['id' => 'b-new']]));
 
 		[$service] = $this->buildService(objectService: $object);
 
@@ -1074,8 +1100,8 @@ class BookingServiceTest extends TestCase {
 	 */
 	public function testPendingDepositBookingSkipsCalendarPushSeam(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn(self::SERVICE_DEPOSIT_REQUIRED);
-		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-pending']]);
+		$object->method('find')->willReturn(self::entity(self::SERVICE_DEPOSIT_REQUIRED));
+		$object->method('saveObject')->willReturn(self::entity(['@self' => ['id' => 'b-pending']]));
 
 		[$service] = $this->buildService(objectService: $object);
 
@@ -1144,8 +1170,8 @@ class BookingServiceTest extends TestCase {
 		];
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($booking);
-		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-pending']]);
+		$object->method('find')->willReturn(self::entity($booking));
+		$object->method('saveObject')->willReturn(self::entity(['@self' => ['id' => 'b-pending']]));
 
 		$calendar = new class {
 
@@ -1196,7 +1222,7 @@ class BookingServiceTest extends TestCase {
 		];
 
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($booking);
+		$object->method('find')->willReturn(self::entity($booking));
 		$object->expects($this->never())->method('saveObject');
 
 		[$service] = $this->buildService(objectService: $object);
@@ -1236,8 +1262,8 @@ class BookingServiceTest extends TestCase {
 	 */
 	public function testCompleteBookingSchedulesWalkInQueueRebalanceJob(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($this->completableBooking());
-		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-finish']]);
+		$object->method('find')->willReturn(self::entity($this->completableBooking()));
+		$object->method('saveObject')->willReturn(self::entity(['@self' => ['id' => 'b-finish']]));
 
 		$jobList = $this->createMock(originalClassName: IJobList::class);
 		$jobList->expects($this->once())
@@ -1269,10 +1295,10 @@ class BookingServiceTest extends TestCase {
 	 */
 	public function testCompleteBookingWritesOnlyTheBookingItself(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($this->completableBooking());
+		$object->method('find')->willReturn(self::entity($this->completableBooking()));
 		$object->expects($this->once())
 			->method('saveObject')
-			->willReturn(['@self' => ['id' => 'b-finish']]);
+			->willReturn(self::entity(['@self' => ['id' => 'b-finish']]));
 
 		[$service] = $this->buildService(objectService: $object);
 
@@ -1290,8 +1316,8 @@ class BookingServiceTest extends TestCase {
 	 */
 	public function testCompleteBookingSurvivesAnUnavailableJobList(): void {
 		$object = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$object->method('find')->willReturn($this->completableBooking());
-		$object->method('saveObject')->willReturn(['@self' => ['id' => 'b-finish']]);
+		$object->method('find')->willReturn(self::entity($this->completableBooking()));
+		$object->method('saveObject')->willReturn(self::entity(['@self' => ['id' => 'b-finish']]));
 
 		$jobList = $this->createMock(originalClassName: IJobList::class);
 		$jobList->method('add')->willThrowException(new \RuntimeException('job list down'));

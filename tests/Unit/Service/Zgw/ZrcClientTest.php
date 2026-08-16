@@ -28,7 +28,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Zgw;
 
-use OCA\Pipelinq\Service\Zgw\AcClient;
 use OCA\Pipelinq\Service\Zgw\ZgwApiClient;
 use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
 use OCA\Pipelinq\Service\Zgw\ZrcClient;
@@ -111,8 +110,11 @@ class ZrcClientTest extends TestCase {
 			'userId' => 'pipelinq',
 			'userRepresentation' => 'Pipelinq',
 		]);
-		$ac = $this->createMock(AcClient::class);
-		$client = new ZrcClient($api, $registers, $ac, $this->createMock(LoggerInterface::class));
+		$client = new ZrcClient(
+			api: $api,
+			registers: $registers,
+			logger: $this->createMock(LoggerInterface::class),
+		);
 
 		$url = $client->linkInitiator($this->endpoint,
 			['zgwUrl' => 'https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/abc'],

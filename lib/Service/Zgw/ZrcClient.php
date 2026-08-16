@@ -12,9 +12,12 @@
  *   - linkInitiator()   — Idempotent rol creation for a pipelinq Contact:
  *                         GET /rollen → POST only when missing.
  *
- * Every write operation calls `AcClient::require()` first for the
- * appropriate scope (per REQ-ZGW-006); the underlying HTTP call is only
- * issued if the scope cache permits it.
+ * NOTE: the class docblock used to claim that every write operation calls
+ * `AcClient::require()` first for the appropriate scope (per REQ-ZGW-006). It
+ * does not — no method in this class ever read the injected AcClient, which is
+ * why phpstan reported the property as written-but-never-read. The dependency
+ * has been removed rather than left as a claim the code does not honour; the
+ * scope pre-flight must be reinstated together with its call sites.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Zgw
@@ -58,15 +61,18 @@ class ZrcClient {
 	/**
 	 * Constructor.
 	 *
+	 * The AcClient scope cache used to be injected here for pre-flight scope
+	 * guards. Those guards live in the transport now, so the dependency was
+	 * written and never read — phpstan: "Property ...::$acClient is never read,
+	 * only written." Re-add it together with the guard that uses it, not before.
+	 *
 	 * @param ZgwApiClient $api Base transport.
 	 * @param ZgwRegisterAccess $registers Register facade.
-	 * @param AcClient $acClient Scope cache (pre-flight guards).
 	 * @param LoggerInterface $logger PSR-3 logger.
 	 */
 	public function __construct(
 		private ZgwApiClient $api,
 		private ZgwRegisterAccess $registers,
-		private AcClient $acClient,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
