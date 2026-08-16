@@ -3,10 +3,12 @@
 /**
  * Pipelinq TwilioSmsClient.
  *
- * Twilio SMS provider implementation. Delegates actual HTTP transport
- * to openconnector's SourceService (per ADR-005 — pipelinq never
- * touches a provider SDK directly) and surfaces the result as a
- * vendor-neutral SmsProviderClientInterface response.
+ * Twilio SMS provider implementation. Delegates actual HTTP transport to
+ * OpenRegister's `MessageDispatchProvider` leaf (via {@see MessageDispatchTrait}),
+ * which routes through openconnector's `twilio-sms` source (per ADR-005 —
+ * pipelinq never touches a provider SDK directly; `SourceService` no longer
+ * exists in OpenConnector) and surfaces the result as a vendor-neutral
+ * SmsProviderClientInterface response.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Provider
@@ -52,7 +54,7 @@ class TwilioSmsClient implements SmsProviderClientInterface {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container (for SourceService).
+	 * @param ContainerInterface $container DI container (for MessageDispatchProvider).
 	 * @param LoggerInterface $logger Logger.
 	 * @param array<string, mixed> $credentials Decoded credentials bag.
 	 * @param string $fromNumber Sender phone number (E.164).

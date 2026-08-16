@@ -181,8 +181,8 @@ class BlastServiceTest extends TestCase {
 					return $this->objectService;
 				}
 
-				// ComplianceService and SourceService intentionally absent —
-				// BlastService should fall back to the closed-fail path.
+				// ComplianceService and OpenConnector's CallService intentionally
+				// absent — BlastService should fall back to the closed-fail path.
 				throw new \RuntimeException('not registered: ' . $id);
 			}
 		);
@@ -206,6 +206,45 @@ class BlastServiceTest extends TestCase {
 			$this->logger,
 		);
 	}//end setUp()
+
+	/**
+	 * Build a fake CallLog-shaped object mirroring the real
+	 * `OCA\OpenConnector\Service\CallService::call()` return contract — an
+	 * OpenRegister `ObjectEntity` exposing `getObject()` with `statusCode`
+	 * and a `response.body` (UTF-8 JSON string).
+	 *
+	 * @param int $statusCode HTTP status code to report.
+	 * @param array<string, mixed>|null $bodyJson JSON-decodable response
+	 *                                            body, or null for an empty body.
+	 *
+	 * @return object Fake CallLog entity.
+	 */
+	public static function fakeCallLog(int $statusCode, ?array $bodyJson): object {
+		$body = '';
+		if ($bodyJson !== null) {
+			$body = (string)json_encode($bodyJson);
+		}
+
+		return new class ($statusCode, $body) {
+
+			public function __construct(private int $statusCode, private string $body) {
+			}//end __construct()
+
+			/**
+			 * @return array<string, mixed>
+			 */
+			public function getObject(): array {
+				return [
+					'statusCode' => $this->statusCode,
+					'response' => [
+						'statusCode' => $this->statusCode,
+						'body' => $this->body,
+						'encoding' => 'UTF-8',
+					],
+				];
+			}//end getObject()
+		};
+	}//end fakeCallLog()
 
 	/**
 	 * variantFor returns "A" when abSplitPercent is null or out-of-range.
@@ -637,10 +676,12 @@ class BlastServiceTest extends TestCase {
 	}//end testSendBlastCreatesVariantChildOnAbSplit()
 
 	/**
-	 * Slice 09 — dispatchBlastDeliveries calls openconnector's send-mail
-	 * action exactly once per queued delivery, flips each row to `sent`
-	 * with a providerId, and respects the rate-limit (source value < caller
-	 * → throttle helper invoked at least once between batches).
+	 * Slice 09 — dispatchBlastDeliveries POSTs to the resolved openconnector
+	 * Source via `CallService::call()` exactly once per queued delivery,
+	 * flips each row to `sent` with a providerId, and respects the
+	 * rate-limit derived from the source's `rateLimitLimit`/`rateLimitWindow`
+	 * (source value < caller → throttle helper invoked at least once between
+	 * batches).
 	 *
 	 * @return void
 	 */
@@ -663,6 +704,13 @@ class BlastServiceTest extends TestCase {
 		];
 		$this->objectService->store['blast-dispatch'] = $blast;
 		$this->objectService->store['tmpl-d'] = $template;
+		// Source's rate limit is intentionally lower (1 msg/s) than the
+		// caller-supplied rate (100/s) so the source config wins.
+		$this->objectService->store['oc-source-x'] = [
+			'uuid' => 'oc-source-x',
+			'rateLimitLimit' => 1,
+			'rateLimitWindow' => 1,
+		];
 		$this->objectService->deliveries = [
 			['uuid' => 'dx-1', 'blastId' => 'blast-dispatch', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
 			['uuid' => 'dx-2', 'blastId' => 'blast-dispatch', 'contactId' => 'c2', 'email' => 'c2@example.test', 'status' => 'queued'],
@@ -684,7 +732,7 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$sourceService = new class {
+		$callService = new class {
 
 			/**
 			 * @var array<int, array<string, mixed>>
@@ -692,43 +740,38 @@ class BlastServiceTest extends TestCase {
 			public array $calls = [];
 
 			/**
-			 * Return a source object whose sendRateLimit is intentionally
-			 * lower than the caller-supplied rate.
+			 * Mock CallService::call — captures every dispatched call and
+			 * returns a synthetic CallLog carrying a providerId derived from
+			 * the recipient.
 			 *
-			 * @param string $id Source id.
+			 * @param object $source Resolved Source entity.
+			 * @param string $endpoint Endpoint (relative to the source base URL).
+			 * @param string $method HTTP method.
+			 * @param array<string, mixed> $config Guzzle-shaped request config.
 			 *
-			 * @return array<string, mixed>|null Source row.
+			 * @return object Fake CallLog entity.
 			 */
-			public function find(string $id): ?array {
-				return ['uuid' => $id, 'sendRateLimit' => 1];
-			}//end find()
-
-			/**
-			 * Mock executeAction — captures every send-mail call and
-			 * returns a synthetic provider id derived from the recipient.
-			 *
-			 * @param string $sourceId Source id.
-			 * @param string $action Action name.
-			 * @param array $payload Send-mail input.
-			 *
-			 * @return array<string, string> Provider response.
-			 */
-			public function executeAction(string $sourceId, string $action, array $payload): array {
-				$this->calls[] = ['sourceId' => $sourceId, 'action' => $action, 'payload' => $payload];
-				return ['providerId' => 'p-' . count($this->calls)];
-			}//end executeAction()
+			public function call(array|object $source, string $endpoint, string $method, array $config): object {
+				$this->calls[] = [
+					'source' => $source,
+					'endpoint' => $endpoint,
+					'method' => $method,
+					'config' => $config,
+				];
+				return BlastServiceTest::fakeCallLog(200, ['providerId' => 'p-' . count($this->calls)]);
+			}//end call()
 		};
 
 		$objectService = $this->objectService;
 		$this->container = $this->createMock(ContainerInterface::class);
 		$this->container->method('get')->willReturnCallback(
-			function (string $id) use ($sourceService, $objectService) {
+			function (string $id) use ($callService, $objectService) {
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
 					return $objectService;
 				}
 
-				if ($id === 'OCA\\OpenConnector\\Service\\SourceService') {
-					return $sourceService;
+				if ($id === 'OCA\\OpenConnector\\Service\\CallService') {
+					return $callService;
 				}
 
 				throw new \RuntimeException('not registered: ' . $id);
@@ -752,12 +795,13 @@ class BlastServiceTest extends TestCase {
 		$dispatched = $service->dispatchBlastDeliveries('blast-dispatch', 100);
 
 		$this->assertSame(3, $dispatched, 'every queued row was dispatched');
-		$this->assertCount(3, $sourceService->calls, 'one send-mail call per row');
-		foreach ($sourceService->calls as $call) {
-			$this->assertSame('send-mail', $call['action']);
-			$this->assertSame('oc-source-x', $call['sourceId']);
-			$this->assertArrayHasKey('to', $call['payload']);
-			$this->assertArrayHasKey('subject', $call['payload']);
+		$this->assertCount(3, $callService->calls, 'one CallService::call per row');
+		foreach ($callService->calls as $call) {
+			$this->assertSame('', $call['endpoint'], 'the source base URL is called directly');
+			$this->assertSame('POST', $call['method']);
+			$this->assertArrayHasKey('json', $call['config']);
+			$this->assertArrayHasKey('to', $call['config']['json']);
+			$this->assertArrayHasKey('subject', $call['config']['json']);
 		}
 
 		// Each row was flipped to `sent` with a providerId.
@@ -780,12 +824,12 @@ class BlastServiceTest extends TestCase {
 	}//end testDispatchBlastDeliveriesCallsOpenconnectorAndRespectsRateLimit()
 
 	/**
-	 * Slice 09 — dispatchBlastDeliveries returns 0 and persists no rows
-	 * when the openconnector source service is unavailable (fail-closed).
+	 * Slice 09 — dispatchBlastDeliveries returns 0 and persists no rows when
+	 * the referenced openconnector Source object does not exist (fail-closed).
 	 *
 	 * @return void
 	 */
-	public function testDispatchBlastDeliveriesFailsClosedWhenSourceServiceUnavailable(): void {
+	public function testDispatchBlastDeliveriesFailsClosedWhenConnectorSourceNotFound(): void {
 		$blast = [
 			'uuid' => 'blast-no-oc',
 			'segmentId' => 'seg-no-oc',
@@ -805,16 +849,60 @@ class BlastServiceTest extends TestCase {
 			['uuid' => 'dn-1', 'blastId' => 'blast-no-oc', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
 		];
 
-		// SourceService NOT registered in the container — every send call
-		// should fail-closed and the row should NOT flip to sent.
+		// 'oc-source-missing' is not in the objectService store — the
+		// register:'openconnector'/schema:'source' lookup misses, so every
+		// send call should fail-closed and the row should NOT flip to sent.
 		$dispatched = $this->service->dispatchBlastDeliveries('blast-no-oc', 100);
 		$this->assertSame(0, $dispatched);
 
 		$sentRows = array_filter($this->objectService->saved,
 			fn (array $row) => ($row['status'] ?? null) === 'sent',
 		);
-		$this->assertCount(0, $sentRows, 'no deliveries should flip to sent when SourceService is unavailable');
-	}//end testDispatchBlastDeliveriesFailsClosedWhenSourceServiceUnavailable()
+		$this->assertCount(0, $sentRows, 'no deliveries should flip to sent when the connector source is missing');
+	}//end testDispatchBlastDeliveriesFailsClosedWhenConnectorSourceNotFound()
+
+	/**
+	 * Slice 09 — dispatchBlastDeliveries returns 0 and persists no rows when
+	 * the connector source resolves but OpenConnector's `CallService` is
+	 * unavailable (fail-closed). This is the scenario that used to be
+	 * "SourceService unavailable" — `SourceService` no longer exists, so the
+	 * equivalent hard dependency today is `CallService`.
+	 *
+	 * @return void
+	 */
+	public function testDispatchBlastDeliveriesFailsClosedWhenCallServiceUnavailable(): void {
+		$blast = [
+			'uuid' => 'blast-no-cs',
+			'segmentId' => 'seg-no-cs',
+			'templateId' => 'tmpl-no-cs',
+			'channel' => 'email',
+			'status' => 'sending',
+			'connectorSourceId' => 'oc-source-no-cs',
+		];
+		$template = [
+			'uuid' => 'tmpl-no-cs',
+			'bodyHtml' => '<p>{{email}}</p>',
+			'bodyText' => '{{email}}',
+		];
+		$this->objectService->store['blast-no-cs'] = $blast;
+		$this->objectService->store['tmpl-no-cs'] = $template;
+		$this->objectService->store['oc-source-no-cs'] = ['uuid' => 'oc-source-no-cs'];
+		$this->objectService->deliveries = [
+			['uuid' => 'dn-2', 'blastId' => 'blast-no-cs', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
+		];
+
+		// The connector source resolves fine but CallService is NOT
+		// registered in the container (setUp()'s default container mock) —
+		// every send call should fail-closed and the row should NOT flip to
+		// sent.
+		$dispatched = $this->service->dispatchBlastDeliveries('blast-no-cs', 100);
+		$this->assertSame(0, $dispatched);
+
+		$sentRows = array_filter($this->objectService->saved,
+			fn (array $row) => ($row['status'] ?? null) === 'sent',
+		);
+		$this->assertCount(0, $sentRows, 'no deliveries should flip to sent when CallService is unavailable');
+	}//end testDispatchBlastDeliveriesFailsClosedWhenCallServiceUnavailable()
 
 	/**
 	 * Slice 09 — updateBlastTotals on a blast with no deliveries leaves
@@ -862,30 +950,31 @@ class BlastServiceTest extends TestCase {
 		];
 		$this->objectService->store['blast-flag-off'] = $blast;
 		$this->objectService->store['tmpl-flag'] = $template;
+		$this->objectService->store['oc-source-flag'] = ['uuid' => 'oc-source-flag'];
 		$this->objectService->deliveries = [
 			['uuid' => 'd-flag-off', 'blastId' => 'blast-flag-off', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
 		];
 
-		$sourceService = new class {
+		$callService = new class {
 			/** @var array<int, array<string, mixed>> */
 			public array $calls = [];
 
-			public function executeAction(string $sourceId, string $action, array $payload): array {
-				$this->calls[] = $payload;
-				return ['providerId' => 'p-1'];
-			}//end executeAction()
+			public function call(array|object $source, string $endpoint, string $method, array $config): object {
+				$this->calls[] = $config['json'];
+				return BlastServiceTest::fakeCallLog(200, ['providerId' => 'p-1']);
+			}//end call()
 		};
 
 		$objectService = $this->objectService;
 		$this->container = $this->createMock(ContainerInterface::class);
 		$this->container->method('get')->willReturnCallback(
-			function (string $id) use ($sourceService, $objectService) {
+			function (string $id) use ($callService, $objectService) {
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
 					return $objectService;
 				}
 
-				if ($id === 'OCA\\OpenConnector\\Service\\SourceService') {
-					return $sourceService;
+				if ($id === 'OCA\\OpenConnector\\Service\\CallService') {
+					return $callService;
 				}
 
 				// TrackingLinkService must never be resolved when the flag is off.
@@ -899,7 +988,7 @@ class BlastServiceTest extends TestCase {
 		$this->assertSame(1, $dispatched);
 		$this->assertSame(
 			'<body><a href="https://pipelinq.nl/q4">Read more</a></body>',
-			$sourceService->calls[0]['bodyHtml'],
+			$callService->calls[0]['bodyHtml'],
 		);
 	}//end testSendOneDeliveryDoesNotInjectTrackingWhenFlagOff()
 
@@ -926,6 +1015,7 @@ class BlastServiceTest extends TestCase {
 		];
 		$this->objectService->store['blast-flag-on'] = $blast;
 		$this->objectService->store['tmpl-flag-on'] = $template;
+		$this->objectService->store['oc-source-flag-on'] = ['uuid' => 'oc-source-flag-on'];
 		$this->objectService->deliveries = [
 			['uuid' => 'd-flag-on', 'blastId' => 'blast-flag-on', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
 		];
@@ -945,14 +1035,14 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$sourceService = new class {
+		$callService = new class {
 			/** @var array<int, array<string, mixed>> */
 			public array $calls = [];
 
-			public function executeAction(string $sourceId, string $action, array $payload): array {
-				$this->calls[] = $payload;
-				return ['providerId' => 'p-1'];
-			}//end executeAction()
+			public function call(array|object $source, string $endpoint, string $method, array $config): object {
+				$this->calls[] = $config['json'];
+				return BlastServiceTest::fakeCallLog(200, ['providerId' => 'p-1']);
+			}//end call()
 		};
 
 		$trackingLinkService = new class {
@@ -968,13 +1058,13 @@ class BlastServiceTest extends TestCase {
 		$objectService = $this->objectService;
 		$this->container = $this->createMock(ContainerInterface::class);
 		$this->container->method('get')->willReturnCallback(
-			function (string $id) use ($sourceService, $objectService, $trackingLinkService) {
+			function (string $id) use ($callService, $objectService, $trackingLinkService) {
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
 					return $objectService;
 				}
 
-				if ($id === 'OCA\\OpenConnector\\Service\\SourceService') {
-					return $sourceService;
+				if ($id === 'OCA\\OpenConnector\\Service\\CallService') {
+					return $callService;
 				}
 
 				if ($id === 'OCA\\Pipelinq\\Service\\TrackingLinkService') {
@@ -989,8 +1079,140 @@ class BlastServiceTest extends TestCase {
 		$dispatched = $service->dispatchBlastDeliveries('blast-flag-on', 100);
 
 		$this->assertSame(1, $dispatched);
-		$this->assertSame('<body>original</body><!--tracked-->', $sourceService->calls[0]['bodyHtml']);
+		$this->assertSame('<body>original</body><!--tracked-->', $callService->calls[0]['bodyHtml']);
 		$this->assertCount(1, $trackingLinkService->calls);
 		$this->assertSame('d-flag-on', $trackingLinkService->calls[0]['blastDeliveryId']);
 	}//end testSendOneDeliveryInjectsTrackingWhenFlagOn()
+
+	/**
+	 * Dedicated shape-assertion test — resolveConnectorSource looks the
+	 * Source up in the `openconnector`/`source` register+schema (not
+	 * pipelinq's own `register` app-config register), and CallService::call
+	 * is invoked with an empty relative endpoint (the source's own base URL
+	 * is the send target), `POST`, and the rendered payload as a `json`
+	 * body — the exact shape a real `OCA\OpenConnector\Service\CallService`
+	 * expects.
+	 *
+	 * @return void
+	 */
+	public function testSendOneDeliveryResolvesSourceFromOpenconnectorRegisterAndCallsCallServiceWithJsonPost(): void {
+		$blast = [
+			'uuid' => 'blast-shape',
+			'templateId' => 'tmpl-shape',
+			'channel' => 'email',
+			'status' => 'sending',
+			'connectorSourceId' => 'oc-source-shape',
+		];
+		$template = [
+			'uuid' => 'tmpl-shape',
+			'subject' => 'Hi {{contactId}}',
+			'bodyHtml' => '<p>{{email}}</p>',
+		];
+		$this->objectService->store['blast-shape'] = $blast;
+		$this->objectService->store['tmpl-shape'] = $template;
+		$this->objectService->store['oc-source-shape'] = ['uuid' => 'oc-source-shape'];
+		$this->objectService->deliveries = [
+			['uuid' => 'd-shape', 'blastId' => 'blast-shape', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
+		];
+
+		$objectService = new class ($this->objectService) {
+
+			/**
+			 * @var array<int, array<string, mixed>>
+			 */
+			public array $findCalls = [];
+
+			/**
+			 * @param object $delegate The shared setUp() objectService mock.
+			 */
+			public function __construct(private object $delegate) {
+			}//end __construct()
+
+			public function find(string $id, $register = null, $schema = null): ?array {
+				$this->findCalls[] = ['id' => $id, 'register' => $register, 'schema' => $schema];
+				return $this->delegate->find($id, $register, $schema);
+			}//end find()
+
+			public function findAll(array $config = []): array {
+				return $this->delegate->findAll($config);
+			}//end findAll()
+
+			public function count(array $config = []): int {
+				return $this->delegate->count($config);
+			}//end count()
+
+			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+				return $this->delegate->saveObject($object, $register, $schema, $uuid);
+			}//end saveObject()
+		};
+
+		$callService = new class {
+			/** @var array<int, array<string, mixed>> */
+			public array $calls = [];
+
+			public function call(array|object $source, string $endpoint, string $method, array $config): object {
+				$this->calls[] = [
+					'source' => $source,
+					'endpoint' => $endpoint,
+					'method' => $method,
+					'config' => $config,
+				];
+				return BlastServiceTest::fakeCallLog(200, ['providerId' => 'p-shape']);
+			}//end call()
+		};
+
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->container->method('get')->willReturnCallback(
+			function (string $id) use ($callService, $objectService) {
+				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+					return $objectService;
+				}
+
+				if ($id === 'OCA\\OpenConnector\\Service\\CallService') {
+					return $callService;
+				}
+
+				throw new \RuntimeException('not registered: ' . $id);
+			}
+		);
+
+		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+		$dispatched = $service->dispatchBlastDeliveries('blast-shape', 100);
+
+		$this->assertSame(1, $dispatched);
+
+		// resolveConnectorSource() looked the Source up in OpenConnector's
+		// OWN register/schema — not pipelinq's `register` app-config value
+		// ('pipelinq' per setUp()'s appConfig mock).
+		$sourceLookups = array_filter($objectService->findCalls, fn (array $c) => $c['id'] === 'oc-source-shape');
+		$this->assertNotEmpty($sourceLookups, 'the connector source id must be looked up');
+		foreach ($sourceLookups as $call) {
+			$this->assertSame('openconnector', $call['register']);
+			$this->assertSame('source', $call['schema']);
+		}
+
+		// CallService::call() shape: empty relative endpoint (the source's
+		// own base URL is the target), POST, rendered payload as JSON body.
+		$this->assertCount(1, $callService->calls);
+		$this->assertSame('', $callService->calls[0]['endpoint']);
+		$this->assertSame('POST', $callService->calls[0]['method']);
+		$expectedJson = [
+			'to' => 'c1@example.test',
+			'subject' => 'Hi c1',
+			'bodyHtml' => '<p>c1@example.test</p>',
+			'bodyText' => '',
+			'senderName' => '',
+			'senderEmail' => '',
+			'replyTo' => '',
+		];
+		$this->assertSame(['json' => $expectedJson], $callService->calls[0]['config']);
+
+		// The BlastDelivery was flipped to sent with the providerId parsed
+		// from the CallLog's JSON response body.
+		$sentRows = array_filter($this->objectService->saved,
+			fn (array $row) => ($row['status'] ?? null) === 'sent',
+		);
+		$this->assertCount(1, $sentRows);
+		$this->assertSame('p-shape', array_values($sentRows)[0]['providerId']);
+	}//end testSendOneDeliveryResolvesSourceFromOpenconnectorRegisterAndCallsCallServiceWithJsonPost()
 }//end class

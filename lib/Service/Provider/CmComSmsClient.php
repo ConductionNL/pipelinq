@@ -4,7 +4,9 @@
  * Pipelinq CmComSmsClient.
  *
  * CM.com SMS provider implementation. Delegates HTTP transport to
- * openconnector's SourceService.
+ * OpenRegister's `MessageDispatchProvider` leaf (via {@see MessageDispatchTrait}),
+ * which routes through openconnector's `cmcom-sms` source. `SourceService`
+ * no longer exists in OpenConnector.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Provider
