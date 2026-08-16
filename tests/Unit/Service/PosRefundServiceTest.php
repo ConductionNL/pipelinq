@@ -226,9 +226,25 @@ class FakeRefundTransitionEngine extends TransitionEngine {
 	}
 
 	/**
-	 * @return array<string, mixed>
+	 * Mirrors the real declaration, checked against openregister
+	 * `origin/development`, `lib/Service/Lifecycle/TransitionEngine.php:246`:
+	 *   `public function transition(string $objectId, string $action): ObjectEntity`
+	 *
+	 * This double previously returned `array`. Against the local stub, which
+	 * declared the weaker `: mixed`, that was a legal covariant override — so
+	 * the bare unit run declared it and reported a tally. Against the REAL class
+	 * (CI runs inside a Nextcloud with openregister enabled) PHP refused to
+	 * declare it and the suite died before test 1, printing no summary at all.
+	 *
+	 * Returning an array also meant the tests exercised a branch production
+	 * never takes: PosRefundService::toArray() tries `is_array()` FIRST, so the
+	 * double's array short-circuited it, while the real engine hands back an
+	 * entity and the `jsonSerialize()` path is the one that actually runs. The
+	 * assertions were reading back the array the fake had just written.
+	 *
+	 * @return ObjectEntity The saved object after the transition.
 	 */
-	public function transition(string $objectId, string $action): array {
+	public function transition(string $objectId, string $action): ObjectEntity {
 		$refund = $this->objects->store['posRefund_schema'][$objectId] ?? null;
 		if ($refund === null) {
 			throw new \RuntimeException(sprintf('Object "%s" not found.', $objectId));
@@ -251,7 +267,11 @@ class FakeRefundTransitionEngine extends TransitionEngine {
 		$refund['status'] = $target;
 		$this->objects->store['posRefund_schema'][$objectId] = $refund;
 
-		return $refund;
+		$entity = new ObjectEntity();
+		$entity->setUuid($objectId);
+		$entity->setObject($refund);
+
+		return $entity;
 	}
 }
 
