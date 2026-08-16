@@ -18,6 +18,19 @@
  * Mirrors the wave-3 `LogIb47Adapter` / `LogCbsBestandenAdapter`
  * dormant-default pattern from the fleet's external surface.
  *
+ * ⚠️ THE SEAM IS UNCONSUMED, AND THE CAPABILITY IT MODELS IS ALREADY
+ * LIVE ELSEWHERE. `BerichtenboxAdapterInterface` is DI-bound in
+ * `Application::register()` but injected into no service or controller,
+ * so `checkMailbox()` has zero callers and hydra gate-6 (orphan-auth)
+ * reports it. Do NOT close that finding by wiring
+ * `MailboxResolver::resolve()` to this adapter: that path already calls
+ * `LogiusConnector::checkMailboxExists()`, which performs a REAL
+ * mailbox check, so routing it here would replace a live check with a
+ * `MAILBOX_DEFERRED` stub — a regression wearing the costume of a fix.
+ * Consume-or-remove is a product decision, tracked in pipelinq#764
+ * ("Decision needed: consume-or-remove the 7 dormant capabilities behind
+ * gate-6 and gate-57").
+ *
  * Per AVG / WBP article 9, BSN values are NEVER passed to the
  * structured logger. Outbound `recipientBsn` + `dispatchMessage`'s
  * BSN payload field + `checkMailbox`'s `bsn` argument are all

@@ -31,7 +31,9 @@
  * the natural hook at that point is OpenRegister's pre-persist, stoppable
  * `ObjectCreatingEvent`/`ObjectUpdatingEvent` on the endpoint schemas, since
  * ZGW endpoints are OpenRegister-object-managed (ADR-022) rather than
- * written through a pipelinq route. Tracked in pipelinq#401.
+ * written through a pipelinq route. Tracked in pipelinq#764 ("Decision
+ * needed: consume-or-remove the 7 dormant capabilities behind gate-6 and
+ * gate-57"), which carries the full per-finding evidence.
  *
  * The check is otherwise intentionally tolerant: a missing StUF schema
  * reduces to "ZGW only", and a ZgwEndpoint with `actief=false` or
@@ -51,7 +53,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-008
+ * @spec openspec/changes/archive/2026-06-14-zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-008
  */
 
 declare(strict_types=1);
