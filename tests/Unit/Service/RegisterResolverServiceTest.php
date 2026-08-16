@@ -122,24 +122,8 @@ class RegisterResolverServiceTest extends TestCase {
 		$this->assertSame($first, $second);
 	}//end testResolveMemoisesPerLogicalName()
 
-	/**
-	 * Test that flush() clears the cache so the next resolve re-reads app-config.
-	 *
-	 * @return void
-	 */
-	public function testFlushClearsCache(): void {
-		$this->appConfig
-			->expects($this->exactly(2))
-			->method('getValueString')
-			->with(Application::APP_ID, 'register', '')
-			->willReturn('reg-refresh');
-
-		$service = new RegisterResolverService(appConfig: $this->appConfig);
-
-		$service->resolve('queue');
-		$service->flush();
-		$second = $service->resolve('queue');
-
-		$this->assertSame('reg-refresh', $second);
-	}//end testFlushClearsCache()
+	// testFlushClearsCache was removed with RegisterResolverService::flush().
+	// The method was documented as "primarily for tests" and had no production
+	// caller in any of the service's five consumers; the memo it cleared is
+	// request-scoped, so nothing outlives the request that would need clearing.
 }//end class

@@ -129,34 +129,16 @@ class NrcSubscriptionService {
 		return $saved ?? $record;
 	}//end registerAbonnement()
 
-	/**
-	 * Reconcile a stored NrcAbonnement against a new desired kanalen list.
+	/*
+	 * NO syncAbonnement() HERE.
 	 *
-	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param array<string, mixed> $abonnement Current NrcAbonnement record.
-	 * @param array<int, array<string,mixed>> $newKanalen Desired kanalen.
-	 *
-	 * @return array<string, mixed> Updated NrcAbonnement record.
+	 * It reconciled a stored NrcAbonnement against a desired kanalen list by
+	 * unregistering and re-registering. Nothing called it — nothing in this app
+	 * drives abonnement lifecycle at all; `ZgwNotificationController` only
+	 * authorises inbound callbacks against an already-stored record. Reviving
+	 * it would have meant building the admin surface that decides when kanalen
+	 * drift, which does not exist here.
 	 */
-	public function syncAbonnement(array $endpoint, array $abonnement, array $newKanalen): array {
-		$current = $this->normaliseKanalen(kanalen: ($abonnement['kanalen'] ?? []));
-		$desired = $this->normaliseKanalen(kanalen: $newKanalen);
-		if ($current === $desired) {
-			return $abonnement;
-		}
-
-		try {
-			$this->unregisterAbonnement(endpoint: $endpoint, abonnement: $abonnement);
-		} catch (Throwable $e) {
-			$this->logger->warning('ZGW NRC: syncAbonnement unregister failed', ['err' => $e->getMessage()]);
-		}
-
-		return $this->registerAbonnement(
-			endpoint: $endpoint,
-			kanalen: $desired,
-			callbackUrl: (string)($abonnement['callbackUrl'] ?? '')
-		);
-	}//end syncAbonnement()
 
 	/**
 	 * Remove an abonnement at NRC and mark the local record inactive.

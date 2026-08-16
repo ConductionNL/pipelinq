@@ -1072,7 +1072,7 @@ class PosTenderServiceTest extends TestCase {
 	}//end testAssertBalancedForSettleRejectsOverpaymentWithoutChangeTender()
 
 	// -----------------------------------------------------------------
-	// emitSingleTenderPosted + markTenderGlPosted + listUnpostedTenders (REQ-PST-006)
+	// emitSingleTenderPosted + listUnpostedTenders (REQ-PST-006)
 	// -----------------------------------------------------------------
 
 	/**
@@ -1125,16 +1125,10 @@ class PosTenderServiceTest extends TestCase {
 		$this->assertSame([], $this->webhooks->events);
 	}//end testEmitSingleTenderPostedSoftFailsAtMaxAttempts()
 
-	/**
-	 * @return void
-	 */
-	public function testMarkTenderGlPostedFlipsTheFlag(): void {
-		$this->seedTender(['id' => 'tnd1', 'glPosted' => false]);
-
-		$this->service->markTenderGlPosted(tenderId: 'tnd1');
-
-		$this->assertTrue($this->objects->store['posTender']['tnd1']['glPosted']);
-	}//end testMarkTenderGlPostedFlipsTheFlag()
+	// testMarkTenderGlPostedFlipsTheFlag was removed with
+	// PosTenderService::markTenderGlPosted(). Pipelinq has no inbound
+	// acknowledgement surface for the tender-posted CloudEvent, so nothing
+	// could ever have called it; REQ-PST-006 specifies emission only.
 
 	/**
 	 * ⚠️ `listUnpostedTenders()` (:828) is still a mis-keyed #793 site — an

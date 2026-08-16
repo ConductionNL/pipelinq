@@ -46,6 +46,7 @@ class LoyaltyAccountService {
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -229,32 +230,17 @@ class LoyaltyAccountService {
 		return $this->persist(payload: $account, uuid: $accountId);
 	}//end disableAccount()
 
-	/**
-	 * GDPR soft-delete: anonymise klantId, keep account+ledger for audit.
+	/*
+	 * NO GDPR ERASE HERE — IT MOVED TO OPENREGISTER.
 	 *
-	 * @param string $accountId The account UUID.
-	 *
-	 * @return array<string, mixed>|null The anonymised account, or null.
-	 *
-	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010-03
+	 * `deleteAccount()` (anonymise customerId, keep account+ledger for audit)
+	 * stood here with zero callers. Its controller is already gone: the
+	 * `loyaltyGdpr#*` routes were retired under ADR-047 Phase-3 and
+	 * `LoyaltyGdprController` removed, because loyalty GDPR export/erase is
+	 * subsumed by OpenRegister's cross-register DSAR erase. Re-wiring the
+	 * service method would have re-opened a second erase path outside that
+	 * engine.
 	 */
-	public function deleteAccount(string $accountId): ?array {
-		$account = $this->getAccount(accountId: $accountId);
-		if ($account === null) {
-			return null;
-		}
-
-		$account['customerId'] = null;
-		$account['status'] = 'deactivated';
-		$account['anonymized'] = true;
-
-		$this->logger->info(
-			'Pipelinq: loyalty account GDPR-anonymised',
-			['accountId' => $accountId]
-		);
-
-		return $this->persist(payload: $account, uuid: $accountId);
-	}//end deleteAccount()
 
 	/**
 	 * Update the denormalised balance fields after a ledger movement.

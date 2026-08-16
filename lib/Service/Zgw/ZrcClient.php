@@ -6,11 +6,7 @@
  * Typed client for the ZGW Zaken (ZRC) component. Implements the operations
  * the request-handling layer needs:
  *
- *   - createZaak()      — POST /zaken, capture Location header into a
- *                         ZgwResourceMapping (with the response ETag).
  *   - getZaak()         — GET, refresh cached ETag.
- *   - updateZaak()      — PATCH with If-Match; surface 412 as
- *                         OptimisticLockException carrying both states.
  *   - addStatus()       — POST /statussen.
  *   - getStatus()       — GET status URL (used by NRC dispatcher).
  *   - linkInitiator()   — Idempotent rol creation for a pipelinq Contact:
@@ -58,8 +54,6 @@ use Throwable;
  */
 class ZrcClient {
 	public const SCOPE_LEZEN = 'zaken.lezen';
-	public const SCOPE_AANMAKEN = 'zaken.aanmaken';
-	public const SCOPE_BIJWERK = 'zaken.bijwerken';
 
 	/**
 	 * Constructor.
@@ -77,60 +71,23 @@ class ZrcClient {
 	) {
 	}//end __construct()
 
-	/**
-	 * Create a zaak (POST /zaken) and persist a ZgwResourceMapping.
+	/*
+	 * NO ZAAK CREATE/UPDATE HERE — THE WRITE BRIDGE LIVES IN OPENCONNECTOR.
 	 *
-	 * The provided $caseData MUST contain at minimum: bronorganisatie,
-	 * zaaktype (URL), verantwoordelijkeOrganisatie, startdatum,
-	 * registratiedatum, omschrijving. The pipelinqRequestId / pipelinqId is
-	 * passed in so the mapping can be linked back to the originating Request.
+	 * `createZaak()` (POST /zaken + ZgwResourceMapping) and `updateZaak()`
+	 * (PATCH with If-Match) stood here with zero callers, and this app's own
+	 * shipped configuration says why: `lib/Settings/register.d/80-zgw-api-bridge.json`
+	 * documents the ZgwEndpoint schema as "addressed only by the inbound status
+	 * path (NrcNotificationListener via ZrcClient::getStatus) and
+	 * NrcSubscriptionService; the ZGW write bridge (zaak/document/besluit
+	 * creation) is not wired in this app — ZGW writes are routed via the
+	 * openconnector ZGW connector instead."
 	 *
-	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param array<string, mixed> $caseData Body for POST /zaken.
-	 * @param string $pipelinqRequestId UUID of the originating pipelinq Request.
-	 *
-	 * @return array<string, mixed> Saved ZgwResourceMapping (with zgwUrl, zgwUuid, etag).
-	 *
-	 * @throws InsufficientScopeException When the configured client lacks zaken.aanmaken.
-	 * @throws ZgwException On transport failure.
-	 *
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
+	 * That is ADR-085: a national-standard surface (ZGW/StUF/DSO) belongs in
+	 * openconnector, not in a leaf. Wiring these back would have re-created a
+	 * second write path to the same national API from an app that has
+	 * deliberately delegated it.
 	 */
-	public function createZaak(array $endpoint, array $caseData, string $pipelinqRequestId): array {
-		$client = $this->requireClient(endpoint: $endpoint);
-		$zrcUrl = $this->requireComponentUrl(endpoint: $endpoint, key: 'zrc');
-
-		$caseTypeUrl = (string)($caseData['caseType'] ?? '');
-		if ($caseTypeUrl !== '') {
-			$this->acClient->require($endpoint, $caseTypeUrl, self::SCOPE_AANMAKEN);
-		}
-
-		$response = $this->api->callComponent(
-			componentUrl: $zrcUrl,
-			method: 'POST',
-			path: '/zaken',
-			client: $client,
-			body: $caseData
-		);
-
-		$url = (string)($response['headers']['location'] ?? $response['body']['url'] ?? '');
-		$etag = (string)($response['headers']['etag'] ?? '');
-		$uuid = self::extractUuid(url: $url);
-
-		$mapping = [
-			'pipelinqEntity' => 'request',
-			'pipelinqId' => $pipelinqRequestId,
-			'zgwResourceType' => 'zaak',
-			'zgwUrl' => $url,
-			'zgwUuid' => $uuid,
-			'endpointId' => (string)($endpoint['id'] ?? ''),
-			'lastSynchronisation' => self::nowIso(),
-			'etag' => $etag,
-		];
-
-		$saved = $this->registers->save(ZgwRegisterAccess::SCHEMA_MAPPING, $mapping);
-		return $saved ?? $mapping;
-	}//end createZaak()
 
 	/**
 	 * GET a zaak and refresh the cached ETag.
@@ -166,75 +123,6 @@ class ZrcClient {
 
 		return $response['body'];
 	}//end getZaak()
-
-	/**
-	 * PATCH a zaak with optimistic concurrency.
-	 *
-	 * Sends `If-Match: <cached etag>`; on 412 fetches the fresh
-	 * representation and raises `OptimisticLockException` carrying both
-	 * sides + the field where they differ.
-	 *
-	 * @param array<string, mixed> $endpoint ZgwEndpoint payload.
-	 * @param array<string, mixed> $mapping ZgwResourceMapping payload (with cached etag).
-	 * @param array<string, mixed> $updates Patch body.
-	 *
-	 * @return array<string, mixed> Updated mapping payload.
-	 *
-	 * @throws OptimisticLockException On 412.
-	 * @throws InsufficientScopeException When zaken.bijwerken is missing.
-	 *
-	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-009
-	 */
-	public function updateZaak(array $endpoint, array $mapping, array $updates): array {
-		$url = (string)($mapping['zgwUrl'] ?? '');
-		$etag = (string)($mapping['etag'] ?? '');
-		$client = $this->requireClient(endpoint: $endpoint);
-
-		$caseTypeUrl = (string)($mapping['caseType'] ?? $updates['caseType'] ?? '');
-		if ($caseTypeUrl !== '') {
-			$this->acClient->require($endpoint, $caseTypeUrl, self::SCOPE_BIJWERK);
-		}
-
-		$extraHeaders = [];
-		if ($etag !== '') {
-			$extraHeaders = ['If-Match' => $etag];
-		}
-
-		try {
-			$response = $this->api->callComponent(
-				componentUrl: $url,
-				method: 'PATCH',
-				path: '',
-				client: $client,
-				body: $updates,
-				extraHeaders: $extraHeaders
-			);
-		} catch (OptimisticLockException) {
-			$fresh = [];
-			try {
-				$fresh = $this->getZaak(endpoint: $endpoint, mapping: $mapping);
-			} catch (Throwable) {
-				// Best effort — fresh representation may be empty.
-			}
-
-			throw new OptimisticLockException(
-				message: sprintf('ZGW: optimistic lock failure on zaak %s', $url),
-				staleRepresentation: $updates,
-				freshRepresentation: $fresh,
-				conflictingField: self::diffField(local: $updates, remote: $fresh)
-			);
-		}//end try
-
-		$newEtag = (string)($response['headers']['etag'] ?? '');
-		$mapping['lastSynchronisation'] = self::nowIso();
-		$mapping['etag'] = $etag;
-		if ($newEtag !== '') {
-			$mapping['etag'] = $newEtag;
-		}
-
-		$this->saveEtag(mapping: $mapping, etag: $mapping['etag']);
-		return $mapping;
-	}//end updateZaak()
 
 	/**
 	 * Append a status to a zaak.
@@ -470,49 +358,6 @@ class ZrcClient {
 
 		return false;
 	}//end identMatches()
-
-	/**
-	 * Find the first field that differs between $local and $remote.
-	 *
-	 * @param array<string, mixed> $local Local pre-image.
-	 * @param array<string, mixed> $remote Remote fresh representation.
-	 *
-	 * @return string
-	 */
-	private static function diffField(array $local, array $remote): string {
-		foreach ($local as $key => $value) {
-			if (array_key_exists($key, $remote) === true && $remote[$key] !== $value) {
-				return (string)$key;
-			}
-		}
-
-		return '';
-	}//end diffField()
-
-	/**
-	 * Extract the trailing UUID from a ZGW URL.
-	 *
-	 * @param string $url Full URL.
-	 *
-	 * @return string UUID or empty string when not present.
-	 */
-	private static function extractUuid(string $url): string {
-		if ($url === '') {
-			return '';
-		}
-
-		$path = parse_url($url, PHP_URL_PATH);
-		if ($path === false || $path === null || $path === '') {
-			$path = '';
-		}
-
-		$tail = basename($path);
-		if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $tail) === 1) {
-			return $tail;
-		}
-
-		return '';
-	}//end extractUuid()
 
 	/**
 	 * Current ISO 8601 timestamp (UTC).

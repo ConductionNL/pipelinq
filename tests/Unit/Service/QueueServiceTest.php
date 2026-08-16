@@ -292,26 +292,8 @@ class QueueServiceTest extends TestCase {
 		$this->assertTrue(condition: $result);
 	}//end testAssignToQueueUpdatesSaveObject()
 
-	/**
-	 * Test removeFromQueue clears the queue field.
-	 *
-	 * @return void
-	 */
-	public function testRemoveFromQueueClearsQueueField(): void {
-		$this->configureAppConfig();
-
-		$this->ticketService
-			->expects($this->once())
-			->method('save')
-			->with($this->equalTo(value: TicketService::TYPE_REQUEST),
-				$this->equalTo(value: ['id' => 'request-123', 'queue' => null]),
-				$this->isNull(),
-			)
-			->willReturn(new \stdClass());
-
-		$result = $this->buildService()->removeFromQueue(requestId: 'request-123');
-		$this->assertTrue(condition: $result);
-	}//end testRemoveFromQueueClearsQueueField()
+	// testRemoveFromQueueClearsQueueField was removed with
+	// QueueService::removeFromQueue() — a one-statement wrapper with no caller.
 
 	/**
 	 * Test assignToQueue returns false when config is missing.

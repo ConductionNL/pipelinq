@@ -50,6 +50,7 @@ class RedemptionService {
 	 * @param LoyaltyAccountService $accountService The account service.
 	 * @param PointsLedgerService $ledgerService The ledger service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -219,45 +220,17 @@ class RedemptionService {
 		return $this->persist(payload: $redemption, uuid: $redemptionId);
 	}//end markRedemptionUsed()
 
-	/**
-	 * Cancel a redemption and refund points.
+	/*
+	 * NO cancelRedemption() HERE.
 	 *
-	 * @param string $redemptionId The Redemption UUID.
-	 * @param string $reason Free-text reason.
-	 *
-	 * @return array<string, mixed> The updated redemption.
+	 * It reversed a reserved redemption and refunded its points through
+	 * LedgerService::refundPoints(). It had no caller: `LoyaltyController`
+	 * exposes getRedemptionOptions / initiateRedemption / lookupRedemptionCode
+	 * / useRedemptionCode and no cancel route, and no loyalty-program
+	 * requirement asks for one. Wiring it would have meant adding a new
+	 * points-crediting endpoint with no authorization design behind it —
+	 * a widening of the write surface, not a repair.
 	 */
-	public function cancelRedemption(string $redemptionId, string $reason = ''): array {
-		$redemption = $this->getRedemption(redemptionId: $redemptionId);
-		if ($redemption === null) {
-			throw new RuntimeException('Redemption not found.');
-		}
-
-		if ((string)($redemption['status'] ?? '') === 'cancelled') {
-			return $redemption;
-		}
-
-		if ((string)($redemption['status'] ?? '') === 'reserved') {
-			$accountId = (string)($redemption['accountId'] ?? '');
-			$cost = (int)($redemption['costInPoints'] ?? 0);
-			if ($accountId !== '' && $cost > 0) {
-				$this->ledgerService->refundPoints(
-					accountId: $accountId,
-					amount: $cost,
-					redemptionId: $redemptionId,
-					processedBy: 'redemption-service'
-				);
-			}
-		}
-
-		$redemption['status'] = 'cancelled';
-		$this->logger->info(
-			'Pipelinq: redemption cancelled',
-			['redemptionId' => $redemptionId, 'reason' => $reason]
-		);
-
-		return $this->persist(payload: $redemption, uuid: $redemptionId);
-	}//end cancelRedemption()
 
 	/**
 	 * Mark a redemption as expired (no refund — customer didn't use it).

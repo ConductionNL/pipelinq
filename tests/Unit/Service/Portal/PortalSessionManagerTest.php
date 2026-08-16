@@ -126,18 +126,21 @@ class PortalSessionManagerTest extends TestCase {
 	}//end testExpiredSessionRejected()
 
 	/**
-	 * An MFA-pending (half-open) session does not validate until cleared.
+	 * An MFA-pending (half-open) session never validates, and the manager
+	 * exposes no method that would promote it.
 	 *
 	 * @return void
 	 */
-	public function testMfaPendingSessionRejectedUntilCleared(): void {
+	public function testMfaPendingSessionNeverValidates(): void {
 		$created = $this->manager->createSession('acc-1', 'tenant-a', 'iphash', 'uahash', 8, true);
 		$this->assertNull($this->manager->validateSession($created['token'], 'tenant-a'));
 
-		$sessionId = $this->repository->idOf($created['session']);
-		$this->manager->clearMfaPending($sessionId);
-		$this->assertNotNull($this->manager->validateSession($created['token'], 'tenant-a'));
-	}//end testMfaPendingSessionRejectedUntilCleared()
+		// The live flow (PortalAuthService::completeMfaStage) verifies the TOTP
+		// code BEFORE creating a session, so a half-open session is never
+		// promoted — and there must be no primitive that promotes one.
+		$this->assertFalse(method_exists(PortalSessionManager::class, 'clearMfaPending'));
+		$this->assertNull($this->manager->validateSession($created['token'], 'tenant-a'));
+	}//end testMfaPendingSessionNeverValidates()
 
 	/**
 	 * A garbage token never validates.

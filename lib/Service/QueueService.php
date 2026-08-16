@@ -50,6 +50,7 @@ class QueueService {
 	 * @param LoggerInterface $logger The logger.
 	 * @param RegisterResolverService $registerResolver The register resolver.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -118,18 +119,15 @@ class QueueService {
 		return $this->updateRequestQueueField(requestId: $requestId, queueId: $queueId);
 	}//end assignToQueue()
 
-	/**
-	 * Remove a request from its queue by clearing the queue field.
+	/*
+	 * NO removeFromQueue() HERE.
 	 *
-	 * @param string $requestId The request UUID.
-	 *
-	 * @return bool True on success.
-	 *
-	 * @spec openspec/specs/queue-management/spec.md
+	 * It was a one-statement wrapper over
+	 * `updateRequestQueueField(queueId: null)` with no caller anywhere — no
+	 * route, no listener, no job. `assignToQueue()` above stays because the
+	 * rebalance path calls it. A caller that wants to clear a request's queue
+	 * uses the same private helper the assign path does.
 	 */
-	public function removeFromQueue(string $requestId): bool {
-		return $this->updateRequestQueueField(requestId: $requestId, queueId: null);
-	}//end removeFromQueue()
 
 	/**
 	 * Determine whether a queue is at or over its maximum capacity.
