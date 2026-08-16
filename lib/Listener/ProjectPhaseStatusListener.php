@@ -3,9 +3,7 @@
 /**
  * Pipelinq ProjectPhaseStatusListener.
  *
- * Dispatches a Shillinq ledger status-change event when a project's status
- * changes, or when a project phase's status changes (resolved in the parent
- * project's context), and records the outcome on the project.
+ * Dispatches project / phase status changes to the Shillinq ledger.
  *
  * @category Listener
  * @package  OCA\Pipelinq\Listener
@@ -26,7 +24,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Listener;
 
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Service\LedgerSyncNotifier;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\ShillinqLedgerService;
@@ -44,11 +44,30 @@ use Psr\Log\LoggerInterface;
  * parent project, whose ledger sync status is then updated. Updates that do
  * not change status are ignored.
  *
+ * ADR-078: the status change is already stored when this runs, so the
+ * dispatch — two `saveObject()` calls around an outbound HTTP call with
+ * retries, plus a parent-project lookup for the phase case — no longer happens
+ * inside the update request. It runs in {@see DeferredObjectListenerJob} under
+ * the acting user.
+ *
+ * THE OLD AND NEW STATUS TRAVEL IN THE ENTRY. They are the ledger event's
+ * payload and the only part a later read cannot reconstruct; everything else
+ * (the project body, whether the webhook is still configured) is re-read in the
+ * job so the dispatch reflects current state.
+ *
  * @implements IEventListener<Event>
  *
  * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-002
  */
-class ProjectPhaseStatusListener implements IEventListener {
+class ProjectPhaseStatusListener implements IEventListener, DeferredObjectWork {
+
+	/**
+	 * Identifies this listener's entries in the deferral job.
+	 *
+	 * @var string
+	 */
+	public const HANDLER_KEY = 'project-phase-status';
+
 	/**
 	 * Constructor.
 	 *
@@ -57,6 +76,7 @@ class ProjectPhaseStatusListener implements IEventListener {
 	 * @param LedgerSyncNotifier $notifier The admin failure notifier.
 	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
 	 * @param IAppConfig $appConfig The app configuration.
+	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
@@ -65,12 +85,15 @@ class ProjectPhaseStatusListener implements IEventListener {
 		private LedgerSyncNotifier $notifier,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
+		private ListenerDeferralService $deferral,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
 
 	/**
 	 * Handle an object-updated event.
+	 *
+	 * Does no ledger work: detects the status change and queues the dispatch.
 	 *
 	 * @param Event $event The dispatched event.
 	 *
@@ -108,31 +131,69 @@ class ProjectPhaseStatusListener implements IEventListener {
 			return;
 		}
 
+		// A phase change is attributed to its parent project; the lookup itself
+		// is a read and belongs in the job, so only the reference travels.
+		$subjectUuid = (string)$newEntity->getUuid();
+		$projectRef = '';
 		if ($entityType === 'projectPhase') {
-			// Resolve the parent project and dispatch in its context (REQ-PLG-002-05).
-			$project = $this->fetchProject(uuid: (string)($newData['project'] ?? ''));
-			if ($project === null) {
+			$projectRef = (string)($newData['project'] ?? '');
+			if ($projectRef === '') {
 				return;
 			}
 
-			$projectUuid = (string)($project['id'] ?? $project['uuid'] ?? '');
-			$this->dispatchAndRecord(
-				project: $project,
-				projectUuid: $projectUuid,
-				oldStatus: $oldStatus,
-				newStatus: $newStatus
-			);
+			$subjectUuid = $projectRef;
+		}
+
+		if ($subjectUuid === '') {
 			return;
 		}
 
-		// Direct project status change.
-		$this->dispatchAndRecord(
-			project: $newData,
-			projectUuid: (string)$newEntity->getUuid(),
-			oldStatus: $oldStatus,
-			newStatus: $newStatus
+		// Our own status writes re-enter this listener; deferring again from
+		// inside the deferred pass would be a cron loop.
+		if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $subjectUuid)) === true) {
+			return;
+		}
+
+		$this->deferral->defer(
+			jobClass: DeferredObjectListenerJob::class,
+			entry: [
+				'handler' => self::HANDLER_KEY,
+				'uuid' => $subjectUuid,
+				'oldStatus' => $oldStatus,
+				'newStatus' => $newStatus,
+			],
+			dedupeKey: self::HANDLER_KEY . '|' . $subjectUuid . '|' . $oldStatus . '|' . $newStatus
 		);
 	}//end handle()
+
+	/**
+	 * Dispatch the status change to the ledger and record the outcome.
+	 *
+	 * @param array<string, mixed> $entry The entry captured at dispatch time.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-002-01
+	 */
+	public function runDeferredWork(array $entry): void {
+		$projectUuid = (string)($entry['uuid'] ?? '');
+		if ($projectUuid === '' || $this->ledgerService->shouldDispatch() === false) {
+			return;
+		}
+
+		$project = $this->fetchProject(uuid: $projectUuid);
+		if ($project === null) {
+			// Project gone since the status change. Stale entry (ADR-078 Rule 7).
+			return;
+		}
+
+		$this->dispatchAndRecord(
+			project: $project,
+			projectUuid: $projectUuid,
+			oldStatus: (string)($entry['oldStatus'] ?? ''),
+			newStatus: (string)($entry['newStatus'] ?? '')
+		);
+	}//end runDeferredWork()
 
 	/**
 	 * Dispatch a status-change ledger event and record the outcome on the project.
@@ -148,10 +209,6 @@ class ProjectPhaseStatusListener implements IEventListener {
 	 * @return void
 	 */
 	private function dispatchAndRecord(array $project, string $projectUuid, string $oldStatus, string $newStatus): void {
-		if ($projectUuid === '') {
-			return;
-		}
-
 		$project['ledgerSyncStatus'] = 'pending';
 		$this->persist(uuid: $projectUuid, data: $project);
 
@@ -201,7 +258,7 @@ class ProjectPhaseStatusListener implements IEventListener {
 			return $object->getObject();
 		} catch (\Throwable $e) {
 			$this->logger->warning(
-				'Pipelinq: failed to resolve parent project for phase ledger sync',
+				'Pipelinq: failed to resolve project for ledger status dispatch',
 				['exception' => $e->getMessage(), 'uuid' => $uuid]
 			);
 			return null;

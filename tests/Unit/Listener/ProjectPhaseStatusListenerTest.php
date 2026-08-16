@@ -89,6 +89,40 @@ class PhaseFakeObjectService {
  * Tests for ProjectPhaseStatusListener.
  */
 class ProjectPhaseStatusListenerTest extends TestCase {
+
+	/**
+	 * The deferral double the last-built listener was wired with.
+	 *
+	 * @var RecordingDeferralService|null
+	 */
+	private ?RecordingDeferralService $deferral = null;
+
+	/**
+	 * Clear the shared re-entrancy guard between tests.
+	 *
+	 * A key leaked by one test would make the next one silently skip its work
+	 * and still report success.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		\OCA\Pipelinq\Listener\DeferredWorkGuard::reset();
+	}//end setUp()
+
+	/**
+	 * Run every entry the listener queued, as the background job would.
+	 *
+	 * @param ProjectPhaseStatusListener $listener The listener under test.
+	 *
+	 * @return void
+	 */
+	private function drain(ProjectPhaseStatusListener $listener): void {
+		if ($this->deferral !== null) {
+			DeferredJobDrain::run($this, $this->deferral, $listener);
+		}
+	}//end drain()
+
 	/**
 	 * Build an ObjectEntity double for the given schema and data.
 	 *
@@ -145,18 +179,26 @@ class ProjectPhaseStatusListenerTest extends TestCase {
 			}
 		);
 
+		$this->deferral = new RecordingDeferralService();
+
 		return new ProjectPhaseStatusListener(
 			schemaMapService: $schemaMap,
 			ledgerService: $ledger,
 			notifier: $this->createMock(LedgerSyncNotifier::class),
 			container: $container,
 			appConfig: $appConfig,
+			deferral: $this->deferral,
 			logger: $this->createMock(LoggerInterface::class),
 		);
 	}//end listener()
 
 	/**
-	 * A status change on a project dispatches and records synced.
+	 * POSITIVE CONTROL: a status change on a project is queued, and the queued
+	 * work dispatches and records synced.
+	 *
+	 * Nothing reaches the ledger during handle() — that is the ADR-078 change.
+	 * Every "no-op" test below is only meaningful because this one shows the
+	 * listener CAN produce an entry and the entry CAN produce the effect.
 	 *
 	 * @return void
 	 */
@@ -172,12 +214,22 @@ class ProjectPhaseStatusListenerTest extends TestCase {
 			->willReturn(true);
 
 		$objects = new PhaseFakeObjectService();
+		$objects->store['proj-1'] = $this->entity('schema-project', ['uuid' => 'proj-1', 'status' => 'in_progress', 'name' => 'P']);
 		$listener = $this->listener($schemaMap, $ledger, $objects);
 
 		$new = $this->entity('schema-project', ['uuid' => 'proj-1', 'status' => 'in_progress', 'name' => 'P']);
 		$old = $this->entity('schema-project', ['uuid' => 'proj-1', 'status' => 'open', 'name' => 'P']);
 
 		$listener->handle(new ObjectUpdatedEvent($new, $old));
+
+		// Queued, and nothing written on the request.
+		$this->assertCount(1, $this->deferral->entries);
+		$this->assertSame('proj-1', $this->deferral->entries[0]['uuid']);
+		$this->assertSame('open', $this->deferral->entries[0]['oldStatus']);
+		$this->assertSame('in_progress', $this->deferral->entries[0]['newStatus']);
+		$this->assertCount(0, $objects->saved);
+
+		$this->drain($listener);
 
 		$this->assertSame('synced', $objects->saved['proj-1']['ledgerSyncStatus']);
 	}//end testProjectStatusChangeDispatches()
@@ -202,6 +254,7 @@ class ProjectPhaseStatusListenerTest extends TestCase {
 		$old = $this->entity('schema-project', ['uuid' => 'proj-1', 'status' => 'open']);
 
 		$listener->handle(new ObjectUpdatedEvent($new, $old));
+		$this->assertCount(0, $this->deferral->entries);
 		$this->assertCount(0, $objects->saved);
 	}//end testNoopWhenStatusUnchanged()
 
@@ -224,6 +277,7 @@ class ProjectPhaseStatusListenerTest extends TestCase {
 		$old = $this->entity('schema-lead', ['uuid' => 'lead-1', 'status' => 'open']);
 
 		$listener->handle(new ObjectUpdatedEvent($new, $old));
+		$this->assertCount(0, $this->deferral->entries);
 		$this->assertCount(0, $objects->saved);
 	}//end testIgnoresUnrelatedSchema()
 
@@ -251,7 +305,43 @@ class ProjectPhaseStatusListenerTest extends TestCase {
 
 		$listener->handle(new ObjectUpdatedEvent($new, $old));
 
+		// The parent-project lookup is a read and now happens in the job, so
+		// the entry carries only the parent's uuid.
+		$this->assertCount(1, $this->deferral->entries);
+		$this->assertSame('parent-proj', $this->deferral->entries[0]['uuid']);
+		$this->assertCount(0, $objects->saved);
+
+		$this->drain($listener);
+
 		$this->assertArrayHasKey('parent-proj', $objects->saved);
 		$this->assertSame('synced', $objects->saved['parent-proj']['ledgerSyncStatus']);
 	}//end testPhaseStatusChangeResolvesParentProject()
+
+	/**
+	 * The project having been deleted before the job runs is a no-op
+	 * (ADR-078 Rule 7).
+	 *
+	 * @return void
+	 */
+	public function testDeletedProjectIsAStaleNoOp(): void {
+		$schemaMap = $this->createMock(SchemaMapService::class);
+		$schemaMap->method('resolveEntityType')->willReturn('project');
+
+		$ledger = $this->createMock(ShillinqLedgerService::class);
+		$ledger->method('shouldDispatch')->willReturn(true);
+		$ledger->expects($this->never())->method('dispatchPhaseChangeEvent');
+
+		// `store` deliberately empty: find() returns null in the job.
+		$objects = new PhaseFakeObjectService();
+		$listener = $this->listener($schemaMap, $ledger, $objects);
+
+		$new = $this->entity('schema-project', ['uuid' => 'proj-1', 'status' => 'in_progress']);
+		$old = $this->entity('schema-project', ['uuid' => 'proj-1', 'status' => 'open']);
+
+		$listener->handle(new ObjectUpdatedEvent($new, $old));
+		$this->assertCount(1, $this->deferral->entries);
+
+		$this->drain($listener);
+		$this->assertCount(0, $objects->saved);
+	}//end testDeletedProjectIsAStaleNoOp()
 }//end class

@@ -18,8 +18,6 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/specs/sla-engine-and-escalation/spec.md
- * @spec openspec/specs/sla-engine-and-escalation/spec.md
- * @spec openspec/specs/sla-engine-and-escalation/spec.md
  */
 
 declare(strict_types=1);
@@ -30,7 +28,9 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Service\Deferral\ListenerDeferralService;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\SlaEngineService;
 use OCP\EventDispatcher\Event;
@@ -44,13 +44,40 @@ use Throwable;
  * React to tracked-object updates: handle pause/resume, status
  * re-evaluation and escalation firing.
  *
+ * ADR-078: the update is already stored when this runs. Policy loading,
+ * target re-evaluation, escalation firing and the `slaStatus` write now
+ * happen in {@see DeferredObjectListenerJob} under the acting user rather than
+ * inside the update request.
+ *
+ * ⚠️ THIS LISTENER RE-ENTERS ITSELF, AND ONLY THE GUARD STOPS IT.
+ * It reacts to `ObjectUpdatedEvent` and unconditionally writes
+ * `slaStatus.lastEvaluatedAt = now` — a value that differs on every pass. Its
+ * own `persist()` therefore raises another `ObjectUpdatedEvent` carrying an
+ * object that satisfies every one of its entry conditions, with no idempotency
+ * check anywhere that can stop it. Inline, that recursed on one request's
+ * stack. Deferred, each turn would enqueue a fresh job, and since `cron.php`
+ * runs one job per web call, that job would starve every other job on the
+ * instance indefinitely.
+ *
+ * {@see DeferredWorkGuard} closes it: the deferred pass marks
+ * `(sla-object-updated, uuid)` in flight, the write it makes re-enters
+ * `handle()`, `handle()` sees the mark and returns without deferring.
+ *
  * @implements IEventListener<Event>
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges the SLA engine,
- *  schema map, OR ObjectService, app-config and logger — an irreducible
- *  set of collaborators for the update-time SLA lifecycle.
+ *  schema map, OR ObjectService, deferral service, app-config and logger — an
+ *  irreducible set of collaborators for the update-time SLA lifecycle.
  */
-class SlaObjectUpdatedListener implements IEventListener {
+class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
+
+	/**
+	 * Identifies this listener's entries in the deferral job.
+	 *
+	 * @var string
+	 */
+	public const HANDLER_KEY = 'sla-object-updated';
+
 	private const TRACKED_TYPES = ['request', 'complaint', 'complaint', 'callback'];
 
 	/**
@@ -69,6 +96,7 @@ class SlaObjectUpdatedListener implements IEventListener {
 	 * @param SchemaMapService $schemaMapService Schema → entity-type map.
 	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig App config.
+	 * @param ListenerDeferralService $deferral The actor-forwarding deferral service.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
@@ -76,6 +104,7 @@ class SlaObjectUpdatedListener implements IEventListener {
 		private SchemaMapService $schemaMapService,
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
+		private ListenerDeferralService $deferral,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -83,11 +112,12 @@ class SlaObjectUpdatedListener implements IEventListener {
 	/**
 	 * Handle a dispatched event.
 	 *
+	 * Does no SLA work: filters and queues the re-evaluation.
+	 *
 	 * @param Event $event The event.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function handle(Event $event): void {
@@ -97,52 +127,104 @@ class SlaObjectUpdatedListener implements IEventListener {
 
 		try {
 			$entity = $event->getNewObject();
-			$type = $this->schemaMapService->resolveEntityType($entity->getSchema());
+			$schemaId = (string)$entity->getSchema();
+			$type = $this->schemaMapService->resolveEntityType($schemaId);
 			if (in_array($type, self::TRACKED_TYPES, true) === false) {
 				return;
 			}
 
 			$data = $entity->getObject();
-			$slaStatus = $data['slaStatus'] ?? null;
+			$slaStatus = ($data['slaStatus'] ?? null);
 			if (is_array($slaStatus) === false || ($slaStatus['policyId'] ?? '') === '') {
 				return;
 			}
 
-			$policy = $this->loadPolicy(policyId: (string)$slaStatus['policyId']);
-			if ($policy === null) {
-				$this->logger->debug(
-					'SlaObjectUpdatedListener: policy not found',
-					['policyId' => $slaStatus['policyId']]
-				);
+			$uuid = (string)$entity->getUuid();
+			if ($uuid === '' || $schemaId === '') {
 				return;
 			}
 
-			$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-			$status = (string)($data['status'] ?? '');
+			// See the class docblock — without this the deferred write re-enters
+			// here and enqueues a job that re-enters again, for ever.
+			if (DeferredWorkGuard::isRunning(key: DeferredWorkGuard::key(handler: self::HANDLER_KEY, uuid: $uuid)) === true) {
+				return;
+			}
 
-			$slaStatus = $this->applyPauseResume(slaStatus: $slaStatus, policy: $policy, status: $status, now: $now);
-			$slaStatus = $this->applyResolution(slaStatus: $slaStatus, status: $status, now: $now);
-
-			// Re-evaluate target statuses and fire escalations.
-			$slaStatus['targets'] = $this->engine->evaluateTargets($slaStatus['targets'] ?? [], $policy, $now);
-
-			$slaStatus = $this->applyEscalations(
-				slaStatus: $slaStatus,
-				type: $type,
-				entity: $entity,
-				policy: $policy,
+			$this->deferral->defer(
+				jobClass: DeferredObjectListenerJob::class,
+				entry: [
+					'handler' => self::HANDLER_KEY,
+					'uuid' => $uuid,
+					'schema' => $schemaId,
+					'type' => (string)$type,
+				],
+				dedupeKey: self::HANDLER_KEY . '|' . $uuid
 			);
-
-			$slaStatus['lastEvaluatedAt'] = $now->format(DateTimeInterface::ATOM);
-			$data['slaStatus'] = $slaStatus;
-			$this->persist(entity: $entity, data: $data);
 		} catch (Throwable $e) {
 			$this->logger->warning(
-				'SlaObjectUpdatedListener: SLA update failed (non-blocking)',
+				'SlaObjectUpdatedListener: SLA update could not be queued (non-blocking)',
 				['error' => $e->getMessage()]
 			);
 		}//end try
 	}//end handle()
+
+	/**
+	 * Re-evaluate the SLA envelope against the object's current state.
+	 *
+	 * @param array<string, mixed> $entry The entry captured at dispatch time.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
+	 */
+	public function runDeferredWork(array $entry): void {
+		$uuid = (string)($entry['uuid'] ?? '');
+		$schemaId = (string)($entry['schema'] ?? '');
+		$type = (string)($entry['type'] ?? '');
+		if ($uuid === '' || $schemaId === '' || $type === '') {
+			return;
+		}
+
+		$data = $this->fetch(uuid: $uuid, schemaId: $schemaId);
+		if ($data === null) {
+			// Object gone since the update. Stale entry (ADR-078 Rule 7).
+			return;
+		}
+
+		$slaStatus = ($data['slaStatus'] ?? null);
+		if (is_array($slaStatus) === false || ($slaStatus['policyId'] ?? '') === '') {
+			return;
+		}
+
+		$policy = $this->loadPolicy(policyId: (string)$slaStatus['policyId']);
+		if ($policy === null) {
+			$this->logger->debug(
+				'SlaObjectUpdatedListener: policy not found',
+				['policyId' => $slaStatus['policyId']]
+			);
+			return;
+		}
+
+		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+		$status = (string)($data['status'] ?? '');
+
+		$slaStatus = $this->applyPauseResume(slaStatus: $slaStatus, policy: $policy, status: $status, now: $now);
+		$slaStatus = $this->applyResolution(slaStatus: $slaStatus, status: $status, now: $now);
+
+		// Re-evaluate target statuses and fire escalations.
+		$slaStatus['targets'] = $this->engine->evaluateTargets(($slaStatus['targets'] ?? []), $policy, $now);
+
+		$slaStatus = $this->applyEscalations(
+			slaStatus: $slaStatus,
+			type: $type,
+			uuid: $uuid,
+			policy: $policy,
+		);
+
+		$slaStatus['lastEvaluatedAt'] = $now->format(DateTimeInterface::ATOM);
+		$data['slaStatus'] = $slaStatus;
+		$this->persist(uuid: $uuid, schemaId: $schemaId, data: $data);
+	}//end runDeferredWork()
 
 	/**
 	 * Fire due escalations for an unpaused timer and merge breach-event IDs.
@@ -151,7 +233,7 @@ class SlaObjectUpdatedListener implements IEventListener {
 	 *
 	 * @param array<string, mixed> $slaStatus Current slaStatus.
 	 * @param string $type Resolved entity type.
-	 * @param object $entity Object entity from the event.
+	 * @param string $uuid UUID of the tracked object.
 	 * @param array<string, mixed> $policy Policy.
 	 *
 	 * @return array<string, mixed> Updated slaStatus.
@@ -159,7 +241,7 @@ class SlaObjectUpdatedListener implements IEventListener {
 	private function applyEscalations(
 		array $slaStatus,
 		string $type,
-		object $entity,
+		string $uuid,
 		array $policy,
 	): array {
 		if (($slaStatus['pausedAt'] ?? null) !== null) {
@@ -174,8 +256,8 @@ class SlaObjectUpdatedListener implements IEventListener {
 
 		$result = $this->engine->executeEscalations(
 			$policy,
-			(string)$matchType,
-			(string)$entity->getUuid(),
+			$matchType,
+			$uuid,
 			$slaStatus['targets'],
 			$slaStatus['targets'],
 			$alreadyFired,
@@ -282,17 +364,47 @@ class SlaObjectUpdatedListener implements IEventListener {
 	}//end loadPolicy()
 
 	/**
+	 * Read the tracked object's current data.
+	 *
+	 * @param string $uuid Object UUID.
+	 * @param string $schemaId Schema identity the object lives in.
+	 *
+	 * @return array<string, mixed>|null Object data, or null when it is gone.
+	 */
+	private function fetch(string $uuid, string $schemaId): ?array {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		if ($register === '') {
+			return null;
+		}
+
+		try {
+			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			$object = $objectService->find(id: $uuid, register: $register, schema: $schemaId);
+			if ($object === null) {
+				return null;
+			}
+
+			return $object->getObject();
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'SlaObjectUpdatedListener: re-read failed (non-blocking)',
+				['error' => $e->getMessage(), 'uuid' => $uuid]
+			);
+			return null;
+		}//end try
+	}//end fetch()
+
+	/**
 	 * Persist the mutated object data back to OpenRegister.
 	 *
-	 * @param object $entity Object entity from the event.
+	 * @param string $uuid Object UUID.
+	 * @param string $schemaId Schema identity the object lives in.
 	 * @param array<string, mixed> $data Mutated data including slaStatus.
 	 *
 	 * @return void
 	 */
-	private function persist(object $entity, array $data): void {
+	private function persist(string $uuid, string $schemaId, array $data): void {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = (string)$entity->getSchema();
-		$uuid = (string)$entity->getUuid();
 		if ($register === '' || $schemaId === '' || $uuid === '') {
 			return;
 		}
@@ -311,6 +423,6 @@ class SlaObjectUpdatedListener implements IEventListener {
 				'SlaObjectUpdatedListener: persist failed (non-blocking)',
 				['error' => $e->getMessage(), 'uuid' => $uuid]
 			);
-		}
+		}//end try
 	}//end persist()
 }//end class

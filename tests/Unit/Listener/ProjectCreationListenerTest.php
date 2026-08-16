@@ -3,7 +3,8 @@
 /**
  * Unit tests for ProjectCreationListener.
  *
- * Asserts the listener dispatches a new project to the ledger, records the
+ * Asserts the listener does NO ledger work on the request (ADR-078) but queues
+ * it, and that the queued work dispatches to the ledger, records the
  * synced/failed outcome on the persisted object, is idempotent for an
  * already-synced project, ignores non-project schemas, and no-ops when the
  * integration is unconfigured.
@@ -40,7 +41,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * In-memory ObjectService capturing saveObject() calls.
+ * In-memory ObjectService capturing saveObject() calls and serving find().
  */
 class CreationFakeObjectService {
 	/**
@@ -49,6 +50,13 @@ class CreationFakeObjectService {
 	 * @var array<string, array<string, mixed>>
 	 */
 	public array $saved = [];
+
+	/**
+	 * Objects readable by find(), keyed by uuid.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	public array $stored = [];
 
 	/**
 	 * Capture a saved object.
@@ -63,14 +71,57 @@ class CreationFakeObjectService {
 	 */
 	public function saveObject($object, array $extend = [], string $register = '', string $schema = '', ?string $uuid = null): array {
 		$this->saved[(string)$uuid] = (array)$object;
+		$this->stored[(string)$uuid] = (array)$object;
 		return (array)$object;
 	}//end saveObject()
+
+	/**
+	 * Serve the deferred pass's re-read.
+	 *
+	 * @param string $id The object uuid.
+	 * @param string $register The register id.
+	 * @param string $schema The schema id.
+	 *
+	 * @return ObjectEntity|null
+	 */
+	public function find(string $id, string $register = '', string $schema = ''): ?ObjectEntity {
+		if (isset($this->stored[$id]) === false) {
+			return null;
+		}
+
+		$entity = new ObjectEntity();
+		$entity->setUuid($id);
+		$entity->setSchema($schema);
+		$entity->setObject($this->stored[$id]);
+		return $entity;
+	}//end find()
 }//end class
 
 /**
  * Tests for ProjectCreationListener.
  */
 class ProjectCreationListenerTest extends TestCase {
+
+	/**
+	 * The deferral double the last-built listener was wired with.
+	 *
+	 * @var RecordingDeferralService|null
+	 */
+	private ?RecordingDeferralService $deferral = null;
+
+	/**
+	 * Clear the shared re-entrancy guard between tests.
+	 *
+	 * A key leaked by one test would make the next one silently skip its work
+	 * and still report success.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		\OCA\Pipelinq\Listener\DeferredWorkGuard::reset();
+	}//end setUp()
+
 	/**
 	 * Build an ObjectEntity double for the given schema and data.
 	 *
@@ -129,15 +180,63 @@ class ProjectCreationListenerTest extends TestCase {
 			}
 		);
 
+		$this->deferral = new RecordingDeferralService();
+
 		return new ProjectCreationListener(
 			schemaMapService: $schemaMap,
 			ledgerService: $ledger,
 			notifier: ($notify ?? $this->createMock(LedgerSyncNotifier::class)),
 			container: $container,
 			appConfig: $appConfig,
+			deferral: $this->deferral,
 			logger: $this->createMock(LoggerInterface::class),
 		);
 	}//end listener()
+
+	/**
+	 * Run every entry the listener queued, as the background job would.
+	 *
+	 * @param ProjectCreationListener $listener The listener under test.
+	 *
+	 * @return void
+	 */
+	private function drain(ProjectCreationListener $listener): void {
+		if ($this->deferral !== null) {
+			DeferredJobDrain::run($this, $this->deferral, $listener);
+		}
+	}//end drain()
+
+	/**
+	 * POSITIVE CONTROL: a new project is queued, not dispatched inline.
+	 *
+	 * Every "nothing happened" assertion below is only meaningful because this
+	 * one shows the listener CAN produce an entry.
+	 *
+	 * @return void
+	 */
+	public function testCreationIsQueuedAndNothingIsDispatchedOnTheRequest(): void {
+		$schemaMap = $this->createMock(SchemaMapService::class);
+		$schemaMap->method('resolveEntityType')->willReturn('project');
+
+		$ledger = $this->createMock(ShillinqLedgerService::class);
+		$ledger->method('shouldDispatch')->willReturn(true);
+		$ledger->expects($this->never())->method('dispatchProjectEvent');
+
+		$objects = new CreationFakeObjectService();
+		$listener = $this->listener($schemaMap, $ledger, $objects);
+
+		$listener->handle(new ObjectCreatedEvent($this->entity('schema-project', ['uuid' => 'proj-1', 'name' => 'P'])));
+
+		$this->assertCount(1, $this->deferral->entries);
+		$this->assertSame(ProjectCreationListener::HANDLER_KEY, $this->deferral->entries[0]['handler']);
+		$this->assertSame('proj-1', $this->deferral->entries[0]['uuid']);
+		$this->assertSame(
+			\OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob::class,
+			$this->deferral->jobClasses[0]
+		);
+		// The whole point: no write and no outbound dispatch on the request.
+		$this->assertCount(0, $objects->saved);
+	}//end testCreationIsQueuedAndNothingIsDispatchedOnTheRequest()
 
 	/**
 	 * A non-ObjectCreatedEvent is ignored.
@@ -152,6 +251,7 @@ class ProjectCreationListenerTest extends TestCase {
 		$listener = $this->listener($this->createMock(SchemaMapService::class), $ledger, $objects);
 
 		$listener->handle(new class extends Event {});
+		$this->assertCount(0, $this->deferral->entries);
 		$this->assertCount(0, $objects->saved);
 	}//end testIgnoresNonObjectCreatedEvent()
 
@@ -171,11 +271,12 @@ class ProjectCreationListenerTest extends TestCase {
 		$listener = $this->listener($schemaMap, $ledger, $objects);
 
 		$listener->handle(new ObjectCreatedEvent($this->entity('schema-lead', ['uuid' => 'lead-1'])));
+		$this->assertCount(0, $this->deferral->entries);
 		$this->assertCount(0, $objects->saved);
 	}//end testIgnoresNonProjectSchema()
 
 	/**
-	 * An unconfigured integration no-ops without persisting.
+	 * An unconfigured integration no-ops without queueing or persisting.
 	 *
 	 * @return void
 	 */
@@ -191,11 +292,12 @@ class ProjectCreationListenerTest extends TestCase {
 		$listener = $this->listener($schemaMap, $ledger, $objects);
 
 		$listener->handle(new ObjectCreatedEvent($this->entity('schema-project', ['uuid' => 'proj-1'])));
+		$this->assertCount(0, $this->deferral->entries);
 		$this->assertCount(0, $objects->saved);
 	}//end testNoopWhenUnconfigured()
 
 	/**
-	 * A successful dispatch marks the project synced.
+	 * A successful deferred dispatch marks the project synced.
 	 *
 	 * @return void
 	 */
@@ -208,9 +310,11 @@ class ProjectCreationListenerTest extends TestCase {
 		$ledger->method('dispatchProjectEvent')->willReturn(true);
 
 		$objects = new CreationFakeObjectService();
+		$objects->stored['proj-1'] = ['uuid' => 'proj-1', 'name' => 'P'];
 		$listener = $this->listener($schemaMap, $ledger, $objects);
 
 		$listener->handle(new ObjectCreatedEvent($this->entity('schema-project', ['uuid' => 'proj-1', 'name' => 'P'])));
+		$this->drain($listener);
 
 		$this->assertArrayHasKey('proj-1', $objects->saved);
 		$this->assertSame('synced', $objects->saved['proj-1']['ledgerSyncStatus']);
@@ -218,7 +322,7 @@ class ProjectCreationListenerTest extends TestCase {
 	}//end testSuccessfulDispatchMarksSynced()
 
 	/**
-	 * A failed dispatch marks the project failed and notifies admins.
+	 * A failed deferred dispatch marks the project failed and notifies admins.
 	 *
 	 * @return void
 	 */
@@ -234,9 +338,11 @@ class ProjectCreationListenerTest extends TestCase {
 		$notify->expects($this->once())->method('notifyFailure');
 
 		$objects = new CreationFakeObjectService();
+		$objects->stored['proj-1'] = ['uuid' => 'proj-1', 'name' => 'P'];
 		$listener = $this->listener($schemaMap, $ledger, $objects, $notify);
 
 		$listener->handle(new ObjectCreatedEvent($this->entity('schema-project', ['uuid' => 'proj-1', 'name' => 'P'])));
+		$this->drain($listener);
 
 		$this->assertSame('failed', $objects->saved['proj-1']['ledgerSyncStatus']);
 	}//end testFailedDispatchMarksFailedAndNotifies()
@@ -260,6 +366,33 @@ class ProjectCreationListenerTest extends TestCase {
 		$entity = $this->entity('schema-project', ['uuid' => 'proj-1', 'ledgerSyncStatus' => 'synced']);
 		$listener->handle(new ObjectCreatedEvent($entity));
 
+		$this->assertCount(0, $this->deferral->entries);
 		$this->assertCount(0, $objects->saved);
 	}//end testIdempotentForAlreadySyncedProject()
+
+	/**
+	 * The project having been deleted before the job runs is a no-op, not an
+	 * error (ADR-078 Rule 7 — at-least-once delivery reconciles against
+	 * current state).
+	 *
+	 * @return void
+	 */
+	public function testDeletedProjectIsAStaleNoOp(): void {
+		$schemaMap = $this->createMock(SchemaMapService::class);
+		$schemaMap->method('resolveEntityType')->willReturn('project');
+
+		$ledger = $this->createMock(ShillinqLedgerService::class);
+		$ledger->method('shouldDispatch')->willReturn(true);
+		$ledger->expects($this->never())->method('dispatchProjectEvent');
+
+		// `stored` deliberately empty: find() returns null.
+		$objects = new CreationFakeObjectService();
+		$listener = $this->listener($schemaMap, $ledger, $objects);
+
+		$listener->handle(new ObjectCreatedEvent($this->entity('schema-project', ['uuid' => 'proj-1'])));
+		$this->assertCount(1, $this->deferral->entries);
+
+		$this->drain($listener);
+		$this->assertCount(0, $objects->saved);
+	}//end testDeletedProjectIsAStaleNoOp()
 }//end class
