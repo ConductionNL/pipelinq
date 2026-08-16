@@ -197,6 +197,21 @@ class FakeWebhookService extends WebhookService {
 	public array $events = [];
 
 	/**
+	 * Deliberately does NOT call parent::__construct().
+	 *
+	 * In CI the real openregister is checked out, so this subclass binds to the
+	 * REAL `WebhookService`, whose constructor requires six collaborators — not
+	 * to pipelinq's constructor-less stub. Without this, `new FakeWebhookService()`
+	 * raises `ArgumentCountError: Too few arguments ... 0 passed`, which a bare
+	 * local run (stub only) can never surface.
+	 *
+	 * `dispatchEvent()` is fully overridden, so no parent state is ever read.
+	 * Same pattern as `FakeRefundTransitionEngine` below.
+	 */
+	public function __construct() {
+	}//end __construct()
+
+	/**
 	 * @param array<string, mixed> $payload
 	 */
 	public function dispatchEvent(object $_event, string $eventName, array $payload): void {

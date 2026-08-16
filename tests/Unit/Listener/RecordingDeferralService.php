@@ -61,6 +61,35 @@ class RecordingDeferralService extends ListenerDeferralService {
 	public array $dedupeKeys = [];
 
 	/**
+	 * Deliberately does NOT call parent::__construct().
+	 *
+	 * `ListenerDeferralService` is one of OpenRegister's CONCRETE classes, and
+	 * tests/bootstrap.php only pre-declares three stubs — everything else "falls
+	 * through to the real app". So in CI, where openregister IS checked out,
+	 * this subclass binds to the REAL service, whose constructor requires five
+	 * collaborators (IUserSession, OrganisationService, IJobList, IAppConfig,
+	 * LoggerInterface). Without an explicit constructor,
+	 * `new RecordingDeferralService()` dies with:
+	 *
+	 *   ArgumentCountError: Too few arguments to function
+	 *   OCA\OpenRegister\Service\Deferral\ListenerDeferralService::__construct(),
+	 *   0 passed
+	 *
+	 * and because tests/bootstrap.php `require_once`s THIS FILE during bootstrap,
+	 * the failure lands on every listener test at once. A bare local run only
+	 * ever has the constructor-less stub, so it cannot see this.
+	 *
+	 * The class docblock above already states that this double does not extend
+	 * the real buffering/enqueue behaviour; `defer()` is fully overridden and no
+	 * parent method is ever called, so the uninitialised parent state is never
+	 * read.
+	 *
+	 * @return void
+	 */
+	public function __construct() {
+	}//end __construct()
+
+	/**
 	 * Record one deferral instead of enqueueing it.
 	 *
 	 * @param string $jobClass FQCN of the ActorForwardedJob subclass.

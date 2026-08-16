@@ -203,6 +203,21 @@ class BookkeepingFakeWebhookService extends WebhookService {
 	public bool $fail = false;
 
 	/**
+	 * Deliberately does NOT call parent::__construct().
+	 *
+	 * In CI the real openregister is checked out, so this subclass binds to the
+	 * REAL `WebhookService`, whose constructor requires six collaborators — not
+	 * to pipelinq's constructor-less stub. Without this,
+	 * `new BookkeepingFakeWebhookService()` raises
+	 * `ArgumentCountError: Too few arguments ... 0 passed`, which a bare local
+	 * run (stub only) can never surface.
+	 *
+	 * `dispatchEvent()` is fully overridden, so no parent state is ever read.
+	 */
+	public function __construct() {
+	}//end __construct()
+
+	/**
 	 * Capture a dispatched CloudEvent.
 	 *
 	 * @param Event $_event The originating event.
