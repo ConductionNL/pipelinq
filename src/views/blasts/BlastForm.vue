@@ -77,6 +77,12 @@
 					:inputLabel="t('pipelinq', 'Connector source')"
 					label="label"
 					:loading="connectorSourcesLoading" />
+				<p
+					v-if="connectorSourcesError"
+					class="blast-form__error"
+					role="alert">
+					{{ connectorSourcesError }}
+				</p>
 			</section>
 
 			<!-- Step 5: schedule -->
@@ -210,6 +216,7 @@ export default {
 			segments: [],
 			templates: [],
 			connectorSources: [],
+			connectorSourcesError: '',
 			selectedSegment: null,
 			selectedTemplate: null,
 			selectedChannel: 'email',
@@ -395,12 +402,28 @@ export default {
 
 		/**
 		 * Load OpenConnector sources usable as email/SMS dispatch endpoints.
+		 *
+		 * OpenConnector's own `/api/sources` CRUD route was removed when its
+		 * Source/Mapping/Synchronization/Job entities moved onto OpenRegister's
+		 * generic object API — sources now live as OpenRegister objects in the
+		 * `openconnector` register, `source` schema. `type` is filtered to
+		 * `api` (the generic HTTP dispatch kind `CallService` sends through,
+		 * covering every vendor connector — Twilio/MessageBird/CM.com/WhatsApp
+		 * included); the Source schema has no distinct `email`/`sms` channel
+		 * value, so filtering on one would silently return zero results again.
+		 *
+		 * @spec exclude bug fix restoring already-intended behaviour after
+		 * OpenConnector's API moved — no new requirement introduced
 		 */
 		async loadConnectorSources() {
 			this.connectorSourcesLoading = true
+			this.connectorSourcesError = ''
 			try {
 				const { data } = await axios.get(
-					generateUrl('/apps/openconnector/api/sources?type=email,sms'),
+					generateUrl(
+						'/apps/openregister/api/objects/openconnector/source'
+							+ '?type=api&isEnabled=true&_limit=200',
+					),
 				)
 				const list = data?.results || data?.data || data || []
 				this.connectorSources = list.map((src) => ({
@@ -409,6 +432,10 @@ export default {
 				}))
 			} catch (_e) {
 				this.connectorSources = []
+				this.connectorSourcesError = this.t(
+					'pipelinq',
+					'Could not load connector sources. You can still create the blast and set a source later.',
+				)
 			} finally {
 				this.connectorSourcesLoading = false
 			}

@@ -4,7 +4,9 @@
  * Pipelinq MessageBirdSmsClient.
  *
  * MessageBird SMS provider implementation (now Bird.com). Delegates
- * actual HTTP transport to openconnector's SourceService.
+ * actual HTTP transport to OpenRegister's `MessageDispatchProvider` leaf
+ * (via {@see MessageDispatchTrait}), which routes through openconnector's
+ * `messagebird-sms` source. `SourceService` no longer exists in OpenConnector.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Provider

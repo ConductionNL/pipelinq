@@ -3,10 +3,12 @@
 /**
  * Pipelinq WhatsAppProviderClient.
  *
- * Abstraction over Meta Cloud API and BSP relay endpoints. Delegates
- * HTTP transport to openconnector's SourceService (ADR-005 — pipelinq
- * never holds a vendor SDK) and surfaces a small, test-friendly
- * surface to WhatsAppAdapter.
+ * Abstraction over Meta Cloud API and BSP relay endpoints. Delegates HTTP
+ * transport to OpenRegister's `MessageDispatchProvider` leaf (via
+ * {@see MessageDispatchTrait}), which routes through openconnector's
+ * `whatsapp-cloud-api` / `whatsapp-bsp` sources (ADR-005 — pipelinq never
+ * holds a vendor SDK; `SourceService` no longer exists in OpenConnector) and
+ * surfaces a small, test-friendly surface to WhatsAppAdapter.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service

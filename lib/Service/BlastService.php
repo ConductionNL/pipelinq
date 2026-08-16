@@ -6,8 +6,13 @@
  * Send-orchestration engine for the marketing-segmentation-and-blast
  * chain. Owns the lifecycle transition from `draft` Blast to a queue of
  * BlastDelivery rows and the throttled dispatch via openconnector. Never
- * touches provider SDKs or credentials — every send goes through
- * `OCA\OpenConnector\Service\SourceService::executeAction()` (ADR-005).
+ * touches provider SDKs or credentials — every send is a generic HTTP call
+ * through `OCA\OpenConnector\Service\CallService::call()` against the
+ * connector Source resolved from OpenRegister's `openconnector`/`source`
+ * register+schema (ADR-005). `SourceService` / `executeAction()` no longer
+ * exist in OpenConnector — its Source/Mapping/Synchronization/Job entities
+ * moved onto OpenRegister's generic object API when OpenConnector's CRUD
+ * was rebuilt on top of it.
  *
  * Reads Blast / BlastDelivery / CampaignTemplate schemas (member 01) via
  * `ObjectService`, consults `SegmentService` (member 02) for recipient
@@ -104,6 +109,18 @@ class BlastService {
 	 * ComplianceService before dispatch.
 	 */
 	private const STATUS_UNSUBSCRIBED_BEFORE_SEND = 'unsubscribed-before-send';
+
+	/**
+	 * OpenConnector's own OpenRegister register slug. Source objects
+	 * (formerly served by the now-removed `SourceService`) live here, not
+	 * in pipelinq's own `register` app-config register.
+	 */
+	private const OPENCONNECTOR_REGISTER_SLUG = 'openconnector';
+
+	/**
+	 * OpenConnector's Source schema slug within {@see OPENCONNECTOR_REGISTER_SLUG}.
+	 */
+	private const OPENCONNECTOR_SOURCE_SCHEMA_SLUG = 'source';
 
 	/**
 	 * Constructor.
@@ -303,13 +320,19 @@ class BlastService {
 	 * Dispatch queued BlastDeliveries for a Blast through openconnector.
 	 *
 	 * Reads queued BlastDelivery rows for `$blastId`, batches them
-	 * (default 50), renders the CampaignTemplate per recipient, then calls
-	 * the openconnector source's `send-mail` action. The returned
-	 * `providerId` is persisted on the BlastDelivery and the row
-	 * transitions to `sent`. Rate limit is read from the openconnector
-	 * source's `sendRateLimit` (preferred over the caller's
-	 * `$maxPerSecond` when the source value is smaller, so the source
-	 * config always wins) and enforced by sleeping between batches.
+	 * (default 50), renders the CampaignTemplate per recipient, then POSTs
+	 * the rendered payload to the openconnector Source's base URL via
+	 * `CallService::call()`. The returned `providerId` (parsed from the
+	 * provider's JSON response, when present) is persisted on the
+	 * BlastDelivery and the row transitions to `sent`. Rate limit is read
+	 * from the Source's `rateLimitLimit` / `rateLimitWindow` fields
+	 * (preferred over the caller's `$maxPerSecond` when the source value is
+	 * smaller, so the source config always wins) and enforced by sleeping
+	 * between batches.
+	 *
+	 * The Source is resolved ONCE per call (not per delivery) via
+	 * OpenRegister's `openconnector`/`source` register+schema and reused for
+	 * every delivery in the batch.
 	 *
 	 * Returns the count of deliveries successfully accepted by the
 	 * provider. Pipelinq code never reads provider credentials and never
@@ -349,8 +372,13 @@ class BlastService {
 			return 0;
 		}
 
+		$source = $this->resolveConnectorSource(connectorSourceId: $connectorSourceId);
+		if ($source === null) {
+			return 0;
+		}
+
 		$rateLimit = $this->resolveRateLimit(
-			connectorSourceId: $connectorSourceId,
+			source: $source,
 			callerRate: $maxPerSecond,
 		);
 		$batchSize = $this->resolveBatchSize();
@@ -368,6 +396,7 @@ class BlastService {
 				$result = $this->sendOneDelivery(
 					delivery: $delivery,
 					template: $template,
+					source: $source,
 					connectorSourceId: $connectorSourceId,
 				);
 				if ($result === false) {
@@ -1056,15 +1085,23 @@ class BlastService {
 	}//end persistQueuedDelivery()
 
 	/**
-	 * Issue one openconnector `send-mail` call and persist the result.
+	 * POST one rendered delivery to the openconnector Source's base URL via
+	 * `CallService::call()` and persist the result.
 	 *
 	 * @param array<string, mixed> $delivery Queued BlastDelivery row.
 	 * @param array<string, mixed> $template CampaignTemplate row.
-	 * @param string $connectorSourceId Source UUID.
+	 * @param array<string, mixed>|object $source Resolved openconnector Source
+	 *                                            entity (from {@see resolveConnectorSource()}).
+	 *                                            Always an `ObjectEntity` in
+	 *                                            production; an array in tests
+	 *                                            is tolerated for the same
+	 *                                            reason {@see toArray()} exists.
+	 * @param string $connectorSourceId Source UUID (for logging only —
+	 *                                  `$source` is already resolved).
 	 *
-	 * @return bool True when the provider accepted the call.
+	 * @return bool True when the provider accepted the call (2xx response).
 	 */
-	private function sendOneDelivery(array $delivery, array $template, string $connectorSourceId): bool {
+	private function sendOneDelivery(array $delivery, array $template, array|object $source, string $connectorSourceId): bool {
 		$rendered = $this->renderTemplate(template: $template, delivery: $delivery);
 
 		if ($this->firstPartyTrackingEnabled() === true) {
@@ -1074,35 +1111,39 @@ class BlastService {
 			);
 		}
 
-		$providerId = null;
-		try {
-			$sourceService = $this->container->get('OCA\\OpenConnector\\Service\\SourceService');
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastService.sendOneDelivery: SourceService unavailable',
-				['exception' => $e->getMessage()]
-			);
+		$callService = $this->getCallService();
+		if ($callService === null) {
 			return false;
 		}
 
 		try {
-			if (method_exists($sourceService, 'executeAction') === false) {
-				$this->logger->warning(
-					'BlastService.sendOneDelivery: SourceService lacks executeAction',
-					['connectorSourceId' => $connectorSourceId]
-				);
-				return false;
-			}
-
-			$result = $sourceService->executeAction($connectorSourceId, 'send-mail', $rendered);
-			$providerId = $this->extractProviderId(result: $result);
+			$callLog = $callService->call(
+				source: $source,
+				endpoint: '',
+				method: 'POST',
+				config: ['json' => $rendered],
+			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
-				'BlastService.sendOneDelivery: send-mail failed',
+				'BlastService.sendOneDelivery: connector call failed (transport)',
 				['connectorSourceId' => $connectorSourceId, 'exception' => $e->getMessage()]
 			);
 			return false;
 		}
+
+		$callLogData = $this->toArray(value: $callLog);
+		$statusCode = (int)($callLogData['statusCode'] ?? 0);
+		if ($statusCode < 200 || $statusCode >= 300) {
+			$this->logger->warning(
+				'BlastService.sendOneDelivery: connector source responded with a non-2xx status',
+				['connectorSourceId' => $connectorSourceId, 'statusCode' => $statusCode]
+			);
+			return false;
+		}
+
+		$providerId = $this->extractProviderId(
+			result: $this->decodeCallLogResponseBody(callLogData: $callLogData),
+		);
 
 		$payload = $delivery;
 		$payload['status'] = 'sent';
@@ -1119,6 +1160,118 @@ class BlastService {
 
 		return true;
 	}//end sendOneDelivery()
+
+	/**
+	 * Resolve the OpenConnector Source object addressed by `$connectorSourceId`.
+	 *
+	 * Sources are OpenRegister objects in the `openconnector` register /
+	 * `source` schema (OpenConnector's own CRUD, not pipelinq's `register`
+	 * app-config register) — `OCA\OpenConnector\Service\SourceService`, the
+	 * class this used to resolve through, no longer exists.
+	 *
+	 * @param string $connectorSourceId Source UUID.
+	 *
+	 * @return array<string, mixed>|object|null The resolved Source entity
+	 *                                           (an `ObjectEntity` in
+	 *                                           production), or null when
+	 *                                           OpenRegister is unavailable
+	 *                                           or the source does not exist.
+	 */
+	private function resolveConnectorSource(string $connectorSourceId): array|object|null {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return null;
+		}
+
+		try {
+			$source = $objectService->find(
+				id: $connectorSourceId,
+				register: self::OPENCONNECTOR_REGISTER_SLUG,
+				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'BlastService.resolveConnectorSource: lookup failed',
+				['connectorSourceId' => $connectorSourceId, 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		if ($source === null) {
+			$this->logger->warning(
+				'BlastService.resolveConnectorSource: connector source not found',
+				['connectorSourceId' => $connectorSourceId]
+			);
+			return null;
+		}
+
+		if (is_array($source) === false && is_object($source) === false) {
+			return null;
+		}
+
+		return $source;
+	}//end resolveConnectorSource()
+
+	/**
+	 * Resolve OpenConnector's `CallService` from the DI container.
+	 *
+	 * @return object|null The service, or null when OpenConnector is
+	 *                      unavailable or lacks `call()`.
+	 */
+	private function getCallService(): ?object {
+		try {
+			$callService = $this->container->get('OCA\\OpenConnector\\Service\\CallService');
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'BlastService.getCallService: OpenConnector CallService unavailable',
+				['exception' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		if (method_exists($callService, 'call') === false) {
+			$this->logger->error('BlastService.getCallService: CallService lacks call()');
+			return null;
+		}
+
+		return $callService;
+	}//end getCallService()
+
+	/**
+	 * Decode a CallLog's `response.body` for provider-id extraction.
+	 *
+	 * Mirrors OpenConnector's own `SourceCallNode::decodeBody()` convention:
+	 * a UTF-8 JSON-object body is decoded; anything else (non-UTF-8/base64,
+	 * non-JSON, empty) is left for {@see extractProviderId()} to fail
+	 * gracefully on.
+	 *
+	 * @param array<string, mixed> $callLogData CallLog payload
+	 *                                          (`getObject()`/`jsonSerialize()` shape).
+	 *
+	 * @return mixed Decoded JSON body, or null when it cannot be decoded.
+	 */
+	private function decodeCallLogResponseBody(array $callLogData): mixed {
+		$response = ($callLogData['response'] ?? null);
+		if (is_array($response) === false) {
+			return null;
+		}
+
+		$body = ($response['body'] ?? null);
+		if (is_string($body) === false || $body === '') {
+			return null;
+		}
+
+		if ((string)($response['encoding'] ?? 'UTF-8') !== 'UTF-8') {
+			return null;
+		}
+
+		$decoded = json_decode($body, true);
+		if (json_last_error() === JSON_ERROR_NONE && is_array($decoded) === true) {
+			return $decoded;
+		}
+
+		return null;
+	}//end decodeCallLogResponseBody()
 
 	/**
 	 * Whether first-party open/click tracking is enabled.
@@ -1184,9 +1337,9 @@ class BlastService {
 	}//end injectTrackingLinks()
 
 	/**
-	 * Extract a provider message id from a `send-mail` action result.
+	 * Extract a provider message id from a decoded connector response body.
 	 *
-	 * @param mixed $result Action result.
+	 * @param mixed $result Decoded response body.
 	 *
 	 * @return string|null Provider message id.
 	 *
@@ -1228,7 +1381,7 @@ class BlastService {
 	 * @param array<string, mixed> $template Template payload.
 	 * @param array<string, mixed> $delivery Delivery payload.
 	 *
-	 * @return array<string, mixed> Rendered send-mail action input.
+	 * @return array<string, mixed> Rendered request body for the connector call.
 	 */
 	private function renderTemplate(array $template, array $delivery): array {
 		$tokens = [
@@ -1254,18 +1407,18 @@ class BlastService {
 	/**
 	 * Resolve the effective rate limit (messages per second).
 	 *
-	 * The openconnector source's `sendRateLimit` always wins when it is
-	 * lower than the caller's value (so a tight provider limit cannot be
-	 * blown by a permissive caller). When neither is set, fall back to
+	 * The openconnector source's rate limit always wins when it is lower
+	 * than the caller's value (so a tight provider limit cannot be blown by
+	 * a permissive caller). When neither is set, fall back to
 	 * `DEFAULT_RATE_LIMIT_PER_SECOND` (100).
 	 *
-	 * @param string $connectorSourceId OC source UUID.
+	 * @param array<string, mixed>|object $source Resolved openconnector Source entity.
 	 * @param int $callerRate Caller's max-per-second.
 	 *
 	 * @return int Resolved rate limit (>=1).
 	 */
-	private function resolveRateLimit(string $connectorSourceId, int $callerRate): int {
-		$sourceRate = $this->readSourceRateLimit(connectorSourceId: $connectorSourceId);
+	private function resolveRateLimit(array|object $source, int $callerRate): int {
+		$sourceRate = $this->readSourceRateLimit(source: $source);
 		$candidate = self::DEFAULT_RATE_LIMIT_PER_SECOND;
 		if ($callerRate > 0) {
 			$candidate = $callerRate;
@@ -1279,32 +1432,41 @@ class BlastService {
 	}//end resolveRateLimit()
 
 	/**
-	 * Read the `sendRateLimit` from an openconnector source.
+	 * Read the effective per-second rate limit from an openconnector source.
 	 *
-	 * @param string $connectorSourceId OC source UUID.
+	 * The current Source schema has no single `sendRateLimit` field (that
+	 * name never existed on the migrated schema); it carries
+	 * `rateLimitLimit` (requests per window) and `rateLimitWindow` (window
+	 * size in seconds) instead. Both are optional admin-configured fields —
+	 * absent on most sources, in which case this returns null and the
+	 * caller's own rate wins.
 	 *
-	 * @return int|null Rate limit or null when unavailable.
+	 * @param array<string, mixed>|object $source Resolved openconnector Source entity.
+	 *
+	 * @return int|null Rate limit (messages/second) or null when unset.
 	 */
-	private function readSourceRateLimit(string $connectorSourceId): ?int {
-		try {
-			$sourceService = $this->container->get('OCA\\OpenConnector\\Service\\SourceService');
-		} catch (Throwable $e) {
+	private function readSourceRateLimit(array|object $source): ?int {
+		$limitValue = $this->readSourceField(source: $source, field: 'rateLimitLimit');
+		if ($limitValue === null || is_numeric($limitValue) === false) {
 			return null;
 		}
 
-		try {
-			if (method_exists($sourceService, 'find') === true) {
-				$source = $sourceService->find($connectorSourceId);
-				$value = $this->readSourceField(source: $source, field: 'sendRateLimit');
-				if ($value !== null) {
-					return (int)$value;
-				}
-			}
-		} catch (Throwable $e) {
+		$limit = (int)$limitValue;
+		if ($limit <= 0) {
 			return null;
 		}
 
-		return null;
+		$windowValue = $this->readSourceField(source: $source, field: 'rateLimitWindow');
+		$window = 1;
+		if ($windowValue !== null && is_numeric($windowValue) === true) {
+			$window = (int)$windowValue;
+		}
+
+		if ($window <= 0) {
+			$window = 1;
+		}
+
+		return max(1, (int)floor($limit / $window));
 	}//end readSourceRateLimit()
 
 	/**
