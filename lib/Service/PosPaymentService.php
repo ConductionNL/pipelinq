@@ -1123,6 +1123,14 @@ class PosPaymentService {
 			throw new OCSNotFoundException('Transaction not found');
 		}
 
+		// Availability established before the reach (ADR-083) — the lookup names
+		// OpenRegister only as a string, so without this the dependency is
+		// declared nowhere a reader or a gate can see it. Converting to a typed
+		// constructor property is the ADR's preferred shape: pipelinq#1160.
+		if (class_exists('\OCA\OpenRegister\Service\ObjectService') === false) {
+			throw new OCSNotFoundException('Transaction storage unavailable');
+		}
+
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 		} catch (Throwable $e) {

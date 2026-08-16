@@ -200,6 +200,16 @@ class CtiDispositionService {
 			return null;
 		}
 
+		// Availability established before the reach (ADR-083) — the lookup names
+		// OpenRegister only as a string, so without this the dependency is
+		// declared nowhere a reader or a gate can see it. This method already
+		// returns null when it cannot record a disposition, so the absent case
+		// takes that path. Converting to a typed constructor property is the
+		// ADR's preferred shape: pipelinq#1160.
+		if (class_exists('\OCA\OpenRegister\Service\ObjectService') === false) {
+			return null;
+		}
+
 		try {
 			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
 			$saved = $objectService->saveObject(

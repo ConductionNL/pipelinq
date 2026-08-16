@@ -90,6 +90,16 @@ class ActivityTimelineController extends Controller {
 	 * @return bool Whether the object could be verified.
 	 */
 	private function objectAccessible(string $entityId, string $userId): bool {
+		// Availability established before the reach (ADR-083) — the lookup names
+		// OpenRegister only as a string, so without this the dependency is
+		// declared nowhere a reader or a gate can see it. This path already
+		// treats an unavailable OpenRegister as "cannot verify" and denies, so
+		// the absent case returns false rather than throwing. Converting to a
+		// typed constructor property is the ADR's preferred shape: pipelinq#1160.
+		if (class_exists('\OCA\OpenRegister\Service\ObjectService') === false) {
+			return false;
+		}
+
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$object = $objectService->find($entityId, []);
