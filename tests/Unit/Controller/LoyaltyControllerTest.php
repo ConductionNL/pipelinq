@@ -35,6 +35,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\LoyaltyController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -192,10 +193,10 @@ class LoyaltyControllerTest extends TestCase {
 		$appConfig = $this->appConfig();
 		$logger = $this->createMock(LoggerInterface::class);
 		$accountService = new LoyaltyAccountService($appConfig, $logger,
-			objectService: $key,
+			objectService: $store,
 		);
 		$ledgerService = new PointsLedgerService($appConfig, $accountService, $logger,
-			objectService: $key,
+			objectService: $store,
 			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);
 
@@ -203,7 +204,7 @@ class LoyaltyControllerTest extends TestCase {
 			accountService: $accountService,
 			ledgerService: $ledgerService,
 			redemptionService: new RedemptionService($appConfig, $accountService, $ledgerService, $logger,
-			objectService: $key,
+			objectService: $store,
 		),
 			params: $params
 		);
@@ -221,7 +222,7 @@ class LoyaltyControllerTest extends TestCase {
 		return $this->buildController(
 			giftCardService: new GiftCardService($this->appConfig(),
 				$this->createMock(LoggerInterface::class),
-			objectService: $key,
+			objectService: $store,
 		),
 			params: $params
 		);
@@ -1524,13 +1525,51 @@ class LoyaltyObjectStoreFake extends ObjectService {
 	/**
 	 * Delete an object from a schema table.
 	 *
+	 * ⚠️ THE SIGNATURE IS THE CONTRACT, AND IT MOVED. This fake extends
+	 * `OCA\OpenRegister\Service\ObjectService`, so PHP checks compatibility at
+	 * CLASS-LOAD time — a drifted signature is a fatal that kills the whole
+	 * PHPUnit process before one test runs, which is why the failure reads
+	 * "Process completed with exit code 255" with no test output at all:
+	 *
+	 *   Declaration of ...LoyaltyObjectStoreFake::deleteObject(...) must be
+	 *   compatible with ...ObjectService::deleteObject(..., bool $_rbac = true,
+	 *   bool $_multitenancy = true, bool $_retentionSweep = false,
+	 *   ?IUser $currentUser = null, bool $permanent = false)
+	 *
+	 * The five trailing parameters are accepted and ignored on purpose: this fake
+	 * is an in-memory table, so there is no RBAC, tenancy, retention sweep or
+	 * soft-delete for them to steer. Declaring them keeps the fake loadable AND
+	 * keeps it honest — a caller that passes `permanent: true` here gets the same
+	 * removal it would get from a real store, because for a plain array they are
+	 * the same operation.
+	 *
 	 * @param string $uuid The object UUID.
 	 * @param string|int|null $register Unused.
 	 * @param string|int|null $schema The schema key.
+	 * @param bool $_rbac Unused — no authorization layer in an in-memory table.
+	 * @param bool $_multitenancy Unused — no tenancy layer in an in-memory table.
+	 * @param bool $_retentionSweep Unused — the fake keeps no retention state.
+	 * @param IUser|null $currentUser Unused — no acting identity to impersonate.
+	 * @param bool $permanent Unused — the fake has no soft-delete, so every
+	 *                        removal is already permanent.
 	 *
 	 * @return bool
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Every parameter after
+	 *   `$schema` exists to satisfy the parent's signature; see the note above.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Same — the flags are the
+	 *   parent's, not this fake's design.
 	 */
-	public function deleteObject(string $uuid, string|int|null $register = null, string|int|null $schema = null): bool {
+	public function deleteObject(
+		string $uuid,
+		string|int|null $register = null,
+		string|int|null $schema = null,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
+		?IUser $currentUser = null,
+		bool $permanent = false,
+	): bool {
 		unset($this->tables[(string)$schema][$uuid]);
 		return true;
 	}//end deleteObject()
