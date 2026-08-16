@@ -85,9 +85,7 @@ class RoutingControllerTest extends TestCase {
 	 *
 	 * Register/schema context is taken ONLY from `$config['filters']`, exactly
 	 * as ObjectService::prepareFindAllConfig() does; the remaining filter keys
-	 * are object-field equality filters; soft-deleted rows are excluded. The
-	 * `find()` signature is widened so both the upstream call shape
-	 * (`find($id, $extendArray)`) and the bundled stub's are accepted.
+	 * are object-field equality filters; soft-deleted rows are excluded.
 	 *
 	 * @return object The store.
 	 */
@@ -116,23 +114,24 @@ class RoutingControllerTest extends TestCase {
 				$this->store[$uuid] = $data;
 			}//end seed()
 
-			/**
-			 * Read one row.
-			 *
-			 * @param string|int $id Object id.
-			 * @param mixed $arg2 Extend list (upstream) or register (stub).
-			 * @param mixed $arg3 Files flag (upstream) or schema (stub).
-			 *
-			 * @return array<string, mixed>|object|null
-			 */
-			public function find(string|int $id, mixed $arg2 = '', mixed $arg3 = ''): array|object|null {
-				$row = ($this->store[(string)$id] ?? null);
-				if ($row === null || ($row['_deleted'] ?? null) !== null) {
-					return null;
-				}
-
-				return $row;
-			}//end find()
+			// ADR-084: this double used to override find() with a WIDENED signature
+			// — `find(string|int $id, mixed $arg2 = '', mixed $arg3 = ''):
+			// array|object|null` — so it could absorb two call shapes at once. The
+			// contract now declares
+			// `find(int|string, ?array, bool, string|int|null, string|int|null,
+			// bool, bool, bool, bool): ?ObjectEntityInterface`, and PHP refuses to
+			// DECLARE an incompatible override. That is a fatal at class-declaration
+			// time, not a failing test: the whole 2231-test run aborted at roughly
+			// 30% with "Declaration of ...@anonymous::find() must be compatible",
+			// and PHPUnit never printed a summary — so nothing reported how many
+			// tests had actually run.
+			//
+			// The override is deleted rather than re-widened because NOTHING calls
+			// it: `git grep '->find('` over this file and over RoutingController
+			// matches only the declaration itself. The bundled stub's own
+			// `find(): ?ObjectEntityInterface` is inherited instead. Re-widening
+			// would only reintroduce the drift, since the contract is the thing that
+			// moved.
 
 			/**
 			 * Query rows.

@@ -43,6 +43,13 @@ class ContactmomentServiceTest extends TestCase {
 	private ContactmomentService $service;
 
 	/**
+	 * Mock ObjectService contract.
+	 *
+	 * @var ObjectServiceInterface
+	 */
+	private ObjectServiceInterface $objectService;
+
+	/**
 	 * Mock container.
 	 *
 	 * @var ContainerInterface
@@ -76,15 +83,31 @@ class ContactmomentServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->container = $this->createMock(ContainerInterface::class);
 		$this->ticketService = $this->createMock(TicketService::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		// ADR-084: this read `objectService: $objectService` — an undefined local,
+		// so PHP passed null into a non-nullable ObjectServiceInterface parameter
+		// and all 19 tests in this class died in setUp() with a TypeError before
+		// asserting anything.
+		$this->objectService = $this->createMock(ObjectServiceInterface::class);
+
+		// STILL OWED, and deliberately not fixed here: three tests below drive
+		// this container mock, which the service no longer consults —
+		// testRecordOutboundMessageWritesContactmomentTicket,
+		// ...ReturnsTheUuidWhenSaveReturnsAnEntity and
+		// testGetObjectServiceThrowsWhenUnavailable. The first two need their
+		// duck-typed doubles rebuilt against the contract; the third asserts a
+		// throw-on-unavailable path that ADR-084 deleted, so it is a decision
+		// (delete the test, or restore the behaviour) rather than a repair. The
+		// mock stays initialised so those three fail on their own merits instead
+		// of on an uninitialised property.
+		$this->container = $this->createMock(ContainerInterface::class);
 
 		$this->service = new ContactmomentService($this->ticketService,
 			$this->groupManager,
 			$this->logger,
-			objectService: $objectService,
+			objectService: $this->objectService,
 		);
 	}//end setUp()
 

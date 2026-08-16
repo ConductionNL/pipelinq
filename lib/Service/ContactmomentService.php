@@ -222,16 +222,17 @@ class ContactmomentService {
 	 * @return object|null The object service, or null.
 	 */
 	private function objectServiceLoose(): ?object {
-		try {
-		} catch (\Throwable $e) {
-			return null;
-		}
-
-		if (is_object($service) === false || method_exists($service, 'saveObject') === false) {
-			return null;
-		}
-
-		return $service;
+		// ADR-084 removed the container lookup that used to populate $service and
+		// left an EMPTY try block behind. `$service` was then an undefined
+		// variable, so `is_object($service)` was false and this method returned
+		// NULL unconditionally — every outbound message logged
+		// "audit skipped (OpenRegister unavailable)" and recorded nothing, on an
+		// instance where OpenRegister was present and working.
+		//
+		// The contract is injected non-nullably now, so "loosely" no longer means
+		// "might not be loadable"; it only means the caller treats the audit as
+		// best-effort, which the try/catch around saveObject() still provides.
+		return $this->objectService;
 	}//end objectServiceLoose()
 
 	/**
