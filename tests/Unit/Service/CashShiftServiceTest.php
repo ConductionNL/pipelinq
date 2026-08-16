@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\CashShiftService;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -100,7 +101,7 @@ class CashFakeObjectService {
 /**
  * A fake WebhookService capturing dispatched CloudEvents.
  */
-class CashFakeWebhookService {
+class CashFakeWebhookService extends WebhookService {
 	/** @var array<int, array{eventName: string, payload: array<string, mixed>}> */
 	public array $events = [];
 
@@ -209,10 +210,10 @@ class CashShiftServiceTest extends TestCase {
 			throw new \RuntimeException('unknown service ' . $id);
 		});
 
-		$this->service = new CashShiftService($container,
-			$this->appConfig,
+		$this->service = new CashShiftService($this->appConfig,
 			$policy,
 			$this->createMock(LoggerInterface::class),
+			webhookService: $this->webhooks,
 			objectService: $key,
 			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);

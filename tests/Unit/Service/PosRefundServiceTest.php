@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Lifecycle\GuardResult;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
+use OCA\OpenRegister\Service\WebhookService;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Service\PosRefundService;
@@ -98,7 +99,7 @@ class FakeObjectService {
 /**
  * A fake WebhookService capturing dispatched CloudEvents.
  */
-class FakeWebhookService {
+class FakeWebhookService extends WebhookService {
 	/** @var array<int, array{eventName: string, payload: array<string, mixed>}> */
 	public array $events = [];
 
@@ -254,9 +255,9 @@ class PosRefundServiceTest extends TestCase {
 			throw new \RuntimeException('unknown service ' . $id);
 		});
 
-		$this->service = new PosRefundService($container,
-			$this->appConfig,
+		$this->service = new PosRefundService($this->appConfig,
 			$logger,
+			webhookService: $this->webhooks,
 			objectService: $key,
 			transitionEngine: $this->createMock(TransitionEngine::class),
 		);

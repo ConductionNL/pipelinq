@@ -649,13 +649,12 @@ class ContactSyncControllerTest extends TestCase {
 		$container->method('get')->willReturn($objectService);
 
 		return new ContactSyncService($contactsManager,
-			new ContactImportService($appConfig, $container, new ContactDataBuilder(),
-			objectService: $objectService,
-		),
+			new ContactImportService($appConfig, new ContactDataBuilder(),
+				objectService: $objectService,
+			),
 			$this->createMock(ContactVcardService::class),
 			$this->createMock(ContactLinkedUidsService::class),
 			$appConfig,
-			$container,
 			objectService: $objectService,
 		);
 	}//end realSyncService()

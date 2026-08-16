@@ -563,8 +563,7 @@ class PosCustomerControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$service = new PosCustomerLinkService($container,
-			$appConfig,
+		$service = new PosCustomerLinkService($appConfig,
 			$this->createMock(LoggerInterface::class),
 			objectService: $objectService,
 		);

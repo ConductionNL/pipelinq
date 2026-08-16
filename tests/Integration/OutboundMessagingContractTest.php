@@ -127,9 +127,9 @@ class OutboundMessagingContractTest extends TestCase {
 		);
 
 		$contactmomentService = new ContactmomentService(
-			new TicketService($this->container, $appConfig, $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
-		),
+			new TicketService($appConfig, $logger,
+				objectService: $this->createMock(ObjectServiceInterface::class),
+			),
 			$this->createMock(IGroupManager::class),
 			$logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
@@ -265,9 +265,9 @@ class OutboundMessagingContractTest extends TestCase {
 		$store = $this->objectService;
 		$container = $this->createMock(ContainerInterface::class);
 		$contactmomentService = new ContactmomentService(
-			new TicketService($container, $appConfig, $logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
-		),
+			new TicketService($appConfig, $logger,
+				objectService: $this->createMock(ObjectServiceInterface::class),
+			),
 			$this->createMock(IGroupManager::class),
 			$logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
