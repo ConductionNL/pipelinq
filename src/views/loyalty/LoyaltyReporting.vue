@@ -159,6 +159,9 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
+		 */
 		programmeOptions() {
 			return this.programmes.map((p) => ({
 				id: p.id,
@@ -194,6 +197,9 @@ export default {
 			}).format(Number(amount || 0))
 		},
 
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
+		 */
 		async loadProgrammes() {
 			try {
 				const url = generateUrl(

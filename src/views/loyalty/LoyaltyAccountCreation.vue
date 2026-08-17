@@ -151,6 +151,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 */
 		async enroll() {
 			if (!this.canSubmit) {
 				return
