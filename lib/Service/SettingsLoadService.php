@@ -313,7 +313,8 @@ class SettingsLoadService {
 	 */
 	private function applySchemaConfig(array $schemaMap): void {
 		foreach (self::SCHEMA_SLUGS as $slug) {
-			if (isset($schemaMap[$slug]) === false || $schemaMap[$slug] === null) {
+			// A null value is not isset(), so this is already the whole guard.
+			if (isset($schemaMap[$slug]) === false) {
 				continue;
 			}
 
