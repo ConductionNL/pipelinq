@@ -5,7 +5,7 @@
  *
  * Owns the Redemption lifecycle (gereserveerd → gebruikt | vervallen | geannuleerd).
  * Atomically debits points via PointsLedgerService and generates a unique
- * beloningCode. Cancellation refunds points.
+ * rewardCode. Cancellation refunds points.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service

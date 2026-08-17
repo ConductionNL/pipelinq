@@ -6,7 +6,7 @@
  * Aggregates programme economics, tier distribution, breakage/redemption ratios,
  * outstanding-points liability (IFRS 15 / RJ 270, REQ-LOY-009), and an expiry
  * forecast. All KPIs read from the immutable PointsLedgerEntry collection —
- * denormalised KlantLoyaltyAccount balances are NOT trusted as source.
+ * denormalised CustomerLoyaltyAccount balances are NOT trusted as source.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -60,8 +60,8 @@ class LoyaltyReportingService {
 	 * @param PointsLedgerService $ledgerService The ledger service.
 	 * @param LoyaltyProgrammeService $programmeService The programme service.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ObjectServiceInterface $objectService OpenRegister object service.
-	 * @param AggregationRunner $aggregationRunner OpenRegister aggregation runner.
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-084).
+	 * @param AggregationRunner $aggregationRunner Runs the reporting aggregations.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -459,7 +459,7 @@ class LoyaltyReportingService {
 	}//end getAggregationRunner()
 
 	/**
-	 * Resolve the register + KlantLoyaltyAccount schema refs for aggregation.
+	 * Resolve the register + CustomerLoyaltyAccount schema refs for aggregation.
 	 *
 	 * Mirrors the refs LoyaltyAccountService uses for its account findAll calls
 	 * so the grouped COUNT aggregates the same object set.
@@ -472,7 +472,7 @@ class LoyaltyReportingService {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'klantLoyaltyAccount_schema', '');
 		if ($register === '' || $schema === '') {
-			throw new RuntimeException('KlantLoyaltyAccount register/schema is not configured.');
+			throw new RuntimeException('CustomerLoyaltyAccount register/schema is not configured.');
 		}
 
 		return [$register, $schema];

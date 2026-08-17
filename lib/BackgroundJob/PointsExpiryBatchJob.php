@@ -193,7 +193,7 @@ class PointsExpiryBatchJob extends TimedJob {
 						'noticeDays' => $notice,
 						'accountId' => $accountId,
 					],
-					objectType: 'klantLoyaltyAccount',
+					objectType: 'customerLoyaltyAccount',
 					objectId: $accountId
 				);
 			} catch (Throwable $e) {

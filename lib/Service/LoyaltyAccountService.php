@@ -3,8 +3,8 @@
 /**
  * Pipelinq LoyaltyAccountService.
  *
- * Lifecycle for KlantLoyaltyAccount: create / read / disable / soft-delete (GDPR).
- * Composite uniqueness on (klantId, programmeId) is enforced at the application
+ * Lifecycle for CustomerLoyaltyAccount: create / read / disable / soft-delete (GDPR).
+ * Composite uniqueness on (customerId, programmeId) is enforced at the application
  * layer via getOrCreateAccount which queries ObjectService::findAll before insert.
  *
  * @category Service
@@ -36,7 +36,7 @@ use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
- * KlantLoyaltyAccount lifecycle service.
+ * CustomerLoyaltyAccount lifecycle service.
  *
  * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
  */
@@ -56,7 +56,7 @@ class LoyaltyAccountService {
 	}//end __construct()
 
 	/**
-	 * Create a new KlantLoyaltyAccount.
+	 * Create a new CustomerLoyaltyAccount.
 	 *
 	 * @param string $customerId The Nextcloud contact UID.
 	 * @param string $programmeId The programme UUID.
@@ -355,7 +355,7 @@ class LoyaltyAccountService {
 	private function persist(array $payload, ?string $uuid): array {
 		[$register, $schema] = $this->config();
 		if ($register === '' || $schema === '') {
-			throw new RuntimeException('KlantLoyaltyAccount schema is not configured.');
+			throw new RuntimeException('CustomerLoyaltyAccount schema is not configured.');
 		}
 
 		$saved = $this->getObjectService()->saveObject(
@@ -370,7 +370,7 @@ class LoyaltyAccountService {
 	}//end persist()
 
 	/**
-	 * Resolve register + klantLoyaltyAccount schema IDs.
+	 * Resolve register + customerLoyaltyAccount schema IDs.
 	 *
 	 * Fails closed: '' on either id means "unconfigured", and every caller
 	 * refuses the OpenRegister call on it. An empty id must never be handed to

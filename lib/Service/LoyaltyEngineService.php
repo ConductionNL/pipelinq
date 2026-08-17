@@ -5,7 +5,7 @@
  *
  * Orchestrates points awarding on a POS-transaction trigger: looks up the
  * customer's accounts, evaluates rules, applies tier multiplier, enforces
- * maxPerKlantPerPeriode, credits points, and triggers tier reclassification.
+ * maxPerCustomerPerPeriod, credits points, and triggers tier reclassification.
  *
  * Failures NEVER halt the POS flow (REQ-LOY-002-05); errors are logged.
  *
@@ -57,7 +57,7 @@ class LoyaltyEngineService {
 	 * @param TierService $tierService The tier service.
 	 * @param IEventDispatcher $eventDispatcher The dispatcher.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-084).
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

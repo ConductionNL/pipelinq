@@ -140,6 +140,15 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
     <repair-steps>
         <post-migration>
+            <!--
+                BEFORE InitializeSettings, which imports the register. OpenRegister
+                matches an existing schema by (application, slug) and CREATES a new one
+                when that misses, so renaming a slug in the shipped fragment does not
+                rename anything — it orphans the old schema and every object already
+                written against it, silently. Renaming the row first means the import
+                updates the schema in place and keeps its id, and its shard table.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameLoyaltyAccountSchemaSlug</step>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
             <!--
                 After InitializeSettings imports the register: the schema edit

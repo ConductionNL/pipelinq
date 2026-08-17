@@ -4,8 +4,8 @@
  * Pipelinq PointsRuleEngine.
  *
  * Evaluates PointsRule objects for a given trigger and context. Supports
- * conditie filters (category, excludeCategory, segment, dayOfWeek, timeRange,
- * channel) and formule types (fixed, percentage, stepped). Highest-priority
+ * condition filters (category, excludeCategory, segment, dayOfWeek, timeRange,
+ * channel) and formula types (fixed, percentage, stepped). Highest-priority
  * matching rule wins (non-cumulative); tier multipliers are applied AFTER the
  * formula and BEFORE rounding (REQ-LOY-002, REQ-LOY-003).
  *
@@ -46,7 +46,7 @@ class PointsRuleEngine {
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-084).
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

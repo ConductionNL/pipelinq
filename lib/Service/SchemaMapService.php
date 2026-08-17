@@ -60,7 +60,10 @@ class SchemaMapService {
 		'loyaltyProgramme_schema' => 'loyaltyProgramme',
 		'pointsRule_schema' => 'pointsRule',
 		'tierRule_schema' => 'tierRule',
-		'klantLoyaltyAccount_schema' => 'klantLoyaltyAccount',
+		// The entity type follows the renamed slug; the app-config KEY deliberately
+		// does not. See SettingsLoadService::SCHEMA_CONFIG_KEYS — the key is live
+		// persisted state and stays until a migration moves it.
+		'klantLoyaltyAccount_schema' => 'customerLoyaltyAccount',
 		'pointsLedgerEntry_schema' => 'pointsLedgerEntry',
 		'redemptionOption_schema' => 'redemptionOption',
 		'redemption_schema' => 'redemption',

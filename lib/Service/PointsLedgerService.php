@@ -3,10 +3,10 @@
 /**
  * Pipelinq PointsLedgerService.
  *
- * Append-only ledger for KlantLoyaltyAccount points movements (credit, debit,
+ * Append-only ledger for CustomerLoyaltyAccount points movements (credit, debit,
  * expiry, adjustment, refund). Ledger entries are immutable after creation; this
  * service NEVER calls updateObject on a PointsLedgerEntry. Account balance is
- * derived from the ledger and denormalised onto KlantLoyaltyAccount via
+ * derived from the ledger and denormalised onto CustomerLoyaltyAccount via
  * LoyaltyAccountService::updateBalances.
  *
  * @category Service
@@ -59,8 +59,8 @@ class PointsLedgerService {
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoyaltyAccountService $accountService The loyalty account service.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ObjectServiceInterface $objectService OpenRegister object service.
-	 * @param AggregationRunner $aggregationRunner OpenRegister ad-hoc aggregation runner (ledger balance sums).
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-084).
+	 * @param AggregationRunner $aggregationRunner Runs the balance aggregations.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

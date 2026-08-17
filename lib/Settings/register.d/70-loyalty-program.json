@@ -6,7 +6,7 @@
           "loyaltyProgramme",
           "pointsRule",
           "tierRule",
-          "klantLoyaltyAccount",
+          "customerLoyaltyAccount",
           "pointsLedgerEntry",
           "redemptionOption",
           "redemption",
@@ -21,7 +21,7 @@
         "title": "Loyalty Programme",
         "version": "1.0.0",
         "summary": "A native loyalty programme owned by a brand/retailer with configurable points rules, tier rules and redemption options.",
-        "description": "A LoyaltyProgramme is the top-level container for one brand/retailer's loyalty economics. It owns its own PointsRule, TierRule and RedemptionOption collections; KlantLoyaltyAccount links a customer (klantId) to exactly one programme. Status transitions from concept→actief are validated against rule and redemption-option presence (REQ-LOY-001).",
+        "description": "A LoyaltyProgramme is the top-level container for one brand/retailer's loyalty economics. It owns its own PointsRule, TierRule and RedemptionOption collections; CustomerLoyaltyAccount links a customer (customerId) to exactly one programme. Status transitions from concept→actief are validated against rule and redemption-option presence (REQ-LOY-001).",
         "@type": "LoyaltyProgramme",
         "configuration": {
           "x-openregister-lifecycle": {
@@ -79,7 +79,7 @@
             "description": "Display name of the programme.",
             "title": "Naam"
           },
-          "merk": {
+          "brand": {
             "type": "string",
             "description": "Brand or retailer that owns the programme.",
             "title": "Merk"
@@ -113,7 +113,7 @@
             "description": "Programme lifecycle status.",
             "title": "Status"
           },
-          "valuta": {
+          "currency": {
             "type": "string",
             "default": "EUR",
             "description": "ISO 4217 currency code for spend-based rules and liability.",
@@ -177,7 +177,7 @@
         "title": "Points Rule",
         "version": "1.0.0",
         "summary": "A trigger-based rule that awards points; conditions filter applicability, formula derives the amount.",
-        "description": "PointsRule defines when (trigger), under what conditions (JSON conditie), and how many points (JSON formule) are awarded. Rules are evaluated in priority order; the highest-priority matching rule wins (non-cumulative). See REQ-LOY-002.",
+        "description": "PointsRule defines when (trigger), under what conditions (JSON condition), and how many points (JSON formula) are awarded. Rules are evaluated in priority order; the highest-priority matching rule wins (non-cumulative). See REQ-LOY-002.",
         "@type": "PointsRule",
         "required": [
           "programmeId",
@@ -228,7 +228,7 @@
           "maxPerCustomerPerPeriod": {
             "type": "integer",
             "description": "Optional cap on points awarded to a single customer per period (null = no cap).",
-            "title": "Max Per Klant Per Periode"
+            "title": "Max Per Customer Per Period"
           },
           "maxPerCustomerPeriod": {
             "type": "string",
@@ -239,8 +239,8 @@
               "year"
             ],
             "default": "day",
-            "description": "Window used to evaluate maxPerKlantPerPeriode.",
-            "title": "Max Per Klant Periode"
+            "description": "Window used to evaluate maxPerCustomerPerPeriod.",
+            "title": "Max Per Customer Period"
           },
           "validFrom": {
             "type": "string",
@@ -325,7 +325,7 @@
             ],
             "default": "immediate",
             "description": "Upgrade timing.",
-            "title": "Upgrade Beleid"
+            "title": "Upgrade Policy"
           },
           "downgradePolicy": {
             "type": "string",
@@ -335,17 +335,17 @@
               "end_of_quarter"
             ],
             "description": "Downgrade timing (null = no downgrade).",
-            "title": "Downgrade Beleid"
+            "title": "Downgrade Policy"
           }
         }
       },
-      "klantLoyaltyAccount": {
-        "slug": "klantLoyaltyAccount",
+      "customerLoyaltyAccount": {
+        "slug": "customerLoyaltyAccount",
         "title": "Customer Loyalty Account",
         "version": "1.0.0",
         "summary": "A customer's enrollment in a loyalty programme; tracks balances, tier, and opt-in.",
-        "description": "KlantLoyaltyAccount links one customer (klantId, references a Nextcloud contact UID) to one LoyaltyProgramme. currentBalance and lifetimePoints are denormalised for query performance; the immutable PointsLedgerEntry collection is the source of truth (REQ-LOY-002, REQ-LOY-005). Composite uniqueness on (klantId, programmeId).",
-        "@type": "KlantLoyaltyAccount",
+        "description": "CustomerLoyaltyAccount links one customer (customerId, references a Nextcloud contact UID) to one LoyaltyProgramme. currentBalance and lifetimePoints are denormalised for query performance; the immutable PointsLedgerEntry collection is the source of truth (REQ-LOY-002, REQ-LOY-005). Composite uniqueness on (customerId, programmeId).",
+        "@type": "CustomerLoyaltyAccount",
         "required": [
           "customerId",
           "programmeId"
@@ -359,7 +359,7 @@
           "customerId": {
             "type": "string",
             "description": "Nextcloud contact UID (OCP\\Contacts\\IManager link).",
-            "title": "Klant ID"
+            "title": "Customer ID"
           },
           "programmeId": {
             "type": "string",
@@ -369,7 +369,7 @@
           "currentBalance": {
             "type": "integer",
             "default": 0,
-            "description": "Denormalised current points balance. Source of truth = sum of PointsLedgerEntry.aantal.",
+            "description": "Denormalised current points balance. Source of truth = sum of PointsLedgerEntry.quantity.",
             "title": "Current Balance"
           },
           "lifetimePoints": {
@@ -448,7 +448,7 @@
         "title": "Points Ledger Entry",
         "version": "1.0.0",
         "summary": "Immutable, append-only entry recording every points movement (credit, debit, expiry, adjustment).",
-        "description": "PointsLedgerEntry is the authoritative ledger of points movements. Entries are immutable (write-once, no UPDATE/DELETE except for GDPR anonymisation of klantId). balansNa records the running balance after the entry was applied. brondocument links to the originating event (POS transaction, redemption, expiry batch, manual adjustment). See REQ-LOY-002, REQ-LOY-005, REQ-LOY-009.",
+        "description": "PointsLedgerEntry is the authoritative ledger of points movements. Entries are immutable (write-once, no UPDATE/DELETE except for GDPR anonymisation of customerId). balanceAfter records the running balance after the entry was applied. sourceDocument links to the originating event (POS transaction, redemption, expiry batch, manual adjustment). See REQ-LOY-002, REQ-LOY-005, REQ-LOY-009.",
         "@type": "PointsLedgerEntry",
         "required": [
           "accountId",
@@ -464,13 +464,13 @@
           },
           "accountId": {
             "type": "string",
-            "description": "FK to KlantLoyaltyAccount.",
+            "description": "FK to CustomerLoyaltyAccount.",
             "title": "Account ID"
           },
           "customerId": {
             "type": "string",
-            "description": "Denormalised klantId for GDPR queries; anonymised on deletion.",
-            "title": "Klant ID"
+            "description": "Denormalised customerId for GDPR queries; anonymised on deletion.",
+            "title": "Customer ID"
           },
           "type": {
             "type": "string",
@@ -492,7 +492,7 @@
           "balanceAfter": {
             "type": "integer",
             "description": "Running balance AFTER this entry was applied.",
-            "title": "Balans Na"
+            "title": "Balance After"
           },
           "sourceDocument": {
             "type": "object",
@@ -522,7 +522,7 @@
         "title": "Redemption Option",
         "version": "1.0.0",
         "summary": "A reward customers can buy with points (discount, free product, gift card, partner voucher).",
-        "description": "RedemptionOption defines what a customer can claim with points. kostenInPunten is the cost in points; beloningType/beloningWaarde define the reward; perKlantLimiet caps repeat redemptions. See REQ-LOY-004.",
+        "description": "RedemptionOption defines what a customer can claim with points. costInPoints is the cost in points; rewardType/rewardValue define the reward; perCustomerLimit caps repeat redemptions. See REQ-LOY-004.",
         "@type": "RedemptionOption",
         "required": [
           "programmeId",
@@ -573,7 +573,7 @@
             "oneOf": [
               {
                 "type": "number",
-                "title": "Beloning Waarde (bedrag)",
+                "title": "Reward Value (amount)",
                 "description": "Numeric reward value, e.g. a discount amount or percentage."
               },
               {
@@ -608,7 +608,7 @@
           "perCustomerLimit": {
             "type": "integer",
             "description": "Max times one customer can redeem this option (null = unlimited).",
-            "title": "Per Klant Limiet"
+            "title": "Per Customer Limit"
           }
         }
       },
@@ -617,7 +617,7 @@
         "title": "Redemption",
         "version": "1.0.0",
         "summary": "A claimed reward with status lifecycle (gereserveerd → gebruikt | vervallen | geannuleerd).",
-        "description": "Redemption tracks one customer's claim against a RedemptionOption. On initiate, points are debited atomically (immutable PointsLedgerEntry of type 'debit') and a unique beloningCode is issued. Status transitions through gereserveerd → gebruikt (used) | vervallen (expired) | geannuleerd (cancelled, points refunded). See REQ-LOY-004.",
+        "description": "Redemption tracks one customer's claim against a RedemptionOption. On initiate, points are debited atomically (immutable PointsLedgerEntry of type 'debit') and a unique rewardCode is issued. Status transitions through gereserveerd → gebruikt (used) | vervallen (expired) | geannuleerd (cancelled, points refunded). See REQ-LOY-004.",
         "@type": "Redemption",
         "required": [
           "accountId",
@@ -633,13 +633,13 @@
           },
           "accountId": {
             "type": "string",
-            "description": "FK to KlantLoyaltyAccount.",
+            "description": "FK to CustomerLoyaltyAccount.",
             "title": "Account ID"
           },
           "customerId": {
             "type": "string",
             "description": "Denormalised for GDPR queries.",
-            "title": "Klant ID"
+            "title": "Customer ID"
           },
           "optionId": {
             "type": "string",
@@ -735,15 +735,15 @@
           },
           "initialBalance": {
             "type": "number",
-            "title": "Initiale Balans",
-            "description": "Initiale Balans for this record."
+            "title": "Initial Balance",
+            "description": "Initial Balance for this record."
           },
           "currentBalance": {
             "type": "number",
-            "title": "Current Balans",
-            "description": "Current Balans for this record."
+            "title": "Current Balance",
+            "description": "Current Balance for this record."
           },
-          "valuta": {
+          "currency": {
             "type": "string",
             "default": "EUR",
             "title": "Valuta",
@@ -769,7 +769,7 @@
           },
           "issuedIn": {
             "type": "string",
-            "description": "Recipient label or klantId.",
+            "description": "Recipient label or customerId.",
             "title": "Uitgegeven Aan"
           },
           "expiresOn": {
@@ -790,8 +790,8 @@
           },
           "customerId": {
             "type": "string",
-            "description": "Optional owner klantId (for GDPR cascading).",
-            "title": "Klant ID"
+            "description": "Optional owner customerId (for GDPR cascading).",
+            "title": "Customer ID"
           }
         }
       },
@@ -840,7 +840,7 @@
           "balanceAfter": {
             "type": "number",
             "description": "Running balance after the movement.",
-            "title": "Balans Na"
+            "title": "Balance After"
           },
           "timestamp": {
             "type": "string",

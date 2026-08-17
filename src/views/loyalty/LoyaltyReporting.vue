@@ -159,10 +159,13 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
+		 */
 		programmeOptions() {
 			return this.programmes.map((p) => ({
 				id: p.id,
-				label: p.name || p.merk || p.id,
+				label: p.name || p.brand || p.id,
 			}))
 		},
 
@@ -194,6 +197,9 @@ export default {
 			}).format(Number(amount || 0))
 		},
 
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-008
+		 */
 		async loadProgrammes() {
 			try {
 				const url = generateUrl(
@@ -205,7 +211,7 @@ export default {
 				this.programmes = list.map((p) => ({
 					id: p['@self']?.id || p.id || p.programmeId,
 					name: p.name,
-					merk: p.merk,
+					brand: p.brand,
 				}))
 				if (this.programmes.length && !this.selectedProgramme) {
 					this.selectedProgramme = this.programmeOptions[0]
