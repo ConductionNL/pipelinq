@@ -36,8 +36,12 @@
 									type="number"
 									min="1"
 									class="inline-input inline-input--qty"
-									:aria-label="t('pipelinq', 'Quantity for {product}', { product: getProductName(item.product) })"
-									@change="updateLineItem(item)">
+									:aria-label="
+										t('pipelinq', 'Quantity for {product}', {
+											product: getProductName(item.product),
+										})
+									"
+									@change="updateLineItem(item)" />
 							</td>
 							<td>
 								<input
@@ -46,8 +50,12 @@
 									min="0"
 									step="0.01"
 									class="inline-input inline-input--price"
-									:aria-label="t('pipelinq', 'Unit price for {product}', { product: getProductName(item.product) })"
-									@change="updateLineItem(item)">
+									:aria-label="
+										t('pipelinq', 'Unit price for {product}', {
+											product: getProductName(item.product),
+										})
+									"
+									@change="updateLineItem(item)" />
 							</td>
 							<td>
 								<input
@@ -56,8 +64,12 @@
 									min="0"
 									step="0.01"
 									class="inline-input inline-input--discount"
-									:aria-label="t('pipelinq', 'Discount for {product}', { product: getProductName(item.product) })"
-									@change="updateLineItem(item)">
+									:aria-label="
+										t('pipelinq', 'Discount for {product}', {
+											product: getProductName(item.product),
+										})
+									"
+									@change="updateLineItem(item)" />
 							</td>
 							<td class="total-cell">
 								{{ formatCurrency(calculateTotal(item)) }}
@@ -68,11 +80,17 @@
 									type="text"
 									class="inline-input inline-input--notes"
 									:placeholder="t('pipelinq', 'Notes...')"
-									:aria-label="t('pipelinq', 'Notes for {product}', { product: getProductName(item.product) })"
-									@change="updateNotes(item)">
+									:aria-label="
+										t('pipelinq', 'Notes for {product}', {
+											product: getProductName(item.product),
+										})
+									"
+									@change="updateNotes(item)" />
 							</td>
 							<td>
-								<NcButton variant="tertiary" @click="removeLineItem(item)">
+								<NcButton
+									variant="tertiary"
+									@click="removeLineItem(item)">
 									{{ t('pipelinq', 'Remove') }}
 								</NcButton>
 							</td>
@@ -95,11 +113,19 @@
 
 			<!-- Auto-calc hint -->
 			<div v-if="hasManualOverride" class="auto-calc-hint">
-				{{ t('pipelinq', 'Lead value is manually set to {manual}. Calculated total: {calculated}.', {
-					manual: formatCurrency(leadValue),
-					calculated: formatCurrency(grandTotal),
-				}) }}
-				<NcButton variant="tertiary" @click="$emit('sync-value', grandTotal)">
+				{{
+					t(
+						'pipelinq',
+						'Lead value is manually set to {manual}. Calculated total: {calculated}.',
+						{
+							manual: formatCurrency(leadValue),
+							calculated: formatCurrency(grandTotal),
+						},
+					)
+				}}
+				<NcButton
+					variant="tertiary"
+					@click="$emit('sync-value', grandTotal)">
 					{{ t('pipelinq', 'Use calculated value') }}
 				</NcButton>
 			</div>
@@ -110,7 +136,10 @@
 			<div class="create-dialog">
 				<div class="create-dialog__header">
 					<h3>{{ t('pipelinq', 'Add Product') }}</h3>
-					<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Close')" @click="showAddDialog = false">
+					<NcButton
+						variant="tertiary"
+						:aria-label="t('pipelinq', 'Close')"
+						@click="showAddDialog = false">
 						✕
 					</NcButton>
 				</div>
@@ -123,41 +152,55 @@
 							:aria-label-combobox="t('pipelinq', 'Product')"
 							:placeholder="t('pipelinq', 'Search products...')"
 							label="name"
-							:reduce="opt => opt.id"
-							@update:model-value="onProductSelect" />
+							:reduce="(opt) => opt.id"
+							@update:modelValue="onProductSelect" />
 					</div>
 					<div class="form-row">
 						<div class="form-group">
 							<NcTextField
 								id="lead-product-quantity"
 								:label="t('pipelinq', 'Quantity')"
-								:model-value="String(addForm.quantity)"
+								:modelValue="String(addForm.quantity)"
 								type="number"
-								@update:model-value="v => addForm.quantity = Number(v)" />
+								@update:modelValue="
+									(v) => (addForm.quantity = Number(v))
+								" />
 						</div>
 						<div class="form-group">
 							<NcTextField
 								id="lead-product-unit-price"
 								:label="t('pipelinq', 'Unit Price')"
-								:model-value="String(addForm.unitPrice)"
+								:modelValue="String(addForm.unitPrice)"
 								type="number"
-								@update:model-value="v => addForm.unitPrice = Number(v)" />
+								@update:modelValue="
+									(v) => (addForm.unitPrice = Number(v))
+								" />
 						</div>
 						<div class="form-group">
 							<NcTextField
 								id="lead-product-discount"
 								:label="t('pipelinq', 'Discount')"
-								:model-value="String(addForm.discount)"
+								:modelValue="String(addForm.discount)"
 								type="number"
-								@update:model-value="v => addForm.discount = Number(v)" />
+								@update:modelValue="
+									(v) => (addForm.discount = Number(v))
+								" />
 						</div>
 					</div>
 					<div class="form-group">
-						<label for="lead-product-notes">{{ t('pipelinq', 'Notes') }}</label>
-						<textarea id="lead-product-notes" v-model="addForm.notes" rows="2" />
+						<label for="lead-product-notes">{{
+							t('pipelinq', 'Notes')
+						}}</label>
+						<textarea
+							id="lead-product-notes"
+							v-model="addForm.notes"
+							rows="2" />
 					</div>
 					<div class="form-actions">
-						<NcButton variant="primary" :disabled="!addForm.product" @click="addLineItem">
+						<NcButton
+							variant="primary"
+							:disabled="!addForm.product"
+							@click="addLineItem">
 							{{ t('pipelinq', 'Add') }}
 						</NcButton>
 						<NcButton @click="showAddDialog = false">
@@ -171,10 +214,10 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import { showError } from '@nextcloud/dialogs'
-import { useObjectStore } from '../store/modules/object.js'
+import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
+import { useObjectStore } from '../store/modules/object.js'
 
 export default {
 	name: 'LeadProducts',
@@ -184,16 +227,19 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	props: {
 		leadId: {
 			type: String,
 			required: true,
 		},
+
 		leadValue: {
 			type: Number,
 			default: null,
 		},
 	},
+
 	emits: ['value-changed', 'sync-value'],
 	data() {
 		return {
@@ -210,6 +256,7 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-17
@@ -217,21 +264,27 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-1.1
 		 */
 		productOptions() {
-			return this.products.map(p => ({
+			return this.products.map((p) => ({
 				id: p.id,
-				name: p.sku ? `${p.name || p.id} (${p.sku})` : (p.name || p.id),
+				name: p.sku ? `${p.name || p.id} (${p.sku})` : p.name || p.id,
 			}))
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-15
 		 */
 		grandTotal() {
-			return this.lineItems.reduce((sum, item) => sum + this.calculateTotal(item), 0)
+			return this.lineItems.reduce(
+				(sum, item) => sum + this.calculateTotal(item),
+				0,
+			)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-16
 		 */
@@ -241,9 +294,11 @@ export default {
 			return Math.abs(Number(this.leadValue) - this.grandTotal) > 0.01
 		},
 	},
+
 	async mounted() {
 		await this.fetchData()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-12
@@ -258,7 +313,7 @@ export default {
 					}),
 					this.objectStore.fetchCollection('product', { _limit: 200 }),
 				])
-				this.lineItems = (items || []).map(item => ({ ...item }))
+				this.lineItems = (items || []).map((item) => ({ ...item }))
 				this.products = prods || []
 			} catch {
 				this.lineItems = []
@@ -267,14 +322,16 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @param productId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-14
 		 */
 		getProductName(productId) {
-			const product = this.products.find(p => p.id === productId)
+			const product = this.products.find((p) => p.id === productId)
 			return product?.name || productId || '-'
 		},
+
 		/**
 		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-11
@@ -283,18 +340,20 @@ export default {
 			const qty = Number(item.quantity) || 0
 			const price = Number(item.unitPrice) || 0
 			const discount = Number(item.discount) || 0
-			return (qty * price) * (1 - discount / 100)
+			return qty * price * (1 - discount / 100)
 		},
+
 		/**
 		 * @param productId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-18
 		 */
 		onProductSelect(productId) {
-			const product = this.products.find(p => p.id === productId)
+			const product = this.products.find((p) => p.id === productId)
 			if (product) {
 				this.addForm.unitPrice = Number(product.unitPrice) || 0
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-10
 		 */
@@ -320,6 +379,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to add product'))
 			}
 		},
+
 		/**
 		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-22
@@ -341,6 +401,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to update line item'))
 			}
 		},
+
 		/**
 		 * @param item
 		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-2.2
@@ -352,6 +413,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to update notes'))
 			}
 		},
+
 		/**
 		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-20
@@ -367,6 +429,7 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to remove line item'))
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-21
 		 */
@@ -379,6 +442,7 @@ export default {
 				notes: '',
 			}
 		},
+
 		/**
 		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-13

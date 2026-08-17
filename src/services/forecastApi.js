@@ -24,12 +24,20 @@ const base = '/apps/pipelinq/api/forecast'
  * @param {number} [params.offset] Page offset.
  * @return {Promise<object>} The snapshot page payload.
  */
-export async function fetchSnapshots({ periodId, level, ownerId = null, limit = 50, offset = 0 }) {
+export async function fetchSnapshots({
+	periodId,
+	level,
+	ownerId = null,
+	limit = 50,
+	offset = 0,
+}) {
 	const query = { periodId, level, format: 'json', limit, offset }
 	if (ownerId) {
 		query.ownerId = ownerId
 	}
-	const response = await axios.get(generateUrl(base + '/snapshots'), { params: query })
+	const response = await axios.get(generateUrl(base + '/snapshots'), {
+		params: query,
+	})
 	return response.data
 }
 
@@ -43,9 +51,12 @@ export async function fetchSnapshots({ periodId, level, ownerId = null, limit = 
  * @return {string} The download URL.
  */
 export function csvExportUrl({ periodId, level, ownerId = null }) {
-	let url = generateUrl(base + '/snapshots')
-		+ '?periodId=' + encodeURIComponent(periodId)
-		+ '&level=' + encodeURIComponent(level)
+	let url =
+		generateUrl(base + '/snapshots')
+		+ '?periodId='
+		+ encodeURIComponent(periodId)
+		+ '&level='
+		+ encodeURIComponent(level)
 		+ '&format=csv'
 	if (ownerId) {
 		url += '&ownerId=' + encodeURIComponent(ownerId)
@@ -71,6 +82,8 @@ export async function createOverride(payload) {
  * @return {Promise<object>} The deletion result.
  */
 export async function deleteOverride(id) {
-	const response = await axios.delete(generateUrl(base + '/overrides/' + encodeURIComponent(id)))
+	const response = await axios.delete(
+		generateUrl(base + '/overrides/' + encodeURIComponent(id)),
+	)
 	return response.data
 }

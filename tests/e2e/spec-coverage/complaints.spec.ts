@@ -28,12 +28,19 @@ import {
 } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/klachtenregistratie/spec.md#complaints-index
-test('Complaints: reachable as a ticket-type tab on the Tickets workspace', async ({ page }) => {
+test('Complaints: reachable as a ticket-type tab on the Tickets workspace', async ({
+	page,
+}) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
 	await navClick(page, 'Tickets', /\/tickets/)
 
-	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Tickets' }).first()).toBeVisible()
+	await expect(
+		page
+			.locator('#content-vue')
+			.getByRole('heading', { name: 'Tickets' })
+			.first(),
+	).toBeVisible()
 	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible()
 
 	// The complaint subtype is a first-class tab on the shared index.
@@ -44,14 +51,20 @@ test('Complaints: reachable as a ticket-type tab on the Tickets workspace', asyn
 })
 
 // @e2e openspec/specs/klachtenregistratie/spec.md#complaints-list-table
-test('Complaints: the tab narrows the list to complaint tickets', async ({ page }) => {
+test('Complaints: the tab narrows the list to complaint tickets', async ({
+	page,
+}) => {
 	await openApp(page)
 	await navClick(page, 'Tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Complaints')
 
 	const content = page.locator('#content-vue')
 	await expect(content.getByRole('button', { name: 'Add Ticket' })).toBeVisible()
-	await expect(content.locator('table, .cn-data-table, [data-testid="cn-data-table"]').first()).toBeVisible()
+	await expect(
+		content
+			.locator('table, .cn-data-table, [data-testid="cn-data-table"]')
+			.first(),
+	).toBeVisible()
 
 	// The demo seed writes three complaint tickets (lib/Settings/demo_seed_data.json
 	// `complaints`), so the filtered list is genuinely populated — and it is the
@@ -63,7 +76,10 @@ test('Complaints: the tab narrows the list to complaint tickets', async ({ page 
 	const rows = content.locator('table tbody tr')
 	await expect(rows.first()).toBeVisible()
 	const count = await rows.count()
-	expect(count, 'the Complaints tab must show at least one seeded complaint').toBeGreaterThan(0)
+	expect(
+		count,
+		'the Complaints tab must show at least one seeded complaint',
+	).toBeGreaterThan(0)
 	for (let i = 0; i < count; i++) {
 		await expect(rows.nth(i)).toContainText(/complaint/i)
 	}
@@ -76,10 +92,15 @@ test('Complaints: Add Ticket opens a create modal with a form', async ({ page })
 	await clickQuickFilter(page, 'Complaints')
 	await dismissSupportDialog(page)
 
-	await page.locator('#content-vue').getByRole('button', { name: 'Add Ticket' }).click()
+	await page
+		.locator('#content-vue')
+		.getByRole('button', { name: 'Add Ticket' })
+		.click()
 	const modal = page.locator('.modal-container, [role="dialog"]').first()
 	await expect(modal).toBeVisible({ timeout: 10000 })
-	await expect(modal.locator('input, .input-field__input, textarea').first()).toBeVisible()
+	await expect(
+		modal.locator('input, .input-field__input, textarea').first(),
+	).toBeVisible()
 })
 
 /*

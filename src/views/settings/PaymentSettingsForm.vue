@@ -19,28 +19,36 @@
 		     betaalmethoden", which read as the same thing twice. -->
 		<NcSettingsSection
 			:name="t('pipelinq', 'Payment providers (PSP)')"
-			:description="t('pipelinq', 'Who processes the money: the payment service providers used for in-store and online payments (Mollie, CCV, Adyen, Stripe). Credentials are stored encrypted. Distinct from POS tender types below, which are how a customer can pay at the till.')">
+			:description="
+				t(
+					'pipelinq',
+					'Who processes the money: the payment service providers used for in-store and online payments (Mollie, CCV, Adyen, Stripe). Credentials are stored encrypted. Distinct from POS tender types below, which are how a customer can pay at the till.',
+				)
+			">
 			<div v-if="loading" class="payment-settings__loading">
 				<NcLoadingIcon :size="24" />
 				<span>{{ t('pipelinq', 'Loading providers…') }}</span>
 			</div>
 			<div v-else class="payment-settings__cards">
-				<div v-for="provider in providers" :key="provider.name" class="payment-settings__card">
+				<div
+					v-for="provider in providers"
+					:key="provider.name"
+					class="payment-settings__card">
 					<header class="payment-settings__card-header">
 						<h3>{{ provider.displayName }}</h3>
-						<span class="payment-settings__type">{{ providerTypeLabel(provider.type) }}</span>
+						<span class="payment-settings__type">{{
+							providerTypeLabel(provider.type)
+						}}</span>
 					</header>
 
-					<NcCheckboxRadioSwitch
-						v-model="provider.isActive"
-						type="switch">
+					<NcCheckboxRadioSwitch v-model="provider.isActive" type="switch">
 						{{ t('pipelinq', 'Enable this provider') }}
 					</NcCheckboxRadioSwitch>
 
 					<NcSelect
 						v-model="provider.environment"
 						:options="environmentOptions"
-						:input-label="t('pipelinq', 'Environment')"
+						:inputLabel="t('pipelinq', 'Environment')"
 						label="label"
 						:reduce="(o) => o.value" />
 
@@ -52,18 +60,35 @@
 					<NcSelect
 						v-model="provider.credential"
 						:options="credentialsFor(provider.name)"
-						:input-label="t('pipelinq', 'API credential')"
+						:inputLabel="t('pipelinq', 'API credential')"
 						:loading="loadingCredentials"
 						:placeholder="t('pipelinq', 'Select a credential')"
 						label="label"
-						@update:model-value="(v) => onCredentialChange(provider, v)" />
+						@update:modelValue="
+							(v) => onCredentialChange(provider, v)
+						" />
 
 					<p class="payment-settings__hint">
-						<template v-if="!loadingCredentials && !credentialsFor(provider.name).length">
-							{{ t('pipelinq', 'No {provider} credential yet. Add one under Personal settings → Additional settings, then reopen this page.', { provider: displayName(provider.name) }) }}
+						<template
+							v-if="
+								!loadingCredentials
+								&& !credentialsFor(provider.name).length
+							">
+							{{
+								t(
+									'pipelinq',
+									'No {provider} credential yet. Add one under Personal settings → Additional settings, then reopen this page.',
+									{ provider: displayName(provider.name) },
+								)
+							}}
 						</template>
 						<template v-else>
-							{{ t('pipelinq', 'The key stays in your credential vault. Pipelinq sends only the request it wants made, and the broker injects the key and refuses anything outside the allowed calls.') }}
+							{{
+								t(
+									'pipelinq',
+									'The key stays in your credential vault. Pipelinq sends only the request it wants made, and the broker injects the key and refuses anything outside the allowed calls.',
+								)
+							}}
 						</template>
 					</p>
 
@@ -73,11 +98,21 @@
 						a constrained HTTP proxy cannot carry it.
 					-->
 					<NcTextField
-						:model-value="provider.webhookSecret === MASK ? '' : provider.webhookSecret"
+						:modelValue="
+							provider.webhookSecret === MASK
+								? ''
+								: provider.webhookSecret
+						"
 						:label="t('pipelinq', 'Webhook secret')"
-						:placeholder="provider.webhookSecret === MASK ? t('pipelinq', '(saved — leave empty to keep)') : ''"
+						:placeholder="
+							provider.webhookSecret === MASK
+								? t('pipelinq', '(saved — leave empty to keep)')
+								: ''
+						"
 						type="password"
-						@update:model-value="(v) => onSecretChange(provider, 'webhookSecret', v)" />
+						@update:modelValue="
+							(v) => onSecretChange(provider, 'webhookSecret', v)
+						" />
 
 					<NcTextField
 						v-if="provider.name === 'ccv'"
@@ -91,9 +126,7 @@
 						:label="t('pipelinq', 'Merchant account')"
 						:placeholder="t('pipelinq', 'PipelinqPOS')" />
 
-					<NcCheckboxRadioSwitch
-						v-model="provider.testMode"
-						type="switch">
+					<NcCheckboxRadioSwitch v-model="provider.testMode" type="switch">
 						{{ t('pipelinq', 'Test mode (do not charge live)') }}
 					</NcCheckboxRadioSwitch>
 
@@ -102,22 +135,42 @@
 							variant="secondary"
 							:disabled="testingProvider === provider.name"
 							@click="onTest(provider)">
-							{{ testingProvider === provider.name ? t('pipelinq', 'Testing…') : t('pipelinq', 'Test connection') }}
+							{{
+								testingProvider === provider.name
+									? t('pipelinq', 'Testing…')
+									: t('pipelinq', 'Test connection')
+							}}
 						</NcButton>
 						<NcButton
 							variant="primary"
 							:disabled="savingProvider === provider.name"
 							@click="onSave(provider)">
-							{{ savingProvider === provider.name ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
+							{{
+								savingProvider === provider.name
+									? t('pipelinq', 'Saving…')
+									: t('pipelinq', 'Save')
+							}}
 						</NcButton>
 					</div>
 
-					<p v-if="provider.testResult && provider.testResult.status"
+					<p
+						v-if="provider.testResult && provider.testResult.status"
 						class="payment-settings__test-result"
-						:class="{ 'payment-settings__test-result--ok': provider.testResult.status === 'ok', 'payment-settings__test-result--error': provider.testResult.status === 'error' }">
+						:class="{
+							'payment-settings__test-result--ok':
+								provider.testResult.status === 'ok',
+							'payment-settings__test-result--error':
+								provider.testResult.status === 'error',
+						}">
 						{{ provider.testResult.message }}
-						<span v-if="provider.lastTestedAt" class="payment-settings__timestamp">
-							{{ t('pipelinq', 'Last tested at {time}', { time: provider.lastTestedAt }) }}
+						<span
+							v-if="provider.lastTestedAt"
+							class="payment-settings__timestamp">
+							{{
+								t('pipelinq', 'Last tested at {time}', {
+									time: provider.lastTestedAt,
+								})
+							}}
 						</span>
 					</p>
 				</div>
@@ -127,14 +180,21 @@
 </template>
 
 <script>
-import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcSelect, NcSettingsSection, NcTextField } from '@nextcloud/vue'
+import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import axios from '@nextcloud/axios'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcSelect,
+	NcSettingsSection,
+	NcTextField,
+} from '@nextcloud/vue'
 import {
 	listProviders,
-	updateProvider,
 	testConnection,
+	updateProvider,
 } from '../../services/posPaymentApi.js'
 
 const MASK = '***SET***'
@@ -163,6 +223,7 @@ export default {
 		NcSettingsSection,
 		NcTextField,
 	},
+
 	data() {
 		return {
 			providers: [],
@@ -176,6 +237,7 @@ export default {
 			MASK,
 		}
 	},
+
 	computed: {
 		environmentOptions() {
 			return [
@@ -184,12 +246,14 @@ export default {
 			]
 		},
 	},
+
 	async mounted() {
 		// Credentials first: refresh() preselects each provider's saved credential from
 		// this list, so it has to be populated before the providers land.
 		await this.fetchCredentials()
 		await this.refresh()
 	},
+
 	methods: {
 		async refresh() {
 			this.loading = true
@@ -198,15 +262,22 @@ export default {
 				this.providers = providers.map((p) => this.normalizeProvider(p))
 				// Reflect the stored credentialId back into the picker.
 				for (const provider of this.providers) {
-					provider.credential = this.credentialsFor(provider.name)
-						.find((o) => o.value === provider.credentialId) || null
+					provider.credential =
+						this.credentialsFor(provider.name).find(
+							(o) => o.value === provider.credentialId,
+						) || null
 				}
 			} catch (e) {
-				showError(t('pipelinq', 'Could not load providers: {error}', { error: e.message || 'netwerkfout' }))
+				showError(
+					t('pipelinq', 'Could not load providers: {error}', {
+						error: e.message || 'netwerkfout',
+					}),
+				)
 			} finally {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Normalize a provider from the API so every field bound to an
 		 * NcTextField is always a string. The secrets come back as the MASK
@@ -221,7 +292,8 @@ export default {
 		normalizeProvider(p) {
 			const config = { ...(p.config || {}) }
 			if (p.name === 'ccv' && config.terminalId == null) config.terminalId = ''
-			if (p.name === 'adyen' && config.merchantAccount == null) config.merchantAccount = ''
+			if (p.name === 'adyen' && config.merchantAccount == null)
+				config.merchantAccount = ''
 			return {
 				...p,
 				// `credentialId` is a reference, not a secret, so it comes back unmasked.
@@ -231,6 +303,7 @@ export default {
 				config,
 			}
 		},
+
 		/**
 		 * The broker credentials this provider can use.
 		 *
@@ -247,10 +320,12 @@ export default {
 				.filter((c) => wanted.includes(c.provider))
 				.map((c) => ({ label: c.name || c.id, value: c.id }))
 		},
+
 		displayName(name) {
 			const p = this.providers.find((x) => x.name === name)
 			return (p && p.displayName) || name
 		},
+
 		/**
 		 * Load the user's broker credentials.
 		 *
@@ -262,7 +337,9 @@ export default {
 		async fetchCredentials() {
 			this.loadingCredentials = true
 			try {
-				const { data } = await axios.get(generateUrl('/apps/openregister/api/credentials'))
+				const { data } = await axios.get(
+					generateUrl('/apps/openregister/api/credentials'),
+				)
 				this.credentials = data.results || []
 			} catch (e) {
 				this.credentials = []
@@ -270,18 +347,24 @@ export default {
 				this.loadingCredentials = false
 			}
 		},
+
 		onCredentialChange(provider, option) {
 			provider.credentialId = option ? option.value : ''
 		},
+
 		providerTypeLabel(type) {
-			return type === 'terminal' ? t('pipelinq', 'PIN-terminal') : t('pipelinq', 'Online')
+			return type === 'terminal'
+				? t('pipelinq', 'PIN-terminal')
+				: t('pipelinq', 'Online')
 		},
+
 		onSecretChange(provider, field, value) {
 			// Replacing the MASK with a typed value flags it as a real edit;
 			// leaving it as MASK keeps the stored value (server ignores both
 			// MASK and empty strings on update).
 			provider[field] = value
 		},
+
 		async onSave(provider) {
 			this.savingProvider = provider.name
 			try {
@@ -303,13 +386,22 @@ export default {
 				if (saved) {
 					Object.assign(provider, this.normalizeProvider(saved))
 				}
-				showSuccess(t('pipelinq', 'Provider {name} saved', { name: provider.displayName }))
+				showSuccess(
+					t('pipelinq', 'Provider {name} saved', {
+						name: provider.displayName,
+					}),
+				)
 			} catch (e) {
-				showError(t('pipelinq', 'Save failed: {error}', { error: e.message || 'onbekend' }))
+				showError(
+					t('pipelinq', 'Save failed: {error}', {
+						error: e.message || 'unknown',
+					}),
+				)
 			} finally {
 				this.savingProvider = null
 			}
 		},
+
 		async onTest(provider) {
 			this.testingProvider = provider.name
 			try {
@@ -317,13 +409,28 @@ export default {
 				provider.testResult = result
 				provider.lastTestedAt = new Date().toISOString()
 				if (result.status === 'ok') {
-					showSuccess(t('pipelinq', 'Connection to {name} successful', { name: provider.displayName }))
+					showSuccess(
+						t('pipelinq', 'Connection to {name} successful', {
+							name: provider.displayName,
+						}),
+					)
 				} else {
-					showError(t('pipelinq', 'Test failed: {message}', { message: result.message }))
+					showError(
+						t('pipelinq', 'Test failed: {message}', {
+							message: result.message,
+						}),
+					)
 				}
 			} catch (e) {
-				provider.testResult = { status: 'error', message: e.message || 'unknown' }
-				showError(t('pipelinq', 'Test failed: {error}', { error: e.message || 'netwerkfout' }))
+				provider.testResult = {
+					status: 'error',
+					message: e.message || 'unknown',
+				}
+				showError(
+					t('pipelinq', 'Test failed: {error}', {
+						error: e.message || 'netwerkfout',
+					}),
+				)
 			} finally {
 				this.testingProvider = null
 			}

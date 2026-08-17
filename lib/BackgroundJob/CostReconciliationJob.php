@@ -38,50 +38,48 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
  */
-class CostReconciliationJob extends TimedJob
-{
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory              $time       Time factory.
-     * @param CostReconciliationService $reconciler Service.
-     * @param LoggerInterface           $logger     Logger.
-     *
-     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
-     */
-    public function __construct(
-        ITimeFactory $time,
-        private CostReconciliationService $reconciler,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $time);
+class CostReconciliationJob extends TimedJob {
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $time Time factory.
+	 * @param CostReconciliationService $reconciler Service.
+	 * @param LoggerInterface $logger Logger.
+	 *
+	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.3
+	 */
+	public function __construct(
+		ITimeFactory $time,
+		private CostReconciliationService $reconciler,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(time: $time);
 
-        // Once a day.
-        $this->setInterval(seconds: 86400);
-    }//end __construct()
+		// Once a day.
+		$this->setInterval(seconds: 86400);
+	}//end __construct()
 
-    /**
-     * Run the reconciliation.
-     *
-     * @param mixed $argument Unused job argument.
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    protected function run($argument): void
-    {
-        try {
-            $summary = $this->reconciler->reconcile();
-            $this->logger->info(
-                'CostReconciliationJob complete',
-                $summary,
-            );
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                'CostReconciliationJob failed',
-                ['exception' => $e->getMessage()]
-            );
-        }
-    }//end run()
+	/**
+	 * Run the reconciliation.
+	 *
+	 * @param mixed $argument Unused job argument.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 */
+	protected function run($argument): void {
+		try {
+			$summary = $this->reconciler->reconcile();
+			$this->logger->info(
+				'CostReconciliationJob complete',
+				$summary,
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'CostReconciliationJob failed',
+				['exception' => $e->getMessage()]
+			);
+		}
+	}//end run()
 }//end class

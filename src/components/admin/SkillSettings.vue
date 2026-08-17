@@ -2,7 +2,9 @@
 <template>
 	<NcSettingsSection
 		:name="t('pipelinq', 'Skills')"
-		:description="t('pipelinq', 'Define skills for routing requests to the right agents')">
+		:description="
+			t('pipelinq', 'Define skills for routing requests to the right agents')
+		">
 		<NcLoadingIcon v-if="loading" />
 
 		<div v-else class="skill-settings">
@@ -10,9 +12,14 @@
 				<div v-if="editingId !== skill.id" class="skill-item__display">
 					<div class="skill-item__info">
 						<span class="skill-title">{{ skill.title }}</span>
-						<span v-if="skill.isActive === false" class="inactive-tag">{{ t('pipelinq', 'Inactive') }}</span>
+						<span v-if="skill.isActive === false" class="inactive-tag">{{
+							t('pipelinq', 'Inactive')
+						}}</span>
 						<span class="skill-meta">
-							{{ (skill.categories || []).join(', ') || t('pipelinq', 'No categories') }}
+							{{
+								(skill.categories || []).join(', ')
+								|| t('pipelinq', 'No categories')
+							}}
 						</span>
 					</div>
 					<div class="skill-item__actions">
@@ -27,20 +34,34 @@
 
 				<div v-else class="skill-item__edit">
 					<div class="edit-field">
-						<label for="skill-edit-title">{{ t('pipelinq', 'Title') }}</label>
-						<input id="skill-edit-title" v-model="editForm.title" type="text">
+						<label for="skill-edit-title">{{
+							t('pipelinq', 'Title')
+						}}</label>
+						<input
+							id="skill-edit-title"
+							v-model="editForm.title"
+							type="text" />
 					</div>
 					<div class="edit-field">
-						<label for="skill-edit-description">{{ t('pipelinq', 'Description') }}</label>
-						<textarea id="skill-edit-description" v-model="editForm.description" />
+						<label for="skill-edit-description">{{
+							t('pipelinq', 'Description')
+						}}</label>
+						<textarea
+							id="skill-edit-description"
+							v-model="editForm.description" />
 					</div>
 					<div class="edit-field">
-						<label for="skill-edit-categories">{{ t('pipelinq', 'Categories (comma-separated)') }}</label>
-						<input id="skill-edit-categories" v-model="editForm.categoriesInput" type="text">
+						<label for="skill-edit-categories">{{
+							t('pipelinq', 'Categories (comma-separated)')
+						}}</label>
+						<input
+							id="skill-edit-categories"
+							v-model="editForm.categoriesInput"
+							type="text" />
 					</div>
 					<div class="edit-field">
 						<label>
-							<input v-model="editForm.isActive" type="checkbox">
+							<input v-model="editForm.isActive" type="checkbox" />
 							{{ t('pipelinq', 'Active') }}
 						</label>
 					</div>
@@ -75,12 +96,14 @@ export default {
 		NcLoadingIcon,
 		NcSettingsSection,
 	},
+
 	data() {
 		return {
 			editingId: null,
 			editForm: {},
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-28
@@ -88,12 +111,14 @@ export default {
 		skillsStore() {
 			return useSkillsStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-25
 		 */
 		loading() {
 			return this.skillsStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-27
 		 */
@@ -101,9 +126,11 @@ export default {
 			return this.skillsStore.skills
 		},
 	},
+
 	mounted() {
 		this.skillsStore.fetchSkills()
 	},
+
 	methods: {
 		/**
 		 * @param skill
@@ -116,6 +143,7 @@ export default {
 				categoriesInput: (skill.categories || []).join(', '),
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-23
 		 */
@@ -123,6 +151,7 @@ export default {
 			this.editingId = null
 			this.editForm = {}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-26
 		 */
@@ -130,13 +159,17 @@ export default {
 			const data = {
 				...this.editForm,
 				categories: this.editForm.categoriesInput
-					? this.editForm.categoriesInput.split(',').map(c => c.trim()).filter(Boolean)
+					? this.editForm.categoriesInput
+							.split(',')
+							.map((c) => c.trim())
+							.filter(Boolean)
 					: [],
 			}
 			delete data.categoriesInput
 			await this.skillsStore.saveSkill(data)
 			this.cancelEdit()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-22
 		 */
@@ -147,12 +180,17 @@ export default {
 				categories: [],
 			})
 		},
+
 		/**
 		 * @param skill
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-24
 		 */
 		async deleteSkill(skill) {
-			if (confirm(t('pipelinq', 'Delete skill "{title}"?', { title: skill.title }))) {
+			if (
+				confirm(
+					t('pipelinq', 'Delete skill "{title}"?', { title: skill.title }),
+				)
+			) {
 				await this.skillsStore.deleteSkill(skill.id)
 			}
 		},

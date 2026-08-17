@@ -11,7 +11,7 @@ import { translate as t } from '@nextcloud/l10n'
  * anything that turns a logical slug into an OpenRegister object type must
  * route through resolveObjectType().
  */
-const TICKET_SUBTYPES = ['request', 'complaint', 'contactmoment']
+const TICKET_SUBTYPES = ['request', 'complaint', 'interaction']
 
 /**
  * Map a logical entity slug onto the OpenRegister object type it now lives in.
@@ -38,7 +38,9 @@ export function resolveObjectType(schemaSlug) {
  */
 export function getDaysAge(item) {
 	if (!item._dateModified) return 0
-	return Math.floor((Date.now() - new Date(item._dateModified).getTime()) / 86400000)
+	return Math.floor(
+		(Date.now() - new Date(item._dateModified).getTime()) / 86400000,
+	)
 }
 
 /**
@@ -83,7 +85,7 @@ export function isStale(item, entityType, threshold = 14) {
 export function isLeadOverdue(lead, stages = []) {
 	if (!lead || !lead.expectedCloseDate) return false
 	if (lead.status === 'won' || lead.status === 'lost') return false
-	const currentStage = stages.find(s => s.name === lead.stage)
+	const currentStage = stages.find((s) => s.name === lead.stage)
 	if (currentStage && currentStage.isClosed) return false
 	return new Date(lead.expectedCloseDate) < new Date()
 }

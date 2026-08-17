@@ -6,11 +6,11 @@
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Delete resource')"
-		@closing="$emit('cancel')">
+	<NcDialog :name="t('pipelinq', 'Delete resource')" @closing="$emit('cancel')">
 		<p>
-			{{ t('pipelinq', 'Are you sure you want to delete "{name}"?', { name }) }}
+			{{
+				t('pipelinq', 'Are you sure you want to delete "{name}"?', { name })
+			}}
 		</p>
 		<template #actions>
 			<NcButton @click="$emit('cancel')">
@@ -32,6 +32,7 @@ export default {
 	props: {
 		name: { type: String, default: '' },
 	},
+
 	emits: ['confirm', 'cancel'],
 }
 </script>

@@ -29,38 +29,35 @@ use OCP\EventDispatcher\Event;
 /**
  * Minimal SchemaUpdatedEvent stub.
  */
-class SchemaUpdatedEvent extends Event
-{
-    /**
-     * Constructor.
-     *
-     * @param Schema $newSchema The updated schema.
-     * @param Schema $oldSchema The previous schema.
-     */
-    public function __construct(
-        private Schema $newSchema,
-        private Schema $oldSchema,
-    ) {
-        parent::__construct();
-    }//end __construct()
+class SchemaUpdatedEvent extends Event {
+	/**
+	 * Constructor.
+	 *
+	 * @param Schema $newSchema The updated schema.
+	 * @param Schema $oldSchema The previous schema.
+	 */
+	public function __construct(
+		private Schema $newSchema,
+		private Schema $oldSchema,
+	) {
+		parent::__construct();
+	}//end __construct()
 
-    /**
-     * The updated schema.
-     *
-     * @return Schema The new schema.
-     */
-    public function getNewSchema(): Schema
-    {
-        return $this->newSchema;
-    }//end getNewSchema()
+	/**
+	 * The updated schema.
+	 *
+	 * @return Schema The new schema.
+	 */
+	public function getNewSchema(): Schema {
+		return $this->newSchema;
+	}//end getNewSchema()
 
-    /**
-     * The previous schema.
-     *
-     * @return Schema The old schema.
-     */
-    public function getOldSchema(): Schema
-    {
-        return $this->oldSchema;
-    }//end getOldSchema()
+	/**
+	 * The previous schema.
+	 *
+	 * @return Schema The old schema.
+	 */
+	public function getOldSchema(): Schema {
+		return $this->oldSchema;
+	}//end getOldSchema()
 }//end class

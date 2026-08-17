@@ -22,7 +22,9 @@ const base = (path) => generateUrl('/apps/pipelinq' + path)
  * @return {Promise<{available: boolean, deepLinkUrl: string, isManager: boolean}>} Availability.
  */
 export async function getBillingHandoffAvailability(clientId) {
-	const { data } = await axios.get(base(`/api/billing/handoff/${clientId}/availability`))
+	const { data } = await axios.get(
+		base(`/api/billing/handoff/${clientId}/availability`),
+	)
 	return {
 		available: !!data.available,
 		deepLinkUrl: data.deepLinkUrl || '',

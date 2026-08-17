@@ -1,6 +1,7 @@
 <template>
 	<div class="prospect-widget">
-		<div class="prospect-widget__header"
+		<div
+			class="prospect-widget__header"
 			role="button"
 			tabindex="0"
 			:aria-expanded="expanded"
@@ -22,7 +23,9 @@
 					:aria-label="t('pipelinq', 'Refresh prospects')"
 					@click.stop="refresh">
 					<template #icon>
-						<Refresh :size="20" :class="{ 'icon-spinning': prospectStore.loading }" />
+						<Refresh
+							:size="20"
+							:class="{ 'icon-spinning': prospectStore.loading }" />
 					</template>
 				</NcButton>
 				<span class="expand-icon">{{ expanded ? '\u25B2' : '\u25BC' }}</span>
@@ -30,8 +33,14 @@
 		</div>
 
 		<!-- Collapsed preview -->
-		<div v-if="!expanded && prospectStore.prospects.length > 0" class="prospect-widget__preview">
-			{{ t('pipelinq', 'Top match: {name}', { name: prospectStore.prospects[0].tradeName }) }}
+		<div
+			v-if="!expanded && prospectStore.prospects.length > 0"
+			class="prospect-widget__preview">
+			{{
+				t('pipelinq', 'Top match: {name}', {
+					name: prospectStore.prospects[0].tradeName,
+				})
+			}}
 		</div>
 
 		<!-- Expanded content -->
@@ -39,8 +48,19 @@
 			<NcLoadingIcon v-if="prospectStore.loading" />
 
 			<!-- No ICP configured -->
-			<div v-else-if="prospectStore.error && prospectStore.error.includes('ICP')" class="prospect-widget__setup">
-				<p>{{ t('pipelinq', 'Configure your Ideal Customer Profile in admin settings to discover prospects.') }}</p>
+			<div
+				v-else-if="
+					prospectStore.error && prospectStore.error.includes('ICP')
+				"
+				class="prospect-widget__setup">
+				<p>
+					{{
+						t(
+							'pipelinq',
+							'Configure your Ideal Customer Profile in admin settings to discover prospects.',
+						)
+					}}
+				</p>
 			</div>
 
 			<!-- Error -->
@@ -52,8 +72,12 @@
 			</div>
 
 			<!-- No results -->
-			<div v-else-if="prospectStore.prospects.length === 0" class="prospect-widget__empty">
-				<p>{{ t('pipelinq', 'No prospects found matching your profile.') }}</p>
+			<div
+				v-else-if="prospectStore.prospects.length === 0"
+				class="prospect-widget__empty">
+				<p>
+					{{ t('pipelinq', 'No prospects found matching your profile.') }}
+				</p>
 			</div>
 
 			<!-- Prospect list -->
@@ -62,10 +86,16 @@
 					v-for="prospect in prospectStore.prospects"
 					:key="prospect.kvkNumber"
 					:prospect="prospect"
-					@create-lead="onCreateLead" />
+					@createLead="onCreateLead" />
 
-				<div v-if="prospectStore.cachedAt" class="prospect-widget__cache-info">
-					{{ t('pipelinq', 'Last updated: {time}', { time: formatTime(prospectStore.cachedAt) }) }}
+				<div
+					v-if="prospectStore.cachedAt"
+					class="prospect-widget__cache-info">
+					{{
+						t('pipelinq', 'Last updated: {time}', {
+							time: formatTime(prospectStore.cachedAt),
+						})
+					}}
 				</div>
 			</div>
 		</div>
@@ -73,8 +103,8 @@
 </template>
 
 <script>
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import { showSuccess, showError } from '@nextcloud/dialogs'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import ProspectCard from './ProspectCard.vue'
 import { useProspectStore } from '../store/modules/prospect.js'
@@ -87,11 +117,13 @@ export default {
 		Refresh,
 		ProspectCard,
 	},
+
 	data() {
 		return {
 			expanded: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-6
@@ -100,9 +132,11 @@ export default {
 			return useProspectStore()
 		},
 	},
+
 	mounted() {
 		this.prospectStore.fetchProspects()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-7
@@ -110,6 +144,7 @@ export default {
 		async refresh() {
 			await this.prospectStore.fetchProspects(true)
 		},
+
 		/**
 		 * @param prospect
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-5
@@ -119,12 +154,20 @@ export default {
 			if (result.error) {
 				showError(result.error)
 			} else {
-				showSuccess(t('pipelinq', 'Lead created from {name}', { name: prospect.tradeName }))
+				showSuccess(
+					t('pipelinq', 'Lead created from {name}', {
+						name: prospect.tradeName,
+					}),
+				)
 				if (result.lead?.id) {
-					this.$router.push({ name: 'LeadDetail', params: { id: result.lead.id } })
+					this.$router.push({
+						name: 'LeadDetail',
+						params: { id: result.lead.id },
+					})
 				}
 			}
 		},
+
 		/**
 		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-4
@@ -132,7 +175,10 @@ export default {
 		formatTime(dateStr) {
 			if (!dateStr) return ''
 			try {
-				return new Date(dateStr).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
+				return new Date(dateStr).toLocaleTimeString('nl-NL', {
+					hour: '2-digit',
+					minute: '2-digit',
+				})
 			} catch {
 				return dateStr
 			}
@@ -226,8 +272,12 @@ export default {
 }
 
 @keyframes spin {
-	from { transform: rotate(0deg); }
-	to { transform: rotate(360deg); }
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

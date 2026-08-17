@@ -25,7 +25,9 @@
 		<header class="messaging-conversation__head">
 			<h3>
 				{{ t('pipelinq', 'Messages') }}
-				<span v-if="latestConversation" class="messaging-conversation__badge">
+				<span
+					v-if="latestConversation"
+					class="messaging-conversation__badge">
 					{{ conversationStatusLabel(latestConversation.status) }}
 				</span>
 			</h3>
@@ -37,33 +39,53 @@
 			</NcButton>
 		</header>
 
-		<div v-if="entityType === 'client'" class="messaging-conversation__contact-picker">
+		<div
+			v-if="entityType === 'client'"
+			class="messaging-conversation__contact-picker">
 			<NcLoadingIcon v-if="loadingContacts" :size="20" />
 			<NcSelect
 				v-else-if="contactOptions.length !== 0"
 				v-model="selectedContactId"
 				:options="contactOptions"
-				:input-label="t('pipelinq', 'Contact')"
+				:inputLabel="t('pipelinq', 'Contact')"
 				label="label"
 				:reduce="(o) => o.id" />
 			<NcEmptyContent
 				v-else
-				:description="t('pipelinq', 'No contacts linked to this client yet — add a contact to enable messaging.')" />
+				:description="
+					t(
+						'pipelinq',
+						'No contacts linked to this client yet — add a contact to enable messaging.',
+					)
+				" />
 		</div>
 
 		<div v-if="effectiveContactId" class="messaging-conversation__consent">
 			<span class="messaging-conversation__consent-item">
 				{{ t('pipelinq', 'SMS consent:') }}
-				<strong :class="consentClass(preflightConsent.sms)">{{ consentLabel(preflightConsent.sms) }}</strong>
+				<strong :class="consentClass(preflightConsent.sms)">{{
+					consentLabel(preflightConsent.sms)
+				}}</strong>
 			</span>
 			<span class="messaging-conversation__consent-item">
 				{{ t('pipelinq', 'WhatsApp consent:') }}
-				<strong :class="consentClass(preflightConsent.whatsapp)">{{ consentLabel(preflightConsent.whatsapp) }}</strong>
+				<strong :class="consentClass(preflightConsent.whatsapp)">{{
+					consentLabel(preflightConsent.whatsapp)
+				}}</strong>
 			</span>
 			<span class="messaging-conversation__consent-item">
 				{{ t('pipelinq', 'WhatsApp session:') }}
-				<strong :class="preflight && preflight.whatsappSessionOpen ? 'messaging-conversation__consent--ok' : 'messaging-conversation__consent--warn'">
-					{{ preflight && preflight.whatsappSessionOpen ? t('pipelinq', 'Open (24h window)') : t('pipelinq', 'Closed — template required') }}
+				<strong
+					:class="
+						preflight && preflight.whatsappSessionOpen
+							? 'messaging-conversation__consent--ok'
+							: 'messaging-conversation__consent--warn'
+					">
+					{{
+						preflight && preflight.whatsappSessionOpen
+							? t('pipelinq', 'Open (24h window)')
+							: t('pipelinq', 'Closed — template required')
+					}}
 				</strong>
 			</span>
 		</div>
@@ -81,12 +103,20 @@
 				class="messaging-conversation__item"
 				:class="`messaging-conversation__item--${message.direction}`">
 				<div class="messaging-conversation__item-meta">
-					<span class="messaging-conversation__channel">{{ message.channel }}</span>
-					<span class="messaging-conversation__direction">{{ directionLabel(message.direction) }}</span>
-					<span class="messaging-conversation__status" :class="deliveryStatusClass(message.deliveryStatus)">
+					<span class="messaging-conversation__channel">{{
+						message.channel
+					}}</span>
+					<span class="messaging-conversation__direction">{{
+						directionLabel(message.direction)
+					}}</span>
+					<span
+						class="messaging-conversation__status"
+						:class="deliveryStatusClass(message.deliveryStatus)">
 						{{ message.deliveryStatus || 'queued' }}
 					</span>
-					<span class="messaging-conversation__time">{{ formatDate(message.sentAt) }}</span>
+					<span class="messaging-conversation__time">{{
+						formatDate(message.sentAt)
+					}}</span>
 				</div>
 				<p class="messaging-conversation__body">
 					{{ message.body || '—' }}
@@ -96,8 +126,8 @@
 
 		<SendMessageModal
 			v-if="showComposer"
-			:contact-id="effectiveContactId"
-			:client-id="effectiveClientId"
+			:contactId="effectiveContactId"
+			:clientId="effectiveClientId"
 			:preflight="preflightForModal"
 			@sent="onSent"
 			@close="showComposer = false" />
@@ -105,11 +135,11 @@
 </template>
 
 <script>
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { useObjectStore } from '../../store/modules/object.js'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import SendMessageModal from '../../modals/SendMessageModal.vue'
+import { useObjectStore } from '../../store/modules/object.js'
 
 const EMPTY_PREFLIGHT = {
 	channels: { sms: false, whatsapp: false },
@@ -127,15 +157,18 @@ export default {
 		NcSelect,
 		SendMessageModal,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** Contact or client OpenRegister UUID for the page being viewed. */
 		entityId: {
 			type: String,
 			required: true,
 		},
+
 		/** Which kind of entity entityId refers to. */
 		entityType: {
 			type: String,
@@ -143,6 +176,7 @@ export default {
 			validator: (value) => ['client', 'contact'].includes(value),
 		},
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -156,27 +190,43 @@ export default {
 			showComposer: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/** The contactId every fetch/send in this component is keyed on. */
 		effectiveContactId() {
-			return this.entityType === 'contact' ? this.entityId : this.selectedContactId
+			return this.entityType === 'contact'
+				? this.entityId
+				: this.selectedContactId
 		},
+
 		/** The clientId passed to the composer for the send-request audit trail. */
 		effectiveClientId() {
-			return this.entityType === 'client' ? this.entityId : this.resolvedClientId
+			return this.entityType === 'client'
+				? this.entityId
+				: this.resolvedClientId
 		},
+
 		contactOptions() {
-			return this.linkedContacts.map((c) => ({ id: c.id, label: c.name || c.id }))
+			return this.linkedContacts.map((c) => ({
+				id: c.id,
+				label: c.name || c.id,
+			}))
 		},
+
 		preflightConsent() {
-			return (this.preflight && this.preflight.consent) || EMPTY_PREFLIGHT.consent
+			return (
+				(this.preflight && this.preflight.consent) || EMPTY_PREFLIGHT.consent
+			)
 		},
+
 		preflightForModal() {
 			return this.preflight || EMPTY_PREFLIGHT
 		},
+
 		/** Most recently active conversation thread for the current contact, if any. */
 		latestConversation() {
 			if (this.conversations.length === 0) {
@@ -189,6 +239,7 @@ export default {
 			})[0]
 		},
 	},
+
 	watch: {
 		effectiveContactId(newValue, oldValue) {
 			if (newValue === oldValue) {
@@ -199,14 +250,20 @@ export default {
 			this.fetchPreflight()
 		},
 	},
+
 	async mounted() {
 		if (this.entityType === 'contact') {
 			await this.resolveContactClient()
-			await Promise.all([this.fetchMessages(), this.fetchConversations(), this.fetchPreflight()])
+			await Promise.all([
+				this.fetchMessages(),
+				this.fetchConversations(),
+				this.fetchPreflight(),
+			])
 		} else {
 			await this.fetchLinkedContacts()
 		}
 	},
+
 	methods: {
 		conversationStatusLabel(status) {
 			const labels = {
@@ -216,9 +273,13 @@ export default {
 			}
 			return labels[status] || status
 		},
+
 		directionLabel(direction) {
-			return direction === 'inbound' ? t('pipelinq', 'Received') : t('pipelinq', 'Sent')
+			return direction === 'inbound'
+				? t('pipelinq', 'Received')
+				: t('pipelinq', 'Sent')
 		},
+
 		deliveryStatusClass(status) {
 			if (status === 'failed' || status === 'expired') {
 				return 'messaging-conversation__status--error'
@@ -228,6 +289,7 @@ export default {
 			}
 			return 'messaging-conversation__status--pending'
 		},
+
 		consentLabel(state) {
 			const labels = {
 				'opted-in': t('pipelinq', 'Opted in'),
@@ -236,6 +298,7 @@ export default {
 			}
 			return labels[state] || labels.unknown
 		},
+
 		consentClass(state) {
 			if (state === 'opted-in') {
 				return 'messaging-conversation__consent--ok'
@@ -245,6 +308,7 @@ export default {
 			}
 			return 'messaging-conversation__consent--warn'
 		},
+
 		formatDate(value) {
 			if (!value) {
 				return '—'
@@ -255,21 +319,27 @@ export default {
 			}
 			return parsed.toLocaleString()
 		},
+
 		async resolveContactClient() {
 			try {
-				const contact = await this.objectStore.fetchObject('contact', this.entityId)
+				const contact = await this.objectStore.fetchObject(
+					'contact',
+					this.entityId,
+				)
 				this.resolvedClientId = (contact && contact.client) || ''
 			} catch (e) {
 				this.resolvedClientId = ''
 			}
 		},
+
 		async fetchLinkedContacts() {
 			this.loadingContacts = true
 			try {
-				this.linkedContacts = await this.objectStore.fetchCollection('contact', {
-					client: this.entityId,
-					_limit: 100,
-				}) || []
+				this.linkedContacts =
+					(await this.objectStore.fetchCollection('contact', {
+						client: this.entityId,
+						_limit: 100,
+					})) || []
 				if (this.linkedContacts.length > 0) {
 					this.selectedContactId = this.linkedContacts[0].id
 				}
@@ -279,6 +349,7 @@ export default {
 				this.loadingContacts = false
 			}
 		},
+
 		async fetchMessages() {
 			if (!this.effectiveContactId) {
 				this.messages = []
@@ -286,10 +357,11 @@ export default {
 			}
 			this.loading = true
 			try {
-				const rows = await this.objectStore.fetchCollection('message', {
-					contactId: this.effectiveContactId,
-					_limit: 200,
-				}) || []
+				const rows =
+					(await this.objectStore.fetchCollection('message', {
+						contactId: this.effectiveContactId,
+						_limit: 200,
+					})) || []
 				this.messages = rows.slice().sort((a, b) => {
 					const at = a.sentAt ? new Date(a.sentAt).getTime() : 0
 					const bt = b.sentAt ? new Date(b.sentAt).getTime() : 0
@@ -301,20 +373,23 @@ export default {
 				this.loading = false
 			}
 		},
+
 		async fetchConversations() {
 			if (!this.effectiveContactId) {
 				this.conversations = []
 				return
 			}
 			try {
-				this.conversations = await this.objectStore.fetchCollection('conversation', {
-					contactId: this.effectiveContactId,
-					_limit: 50,
-				}) || []
+				this.conversations =
+					(await this.objectStore.fetchCollection('conversation', {
+						contactId: this.effectiveContactId,
+						_limit: 50,
+					})) || []
 			} catch (e) {
 				this.conversations = []
 			}
 		},
+
 		async fetchPreflight() {
 			if (!this.effectiveContactId) {
 				this.preflight = null
@@ -322,19 +397,24 @@ export default {
 			}
 			try {
 				const { data } = await axios.get(
-					generateUrl('/apps/pipelinq/api/messaging/preflight/{contactId}', { contactId: this.effectiveContactId }),
+					generateUrl(
+						'/apps/pipelinq/api/messaging/preflight/{contactId}',
+						{ contactId: this.effectiveContactId },
+					),
 				)
 				this.preflight = data
 			} catch (e) {
 				this.preflight = null
 			}
 		},
+
 		openComposer() {
 			if (!this.effectiveContactId) {
 				return
 			}
 			this.showComposer = true
 		},
+
 		onSent() {
 			this.showComposer = false
 			this.fetchMessages()

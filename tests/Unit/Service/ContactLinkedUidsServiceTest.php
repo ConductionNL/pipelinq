@@ -19,42 +19,39 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ContactLinkedUidsService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Tests for ContactLinkedUidsService.
  */
-class ContactLinkedUidsServiceTest extends TestCase
-{
-    /**
-     * Test getLinkedContactsUids handles missing schema gracefully.
-     *
-     * @return void
-     */
-    public function testGetLinkedUidsHandlesMissingSchema(): void
-    {
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturn('');
+class ContactLinkedUidsServiceTest extends TestCase {
+	/**
+	 * Test getLinkedContactsUids handles missing schema gracefully.
+	 *
+	 * @return void
+	 */
+	public function testGetLinkedUidsHandlesMissingSchema(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('');
 
-        $objectService = new class {
-            public function findAll(array $params, bool $_rbac, bool $_multitenancy): array
-            {
-                return [];
-            }
-        };
+		// An in-test anonymous class no longer satisfies the contract
+		// (ADR-084): the service now type-hints ObjectServiceInterface, and a
+		// bare `new class { … }` is rejected at construction. Mock the
+		// interface so every signature comes from the contract itself.
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('findAll')->willReturn([]);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($objectService);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $logger = $this->createMock(LoggerInterface::class);
+		$service = new ContactLinkedUidsService($appConfig, $logger,
+			objectService: $objectService,
+		);
 
-        $service = new ContactLinkedUidsService($appConfig, $container, $logger);
-
-        // With empty register/schema, should return empty.
-        $this->assertSame([], $service->getLinkedContactsUids());
-    }//end testGetLinkedUidsHandlesMissingSchema()
+		// With empty register/schema, should return empty.
+		$this->assertSame([], $service->getLinkedContactsUids());
+	}//end testGetLinkedUidsHandlesMissingSchema()
 }//end class

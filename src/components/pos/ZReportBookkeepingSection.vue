@@ -34,13 +34,24 @@
 							:label="bookkeepingStatusLabel" />
 					</div>
 					<div class="info-field">
-						<label>{{ t('pipelinq', 'Shillinq journal entry id') }}</label>
-						<code v-if="zReport.shillinqJournalEntryId" data-testid="pos-eod-journal-id">{{ zReport.shillinqJournalEntryId }}</code>
+						<label>{{
+							t('pipelinq', 'Shillinq journal entry id')
+						}}</label>
+						<code
+							v-if="zReport.shillinqJournalEntryId"
+							data-testid="pos-eod-journal-id"
+							>{{ zReport.shillinqJournalEntryId }}</code
+						>
 						<span v-else>—</span>
 					</div>
 				</div>
 				<p class="z-report-section__hint">
-					{{ t('pipelinq', 'The general ledger, the VAT posting and the journal entry are managed in shillinq. Pipelinq only raises the business facts of this POS day via the integration registry.') }}
+					{{
+						t(
+							'pipelinq',
+							'The general ledger, the VAT posting and the journal entry are managed in shillinq. Pipelinq only raises the business facts of this POS day via the integration registry.',
+						)
+					}}
 				</p>
 				<NcButton
 					v-if="canRetry"
@@ -54,7 +65,9 @@
 
 			<section class="z-report-section__block">
 				<h4>{{ t('pipelinq', 'VAT breakdown') }}</h4>
-				<table class="z-report-section__table" data-testid="z-report-tax-table">
+				<table
+					class="z-report-section__table"
+					data-testid="z-report-tax-table">
 					<thead>
 						<tr>
 							<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
@@ -70,7 +83,9 @@
 						</tr>
 						<tr v-if="!taxBreakdown.length">
 							<td colspan="3">
-								{{ t('pipelinq', 'No VAT breakdown — empty report.') }}
+								{{
+									t('pipelinq', 'No VAT breakdown — empty report.')
+								}}
 							</td>
 						</tr>
 					</tbody>
@@ -79,7 +94,9 @@
 
 			<section class="z-report-section__block">
 				<h4>{{ t('pipelinq', 'Payment methods') }}</h4>
-				<table class="z-report-section__table" data-testid="z-report-payment-table">
+				<table
+					class="z-report-section__table"
+					data-testid="z-report-payment-table">
 					<thead>
 						<tr>
 							<th scope="col">{{ t('pipelinq', 'Method') }}</th>
@@ -100,10 +117,16 @@
 				</table>
 			</section>
 		</template>
-		<ConfirmDialog v-if="showRetryConfirm"
+		<ConfirmDialog
+			v-if="showRetryConfirm"
 			:name="t('pipelinq', 'Re-raise journal entry')"
-			:message="t('pipelinq', 'Re-raise journal entry at shillinq? This uses the same idempotency key, so shillinq prevents duplicate postings.')"
-			:confirm-label="t('pipelinq', 'Re-raise')"
+			:message="
+				t(
+					'pipelinq',
+					'Re-raise journal entry at shillinq? This uses the same idempotency key, so shillinq prevents duplicate postings.',
+				)
+			"
+			:confirmLabel="t('pipelinq', 'Re-raise')"
 			variant="primary"
 			@confirm="performRetry"
 			@cancel="showRetryConfirm = false" />
@@ -111,13 +134,13 @@
 </template>
 
 <script>
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
-import { useObjectStore } from '../../store/modules/object.js'
-import { formatEur } from '../../services/posTotals.js'
 import { raiseJournalEntry } from '../../services/posBookkeepingApi.js'
+import { formatEur } from '../../services/posTotals.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 const BOOKKEEPING_STATUS_LABELS = {
 	pending: 'Queued',
@@ -133,9 +156,11 @@ export default {
 		NcLoadingIcon,
 		CnStatusBadge,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The Z-report id (token-resolved from @objectId by CnBodySections). */
 		zReportId: {
@@ -143,6 +168,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			zReport: {},
@@ -151,29 +177,40 @@ export default {
 			showRetryConfirm: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/** The resolved Z-report id — prop wins, else the injected section context. */
 		resolvedId() {
 			if (this.zReportId) {
 				return this.zReportId
 			}
 			const ctx = this.cnSectionContext
-			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
+			const bag =
+				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		taxBreakdown() {
-			return Array.isArray(this.zReport.taxBreakdown) ? this.zReport.taxBreakdown : []
+			return Array.isArray(this.zReport.taxBreakdown)
+				? this.zReport.taxBreakdown
+				: []
 		},
+
 		paymentBreakdown() {
-			return Array.isArray(this.zReport.paymentMethodBreakdown) ? this.zReport.paymentMethodBreakdown : []
+			return Array.isArray(this.zReport.paymentMethodBreakdown)
+				? this.zReport.paymentMethodBreakdown
+				: []
 		},
+
 		bookkeepingStatusLabel() {
 			const key = this.zReport.bookkeepingStatus || 'pending'
 			return t('pipelinq', BOOKKEEPING_STATUS_LABELS[key] || key)
 		},
+
 		/**
 		 * Whether the manager-gated re-raise button is shown. The server-side
 		 * gate is authoritative; this only hides the button for non-managers and
@@ -185,10 +222,14 @@ export default {
 			const status = this.zReport.bookkeepingStatus || 'pending'
 			const isCandidate = ['pending', 'failed'].includes(status)
 			const hasTakings = Number(this.zReport.transactionCount || 0) > 0
-			const isManager = typeof window.OC?.isUserAdmin === 'function' ? window.OC.isUserAdmin() : false
+			const isManager =
+				typeof window.OC?.isUserAdmin === 'function'
+					? window.OC.isUserAdmin()
+					: false
 			return isCandidate && hasTakings && isManager
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -197,6 +238,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		formatEur,
 		/**
@@ -208,13 +250,21 @@ export default {
 			}
 			this.loading = true
 			try {
-				this.zReport = await this.objectStore.fetchObject('posZReport', this.resolvedId) || {}
+				this.zReport =
+					(await this.objectStore.fetchObject(
+						'posZReport',
+						this.resolvedId,
+					)) || {}
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Could not load Z-report.'))
+				showError(
+					err?.response?.data?.error
+						|| t('pipelinq', 'Could not load Z-report.'),
+				)
 			} finally {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Confirm + trigger a manager-gated re-raise of the shillinq journal entry.
 		 *
@@ -228,6 +278,7 @@ export default {
 			}
 			this.showRetryConfirm = true
 		},
+
 		/**
 		 * Re-raise the journal entry once the dialog confirms.
 		 *
@@ -249,7 +300,9 @@ export default {
 				showSuccess(t('pipelinq', 'Journal entry raised at shillinq.'))
 				await this.load()
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Raise failed.'))
+				showError(
+					err?.response?.data?.error || t('pipelinq', 'Raise failed.'),
+				)
 			} finally {
 				this.busy = false
 			}

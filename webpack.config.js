@@ -98,15 +98,47 @@ webpackConfig.entry = {
 // Vue 3 app. Opt IN explicitly (USE_LOCAL_LIB=true) and hard-fail if the local
 // tree is not on the Vue 3 major.
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
-const useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
+let useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
 if (useLocalLib) {
-	const localPkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../nextcloud-vue/package.json'), 'utf8'))
-	const localVue = (localPkg.peerDependencies && localPkg.peerDependencies.vue) || ''
-	if (!/\^?3\./.test(localVue)) {
-		throw new Error(
-			`USE_LOCAL_LIB=true but ../nextcloud-vue declares peer vue "${localVue}" — that is the Vue 2 line. `
-			+ 'Building against it would silently compile Vue 2 sources into this Vue 3 app. Refusing.',
+	// The peer-vue test this replaces asked the wrong question. The sibling's
+	// `peerDependencies.vue` is ^3.5.0 — it IS a Vue 3 library — so the check
+	// passed, while the sibling was still 2.0.5 against a declared ^2.3.0. Being
+	// on the Vue 3 line and being the version this app asked for are different
+	// things, and only the second one is safe to alias in.
+	//
+	// Fail CLOSED: if the check cannot run, the sibling is refused.
+	let localVersion = 'unreadable'
+	let satisfied = false
+	try {
+		// eslint-disable-next-line n/no-extraneous-require
+		const semver = require('semver')
+		const required =
+			require('./package.json').dependencies['@conduction/nextcloud-vue']
+		localVersion = String(
+			JSON.parse(
+				fs.readFileSync(
+					path.resolve(__dirname, '../nextcloud-vue/package.json'),
+					'utf8',
+				),
+			).version || '',
 		)
+		satisfied = semver.satisfies(localVersion, required, {
+			includePrerelease: true,
+		})
+	} catch (e) {
+		satisfied = false
+	}
+
+	if (!satisfied) {
+		// Warn rather than throw: refusing the sibling still produces a complete
+		// build against the pinned npm package, so there is nothing to repair
+		// before the build can proceed.
+		// eslint-disable-next-line no-console
+		console.warn(
+			`[pipelinq] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
+				+ "it does not satisfy this app's declared range. Building against the npm dist.",
+		)
+		useLocalLib = false
 	}
 }
 
@@ -116,16 +148,21 @@ webpackConfig.resolve = {
 		'@': path.resolve(__dirname, 'src'),
 		...(useLocalLib
 			? { '@conduction/nextcloud-vue': localLib }
-			// Published mode: the package's main entry is dist/, but src/main.js
-			// imports the integration-registry helpers from their 0-hop definition
-			// modules (`@conduction/nextcloud-vue/integrations/...`) rather than the
-			// barrel — the barrel's multi-hop re-exports of these functions resolve
-			// to `undefined` across pipelinq's split shared-nc-vue chunk. Those
-			// subpaths exist only under the package's published `src/` tree, so map
-			// the `integrations` subpath there. The registry installs onto the
-			// `window.OCA.OpenRegister.integrations` global, so resolving these from
-			// src/ shares the same singleton as the dist components (no dual instance).
-			: { '@conduction/nextcloud-vue/integrations': path.resolve(__dirname, 'node_modules/@conduction/nextcloud-vue/src/integrations') }),
+			: // Published mode: the package's main entry is dist/, but src/main.js
+				// imports the integration-registry helpers from their 0-hop definition
+				// modules (`@conduction/nextcloud-vue/integrations/...`) rather than the
+				// barrel — the barrel's multi-hop re-exports of these functions resolve
+				// to `undefined` across pipelinq's split shared-nc-vue chunk. Those
+				// subpaths exist only under the package's published `src/` tree, so map
+				// the `integrations` subpath there. The registry installs onto the
+				// `window.OCA.OpenRegister.integrations` global, so resolving these from
+				// src/ shares the same singleton as the dist components (no dual instance).
+				{
+					'@conduction/nextcloud-vue/integrations': path.resolve(
+						__dirname,
+						'node_modules/@conduction/nextcloud-vue/src/integrations',
+					),
+				}),
 		// Deduplicate shared packages so the aliased library source uses the same
 		// instances as the app (prevents dual-Pinia / dual-Vue / dual-router bugs).
 		//
@@ -139,12 +176,18 @@ webpackConfig.resolve = {
 		// still declare `main`, so a directory alias resolves for them.)
 		vue$: path.resolve(__dirname, 'node_modules/vue'),
 		pinia$: path.resolve(__dirname, 'node_modules/pinia'),
-		'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue/dist/index.mjs'),
+		'@nextcloud/vue$': path.resolve(
+			__dirname,
+			'node_modules/@nextcloud/vue/dist/index.mjs',
+		),
 		// @nextcloud/vue@9 hard-depends on vue-router ^5.1.0 while the app is on
 		// vue-router 4, so a DUAL COPY is inevitable and the router injection keys
 		// (module-local Symbols) would not match across it — `useRoute()` inside
 		// library components would return undefined. Force one copy.
-		'vue-router$': path.resolve(__dirname, 'node_modules/vue-router/dist/vue-router.mjs'),
+		'vue-router$': path.resolve(
+			__dirname,
+			'node_modules/vue-router/dist/vue-router.mjs',
+		),
 	},
 }
 
@@ -153,7 +196,9 @@ webpackConfig.resolve = {
 webpackConfig.plugins = [
 	new VueLoaderPlugin(),
 	new webpack.DefinePlugin({ appName: JSON.stringify(appId) }),
-	new webpack.DefinePlugin({ appVersion: JSON.stringify(process.env.npm_package_version) }),
+	new webpack.DefinePlugin({
+		appVersion: JSON.stringify(process.env.npm_package_version),
+	}),
 ]
 
 // The former `@nextcloud/dialogs` + `@nextcloud/dialogs/style.css` directory
@@ -184,8 +229,14 @@ webpackConfig.plugins = [
 // nc-vue pulls ESM-only @nextcloud packages that declare only the `import`
 // export condition; alias to the ESM entry so a CJS `require()` inside a
 // transitive dependency still resolves.
-webpackConfig.resolve.alias['@nextcloud/paths$'] = path.resolve(__dirname, 'node_modules/@nextcloud/paths/dist/index.mjs')
-webpackConfig.resolve.alias['@nextcloud/notify_push$'] = path.resolve(__dirname, 'node_modules/@nextcloud/notify_push/dist/index.js')
+webpackConfig.resolve.alias['@nextcloud/paths$'] = path.resolve(
+	__dirname,
+	'node_modules/@nextcloud/paths/dist/index.mjs',
+)
+webpackConfig.resolve.alias['@nextcloud/notify_push$'] = path.resolve(
+	__dirname,
+	'node_modules/@nextcloud/notify_push/dist/index.js',
+)
 
 // @nextcloud/files (pulled transitively via @nextcloud/axios → @nextcloud/auth)
 // references the Node core `stream` module, which webpack 5 does not polyfill for

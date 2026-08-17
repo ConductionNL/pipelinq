@@ -84,6 +84,7 @@ export default {
 			default: () => ({}),
 		},
 	},
+
 	computed: {
 		/**
 		 * Persisted per-rate tax summary rows, sorted by rate ascending.
@@ -91,8 +92,11 @@ export default {
 		 * @return {Array<object>} The tax breakdown rows.
 		 */
 		taxBreakdown() {
-			return [...(this.transaction.taxBreakdown || [])].sort((a, b) => a.rate - b.rate)
+			return [...(this.transaction.taxBreakdown || [])].sort(
+				(a, b) => a.rate - b.rate,
+			)
 		},
+
 		/**
 		 * Per-rate GL posting rows. Falls back to deriving descriptions from the
 		 * tax breakdown for legacy records that predate the invoice breakdown.
@@ -104,11 +108,12 @@ export default {
 			if (Array.isArray(rows) && rows.length > 0) {
 				return [...rows].sort((a, b) => a.rate - b.rate)
 			}
-			return this.taxBreakdown.map(row => ({
+			return this.taxBreakdown.map((row) => ({
 				...row,
 				description: rateDescription(row.rate),
 			}))
 		},
+
 		/**
 		 * Whether prices are tax-inclusive.
 		 *
@@ -117,6 +122,7 @@ export default {
 		isInclusive() {
 			return this.transaction.priceMode === 'incl'
 		},
+
 		/**
 		 * Price mode label for the card header.
 		 *
@@ -128,6 +134,7 @@ export default {
 				: t('pipelinq', 'Prices excl. VAT')
 		},
 	},
+
 	methods: {
 		formatEur,
 	},

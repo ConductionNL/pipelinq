@@ -51,183 +51,179 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/master-data-management/spec.md
  */
-class SeedTrustConfigurationRows implements IRepairStep
-{
-    /**
-     * OpenRegister's trust-configuration register slug.
-     *
-     * @var string
-     */
-    private const OR_TRUST_REGISTER = 'trust-configuration';
+class SeedTrustConfigurationRows implements IRepairStep {
+	/**
+	 * OpenRegister's trust-configuration register slug.
+	 *
+	 * @var string
+	 */
+	private const OR_TRUST_REGISTER = 'trust-configuration';
 
-    /**
-     * OpenRegister's trustConfiguration schema slug.
-     *
-     * @var string
-     */
-    private const OR_TRUST_SCHEMA = 'trustConfiguration';
+	/**
+	 * OpenRegister's trustConfiguration schema slug.
+	 *
+	 * @var string
+	 */
+	private const OR_TRUST_SCHEMA = 'trustConfiguration';
 
-    /**
-     * The three account trust rows migrated one-to-one from the pipelinq
-     * register file. Same field shape as OR's trustConfiguration schema.
-     *
-     * @var array<int, array<string, mixed>>
-     */
-    private const TRUST_ROWS = [
-        [
-            'entityType'            => 'account',
-            'attribute'             => 'billingAddress',
-            'sourceSystem'          => 'kvk-api',
-            'trustTier'             => 'gold',
-            'freshnessDecayDays'    => 180,
-            'manualOverrideAllowed' => true,
-            'rationale'             => 'KvK is government-verified source for Dutch business addresses.',
-            'effectiveFrom'         => '2026-06-01',
-        ],
-        [
-            'entityType'            => 'account',
-            'attribute'             => 'phone',
-            'sourceSystem'          => 'shillinq-debiteuren',
-            'trustTier'             => 'silver',
-            'freshnessDecayDays'    => 90,
-            'manualOverrideAllowed' => true,
-            'rationale'             => 'Shillinq phone numbers are used for billing communication; fresher than CRM.',
-            'effectiveFrom'         => '2026-06-01',
-        ],
-        [
-            'entityType'            => 'account',
-            'attribute'             => 'vatNumber',
-            'sourceSystem'          => 'kvk-api',
-            'trustTier'             => 'gold',
-            'freshnessDecayDays'    => 365,
-            'manualOverrideAllowed' => false,
-            'rationale'             => 'KvK VAT numbers are legally binding; override not permitted.',
-            'effectiveFrom'         => '2026-06-01',
-        ],
-    ];
+	/**
+	 * The three account trust rows migrated one-to-one from the pipelinq
+	 * register file. Same field shape as OR's trustConfiguration schema.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private const TRUST_ROWS = [
+		[
+			'entityType' => 'account',
+			'attribute' => 'billingAddress',
+			'sourceSystem' => 'kvk-api',
+			'trustTier' => 'gold',
+			'freshnessDecayDays' => 180,
+			'manualOverrideAllowed' => true,
+			'rationale' => 'KvK is government-verified source for Dutch business addresses.',
+			'effectiveFrom' => '2026-06-01',
+		],
+		[
+			'entityType' => 'account',
+			'attribute' => 'phone',
+			'sourceSystem' => 'shillinq-debiteuren',
+			'trustTier' => 'silver',
+			'freshnessDecayDays' => 90,
+			'manualOverrideAllowed' => true,
+			'rationale' => 'Shillinq phone numbers are used for billing communication; fresher than CRM.',
+			'effectiveFrom' => '2026-06-01',
+		],
+		[
+			'entityType' => 'account',
+			'attribute' => 'vatNumber',
+			'sourceSystem' => 'kvk-api',
+			'trustTier' => 'gold',
+			'freshnessDecayDays' => 365,
+			'manualOverrideAllowed' => false,
+			'rationale' => 'KvK VAT numbers are legally binding; override not permitted.',
+			'effectiveFrom' => '2026-06-01',
+		],
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param IAppManager        $appManager The app manager.
-     * @param ContainerInterface $container  The DI container (OR ObjectService lookup).
-     * @param LoggerInterface    $logger     The logger.
-     */
-    public function __construct(
-        private readonly IAppManager $appManager,
-        private readonly ContainerInterface $container,
-        private readonly LoggerInterface $logger,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppManager $appManager The app manager.
+	 * @param ContainerInterface $container The DI container (OR ObjectService lookup).
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private readonly IAppManager $appManager,
+		private readonly ContainerInterface $container,
+		private readonly LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Get the name of this repair step.
-     *
-     * @return string The step name.
-     *
-     * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-005
-     */
-    public function getName(): string
-    {
-        return 'Seed pipelinq trust-tier rows into OpenRegister trust-configuration register (idempotent)';
-    }//end getName()
+	/**
+	 * Get the name of this repair step.
+	 *
+	 * @return string The step name.
+	 *
+	 * @spec openspec/changes/mdm-consume-or-surface-backend/specs/master-data-management/spec.md#REQ-MDM-005
+	 */
+	public function getName(): string {
+		return 'Seed pipelinq trust-tier rows into OpenRegister trust-configuration register (idempotent)';
+	}//end getName()
 
-    /**
-     * Run the repair step (IRepairStep entry point).
-     *
-     * @param IOutput $output The output interface.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/master-data-management/spec.md
-     */
-    public function run(IOutput $output): void
-    {
-        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-            $output->warning('OpenRegister not installed — skipping trust-configuration seed.');
-            return;
-        }
+	/**
+	 * Run the repair step (IRepairStep entry point).
+	 *
+	 * @param IOutput $output The output interface.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/master-data-management/spec.md
+	 */
+	public function run(IOutput $output): void {
+		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+			$output->warning('OpenRegister not installed — skipping trust-configuration seed.');
+			return;
+		}
 
-        try {
-            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-        } catch (\Throwable $e) {
-            $output->warning('OpenRegister ObjectService unavailable — skipping trust-configuration seed.');
-            return;
-        }
+		try {
+			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+		} catch (\Throwable $e) {
+			$output->warning('OpenRegister ObjectService unavailable — skipping trust-configuration seed.');
+			return;
+		}
 
-        $seeded  = 0;
-        $skipped = 0;
-        foreach (self::TRUST_ROWS as $row) {
-            try {
-                if ($this->rowExists(objectService: $objectService, row: $row) === true) {
-                    $skipped++;
-                    continue;
-                }
+		$seeded = 0;
+		$skipped = 0;
+		foreach (self::TRUST_ROWS as $row) {
+			try {
+				if ($this->rowExists(objectService: $objectService, row: $row) === true) {
+					$skipped++;
+					continue;
+				}
 
-                // A repair step runs from `occ` with no user session, so RBAC
-                // resolves the actor to 'Anonymous' and refuses the write. Seed
-                // rows are system data, not user data — run them in the system
-                // context, as the other repair/CLI writers do.
-                $objectService->saveObject(
-                    object: $row,
-                    extend: [],
-                    register: self::OR_TRUST_REGISTER,
-                    schema: self::OR_TRUST_SCHEMA,
-                    uuid: null,
-                    _rbac: false,
-                    _multitenancy: false
-                );
-                $seeded++;
-            } catch (\Throwable $e) {
-                $output->warning(
-                    sprintf(
-                        'Trust-configuration seed failed for %s/%s/%s: %s',
-                        $row['entityType'],
-                        $row['attribute'],
-                        $row['sourceSystem'],
-                        $e->getMessage()
-                    )
-                );
-                $this->logger->warning(
-                    'Pipelinq MDM: trust-configuration seed row failed',
-                    ['row' => $row, 'exception' => $e->getMessage()]
-                );
-            }//end try
-        }//end foreach
+				// A repair step runs from `occ` with no user session, so RBAC
+				// resolves the actor to 'Anonymous' and refuses the write. Seed
+				// rows are system data, not user data — run them in the system
+				// context, as the other repair/CLI writers do.
+				$objectService->saveObject(
+					object: $row,
+					extend: [],
+					register: self::OR_TRUST_REGISTER,
+					schema: self::OR_TRUST_SCHEMA,
+					uuid: null,
+					_rbac: false,
+					_multitenancy: false
+				);
+				$seeded++;
+			} catch (\Throwable $e) {
+				$output->warning(
+					sprintf(
+						'Trust-configuration seed failed for %s/%s/%s: %s',
+						$row['entityType'],
+						$row['attribute'],
+						$row['sourceSystem'],
+						$e->getMessage()
+					)
+				);
+				$this->logger->warning(
+					'Pipelinq MDM: trust-configuration seed row failed',
+					['row' => $row, 'exception' => $e->getMessage()]
+				);
+			}//end try
+		}//end foreach
 
-        $output->info(
-            sprintf('Trust-configuration seed complete: %d seeded, %d already present.', $seeded, $skipped)
-        );
-    }//end run()
+		$output->info(
+			sprintf('Trust-configuration seed complete: %d seeded, %d already present.', $seeded, $skipped)
+		);
+	}//end run()
 
-    /**
-     * Whether a trust row for this (entityType, attribute, sourceSystem) already
-     * exists in OpenRegister's trust-configuration register.
-     *
-     * @param mixed                $objectService The OR ObjectService.
-     * @param array<string, mixed> $row           The candidate trust row.
-     *
-     * @return bool True when a matching row already exists.
-     */
-    private function rowExists(mixed $objectService, array $row): bool
-    {
-        // Read in the system context too: an RBAC-filtered read as 'Anonymous'
-        // returns nothing, which would make an existing row look absent and the
-        // seed re-insert a duplicate on every upgrade.
-        $results = $objectService->findAll(
-            config: [
-                'filters' => [
-                    'register'     => self::OR_TRUST_REGISTER,
-                    'schema'       => self::OR_TRUST_SCHEMA,
-                    'entityType'   => $row['entityType'],
-                    'attribute'    => $row['attribute'],
-                    'sourceSystem' => $row['sourceSystem'],
-                ],
-            ],
-            _rbac: false,
-            _multitenancy: false
-        );
+	/**
+	 * Whether a trust row for this (entityType, attribute, sourceSystem) already
+	 * exists in OpenRegister's trust-configuration register.
+	 *
+	 * @param mixed $objectService The OR ObjectService.
+	 * @param array<string, mixed> $row The candidate trust row.
+	 *
+	 * @return bool True when a matching row already exists.
+	 */
+	private function rowExists(mixed $objectService, array $row): bool {
+		// Read in the system context too: an RBAC-filtered read as 'Anonymous'
+		// returns nothing, which would make an existing row look absent and the
+		// seed re-insert a duplicate on every upgrade.
+		$results = $objectService->findAll(
+			config: [
+				'filters' => [
+					'register' => self::OR_TRUST_REGISTER,
+					'schema' => self::OR_TRUST_SCHEMA,
+					'entityType' => $row['entityType'],
+					'attribute' => $row['attribute'],
+					'sourceSystem' => $row['sourceSystem'],
+				],
+			],
+			_rbac: false,
+			_multitenancy: false
+		);
 
-        return empty($results) === false;
-    }//end rowExists()
+		return empty($results) === false;
+	}//end rowExists()
 }//end class

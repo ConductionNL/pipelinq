@@ -13,7 +13,13 @@
 <template>
 	<div class="project-activity-list">
 		<div class="project-activity-list__header">
-			<NcButton @click="$router.push({ name: 'ProjectDetail', params: { id: projectId } })">
+			<NcButton
+				@click="
+					$router.push({
+						name: 'ProjectDetail',
+						params: { id: projectId },
+					})
+				">
 				{{ t('pipelinq', 'Back to project') }}
 			</NcButton>
 			<h2>
@@ -25,15 +31,18 @@
 		<div class="filters">
 			<label>
 				{{ t('pipelinq', 'From') }}
-				<input v-model="filters.from" type="date">
+				<input v-model="filters.from" type="date" />
 			</label>
 			<label>
 				{{ t('pipelinq', 'To') }}
-				<input v-model="filters.to" type="date">
+				<input v-model="filters.to" type="date" />
 			</label>
 			<label>
 				{{ t('pipelinq', 'User') }}
-				<input v-model="filters.user" type="text" :placeholder="t('pipelinq', 'UID')">
+				<input
+					v-model="filters.user"
+					type="text"
+					:placeholder="t('pipelinq', 'UID')" />
 			</label>
 			<label>
 				{{ t('pipelinq', 'Task') }}
@@ -92,8 +101,18 @@
 							{{ formatDuration(row.durationMinutes) }}
 						</td>
 						<td>
-							<span :class="['billable-dot', resolveBillable(row) ? 'billable-dot--on' : 'billable-dot--off']" />
-							{{ resolveBillable(row) ? t('pipelinq', 'Billable') : t('pipelinq', 'Non-billable') }}
+							<span
+								class="billable-dot"
+								:class="[
+									resolveBillable(row)
+										? 'billable-dot--on'
+										: 'billable-dot--off',
+								]" />
+							{{
+								resolveBillable(row)
+									? t('pipelinq', 'Billable')
+									: t('pipelinq', 'Non-billable')
+							}}
 						</td>
 					</tr>
 				</tbody>
@@ -106,9 +125,11 @@
 							{{ formatHours(totals.total) }}
 						</td>
 						<td>
-							{{ t('pipelinq', 'Billable') }}: {{ formatHours(totals.billable) }}
+							{{ t('pipelinq', 'Billable') }}:
+							{{ formatHours(totals.billable) }}
 							·
-							{{ t('pipelinq', 'Non-billable') }}: {{ formatHours(totals.nonBillable) }}
+							{{ t('pipelinq', 'Non-billable') }}:
+							{{ formatHours(totals.nonBillable) }}
 						</td>
 					</tr>
 				</tfoot>
@@ -126,12 +147,14 @@ export default {
 	components: {
 		NcButton,
 	},
+
 	props: {
 		id: {
 			type: String,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			loading: true,
@@ -148,24 +171,43 @@ export default {
 			},
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		projectId() {
-			return this.id || (this.$route && this.$route.params && this.$route.params.id) || null
+			return (
+				this.id
+				|| (this.$route && this.$route.params && this.$route.params.id)
+				|| null
+			)
 		},
+
 		filteredActivities() {
 			return this.activities.filter((row) => {
-				if (this.filters.from && row.date && row.date < this.filters.from) return false
-				if (this.filters.to && row.date && row.date > this.filters.to) return false
-				if (this.filters.user && row.user && row.user.toLowerCase().indexOf(this.filters.user.toLowerCase()) === -1) return false
+				if (this.filters.from && row.date && row.date < this.filters.from)
+					return false
+				if (this.filters.to && row.date && row.date > this.filters.to)
+					return false
+				if (
+					this.filters.user
+					&& row.user
+					&& row.user
+						.toLowerCase()
+						.indexOf(this.filters.user.toLowerCase()) === -1
+				)
+					return false
 				if (this.filters.task && row.task !== this.filters.task) return false
-				if (this.filters.billable === 'yes' && !this.resolveBillable(row)) return false
-				if (this.filters.billable === 'no' && this.resolveBillable(row)) return false
+				if (this.filters.billable === 'yes' && !this.resolveBillable(row))
+					return false
+				if (this.filters.billable === 'no' && this.resolveBillable(row))
+					return false
 				return true
 			})
 		},
+
 		totals() {
 			let billable = 0
 			let nonBillable = 0
@@ -184,18 +226,29 @@ export default {
 			}
 		},
 	},
+
 	async mounted() {
 		await this.loadAll()
 	},
+
 	methods: {
 		async loadAll() {
 			this.loading = true
 			try {
 				const [project, phases, tasks, activities] = await Promise.all([
 					this.objectStore.fetchObject('project', this.projectId),
-					this.objectStore.fetchCollection('projectPhase', { _limit: 200, project: this.projectId }),
-					this.objectStore.fetchCollection('projectTask', { _limit: 500, project: this.projectId }),
-					this.objectStore.fetchCollection('projectActivity', { _limit: 2000, project: this.projectId }),
+					this.objectStore.fetchCollection('projectPhase', {
+						_limit: 200,
+						project: this.projectId,
+					}),
+					this.objectStore.fetchCollection('projectTask', {
+						_limit: 500,
+						project: this.projectId,
+					}),
+					this.objectStore.fetchCollection('projectActivity', {
+						_limit: 2000,
+						project: this.projectId,
+					}),
 				])
 				this.projectData = project || {}
 				this.phases = phases || []
@@ -205,6 +258,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Resolved billable value for an activity walking activity → task →
 		 * phase → project (REQ-PTH-005).
@@ -216,11 +270,11 @@ export default {
 			if (activity && typeof activity.billable === 'boolean') {
 				return activity.billable
 			}
-			const task = this.tasks.find(t => t.id === activity.task)
+			const task = this.tasks.find((t) => t.id === activity.task)
 			if (task && typeof task.billable === 'boolean') {
 				return task.billable
 			}
-			const phase = task ? this.phases.find(p => p.id === task.phase) : null
+			const phase = task ? this.phases.find((p) => p.id === task.phase) : null
 			if (phase && typeof phase.billable === 'boolean') {
 				return phase.billable
 			}
@@ -229,18 +283,22 @@ export default {
 			}
 			return true
 		},
+
 		taskName(taskId) {
 			if (!taskId) return '-'
-			const task = this.tasks.find(t => t.id === taskId)
-			return task ? (task.name || taskId) : taskId
+			const task = this.tasks.find((t) => t.id === taskId)
+			return task ? task.name || taskId : taskId
 		},
+
 		minutesToHours(minutes) {
 			return Math.round((Number(minutes) / 60) * 10) / 10
 		},
+
 		formatHours(value) {
 			const n = Number(value || 0)
 			return n + 'u'
 		},
+
 		formatDuration(minutes) {
 			const n = Number(minutes) || 0
 			const h = Math.floor(n / 60)
@@ -253,6 +311,7 @@ export default {
 			}
 			return h + 'u ' + m + 'min'
 		},
+
 		formatDate(dateStr) {
 			if (!dateStr) return '-'
 			try {
@@ -322,9 +381,13 @@ export default {
 	vertical-align: middle;
 }
 
-.billable-dot--on { background: #43a047; }
+.billable-dot--on {
+	background: #43a047;
+}
 
-.billable-dot--off { background: #b0bec5; }
+.billable-dot--off {
+	background: #b0bec5;
+}
 
 .loading-state,
 .empty-state {

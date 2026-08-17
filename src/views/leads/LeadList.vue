@@ -23,18 +23,26 @@
 		:schema="schema"
 		:columns="columns"
 		:sidebar="sidebarConfig"
-		:row-class="rowClassFor"
-		:items-filter="itemsFilter"
-		:row-click-to-view="false"
-		@row-click="openLead"
+		:rowClass="rowClassFor"
+		:itemsFilter="itemsFilter"
+		:rowClickToView="false"
+		@rowClick="openLead"
 		@view="openLead">
 		<template #header-actions>
 			<div class="lead-list__filters">
 				<NcCheckboxRadioSwitch
 					v-model="showStaleOnly"
-					:aria-label="t('pipelinq', 'Stale only (>{days}d)', { days: staleThreshold })"
+					:aria-label="
+						t('pipelinq', 'Stale only (>{days}d)', {
+							days: staleThreshold,
+						})
+					"
 					type="checkbox">
-					{{ t('pipelinq', 'Stale only (>{days}d)', { days: staleThreshold }) }}
+					{{
+						t('pipelinq', 'Stale only (>{days}d)', {
+							days: staleThreshold,
+						})
+					}}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
 					v-model="hideClosed"
@@ -59,9 +67,14 @@
 <script>
 import { CnIndexPage } from '@conduction/nextcloud-vue'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
-import { getDaysAge, isLeadOverdue, getOverdueDays, getStaleThreshold } from '../../services/pipelineUtils.js'
-import { useSettingsStore } from '../../store/modules/settings.js'
+import {
+	getDaysAge,
+	getOverdueDays,
+	getStaleThreshold,
+	isLeadOverdue,
+} from '../../services/pipelineUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 
 export default {
 	name: 'LeadList',
@@ -69,16 +82,26 @@ export default {
 		CnIndexPage,
 		NcCheckboxRadioSwitch,
 	},
+
 	data() {
 		return {
 			register: 'pipelinq',
 			schema: 'lead',
-			columns: ['title', 'stage', 'status', 'priority', 'value', 'expectedCloseDate'],
+			columns: [
+				'title',
+				'stage',
+				'status',
+				'priority',
+				'value',
+				'expectedCloseDate',
+			],
+
 			showStaleOnly: false,
 			hideClosed: true,
 			stages: [],
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/specs/lead-management/spec.md
@@ -86,12 +109,14 @@ export default {
 		settingsStore() {
 			return useSettingsStore()
 		},
+
 		/**
 		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * Effective stale threshold from the settings store. Falls back to
 		 * 14 days when the store hasn't initialised yet.
@@ -101,6 +126,7 @@ export default {
 		staleThreshold() {
 			return getStaleThreshold(this.settingsStore.config)
 		},
+
 		/**
 		 * Sidebar config for the index page; mirrors the manifest.json default.
 		 */
@@ -108,10 +134,12 @@ export default {
 			return { enabled: true, showMetadata: true }
 		},
 	},
+
 	async mounted() {
 		await this.settingsStore.fetchSettings()
 		await this.loadDefaultPipeline()
 	},
+
 	methods: {
 		isLeadOverdue,
 		getOverdueDays,
@@ -123,6 +151,7 @@ export default {
 		openLead(row) {
 			this.$router.push({ name: 'LeadDetail', params: { id: row.id } })
 		},
+
 		/**
 		 * Compute the row CSS class for the given lead. Drives the
 		 * `.lead-overdue` highlighting on the list rows.
@@ -134,6 +163,7 @@ export default {
 		rowClassFor(item) {
 			return isLeadOverdue(item, this.stages) ? 'lead-overdue' : ''
 		},
+
 		/**
 		 * Custom items filter — applied after the platform's search/sort.
 		 * Implements the stale toggle and the optional "hide closed" filter.
@@ -144,8 +174,11 @@ export default {
 		 */
 		itemsFilter(items) {
 			if (!Array.isArray(items)) return []
-			return items.filter(item => {
-				if (this.hideClosed && (item.status === 'won' || item.status === 'lost')) {
+			return items.filter((item) => {
+				if (
+					this.hideClosed
+					&& (item.status === 'won' || item.status === 'lost')
+				) {
 					return false
 				}
 				if (this.showStaleOnly && getDaysAge(item) < this.staleThreshold) {
@@ -154,6 +187,7 @@ export default {
 				return true
 			})
 		},
+
 		/**
 		 * Resolve the default pipeline's stages so the overdue highlighting
 		 * (REQ-LM-004) can honour each stage's `isClosed` flag. Falls back to
@@ -163,9 +197,13 @@ export default {
 		 */
 		async loadDefaultPipeline() {
 			try {
-				const pipelines = await this.objectStore.fetchCollection('pipeline', { _limit: 50 })
+				const pipelines = await this.objectStore.fetchCollection(
+					'pipeline',
+					{ _limit: 50 },
+				)
 				if (!Array.isArray(pipelines)) return
-				const defaultPipeline = pipelines.find(p => p.isDefault) || pipelines[0]
+				const defaultPipeline =
+					pipelines.find((p) => p.isDefault) || pipelines[0]
 				if (defaultPipeline && Array.isArray(defaultPipeline.stages)) {
 					this.stages = defaultPipeline.stages
 				}

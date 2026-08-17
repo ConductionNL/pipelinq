@@ -35,50 +35,47 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Console entrypoint for the portal account-closure cleanup.
  */
-class PortalCleanupCommand extends Command
-{
-    /**
-     * Constructor.
-     *
-     * @param PortalCleanupService $cleanup The cleanup service.
-     */
-    public function __construct(
-        private PortalCleanupService $cleanup,
-    ) {
-        parent::__construct();
-    }//end __construct()
+class PortalCleanupCommand extends Command {
+	/**
+	 * Constructor.
+	 *
+	 * @param PortalCleanupService $cleanup The cleanup service.
+	 */
+	public function __construct(
+		private PortalCleanupService $cleanup,
+	) {
+		parent::__construct();
+	}//end __construct()
 
-    /**
-     * Configure the command name and description.
-     *
-     * @return void
-     */
-    protected function configure(): void
-    {
-        $this->setName(name: 'pipelinq:portal:cleanup')
-            ->setDescription('Pseudonymise contacts of closed portal accounts whose retention has lapsed (AVG Art. 17).');
-    }//end configure()
+	/**
+	 * Configure the command name and description.
+	 *
+	 * @return void
+	 */
+	protected function configure(): void {
+		$this->setName(name: 'pipelinq:portal:cleanup')
+			->setDescription('Pseudonymise contacts of closed portal accounts whose retention has lapsed (AVG Art. 17).');
+	}//end configure()
 
-    /**
-     * Execute the cleanup pass.
-     *
-     * @param InputInterface  $input  The console input (unused; no arguments).
-     * @param OutputInterface $output The console output.
-     *
-     * @return int The exit code.
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $input is part of the
-     *  Symfony Command::execute() contract.
-     */
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        try {
-            $count = $this->cleanup->run();
-            $output->writeln(sprintf('<info>Pseudonymised %d closed-account contact(s).</info>', $count));
-            return Command::SUCCESS;
-        } catch (\Throwable $e) {
-            $output->writeln('<error>Portal cleanup failed: '.$e->getMessage().'</error>');
-            return Command::FAILURE;
-        }
-    }//end execute()
+	/**
+	 * Execute the cleanup pass.
+	 *
+	 * @param InputInterface $input The console input (unused; no arguments).
+	 * @param OutputInterface $output The console output.
+	 *
+	 * @return int The exit code.
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $input is part of the
+	 *  Symfony Command::execute() contract.
+	 */
+	protected function execute(InputInterface $input, OutputInterface $output): int {
+		try {
+			$count = $this->cleanup->run();
+			$output->writeln(sprintf('<info>Pseudonymised %d closed-account contact(s).</info>', $count));
+			return Command::SUCCESS;
+		} catch (\Throwable $e) {
+			$output->writeln('<error>Portal cleanup failed: ' . $e->getMessage() . '</error>');
+			return Command::FAILURE;
+		}
+	}//end execute()
 }//end class

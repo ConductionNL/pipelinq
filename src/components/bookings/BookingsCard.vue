@@ -22,7 +22,9 @@
 		<div v-if="loading" class="bookings-card__state">
 			<NcLoadingIcon :size="24" />
 		</div>
-		<div v-else-if="error" class="bookings-card__state bookings-card__state--error">
+		<div
+			v-else-if="error"
+			class="bookings-card__state bookings-card__state--error">
 			<p>{{ error }}</p>
 		</div>
 		<div v-else-if="!sortedBookings.length" class="bookings-card__state">
@@ -48,7 +50,9 @@
 						<td>{{ serviceLabel(row) }}</td>
 						<td>{{ resourceLabel(row) }}</td>
 						<td>
-							<span class="status-badge" :class="`status-badge--${row.status}`">
+							<span
+								class="status-badge"
+								:class="`status-badge--${row.status}`">
 								{{ statusLabel(row.status) }}
 							</span>
 						</td>
@@ -60,8 +64,8 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
 import { CnDetailCard } from '@conduction/nextcloud-vue'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const STATUS_LABELS = {
@@ -80,6 +84,7 @@ export default {
 	props: {
 		customerId: { type: String, required: true },
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -89,10 +94,12 @@ export default {
 			resourceLookup: {},
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * Future-first sort: upcoming bookings (startAt > now) first in
 		 * ascending order, then past bookings in descending order so the
@@ -117,6 +124,7 @@ export default {
 			return [...future, ...past]
 		},
 	},
+
 	watch: {
 		customerId: {
 			immediate: true,
@@ -127,6 +135,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Fetch bookings for the customer and prime the service / resource
@@ -148,50 +157,77 @@ export default {
 				await this.primeLabels()
 			} catch {
 				this.bookings = []
-				this.error = t('pipelinq', 'Failed to load bookings for this customer.')
+				this.error = t(
+					'pipelinq',
+					'Failed to load bookings for this customer.',
+				)
 			} finally {
 				this.loading = false
 			}
 		},
+
 		async primeLabels() {
-			const serviceIds = [...new Set(this.bookings.map(b => b.serviceId).filter(Boolean))]
-			const resourceIds = [...new Set(
-				this.bookings.flatMap(b => (b.resourceAssignments || []).map(a => a?.resourceId).filter(Boolean)),
-			)]
+			const serviceIds = [
+				...new Set(this.bookings.map((b) => b.serviceId).filter(Boolean)),
+			]
+			const resourceIds = [
+				...new Set(
+					this.bookings.flatMap((b) =>
+						(b.resourceAssignments || [])
+							.map((a) => a?.resourceId)
+							.filter(Boolean),
+					),
+				),
+			]
 			for (const id of serviceIds) {
 				if (this.serviceLookup[id]) continue
 				try {
 					const svc = await this.objectStore.fetchObject('service', id)
 					if (svc?.name) {
-						this.serviceLookup = { ...this.serviceLookup, [id]: svc.name }
+						this.serviceLookup = {
+							...this.serviceLookup,
+							[id]: svc.name,
+						}
 					}
-				} catch { /* tolerated */ }
+				} catch {
+					/* tolerated */
+				}
 			}
 			for (const id of resourceIds) {
 				if (this.resourceLookup[id]) continue
 				try {
 					const r = await this.objectStore.fetchObject('resource', id)
 					if (r?.name) {
-						this.resourceLookup = { ...this.resourceLookup, [id]: r.name }
+						this.resourceLookup = {
+							...this.resourceLookup,
+							[id]: r.name,
+						}
 					}
-				} catch { /* tolerated */ }
+				} catch {
+					/* tolerated */
+				}
 			}
 		},
+
 		open(row) {
 			this.$router.push({ name: 'BookingDetail', params: { id: row.id } })
 		},
+
 		serviceLabel(row) {
 			return this.serviceLookup[row.serviceId] || row.serviceId || '-'
 		},
+
 		resourceLabel(row) {
 			const first = (row.resourceAssignments || [])[0]
 			const id = first?.resourceId
 			if (!id) return '-'
 			return this.resourceLookup[id] || id
 		},
+
 		statusLabel(status) {
 			return t('pipelinq', STATUS_LABELS[status] || status || '-')
 		},
+
 		formatDateTime(iso) {
 			if (!iso) return '-'
 			try {
@@ -228,7 +264,8 @@ export default {
 	border-collapse: collapse;
 }
 
-.viewTable th, .viewTable td {
+.viewTable th,
+.viewTable td {
 	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);

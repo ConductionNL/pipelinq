@@ -36,6 +36,7 @@ use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCA\Pipelinq\Service\Portal\PortalSessionManager;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -46,216 +47,226 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the auth-flow services
  *  (auth, sessions, MFA, reset, repository, guard) a login controller needs.
  */
-class PortalAuthController extends PortalApiController
-{
-    /**
-     * Schema slug for accounts.
-     *
-     * @var string
-     */
-    private const ACCOUNT_SCHEMA = 'portalAccount';
+class PortalAuthController extends PortalApiController {
+	/**
+	 * Schema slug for accounts.
+	 *
+	 * @var string
+	 */
+	private const ACCOUNT_SCHEMA = 'portalAccount';
 
-    /**
-     * Constructor.
-     *
-     * @param IRequest               $request    The request.
-     * @param PortalRequestGuard     $guard      The portal guard.
-     * @param LoggerInterface        $logger     The logger.
-     * @param PortalAuthService      $auth       The auth service.
-     * @param PortalSessionManager   $sessions   The session manager.
-     * @param PortalMfaService       $mfa        The MFA service.
-     * @param PasswordResetService   $reset      The password-reset service.
-     * @param PortalObjectRepository $repository The portal object repository.
-     */
-    public function __construct(
-        IRequest $request,
-        PortalRequestGuard $guard,
-        LoggerInterface $logger,
-        private PortalAuthService $auth,
-        private PortalSessionManager $sessions,
-        private PortalMfaService $mfa,
-        private PasswordResetService $reset,
-        private PortalObjectRepository $repository,
-    ) {
-        parent::__construct(request: $request, guard: $guard, logger: $logger);
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param PortalRequestGuard $guard The portal guard.
+	 * @param LoggerInterface $logger The logger.
+	 * @param PortalAuthService $auth The auth service.
+	 * @param PortalSessionManager $sessions The session manager.
+	 * @param PortalMfaService $mfa The MFA service.
+	 * @param PasswordResetService $reset The password-reset service.
+	 * @param PortalObjectRepository $repository The portal object repository.
+	 */
+	public function __construct(
+		IRequest $request,
+		PortalRequestGuard $guard,
+		LoggerInterface $logger,
+		private PortalAuthService $auth,
+		private PortalSessionManager $sessions,
+		private PortalMfaService $mfa,
+		private PasswordResetService $reset,
+		private PortalObjectRepository $repository,
+	) {
+		parent::__construct(request: $request, guard: $guard, logger: $logger);
+	}//end __construct()
 
-    /**
-     * Authenticate with email + password (+ optional TOTP).
-     *
-     * @return JSONResponse The login result (token or mfa-required marker).
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function login(): JSONResponse
-    {
-        return $this->guarded(
-            handler: function (): array {
-                $tenantId = $this->requireTenant();
-                $totpCode = $this->strParam(name: 'totpCode');
-                if ($totpCode === '') {
-                    $totpCode = null;
-                }
+	/**
+	 * Authenticate with email + password (+ optional TOTP).
+	 *
+	 * @return JSONResponse The login result (token or mfa-required marker).
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	// An IP-scoped ceiling ALONGSIDE the account-scoped lockout, not instead of
+	// it. PortalAuthService already arms a sliding-window lockout after repeated
+	// failures on ONE account — but an account lockout cannot see PASSWORD
+	// SPRAYING, where one IP tries one password against many accounts and never
+	// trips any single account's counter. That is the gap this closes.
+	#[AnonRateLimit(limit: 20, period: 60)]
+	public function login(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$tenantId = $this->requireTenant();
+				$totpCode = $this->strParam(name: 'totpCode');
+				if ($totpCode === '') {
+					$totpCode = null;
+				}
 
-                $result = $this->auth->login(
-                    email: $this->strParam(name: 'email'),
-                    password: (string) $this->request->getParam('password', ''),
-                    tenantId: $tenantId,
-                    totpCode: $totpCode,
-                    ipHash: $this->guard->ipHash(request: $this->request),
-                    userAgentHash: $this->guard->userAgentHash(request: $this->request)
-                );
+				$result = $this->auth->login(
+					email: $this->strParam(name: 'email'),
+					password: (string)$this->request->getParam('password', ''),
+					tenantId: $tenantId,
+					totpCode: $totpCode,
+					ipHash: $this->guard->ipHash(request: $this->request),
+					userAgentHash: $this->guard->userAgentHash(request: $this->request)
+				);
 
-                return [$result, Http::STATUS_OK];
-            }
-        );
-    }//end login()
+				return [$result, Http::STATUS_OK];
+			}
+		);
+	}//end login()
 
-    /**
-     * Revoke the current session.
-     *
-     * @return JSONResponse The logout acknowledgement.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function logout(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $ctx       = $this->requireSession();
-                    $sessionId = (string) $this->repository->idOf(object: $ctx['session']);
-                    $this->sessions->revokeSession(sessionId: $sessionId, reason: 'logout');
-                    return [['status' => 'logged-out'], Http::STATUS_OK];
-                }
-                );
-    }//end logout()
+	/**
+	 * Revoke the current session.
+	 *
+	 * @return JSONResponse The logout acknowledgement.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	#[AnonRateLimit(limit: 60, period: 60)]
+	public function logout(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$ctx = $this->requireSession();
+				$sessionId = (string)$this->repository->idOf(object: $ctx['session']);
+				$this->sessions->revokeSession(sessionId: $sessionId, reason: 'logout');
+				return [['status' => 'logged-out'], Http::STATUS_OK];
+			}
+		);
+	}//end logout()
 
-    /**
-     * Extend the current session's TTL.
-     *
-     * @return JSONResponse The new expiry.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function extendSession(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $ctx       = $this->requireSession();
-                    $sessionId = (string) $this->repository->idOf(object: $ctx['session']);
-                    $updated   = $this->sessions->extendSessionOrThrow(sessionId: $sessionId);
+	/**
+	 * Extend the current session's TTL.
+	 *
+	 * @return JSONResponse The new expiry.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	#[AnonRateLimit(limit: 60, period: 60)]
+	public function extendSession(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$ctx = $this->requireSession();
+				$sessionId = (string)$this->repository->idOf(object: $ctx['session']);
+				$updated = $this->sessions->extendSessionOrThrow(sessionId: $sessionId);
 
-                    return [['expiresAt' => ($updated['expiresAt'] ?? null)], Http::STATUS_OK];
-                }
-                );
-    }//end extendSession()
+				return [['expiresAt' => ($updated['expiresAt'] ?? null)], Http::STATUS_OK];
+			}
+		);
+	}//end extendSession()
 
-    /**
-     * Begin a password reset (uniform response — no account enumeration).
-     *
-     * @return JSONResponse The uniform acknowledgement.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function passwordResetRequest(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $tenantId = $this->requireTenant();
-                    $this->reset->requestReset(email: $this->strParam(name: 'email'), tenantId: $tenantId);
-                    return [['status' => 'ok'], Http::STATUS_OK];
-                }
-                );
-    }//end passwordResetRequest()
+	/**
+	 * Begin a password reset (uniform response — no account enumeration).
+	 *
+	 * @return JSONResponse The uniform acknowledgement.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	// Tight: this one sends mail to an address the caller supplies, so an
+	// unbounded caller can use it to mail-bomb a third party.
+	#[AnonRateLimit(limit: 10, period: 60)]
+	public function passwordResetRequest(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$tenantId = $this->requireTenant();
+				$this->reset->requestReset(email: $this->strParam(name: 'email'), tenantId: $tenantId);
+				return [['status' => 'ok'], Http::STATUS_OK];
+			}
+		);
+	}//end passwordResetRequest()
 
-    /**
-     * Complete a password reset with a token + new password.
-     *
-     * @return JSONResponse The result.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function passwordReset(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $tenantId = $this->requireTenant();
-                    $this->reset->resetPassword(
-                    $this->strParam(name: 'token'),
-                    (string) $this->request->getParam('password', ''),
-                    $tenantId
-                    );
-                    return [['status' => 'password-reset'], Http::STATUS_OK];
-                }
-                );
-    }//end passwordReset()
+	/**
+	 * Complete a password reset with a token + new password.
+	 *
+	 * @return JSONResponse The result.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	// Tight: the token is the only thing standing between a caller and an
+	// account takeover, so the ceiling bounds how fast one can be guessed.
+	#[AnonRateLimit(limit: 20, period: 60)]
+	public function passwordReset(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$tenantId = $this->requireTenant();
+				$this->reset->resetPassword(
+					$this->strParam(name: 'token'),
+					(string)$this->request->getParam('password', ''),
+					$tenantId
+				);
+				return [['status' => 'password-reset'], Http::STATUS_OK];
+			}
+		);
+	}//end passwordReset()
 
-    /**
-     * Begin TOTP enrolment for the authenticated account (returns the otpauth
-     * URI to render as a QR code; the secret is only stored on verification).
-     *
-     * @return JSONResponse The enrolment material.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function mfaEnroll(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $ctx     = $this->requireSession();
-                    $account = $ctx['account'];
-                    $secret  = $this->mfa->generateSecret();
-                    $uri     = $this->mfa->provisioningUri(
-                        secret: $secret,
-                        accountLabel: (string) ($account['email'] ?? 'portal'),
-                        issuer: 'Pipelinq'
-                    );
+	/**
+	 * Begin TOTP enrolment for the authenticated account (returns the otpauth
+	 * URI to render as a QR code; the secret is only stored on verification).
+	 *
+	 * @return JSONResponse The enrolment material.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	#[AnonRateLimit(limit: 20, period: 60)]
+	public function mfaEnroll(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$ctx = $this->requireSession();
+				$account = $ctx['account'];
+				$secret = $this->mfa->generateSecret();
+				$uri = $this->mfa->provisioningUri(
+					secret: $secret,
+					accountLabel: (string)($account['email'] ?? 'portal'),
+					issuer: 'Pipelinq'
+				);
 
-                    // Stash the encrypted secret as pending until verification confirms it.
-                    $account['mfaSecret']  = $this->mfa->encryptSecret(secret: $secret);
-                    $account['mfaEnabled'] = false;
-                    $this->repository->save(self::ACCOUNT_SCHEMA, $account, $ctx['accountId']);
+				// Stash the encrypted secret as pending until verification confirms it.
+				$account['mfaSecret'] = $this->mfa->encryptSecret(secret: $secret);
+				$account['mfaEnabled'] = false;
+				$this->repository->save(self::ACCOUNT_SCHEMA, $account, $ctx['accountId']);
 
-                    return [['secret' => $secret, 'otpauthUri' => $uri], Http::STATUS_OK];
-                }
-                );
-    }//end mfaEnroll()
+				return [['secret' => $secret, 'otpauthUri' => $uri], Http::STATUS_OK];
+			}
+		);
+	}//end mfaEnroll()
 
-    /**
-     * Verify a TOTP code to activate MFA on the account.
-     *
-     * @return JSONResponse The result.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     * @PublicPage
-     */
-    public function mfaVerify(): JSONResponse
-    {
-        return $this->guarded(
-                handler: function (): array {
-                    $ctx     = $this->requireSession();
-                    $account = $ctx['account'];
-                    if ($this->mfa->verifyCode(encryptedSecret: ($account['mfaSecret'] ?? null), code: $this->strParam(name: 'code')) === false) {
-                        return [['errorCode' => 'invalidMfaCode', 'message' => 'Ongeldige code.'], Http::STATUS_BAD_REQUEST];
-                    }
+	/**
+	 * Verify a TOTP code to activate MFA on the account.
+	 *
+	 * @return JSONResponse The result.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @PublicPage
+	 */
+	// Tightest in this controller: a TOTP code is six digits, so the whole
+	// keyspace is a million guesses. Without a ceiling that is minutes of work.
+	#[AnonRateLimit(limit: 10, period: 60)]
+	public function mfaVerify(): JSONResponse {
+		return $this->guarded(
+			handler: function (): array {
+				$ctx = $this->requireSession();
+				$account = $ctx['account'];
+				if ($this->mfa->verifyCode(encryptedSecret: ($account['mfaSecret'] ?? null), code: $this->strParam(name: 'code')) === false) {
+					return [['errorCode' => 'invalidMfaCode', 'message' => 'Ongeldige code.'], Http::STATUS_BAD_REQUEST];
+				}
 
-                    $account['mfaEnabled'] = true;
-                    $this->repository->save(self::ACCOUNT_SCHEMA, $account, $ctx['accountId']);
-                    return [['status' => 'mfa-enabled'], Http::STATUS_OK];
-                }
-                );
-    }//end mfaVerify()
+				$account['mfaEnabled'] = true;
+				$this->repository->save(self::ACCOUNT_SCHEMA, $account, $ctx['accountId']);
+				return [['status' => 'mfa-enabled'], Http::STATUS_OK];
+			}
+		);
+	}//end mfaVerify()
 }//end class

@@ -56,162 +56,157 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/pos-product-catalogue/spec.md
  * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
  */
-class ProductCatalogController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest              $request     The request.
-     * @param ProductCatalogService $service     The product catalogue service.
-     * @param IUserSession          $userSession The user session.
-     * @param PosAccessPolicy       $policy      The shared POS access policy.
-     * @param IL10N                 $l10n        The localization service.
-     * @param LoggerInterface       $logger      The logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private ProductCatalogService $service,
-        private IUserSession $userSession,
-        private PosAccessPolicy $policy,
-        private IL10N $l10n,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class ProductCatalogController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param ProductCatalogService $service The product catalogue service.
+	 * @param IUserSession $userSession The user session.
+	 * @param PosAccessPolicy $policy The shared POS access policy.
+	 * @param IL10N $l10n The localization service.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private ProductCatalogService $service,
+		private IUserSession $userSession,
+		private PosAccessPolicy $policy,
+		private IL10N $l10n,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * Look up a product by barcode (product or variant barcode).
-     *
-     * @return JSONResponse The matching product, or 404 when none matches.
-     *
-     * @spec openspec/specs/pos-product-catalogue/spec.md
-     */
-    #[NoAdminRequired]
-    public function lookupBarcode(): JSONResponse
-    {
-        $uid = $this->requireUserId();
-        if ($uid instanceof JSONResponse) {
-            return $uid;
-        }
+	/**
+	 * Look up a product by barcode (product or variant barcode).
+	 *
+	 * @return JSONResponse The matching product, or 404 when none matches.
+	 *
+	 * @spec openspec/specs/pos-product-catalogue/spec.md
+	 */
+	#[NoAdminRequired]
+	public function lookupBarcode(): JSONResponse {
+		$uid = $this->requireUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
 
-        $barcode = (string) $this->request->getParam('barcode', '');
+		$barcode = (string)$this->request->getParam('barcode', '');
 
-        return $this->run(
-            action: function () use ($barcode): array {
-                $product = $this->service->lookupByBarcode(barcode: $barcode);
-                if ($product === null) {
-                    throw new OCSNotFoundException(
-                        $this->l10n->t('No product found for barcode %s', [$barcode])
-                    );
-                }
+		return $this->run(
+			action: function () use ($barcode): array {
+				$product = $this->service->lookupByBarcode(barcode: $barcode);
+				if ($product === null) {
+					throw new OCSNotFoundException(
+						$this->l10n->t('No product found for barcode %s', [$barcode])
+					);
+				}
 
-                // Surface the matched variant index (null on a top-level match)
-                // so the client can address the variant without re-searching.
-                $variantIndex = null;
-                if (isset($product['matchedVariantIndex']) === true) {
-                    $variantIndex = (int) $product['matchedVariantIndex'];
-                }
+				// Surface the matched variant index (null on a top-level match)
+				// so the client can address the variant without re-searching.
+				$variantIndex = null;
+				if (isset($product['matchedVariantIndex']) === true) {
+					$variantIndex = (int)$product['matchedVariantIndex'];
+				}
 
-                return ['product' => $product, 'variantIndex' => $variantIndex];
-            },
-            label: 'lookupBarcode'
-        );
-    }//end lookupBarcode()
+				return ['product' => $product, 'variantIndex' => $variantIndex];
+			},
+			label: 'lookupBarcode'
+		);
+	}//end lookupBarcode()
 
-    /**
-     * Resolve the server-authoritative effective unit price for a product.
-     *
-     * Accepts a product object payload plus quantity and optional variantSku,
-     * and returns the resolved unitPrice, source, tax rate and BTW class. The
-     * client-supplied price is ignored; the figure is derived from the product's
-     * own tiers / variant overrides and BTW class.
-     *
-     * @return JSONResponse The resolved price.
-     *
-     * @spec openspec/specs/pos-product-catalogue/spec.md
-     */
-    #[NoAdminRequired]
-    public function resolvePrice(): JSONResponse
-    {
-        $uid = $this->requireUserId();
-        if ($uid instanceof JSONResponse) {
-            return $uid;
-        }
+	/**
+	 * Resolve the server-authoritative effective unit price for a product.
+	 *
+	 * Accepts a product object payload plus quantity and optional variantSku,
+	 * and returns the resolved unitPrice, source, tax rate and BTW class. The
+	 * client-supplied price is ignored; the figure is derived from the product's
+	 * own tiers / variant overrides and BTW class.
+	 *
+	 * @return JSONResponse The resolved price.
+	 *
+	 * @spec openspec/specs/pos-product-catalogue/spec.md
+	 */
+	#[NoAdminRequired]
+	public function resolvePrice(): JSONResponse {
+		$uid = $this->requireUserId();
+		if ($uid instanceof JSONResponse) {
+			return $uid;
+		}
 
-        $product    = (array) $this->request->getParam('product', []);
-        $quantity   = (float) $this->request->getParam('quantity', 1);
-        $variantSku = $this->request->getParam('variantSku');
-        if ($variantSku !== null) {
-            $variantSku = (string) $variantSku;
-        }
+		$product = (array)$this->request->getParam('product', []);
+		$quantity = (float)$this->request->getParam('quantity', 1);
+		$variantSku = $this->request->getParam('variantSku');
+		if ($variantSku !== null) {
+			$variantSku = (string)$variantSku;
+		}
 
-        return $this->run(
-            action: fn (): array => $this->service->resolveEffectivePrice(
-                product: $product,
-                quantity: $quantity,
-                variantSku: $variantSku
-            ),
-            label: 'resolvePrice'
-        );
-    }//end resolvePrice()
+		return $this->run(
+			action: fn (): array => $this->service->resolveEffectivePrice(
+				product: $product,
+				quantity: $quantity,
+				variantSku: $variantSku
+			),
+			label: 'resolvePrice'
+		);
+	}//end resolvePrice()
 
-    /**
-     * Require an authenticated POS operator, returning their UID.
-     *
-     * Returns a 401 JSONResponse when no user is in the session, and a 403 when
-     * the caller is not a POS-group member or admin. The catalogue surface is a
-     * cashier capability, not an any-authenticated-user one, so it is gated to
-     * POS operators (closing the over-broad #[NoAdminRequired] exposure).
-     *
-     * @return string|JSONResponse The acting user UID, or a 401/403 response.
-     *
-     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
-     */
-    private function requireUserId(): string|JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('Authentication required')],
-                Http::STATUS_UNAUTHORIZED
-            );
-        }
+	/**
+	 * Require an authenticated POS operator, returning their UID.
+	 *
+	 * Returns a 401 JSONResponse when no user is in the session, and a 403 when
+	 * the caller is not a POS-group member or admin. The catalogue surface is a
+	 * cashier capability, not an any-authenticated-user one, so it is gated to
+	 * POS operators (closing the over-broad #[NoAdminRequired] exposure).
+	 *
+	 * @return string|JSONResponse The acting user UID, or a 401/403 response.
+	 *
+	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#4.2
+	 */
+	private function requireUserId(): string|JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('Authentication required')],
+				Http::STATUS_UNAUTHORIZED
+			);
+		}
 
-        $uid = $user->getUID();
-        if ($this->policy->isPosUser(userId: $uid) === false) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('POS access is required for the product catalogue')],
-                Http::STATUS_FORBIDDEN
-            );
-        }
+		$uid = $user->getUID();
+		if ($this->policy->isPosUser(userId: $uid) === false) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('POS access is required for the product catalogue')],
+				Http::STATUS_FORBIDDEN
+			);
+		}
 
-        return $uid;
-    }//end requireUserId()
+		return $uid;
+	}//end requireUserId()
 
-    /**
-     * Run an action with shared error handling.
-     *
-     * @param callable $action The action to run.
-     * @param string   $label  A short label for log context.
-     *
-     * @return JSONResponse The response.
-     */
-    private function run(callable $action, string $label): JSONResponse
-    {
-        try {
-            return new JSONResponse($action());
-        } catch (OCSNotFoundException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
-        } catch (OCSForbiddenException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
-        } catch (OCSBadRequestException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
-        } catch (\Throwable $e) {
-            $this->logger->error('ProductCatalogController::'.$label.' failed', ['exception' => $e->getMessage()]);
-            return new JSONResponse(
-                ['error' => $this->l10n->t('An unexpected error occurred')],
-                Http::STATUS_INTERNAL_SERVER_ERROR
-            );
-        }//end try
-    }//end run()
+	/**
+	 * Run an action with shared error handling.
+	 *
+	 * @param callable $action The action to run.
+	 * @param string $label A short label for log context.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function run(callable $action, string $label): JSONResponse {
+		try {
+			return new JSONResponse($action());
+		} catch (OCSNotFoundException $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_NOT_FOUND);
+		} catch (OCSForbiddenException $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_FORBIDDEN);
+		} catch (OCSBadRequestException $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_UNPROCESSABLE_ENTITY);
+		} catch (\Throwable $e) {
+			$this->logger->error('ProductCatalogController::' . $label . ' failed', ['exception' => $e->getMessage()]);
+			return new JSONResponse(
+				['error' => $this->l10n->t('An unexpected error occurred')],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}//end try
+	}//end run()
 }//end class

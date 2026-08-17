@@ -1,13 +1,18 @@
-import { defineStore } from 'pinia'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 
 const API_BASE = generateUrl('/apps/pipelinq/api/settings/lead-sources')
 
-const headers = () => ({
-	'Content-Type': 'application/json',
-	requesttoken: OC.requestToken,
-	'OCS-APIREQUEST': 'true',
-})
+/**
+ *
+ */
+function headers() {
+	return {
+		'Content-Type': 'application/json',
+		requesttoken: OC.requestToken,
+		'OCS-APIREQUEST': 'true',
+	}
+}
 
 export const useLeadSourcesStore = defineStore('leadSources', {
 	state: () => ({
@@ -29,7 +34,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 			try {
 				const response = await fetch(API_BASE, { headers: headers() })
 				if (!response.ok) {
-					throw new Error(`Failed to fetch lead sources (${response.status})`)
+					throw new Error(
+						`Failed to fetch lead sources (${response.status})`,
+					)
 				}
 				const data = await response.json()
 				this.tags = data.tags || []

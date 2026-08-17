@@ -114,7 +114,9 @@ test('LeadList: /leads mounts src/views/leads/LeadList.vue', async ({ page }) =>
 	// <h1> visually hidden rather than not at all. `toHaveText` reads
 	// textContent and is therefore the right assertion for a clipped heading —
 	// `toBeVisible` would be asserting a styling detail, not the page identity.
-	await expect(index.locator('[data-testid="cn-page-title"]').first()).toHaveText('Leads')
+	await expect(index.locator('[data-testid="cn-page-title"]').first()).toHaveText(
+		'Leads',
+	)
 
 	// ⚠️ NOT ASSERTED ON PURPOSE — LeadList's `<template #header-actions>` block
 	// (the "Stale only (>Nd)" and "Hide closed" switches, REQ-LM-002 /
@@ -132,7 +134,9 @@ test('LeadList: /leads mounts src/views/leads/LeadList.vue', async ({ page }) =>
 })
 
 // ── src/views/pipeline/PipelineBoard.vue — page `Pipeline`, route `/pipeline` ─
-test('PipelineBoard: /pipeline mounts src/views/pipeline/PipelineBoard.vue', async ({ page }) => {
+test('PipelineBoard: /pipeline mounts src/views/pipeline/PipelineBoard.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, '/pipeline')
 
 	const board = content(page).locator('.pipeline-board')
@@ -141,20 +145,28 @@ test('PipelineBoard: /pipeline mounts src/views/pipeline/PipelineBoard.vue', asy
 	// The pipeline selector / search / view-toggle strip is rendered
 	// unconditionally in the board header, so it does not depend on any
 	// pipeline record existing.
-	await expect(board.locator('.pipeline-board__controls .view-toggle')).toBeVisible()
+	await expect(
+		board.locator('.pipeline-board__controls .view-toggle'),
+	).toBeVisible()
 })
 
 // ── src/views/pos/CashShiftList.vue — page `CashShifts`, route `/pos/shifts` ──
-test('CashShiftList: /pos/shifts mounts src/views/pos/CashShiftList.vue', async ({ page }) => {
+test('CashShiftList: /pos/shifts mounts src/views/pos/CashShiftList.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, '/pos/shifts')
 
 	const index = content(page).locator('[data-testid="cn-index-page"]').first()
 	await expect(index).toBeVisible({ timeout: 15000 })
-	await expect(index.locator('[data-testid="cn-page-title"]').first()).toHaveText('Cash drawer')
+	await expect(index.locator('[data-testid="cn-page-title"]').first()).toHaveText(
+		'Cash drawer',
+	)
 })
 
 // ── src/views/pos/PosRefundForm.vue — page `PosRefundNew`, `/pos/refunds/new` ─
-test('PosRefundForm: /pos/refunds/new mounts src/views/pos/PosRefundForm.vue', async ({ page }) => {
+test('PosRefundForm: /pos/refunds/new mounts src/views/pos/PosRefundForm.vue', async ({
+	page,
+}) => {
 	// Manifest route ordering matters here: `routesFromManifest()` sorts by
 	// parameter count ascending, so the literal `/pos/refunds/new` is registered
 	// before `/pos/refunds/:id` and wins the match.
@@ -169,19 +181,27 @@ test('PosRefundForm: /pos/refunds/new mounts src/views/pos/PosRefundForm.vue', a
 })
 
 // ── src/views/kassakoppeling/KassakoppelingAuditList.vue — `/kassakoppeling/audit`
-test('KassakoppelingAuditList: /kassakoppeling/audit mounts src/views/kassakoppeling/KassakoppelingAuditList.vue', async ({ page }) => {
+test('KassakoppelingAuditList: /kassakoppeling/audit mounts src/views/kassakoppeling/KassakoppelingAuditList.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, '/kassakoppeling/audit')
 
 	const list = content(page).locator('.kassakoppeling-audit-list')
 	await expect(list).toBeVisible({ timeout: 15000 })
-	await expect(list.getByRole('heading', { name: 'Cash register audit log' })).toBeVisible()
+	await expect(
+		list.getByRole('heading', { name: 'Cash register audit log' }),
+	).toBeVisible()
 	// The filter strip carries the page's own testid and renders regardless of
 	// whether the append-only register holds any entries.
-	await expect(list.locator('[data-testid="kassakoppeling-audit-filters"]')).toBeVisible()
+	await expect(
+		list.locator('[data-testid="kassakoppeling-audit-filters"]'),
+	).toBeVisible()
 })
 
 // ── src/views/kassakoppeling/KassakoppelingAuditDetail.vue — `/kassakoppeling/audit/:id`
-test('KassakoppelingAuditDetail: /kassakoppeling/audit/:id mounts src/views/kassakoppeling/KassakoppelingAuditDetail.vue', async ({ page }) => {
+test('KassakoppelingAuditDetail: /kassakoppeling/audit/:id mounts src/views/kassakoppeling/KassakoppelingAuditDetail.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, `/kassakoppeling/audit/${ABSENT_ID}`)
 
 	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
@@ -194,7 +214,9 @@ test('KassakoppelingAuditDetail: /kassakoppeling/audit/:id mounts src/views/kass
 })
 
 // ── src/views/admin/BrpMonitor.vue — page `BrpMonitor`, `/admin/brp-monitor` ──
-test('BrpMonitor: /admin/brp-monitor mounts src/views/admin/BrpMonitor.vue', async ({ page }) => {
+test('BrpMonitor: /admin/brp-monitor mounts src/views/admin/BrpMonitor.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, '/admin/brp-monitor')
 
 	const monitor = content(page).locator('[data-testid="brp-monitor"]')
@@ -203,7 +225,9 @@ test('BrpMonitor: /admin/brp-monitor mounts src/views/admin/BrpMonitor.vue', asy
 })
 
 // ── src/views/admin/PosCustomerSettings.vue — `/admin/pos-customer-link` ──────
-test('PosCustomerSettings: /admin/pos-customer-link mounts src/views/admin/PosCustomerSettings.vue', async ({ page }) => {
+test('PosCustomerSettings: /admin/pos-customer-link mounts src/views/admin/PosCustomerSettings.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, '/admin/pos-customer-link')
 
 	// The whole template is one NcSettingsSection, and its `name` prop is the

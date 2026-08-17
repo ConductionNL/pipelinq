@@ -9,15 +9,13 @@
   - inside its parent (ADR-004); it was extracted out of PipelineCard.vue.
   -->
 <template>
-	<NcDialog
-		:name="t('pipelinq', 'Assign user')"
-		@closing="$emit('close')">
+	<NcDialog :name="t('pipelinq', 'Assign user')" @closing="$emit('close')">
 		<NcSelect
 			v-model="picked"
 			:options="options"
 			:clearable="true"
-			:input-label="t('pipelinq', 'Assignee')"
-			@update:model-value="$emit('select', $event)" />
+			:inputLabel="t('pipelinq', 'Assignee')"
+			@update:modelValue="$emit('select', $event)" />
 	</NcDialog>
 </template>
 
@@ -30,6 +28,7 @@ export default {
 		NcDialog,
 		NcSelect,
 	},
+
 	props: {
 		/**
 		 * The user ids that can be assigned.
@@ -38,6 +37,7 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		/**
 		 * The currently assigned user id, pre-selected when the dialog opens.
 		 */
@@ -46,6 +46,7 @@ export default {
 			default: null,
 		},
 	},
+
 	emits: ['close', 'select'],
 	data() {
 		return {

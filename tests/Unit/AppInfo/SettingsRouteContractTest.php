@@ -47,192 +47,178 @@ use ReflectionClass;
  *
  * @spec openspec/specs/admin-settings/spec.md
  */
-class SettingsRouteContractTest extends TestCase
-{
-    /**
-     * Load and evaluate the shipped route table.
-     *
-     * @return array<int, array<string, mixed>> The declared route entries.
-     *
-     * @spec openspec/specs/admin-settings/spec.md
-     */
-    private function routes(): array
-    {
-        $table = include __DIR__.'/../../../appinfo/routes.php';
+class SettingsRouteContractTest extends TestCase {
+	/**
+	 * Load and evaluate the shipped route table.
+	 *
+	 * @return array<int, array<string, mixed>> The declared route entries.
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	private function routes(): array {
+		$table = include __DIR__ . '/../../../appinfo/routes.php';
 
-        $this->assertIsArray($table, 'appinfo/routes.php must return an array');
-        $this->assertArrayHasKey('routes', $table, 'appinfo/routes.php must declare a "routes" key');
-        $this->assertIsArray($table['routes'], 'The "routes" key must hold an array');
+		$this->assertIsArray($table, 'appinfo/routes.php must return an array');
+		$this->assertArrayHasKey('routes', $table, 'appinfo/routes.php must declare a "routes" key');
+		$this->assertIsArray($table['routes'], 'The "routes" key must hold an array');
 
-        return $table['routes'];
+		return $table['routes'];
+	}//end routes()
 
-    }//end routes()
+	/**
+	 * Find the index of a route entry by name + url + verb.
+	 *
+	 * @param array<int, array<string, mixed>> $routes The evaluated route table.
+	 * @param string $name The route name.
+	 * @param string $url The route url.
+	 * @param string $verb The HTTP verb.
+	 *
+	 * @return int|null The zero-based index, or null when absent.
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	private function indexOfRoute(array $routes, string $name, string $url, string $verb): ?int {
+		foreach ($routes as $index => $route) {
+			if (is_array($route) === false) {
+				continue;
+			}
 
-    /**
-     * Find the index of a route entry by name + url + verb.
-     *
-     * @param array<int, array<string, mixed>> $routes The evaluated route table.
-     * @param string                           $name   The route name.
-     * @param string                           $url    The route url.
-     * @param string                           $verb   The HTTP verb.
-     *
-     * @return int|null The zero-based index, or null when absent.
-     *
-     * @spec openspec/specs/admin-settings/spec.md
-     */
-    private function indexOfRoute(array $routes, string $name, string $url, string $verb): ?int
-    {
-        foreach ($routes as $index => $route) {
-            if (is_array($route) === false) {
-                continue;
-            }
+			if (($route['name'] ?? null) === $name
+				&& ($route['url'] ?? null) === $url
+				&& ($route['verb'] ?? null) === $verb
+			) {
+				return $index;
+			}
+		}
 
-            if (($route['name'] ?? null) === $name
-                && ($route['url'] ?? null) === $url
-                && ($route['verb'] ?? null) === $verb
-            ) {
-                return $index;
-            }
-        }
+		return null;
+	}//end indexOfRoute()
 
-        return null;
+	/**
+	 * The canonical write verb must be routed.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testCanonicalPutSettingsRouteIsDeclared(): void {
+		$routes = $this->routes();
 
-    }//end indexOfRoute()
+		$this->assertNotNull($this->indexOfRoute($routes, 'settings#update', '/api/settings', 'PUT'),
+			'appinfo/routes.php does not declare the canonical ADR-066 write '
+			. '["name" => "settings#update", "url" => "/api/settings", "verb" => "PUT"]. '
+			. 'Without it PUT /api/settings answers 405 Method Not Allowed.'
+		);
 
-    /**
-     * The canonical write verb must be routed.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/admin-settings/spec.md
-     */
-    public function testCanonicalPutSettingsRouteIsDeclared(): void
-    {
-        $routes = $this->routes();
+	}//end testCanonicalPutSettingsRouteIsDeclared()
 
-        $this->assertNotNull(
-            $this->indexOfRoute($routes, 'settings#update', '/api/settings', 'PUT'),
-            'appinfo/routes.php does not declare the canonical ADR-066 write '
-            .'["name" => "settings#update", "url" => "/api/settings", "verb" => "PUT"]. '
-            .'Without it PUT /api/settings answers 405 Method Not Allowed.'
-        );
+	/**
+	 * The legacy POST alias must survive the conversion.
+	 *
+	 * `src/store/modules/settings.js::saveSettings()` and
+	 * `src/views/settings/ExportConfigurationSettings.vue::save()` both POST
+	 * to this exact url, so removing the alias would break the live admin UI.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testLegacyPostSettingsRouteIsPreserved(): void {
+		$routes = $this->routes();
 
-    }//end testCanonicalPutSettingsRouteIsDeclared()
+		$this->assertNotNull($this->indexOfRoute($routes, 'settings#create', '/api/settings', 'POST'),
+			'The legacy POST /api/settings route was removed — the settings store '
+			. 'and ExportConfigurationSettings.vue still call it.'
+		);
 
-    /**
-     * The legacy POST alias must survive the conversion.
-     *
-     * `src/store/modules/settings.js::saveSettings()` and
-     * `src/views/settings/ExportConfigurationSettings.vue::save()` both POST
-     * to this exact url, so removing the alias would break the live admin UI.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/admin-settings/spec.md
-     */
-    public function testLegacyPostSettingsRouteIsPreserved(): void
-    {
-        $routes = $this->routes();
+		$this->assertNotNull($this->indexOfRoute($routes, 'settings#index', '/api/settings', 'GET'),
+			'The GET /api/settings read route was removed.'
+		);
 
-        $this->assertNotNull(
-            $this->indexOfRoute($routes, 'settings#create', '/api/settings', 'POST'),
-            'The legacy POST /api/settings route was removed — the settings store '
-            .'and ExportConfigurationSettings.vue still call it.'
-        );
+	}//end testLegacyPostSettingsRouteIsPreserved()
 
-        $this->assertNotNull(
-            $this->indexOfRoute($routes, 'settings#index', '/api/settings', 'GET'),
-            'The GET /api/settings read route was removed.'
-        );
+	/**
+	 * Settings routes must precede the SPA wildcard catch-all (ADR-016).
+	 *
+	 * `dashboard#page` matches `/{path}` with `path => .*`, so any route
+	 * declared after it is unreachable for GET. Ordering is a property of the
+	 * evaluated array, which is why this test reads indices and not source
+	 * lines.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testSettingsRoutesPrecedeTheSpaCatchAll(): void {
+		$routes = $this->routes();
 
-    }//end testLegacyPostSettingsRouteIsPreserved()
+		$catchAll = $this->indexOfRoute($routes, 'dashboard#page', '/{path}', 'GET');
+		$this->assertNotNull($catchAll, 'The SPA catch-all route is missing — this test cannot be read.');
 
-    /**
-     * Settings routes must precede the SPA wildcard catch-all (ADR-016).
-     *
-     * `dashboard#page` matches `/{path}` with `path => .*`, so any route
-     * declared after it is unreachable for GET. Ordering is a property of the
-     * evaluated array, which is why this test reads indices and not source
-     * lines.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/admin-settings/spec.md
-     */
-    public function testSettingsRoutesPrecedeTheSpaCatchAll(): void
-    {
-        $routes = $this->routes();
+		$update = $this->indexOfRoute($routes, 'settings#update', '/api/settings', 'PUT');
+		$this->assertNotNull($update, 'settings#update PUT is not declared.');
 
-        $catchAll = $this->indexOfRoute($routes, 'dashboard#page', '/{path}', 'GET');
-        $this->assertNotNull($catchAll, 'The SPA catch-all route is missing — this test cannot be read.');
+		$this->assertLessThan($catchAll,
+			$update,
+			'settings#update must be declared BEFORE the SPA wildcard catch-all (ADR-016).'
+		);
 
-        $update = $this->indexOfRoute($routes, 'settings#update', '/api/settings', 'PUT');
-        $this->assertNotNull($update, 'settings#update PUT is not declared.');
+	}//end testSettingsRoutesPrecedeTheSpaCatchAll()
 
-        $this->assertLessThan(
-            $catchAll,
-            $update,
-            'settings#update must be declared BEFORE the SPA wildcard catch-all (ADR-016).'
-        );
+	/**
+	 * Every declared `settings#` route must target a public method.
+	 *
+	 * A route whose target method does not exist is a ReflectionException at
+	 * dispatch (HTTP 500), not a 404 — the router matched the url already.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testEverySettingsRouteTargetsAPublicControllerMethod(): void {
+		$reflection = new ReflectionClass(\OCA\Pipelinq\Controller\SettingsController::class);
 
-    }//end testSettingsRoutesPrecedeTheSpaCatchAll()
+		$inspected = 0;
+		$missing = [];
 
-    /**
-     * Every declared `settings#` route must target a public method.
-     *
-     * A route whose target method does not exist is a ReflectionException at
-     * dispatch (HTTP 500), not a 404 — the router matched the url already.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/admin-settings/spec.md
-     */
-    public function testEverySettingsRouteTargetsAPublicControllerMethod(): void
-    {
-        $reflection = new ReflectionClass(\OCA\Pipelinq\Controller\SettingsController::class);
+		foreach ($this->routes() as $route) {
+			if (is_array($route) === false || is_string($route['name'] ?? null) === false) {
+				continue;
+			}
 
-        $inspected = 0;
-        $missing   = [];
+			if (str_starts_with($route['name'], 'settings#') === false) {
+				continue;
+			}
 
-        foreach ($this->routes() as $route) {
-            if (is_array($route) === false || is_string($route['name'] ?? null) === false) {
-                continue;
-            }
+			$method = substr($route['name'], strlen('settings#'));
+			$inspected++;
 
-            if (str_starts_with($route['name'], 'settings#') === false) {
-                continue;
-            }
+			if ($reflection->hasMethod($method) === false) {
+				$missing[] = sprintf('SettingsController::%s() [%s %s]', $method, $route['verb'] ?? '?', $route['url'] ?? '?');
+				continue;
+			}
 
-            $method = substr($route['name'], strlen('settings#'));
-            $inspected++;
+			$this->assertTrue($reflection->getMethod($method)->isPublic(),
+				sprintf('SettingsController::%s() must be public to be dispatchable', $method)
+			);
+		}//end foreach
 
-            if ($reflection->hasMethod($method) === false) {
-                $missing[] = sprintf('SettingsController::%s() [%s %s]', $method, $route['verb'] ?? '?', $route['url'] ?? '?');
-                continue;
-            }
+		// Positive control. An empty $missing list only means something if the
+		// loop actually looked at routes; a broken name filter would produce
+		// the same "no findings" as a healthy route table.
+		$this->assertGreaterThan(
+			0,
+			$inspected,
+			'No settings# route was inspected — the route-name filter matched nothing, '
+			. 'so the empty finding list below proves nothing.'
+		);
 
-            $this->assertTrue(
-                $reflection->getMethod($method)->isPublic(),
-                sprintf('SettingsController::%s() must be public to be dispatchable', $method)
-            );
-        }//end foreach
+		$this->assertSame(
+			[],
+			$missing,
+			"These routes point at methods SettingsController does not define. Each is a 500, not a 404:\n  - "
+			. implode("\n  - ", $missing)
+		);
 
-        // Positive control. An empty $missing list only means something if the
-        // loop actually looked at routes; a broken name filter would produce
-        // the same "no findings" as a healthy route table.
-        $this->assertGreaterThan(
-            0,
-            $inspected,
-            'No settings# route was inspected — the route-name filter matched nothing, '
-            .'so the empty finding list below proves nothing.'
-        );
-
-        $this->assertSame(
-            [],
-            $missing,
-            "These routes point at methods SettingsController does not define. Each is a 500, not a 404:\n  - "
-            .implode("\n  - ", $missing)
-        );
-
-    }//end testEverySettingsRouteTargetsAPublicControllerMethod()
+	}//end testEverySettingsRouteTargetsAPublicControllerMethod()
 }//end class

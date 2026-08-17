@@ -1,7 +1,12 @@
 <template>
 	<NcSettingsSection
 		:name="t('pipelinq', 'Queues')"
-		:description="t('pipelinq', 'Manage work queues for request routing and workload distribution')">
+		:description="
+			t(
+				'pipelinq',
+				'Manage work queues for request routing and workload distribution',
+			)
+		">
 		<NcLoadingIcon v-if="loading" />
 
 		<div v-else class="queue-settings">
@@ -9,11 +14,24 @@
 				<div v-if="editingId !== queue.id" class="queue-item__display">
 					<div class="queue-item__info">
 						<span class="queue-title">{{ queue.title }}</span>
-						<span v-if="queue.isActive === false" class="inactive-tag">{{ t('pipelinq', 'Inactive') }}</span>
+						<span v-if="queue.isActive === false" class="inactive-tag">{{
+							t('pipelinq', 'Inactive')
+						}}</span>
 						<span class="queue-meta">
-							{{ (queue.categories || []).join(', ') || t('pipelinq', 'No categories') }}
-							· {{ (queue.assignedAgents || []).length }} {{ t('pipelinq', 'agents') }}
-							<template v-if="queue.maxCapacity">· {{ t('pipelinq', 'max {n}', { n: queue.maxCapacity }) }}</template>
+							{{
+								(queue.categories || []).join(', ')
+								|| t('pipelinq', 'No categories')
+							}}
+							· {{ (queue.assignedAgents || []).length }}
+							{{ t('pipelinq', 'agents') }}
+							<template v-if="queue.maxCapacity"
+								>·
+								{{
+									t('pipelinq', 'max {n}', {
+										n: queue.maxCapacity,
+									})
+								}}</template
+							>
 						</span>
 					</div>
 					<div class="queue-item__actions">
@@ -28,36 +46,61 @@
 
 				<div v-else class="queue-item__edit">
 					<div class="edit-field">
-						<label for="queue-edit-title">{{ t('pipelinq', 'Title') }}</label>
-						<input id="queue-edit-title" v-model="editForm.title" type="text">
+						<label for="queue-edit-title">{{
+							t('pipelinq', 'Title')
+						}}</label>
+						<input
+							id="queue-edit-title"
+							v-model="editForm.title"
+							type="text" />
 					</div>
 					<div class="edit-field">
-						<label for="queue-edit-description">{{ t('pipelinq', 'Description') }}</label>
-						<textarea id="queue-edit-description" v-model="editForm.description" />
+						<label for="queue-edit-description">{{
+							t('pipelinq', 'Description')
+						}}</label>
+						<textarea
+							id="queue-edit-description"
+							v-model="editForm.description" />
 					</div>
 					<div class="edit-field">
-						<label for="queue-edit-categories">{{ t('pipelinq', 'Categories (comma-separated)') }}</label>
-						<input id="queue-edit-categories" v-model="editForm.categoriesInput" type="text">
+						<label for="queue-edit-categories">{{
+							t('pipelinq', 'Categories (comma-separated)')
+						}}</label>
+						<input
+							id="queue-edit-categories"
+							v-model="editForm.categoriesInput"
+							type="text" />
 					</div>
 					<div class="edit-row">
 						<div class="edit-field">
-							<label for="queue-edit-max-capacity">{{ t('pipelinq', 'Max capacity') }}</label>
-							<input id="queue-edit-max-capacity"
+							<label for="queue-edit-max-capacity">{{
+								t('pipelinq', 'Max capacity')
+							}}</label>
+							<input
+								id="queue-edit-max-capacity"
 								v-model.number="editForm.maxCapacity"
 								type="number"
 								min="1"
-								autocomplete="off">
+								autocomplete="off" />
 						</div>
 						<div class="edit-field">
 							<label>
-								<input v-model="editForm.isActive" type="checkbox">
+								<input v-model="editForm.isActive" type="checkbox" />
 								{{ t('pipelinq', 'Active') }}
 							</label>
 						</div>
 					</div>
 					<div class="edit-field">
-						<label for="queue-edit-agents">{{ t('pipelinq', 'Assigned agents (comma-separated user IDs)') }}</label>
-						<input id="queue-edit-agents" v-model="editForm.agentsInput" type="text">
+						<label for="queue-edit-agents">{{
+							t(
+								'pipelinq',
+								'Assigned agents (comma-separated user IDs)',
+							)
+						}}</label>
+						<input
+							id="queue-edit-agents"
+							v-model="editForm.agentsInput"
+							type="text" />
 					</div>
 					<div class="edit-actions">
 						<NcButton @click="cancelEdit">
@@ -90,12 +133,14 @@ export default {
 		NcLoadingIcon,
 		NcSettingsSection,
 	},
+
 	data() {
 		return {
 			editingId: null,
 			editForm: {},
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-19
@@ -103,12 +148,14 @@ export default {
 		queuesStore() {
 			return useQueuesStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-17
 		 */
 		loading() {
 			return this.queuesStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-18
 		 */
@@ -116,9 +163,11 @@ export default {
 			return this.queuesStore.queues
 		},
 	},
+
 	mounted() {
 		this.queuesStore.fetchQueues()
 	},
+
 	methods: {
 		/**
 		 * @param queue
@@ -132,6 +181,7 @@ export default {
 				agentsInput: (queue.assignedAgents || []).join(', '),
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-15
 		 */
@@ -139,6 +189,7 @@ export default {
 			this.editingId = null
 			this.editForm = {}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-20
 		 */
@@ -146,10 +197,17 @@ export default {
 			const data = {
 				...this.editForm,
 				categories: this.editForm.categoriesInput
-					? this.editForm.categoriesInput.split(',').map(c => c.trim()).filter(Boolean)
+					? this.editForm.categoriesInput
+							.split(',')
+							.map((c) => c.trim())
+							.filter(Boolean)
 					: [],
+
 				assignedAgents: this.editForm.agentsInput
-					? this.editForm.agentsInput.split(',').map(a => a.trim()).filter(Boolean)
+					? this.editForm.agentsInput
+							.split(',')
+							.map((a) => a.trim())
+							.filter(Boolean)
 					: [],
 			}
 			delete data.categoriesInput
@@ -157,6 +215,7 @@ export default {
 			await this.queuesStore.saveQueue(data)
 			this.cancelEdit()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-14
 		 */
@@ -167,12 +226,21 @@ export default {
 				categories: [],
 			})
 		},
+
 		/**
 		 * @param queue
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-16
 		 */
 		async deleteQueue(queue) {
-			if (confirm(t('pipelinq', 'Delete queue "{title}"? Items will be unqueued.', { title: queue.title }))) {
+			if (
+				confirm(
+					t(
+						'pipelinq',
+						'Delete queue "{title}"? Items will be unqueued.',
+						{ title: queue.title },
+					),
+				)
+			) {
 				await this.queuesStore.deleteQueue(queue.id)
 			}
 		},

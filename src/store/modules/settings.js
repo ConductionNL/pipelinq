@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
 import { generateUrl } from '@nextcloud/router'
+import { defineStore } from 'pinia'
 
 export const useSettingsStore = defineStore('settings', {
 	state: () => ({
@@ -53,17 +53,22 @@ export const useSettingsStore = defineStore('settings', {
 			this.error = null
 
 			try {
-				const response = await fetch(generateUrl('/apps/pipelinq/api/settings'), {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
+				const response = await fetch(
+					generateUrl('/apps/pipelinq/api/settings'),
+					{
+						method: 'GET',
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
 					},
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`Failed to fetch settings: ${response.statusText}`)
+					throw new Error(
+						`Failed to fetch settings: ${response.statusText}`,
+					)
 				}
 
 				const data = await response.json()
@@ -91,18 +96,23 @@ export const useSettingsStore = defineStore('settings', {
 			this.error = null
 
 			try {
-				const response = await fetch(generateUrl('/apps/pipelinq/api/settings'), {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
+				const response = await fetch(
+					generateUrl('/apps/pipelinq/api/settings'),
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+						body: JSON.stringify(settingsData),
 					},
-					body: JSON.stringify(settingsData),
-				})
+				)
 
 				if (!response.ok) {
-					throw new Error(`Failed to save settings: ${response.statusText}`)
+					throw new Error(
+						`Failed to save settings: ${response.statusText}`,
+					)
 				}
 
 				const data = await response.json()

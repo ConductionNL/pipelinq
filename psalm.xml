@@ -75,6 +75,15 @@
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
+                <!-- ADR-078 actor-forwarded deferral contract (gate-61). The seven
+                     converted post-event listeners hand their work to
+                     DeferredObjectListenerJob through ListenerDeferralService instead
+                     of running it inside the user's write; all three types live in
+                     OpenRegister and resolve at runtime, exactly like ObjectService. -->
+                <referencedClass name="OCA\OpenRegister\Service\Deferral\ListenerDeferralService"/>
+                <referencedClass name="OCA\OpenRegister\Service\Deferral\DeferredListenerContext"/>
+                <referencedClass name="OCA\OpenRegister\Service\OrganisationService"/>
+                <referencedClass name="OCA\OpenRegister\BackgroundJob\ActorForwardedJob"/>
                 <!-- OpenRegister AVG/DSAR integration seams (ADR-047 Phase-3) -->
                 <referencedClass name="OCA\OpenRegister\Service\Gdpr\Identity\IdentityVerifyProvider"/>
                 <referencedClass name="OCA\OpenRegister\Service\Gdpr\Identity\IdentityVerifyResult"/>

@@ -31,6 +31,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Integration;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -42,6 +45,7 @@ use OCA\Pipelinq\Service\SmsProviderFactory;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -51,289 +55,341 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class OutboundMessagingContractTest extends TestCase
-{
-    private ContainerInterface $container;
-    private object $objectService;
-    private ChannelProviderRepository $providerRepo;
-    private SmsProviderFactory $providerFactory;
-    private SmsAdapter $adapter;
+class OutboundMessagingContractTest extends TestCase {
+	private ContainerInterface $container;
+	private object $objectService;
+	private ChannelProviderRepository $providerRepo;
+	private SmsProviderFactory $providerFactory;
+	private SmsAdapter $adapter;
 
-    /**
-     * Wire an in-memory OR stub + a real ContactmomentService in the container.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->container = $this->createMock(ContainerInterface::class);
-        $appConfig       = $this->createMock(IAppConfig::class);
-        $logger          = $this->createMock(LoggerInterface::class);
+	/**
+	 * Wire an in-memory OR stub + a real ContactmomentService in the container.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->container = $this->createMock(ContainerInterface::class);
+		$appConfig = $this->createMock(IAppConfig::class);
+		$logger = $this->createMock(LoggerInterface::class);
 
-        $this->objectService = new class {
-            /** @var array<string, array<string, mixed>> */
-            public array $store = [];
+		// The double EXTENDS the ObjectService stub, so it satisfies the
+		// injected `ObjectServiceInterface` type hint the services now carry
+		// (ADR-084). Both overrides reproduce the contract signatures exactly —
+		// PHP checks compatibility at CLASS-LOAD time, so a narrower one is a
+		// fatal before test 1 rather than a test failure.
+		$this->objectService = new class extends \OCA\OpenRegister\Service\ObjectService {
+			/** @var array<string, array<string, mixed>> */
+			public array $store = [];
 
-            /**
-             * @param array<string, mixed> $object   Payload.
-             * @param mixed                $register Register.
-             * @param mixed                $schema   Schema.
-             * @param string|null          $uuid     Id.
-             *
-             * @return array<string, mixed>
-             */
-            public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array
-            {
-                if ($uuid === null || $uuid === '') {
-                    $uuid = ('row-'.count($this->store));
-                }
+			/**
+			 * @param array<string, mixed> $object Payload.
+			 * @param array<string, mixed>|null $extend Extend list.
+			 * @param string|int|null $register Register.
+			 * @param string|int|null $schema Schema.
+			 * @param string|null $uuid Id.
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $silent Unused.
+			 * @param bool $_validation Unused.
+			 * @param array<string, mixed>|null $uploadedFiles Unused.
+			 * @param IUser|null $currentUser Unused.
+			 * @param bool $failIfExists Unused.
+			 *
+			 * @return ObjectEntityInterface The stored row, wrapped as an entity.
+			 */
+			public function saveObject(
+				array $object,
+				?array $extend = [],
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				?string $uuid = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $silent = false,
+				bool $_validation = true,
+				?array $uploadedFiles = null,
+				?IUser $currentUser = null,
+				bool $failIfExists = false,
+			): ObjectEntityInterface {
+				if ($uuid === null || $uuid === '') {
+					$uuid = ('row-' . count($this->store));
+				}
 
-                $object['uuid']     = $uuid;
-                $object['_schema']  = (string) $schema;
-                $this->store[$uuid] = $object;
-                return $object;
-            }
+				$object['uuid'] = $uuid;
+				$object['_schema'] = (string)$schema;
+				$this->store[$uuid] = $object;
 
-            /**
-             * @param string $id       Id.
-             * @param mixed  $register Register.
-             * @param mixed  $schema   Schema.
-             *
-             * @return array<string, mixed>|null
-             */
-            public function find(string $id, $register = null, $schema = null): ?array
-            {
-                return ($this->store[$id] ?? null);
-            }
+				$entity = new ObjectEntity();
+				$entity->setUuid($uuid);
+				$entity->setRegister((string)$register);
+				$entity->setSchema((string)$schema);
+				$entity->setObject($object);
 
-            /**
-             * Mirrors OR's real ObjectService::findAll(array $config).
-             *
-             * @param array<string, mixed> $config Config with a `filters` map.
-             *
-             * @return array<int, array<string, mixed>>
-             */
-            public function findAll(array $config = []): array
-            {
-                return [];
-            }
-        };
+				return $entity;
+			}
 
-        $appConfig->method('getValueString')->willReturnCallback(
-            static function (string $app, string $key, string $default): string {
-                return match ($key) {
-                    'register'      => 'pipelinq',
-                    'tenant_id'     => 'tenant-1',
-                    'ticket_schema' => 'ticket',
-                    default         => $default,
-                };
-            }
-        );
+			/**
+			 * @param int|string $id Id.
+			 * @param array<string, mixed>|null $_extend Unused.
+			 * @param bool $files Unused.
+			 * @param string|int|null $register Register.
+			 * @param string|int|null $schema Schema.
+			 * @param bool $_rbac Unused.
+			 * @param bool $_multitenancy Unused.
+			 * @param bool $_render Unused.
+			 * @param bool $_audit Unused.
+			 *
+			 * @return ObjectEntityInterface|null The row, wrapped as an entity.
+			 */
+			public function find(
+				int|string $id,
+				?array $_extend = [],
+				bool $files = false,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+				bool $_rbac = true,
+				bool $_multitenancy = true,
+				bool $_render = true,
+				bool $_audit = true,
+			): ?ObjectEntityInterface {
+				$row = ($this->store[(string)$id] ?? null);
+				if ($row === null) {
+					return null;
+				}
 
-        $contactmomentService = new ContactmomentService(
-            $this->container,
-            new TicketService($this->container, $appConfig, $logger),
-            $this->createMock(IGroupManager::class),
-            $logger,
-        );
+				$entity = new ObjectEntity();
+				$entity->setUuid((string)$id);
+				$entity->setRegister((string)$register);
+				$entity->setSchema((string)$schema);
+				$entity->setObject($row);
 
-        $this->container->method('get')->willReturnCallback(
-            function (string $id) use ($contactmomentService) {
-                if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
-                    return $this->objectService;
-                }
+				return $entity;
+			}
 
-                if ($id === 'OCA\\Pipelinq\\Service\\ContactmomentService') {
-                    return $contactmomentService;
-                }
+			/**
+			 * Mirrors OR's real ObjectService::findAll(array $config).
+			 *
+			 * @param array<string, mixed> $config Config with a `filters` map.
+			 * @param bool $_rbac RBAC posture.
+			 * @param bool $_multitenancy Tenancy posture.
+			 *
+			 * @return array<int, array<string, mixed>>
+			 */
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				return [];
+			}
+		};
 
-                throw new \RuntimeException('not registered: '.$id);
-            }
-        );
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default): string {
+				return match ($key) {
+					'register' => 'pipelinq',
+					'tenant_id' => 'tenant-1',
+					'ticket_schema' => 'ticket',
+					default => $default,
+				};
+			}
+		);
 
-        $this->providerRepo    = $this->createMock(ChannelProviderRepository::class);
-        $this->providerFactory = $this->createMock(SmsProviderFactory::class);
+		$contactmomentService = new ContactmomentService(
+			new TicketService($appConfig, $logger,
+				objectService: $this->objectService,
+			),
+			$this->createMock(IGroupManager::class),
+			$logger,
+			objectService: $this->objectService,
+		);
 
-        $this->adapter = new SmsAdapter(
-            $this->container,
-            $appConfig,
-            $this->providerRepo,
-            $this->providerFactory,
-            new ConsentService($this->container, $appConfig, $logger),
-            new BudgetService($this->container, $appConfig, $this->createMock(NotificationService::class), $logger),
-            $this->createMock(NotificationService::class),
-            $logger,
-        );
-    }//end setUp()
+		$this->container->method('get')->willReturnCallback(
+			function (string $id) use ($contactmomentService) {
+				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+					return $this->objectService;
+				}
 
-    /**
-     * A vendor client returning the canned mock-mode SMS id.
-     *
-     * @return SmsProviderClientInterface
-     */
-    private function mockModeClient(): SmsProviderClientInterface
-    {
-        return new class implements SmsProviderClientInterface {
-            /**
-             * @param string $toNumber Recipient.
-             * @param string $body     Body.
-             *
-             * @return array<string, mixed>
-             */
-            public function send(string $toNumber, string $body): array
-            {
-                // Shape emitted by OpenConnector's mock-flagged messagebird-sms
-                // source (configuration.mock: true → canned mockResponse).
-                return ['externalMessageId' => 'MOCK-SMS-0001', 'vendor' => 'messagebird'];
-            }
+				if ($id === 'OCA\\Pipelinq\\Service\\ContactmomentService') {
+					return $contactmomentService;
+				}
 
-            /**
-             * @param string $rawBody   Raw body.
-             * @param string $signature Signature.
-             *
-             * @return bool
-             */
-            public function verifySignature(string $rawBody, string $signature): bool
-            {
-                return true;
-            }
+				throw new \RuntimeException('not registered: ' . $id);
+			}
+		);
 
-            /**
-             * @return string
-             */
-            public function getVendor(): string
-            {
-                return 'messagebird';
-            }
-        };
-    }//end mockModeClient()
+		$this->providerRepo = $this->createMock(ChannelProviderRepository::class);
+		$this->providerFactory = $this->createMock(SmsProviderFactory::class);
 
-    /**
-     * A network-free SMS send persists the outbound row with the mock id and
-     * writes an outbound `channel: sms` contactmoment-ticket audit (REQ-OM-006).
-     *
-     * @return void
-     */
-    public function testSmsSendPersistsAndAudits(): void
-    {
-        $this->providerRepo->method('listActive')->willReturn([
-            ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird', 'sourceId' => 'messagebird-sms'],
-        ]);
-        $this->providerFactory->method('create')->willReturn($this->mockModeClient());
+		$this->adapter = new SmsAdapter($this->container,
+			$appConfig,
+			$this->providerRepo,
+			$this->providerFactory,
+			new ConsentService($this->container, $appConfig, $logger),
+			new BudgetService($this->container, $appConfig, $this->createMock(NotificationService::class), $logger),
+			$this->createMock(NotificationService::class),
+			$logger,
+		);
+	}//end setUp()
 
-        $result = $this->adapter->send(
-            contact: ['uuid' => 'contact-1', 'phoneNumber' => '+31611111111', 'client' => 'client-1'],
-            body: 'Your request is being handled.',
-            providerHint: null,
-            context: ['agent' => 'agent-1', 'clientId' => 'client-1'],
-        );
+	/**
+	 * A vendor client returning the canned mock-mode SMS id.
+	 *
+	 * @return SmsProviderClientInterface
+	 */
+	private function mockModeClient(): SmsProviderClientInterface {
+		return new class implements SmsProviderClientInterface {
+			/**
+			 * @param string $toNumber Recipient.
+			 * @param string $body Body.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function send(string $toNumber, string $body): array {
+				// Shape emitted by OpenConnector's mock-flagged messagebird-sms
+				// source (configuration.mock: true → canned mockResponse).
+				return ['externalMessageId' => 'MOCK-SMS-0001', 'vendor' => 'messagebird'];
+			}
 
-        $this->assertSame('sent', $result['status']);
-        $this->assertSame('MOCK-SMS-0001', $result['externalMessageId']);
+			/**
+			 * @param string $rawBody Raw body.
+			 * @param string $signature Signature.
+			 *
+			 * @return bool
+			 */
+			public function verifySignature(string $rawBody, string $signature): bool {
+				return true;
+			}
 
-        $outbound = $this->rowsBySchema(schema: 'message');
-        $this->assertNotEmpty($outbound, 'outbound message row not persisted');
+			/**
+			 * @return string
+			 */
+			public function getVendor(): string {
+				return 'messagebird';
+			}
+		};
+	}//end mockModeClient()
 
-        $contactmomenten = $this->rowsBySchema(schema: 'ticket');
-        $this->assertCount(1, $contactmomenten, 'exactly one outbound contactmoment audit row expected');
-        $audit = $contactmomenten[0];
-        $this->assertSame('contactmoment', $audit['ticketType']);
-        $this->assertSame('sms', $audit['channel']);
-        $this->assertSame('client-1', $audit['client']);
-        // Ticket field names: subject → title, summary → description, agent → assignee.
-        $this->assertSame('Outbound SMS', $audit['title']);
-        $this->assertSame('Your request is being handled.', $audit['description']);
-        $this->assertSame('agent-1', $audit['assignee']);
-        $this->assertSame('outbound', $audit['channelMetadata']['direction']);
-        $this->assertSame('sms', $audit['channelMetadata']['platform']);
-    }//end testSmsSendPersistsAndAudits()
+	/**
+	 * A network-free SMS send persists the outbound row with the mock id and
+	 * writes an outbound `channel: sms` contactmoment-ticket audit (REQ-OM-006).
+	 *
+	 * @return void
+	 */
+	public function testSmsSendPersistsAndAudits(): void {
+		$this->providerRepo->method('listActive')->willReturn([
+			['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird', 'sourceId' => 'messagebird-sms'],
+		]);
+		$this->providerFactory->method('create')->willReturn($this->mockModeClient());
 
-    /**
-     * The contactmoment audit is log-and-continue: a send still reports `sent`
-     * even when the contactmoment write is impossible (schema unconfigured).
-     *
-     * @return void
-     */
-    public function testAuditFailureNeverBlocksSend(): void
-    {
-        // Fully isolated wiring: the ticket schema is unconfigured, so
-        // ContactmomentService.getConfig throws → recordOutboundMessage returns
-        // null → the send is unaffected.
-        $logger    = $this->createMock(LoggerInterface::class);
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturnCallback(
-            static function (string $app, string $key, string $default): string {
-                return match ($key) {
-                    'register'  => 'pipelinq',
-                    'tenant_id' => 'tenant-1',
-                    default     => $default,
-                };
-            }
-        );
+		$result = $this->adapter->send(
+			contact: ['uuid' => 'contact-1', 'phoneNumber' => '+31611111111', 'client' => 'client-1'],
+			body: 'Your request is being handled.',
+			providerHint: null,
+			context: ['agent' => 'agent-1', 'clientId' => 'client-1'],
+		);
 
-        $store = $this->objectService;
-        $container = $this->createMock(ContainerInterface::class);
-        $contactmomentService = new ContactmomentService(
-            $container,
-            new TicketService($container, $appConfig, $logger),
-            $this->createMock(IGroupManager::class),
-            $logger,
-        );
-        $container->method('get')->willReturnCallback(
-            function (string $id) use ($store, $contactmomentService) {
-                if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
-                    return $store;
-                }
+		$this->assertSame('sent', $result['status']);
+		$this->assertSame('MOCK-SMS-0001', $result['externalMessageId']);
 
-                if ($id === 'OCA\\Pipelinq\\Service\\ContactmomentService') {
-                    return $contactmomentService;
-                }
+		$outbound = $this->rowsBySchema(schema: 'message');
+		$this->assertNotEmpty($outbound, 'outbound message row not persisted');
 
-                throw new \RuntimeException('not registered: '.$id);
-            }
-        );
+		$contactmomenten = $this->rowsBySchema(schema: 'ticket');
+		$this->assertCount(1, $contactmomenten, 'exactly one outbound contactmoment audit row expected');
+		$audit = $contactmomenten[0];
+		$this->assertSame('interaction', $audit['ticketType']);
+		$this->assertSame('sms', $audit['channel']);
+		$this->assertSame('client-1', $audit['client']);
+		// Ticket field names: subject → title, summary → description, agent → assignee.
+		$this->assertSame('Outbound SMS', $audit['title']);
+		$this->assertSame('Your request is being handled.', $audit['description']);
+		$this->assertSame('agent-1', $audit['assignee']);
+		$this->assertSame('outbound', $audit['channelMetadata']['direction']);
+		$this->assertSame('sms', $audit['channelMetadata']['platform']);
+	}//end testSmsSendPersistsAndAudits()
 
-        $adapter = new SmsAdapter(
-            $container,
-            $appConfig,
-            $this->providerRepo,
-            $this->providerFactory,
-            new ConsentService($container, $appConfig, $logger),
-            new BudgetService($container, $appConfig, $this->createMock(NotificationService::class), $logger),
-            $this->createMock(NotificationService::class),
-            $logger,
-        );
+	/**
+	 * The contactmoment audit is log-and-continue: a send still reports `sent`
+	 * even when the contactmoment write is impossible (schema unconfigured).
+	 *
+	 * @return void
+	 */
+	public function testAuditFailureNeverBlocksSend(): void {
+		// Fully isolated wiring: the ticket schema is unconfigured, so
+		// ContactmomentService.getConfig throws → recordOutboundMessage returns
+		// null → the send is unaffected.
+		$logger = $this->createMock(LoggerInterface::class);
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default): string {
+				return match ($key) {
+					'register' => 'pipelinq',
+					'tenant_id' => 'tenant-1',
+					default => $default,
+				};
+			}
+		);
 
-        $this->providerRepo->method('listActive')->willReturn([
-            ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird', 'sourceId' => 'messagebird-sms'],
-        ]);
-        $this->providerFactory->method('create')->willReturn($this->mockModeClient());
+		$store = $this->objectService;
+		$container = $this->createMock(ContainerInterface::class);
+		$contactmomentService = new ContactmomentService(
+			new TicketService($appConfig, $logger,
+				objectService: $this->createMock(ObjectServiceInterface::class),
+			),
+			$this->createMock(IGroupManager::class),
+			$logger,
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
+		$container->method('get')->willReturnCallback(
+			function (string $id) use ($store, $contactmomentService) {
+				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+					return $store;
+				}
 
-        $result = $adapter->send(
-            contact: ['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'],
-            body: 'Handled.',
-        );
+				if ($id === 'OCA\\Pipelinq\\Service\\ContactmomentService') {
+					return $contactmomentService;
+				}
 
-        $this->assertSame('sent', $result['status']);
-        $this->assertSame([], $this->rowsBySchema(schema: 'ticket'));
-    }//end testAuditFailureNeverBlocksSend()
+				throw new \RuntimeException('not registered: ' . $id);
+			}
+		);
 
-    /**
-     * All persisted rows written under the given schema.
-     *
-     * @param string $schema Schema slug.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function rowsBySchema(string $schema): array
-    {
-        $out = [];
-        foreach ($this->objectService->store as $row) {
-            if (($row['_schema'] ?? '') === $schema) {
-                $out[] = $row;
-            }
-        }
+		$adapter = new SmsAdapter($container,
+			$appConfig,
+			$this->providerRepo,
+			$this->providerFactory,
+			new ConsentService($container, $appConfig, $logger),
+			new BudgetService($container, $appConfig, $this->createMock(NotificationService::class), $logger),
+			$this->createMock(NotificationService::class),
+			$logger,
+		);
 
-        return $out;
-    }//end rowsBySchema()
+		$this->providerRepo->method('listActive')->willReturn([
+			['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird', 'sourceId' => 'messagebird-sms'],
+		]);
+		$this->providerFactory->method('create')->willReturn($this->mockModeClient());
+
+		$result = $adapter->send(
+			contact: ['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'],
+			body: 'Handled.',
+		);
+
+		$this->assertSame('sent', $result['status']);
+		$this->assertSame([], $this->rowsBySchema(schema: 'ticket'));
+	}//end testAuditFailureNeverBlocksSend()
+
+	/**
+	 * All persisted rows written under the given schema.
+	 *
+	 * @param string $schema Schema slug.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function rowsBySchema(string $schema): array {
+		$out = [];
+		foreach ($this->objectService->store as $row) {
+			if (($row['_schema'] ?? '') === $schema) {
+				$out[] = $row;
+			}
+		}
+
+		return $out;
+	}//end rowsBySchema()
 }//end class

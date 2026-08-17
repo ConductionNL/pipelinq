@@ -21,8 +21,9 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Initial state survives the page/API boot split', () => {
-
-	test('a rendered pipelinq page carries its serialised initial state', async ({ page }) => {
+	test('a rendered pipelinq page carries its serialised initial state', async ({
+		page,
+	}) => {
 		// domcontentloaded, never networkidle — networkidle does not settle on
 		// Nextcloud (ADR-074 rule 4).
 		await page.goto('/apps/pipelinq/', { waitUntil: 'domcontentloaded' })
@@ -39,9 +40,14 @@ test.describe('Initial state survives the page/API boot split', () => {
 		// the same failure wearing a different shape. The payload is a
 		// base64-encoded JSON object carrying at least the reporting currency.
 		const encoded = await state.getAttribute('value')
-		expect(encoded, 'initial-state-pipelinq-config must carry a payload').toBeTruthy()
+		expect(
+			encoded,
+			'initial-state-pipelinq-config must carry a payload',
+		).toBeTruthy()
 
-		const decoded = JSON.parse(Buffer.from(encoded as string, 'base64').toString('utf-8'))
+		const decoded = JSON.parse(
+			Buffer.from(encoded as string, 'base64').toString('utf-8'),
+		)
 		expect(decoded).toHaveProperty('currency')
 	})
 })

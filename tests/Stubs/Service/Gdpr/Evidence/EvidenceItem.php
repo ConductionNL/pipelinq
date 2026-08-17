@@ -21,90 +21,84 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service\Gdpr\Evidence;
 
 if (class_exists(EvidenceItem::class) === false) {
-    /**
-     * Stub of OR's EvidenceItem value object (unit tests only).
-     */
-    final class EvidenceItem
-    {
-        /**
-         * Collected status.
-         *
-         * @var string
-         */
-        public const STATUS_COLLECTED = 'collected';
+	/**
+	 * Stub of OR's EvidenceItem value object (unit tests only).
+	 */
+	final class EvidenceItem {
+		/**
+		 * Collected status.
+		 *
+		 * @var string
+		 */
+		public const STATUS_COLLECTED = 'collected';
 
-        /**
-         * Pending status.
-         *
-         * @var string
-         */
-        public const STATUS_PENDING = 'pending';
+		/**
+		 * Pending status.
+		 *
+		 * @var string
+		 */
+		public const STATUS_PENDING = 'pending';
 
-        /**
-         * Failed status.
-         *
-         * @var string
-         */
-        public const STATUS_FAILED = 'failed';
+		/**
+		 * Failed status.
+		 *
+		 * @var string
+		 */
+		public const STATUS_FAILED = 'failed';
 
-        /**
-         * Constructor mirroring OR's EvidenceItem.
-         *
-         * @param string               $sourceId    The source/provider id.
-         * @param string               $contentHash The dedup content hash.
-         * @param string               $status      The per-item status.
-         * @param array<string, mixed> $payload     Optional dossier payload.
-         */
-        public function __construct(
-            private readonly string $sourceId,
-            private readonly string $contentHash,
-            private readonly string $status=self::STATUS_COLLECTED,
-            private readonly array $payload=[]
-        ) {
-        }//end __construct()
+		/**
+		 * Constructor mirroring OR's EvidenceItem.
+		 *
+		 * @param string $sourceId The source/provider id.
+		 * @param string $contentHash The dedup content hash.
+		 * @param string $status The per-item status.
+		 * @param array<string, mixed> $payload Optional dossier payload.
+		 */
+		public function __construct(
+			private readonly string $sourceId,
+			private readonly string $contentHash,
+			private readonly string $status = self::STATUS_COLLECTED,
+			private readonly array $payload = [],
+		) {
+		}//end __construct()
 
-        /**
-         * @return string The source id.
-         */
-        public function getSourceId(): string
-        {
-            return $this->sourceId;
-        }//end getSourceId()
+		/**
+		 * @return string The source id.
+		 */
+		public function getSourceId(): string {
+			return $this->sourceId;
+		}//end getSourceId()
 
-        /**
-         * @return string The content hash.
-         */
-        public function getContentHash(): string
-        {
-            return $this->contentHash;
-        }//end getContentHash()
+		/**
+		 * @return string The content hash.
+		 */
+		public function getContentHash(): string {
+			return $this->contentHash;
+		}//end getContentHash()
 
-        /**
-         * @return string The status.
-         */
-        public function getStatus(): string
-        {
-            return $this->status;
-        }//end getStatus()
+		/**
+		 * @return string The status.
+		 */
+		public function getStatus(): string {
+			return $this->status;
+		}//end getStatus()
 
-        /**
-         * @return array<string, mixed> The payload.
-         */
-        public function getPayload(): array
-        {
-            return $this->payload;
-        }//end getPayload()
+		/**
+		 * @return array<string, mixed> The payload.
+		 */
+		public function getPayload(): array {
+			return $this->payload;
+		}//end getPayload()
 
-        /**
-         * @return array{sourceId: string, contentHash: string, status: string} The record.
-         */
-        public function toEvidenceRecord(): array
-        {
-            return [
-                'sourceId'    => $this->sourceId,
-                'contentHash' => $this->contentHash,
-                'status'      => $this->status,
-            ];
-        }//end toEvidenceRecord()
-    }//end class
+		/**
+		 * @return array{sourceId: string, contentHash: string, status: string} The record.
+		 */
+		public function toEvidenceRecord(): array {
+			return [
+				'sourceId' => $this->sourceId,
+				'contentHash' => $this->contentHash,
+				'status' => $this->status,
+			];
+		}//end toEvidenceRecord()
+	}//end class
 }//end if

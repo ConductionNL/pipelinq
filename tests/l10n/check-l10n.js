@@ -43,17 +43,20 @@ const path = require('path')
 const ROOT = process.cwd()
 const WRITE = process.argv.includes('--write')
 
-function readJson (p) {
+function readJson(p) {
 	return JSON.parse(fs.readFileSync(p, 'utf8'))
 }
 
-const appId = process.env.L10N_APP_ID
+const appId =
+	process.env.L10N_APP_ID
 	|| (fs.existsSync(path.join(ROOT, 'package.json'))
 		? readJson(path.join(ROOT, 'package.json')).name
 		: null)
 
 if (!appId) {
-	console.error('l10n-check: cannot determine app id (no L10N_APP_ID and no package.json "name")')
+	console.error(
+		'l10n-check: cannot determine app id (no L10N_APP_ID and no package.json "name")',
+	)
 	process.exit(2)
 }
 
@@ -65,7 +68,9 @@ if (!fs.existsSync(srcDir)) {
 	process.exit(2)
 }
 if (!fs.existsSync(enFile)) {
-	console.error(`l10n-check: en.json not found: ${enFile} — every t() call would be a miss`)
+	console.error(
+		`l10n-check: en.json not found: ${enFile} — every t() call would be a miss`,
+	)
 	process.exit(1)
 }
 
@@ -74,7 +79,7 @@ const translations = readJson(enFile).translations || {}
 // Collect all .vue/.js/.ts/.mjs files under the source dir.
 const exts = new Set(['.vue', '.js', '.ts', '.mjs', '.jsx', '.tsx'])
 const files = []
-;(function walk (dir) {
+;(function walk(dir) {
 	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
 		if (entry.name === 'node_modules' || entry.name.startsWith('.')) {
 			continue
@@ -101,19 +106,23 @@ const esc = appId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 // t('app', 'key'  — key in group 2 (any of the three quote styles).
 const tRe = new RegExp(
-	'[\\$.]?\\bt\\(\\s*[\'"`]' + esc + '[\'"`]\\s*,\\s*'
-	+ '(?:\'((?:[^\'\\\\]|\\\\.)*)\'|"((?:[^"\\\\]|\\\\.)*)"|`([^`$]*)`)',
+	'[\\$.]?\\bt\\(\\s*[\'"`]'
+		+ esc
+		+ '[\'"`]\\s*,\\s*'
+		+ '(?:\'((?:[^\'\\\\]|\\\\.)*)\'|"((?:[^"\\\\]|\\\\.)*)"|`([^`$]*)`)',
 	'g',
 )
 // n('app', 'singular', 'plural'  — singular in 2, plural in 3.
 const nRe = new RegExp(
-	'[\\$.]?\\bn\\(\\s*[\'"`]' + esc + '[\'"`]\\s*,\\s*'
-	+ '(?:\'((?:[^\'\\\\]|\\\\.)*)\'|"((?:[^"\\\\]|\\\\.)*)"|`([^`$]*)`)\\s*,\\s*'
-	+ '(?:\'((?:[^\'\\\\]|\\\\.)*)\'|"((?:[^"\\\\]|\\\\.)*)"|`([^`$]*)`)',
+	'[\\$.]?\\bn\\(\\s*[\'"`]'
+		+ esc
+		+ '[\'"`]\\s*,\\s*'
+		+ '(?:\'((?:[^\'\\\\]|\\\\.)*)\'|"((?:[^"\\\\]|\\\\.)*)"|`([^`$]*)`)\\s*,\\s*'
+		+ '(?:\'((?:[^\'\\\\]|\\\\.)*)\'|"((?:[^"\\\\]|\\\\.)*)"|`([^`$]*)`)',
 	'g',
 )
 
-function unescape (s) {
+function unescape(s) {
 	// Mirror JS string unescaping for the escapes that appear in source keys.
 	return s
 		.replace(/\\n/g, '\n')
@@ -127,7 +136,7 @@ function unescape (s) {
 // usedKey -> Set of "file:line" where it appears (for actionable output).
 const used = new Map()
 
-function record (key, file, idx, content) {
+function record(key, file, idx, content) {
 	if (key == null) {
 		return
 	}
@@ -159,12 +168,16 @@ for (const [key, locations] of used) {
 	}
 }
 
-console.log(`l10n-check [${appId}]: scanned ${files.length} files, `
-	+ `${used.size} distinct literal keys used, `
-	+ `${Object.keys(translations).length} keys in en.json`)
+console.log(
+	`l10n-check [${appId}]: scanned ${files.length} files, `
+		+ `${used.size} distinct literal keys used, `
+		+ `${Object.keys(translations).length} keys in en.json`,
+)
 
 if (missing.length === 0) {
-	console.log('l10n-check: OK — every used translation key is present in l10n/en.json')
+	console.log(
+		'l10n-check: OK — every used translation key is present in l10n/en.json',
+	)
 	process.exit(0)
 }
 
@@ -175,20 +188,28 @@ if (WRITE) {
 	// among themselves for a stable, reviewable block.
 	const full = readJson(enFile)
 	const appended = { ...full.translations }
-	for (const { key } of missing.slice().sort((a, b) => a.key.localeCompare(b.key))) {
+	for (const { key } of missing
+		.slice()
+		.sort((a, b) => a.key.localeCompare(b.key))) {
 		appended[key] = key
 	}
 	full.translations = appended
 	fs.writeFileSync(enFile, JSON.stringify(full, null, 4) + '\n')
-	console.log(`l10n-check: WROTE ${missing.length} missing key(s) into `
-		+ `${path.relative(ROOT, enFile)} (source === English value). `
-		+ 'Review the diff and translate the nl.json side as needed.')
+	console.log(
+		`l10n-check: WROTE ${missing.length} missing key(s) into `
+			+ `${path.relative(ROOT, enFile)} (source === English value). `
+			+ 'Review the diff and translate the nl.json side as needed.',
+	)
 	process.exit(0)
 }
 
-console.error(`\nl10n-check: FAIL — ${missing.length} translation key(s) used in source `
-	+ 'but MISSING from l10n/en.json:')
-for (const { key, locations } of missing.sort((a, b) => a.key.localeCompare(b.key))) {
+console.error(
+	`\nl10n-check: FAIL — ${missing.length} translation key(s) used in source `
+		+ 'but MISSING from l10n/en.json:',
+)
+for (const { key, locations } of missing.sort((a, b) =>
+	a.key.localeCompare(b.key),
+)) {
 	console.error(`  • ${JSON.stringify(key)}`)
 	for (const loc of locations.slice(0, 5)) {
 		console.error(`      ${loc}`)
@@ -197,6 +218,8 @@ for (const { key, locations } of missing.sort((a, b) => a.key.localeCompare(b.ke
 		console.error(`      … +${locations.length - 5} more`)
 	}
 }
-console.error('\nAdd the missing source strings to l10n/en.json (key === English source), '
-	+ 'or run `node tests/l10n/check-l10n.js --write` to extract them automatically.')
+console.error(
+	'\nAdd the missing source strings to l10n/en.json (key === English source), '
+		+ 'or run `node tests/l10n/check-l10n.js --write` to extract them automatically.',
+)
 process.exit(1)

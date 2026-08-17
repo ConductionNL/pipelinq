@@ -9,12 +9,21 @@
 		size="normal"
 		@closing="$emit('close')">
 		<div class="pos-refund">
-			<p>{{ t('pipelinq', 'This will reverse the transaction. Enter a reason for the refund.') }}</p>
+			<p>
+				{{
+					t(
+						'pipelinq',
+						'This will reverse the transaction. Enter a reason for the refund.',
+					)
+				}}
+			</p>
 			<NcTextArea
 				v-model="reason"
 				:label="t('pipelinq', 'Reason')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Enter a reason for the reversal') : ''" />
+				:helperText="
+					showError ? t('pipelinq', 'Enter a reason for the reversal') : ''
+				" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
@@ -28,7 +37,7 @@
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextArea } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcTextArea } from '@nextcloud/vue'
 
 export default {
 	name: 'PosRefundDialog',
@@ -37,12 +46,14 @@ export default {
 		NcButton,
 		NcTextArea,
 	},
+
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -50,6 +61,7 @@ export default {
 			showError: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * Validate and emit the refund reason.

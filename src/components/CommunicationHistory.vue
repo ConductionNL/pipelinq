@@ -25,7 +25,10 @@
 			</NcButton>
 		</template>
 
-		<div v-if="loading && items.length === 0" class="communication-history__loading" role="status">
+		<div
+			v-if="loading && items.length === 0"
+			class="communication-history__loading"
+			role="status">
 			<NcLoadingIcon :size="32" />
 			<span class="communication-history__loading-text">
 				{{ t('pipelinq', 'Loading communication history...') }}
@@ -42,12 +45,12 @@
 			<CnDataTable
 				:columns="columns"
 				:rows="items"
-				row-key="id"
-				:row-class="rowClass"
+				rowKey="id"
+				:rowClass="rowClass"
 				:loading="loading"
-				:loading-text="t('pipelinq', 'Loading communication history...')"
-				:empty-text="t('pipelinq', 'No communication history yet')"
-				@row-click="goToContactmoment">
+				:loadingText="t('pipelinq', 'Loading communication history...')"
+				:emptyText="t('pipelinq', 'No communication history yet')"
+				@rowClick="goToContactmoment">
 				<template #column-channel="{ value }">
 					<span
 						class="communication-history__channel"
@@ -62,24 +65,20 @@
 
 			<CnPagination
 				v-if="pages > 1"
-				:current-page="page"
-				:total-pages="pages"
-				:total-items="total"
-				:current-page-size="limit"
-				@page-changed="onPageChanged" />
+				:currentPage="page"
+				:totalPages="pages"
+				:totalItems="total"
+				:currentPageSize="limit"
+				@pageChanged="onPageChanged" />
 		</template>
 	</CnDetailCard>
 </template>
 
 <script>
+import { CnDataTable, CnDetailCard, CnPagination } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
-import {
-	CnDetailCard,
-	CnDataTable,
-	CnPagination,
-} from '@conduction/nextcloud-vue'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 /**
@@ -115,8 +114,10 @@ export default {
 		entityType: {
 			type: String,
 			required: true,
-			validator: (value) => ['client', 'contact', 'lead', 'request'].includes(value),
+			validator: (value) =>
+				['client', 'contact', 'lead', 'request'].includes(value),
 		},
+
 		/**
 		 * The OpenRegister UUID of the entity being viewed.
 		 */
@@ -153,6 +154,7 @@ export default {
 			this.page = 1
 			this.fetchHistory()
 		},
+
 		entityType() {
 			this.page = 1
 			this.fetchHistory()

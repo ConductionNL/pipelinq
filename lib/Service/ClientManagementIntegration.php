@@ -38,45 +38,43 @@ use Throwable;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
  */
-class ClientManagementIntegration
-{
-    /**
-     * Constructor.
-     *
-     * @param ConsentService  $consentService Consent audit log.
-     * @param LoggerInterface $logger         Logger.
-     *
-     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
-     */
-    public function __construct(
-        private ConsentService $consentService,
-        private LoggerInterface $logger,
-    ) {
-    }//end __construct()
+class ClientManagementIntegration {
+	/**
+	 * Constructor.
+	 *
+	 * @param ConsentService $consentService Consent audit log.
+	 * @param LoggerInterface $logger Logger.
+	 *
+	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+	 */
+	public function __construct(
+		private ConsentService $consentService,
+		private LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Cascade contact deletion to the consent log.
-     *
-     * @param string $contactId Contact UUID.
-     *
-     * @return int Number of consent rows deleted.
-     *
-     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
-     */
-    public function onContactDeleted(string $contactId): int
-    {
-        if ($contactId === '') {
-            return 0;
-        }
+	/**
+	 * Cascade contact deletion to the consent log.
+	 *
+	 * @param string $contactId Contact UUID.
+	 *
+	 * @return int Number of consent rows deleted.
+	 *
+	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.4
+	 */
+	public function onContactDeleted(string $contactId): int {
+		if ($contactId === '') {
+			return 0;
+		}
 
-        try {
-            return $this->consentService->deleteForContact(contactId: $contactId);
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                'ClientManagementIntegration.onContactDeleted: failed',
-                ['contactId' => $contactId, 'exception' => $e->getMessage()]
-            );
-            return 0;
-        }
-    }//end onContactDeleted()
+		try {
+			return $this->consentService->deleteForContact(contactId: $contactId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'ClientManagementIntegration.onContactDeleted: failed',
+				['contactId' => $contactId, 'exception' => $e->getMessage()]
+			);
+			return 0;
+		}
+	}//end onContactDeleted()
 }//end class

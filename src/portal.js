@@ -10,13 +10,13 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
 
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { createApp } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
-import { generateUrl } from '@nextcloud/router'
-
 import PortalApp from './portal/PortalApp.vue'
-import { portalRoutes, installPortalGuard } from './portal/portalRoutes.js'
+import { installPortalGuard, portalRoutes } from './portal/portalRoutes.js'
+
 import './assets/app.css'
 
 // vue-router 4 replaces `mode: 'hash'` + `base` with a history object.
@@ -27,7 +27,9 @@ const router = createRouter({
 installPortalGuard(router)
 
 document.addEventListener('DOMContentLoaded', () => {
-	const mount = document.getElementById('pipelinq-portal') || document.body.appendChild(document.createElement('div'))
+	const mount =
+		document.getElementById('pipelinq-portal')
+		|| document.body.appendChild(document.createElement('div'))
 	mount.id = 'pipelinq-portal'
 	const app = createApp(PortalApp)
 	// Vue 3 has no `Vue.prototype`; `app.config.globalProperties` is the

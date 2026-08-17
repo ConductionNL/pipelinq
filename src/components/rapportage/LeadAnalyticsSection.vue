@@ -36,7 +36,7 @@
 				<h3>{{ t('pipelinq', 'Win/loss') }}</h3>
 				<WinLossWidget
 					:data="stats.winLoss || {}"
-					@range-change="onRangeChange" />
+					@rangeChange="onRangeChange" />
 			</div>
 		</div>
 	</section>
@@ -44,12 +44,12 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import LeadAgingWidget from '../../views/rapportage/LeadAgingWidget.vue'
 import PipelineFunnelWidget from '../../views/rapportage/PipelineFunnelWidget.vue'
 import SourcePerformanceWidget from '../../views/rapportage/SourcePerformanceWidget.vue'
-import LeadAgingWidget from '../../views/rapportage/LeadAgingWidget.vue'
 import WinLossWidget from '../../views/rapportage/WinLossWidget.vue'
 
 export default {
@@ -61,6 +61,7 @@ export default {
 		LeadAgingWidget,
 		WinLossWidget,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -68,9 +69,11 @@ export default {
 			dateRange: null,
 		}
 	},
+
 	mounted() {
 		this.loadStats()
 	},
+
 	methods: {
 		/**
 		 * Fetch analytics data from the rapportage pipeline-stats endpoint
@@ -91,12 +94,18 @@ export default {
 				)
 				this.stats = response?.data || {}
 			} catch (e) {
-				showError(t('pipelinq', 'Failed to load lead analytics. Please try again.'))
+				showError(
+					t(
+						'pipelinq',
+						'Failed to load lead analytics. Please try again.',
+					),
+				)
 				this.stats = {}
 			} finally {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Re-fetch with a new date range when the win/loss widget changes.
 		 *
@@ -129,6 +138,8 @@ export default {
 	font-weight: 600;
 }
 @media (max-width: 1024px) {
-	.lead-analytics__grid { grid-template-columns: 1fr; }
+	.lead-analytics__grid {
+		grid-template-columns: 1fr;
+	}
 }
 </style>

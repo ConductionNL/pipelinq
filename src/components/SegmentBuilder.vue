@@ -21,11 +21,11 @@
 		<SegmentRuleNode
 			:node="tree"
 			:depth="0"
-			:entity-type="entityType"
-			:field-options="fieldOptions"
+			:entityType="entityType"
+			:fieldOptions="fieldOptions"
 			:errors="errors"
 			@update:node="onTreeUpdate"
-			@validate-leaf="validateLeaf" />
+			@validateLeaf="validateLeaf" />
 
 		<p v-if="validationError" class="builder-error" role="alert">
 			{{ validationError }}
@@ -34,9 +34,9 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import SegmentRuleNode from './SegmentRuleNode.vue'
 
 const DEBOUNCE_ESTIMATE_MS = 400
@@ -57,21 +57,25 @@ export default {
 		NcLoadingIcon,
 		SegmentRuleNode,
 	},
+
 	props: {
 		modelValue: {
 			type: Object,
 			default: () => emptyTree(),
 		},
+
 		entityType: {
 			type: String,
 			required: true,
 			validator: (v) => ['contact', 'customer'].includes(v),
 		},
+
 		fieldOptions: {
 			type: Array,
 			default: () => [],
 		},
 	},
+
 	emits: ['update:modelValue', 'validity-change'],
 	data() {
 		return {
@@ -85,6 +89,7 @@ export default {
 			validateTimer: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * Renderable estimate label for the audience size.
@@ -97,6 +102,7 @@ export default {
 			}
 			return String(this.estimatedSize)
 		},
+
 		/**
 		 * Whether the current rule tree has any leaf condition.
 		 *
@@ -106,6 +112,7 @@ export default {
 			return this.countLeaves(this.tree) > 0
 		},
 	},
+
 	watch: {
 		modelValue: {
 			handler(next) {
@@ -114,9 +121,11 @@ export default {
 					this.tree = this.cloneTree(next)
 				}
 			},
+
 			deep: true,
 		},
 	},
+
 	beforeUnmount() {
 		if (this.estimateTimer) {
 			clearTimeout(this.estimateTimer)
@@ -125,6 +134,7 @@ export default {
 			clearTimeout(this.validateTimer)
 		}
 	},
+
 	methods: {
 		/**
 		 * Deep clone the rule tree so parent props remain immutable.
@@ -142,6 +152,7 @@ export default {
 				return emptyTree()
 			}
 		},
+
 		/**
 		 * Recursively count leaf predicates in a node tree.
 		 *
@@ -153,10 +164,14 @@ export default {
 				return 0
 			}
 			if (Array.isArray(node.children)) {
-				return node.children.reduce((sum, child) => sum + this.countLeaves(child), 0)
+				return node.children.reduce(
+					(sum, child) => sum + this.countLeaves(child),
+					0,
+				)
 			}
 			return node.field ? 1 : 0
 		},
+
 		/**
 		 * Handle a tree update from the recursive node component.
 		 * Emits update:modelValue and schedules estimate + validate calls.
@@ -170,6 +185,7 @@ export default {
 			this.scheduleEstimate()
 			this.scheduleValidate()
 		},
+
 		/**
 		 * Debounce a backend size-estimate call.
 		 *
@@ -187,8 +203,12 @@ export default {
 			}
 			this.estimating = true
 			this.estimateError = false
-			this.estimateTimer = setTimeout(() => this.runEstimate(), DEBOUNCE_ESTIMATE_MS)
+			this.estimateTimer = setTimeout(
+				() => this.runEstimate(),
+				DEBOUNCE_ESTIMATE_MS,
+			)
 		},
+
 		/**
 		 * Perform the size estimate by posting the current rules to the
 		 * segment-size endpoint. The endpoint accepts an inline rule payload
@@ -201,11 +221,12 @@ export default {
 					entityType: this.entityType,
 					rules: this.tree,
 				})
-				this.estimatedSize = typeof data?.estimatedSize === 'number'
-					? data.estimatedSize
-					: typeof data?.size === 'number'
-						? data.size
-						: 0
+				this.estimatedSize =
+					typeof data?.estimatedSize === 'number'
+						? data.estimatedSize
+						: typeof data?.size === 'number'
+							? data.size
+							: 0
 				this.estimateError = false
 			} catch (_e) {
 				this.estimateError = true
@@ -213,6 +234,7 @@ export default {
 				this.estimating = false
 			}
 		},
+
 		/**
 		 * Debounce a backend rule-tree validate call.
 		 *
@@ -222,8 +244,12 @@ export default {
 			if (this.validateTimer) {
 				clearTimeout(this.validateTimer)
 			}
-			this.validateTimer = setTimeout(() => this.runValidate(), DEBOUNCE_VALIDATE_MS)
+			this.validateTimer = setTimeout(
+				() => this.runValidate(),
+				DEBOUNCE_VALIDATE_MS,
+			)
 		},
+
 		/**
 		 * Validate the current rule tree against the server-side SegmentService
 		 * validator. Errors are stored per-path so leaf rows can render their
@@ -243,7 +269,8 @@ export default {
 					rules: this.tree,
 				})
 				if (data?.valid === false) {
-					this.validationError = data?.error || this.t('pipelinq', 'Invalid rules.')
+					this.validationError =
+						data?.error || this.t('pipelinq', 'Invalid rules.')
 					this.errors = data?.fieldErrors || {}
 					this.$emit('validity-change', false)
 				} else {
@@ -251,11 +278,14 @@ export default {
 				}
 			} catch (e) {
 				const response = e?.response?.data
-				this.validationError = response?.error || this.t('pipelinq', 'Could not validate rules.')
+				this.validationError =
+					response?.error
+					|| this.t('pipelinq', 'Could not validate rules.')
 				this.errors = response?.fieldErrors || {}
 				this.$emit('validity-change', false)
 			}
 		},
+
 		/**
 		 * Trigger an immediate validate call when a leaf field/operator/value
 		 * blur event bubbles up from the recursive node component.

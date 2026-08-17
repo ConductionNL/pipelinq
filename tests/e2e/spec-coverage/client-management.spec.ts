@@ -37,14 +37,17 @@ test('client creation form opens and has required fields', async ({ page }) => {
 		await page.goto('/apps/pipelinq/clients/new')
 	}
 	// Form should be present with name field
-	const nameField = page.getByRole('textbox', { name: /Name/i }).first()
+	const nameField =
+		page.getByRole('textbox', { name: /Name/i }).first()
 		|| page.locator('input[name="name"], input[placeholder*="name" i]').first()
 	await expect(nameField).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/client-management/spec.md#inline-validation-errors
 test('client form shows validation when name empty', async ({ page }) => {
-	await page.goto('/apps/pipelinq/clients/new').catch(() => page.goto('/apps/pipelinq/clients'))
+	await page
+		.goto('/apps/pipelinq/clients/new')
+		.catch(() => page.goto('/apps/pipelinq/clients'))
 	// Save button should be disabled without a name
 	const saveBtn = page.getByRole('button', { name: /Save|Create/i }).first()
 	if (await saveBtn.isVisible().catch(() => false)) {
@@ -67,35 +70,49 @@ test('clients navigation item visible in sidebar', async ({ page }) => {
 // @e2e openspec/specs/client-management/spec.md#view-organization-client-detail
 test('client page loads without error', async ({ page }) => {
 	await page.goto('/apps/pipelinq/clients')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/client-management/spec.md#search-clients-by-name
 test('client list has search capability', async ({ page }) => {
 	await page.goto('/apps/pipelinq/clients')
 	// Search input should be available
-	const searchInput = page.locator('input[type="search"], input[placeholder*="search" i], input[placeholder*="zoek" i]').first()
+	const searchInput = page
+		.locator(
+			'input[type="search"], input[placeholder*="search" i], input[placeholder*="zoek" i]',
+		)
+		.first()
 	// Check the page loads fully
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/client-management/spec.md#list-all-contact-persons
 test('contacts navigation item visible in sidebar', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	// Relocated under the "Sales" group — see src/menu-layout.json#relocations.
-	await expect(await revealNavEntry(page, 'Contacts')).toBeVisible({ timeout: 10000 })
+	await expect(await revealNavEntry(page, 'Contacts')).toBeVisible({
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/client-management/spec.md#create-a-contact-person-for-an-organization
 test('contacts page loads without error', async ({ page }) => {
 	await page.goto('/apps/pipelinq/contacts')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/client-management/spec.md#add-tags-to-a-client
 test('client form UI loads', async ({ page }) => {
 	await page.goto('/apps/pipelinq/clients')
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
+	await expect(
+		page.locator('#app-content, .app-content, main').first(),
+	).toBeVisible({ timeout: 10000 })
 })
 
 /*

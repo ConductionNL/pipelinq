@@ -23,7 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Service\ObjectService;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\MessagingService;
@@ -44,122 +45,129 @@ use Psr\Log\LoggerInterface;
  * These tests distinguish the two cases the old default-argument form
  * conflated — key missing, and key present-but-blank.
  */
-class RegisterSlugBlankOverrideTest extends TestCase
-{
-    /**
-     * Build MessagingService over a config map.
-     *
-     * @param array<string, string> $config The app-config contents.
-     * @param ObjectService         $object The ObjectService mock.
-     *
-     * @return MessagingService
-     */
-    private function buildService(array $config, ObjectService $object): MessagingService
-    {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($object);
+class RegisterSlugBlankOverrideTest extends TestCase {
+	/**
+	 * Build MessagingService over a config map.
+	 *
+	 * @param array<string, string> $config The app-config contents.
+	 * @param ObjectServiceInterface $object The ObjectService mock.
+	 *
+	 * @return MessagingService
+	 */
+	private function buildService(array $config, ObjectServiceInterface $object): MessagingService {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($object);
 
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturnCallback(
-            static function (string $app, string $key, string $default='') use ($config): string {
-                // array_key_exists, NOT ??: a key set to '' must return '',
-                // which is exactly the case under test.
-                if (array_key_exists($key, $config) === true) {
-                    return $config[$key];
-                }
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = '') use ($config): string {
+				// array_key_exists, NOT ??: a key set to '' must return '',
+				// which is exactly the case under test.
+				if (array_key_exists($key, $config) === true) {
+					return $config[$key];
+				}
 
-                return $default;
-            }
-        );
+				return $default;
+			}
+		);
 
-        return new MessagingService(
-            $container,
-            $appConfig,
-            $this->createMock(ChannelProviderRepository::class),
-            $this->createMock(SmsAdapter::class),
-            $this->createMock(WhatsAppAdapter::class),
-            $this->createMock(ConsentService::class),
-            $this->createMock(LoggerInterface::class)
-        );
-    }//end buildService()
+		return new MessagingService($container,
+			$appConfig,
+			$this->createMock(ChannelProviderRepository::class),
+			$this->createMock(SmsAdapter::class),
+			$this->createMock(WhatsAppAdapter::class),
+			$this->createMock(ConsentService::class),
+			$this->createMock(LoggerInterface::class)
+		);
+	}//end buildService()
 
-    /**
-     * A BLANK `register` override still resolves to the built-in slug, so the
-     * lookup proceeds scoped instead of being abandoned.
-     *
-     * Before the fix this returned '' and loadContact() bailed out, because
-     * getValueString()'s default never applies to a present-but-empty key.
-     *
-     * @return void
-     */
-    public function testBlankRegisterOverrideFallsBackToBuiltInSlug(): void
-    {
-        $seen = [];
+	/**
+	 * An ObjectService double that records the register every find() is scoped to.
+	 *
+	 * The register is read from the NAMED parameter, not from a positional
+	 * index. `ObjectServiceInterface::find()` declares nine parameters and the
+	 * register is the FOURTH — these tests used to read `$args[1]`, which under
+	 * the current contract is `$_extend` and always came back as `[]`, so all
+	 * three assertions compared a register slug against an empty array.
+	 *
+	 * @param array<int, mixed> $seen Collects the register of every call.
+	 *
+	 * @return ObjectServiceInterface The recording double.
+	 */
+	private function registerRecordingObjectService(array &$seen): ObjectServiceInterface {
+		$object = $this->createMock(ObjectServiceInterface::class);
+		$object->method('find')->willReturnCallback(
+			static function (
+				int|string $id,
+				?array $_extend = [],
+				bool $files = false,
+				string|int|null $register = null,
+				string|int|null $schema = null,
+			) use (&$seen): ?ObjectEntityInterface {
+				$seen[] = $register;
+				return null;
+			}
+		);
 
-        $object = $this->createMock(ObjectService::class);
-        $object->method('find')->willReturnCallback(
-            static function (...$args) use (&$seen): ?array {
-                $seen[] = ($args[1] ?? null);
-                return null;
-            }
-        );
+		return $object;
+	}//end registerRecordingObjectService()
 
-        $service = $this->buildService(['register' => ''], $object);
+	/**
+	 * A BLANK `register` override still resolves to the built-in slug, so the
+	 * lookup proceeds scoped instead of being abandoned.
+	 *
+	 * Before the fix this returned '' and loadContact() bailed out, because
+	 * getValueString()'s default never applies to a present-but-empty key.
+	 *
+	 * @return void
+	 */
+	public function testBlankRegisterOverrideFallsBackToBuiltInSlug(): void {
+		$seen = [];
 
-        $service->loadContact('contact-1');
+		$object = $this->registerRecordingObjectService($seen);
 
-        $this->assertNotEmpty($seen, 'A blank register override must not abandon the lookup.');
-        $this->assertSame('pipelinq', $seen[0], 'A blank override must resolve to the built-in slug.');
-    }//end testBlankRegisterOverrideFallsBackToBuiltInSlug()
+		$service = $this->buildService(['register' => ''], $object);
 
-    /**
-     * An ABSENT `register` key resolves to the built-in slug too.
-     *
-     * @return void
-     */
-    public function testAbsentRegisterKeyFallsBackToBuiltInSlug(): void
-    {
-        $seen = [];
+		$service->loadContact('contact-1');
 
-        $object = $this->createMock(ObjectService::class);
-        $object->method('find')->willReturnCallback(
-            static function (...$args) use (&$seen): ?array {
-                $seen[] = ($args[1] ?? null);
-                return null;
-            }
-        );
+		$this->assertNotEmpty($seen, 'A blank register override must not abandon the lookup.');
+		$this->assertSame('pipelinq', $seen[0], 'A blank override must resolve to the built-in slug.');
+	}//end testBlankRegisterOverrideFallsBackToBuiltInSlug()
 
-        $service = $this->buildService([], $object);
+	/**
+	 * An ABSENT `register` key resolves to the built-in slug too.
+	 *
+	 * @return void
+	 */
+	public function testAbsentRegisterKeyFallsBackToBuiltInSlug(): void {
+		$seen = [];
 
-        $service->loadContact('contact-1');
+		$object = $this->registerRecordingObjectService($seen);
 
-        $this->assertNotEmpty($seen);
-        $this->assertSame('pipelinq', $seen[0]);
-    }//end testAbsentRegisterKeyFallsBackToBuiltInSlug()
+		$service = $this->buildService([], $object);
 
-    /**
-     * An explicit override is still honoured — the fallback must not swallow
-     * a real configuration.
-     *
-     * @return void
-     */
-    public function testExplicitRegisterOverrideIsHonoured(): void
-    {
-        $seen = [];
+		$service->loadContact('contact-1');
 
-        $object = $this->createMock(ObjectService::class);
-        $object->method('find')->willReturnCallback(
-            static function (...$args) use (&$seen): ?array {
-                $seen[] = ($args[1] ?? null);
-                return null;
-            }
-        );
+		$this->assertNotEmpty($seen);
+		$this->assertSame('pipelinq', $seen[0]);
+	}//end testAbsentRegisterKeyFallsBackToBuiltInSlug()
 
-        $service = $this->buildService(['register' => 'custom-reg'], $object);
+	/**
+	 * An explicit override is still honoured — the fallback must not swallow
+	 * a real configuration.
+	 *
+	 * @return void
+	 */
+	public function testExplicitRegisterOverrideIsHonoured(): void {
+		$seen = [];
 
-        $service->loadContact('contact-1');
+		$object = $this->registerRecordingObjectService($seen);
 
-        $this->assertNotEmpty($seen);
-        $this->assertSame('custom-reg', $seen[0]);
-    }//end testExplicitRegisterOverrideIsHonoured()
+		$service = $this->buildService(['register' => 'custom-reg'], $object);
+
+		$service->loadContact('contact-1');
+
+		$this->assertNotEmpty($seen);
+		$this->assertSame('custom-reg', $seen[0]);
+	}//end testExplicitRegisterOverrideIsHonoured()
 }//end class

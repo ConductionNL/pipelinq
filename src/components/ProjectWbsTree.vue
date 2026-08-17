@@ -25,23 +25,40 @@
 		</div>
 
 		<div v-for="phase in orderedPhases" :key="phase.id" class="wbs-phase">
-			<div class="wbs-phase__row"
+			<div
+				class="wbs-phase__row"
 				role="button"
 				tabindex="0"
 				:aria-expanded="isOpen(phase.id)"
-				:aria-label="t('pipelinq', 'Toggle phase {name}', { name: phase.title || phase.name })"
+				:aria-label="
+					t('pipelinq', 'Toggle phase {name}', {
+						name: phase.title || phase.name,
+					})
+				"
 				@click="toggle(phase.id)"
 				@keydown.enter.prevent="toggle(phase.id)"
 				@keydown.space.prevent="toggle(phase.id)">
-				<span class="wbs-phase__chevron" :class="{ 'wbs-phase__chevron--open': isOpen(phase.id) }">
+				<span
+					class="wbs-phase__chevron"
+					:class="{ 'wbs-phase__chevron--open': isOpen(phase.id) }">
 					›
 				</span>
-				<span class="wbs-phase__name">{{ phase.name || t('pipelinq', '(unnamed phase)') }}</span>
-				<span class="status-pill" :class="'status-pill--' + (phase.status || 'open')">
+				<span class="wbs-phase__name">{{
+					phase.name || t('pipelinq', '(unnamed phase)')
+				}}</span>
+				<span
+					class="status-pill"
+					:class="'status-pill--' + (phase.status || 'open')">
 					{{ statusLabel(phase.status) }}
 				</span>
 				<span class="wbs-billable">
-					<span :class="['billable-dot', resolvedBillable('phase', phase) ? 'billable-dot--on' : 'billable-dot--off']" />
+					<span
+						class="billable-dot"
+						:class="[
+							resolvedBillable('phase', phase)
+								? 'billable-dot--on'
+								: 'billable-dot--off',
+						]" />
 					{{ billableLabel('phase', phase) }}
 				</span>
 				<span class="wbs-progress">
@@ -54,21 +71,37 @@
 					{{ t('pipelinq', 'No tasks in this phase yet.') }}
 				</div>
 				<div v-for="task in tasksFor(phase)" :key="task.id" class="wbs-task">
-					<span class="wbs-task__name">{{ task.name || t('pipelinq', '(unnamed task)') }}</span>
-					<span v-if="task.assignee" class="wbs-task__assignee">@{{ task.assignee }}</span>
+					<span class="wbs-task__name">{{
+						task.name || t('pipelinq', '(unnamed task)')
+					}}</span>
+					<span v-if="task.assignee" class="wbs-task__assignee"
+						>@{{ task.assignee }}</span
+					>
 					<span class="wbs-task__hours">
-						{{ task.estimatedHours || 0 }}u {{ t('pipelinq', 'planned') }}
+						{{ task.estimatedHours || 0 }}u
+						{{ t('pipelinq', 'planned') }}
 						·
-						{{ loggedHoursForTask(task.id) }}u {{ t('pipelinq', 'logged') }}
+						{{ loggedHoursForTask(task.id) }}u
+						{{ t('pipelinq', 'logged') }}
 					</span>
-					<span class="status-pill" :class="'status-pill--' + (task.status || 'open')">
+					<span
+						class="status-pill"
+						:class="'status-pill--' + (task.status || 'open')">
 						{{ statusLabel(task.status) }}
 					</span>
 					<span class="wbs-billable wbs-billable--task">
-						<span :class="['billable-dot', resolvedBillable('task', task, { phase }) ? 'billable-dot--on' : 'billable-dot--off']" />
+						<span
+							class="billable-dot"
+							:class="[
+								resolvedBillable('task', task, { phase })
+									? 'billable-dot--on'
+									: 'billable-dot--off',
+							]" />
 						{{ billableLabel('task', task, { phase }) }}
 					</span>
-					<NcButton variant="tertiary" @click="$emit('add-activity', { phase, task })">
+					<NcButton
+						variant="tertiary"
+						@click="$emit('add-activity', { phase, task })">
 						{{ t('pipelinq', 'Time entry') }}
 					</NcButton>
 				</div>
@@ -96,34 +129,40 @@ export default {
 	components: {
 		NcButton,
 	},
+
 	props: {
 		/** Parent project — used as the root of the billable inheritance chain. */
 		project: {
 			type: Object,
 			required: true,
 		},
+
 		/** Array of projectPhase objects belonging to the project. */
 		phases: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Array of projectTask objects belonging to the project. */
 		tasks: {
 			type: Array,
 			default: () => [],
 		},
+
 		/** Array of projectActivity objects belonging to the project. */
 		activities: {
 			type: Array,
 			default: () => [],
 		},
 	},
+
 	emits: ['add-phase', 'add-task', 'add-activity'],
 	data() {
 		return {
 			openPhases: {},
 		}
 	},
+
 	computed: {
 		/**
 		 * Phases sorted by their stored sequence (the legacy field also
@@ -140,6 +179,7 @@ export default {
 			})
 		},
 	},
+
 	methods: {
 		/**
 		 * Toggle a phase's collapsed/expanded state.
@@ -152,6 +192,7 @@ export default {
 				[phaseId]: !this.openPhases[phaseId],
 			}
 		},
+
 		/**
 		 * Whether the phase is currently expanded. Phases default to open.
 		 *
@@ -162,6 +203,7 @@ export default {
 			if (this.openPhases[phaseId] === undefined) return true
 			return !!this.openPhases[phaseId]
 		},
+
 		/**
 		 * Tasks belonging to a given phase, ordered by sequence then name.
 		 *
@@ -170,7 +212,7 @@ export default {
 		 */
 		tasksFor(phase) {
 			return this.tasks
-				.filter(t => t.phase === phase.id)
+				.filter((t) => t.phase === phase.id)
 				.sort((a, b) => {
 					const sa = Number(a.sequence ?? a.order ?? 0)
 					const sb = Number(b.sequence ?? b.order ?? 0)
@@ -178,6 +220,7 @@ export default {
 					return String(a.name || '').localeCompare(String(b.name || ''))
 				})
 		},
+
 		/**
 		 * Count of completed tasks in a phase (Scenario 13 / 28).
 		 *
@@ -185,8 +228,10 @@ export default {
 		 * @return {number}
 		 */
 		tasksCompleted(phase) {
-			return this.tasksFor(phase).filter(t => t.status === 'completed').length
+			return this.tasksFor(phase).filter((t) => t.status === 'completed')
+				.length
 		},
+
 		/**
 		 * Logged hours summed across all activities for a given task.
 		 *
@@ -195,10 +240,11 @@ export default {
 		 */
 		loggedHoursForTask(taskId) {
 			const minutes = this.activities
-				.filter(a => a.task === taskId)
+				.filter((a) => a.task === taskId)
 				.reduce((sum, a) => sum + (Number(a.durationMinutes) || 0), 0)
 			return Math.round((minutes / 60) * 10) / 10
 		},
+
 		/**
 		 * Resolved billable flag for a given WBS level, walking up the
 		 * hierarchy until the first explicitly-set value is found
@@ -217,13 +263,15 @@ export default {
 				return obj.billable
 			}
 			if (level === 'activity') {
-				const task = ctx.task || this.tasks.find(t => t.id === (obj && obj.task))
+				const task =
+					ctx.task || this.tasks.find((t) => t.id === (obj && obj.task))
 				if (task) {
 					return this.resolvedBillable('task', task)
 				}
 			}
 			if (level === 'task' || level === 'activity') {
-				const phase = ctx.phase || this.phases.find(p => p.id === (obj && obj.phase))
+				const phase =
+					ctx.phase || this.phases.find((p) => p.id === (obj && obj.phase))
 				if (phase) {
 					return this.resolvedBillable('phase', phase)
 				}
@@ -233,6 +281,7 @@ export default {
 			}
 			return true
 		},
+
 		/**
 		 * UI label for the billable indicator, including the "(geërfd van …)"
 		 * hint when the value was resolved via inheritance (Scenarios 8, 11).
@@ -245,7 +294,9 @@ export default {
 		billableLabel(level, obj, ctx) {
 			const value = this.resolvedBillable(level, obj, ctx)
 			const set = obj && typeof obj.billable === 'boolean'
-			const base = value ? t('pipelinq', 'Billable') : t('pipelinq', 'Non-billable')
+			const base = value
+				? t('pipelinq', 'Billable')
+				: t('pipelinq', 'Non-billable')
 			if (set) return base
 			if (level === 'phase') {
 				return base + ' ' + t('pipelinq', '(inherited from project)')
@@ -258,6 +309,7 @@ export default {
 			}
 			return base
 		},
+
 		/**
 		 * Localised label for a lifecycle status.
 		 *
@@ -272,7 +324,7 @@ export default {
 				completed: t('pipelinq', 'Completed'),
 				cancelled: t('pipelinq', 'Cancelled'),
 			}
-			return map[status] || (status || '-')
+			return map[status] || status || '-'
 		},
 	},
 }
@@ -386,15 +438,30 @@ export default {
 	color: var(--color-main-text);
 }
 
-.status-pill--open { background: #e3f2fd; color: #0d47a1; }
+.status-pill--open {
+	background: #e3f2fd;
+	color: #0d47a1;
+}
 
-.status-pill--in_progress { background: #fff8e1; color: #6d4c00; }
+.status-pill--in_progress {
+	background: #fff8e1;
+	color: #6d4c00;
+}
 
-.status-pill--on_hold { background: #ede7f6; color: #4527a0; }
+.status-pill--on_hold {
+	background: #ede7f6;
+	color: #4527a0;
+}
 
-.status-pill--completed { background: #e8f5e9; color: #1b5e20; }
+.status-pill--completed {
+	background: #e8f5e9;
+	color: #1b5e20;
+}
 
-.status-pill--cancelled { background: #fbe9e7; color: #b71c1c; }
+.status-pill--cancelled {
+	background: #fbe9e7;
+	color: #b71c1c;
+}
 
 .wbs-billable {
 	font-size: 0.85em;
@@ -414,9 +481,13 @@ export default {
 	vertical-align: middle;
 }
 
-.billable-dot--on { background: #43a047; }
+.billable-dot--on {
+	background: #43a047;
+}
 
-.billable-dot--off { background: #b0bec5; }
+.billable-dot--off {
+	background: #b0bec5;
+}
 
 @media (prefers-reduced-motion: reduce) {
 	.wbs-phase__chevron {

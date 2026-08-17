@@ -34,7 +34,7 @@ async function api(
 	method: string,
 	path: string,
 	body?: unknown,
-): Promise<{ status: number, json: any, text: string }> {
+): Promise<{ status: number; json: any; text: string }> {
 	return await page.evaluate(
 		async ({ method, path, body }) => {
 			const res = await fetch(path, {
@@ -49,7 +49,11 @@ async function api(
 			})
 			const text = await res.text()
 			let json: any = null
-			try { json = text ? JSON.parse(text) : null } catch { /* non-JSON */ }
+			try {
+				json = text ? JSON.parse(text) : null
+			} catch {
+				/* non-JSON */
+			}
 			return { status: res.status, json, text: text.slice(0, 400) }
 		},
 		{ method, path, body },
@@ -70,28 +74,56 @@ test.describe('First-time setup contract', () => {
 	 * records having shipped once already.
 	 */
 	// @e2e openspec/specs/first-time-setup/spec.md#optional-steps-report-done-without-gating
-	test('setup status reports every step, and only currency gates completion', async ({ page }) => {
+	test('setup status reports every step, and only currency gates completion', async ({
+		page,
+	}) => {
 		await openApp(page)
 
 		const res = await api(page, 'GET', `${APP}/api/setup/status`)
 		expect(res.status, res.text).toBe(200)
 
 		// Currency is set by ci-seed.sh, so the app is complete…
-		expect(res.json?.steps?.currency?.done, 'currency is the required step').toBe(true)
+		expect(
+			res.json?.steps?.currency?.done,
+			'currency is the required step',
+		).toBe(true)
 		expect(res.json?.completed, 'currency alone decides completion').toBe(true)
 
 		// …and every declared step is reported with a boolean, none omitted.
-		for (const id of ['welcome', 'currency', 'provision', 'demo-data', 'organisation', 'integrations', 'done']) {
-			expect(res.json?.steps?.[id], `step "${id}" is not reported at all`).toBeTruthy()
-			expect(typeof res.json.steps[id].done, `step "${id}" done flag is not a boolean`).toBe('boolean')
+		for (const id of [
+			'welcome',
+			'currency',
+			'provision',
+			'demo-data',
+			'organisation',
+			'integrations',
+			'done',
+		]) {
+			expect(
+				res.json?.steps?.[id],
+				`step "${id}" is not reported at all`,
+			).toBeTruthy()
+			expect(
+				typeof res.json.steps[id].done,
+				`step "${id}" done flag is not a boolean`,
+			).toBe('boolean')
 		}
 
 		// The optional steps reflect their OWN state rather than the app's:
 		// provision and demo-data were done by ci-seed, organisation was not —
 		// and completion is true regardless, which is the whole scenario.
-		expect(res.json.steps.provision.done, 'ci-seed reimported the register').toBe(true)
-		expect(res.json.steps['demo-data'].done, 'ci-seed recorded the demo-data decision').toBe(true)
-		expect(res.json.steps.organisation.done, 'no organisation name is configured in CI').toBe(false)
+		expect(
+			res.json.steps.provision.done,
+			'ci-seed reimported the register',
+		).toBe(true)
+		expect(
+			res.json.steps['demo-data'].done,
+			'ci-seed recorded the demo-data decision',
+		).toBe(true)
+		expect(
+			res.json.steps.organisation.done,
+			'no organisation name is configured in CI',
+		).toBe(false)
 		expect(res.json.completed).toBe(true)
 	})
 
@@ -101,7 +133,9 @@ test.describe('First-time setup contract', () => {
 	 * duplicate check is made against real object counts on both sides.
 	 */
 	// @e2e openspec/specs/first-time-setup/spec.md#provision-on-demand-after-enabling-openregister-later
-	test('provision-register is idempotent and leaves the register populated', async ({ page }) => {
+	test('provision-register is idempotent and leaves the register populated', async ({
+		page,
+	}) => {
 		test.setTimeout(120000)
 		await openApp(page)
 
@@ -114,21 +148,35 @@ test.describe('First-time setup contract', () => {
 		}
 
 		const before = await countPipelines()
-		expect(before, 'provisioning must have created the default pipelines').toBeGreaterThan(0)
+		expect(
+			before,
+			'provisioning must have created the default pipelines',
+		).toBeGreaterThan(0)
 
-		const first = await api(page, 'POST', `${APP}/api/setup/action/provision-register`)
+		const first = await api(
+			page,
+			'POST',
+			`${APP}/api/setup/action/provision-register`,
+		)
 		expect(first.status, first.text).toBe(200)
 		expect(first.json?.success, first.text).toBe(true)
 
 		const middle = await countPipelines()
 
 		// Running it AGAIN must succeed and must not duplicate.
-		const second = await api(page, 'POST', `${APP}/api/setup/action/provision-register`)
+		const second = await api(
+			page,
+			'POST',
+			`${APP}/api/setup/action/provision-register`,
+		)
 		expect(second.status, second.text).toBe(200)
 		expect(second.json?.success, second.text).toBe(true)
 
 		const after = await countPipelines()
-		expect(after, 'a second provision run duplicated the default pipelines').toBe(middle)
+		expect(
+			after,
+			'a second provision run duplicated the default pipelines',
+		).toBe(middle)
 		expect(after).toBeGreaterThan(0)
 
 		// And the step still reports done.
@@ -137,7 +185,9 @@ test.describe('First-time setup contract', () => {
 	})
 
 	// @e2e openspec/specs/first-time-setup/spec.md#organisation-details-persist
-	test('organisation details persist and flip the optional step to done', async ({ page }) => {
+	test('organisation details persist and flip the optional step to done', async ({
+		page,
+	}) => {
 		await openApp(page)
 
 		// Precondition: unset, so the flip below is caused by this test.
@@ -158,7 +208,10 @@ test.describe('First-time setup contract', () => {
 			// non-empty, so a true here is that key holding the entered value.
 			const after = await api(page, 'GET', `${APP}/api/setup/status`)
 			expect(after.status, after.text).toBe(200)
-			expect(after.json?.steps?.organisation?.done, 'the organisation step did not record the entered name').toBe(true)
+			expect(
+				after.json?.steps?.organisation?.done,
+				'the organisation step did not record the entered name',
+			).toBe(true)
 			// Still not gating: completion is unchanged by an optional step.
 			expect(after.json?.completed).toBe(true)
 		} finally {
@@ -169,7 +222,10 @@ test.describe('First-time setup contract', () => {
 				receipt_company_kvk: '',
 			})
 			const restored = await api(page, 'GET', `${APP}/api/setup/status`)
-			expect(restored.json?.steps?.organisation?.done, 'cleanup failed to reset the organisation step').toBe(false)
+			expect(
+				restored.json?.steps?.organisation?.done,
+				'cleanup failed to reset the organisation step',
+			).toBe(false)
 		}
 	})
 
@@ -181,7 +237,9 @@ test.describe('First-time setup contract', () => {
 	// @e2e openspec/specs/first-time-setup/spec.md#seed-on-a-clean-install
 	// @e2e openspec/specs/first-time-setup/spec.md#idempotent-re-run
 	// @e2e openspec/specs/first-time-setup/spec.md#offered-as-an-optional-wizard-step
-	test('the demo seed is an optional action, and re-running it creates no duplicates', async ({ page }) => {
+	test('the demo seed is an optional action, and re-running it creates no duplicates', async ({
+		page,
+	}) => {
 		test.setTimeout(120000)
 		await openApp(page)
 
@@ -201,11 +259,17 @@ test.describe('First-time setup contract', () => {
 			ticket: await count('ticket'),
 		}
 		for (const [schema, n] of Object.entries(before)) {
-			expect(n, `the demo seed produced no ${schema} objects`).toBeGreaterThan(0)
+			expect(n, `the demo seed produced no ${schema} objects`).toBeGreaterThan(
+				0,
+			)
 		}
 
 		// Re-run through the same optional wizard action the occ command shares.
-		const rerun = await api(page, 'POST', `${APP}/api/setup/action/seed-demo-data`)
+		const rerun = await api(
+			page,
+			'POST',
+			`${APP}/api/setup/action/seed-demo-data`,
+		)
 		expect(rerun.status, rerun.text).toBe(200)
 		expect(rerun.json?.success, rerun.text).toBe(true)
 
@@ -219,7 +283,13 @@ test.describe('First-time setup contract', () => {
 		// It is OPTIONAL and does not gate: the app is complete either way, and
 		// the step is reported so the wizard can offer it.
 		const status = await api(page, 'GET', `${APP}/api/setup/status`)
-		expect(status.json?.steps?.['demo-data'], 'the demo-data step must be offered').toBeTruthy()
-		expect(status.json?.completed, 'the demo-data step must not gate completion').toBe(true)
+		expect(
+			status.json?.steps?.['demo-data'],
+			'the demo-data step must be offered',
+		).toBeTruthy()
+		expect(
+			status.json?.completed,
+			'the demo-data step must not gate completion',
+		).toBe(true)
 	})
 })

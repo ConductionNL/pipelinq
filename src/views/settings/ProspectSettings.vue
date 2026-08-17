@@ -1,7 +1,12 @@
 <template>
 	<CnSettingsSection
 		:name="t('pipelinq', 'Prospect Discovery')"
-		:description="t('pipelinq', 'Configure your Ideal Customer Profile (ICP) to discover potential leads.')">
+		:description="
+			t(
+				'pipelinq',
+				'Configure your Ideal Customer Profile (ICP) to discover potential leads.',
+			)
+		">
 		<NcLoadingIcon v-if="loading" :size="24" />
 
 		<div v-else class="prospect-settings__form">
@@ -10,11 +15,16 @@
 				<NcTextField
 					id="prospect-sbi-codes"
 					:label="t('pipelinq', 'SBI Codes')"
-					:model-value="sbiCodesText"
+					:modelValue="sbiCodesText"
 					:placeholder="t('pipelinq', 'e.g. 62, 72 (comma-separated)')"
-					@update:model-value="v => sbiCodesText = v" />
+					@update:modelValue="(v) => (sbiCodesText = v)" />
 				<p class="form-help">
-					{{ t('pipelinq', 'Dutch Standard Industrial Classification codes. Separate multiple codes with commas.') }}
+					{{
+						t(
+							'pipelinq',
+							'Dutch Standard Industrial Classification codes. Separate multiple codes with commas.',
+						)
+					}}
 				</p>
 			</div>
 
@@ -24,17 +34,21 @@
 					<NcTextField
 						id="prospect-employee-count-min"
 						:label="t('pipelinq', 'Min Employees')"
-						:model-value="String(form.employeeCountMin)"
+						:modelValue="String(form.employeeCountMin)"
 						type="number"
-						@update:model-value="v => form.employeeCountMin = Number(v)" />
+						@update:modelValue="
+							(v) => (form.employeeCountMin = Number(v))
+						" />
 				</div>
 				<div class="form-group">
 					<NcTextField
 						id="prospect-employee-count-max"
 						:label="t('pipelinq', 'Max Employees')"
-						:model-value="String(form.employeeCountMax)"
+						:modelValue="String(form.employeeCountMax)"
 						type="number"
-						@update:model-value="v => form.employeeCountMax = Number(v)" />
+						@update:modelValue="
+							(v) => (form.employeeCountMax = Number(v))
+						" />
 				</div>
 			</div>
 
@@ -46,7 +60,7 @@
 					:options="provinceOptions"
 					:aria-label-combobox="t('pipelinq', 'Provinces')"
 					:multiple="true"
-					:keep-open="true"
+					:keepOpen="true"
 					:placeholder="t('pipelinq', 'Select provinces')" />
 			</div>
 
@@ -58,7 +72,7 @@
 					:options="legalFormOptions"
 					:aria-label-combobox="t('pipelinq', 'Legal Forms')"
 					:multiple="true"
-					:keep-open="true"
+					:keepOpen="true"
 					:placeholder="t('pipelinq', 'Select legal forms')" />
 			</div>
 
@@ -67,8 +81,10 @@
 				<input
 					id="exclude-inactive"
 					v-model="form.excludeInactive"
-					type="checkbox">
-				<label for="exclude-inactive">{{ t('pipelinq', 'Exclude inactive companies') }}</label>
+					type="checkbox" />
+				<label for="exclude-inactive">{{
+					t('pipelinq', 'Exclude inactive companies')
+				}}</label>
 			</div>
 
 			<!-- Keywords (for OpenCorporates) -->
@@ -76,11 +92,18 @@
 				<NcTextField
 					id="prospect-keywords"
 					:label="t('pipelinq', 'Keywords')"
-					:model-value="keywordsText"
-					:placeholder="t('pipelinq', 'e.g. software, IT (comma-separated)')"
-					@update:model-value="v => keywordsText = v" />
+					:modelValue="keywordsText"
+					:placeholder="
+						t('pipelinq', 'e.g. software, IT (comma-separated)')
+					"
+					@update:modelValue="(v) => (keywordsText = v)" />
 				<p class="form-help">
-					{{ t('pipelinq', 'Used for OpenCorporates search. Separate with commas.') }}
+					{{
+						t(
+							'pipelinq',
+							'Used for OpenCorporates search. Separate with commas.',
+						)
+					}}
 				</p>
 			</div>
 
@@ -89,12 +112,17 @@
 				<NcTextField
 					id="prospect-kvk-api-key"
 					:label="t('pipelinq', 'KVK API Key')"
-					:model-value="form.kvkApiKey"
+					:modelValue="form.kvkApiKey"
 					type="password"
 					:placeholder="t('pipelinq', 'Enter your KVK API key')"
-					@update:model-value="v => form.kvkApiKey = v" />
+					@update:modelValue="(v) => (form.kvkApiKey = v)" />
 				<p class="form-help">
-					{{ t('pipelinq', 'Required for prospect discovery. Get one at developers.kvk.nl.') }}
+					{{
+						t(
+							'pipelinq',
+							'Required for prospect discovery. Get one at developers.kvk.nl.',
+						)
+					}}
 				</p>
 			</div>
 
@@ -103,14 +131,23 @@
 				<input
 					id="oc-enabled"
 					v-model="form.openCorporatesEnabled"
-					type="checkbox">
-				<label for="oc-enabled">{{ t('pipelinq', 'Enable OpenCorporates (supplementary data source)') }}</label>
+					type="checkbox" />
+				<label for="oc-enabled">{{
+					t(
+						'pipelinq',
+						'Enable OpenCorporates (supplementary data source)',
+					)
+				}}</label>
 			</div>
 
 			<!-- Save -->
 			<div class="prospect-settings__actions">
 				<NcButton variant="primary" :disabled="saving" @click="save">
-					{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save ICP Settings') }}
+					{{
+						saving
+							? t('pipelinq', 'Saving...')
+							: t('pipelinq', 'Save ICP Settings')
+					}}
 				</NcButton>
 			</div>
 
@@ -123,8 +160,14 @@
 
 <script>
 import { CnSettingsSection } from '@conduction/nextcloud-vue'
-import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import {
+	NcButton,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
 
 export default {
 	name: 'ProspectSettings',
@@ -136,6 +179,7 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -153,20 +197,39 @@ export default {
 				kvkApiKey: '',
 				openCorporatesEnabled: false,
 			},
+
 			provinceOptions: [
-				'Drenthe', 'Flevoland', 'Friesland', 'Gelderland',
-				'Groningen', 'Limburg', 'Noord-Brabant', 'Noord-Holland',
-				'Overijssel', 'Utrecht', 'Zeeland', 'Zuid-Holland',
+				'Drenthe',
+				'Flevoland',
+				'Friesland',
+				'Gelderland',
+				'Groningen',
+				'Limburg',
+				'Noord-Brabant',
+				'Noord-Holland',
+				'Overijssel',
+				'Utrecht',
+				'Zeeland',
+				'Zuid-Holland',
 			],
+
 			legalFormOptions: [
-				'BV', 'NV', 'VOF', 'Eenmanszaak', 'Stichting',
-				'Vereniging', 'CV', 'Maatschap',
+				'BV',
+				'NV',
+				'VOF',
+				'Eenmanszaak',
+				'Stichting',
+				'Vereniging',
+				'CV',
+				'Maatschap',
 			],
 		}
 	},
+
 	async mounted() {
 		await this.fetchSettings()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-65
@@ -174,13 +237,16 @@ export default {
 		async fetchSettings() {
 			this.loading = true
 			try {
-				const response = await fetch(generateUrl('/apps/pipelinq/api/prospects/settings'), {
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
+				const response = await fetch(
+					generateUrl('/apps/pipelinq/api/prospects/settings'),
+					{
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
 					},
-				})
+				)
 				if (response.ok) {
 					const data = await response.json()
 					this.form = {
@@ -189,7 +255,11 @@ export default {
 						provinces: data.provinces || [],
 						legalForms: data.legalForms || [],
 						excludeInactive: data.excludeInactive !== false,
-						kvkApiKey: data.kvkApiKey === '***configured***' ? '***configured***' : '',
+						kvkApiKey:
+							data.kvkApiKey === '***configured***'
+								? '***configured***'
+								: '',
+
 						openCorporatesEnabled: data.openCorporatesEnabled || false,
 					}
 					this.sbiCodesText = (data.sbiCodes || []).join(', ')
@@ -201,6 +271,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-66
 		 */
@@ -210,8 +281,15 @@ export default {
 
 			const payload = {
 				...this.form,
-				sbiCodes: this.sbiCodesText.split(',').map(s => s.trim()).filter(Boolean),
-				keywords: this.keywordsText.split(',').map(s => s.trim()).filter(Boolean),
+				sbiCodes: this.sbiCodesText
+					.split(',')
+					.map((s) => s.trim())
+					.filter(Boolean),
+
+				keywords: this.keywordsText
+					.split(',')
+					.map((s) => s.trim())
+					.filter(Boolean),
 			}
 
 			// Don't send masked API key
@@ -220,15 +298,18 @@ export default {
 			}
 
 			try {
-				const response = await fetch(generateUrl('/apps/pipelinq/api/prospects/settings'), {
-					method: 'PUT',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
+				const response = await fetch(
+					generateUrl('/apps/pipelinq/api/prospects/settings'),
+					{
+						method: 'PUT',
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+						body: JSON.stringify(payload),
 					},
-					body: JSON.stringify(payload),
-				})
+				)
 
 				if (response.ok) {
 					this.message = t('pipelinq', 'ICP settings saved successfully')

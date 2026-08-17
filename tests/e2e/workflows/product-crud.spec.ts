@@ -21,7 +21,12 @@
  * Created objects are tracked + removed via the OR object API in afterAll.
  */
 import { test, expect, Locator, Page } from '@playwright/test'
-import { openApp, navClick, dismissSupportDialog, openIndexSearch } from '../helpers/pipelinq'
+import {
+	openApp,
+	navClick,
+	dismissSupportDialog,
+	openIndexSearch,
+} from '../helpers/pipelinq'
 import { FixtureSession, TEST_PREFIX } from './helpers/fixtures'
 
 const NAME = `${TEST_PREFIX}-Cnd Werkbank`
@@ -34,7 +39,11 @@ async function pickOption(combo: Locator, text: string): Promise<void> {
 	await combo.click()
 	const page = combo.page()
 	await page.waitForTimeout(300)
-	await page.locator('li[role="option"], .vs__dropdown-option').filter({ hasText: text }).first().click()
+	await page
+		.locator('li[role="option"], .vs__dropdown-option')
+		.filter({ hasText: text })
+		.first()
+		.click()
 	await page.waitForTimeout(200)
 }
 
@@ -43,7 +52,11 @@ async function pickOption(combo: Locator, text: string): Promise<void> {
  * ids `cn-form-<field>` (btwClass / status / type), so the required Type field
  * is addressed by id rather than positional combobox order.
  */
-async function pickFormSelect(dialog: Locator, field: string, text: string): Promise<void> {
+async function pickFormSelect(
+	dialog: Locator,
+	field: string,
+	text: string,
+): Promise<void> {
 	await pickOption(dialog.locator(`#cn-form-${field}`), text)
 }
 
@@ -90,7 +103,9 @@ test.describe('Products — full CRUD with persistence', () => {
 		try {
 			const cleaner = new FixtureSession(page)
 			await openApp(page)
-			const rows = await cleaner.list('product', { _limit: 20, name: NAME }).catch(() => [])
+			const rows = await cleaner
+				.list('product', { _limit: 20, name: NAME })
+				.catch(() => [])
 			for (const r of rows) {
 				const id = r.id || r['@self']?.id
 				if (id) await cleaner.remove('product', id)
@@ -112,15 +127,24 @@ test.describe('Products — full CRUD with persistence', () => {
 	// app's own saveObject() calls; the detail-PAGE edit UI is still unreachable
 	// from a list row — that distinct UI-shell gap stays captured by the fixme
 	// below.)
-	test('create → list → values → edit price → delete round-trips real data', async ({ page }) => {
+	test('create → list → values → edit price → delete round-trips real data', async ({
+		page,
+	}) => {
 		test.setTimeout(90000)
 		fx = new FixtureSession(page)
 		await openApp(page)
 
 		// --- CREATE via the "Create Product" schema dialog --------------------
 		await openProductsList(page)
-		await page.locator('#content-vue').getByRole('button', { name: /Add Product/i }).first().click()
-		const dialog = page.locator('[role="dialog"]').filter({ hasText: 'Create Product' }).first()
+		await page
+			.locator('#content-vue')
+			.getByRole('button', { name: /Add Product/i })
+			.first()
+			.click()
+		const dialog = page
+			.locator('[role="dialog"]')
+			.filter({ hasText: 'Create Product' })
+			.first()
 		await expect(dialog).toBeVisible({ timeout: 10000 })
 
 		// FIXED 2026-08-06 — this was `{ name: /^name/i }`, anchored at the START
@@ -129,10 +153,16 @@ test.describe('Products — full CRUD with persistence', () => {
 		// (lib/Settings/pipelinq_register.json). "Product Name" does not START with
 		// "name", so the locator matched nothing and `fill()` waited out the whole
 		// 90s test timeout — a label mismatch presenting as a hung create dialog.
-		await dialog.getByRole('textbox', { name: /product name/i }).first().fill(NAME)
+		await dialog
+			.getByRole('textbox', { name: /product name/i })
+			.first()
+			.fill(NAME)
 		await pickFormSelect(dialog, 'type', 'product') // required Type
 		// unitPrice is the dialog's single numeric/spinbutton field.
-		const priceField = dialog.getByRole('spinbutton').or(dialog.locator('input[type="number"]')).first()
+		const priceField = dialog
+			.getByRole('spinbutton')
+			.or(dialog.locator('input[type="number"]'))
+			.first()
 		await priceField.fill(String(PRICE))
 		const skuField = dialog.getByRole('textbox', { name: /sku/i }).first()
 		if (await skuField.count()) await skuField.fill(SKU)
@@ -148,34 +178,54 @@ test.describe('Products — full CRUD with persistence', () => {
 		const createdId = (created.id || created['@self']?.id) as string
 		fx.track('product', createdId)
 		expect(created.name).toBe(NAME)
-		expect(Number(created.unitPrice), 'unitPrice persisted exactly (49.95)').toBe(PRICE)
+		expect(
+			Number(created.unitPrice),
+			'unitPrice persisted exactly (49.95)',
+		).toBe(PRICE)
 
 		// --- READ: row present (NOT empty-state) + renders the name -----------
 		await openProductsList(page)
 		await searchInList(page, NAME)
 		await expect(page.locator('.cn-index-page__empty')).toHaveCount(0)
-		const row = page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }).first()
+		const row = page
+			.locator('[data-testid="cn-object-row"]')
+			.filter({ hasText: NAME })
+			.first()
 		await expect(row).toBeVisible({ timeout: 10000 })
 
 		// --- UPDATE the price, assert persisted EXACTLY -----------------------
-		const updated = await fx.update('product', createdId, { unitPrice: PRICE_EDITED })
+		const updated = await fx.update('product', createdId, {
+			unitPrice: PRICE_EDITED,
+		})
 		expect(updated, 'price update accepted by OR API').toBeTruthy()
 		const persisted = await fx.get('product', createdId)
-		expect(Number(persisted.unitPrice), 'edited unitPrice persisted exactly (59.95)').toBe(PRICE_EDITED)
+		expect(
+			Number(persisted.unitPrice),
+			'edited unitPrice persisted exactly (59.95)',
+		).toBe(PRICE_EDITED)
 		expect(persisted.name, 'name unchanged after price edit').toBe(NAME)
 
 		// The row still shows the product after the edit.
 		await openProductsList(page)
 		await searchInList(page, NAME)
-		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME })).toBeVisible({ timeout: 10000 })
+		await expect(
+			page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }),
+		).toBeVisible({ timeout: 10000 })
 
 		// --- DELETE: remove + assert the row is gone from the list ------------
 		await fx.remove('product', createdId)
 		await openProductsList(page)
 		await searchInList(page, NAME)
-		await expect(page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME })).toHaveCount(0)
-		const remaining = await fx.list('product', { _limit: 5, name: NAME }).catch(() => [])
-		expect(remaining.length, 'deleted product no longer returned by OR API').toBe(0)
+		await expect(
+			page.locator('[data-testid="cn-object-row"]').filter({ hasText: NAME }),
+		).toHaveCount(0)
+		const remaining = await fx
+			.list('product', { _limit: 5, name: NAME })
+			.catch(() => [])
+		expect(
+			remaining.length,
+			'deleted product no longer returned by OR API',
+		).toBe(0)
 	})
 
 	/**

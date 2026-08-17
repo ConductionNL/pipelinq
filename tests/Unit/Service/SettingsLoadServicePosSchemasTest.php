@@ -30,95 +30,88 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\Pipelinq\Service\ConfigFileLoaderService;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Service\SettingsMapBuilder;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 
 /**
  * Tests that loadSettings() provisions the POS + billingCategory schema keys.
  */
-class SettingsLoadServicePosSchemasTest extends TestCase
-{
-    /**
-     * Writes the `<slug>_schema` app-config key for billingCategory and the POS
-     * object types when the OpenRegister import returns them.
-     *
-     * @return void
-     */
-    public function testProvisionsPosAndBillingSchemaConfigKeys(): void
-    {
-        $appManager = $this->createMock(IAppManager::class);
-        $appManager->method('getAppVersion')->willReturn('1.0.0');
+class SettingsLoadServicePosSchemasTest extends TestCase {
+	/**
+	 * Writes the `<slug>_schema` app-config key for billingCategory and the POS
+	 * object types when the OpenRegister import returns them.
+	 *
+	 * @return void
+	 */
+	public function testProvisionsPosAndBillingSchemaConfigKeys(): void {
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('getAppVersion')->willReturn('1.0.0');
 
-        $fileLoader = $this->createMock(ConfigFileLoaderService::class);
-        $fileLoader->method('loadConfigurationFile')->willReturn(['stub' => true]);
-        $fileLoader->method('ensureSourceType')->willReturnArgument(0);
+		$fileLoader = $this->createMock(ConfigFileLoaderService::class);
+		$fileLoader->method('loadConfigurationFile')->willReturn(['stub' => true]);
+		$fileLoader->method('ensureSourceType')->willReturnArgument(0);
 
-        // Real map builder so the slug => id map is derived exactly as production.
-        $mapBuilder = new SettingsMapBuilder();
+		// Real map builder so the slug => id map is derived exactly as production.
+		$mapBuilder = new SettingsMapBuilder();
 
-        // The import returns the pipelinq register and the three schemas under
-        // test (plus an unrelated one to prove only listed slugs are written).
-        $configService = new class {
-            /**
-             * Echo a fixed import result for the test.
-             *
-             * @param string               $appId   The app id.
-             * @param array<string, mixed> $data    The config data.
-             * @param string               $version The app version.
-             * @param bool                 $force   Force flag.
-             *
-             * @return array<string, mixed>
-             */
-            public function importFromApp(string $appId, array $data, string $version, bool $force): array
-            {
-                return [
-                    'registers' => [
-                        ['slug' => 'pipelinq', 'id' => 16],
-                    ],
-                    'schemas'   => [
-                        ['slug' => 'billingCategory', 'id' => 30],
-                        ['slug' => 'posTransaction', 'id' => 41],
-                        ['slug' => 'posTransactionLine', 'id' => 42],
-                        ['slug' => 'notProvisioned', 'id' => 99],
-                    ],
-                    'views'     => [],
-                ];
-            }//end importFromApp()
-        };
+		// The import returns the pipelinq register and the three schemas under
+		// test (plus an unrelated one to prove only listed slugs are written).
+		//
+		// ConfigurationService is now a constructor-injected, concretely typed
+		// dependency (ADR-083) rather than a container lookup, so the in-test
+		// anonymous class this used to pass no longer satisfies the type-hint.
+		$configService = $this->createMock(ConfigurationService::class);
+		$configService->method('importFromApp')->willReturn(
+			[
+				'registers' => [
+					['slug' => 'pipelinq', 'id' => 16],
+				],
+				'schemas' => [
+					['slug' => 'billingCategory', 'id' => 30],
+					['slug' => 'posTransaction', 'id' => 41],
+					['slug' => 'posTransactionLine', 'id' => 42],
+					['slug' => 'notProvisioned', 'id' => 99],
+				],
+				'views' => [],
+			]
+		);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($configService);
+		// Capture every setValueString(app, key, value) call.
+		$written = [];
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('setValueString')->willReturnCallback(
+			static function (string $app, string $key, string $value) use (&$written): bool {
+				$written[$key] = $value;
+				return true;
+			}
+		);
 
-        // Capture every setValueString(app, key, value) call.
-        $written   = [];
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('setValueString')->willReturnCallback(
-            static function (string $app, string $key, string $value) use (&$written): bool {
-                $written[$key] = $value;
-                return true;
-            }
-        );
+		$service = new SettingsLoadService(
+			appConfig: $appConfig,
+			appManager: $appManager,
+			mapBuilder: $mapBuilder,
+			fileLoader: $fileLoader,
+			configurationService: $configService,
+		);
+		$service->loadSettings();
 
-        $service = new SettingsLoadService($appConfig, $appManager, $container, $mapBuilder, $fileLoader);
-        $service->loadSettings();
+		// The billingCategory + POS types are provisioned with their numeric ids.
+		$this->assertArrayHasKey('billingCategory_schema', $written);
+		$this->assertSame('30', $written['billingCategory_schema']);
+		$this->assertArrayHasKey('posTransaction_schema', $written);
+		$this->assertSame('41', $written['posTransaction_schema']);
+		$this->assertArrayHasKey('posTransactionLine_schema', $written);
+		$this->assertSame('42', $written['posTransactionLine_schema']);
 
-        // The billingCategory + POS types are provisioned with their numeric ids.
-        $this->assertArrayHasKey('billingCategory_schema', $written);
-        $this->assertSame('30', $written['billingCategory_schema']);
-        $this->assertArrayHasKey('posTransaction_schema', $written);
-        $this->assertSame('41', $written['posTransaction_schema']);
-        $this->assertArrayHasKey('posTransactionLine_schema', $written);
-        $this->assertSame('42', $written['posTransactionLine_schema']);
+		// The register id is provisioned too.
+		$this->assertSame('16', $written['register']);
 
-        // The register id is provisioned too.
-        $this->assertSame('16', $written['register']);
-
-        // A schema slug NOT in SCHEMA_SLUGS is never written.
-        $this->assertArrayNotHasKey('notProvisioned_schema', $written);
-    }//end testProvisionsPosAndBillingSchemaConfigKeys()
+		// A schema slug NOT in SCHEMA_SLUGS is never written.
+		$this->assertArrayNotHasKey('notProvisioned_schema', $written);
+	}//end testProvisionsPosAndBillingSchemaConfigKeys()
 }//end class

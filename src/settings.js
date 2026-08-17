@@ -1,7 +1,7 @@
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { createApp } from 'vue'
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
-import pinia from './pinia.js'
 import Settings from './views/settings/Settings.vue'
+import pinia from './pinia.js'
 import { initializeStores } from './store/store.js'
 
 // Vue 3 has no global `Vue.mixin` / `Vue.use`; both are per-app-instance, and

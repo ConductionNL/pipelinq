@@ -40,49 +40,47 @@ use OCP\IGroupManager;
  *
  * @spec openspec/specs/time-approval-workflow/spec.md
  */
-class BillingHandoffNotifier
-{
-    /**
-     * Constructor.
-     *
-     * @param NotificationService $notificationService The notification service.
-     * @param IGroupManager       $groupManager        The group manager (admin resolution).
-     */
-    public function __construct(
-        private NotificationService $notificationService,
-        private IGroupManager $groupManager,
-    ) {
-    }//end __construct()
+class BillingHandoffNotifier {
+	/**
+	 * Constructor.
+	 *
+	 * @param NotificationService $notificationService The notification service.
+	 * @param IGroupManager $groupManager The group manager (admin resolution).
+	 */
+	public function __construct(
+		private NotificationService $notificationService,
+		private IGroupManager $groupManager,
+	) {
+	}//end __construct()
 
-    /**
-     * Notify every admin user that a billing-handoff batch permanently failed.
-     *
-     * @param string $clientName The client's display name (used in the notification text).
-     * @param string $clientId   The client UUID (notification object reference).
-     * @param string $batchId    The deterministic batch id that failed.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/time-approval-workflow/spec.md
-     */
-    public function notifyFailure(string $clientName, string $clientId, string $batchId): void
-    {
-        $adminGroup = $this->groupManager->get('admin');
-        if ($adminGroup === null) {
-            return;
-        }
+	/**
+	 * Notify every admin user that a billing-handoff batch permanently failed.
+	 *
+	 * @param string $clientName The client's display name (used in the notification text).
+	 * @param string $clientId The client UUID (notification object reference).
+	 * @param string $batchId The deterministic batch id that failed.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/time-approval-workflow/spec.md
+	 */
+	public function notifyFailure(string $clientName, string $clientId, string $batchId): void {
+		$adminGroup = $this->groupManager->get('admin');
+		if ($adminGroup === null) {
+			return;
+		}
 
-        foreach ($adminGroup->getUsers() as $user) {
-            $this->notificationService->sendNotification(
-                userId: $user->getUID(),
-                subject: 'billing_handoff_failed',
-                parameters: [
-                    'title'   => $clientName,
-                    'batchId' => $batchId,
-                ],
-                objectType: 'client',
-                objectId: $clientId
-            );
-        }
-    }//end notifyFailure()
+		foreach ($adminGroup->getUsers() as $user) {
+			$this->notificationService->sendNotification(
+				userId: $user->getUID(),
+				subject: 'billing_handoff_failed',
+				parameters: [
+					'title' => $clientName,
+					'batchId' => $batchId,
+				],
+				objectType: 'client',
+				objectId: $clientId
+			);
+		}
+	}//end notifyFailure()
 }//end class

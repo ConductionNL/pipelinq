@@ -28,23 +28,28 @@
 		<template v-if="showSendControls">
 			<div class="client-billing-handoff-section__period">
 				<div class="client-billing-handoff-section__field">
-					<label for="billing-handoff-period-start">{{ t('pipelinq', 'From') }}</label>
+					<label for="billing-handoff-period-start">{{
+						t('pipelinq', 'From')
+					}}</label>
 					<input
 						id="billing-handoff-period-start"
 						v-model="periodStart"
 						type="date"
-						:aria-label="t('pipelinq', 'Billing period start date')">
+						:aria-label="t('pipelinq', 'Billing period start date')" />
 				</div>
 				<div class="client-billing-handoff-section__field">
-					<label for="billing-handoff-period-end">{{ t('pipelinq', 'To') }}</label>
+					<label for="billing-handoff-period-end">{{
+						t('pipelinq', 'To')
+					}}</label>
 					<input
 						id="billing-handoff-period-end"
 						v-model="periodEnd"
 						type="date"
-						:aria-label="t('pipelinq', 'Billing period end date')">
+						:aria-label="t('pipelinq', 'Billing period end date')" />
 				</div>
 			</div>
-			<NcButton variant="primary"
+			<NcButton
+				variant="primary"
 				:disabled="busy || !periodStart || !periodEnd"
 				data-testid="billing-handoff-send"
 				@click="send">
@@ -54,7 +59,8 @@
 				{{ t('pipelinq', 'Send to billing') }}
 			</NcButton>
 		</template>
-		<NcButton v-else-if="deepLinkUrl"
+		<NcButton
+			v-else-if="deepLinkUrl"
 			variant="secondary"
 			:href="deepLinkUrl"
 			target="_blank"
@@ -62,7 +68,10 @@
 			{{ t('pipelinq', 'Continue in Shillinq') }}
 		</NcButton>
 
-		<NcNoteCard v-if="lastResult" :type="lastResultType" class="client-billing-handoff-section__result">
+		<NcNoteCard
+			v-if="lastResult"
+			:type="lastResultType"
+			class="client-billing-handoff-section__result">
 			{{ lastResultMessage }}
 		</NcNoteCard>
 	</div>
@@ -70,7 +79,10 @@
 
 <script>
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import { getBillingHandoffAvailability, sendToBilling } from '../../services/billingHandoffApi.js'
+import {
+	getBillingHandoffAvailability,
+	sendToBilling,
+} from '../../services/billingHandoffApi.js'
 
 const DEFAULT_AVAILABILITY = {
 	available: false,
@@ -98,9 +110,11 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The client id (token-resolved from @objectId by CnBodySections). */
 		clientId: {
@@ -108,6 +122,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		const period = currentMonthPeriod()
 		return {
@@ -119,6 +134,7 @@ export default {
 			lastResult: null,
 		}
 	},
+
 	computed: {
 		/** The resolved client id — prop wins, else the injected section context. */
 		resolvedId() {
@@ -126,25 +142,36 @@ export default {
 				return this.clientId
 			}
 			const ctx = this.cnSectionContext
-			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
+			const bag =
+				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		deepLinkUrl() {
 			return this.availability.deepLinkUrl
 		},
+
 		/** Shown only when the real emit is enabled AND the user is a manager. */
 		showSendControls() {
-			return this.availability.available === true && this.availability.isManager === true
+			return (
+				this.availability.available === true
+				&& this.availability.isManager === true
+			)
 		},
+
 		/** Whether this section has anything to render at all (else it stays hidden). */
 		hasContent() {
 			return this.showSendControls || !!this.deepLinkUrl
 		},
+
 		lastResultType() {
 			if (!this.lastResult) {
 				return 'success'
 			}
-			if (this.lastResult.status === 'synced' || this.lastResult.status === 'empty') {
+			if (
+				this.lastResult.status === 'synced'
+				|| this.lastResult.status === 'empty'
+			) {
 				return 'success'
 			}
 			if (this.lastResult.status === 'conflict') {
@@ -152,26 +179,54 @@ export default {
 			}
 			return 'error'
 		},
+
 		lastResultMessage() {
 			if (!this.lastResult) {
 				return ''
 			}
 			switch (this.lastResult.status) {
-			case 'synced':
-				return this.lastResult.duplicated
-					? t('pipelinq', 'Already sent — Shillinq returned the existing draft invoice {number}.', { number: this.lastResult.invoiceNumber })
-					: t('pipelinq', 'Sent to billing — draft invoice {number} created ({count} entries).', { number: this.lastResult.invoiceNumber, count: this.lastResult.entryCount })
-			case 'empty':
-				return t('pipelinq', 'No approved, un-billed hours in this period.')
-			case 'conflict':
-				return t('pipelinq', 'This batch is already being processed by Shillinq — try again shortly.')
-			case 'unmapped':
-				return this.lastResult.message || t('pipelinq', 'Shillinq could not resolve this client or a rate. Check the Shillinq organisation reference on this client.')
-			default:
-				return this.lastResult.message || t('pipelinq', 'Could not send this batch to billing.')
+				case 'synced':
+					return this.lastResult.duplicated
+						? t(
+								'pipelinq',
+								'Already sent — Shillinq returned the existing draft invoice {number}.',
+								{ number: this.lastResult.invoiceNumber },
+							)
+						: t(
+								'pipelinq',
+								'Sent to billing — draft invoice {number} created ({count} entries).',
+								{
+									number: this.lastResult.invoiceNumber,
+									count: this.lastResult.entryCount,
+								},
+							)
+				case 'empty':
+					return t(
+						'pipelinq',
+						'No approved, un-billed hours in this period.',
+					)
+				case 'conflict':
+					return t(
+						'pipelinq',
+						'This batch is already being processed by Shillinq — try again shortly.',
+					)
+				case 'unmapped':
+					return (
+						this.lastResult.message
+						|| t(
+							'pipelinq',
+							'Shillinq could not resolve this client or a rate. Check the Shillinq organisation reference on this client.',
+						)
+					)
+				default:
+					return (
+						this.lastResult.message
+						|| t('pipelinq', 'Could not send this batch to billing.')
+					)
 			}
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -181,6 +236,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Fetch the current "Send to billing" availability for this client.
@@ -192,26 +248,40 @@ export default {
 			}
 			this.loading = true
 			try {
-				this.availability = await getBillingHandoffAvailability(this.resolvedId)
+				this.availability = await getBillingHandoffAvailability(
+					this.resolvedId,
+				)
 			} catch (e) {
 				this.availability = { ...DEFAULT_AVAILABILITY }
 			} finally {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Send the selected period's approved, un-billed entries to billing.
 		 */
 		async send() {
-			if (!this.resolvedId || this.busy || !this.periodStart || !this.periodEnd) {
+			if (
+				!this.resolvedId
+				|| this.busy
+				|| !this.periodStart
+				|| !this.periodEnd
+			) {
 				return
 			}
 			this.busy = true
 			this.lastResult = null
 			try {
-				this.lastResult = await sendToBilling(this.resolvedId, this.periodStart, this.periodEnd)
+				this.lastResult = await sendToBilling(
+					this.resolvedId,
+					this.periodStart,
+					this.periodEnd,
+				)
 			} catch (err) {
-				this.lastResult = (err && err.response && err.response.data) || { status: 'failed' }
+				this.lastResult = (err && err.response && err.response.data) || {
+					status: 'failed',
+				}
 			} finally {
 				this.busy = false
 			}

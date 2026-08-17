@@ -47,7 +47,7 @@
             "type": "string",
             "enum": [
               "request",
-              "klacht",
+              "complaint",
               "callback",
               "return",
               "*"
@@ -449,7 +449,7 @@
         },
         "name": "AVG datalek-klacht SLA",
         "description": "AVG Art. 33 72-uurs meldplicht voor datalek-klachten. 24x7 strikte deadline.",
-        "appliesTo": "klacht",
+        "appliesTo": "complaint",
         "customerTier": "*",
         "targets": [
           {

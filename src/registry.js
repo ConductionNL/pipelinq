@@ -19,27 +19,100 @@
 //   - openspec/changes/pipelinq-manifest-v1/design.md
 //   - hydra/openspec/architecture/adr-036-manifest-v2.md
 
+import ActivityTimeline from './components/ActivityTimeline.vue'
+// --- Shillinq time-intake billing handoff (time-billing-handoff-emit): the
+//     real emit side of the delegated time-approval-workflow. Self-fetches
+//     its availability endpoint and falls back to the existing Shillinq
+//     deep-link — same self-fetching-by-props pattern as the sections above. ---
+import ClientBillingHandoffSection from './components/billing/ClientBillingHandoffSection.vue'
+// BookingDetail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
+// declarative); its TIME-WINDOW-gated admin actions + array-on-object tables +
+// computed timeline + notes editor stay in the page body via this kind:'section'.
+import BookingDetailSection from './components/bookings/BookingDetailSection.vue'
+import BookingsCard from './components/bookings/BookingsCard.vue'
+import BrpContactPanel from './components/BrpContactPanel.vue'
+import CommunicationHistory from './components/CommunicationHistory.vue'
+import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
+// --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
+//     declarative). The ClientDetail / ContactDetail monolithic page-host views
+//     are gone — the pages are declarative type:"detail" manifest entries whose
+//     identity/account fields auto-render in the body, KPI chips come from
+//     `summaryAggregates`, related lists from `relatedCollections`, the parent-
+//     org link from `relationLinks`, and these rich sub-features stay in the
+//     page body via `bodyWidgets` (kind:'section'). Each reads the live object
+//     via props (token-resolved `@objectId`) — no page host needed. ---
+import ContactRelationships from './components/ContactRelationships.vue'
+// --- Billing categories (billable-categories-and-tags): list view with a
+//     bespoke color-swatch + DBA / active badge column layout the
+//     declarative type:"index" page cannot express. Donut widget for the
+//     dashboard (hours per billing category) registered as a slot. ---
+import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
+import CashShiftActionsSection from './components/pos/CashShiftActionsSection.vue'
+// --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
+//     declarative): refund fields auto-render; the manager-gated confirm/reject
+//     actions + the cross-schema "Returned items" join + totals are a section. ---
+import PosRefundActionsSection from './components/pos/PosRefundActionsSection.vue'
+// --- POS transactions. The detail page is now a declarative type:"detail" page
+//     (pipelinq-pos-mdm-detail-declarative): the transaction's flat fields
+//     auto-render, the line items are a relatedCollections table, and the
+//     status-gated action toolbar (bespoke /api/pos-transactions endpoints) +
+//     tax breakdown + tender panel + payment card + receipt modals live in one
+//     kind:'section' bodyWidget. The form is a bespoke cart editor. ---
+import PosTransactionActionsSection from './components/pos/PosTransactionActionsSection.vue'
+// --- POS end-of-day Z-report. The per-report page is now a declarative
+//     type:"detail" page (pipelinq-detail-pages-declarative-r3): the Z-report's
+//     flat fields auto-render via CnObjectDataWidget; the BTW + payment-method
+//     breakdown tables (array fields on the object) and the shillinq
+//     bookkeeping-status projection + manager-gated re-raise live in one
+//     kind:'section' bodyWidget (ZReportBookkeepingSection). The GL journal
+//     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
+import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
+import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
+import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
+// --- Reporting dashboards (lib gap: no chart-widget page type). ---
+import ChannelDistributionSection from './components/rapportage/ChannelDistributionSection.vue'
+// --- Lead-management analytics dashboard (lead-management REQ-LM-006..008).
+//     Declarative type:"dashboard" (pipelinq-dashboards-declarative): the four
+//     bespoke chart/table widgets are hosted in one kind:'section' bodyWidget
+//     (LeadAnalyticsSection) that self-fetches /api/rapportage/pipeline-stats
+//     once and keeps the in-widget filtering (pipeline selector + win/loss
+//     date-range re-fetch) the legacy view had. ---
+import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
 // --- Service Hub — cards-collapse landing page (service-group-cards-collapse,
 //     ADR-044). Replaces the expandable Service nav group with a single
 //     top-level menu item linking to this card grid. ---
 import ServiceHubOverview from './components/service/ServiceHubOverview.vue'
-
-// --- MyWork — bespoke per-user surface mixing tasks + leads + requests. ---
-import MyWorkView from './views/MyWork.vue'
-import ProspectsView from './views/prospects/ProspectsView.vue'
-
+import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
+import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
+import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
+import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
+// --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
+//     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
+//     avg response time) and the mTLS client-certificate expiry countdown. ---
+import BrpMonitorView from './views/admin/BrpMonitor.vue'
+import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
+// --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
+//     three-route Vue surface — list, multi-step create wizard, live monitor.
+//     The wizard embeds the missing-consent modal (own file under modals/);
+//     the monitor polls /api/blasts/:id every 2s and stops on terminal status.
+//     SegmentBuilder + SegmentRuleNode live under components/ for reuse by
+//     forthcoming SegmentEditor / dashboard surfaces (slice 08). ---
+import BlastFormView from './views/blasts/BlastForm.vue'
+import BlastMonitorView from './views/blasts/BlastMonitor.vue'
+import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
+import ResourceDetailView from './views/bookings/ResourceDetail.vue'
+// --- Appointment booking — admin surface (appointment-booking 11 of 12).
+//     Service / Resource / Booking list + detail views; resolved by the v2
+//     renderer from the manifest.d fragment at render time. ---
+import ServiceDetailView from './views/bookings/ServiceDetail.vue'
+import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
 // --- Dashboard (manifest-driven type:"dashboard") — header actions and
 //     per-widget slot components. The page itself is rendered by
 //     CnDashboardPage from `config.widgets[]` + `config.layout[]`. ---
 import DashboardHeaderActions from './views/dashboard/DashboardHeaderActions.vue'
-import OpenLeadsKpiWidget from './views/dashboard/widgets/OpenLeadsKpiWidget.vue'
-import OpenRequestsKpiWidget from './views/dashboard/widgets/OpenRequestsKpiWidget.vue'
-import PipelineValueKpiWidget from './views/dashboard/widgets/PipelineValueKpiWidget.vue'
-import OverdueKpiWidget from './views/dashboard/widgets/OverdueKpiWidget.vue'
-import RequestsByStatusWidget from './views/dashboard/widgets/RequestsByStatusWidget.vue'
 import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
+import LeadsOverTimeChartWidget from './views/dashboard/widgets/LeadsOverTimeChartWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
-
 // --- Dashboard analytics widgets (openspec/changes/dashboard +
 //     openspec/changes/decompose-unified-analytics). Navi AI
 //     conversational analytics + the endpoint-bound trend charts.
@@ -53,10 +126,15 @@ import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
 //     The funder report export panel stays custom (see the
 //     ReportExportPanel _note). ---
 import NaviAnalyticsWidget from './views/dashboard/widgets/NaviAnalyticsWidget.vue'
-import LeadsOverTimeChartWidget from './views/dashboard/widgets/LeadsOverTimeChartWidget.vue'
-import RequestsByCategoryChartWidget from './views/dashboard/widgets/RequestsByCategoryChartWidget.vue'
+import OpenLeadsKpiWidget from './views/dashboard/widgets/OpenLeadsKpiWidget.vue'
+import OpenRequestsKpiWidget from './views/dashboard/widgets/OpenRequestsKpiWidget.vue'
+import OverdueKpiWidget from './views/dashboard/widgets/OverdueKpiWidget.vue'
+import PipelineByStageChartWidget from './views/dashboard/widgets/PipelineByStageChartWidget.vue'
+import PipelineValueKpiWidget from './views/dashboard/widgets/PipelineValueKpiWidget.vue'
 import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
-
+import RequestsByCategoryChartWidget from './views/dashboard/widgets/RequestsByCategoryChartWidget.vue'
+import RequestsByStatusWidget from './views/dashboard/widgets/RequestsByStatusWidget.vue'
+import RevenueByCategoryChartWidget from './views/dashboard/widgets/RevenueByCategoryChartWidget.vue'
 // Commercial dashboard trend charts (openspec/changes/commercial-dashboard).
 // Four endpoint-bound charts from GET /api/analytics/trends (revenue /
 // pipeline-by-stage / revenue-by-product-category / top-customers). The six
@@ -64,101 +142,25 @@ import ReportExportPanel from './views/dashboard/widgets/ReportExportPanel.vue'
 // `content.endpointSource` manifest config (ADR-049 Phase-4). These charts
 // stay custom pending a library fix — see their registry _notes.
 import RevenueOverTimeChartWidget from './views/dashboard/widgets/RevenueOverTimeChartWidget.vue'
-import PipelineByStageChartWidget from './views/dashboard/widgets/PipelineByStageChartWidget.vue'
-import RevenueByCategoryChartWidget from './views/dashboard/widgets/RevenueByCategoryChartWidget.vue'
 import TopCustomersChartWidget from './views/dashboard/widgets/TopCustomersChartWidget.vue'
-
-// Bespoke kanban board with in-memory search (REQ-PIPE-022).
-// See openspec/changes/2026-03-20-pipeline/design.md.
-import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
-
-// --- Queues / routing rules (lib gap: no routing-rules widget). ---
-import QueueListView from './views/queues/QueueList.vue'
-import QueueDetailView from './views/queues/QueueDetail.vue'
-
-// --- Reporting dashboards (lib gap: no chart-widget page type). ---
-import ChannelDistributionSection from './components/rapportage/ChannelDistributionSection.vue'
-import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
-import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
-
-// --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
-import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
-import ForecastTrendView from './views/forecast/ForecastTrend.vue'
-import LeadForecastTab from './views/leads/LeadForecastTab.vue'
-
-// --- Leads list (lead-management spec REQ-LM-002 / REQ-LM-004 / REQ-LM-005).
-//     Wraps CnIndexPage to add the stale filter, overdue row highlighting
-//     and CSV import/export via the platform mass dialogs. ---
-import LeadListView from './views/leads/LeadList.vue'
-
-// --- Lead-management analytics dashboard (lead-management REQ-LM-006..008).
-//     Declarative type:"dashboard" (pipelinq-dashboards-declarative): the four
-//     bespoke chart/table widgets are hosted in one kind:'section' bodyWidget
-//     (LeadAnalyticsSection) that self-fetches /api/rapportage/pipeline-stats
-//     once and keeps the in-widget filtering (pipeline selector + win/loss
-//     date-range re-fetch) the legacy view had. ---
-import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
-import PipelineFunnelWidget from './views/rapportage/PipelineFunnelWidget.vue'
-import SourcePerformanceWidget from './views/rapportage/SourcePerformanceWidget.vue'
-import LeadAgingWidget from './views/rapportage/LeadAgingWidget.vue'
-import WinLossWidget from './views/rapportage/WinLossWidget.vue'
-// --- Loyalty program (loyalty-program). ---
-import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
-import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
-
-// --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
-import PipelineManagerView from './views/settings/PipelineManager.vue'
-import SyncSettingsView from './views/sync/SyncSettings.vue'
-
+// --- xWiki integration (xwiki-integration): dashboard widget wrapper +
+//     reusable widget / sidebar / viewer / list components. ---
+import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget.vue'
+import ExportDestinationFormView from './views/export/ExportDestinationForm.vue'
+import ExportDestinationsView from './views/export/ExportDestinations.vue'
+import ExportJobFormView from './views/export/ExportJobForm.vue'
 // --- BI export + data-warehouse sink (lib gap: declarative index/detail pages
 //     cannot express the bespoke test-connection / test-run / enable / retry
 //     actions on the export controllers, nor the run-detail manifest +
 //     schema-snapshot drill-down). Object CRUD still flows through the shared
 //     object store; these views add the action surface. ---
 import ExportJobsView from './views/export/ExportJobs.vue'
-import ExportJobFormView from './views/export/ExportJobForm.vue'
-import ExportDestinationsView from './views/export/ExportDestinations.vue'
-import ExportDestinationFormView from './views/export/ExportDestinationForm.vue'
-import ExportRunsView from './views/export/ExportRuns.vue'
 import ExportRunDetailView from './views/export/ExportRunDetail.vue'
-
-// --- POS transactions. The detail page is now a declarative type:"detail" page
-//     (pipelinq-pos-mdm-detail-declarative): the transaction's flat fields
-//     auto-render, the line items are a relatedCollections table, and the
-//     status-gated action toolbar (bespoke /api/pos-transactions endpoints) +
-//     tax breakdown + tender panel + payment card + receipt modals live in one
-//     kind:'section' bodyWidget. The form is a bespoke cart editor. ---
-import PosTransactionActionsSection from './components/pos/PosTransactionActionsSection.vue'
-import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
-// --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
-//     declarative): refund fields auto-render; the manager-gated confirm/reject
-//     actions + the cross-schema "Returned items" join + totals are a section. ---
-import PosRefundActionsSection from './components/pos/PosRefundActionsSection.vue'
-import PosRefundFormView from './views/pos/PosRefundForm.vue'
-
-// --- POS cash drawer. The detail page is now a declarative type:"detail" page
-//     (pipelinq-pos-mdm-detail-declarative): the shift's float fields auto-render,
-//     the drops are a relatedCollections table, and the variance/diff projection
-//     + drop/count/reconcile actions (bespoke /api/pos-shifts endpoints) are a
-//     kind:'section' bodyWidget. ---
-import CashShiftListView from './views/pos/CashShiftList.vue'
-import CashShiftActionsSection from './components/pos/CashShiftActionsSection.vue'
-
-// --- POS end-of-day Z-report. The per-report page is now a declarative
-//     type:"detail" page (pipelinq-detail-pages-declarative-r3): the Z-report's
-//     flat fields auto-render via CnObjectDataWidget; the BTW + payment-method
-//     breakdown tables (array fields on the object) and the shillinq
-//     bookkeeping-status projection + manager-gated re-raise live in one
-//     kind:'section' bodyWidget (ZReportBookkeepingSection). The GL journal
-//     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
-import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
-import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
-
-// --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
-//     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
-//     avg response time) and the mTLS client-certificate expiry countdown. ---
-import BrpMonitorView from './views/admin/BrpMonitor.vue'
-
+import ExportRunsView from './views/export/ExportRuns.vue'
+// --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
+import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
+import ForecastTrendView from './views/forecast/ForecastTrend.vue'
+import KassakoppelingAuditDetailView from './views/kassakoppeling/KassakoppelingAuditDetail.vue'
 // --- POS Kassakoppeling-compliant audit log (pos-kassakoppeling-audit):
 //     append-only HMAC-SHA256 signed register actions chained per-register
 //     with an admin-gated Belastingdienst export pack. Lib gap: declarative
@@ -166,51 +168,33 @@ import BrpMonitorView from './views/admin/BrpMonitor.vue'
 //     endpoint, the verify-button + verification badge ramp on the detail
 //     view, or the date-range + format export modal. ---
 import KassakoppelingAuditListView from './views/kassakoppeling/KassakoppelingAuditList.vue'
-import KassakoppelingAuditDetailView from './views/kassakoppeling/KassakoppelingAuditDetail.vue'
-
-// --- Billing categories (billable-categories-and-tags): list view with a
-//     bespoke color-swatch + DBA / active badge column layout the
-//     declarative type:"index" page cannot express. Donut widget for the
-//     dashboard (hours per billing category) registered as a slot. ---
-import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
-
-import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
-
-// --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
-//     declarative). The ClientDetail / ContactDetail monolithic page-host views
-//     are gone — the pages are declarative type:"detail" manifest entries whose
-//     identity/account fields auto-render in the body, KPI chips come from
-//     `summaryAggregates`, related lists from `relatedCollections`, the parent-
-//     org link from `relationLinks`, and these rich sub-features stay in the
-//     page body via `bodyWidgets` (kind:'section'). Each reads the live object
-//     via props (token-resolved `@objectId`) — no page host needed. ---
-import ContactRelationships from './components/ContactRelationships.vue'
-import ActivityTimeline from './components/ActivityTimeline.vue'
-import CommunicationHistory from './components/CommunicationHistory.vue'
-import BookingsCard from './components/bookings/BookingsCard.vue'
-import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
-import BrpContactPanel from './components/BrpContactPanel.vue'
-
-// --- Shillinq time-intake billing handoff (time-billing-handoff-emit): the
-//     real emit side of the delegated time-approval-workflow. Self-fetches
-//     its availability endpoint and falls back to the existing Shillinq
-//     deep-link — same self-fetching-by-props pattern as the sections above. ---
-import ClientBillingHandoffSection from './components/billing/ClientBillingHandoffSection.vue'
-
+import LeadForecastTab from './views/leads/LeadForecastTab.vue'
+// --- Leads list (lead-management spec REQ-LM-002 / REQ-LM-004 / REQ-LM-005).
+//     Wraps CnIndexPage to add the stale filter, overdue row highlighting
+//     and CSV import/export via the platform mass dialogs. ---
+import LeadListView from './views/leads/LeadList.vue'
+import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
+// --- Loyalty program (loyalty-program). ---
+import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
 // --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
 //     provider-wiring): self-fetches conversation/message rows by contactId
 //     + the composer preflight facts, and hosts the SendMessageModal
 //     composer. Same self-fetching-by-props pattern as the sections above. ---
 import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
-
-// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit):
-//     "Convert to case" (request → ns#Case) and "Send to invoicing"
-//     (contract → ns#Invoice) in-body actions. Both self-fetch their
-//     availability endpoint and hide when no installed app implements the
-//     kind — same self-fetching-by-props pattern as the sections above. ---
-import RequestConversionSection from './views/requests/RequestConversionSection.vue'
-import ContractInvoicingSection from './views/contracts/ContractInvoicingSection.vue'
-
+// --- MyWork — bespoke per-user surface mixing tasks + leads + requests. ---
+import MyWorkView from './views/MyWork.vue'
+// Bespoke kanban board with in-memory search (REQ-PIPE-022).
+// See openspec/changes/2026-03-20-pipeline/design.md.
+import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
+// --- POS cash drawer. The detail page is now a declarative type:"detail" page
+//     (pipelinq-pos-mdm-detail-declarative): the shift's float fields auto-render,
+//     the drops are a relatedCollections table, and the variance/diff projection
+//     + drop/count/reconcile actions (bespoke /api/pos-shifts endpoints) are a
+//     kind:'section' bodyWidget. ---
+import CashShiftListView from './views/pos/CashShiftList.vue'
+import PosRefundFormView from './views/pos/PosRefundForm.vue'
+import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
+import ProjectActivityList from './views/projects/ProjectActivityList.vue'
 // --- Project / WBS hierarchy (project-task-hierarchy):
 //     four schemas (project / projectPhase / projectTask / projectActivity)
 //     surface as ProjectList → ProjectDetail (WBS tree with inline phase /
@@ -219,28 +203,24 @@ import ContractInvoicingSection from './views/contracts/ContractInvoicingSection
 //     parallel relation fetch, the resolved-billable inheritance chain or
 //     the inline-add CnFormDialogs feeding three different schemas. ---
 import ProjectDetail from './views/projects/ProjectDetail.vue'
-import ProjectActivityList from './views/projects/ProjectActivityList.vue'
-
-// --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
-//     three-route Vue surface — list, multi-step create wizard, live monitor.
-//     The wizard embeds the missing-consent modal (own file under modals/);
-//     the monitor polls /api/blasts/:id every 2s and stops on terminal status.
-//     SegmentBuilder + SegmentRuleNode live under components/ for reuse by
-//     forthcoming SegmentEditor / dashboard surfaces (slice 08). ---
-import BlastFormView from './views/blasts/BlastForm.vue'
-import BlastMonitorView from './views/blasts/BlastMonitor.vue'
-import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
-
-// --- Appointment booking — admin surface (appointment-booking 11 of 12).
-//     Service / Resource / Booking list + detail views; resolved by the v2
-//     renderer from the manifest.d fragment at render time. ---
-import ServiceDetailView from './views/bookings/ServiceDetail.vue'
-import ResourceDetailView from './views/bookings/ResourceDetail.vue'
-// BookingDetail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
-// declarative); its TIME-WINDOW-gated admin actions + array-on-object tables +
-// computed timeline + notes editor stay in the page body via this kind:'section'.
-import BookingDetailSection from './components/bookings/BookingDetailSection.vue'
-
+import ProspectsView from './views/prospects/ProspectsView.vue'
+import QueueDetailView from './views/queues/QueueDetail.vue'
+// --- Queues / routing rules (lib gap: no routing-rules widget). ---
+import QueueListView from './views/queues/QueueList.vue'
+import LeadAgingWidget from './views/rapportage/LeadAgingWidget.vue'
+import PipelineFunnelWidget from './views/rapportage/PipelineFunnelWidget.vue'
+import SourcePerformanceWidget from './views/rapportage/SourcePerformanceWidget.vue'
+import WinLossWidget from './views/rapportage/WinLossWidget.vue'
+// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit):
+//     "Convert to case" (request → ns#Case) and "Send to invoicing"
+//     (contract → ns#Invoice) in-body actions. Both self-fetch their
+//     availability endpoint and hide when no installed app implements the
+//     kind — same self-fetching-by-props pattern as the sections above. ---
+import RequestConversionSection from './views/requests/RequestConversionSection.vue'
+// --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
+import PipelineManagerView from './views/settings/PipelineManager.vue'
+import SyncSettingsView from './views/sync/SyncSettings.vue'
+import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
 //     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
 //     queue filter, the active-interaction form, the summary-driven knowledge
@@ -249,14 +229,6 @@ import BookingDetailSection from './components/bookings/BookingDetailSection.vue
 //     widgets remain: the queue filter (pipelinq-specific /state endpoint) and
 //     the header agent-availability toggle. ---
 import WerkplekQueueFilter from './views/werkplek/widgets/WerkplekQueueFilter.vue'
-import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
-
-// --- xWiki integration (xwiki-integration): dashboard widget wrapper +
-//     reusable widget / sidebar / viewer / list components. ---
-import XWikiDashboardWidget from './views/dashboard/widgets/XWikiDashboardWidget.vue'
-import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
-import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
-import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 // --- AVG (GDPR data-subject request) workflow removed by consume-or-dsar
 //     (ADR-047 Phase 3): the data-subject request workflow is owned by
 //     OpenRegister's case engine; pipelinq deep-links handlers into OR's AVG
@@ -269,7 +241,6 @@ import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 //     app-local MDM views/sections/modals were removed and a single "Data
 //     quality" nav entry deep-links to OR's Data-Quality surface instead
 //     (see src/manifest.d/90-master-data-management.json). ---
-
 // --- Contact-aware create overrides (kind:"create-override"). The
 //     client/contact schemas mark `contactsUid` REQUIRED, so a plain
 //     objectStore.saveObject() 400s. These handlers post the create-form to
@@ -536,7 +507,7 @@ const registry = {
 	LeadAnalyticsSection: {
 		kind: 'section',
 		component: LeadAnalyticsSection,
-		_note: 'In-body lead-analytics surface (pipeline funnel + source table + aging donut + win/loss) for the declarative LeadAnalytics dashboard. Self-fetches /api/rapportage/pipeline-stats ONCE and distributes the four slices to the presentational child widgets, preserving the legacy view\'s in-widget filtering (funnel pipeline selector, win/loss date-range re-fetch). KEPT-IN-SECTION because the filters live INSIDE the widgets and the win/loss date-range derives dateFrom/dateTo no page-level period pageFilter can emit.',
+		_note: "In-body lead-analytics surface (pipeline funnel + source table + aging donut + win/loss) for the declarative LeadAnalytics dashboard. Self-fetches /api/rapportage/pipeline-stats ONCE and distributes the four slices to the presentational child widgets, preserving the legacy view's in-widget filtering (funnel pipeline selector, win/loss date-range re-fetch). KEPT-IN-SECTION because the filters live INSIDE the widgets and the win/loss date-range derives dateFrom/dateTo no page-level period pageFilter can emit.",
 	},
 	PipelineFunnelWidget: {
 		kind: 'widget',
@@ -729,7 +700,7 @@ const registry = {
 	MessagingConversationSection: {
 		kind: 'section',
 		component: MessagingConversationSection,
-		_note: 'Outbound WhatsApp/SMS conversation feed for a client or contact (outbound-messaging-provider-wiring). Self-fetches message/conversation rows by contactId + the composer preflight facts; on ClientDetail (no client-level FK on message/conversation) it resolves the client\'s linked contacts client-side and lets the agent pick which contact to converse with. Hosts the SendMessageModal composer.',
+		_note: "Outbound WhatsApp/SMS conversation feed for a client or contact (outbound-messaging-provider-wiring). Self-fetches message/conversation rows by contactId + the composer preflight facts; on ClientDetail (no client-level FK on message/conversation) it resolves the client's linked contacts client-side and lets the agent pick which contact to converse with. Hosts the SendMessageModal composer.",
 	},
 
 	// --- ADR-051 semantic-object-handoff emit side (semantic-handoff-emit).

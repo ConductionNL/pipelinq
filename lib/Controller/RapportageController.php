@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\RapportageService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -43,85 +44,91 @@ use OCP\IUserSession;
  *
  * @spec openspec/specs/lead-management/spec.md
  */
-class RapportageController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest          $request           The request.
-     * @param RapportageService $rapportageService Analytics aggregation service.
-     * @param IUserSession      $userSession       The user session.
-     */
-    public function __construct(
-        IRequest $request,
-        private RapportageService $rapportageService,
-        private IUserSession $userSession,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+class RapportageController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param RapportageService $rapportageService Analytics aggregation service.
+	 * @param IUserSession $userSession The user session.
+	 */
+	public function __construct(
+		IRequest $request,
+		private RapportageService $rapportageService,
+		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $accessPolicy,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Aggregate lead analytics for the Rapportage dashboard.
-     *
-     * Available to any authenticated Nextcloud user (REQ-LM-009). The
-     * endpoint returns 401 for unauthenticated requests, 500 on aggregation
-     * failure with a static error string (no exception leakage).
-     *
-     * @return JSONResponse The analytics payload.
-     *
-     * @spec openspec/specs/lead-management/spec.md
-     * @spec openspec/specs/lead-management/spec.md
-     */
-    #[NoAdminRequired]
-    public function getPipelineStats(): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(data: ['message' => 'Authentication required'], statusCode: Http::STATUS_UNAUTHORIZED);
-        }
+	/**
+	 * Aggregate lead analytics for the Rapportage dashboard.
+	 *
+	 * Available to any authenticated Nextcloud user (REQ-LM-009). The
+	 * endpoint returns 401 for unauthenticated requests, 500 on aggregation
+	 * failure with a static error string (no exception leakage).
+	 *
+	 * @return JSONResponse The analytics payload.
+	 *
+	 * @spec openspec/specs/lead-management/spec.md
+	 * @spec openspec/specs/lead-management/spec.md
+	 */
+	#[NoAdminRequired]
+	public function getPipelineStats(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(data: ['message' => 'Authentication required'], statusCode: Http::STATUS_UNAUTHORIZED);
+		}
 
-        $pipelineId = (string) $this->request->getParam('pipelineId', '');
-        $dateFrom   = (string) $this->request->getParam('dateFrom', '');
-        $dateTo     = (string) $this->request->getParam('dateTo', '');
+		// Pipeline statistics aggregate the whole sales pipeline — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(data: ['message' => 'Forbidden'], statusCode: Http::STATUS_FORBIDDEN);
+		}
 
-        $pipelineIdArg = null;
-        if ($pipelineId !== '') {
-            $pipelineIdArg = $pipelineId;
-        }
+		$pipelineId = (string)$this->request->getParam('pipelineId', '');
+		$dateFrom = (string)$this->request->getParam('dateFrom', '');
+		$dateTo = (string)$this->request->getParam('dateTo', '');
 
-        $dateFromArg = null;
-        if ($dateFrom !== '') {
-            $dateFromArg = $dateFrom;
-        }
+		$pipelineIdArg = null;
+		if ($pipelineId !== '') {
+			$pipelineIdArg = $pipelineId;
+		}
 
-        $dateToArg = null;
-        if ($dateTo !== '') {
-            $dateToArg = $dateTo;
-        }
+		$dateFromArg = null;
+		if ($dateFrom !== '') {
+			$dateFromArg = $dateFrom;
+		}
 
-        try {
-            $stageValues       = $this->rapportageService->getStageValues(pipelineId: $pipelineIdArg);
-            $sourcePerformance = $this->rapportageService->getSourcePerformance(
-                dateFrom: $dateFromArg,
-                dateTo: $dateToArg,
-            );
-            $agingBuckets      = $this->rapportageService->getAgingBuckets();
-            $winLoss           = $this->rapportageService->getWinLossAnalysis(
-                dateFrom: $dateFromArg,
-                dateTo: $dateToArg,
-            );
-        } catch (\Throwable) {
-            return new JSONResponse(data: ['message' => 'Operation failed'], statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);
-        }
+		$dateToArg = null;
+		if ($dateTo !== '') {
+			$dateToArg = $dateTo;
+		}
 
-        return new JSONResponse(
-            data: [
-                'stageValues'       => $stageValues,
-                'sourcePerformance' => $sourcePerformance,
-                'agingBuckets'      => $agingBuckets,
-                'winLoss'           => $winLoss,
-            ]
-        );
+		try {
+			$stageValues = $this->rapportageService->getStageValues(pipelineId: $pipelineIdArg);
+			$sourcePerformance = $this->rapportageService->getSourcePerformance(
+				dateFrom: $dateFromArg,
+				dateTo: $dateToArg,
+			);
+			$agingBuckets = $this->rapportageService->getAgingBuckets();
+			$winLoss = $this->rapportageService->getWinLossAnalysis(
+				dateFrom: $dateFromArg,
+				dateTo: $dateToArg,
+			);
+		} catch (\Throwable) {
+			return new JSONResponse(data: ['message' => 'Operation failed'], statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
 
-    }//end getPipelineStats()
+		return new JSONResponse(
+			data: [
+				'stageValues' => $stageValues,
+				'sourcePerformance' => $sourcePerformance,
+				'agingBuckets' => $agingBuckets,
+				'winLoss' => $winLoss,
+			]
+		);
+
+	}//end getPipelineStats()
 }//end class

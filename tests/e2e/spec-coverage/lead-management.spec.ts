@@ -24,19 +24,25 @@ test('leads page accessible from navigation', async ({ page }) => {
 // @e2e openspec/specs/lead-management/spec.md#display-qualification-score-on-lead-list-and-detail
 test('leads list page renders without error', async ({ page }) => {
 	await page.goto('/apps/pipelinq/leads')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/lead-management/spec.md#add-product-line-item-to-a-lead
 test('leads page main content accessible', async ({ page }) => {
 	await page.goto('/apps/pipelinq/leads')
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
+	await expect(
+		page.locator('#app-content, .app-content, main').first(),
+	).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/lead-management/spec.md#pipeline-value-summary-by-stage
 test('leads dashboard KPI tile reflects pipeline value', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	await expect(page.getByText(/Pipeline V/i).first()).toBeVisible({ timeout: 10000 })
+	await expect(page.getByText(/Pipeline V/i).first()).toBeVisible({
+		timeout: 10000,
+	})
 })
 
 /*

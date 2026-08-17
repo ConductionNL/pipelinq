@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AppointmentEmailService;
 use OCA\Pipelinq\Service\BookingService;
 use OCP\AppFramework\Controller;
@@ -58,261 +59,293 @@ use Throwable;
  *
  * @spec openspec/specs/appointment-booking/spec.md
  */
-class BookingAdminController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest                $request      The HTTP request.
-     * @param BookingService          $bookings     The booking lifecycle service.
-     * @param AppointmentEmailService $emailService The email service (reminder seam).
-     * @param IUserSession            $userSession  The current user session.
-     * @param IL10N                   $l10n         Localization service.
-     * @param LoggerInterface         $logger       The logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private BookingService $bookings,
-        private AppointmentEmailService $emailService,
-        private IUserSession $userSession,
-        private IL10N $l10n,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class BookingAdminController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The HTTP request.
+	 * @param BookingService $bookings The booking lifecycle service.
+	 * @param AppointmentEmailService $emailService The email service (reminder seam).
+	 * @param IUserSession $userSession The current user session.
+	 * @param IL10N $l10n Localization service.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private BookingService $bookings,
+		private AppointmentEmailService $emailService,
+		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $accessPolicy,
+		private IL10N $l10n,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * Reschedule a booking to a new start time.
-     *
-     * Creates a fresh confirmed booking linked back via `previousBookingId`
-     * and transitions the original to `rescheduled`. Returns the new
-     * booking UUID so the caller can navigate to it.
-     *
-     * @param string $id The original booking UUID.
-     *
-     * @return JSONResponse The new booking UUID, or an error.
-     *
-     * @spec openspec/specs/appointment-booking/spec.md
-     */
-    #[NoAdminRequired]
-    public function reschedule(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorised();
-        }
+	/**
+	 * Reschedule a booking to a new start time.
+	 *
+	 * Creates a fresh confirmed booking linked back via `previousBookingId`
+	 * and transitions the original to `rescheduled`. Returns the new
+	 * booking UUID so the caller can navigate to it.
+	 *
+	 * @param string $id The original booking UUID.
+	 *
+	 * @return JSONResponse The new booking UUID, or an error.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
+	#[NoAdminRequired]
+	public function reschedule(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorised();
+		}
 
-        $newStartAt = (string) $this->request->getParam('newStartAt', '');
-        if ($newStartAt === '') {
-            return $this->error(message: $this->l10n->t('newStartAt is required'), status: Http::STATUS_UNPROCESSABLE_ENTITY);
-        }
+		// Booking administration moves other people's appointments — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		}
 
-        return $this->run(
-            label: 'reschedule',
-            handler: function () use ($id, $newStartAt): array {
-                $newId = $this->bookings->rescheduleBooking(bookingId: $id, newStartAt: $newStartAt);
-                return ['bookingId' => $newId];
-            }
-        );
-    }//end reschedule()
+		$newStartAt = (string)$this->request->getParam('newStartAt', '');
+		if ($newStartAt === '') {
+			return $this->error(message: $this->l10n->t('newStartAt is required'), status: Http::STATUS_UNPROCESSABLE_ENTITY);
+		}
 
-    /**
-     * Cancel a booking.
-     *
-     * Staff cancellations always skip the cancellation charge (REQ-APT-009
-     * scenario 3); the service derives the policy from the linked Service.
-     *
-     * @param string $id The booking UUID.
-     *
-     * @return JSONResponse The result, or an error.
-     */
-    #[NoAdminRequired]
-    public function cancel(string $id): JSONResponse
-    {
-        $uid = $this->requireUser();
-        if ($uid === null) {
-            return $this->unauthorised();
-        }
+		return $this->run(
+			label: 'reschedule',
+			handler: function () use ($id, $newStartAt): array {
+				$newId = $this->bookings->rescheduleBooking(bookingId: $id, newStartAt: $newStartAt);
+				return ['bookingId' => $newId];
+			}
+		);
+	}//end reschedule()
 
-        $reason = (string) $this->request->getParam('reason', '');
-        return $this->run(
-            label: 'cancel',
-            handler: function () use ($id, $reason, $uid): array {
-                $this->bookings->cancelBooking(bookingId: $id, reason: $reason, cancelledBy: $uid);
-                return ['cancelled' => true];
-            }
-        );
-    }//end cancel()
+	/**
+	 * Cancel a booking.
+	 *
+	 * Staff cancellations always skip the cancellation charge (REQ-APT-009
+	 * scenario 3); the service derives the policy from the linked Service.
+	 *
+	 * @param string $id The booking UUID.
+	 *
+	 * @return JSONResponse The result, or an error.
+	 */
+	#[NoAdminRequired]
+	public function cancel(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorised();
+		}
 
-    /**
-     * Mark a booking as completed.
-     *
-     * @param string $id The booking UUID.
-     *
-     * @return JSONResponse The result, or an error.
-     */
-    #[NoAdminRequired]
-    public function markCompleted(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorised();
-        }
+		$reason = (string)$this->request->getParam('reason', '');
+		return $this->run(
+			label: 'cancel',
+			handler: function () use ($id, $reason, $uid): array {
+				$this->bookings->cancelBooking(bookingId: $id, reason: $reason, cancelledBy: $uid);
+				return ['cancelled' => true];
+			}
+		);
+	}//end cancel()
 
-        return $this->run(
-            label: 'markCompleted',
-            handler: function () use ($id): array {
-                $this->bookings->completeBooking(bookingId: $id);
-                return ['completed' => true];
-            }
-        );
-    }//end markCompleted()
+	/**
+	 * Mark a booking as completed.
+	 *
+	 * @param string $id The booking UUID.
+	 *
+	 * @return JSONResponse The result, or an error.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
+	#[NoAdminRequired]
+	public function markCompleted(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorised();
+		}
 
-    /**
-     * Mark a booking as no-show.
-     *
-     * Triggers no-show fee charging via the configured payment provider
-     * (member 08) when Service.noShowFee > 0 and increments the customer's
-     * no-show count.
-     *
-     * @param string $id The booking UUID.
-     *
-     * @return JSONResponse The result, or an error.
-     */
-    #[NoAdminRequired]
-    public function markNoShow(string $id): JSONResponse
-    {
-        $uid = $this->requireUser();
-        if ($uid === null) {
-            return $this->unauthorised();
-        }
+		// Booking administration moves other people's appointments — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		}
 
-        return $this->run(
-            label: 'markNoShow',
-            handler: function () use ($id, $uid): array {
-                $this->bookings->markNoShow(bookingId: $id, staffUserId: $uid);
-                return ['markedNoShow' => true];
-            }
-        );
-    }//end markNoShow()
+		return $this->run(
+			label: 'markCompleted',
+			handler: function () use ($id): array {
+				$this->bookings->completeBooking(bookingId: $id);
+				return ['completed' => true];
+			}
+		);
+	}//end markCompleted()
 
-    /**
-     * Force-send a reminder email for a booking.
-     *
-     * Calls AppointmentEmailService::sendReminder which stamps
-     * reminderSentAt — letting staff re-fire reminders if the cron-driven
-     * dispatch was missed. Returns 503 when no email provider is wired
-     * (graceful degradation, mirroring the BookingService confirmation seam).
-     *
-     * @param string $id The booking UUID.
-     *
-     * @return JSONResponse The result, or an error.
-     */
-    #[NoAdminRequired]
-    public function sendReminder(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorised();
-        }
+	/**
+	 * Mark a booking as no-show.
+	 *
+	 * Triggers no-show fee charging via the configured payment provider
+	 * (member 08) when Service.noShowFee > 0 and increments the customer's
+	 * no-show count.
+	 *
+	 * @param string $id The booking UUID.
+	 *
+	 * @return JSONResponse The result, or an error.
+	 */
+	#[NoAdminRequired]
+	public function markNoShow(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorised();
+		}
 
-        return $this->run(
-            label: 'sendReminder',
-            handler: function () use ($id): array {
-                $sent = $this->emailService->sendReminder(bookingId: $id);
-                return ['sent' => $sent];
-            }
-        );
-    }//end sendReminder()
+		// Booking administration moves other people's appointments — a CRM
+		// capability, not an any-authenticated-user one. This one was MISSED in
+		// the first pass: its four siblings on this controller got the guard
+		// and markNoShow did not, and marking a no-show can charge a fee.
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		}
 
-    /**
-     * Manually confirm a booking whose deposit cleared out-of-band.
-     *
-     * Useful when the payment provider's webhook is unreliable or when
-     * staff record a cash deposit at the counter. Transitions the booking
-     * from pending-deposit to confirmed.
-     *
-     * @param string $id The booking UUID.
-     *
-     * @return JSONResponse The result, or an error.
-     */
-    #[NoAdminRequired]
-    public function confirmDeposit(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorised();
-        }
+		return $this->run(
+			label: 'markNoShow',
+			handler: function () use ($id, $uid): array {
+				$this->bookings->markNoShow(bookingId: $id, staffUserId: $uid);
+				return ['markedNoShow' => true];
+			}
+		);
+	}//end markNoShow()
 
-        $reason = (string) $this->request->getParam('reason', '');
-        if ($reason === '') {
-            $reason = 'Deposit confirmed by staff';
-        }
+	/**
+	 * Force-send a reminder email for a booking.
+	 *
+	 * Calls AppointmentEmailService::sendReminder which stamps
+	 * reminderSentAt — letting staff re-fire reminders if the cron-driven
+	 * dispatch was missed. Returns 503 when no email provider is wired
+	 * (graceful degradation, mirroring the BookingService confirmation seam).
+	 *
+	 * @param string $id The booking UUID.
+	 *
+	 * @return JSONResponse The result, or an error.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
+	#[NoAdminRequired]
+	public function sendReminder(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorised();
+		}
 
-        return $this->run(
-            label: 'confirmDeposit',
-            handler: function () use ($id, $reason): array {
-                $this->bookings->confirmBooking(bookingId: $id, reason: $reason);
-                return ['confirmed' => true];
-            }
-        );
-    }//end confirmDeposit()
+		// Booking administration moves other people's appointments — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		}
 
-    /**
-     * Resolve the acting user UID or return null when unauthenticated.
-     *
-     * The Nextcloud SecurityMiddleware enforces authentication by default,
-     * but the controller adds defence-in-depth and lets us emit a clean 401
-     * envelope with a localised message instead of the middleware HTML.
-     *
-     * @return string|null The acting user UID, or null when unauthenticated.
-     */
-    private function requireUser(): ?string
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return null;
-        }
+		return $this->run(
+			label: 'sendReminder',
+			handler: function () use ($id): array {
+				$sent = $this->emailService->sendReminder(bookingId: $id);
+				return ['sent' => $sent];
+			}
+		);
+	}//end sendReminder()
 
-        return $user->getUID();
-    }//end requireUser()
+	/**
+	 * Manually confirm a booking whose deposit cleared out-of-band.
+	 *
+	 * Useful when the payment provider's webhook is unreliable or when
+	 * staff record a cash deposit at the counter. Transitions the booking
+	 * from pending-deposit to confirmed.
+	 *
+	 * @param string $id The booking UUID.
+	 *
+	 * @return JSONResponse The result, or an error.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
+	#[NoAdminRequired]
+	public function confirmDeposit(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorised();
+		}
 
-    /**
-     * Build a 401 envelope.
-     *
-     * @return JSONResponse The 401 response.
-     */
-    private function unauthorised(): JSONResponse
-    {
-        return $this->error(message: $this->l10n->t('Authentication required'), status: Http::STATUS_UNAUTHORIZED);
-    }//end unauthorised()
+		// Booking administration moves other people's appointments — a CRM
+		// capability, not an any-authenticated-user one.
+		if ($this->accessPolicy->isPrivileged(uid: $uid) === false) {
+			return $this->error(message: $this->l10n->t('Forbidden'), status: Http::STATUS_FORBIDDEN);
+		}
 
-    /**
-     * Build a JSON error envelope with the given status.
-     *
-     * @param string $message The human-readable error.
-     * @param int    $status  The HTTP status.
-     *
-     * @return JSONResponse The error response.
-     */
-    private function error(string $message, int $status): JSONResponse
-    {
-        return new JSONResponse(['error' => $message], $status);
-    }//end error()
+		$reason = (string)$this->request->getParam('reason', '');
+		if ($reason === '') {
+			$reason = 'Deposit confirmed by staff';
+		}
 
-    /**
-     * Run a handler with shared error mapping (404 / 422 / 500).
-     *
-     * @param string   $label   Short label for logger context.
-     * @param callable $handler The handler producing the success payload.
-     *
-     * @return JSONResponse The response.
-     */
-    private function run(string $label, callable $handler): JSONResponse
-    {
-        try {
-            return new JSONResponse($handler());
-        } catch (InvalidArgumentException $e) {
-            return $this->error(message: $e->getMessage(), status: Http::STATUS_UNPROCESSABLE_ENTITY);
-        } catch (Throwable $e) {
-            $this->logger->error('BookingAdminController::'.$label.' failed', ['exception' => $e->getMessage()]);
-            return $this->error(message: $this->l10n->t('An unexpected error occurred'), status: Http::STATUS_INTERNAL_SERVER_ERROR);
-        }
-    }//end run()
+		return $this->run(
+			label: 'confirmDeposit',
+			handler: function () use ($id, $reason): array {
+				$this->bookings->confirmBooking(bookingId: $id, reason: $reason);
+				return ['confirmed' => true];
+			}
+		);
+	}//end confirmDeposit()
+
+	/**
+	 * Resolve the acting user UID or return null when unauthenticated.
+	 *
+	 * The Nextcloud SecurityMiddleware enforces authentication by default,
+	 * but the controller adds defence-in-depth and lets us emit a clean 401
+	 * envelope with a localised message instead of the middleware HTML.
+	 *
+	 * @return string|null The acting user UID, or null when unauthenticated.
+	 */
+	private function requireUser(): ?string {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return null;
+		}
+
+		return $user->getUID();
+	}//end requireUser()
+
+	/**
+	 * Build a 401 envelope.
+	 *
+	 * @return JSONResponse The 401 response.
+	 */
+	private function unauthorised(): JSONResponse {
+		return $this->error(message: $this->l10n->t('Authentication required'), status: Http::STATUS_UNAUTHORIZED);
+	}//end unauthorised()
+
+	/**
+	 * Build a JSON error envelope with the given status.
+	 *
+	 * @param string $message The human-readable error.
+	 * @param int $status The HTTP status.
+	 *
+	 * @return JSONResponse The error response.
+	 */
+	private function error(string $message, int $status): JSONResponse {
+		return new JSONResponse(['error' => $message], $status);
+	}//end error()
+
+	/**
+	 * Run a handler with shared error mapping (404 / 422 / 500).
+	 *
+	 * @param string $label Short label for logger context.
+	 * @param callable $handler The handler producing the success payload.
+	 *
+	 * @return JSONResponse The response.
+	 */
+	private function run(string $label, callable $handler): JSONResponse {
+		try {
+			return new JSONResponse($handler());
+		} catch (InvalidArgumentException $e) {
+			return $this->error(message: $e->getMessage(), status: Http::STATUS_UNPROCESSABLE_ENTITY);
+		} catch (Throwable $e) {
+			$this->logger->error('BookingAdminController::' . $label . ' failed', ['exception' => $e->getMessage()]);
+			return $this->error(message: $this->l10n->t('An unexpected error occurred'), status: Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+	}//end run()
 }//end class

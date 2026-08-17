@@ -26,38 +26,38 @@
         "configuration": {
           "x-openregister-lifecycle": {
             "field": "status",
-            "initial": "concept",
+            "initial": "draft",
             "terminal": [
-              "beeindigd"
+              "ended"
             ],
             "transitions": {
               "activate": {
                 "from": [
-                  "concept"
+                  "draft"
                 ],
-                "to": "actief",
+                "to": "active",
                 "description": "Activate the programme (validated against rule and redemption-option presence, REQ-LOY-001)."
               },
               "pause": {
                 "from": [
-                  "actief"
+                  "active"
                 ],
-                "to": "gepauzeerd",
+                "to": "paused",
                 "description": "Temporarily pause an active programme."
               },
               "resume": {
                 "from": [
-                  "gepauzeerd"
+                  "paused"
                 ],
-                "to": "actief",
+                "to": "active",
                 "description": "Resume a paused programme."
               },
               "end": {
                 "from": [
-                  "actief",
-                  "gepauzeerd"
+                  "active",
+                  "paused"
                 ],
-                "to": "beeindigd",
+                "to": "ended",
                 "description": "End the programme (terminal)."
               }
             }
@@ -65,7 +65,7 @@
         },
         "required": [
           "name",
-          "brand",
+          "merk",
           "status"
         ],
         "properties": {
@@ -89,13 +89,13 @@
             "description": "Customer-facing description of the programme.",
             "title": "Beschrijving"
           },
-          "validFrom": {
+          "startDate": {
             "type": "string",
             "format": "date",
             "description": "ISO-8601 programme start date.",
             "title": "Startdatum"
           },
-          "validUntil": {
+          "endDate": {
             "type": "string",
             "format": "date",
             "description": "ISO-8601 programme end date (null for open-ended).",
@@ -104,10 +104,10 @@
           "status": {
             "type": "string",
             "enum": [
-              "concept",
-              "actief",
-              "gepauzeerd",
-              "beeindigd"
+              "draft",
+              "active",
+              "paused",
+              "ended"
             ],
             "default": "concept",
             "description": "Programme lifecycle status.",
@@ -248,7 +248,7 @@
             "title": "Geldig Van",
             "description": "Geldig Van for this record."
           },
-          "validUntil": {
+          "validTo": {
             "type": "string",
             "format": "date",
             "title": "Geldig Tot",
@@ -389,7 +389,7 @@
             "description": "Timestamp tier was reached.",
             "title": "Tier Behaald Op"
           },
-          "tierValidUntil": {
+          "tierValidTo": {
             "type": "string",
             "format": "date-time",
             "description": "Scheduled downgrade evaluation date.",
@@ -398,9 +398,9 @@
           "status": {
             "type": "string",
             "enum": [
-              "actief",
-              "geblokkerd",
-              "gedeactiveerd"
+              "active",
+              "blocked",
+              "deactivated"
             ],
             "default": "actief",
             "description": "Account status. Geblokkerd accounts do not earn points (REQ-LOY-002-05).",
@@ -453,7 +453,7 @@
         "required": [
           "accountId",
           "type",
-          "quantity",
+          "count",
           "timestamp"
         ],
         "properties": {
@@ -484,7 +484,7 @@
             "description": "Movement type.",
             "title": "Type"
           },
-          "quantity": {
+          "count": {
             "type": "integer",
             "description": "Signed delta. Credit positive, debit/expiry negative, adjustment signed.",
             "title": "Aantal"
@@ -567,7 +567,7 @@
             "description": "Reward type.",
             "title": "Beloning Type"
           },
-          "rewardValue": {
+          "remunerationValue": {
             "description": "Reward value (number for discount, string for product name, etc.).",
             "title": "Beloning Waarde",
             "oneOf": [
@@ -583,7 +583,7 @@
               }
             ]
           },
-          "kostBasisEur": {
+          "costBasisEur": {
             "type": "number",
             "description": "Estimated business cost in EUR for cost % reporting (REQ-LOY-008).",
             "title": "Kost Basis Eur"
@@ -599,7 +599,7 @@
             "title": "Geldig Van",
             "description": "Geldig Van for this record."
           },
-          "validUntil": {
+          "validTo": {
             "type": "string",
             "format": "date",
             "title": "Geldig Tot",
@@ -673,7 +673,7 @@
             "title": "Status",
             "description": "Current lifecycle status of this record."
           },
-          "validUntil": {
+          "validTo": {
             "type": "string",
             "format": "date-time",
             "description": "Expiry of the code itself.",
@@ -767,7 +767,7 @@
             "title": "Uitgegeven Op",
             "description": "Uitgegeven Op for this record."
           },
-          "issuedTo": {
+          "issuedIn": {
             "type": "string",
             "description": "Recipient label or customerId.",
             "title": "Uitgegeven Aan"

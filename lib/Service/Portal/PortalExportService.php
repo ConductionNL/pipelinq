@@ -37,99 +37,96 @@ use OCP\IL10N;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the data sources an
  *  export legitimately spans (audit, invoices, profile, signing, mail).
  */
-class PortalExportService
-{
-    /**
-     * Export download-link validity in minutes (30 days).
-     *
-     * @var int
-     */
-    private const TTL_MINUTES = (30 * 24 * 60);
+class PortalExportService {
+	/**
+	 * Export download-link validity in minutes (30 days).
+	 *
+	 * @var int
+	 */
+	private const TTL_MINUTES = (30 * 24 * 60);
 
-    /**
-     * Constructor.
-     *
-     * @param PortalProfileService   $profile  The profile service.
-     * @param PortalAuditService     $audit    The audit service.
-     * @param PortalInvoiceService   $invoices The invoice facade.
-     * @param DocumentSigningService $signing  The document signing service.
-     * @param PortalMailService      $mail     The mail service.
-     * @param ITimeFactory           $time     The time factory.
-     * @param IL10N                  $l10n     The localisation service.
-     */
-    public function __construct(
-        private PortalProfileService $profile,
-        private PortalAuditService $audit,
-        private PortalInvoiceService $invoices,
-        private DocumentSigningService $signing,
-        private PortalMailService $mail,
-        private ITimeFactory $time,
-        private IL10N $l10n,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param PortalProfileService $profile The profile service.
+	 * @param PortalAuditService $audit The audit service.
+	 * @param PortalInvoiceService $invoices The invoice facade.
+	 * @param DocumentSigningService $signing The document signing service.
+	 * @param PortalMailService $mail The mail service.
+	 * @param ITimeFactory $time The time factory.
+	 * @param IL10N $l10n The localisation service.
+	 */
+	public function __construct(
+		private PortalProfileService $profile,
+		private PortalAuditService $audit,
+		private PortalInvoiceService $invoices,
+		private DocumentSigningService $signing,
+		private PortalMailService $mail,
+		private ITimeFactory $time,
+		private IL10N $l10n,
+	) {
+	}//end __construct()
 
-    /**
-     * Assemble the export payload for an account (own data only).
-     *
-     * @param array<string, mixed> $account The authenticated account.
-     *
-     * @return array<string, mixed> The export payload.
-     */
-    public function buildExport(array $account): array
-    {
-        $accountId = (string) ($account['@self']['id'] ?? $account['id'] ?? $account['uuid'] ?? '');
+	/**
+	 * Assemble the export payload for an account (own data only).
+	 *
+	 * @param array<string, mixed> $account The authenticated account.
+	 *
+	 * @return array<string, mixed> The export payload.
+	 */
+	public function buildExport(array $account): array {
+		$accountId = (string)($account['@self']['id'] ?? $account['id'] ?? $account['uuid'] ?? '');
 
-        $invoicePage = $this->invoices->getForAccount($account, 1, 100);
+		$invoicePage = $this->invoices->getForAccount($account, 1, 100);
 
-        return [
-            'exportedAt'  => $this->time->getDateTime()->format(DATE_ATOM),
-            'account'     => $this->profile->present(account: $account),
-            'auditEvents' => array_map(
-                static fn (array $event): array => [
-                    'eventType'  => ($event['eventType'] ?? null),
-                    'outcome'    => ($event['outcome'] ?? null),
-                    'occurredAt' => ($event['occurredAt'] ?? null),
-                ],
-                $this->audit->getForAccount($accountId)
-            ),
-            'documents'   => array_map(
-                static fn (array $invoice): array => [
-                    'type'   => 'invoice',
-                    'number' => ($invoice['invoiceNumber'] ?? null),
-                    'date'   => ($invoice['date'] ?? null),
-                    'amount' => ($invoice['amount'] ?? null),
-                ],
-                $invoicePage['items']
-            ),
-        ];
-    }//end buildExport()
+		return [
+			'exportedAt' => $this->time->getDateTime()->format(DATE_ATOM),
+			'account' => $this->profile->present(account: $account),
+			'auditEvents' => array_map(
+				static fn (array $event): array => [
+					'eventType' => ($event['eventType'] ?? null),
+					'outcome' => ($event['outcome'] ?? null),
+					'occurredAt' => ($event['occurredAt'] ?? null),
+				],
+				$this->audit->getForAccount($accountId)
+			),
+			'documents' => array_map(
+				static fn (array $invoice): array => [
+					'type' => 'invoice',
+					'number' => ($invoice['invoiceNumber'] ?? null),
+					'date' => ($invoice['date'] ?? null),
+					'amount' => ($invoice['amount'] ?? null),
+				],
+				$invoicePage['items']
+			),
+		];
+	}//end buildExport()
 
-    /**
-     * Request an export: build it, mint a 30-day signed link, email it.
-     *
-     * @param array<string, mixed> $account  The authenticated account.
-     * @param string               $tenantId The tenant id.
-     *
-     * @return array{downloadUrl: string, expiresAt: int} The download descriptor.
-     */
-    public function requestExport(array $account, string $tenantId): array
-    {
-        $accountId = (string) ($account['@self']['id'] ?? $account['id'] ?? $account['uuid'] ?? '');
-        $signed    = $this->signing->generateUrl(
-            objectId: $accountId,
-            objectType: 'data-export',
-            accountId: $accountId,
-            ttlMinutes: self::TTL_MINUTES
-        );
+	/**
+	 * Request an export: build it, mint a 30-day signed link, email it.
+	 *
+	 * @param array<string, mixed> $account The authenticated account.
+	 * @param string $tenantId The tenant id.
+	 *
+	 * @return array{downloadUrl: string, expiresAt: int} The download descriptor.
+	 */
+	public function requestExport(array $account, string $tenantId): array {
+		$accountId = (string)($account['@self']['id'] ?? $account['id'] ?? $account['uuid'] ?? '');
+		$signed = $this->signing->generateUrl(
+			objectId: $accountId,
+			objectType: 'data-export',
+			accountId: $accountId,
+			ttlMinutes: self::TTL_MINUTES
+		);
 
-        $this->mail->send(
-            (string) ($account['email'] ?? ''),
-            $this->l10n->t('Your data export is ready'),
-            $this->l10n->t('Your data export is ready to download. The link is valid for 30 days.')
-        );
+		$this->mail->send(
+			(string)($account['email'] ?? ''),
+			$this->l10n->t('Your data export is ready'),
+			$this->l10n->t('Your data export is ready to download. The link is valid for 30 days.')
+		);
 
-        $this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'data-export-requested', outcome: 'success');
+		$this->audit->log(accountId: $accountId, tenantId: $tenantId, eventType: 'data-export-requested', outcome: 'success');
 
-        return ['downloadUrl' => $signed['path'], 'expiresAt' => $signed['expiresAt']];
-    }//end requestExport()
+		return ['downloadUrl' => $signed['path'], 'expiresAt' => $signed['expiresAt']];
+	}//end requestExport()
 }//end class

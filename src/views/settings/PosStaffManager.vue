@@ -14,20 +14,27 @@
   - instead of routing to a detail page and the form opens in a dialog.
   -->
 <template>
-	<NcSettingsSection :name="t('pipelinq', 'POS staff')"
-		:description="t('pipelinq', 'Cashiers who can sign in at the register, and the POS role each one holds.')">
+	<NcSettingsSection
+		:name="t('pipelinq', 'POS staff')"
+		:description="
+			t(
+				'pipelinq',
+				'Cashiers who can sign in at the register, and the POS role each one holds.',
+			)
+		">
 		<PosStaffList :key="reloadKey" @edit="openStaff" @create="openNew" />
 
-		<PosStaffFormDialog v-if="dialogOpen"
-			:staff-id="editingId"
+		<PosStaffFormDialog
+			v-if="dialogOpen"
+			:staffId="editingId"
 			@done="closeDialog" />
 	</NcSettingsSection>
 </template>
 
 <script>
 import { NcSettingsSection } from '@nextcloud/vue'
-import PosStaffList from '../pos/PosStaffList.vue'
 import PosStaffFormDialog from '../../dialogs/PosStaffFormDialog.vue'
+import PosStaffList from '../pos/PosStaffList.vue'
 
 export default {
 	name: 'PosStaffManager',
@@ -36,6 +43,7 @@ export default {
 		PosStaffList,
 		PosStaffFormDialog,
 	},
+
 	data() {
 		return {
 			dialogOpen: false,
@@ -44,6 +52,7 @@ export default {
 			reloadKey: 0,
 		}
 	},
+
 	methods: {
 		/**
 		 * Open an existing staff member in the dialog.
@@ -55,6 +64,7 @@ export default {
 			this.editingId = id
 			this.dialogOpen = true
 		},
+
 		/**
 		 * Open an empty staff form.
 		 *
@@ -64,6 +74,7 @@ export default {
 			this.editingId = ''
 			this.dialogOpen = true
 		},
+
 		/**
 		 * Close the dialog and re-render the list so a save or delete shows up.
 		 *

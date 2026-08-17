@@ -13,7 +13,10 @@
 
 <template>
 	<div class="activity-timeline">
-		<div class="activity-timeline__filters" role="toolbar" :aria-label="t('pipelinq', 'Activity type filter')">
+		<div
+			class="activity-timeline__filters"
+			role="toolbar"
+			:aria-label="t('pipelinq', 'Activity type filter')">
 			<NcButton
 				v-for="option in filterOptions"
 				:key="option.value"
@@ -30,7 +33,12 @@
 		<NcEmptyContent
 			v-else-if="items.length === 0 && !loading"
 			:name="t('pipelinq', 'No activities yet')"
-			:description="t('pipelinq', 'Activities will appear here once contactmomenten, tasks, emails or calendar entries are linked to this record.')">
+			:description="
+				t(
+					'pipelinq',
+					'Activities will appear here once contactmomenten, tasks, emails or calendar entries are linked to this record.',
+				)
+			">
 			<template #icon>
 				<TimelineTextOutline :size="64" />
 			</template>
@@ -47,15 +55,25 @@
 				</span>
 				<div class="activity-timeline__content">
 					<div class="activity-timeline__header">
-						<span class="activity-timeline__title">{{ item.title || t('pipelinq', '(no title)') }}</span>
-						<span class="activity-timeline__date">{{ formatDate(item.date) }}</span>
+						<span class="activity-timeline__title">{{
+							item.title || t('pipelinq', '(no title)')
+						}}</span>
+						<span class="activity-timeline__date">{{
+							formatDate(item.date)
+						}}</span>
 					</div>
-					<div v-if="item.description" class="activity-timeline__description">
+					<div
+						v-if="item.description"
+						class="activity-timeline__description">
 						{{ truncate(item.description) }}
 					</div>
 					<div class="activity-timeline__meta">
-						<span class="activity-timeline__type-label">{{ typeLabel(item.type) }}</span>
-						<span v-if="item.user" class="activity-timeline__user">{{ item.user }}</span>
+						<span class="activity-timeline__type-label">{{
+							typeLabel(item.type)
+						}}</span>
+						<span v-if="item.user" class="activity-timeline__user">{{
+							item.user
+						}}</span>
 					</div>
 				</div>
 			</li>
@@ -71,16 +89,16 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
-import { NcButton, NcLoadingIcon, NcEmptyContent } from '@nextcloud/vue'
-import Phone from 'vue-material-design-icons/Phone.vue'
-import Email from 'vue-material-design-icons/Email.vue'
-import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
+import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
-import Message from 'vue-material-design-icons/Message.vue'
 import ClockOutline from 'vue-material-design-icons/ClockOutline.vue'
+import Email from 'vue-material-design-icons/Email.vue'
+import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
+import Message from 'vue-material-design-icons/Message.vue'
+import Phone from 'vue-material-design-icons/Phone.vue'
 import TimelineTextOutline from 'vue-material-design-icons/TimelineTextOutline.vue'
 
 export default {
@@ -98,16 +116,19 @@ export default {
 		ClockOutline,
 		TimelineTextOutline,
 	},
+
 	props: {
 		entityType: {
 			type: String,
 			required: true,
 		},
+
 		entityId: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			items: [],
@@ -119,6 +140,7 @@ export default {
 			activeFilter: 'all',
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-2
@@ -126,20 +148,26 @@ export default {
 		filterOptions() {
 			return [
 				{ value: 'all', label: this.t('pipelinq', 'All') },
-				{ value: 'contactmoment', label: this.t('pipelinq', 'Contact moments') },
+				{
+					value: 'interaction',
+					label: this.t('pipelinq', 'Contact moments'),
+				},
 				{ value: 'task', label: this.t('pipelinq', 'Tasks') },
 				{ value: 'email', label: this.t('pipelinq', 'Email') },
 				{ value: 'calendar', label: this.t('pipelinq', 'Calendar') },
 			]
 		},
 	},
+
 	watch: {
 		entityId: 'reload',
 		entityType: 'reload',
 	},
+
 	mounted() {
 		this.reload()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-6
@@ -151,6 +179,7 @@ export default {
 			this.total = 0
 			this.fetchPage(1)
 		},
+
 		/**
 		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-7
@@ -162,6 +191,7 @@ export default {
 			this.activeFilter = value
 			this.reload()
 		},
+
 		/**
 		 * @param page
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-1
@@ -181,7 +211,10 @@ export default {
 				if (this.activeFilter !== 'all') {
 					params['types[]'] = this.activeFilter
 				}
-				const response = await axios.get(generateUrl('/apps/pipelinq/api/timeline'), { params })
+				const response = await axios.get(
+					generateUrl('/apps/pipelinq/api/timeline'),
+					{ params },
+				)
 				const data = response.data || {}
 				const items = Array.isArray(data.items) ? data.items : []
 				if (page === 1) {
@@ -198,6 +231,7 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-5
 		 */
@@ -206,12 +240,13 @@ export default {
 				this.fetchPage(this.page + 1)
 			}
 		},
+
 		/**
 		 * @param item
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-4
 		 */
 		iconFor(item) {
-			if (item.type === 'contactmoment') {
+			if (item.type === 'interaction') {
 				const channel = (item.metadata && item.metadata.channel) || ''
 				if (channel === 'phone') {
 					return Phone
@@ -235,20 +270,28 @@ export default {
 			}
 			return Message
 		},
+
 		/**
 		 * @param type
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-9
 		 */
 		typeLabel(type) {
 			switch (type) {
-			case 'contactmoment': return this.t('pipelinq', 'Contact moment')
-			case 'worklog': return this.t('pipelinq', 'Worklog')
-			case 'task': return this.t('pipelinq', 'Task')
-			case 'email': return this.t('pipelinq', 'Email')
-			case 'calendar': return this.t('pipelinq', 'Calendar')
-			default: return type
+				case 'interaction':
+					return this.t('pipelinq', 'Contact moment')
+				case 'worklog':
+					return this.t('pipelinq', 'Worklog')
+				case 'task':
+					return this.t('pipelinq', 'Task')
+				case 'email':
+					return this.t('pipelinq', 'Email')
+				case 'calendar':
+					return this.t('pipelinq', 'Calendar')
+				default:
+					return type
 			}
 		},
+
 		/**
 		 * @param text
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-8
@@ -258,6 +301,7 @@ export default {
 			const max = 120
 			return text.length > max ? text.substring(0, max) + '...' : text
 		},
+
 		/**
 		 * @param dateStr
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-3
@@ -279,7 +323,11 @@ export default {
 </script>
 
 <style scoped>
-.activity-timeline { display: flex; flex-direction: column; gap: 12px; }
+.activity-timeline {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
 
 .activity-timeline__filters {
 	display: flex;
@@ -288,7 +336,9 @@ export default {
 	padding-bottom: 6px;
 }
 
-.activity-timeline__filter-btn { font-size: 0.85em; }
+.activity-timeline__filter-btn {
+	font-size: 0.85em;
+}
 
 .activity-timeline__list {
 	display: flex;
@@ -308,15 +358,25 @@ export default {
 	background: var(--color-background-hover);
 }
 
-.activity-timeline__item--contactmoment { border-left-color: var(--color-primary-element); }
+.activity-timeline__item--contactmoment {
+	border-left-color: var(--color-primary-element);
+}
 
-.activity-timeline__item--task { border-left-color: var(--color-success); }
+.activity-timeline__item--task {
+	border-left-color: var(--color-success);
+}
 
-.activity-timeline__item--email { border-left-color: var(--color-warning); }
+.activity-timeline__item--email {
+	border-left-color: var(--color-warning);
+}
 
-.activity-timeline__item--calendar { border-left-color: var(--color-text-maxcontrast); }
+.activity-timeline__item--calendar {
+	border-left-color: var(--color-text-maxcontrast);
+}
 
-.activity-timeline__item--worklog { border-left-color: var(--color-info); }
+.activity-timeline__item--worklog {
+	border-left-color: var(--color-info);
+}
 
 .activity-timeline__icon {
 	width: 24px;
@@ -326,7 +386,10 @@ export default {
 	color: var(--color-text-lighter);
 }
 
-.activity-timeline__content { flex: 1; min-width: 0; }
+.activity-timeline__content {
+	flex: 1;
+	min-width: 0;
+}
 
 .activity-timeline__header {
 	display: flex;
@@ -361,7 +424,9 @@ export default {
 	margin-top: 4px;
 }
 
-.activity-timeline__type-label { font-weight: 600; }
+.activity-timeline__type-label {
+	font-weight: 600;
+}
 
 .activity-timeline__load-more {
 	display: flex;

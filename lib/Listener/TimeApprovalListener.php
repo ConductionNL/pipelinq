@@ -45,113 +45,110 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
  */
-class TimeApprovalListener implements IEventListener
-{
-    /**
-     * Constructor.
-     *
-     * @param ShillinqWipService $wipService The Shillinq WIP dispatch service.
-     * @param WipSyncNotifier    $notifier   The admin failure notifier.
-     * @param ContainerInterface $container  The DI container (OpenRegister ObjectService lookup).
-     * @param IAppConfig         $appConfig  The app configuration.
-     * @param LoggerInterface    $logger     The logger.
-     */
-    public function __construct(
-        private ShillinqWipService $wipService,
-        private WipSyncNotifier $notifier,
-        private ContainerInterface $container,
-        private IAppConfig $appConfig,
-        private LoggerInterface $logger,
-    ) {
-    }//end __construct()
+class TimeApprovalListener implements IEventListener {
+	/**
+	 * Constructor.
+	 *
+	 * @param ShillinqWipService $wipService The Shillinq WIP dispatch service.
+	 * @param WipSyncNotifier $notifier The admin failure notifier.
+	 * @param ContainerInterface $container The DI container (OpenRegister ObjectService lookup).
+	 * @param IAppConfig $appConfig The app configuration.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private ShillinqWipService $wipService,
+		private WipSyncNotifier $notifier,
+		private ContainerInterface $container,
+		private IAppConfig $appConfig,
+		private LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Handle a TimeEntryApprovedEvent.
-     *
-     * @param Event $event The dispatched event.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
-     */
-    public function handle(Event $event): void
-    {
-        if (($event instanceof TimeEntryApprovedEvent) === false) {
-            return;
-        }
+	/**
+	 * Handle a TimeEntryApprovedEvent.
+	 *
+	 * @param Event $event The dispatched event.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
+	 */
+	public function handle(Event $event): void {
+		if (($event instanceof TimeEntryApprovedEvent) === false) {
+			return;
+		}
 
-        if ($this->wipService->shouldDispatch() === false) {
-            // REQ-WIP-001 missing-webhook-URL scenario: no dispatch, no notification.
-            return;
-        }
+		if ($this->wipService->shouldDispatch() === false) {
+			// REQ-WIP-001 missing-webhook-URL scenario: no dispatch, no notification.
+			return;
+		}
 
-        $uuid = $event->getTimeEntryUuid();
-        $data = $event->getTimeEntry();
+		$uuid = $event->getTimeEntryUuid();
+		$data = $event->getTimeEntry();
 
-        // Idempotency: never re-dispatch an already-synced entry (REQ-WIP-001 idempotent scenario).
-        if (($data['wipSyncStatus'] ?? null) === 'synced') {
-            return;
-        }
+		// Idempotency: never re-dispatch an already-synced entry (REQ-WIP-001 idempotent scenario).
+		if (($data['wipSyncStatus'] ?? null) === 'synced') {
+			return;
+		}
 
-        // Mark pending and persist before the dispatch begins (REQ-WIP-002).
-        $data['wipSyncStatus'] = 'pending';
-        $this->persist(uuid: $uuid, data: $data);
+		// Mark pending and persist before the dispatch begins (REQ-WIP-002).
+		$data['wipSyncStatus'] = 'pending';
+		$this->persist(uuid: $uuid, data: $data);
 
-        $success = $this->wipService->dispatchWipEvent(
-            timeEntry: $data,
-            approvedBy: $event->getApprovedBy(),
-            approvedAt: $event->getApprovedAt()
-        );
+		$success = $this->wipService->dispatchWipEvent(
+			timeEntry: $data,
+			approvedBy: $event->getApprovedBy(),
+			approvedAt: $event->getApprovedAt()
+		);
 
-        if ($success === true) {
-            $data['wipSyncStatus'] = 'synced';
-            $data['wipSyncedAt']   = $this->wipService->now();
-            $this->persist(uuid: $uuid, data: $data);
-            return;
-        }
+		if ($success === true) {
+			$data['wipSyncStatus'] = 'synced';
+			$data['wipSyncedAt'] = $this->wipService->now();
+			$this->persist(uuid: $uuid, data: $data);
+			return;
+		}
 
-        // Dispatch failed after retries (REQ-WIP-003): mark failed and notify admins.
-        $data['wipSyncStatus'] = 'failed';
-        $this->persist(uuid: $uuid, data: $data);
-        $this->notifier->notifyFailure(
-            title: (string) ($data['title'] ?? ''),
-            uuid: $uuid
-        );
-    }//end handle()
+		// Dispatch failed after retries (REQ-WIP-003): mark failed and notify admins.
+		$data['wipSyncStatus'] = 'failed';
+		$this->persist(uuid: $uuid, data: $data);
+		$this->notifier->notifyFailure(
+			title: (string)($data['title'] ?? ''),
+			uuid: $uuid
+		);
+	}//end handle()
 
-    /**
-     * Persist the mutated time entry data back to OpenRegister.
-     *
-     * No-op when the timeEntry register/schema config keys are unset so the
-     * listener is safe to install before the schema is bound.
-     *
-     * @param string               $uuid The time entry UUID.
-     * @param array<string, mixed> $data The mutated time entry data.
-     *
-     * @return void
-     */
-    private function persist(string $uuid, array $data): void
-    {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'timeEntry_schema', '');
-        if ($register === '' || $schema === '' || $uuid === '') {
-            return;
-        }
+	/**
+	 * Persist the mutated time entry data back to OpenRegister.
+	 *
+	 * No-op when the timeEntry register/schema config keys are unset so the
+	 * listener is safe to install before the schema is bound.
+	 *
+	 * @param string $uuid The time entry UUID.
+	 * @param array<string, mixed> $data The mutated time entry data.
+	 *
+	 * @return void
+	 */
+	private function persist(string $uuid, array $data): void {
+		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$schema = $this->appConfig->getValueString(Application::APP_ID, 'timeEntry_schema', '');
+		if ($register === '' || $schema === '' || $uuid === '') {
+			return;
+		}
 
-        try {
-            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $objectService->saveObject(
-                object: $data,
-                extend: [],
-                register: $register,
-                schema: $schema,
-                uuid: $uuid
-            );
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'Pipelinq: failed to persist time entry WIP sync status',
-                ['exception' => $e->getMessage(), 'uuid' => $uuid]
-            );
-        }//end try
-    }//end persist()
+		try {
+			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			$objectService->saveObject(
+				object: $data,
+				extend: [],
+				register: $register,
+				schema: $schema,
+				uuid: $uuid
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: failed to persist time entry WIP sync status',
+				['exception' => $e->getMessage(), 'uuid' => $uuid]
+			);
+		}//end try
+	}//end persist()
 }//end class

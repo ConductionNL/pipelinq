@@ -77,19 +77,26 @@ const content = (page: Page) => page.locator('#content-vue')
  * @param page The Playwright page.
  */
 const indexTitle = (page: Page) =>
-	content(page).locator('[data-testid="cn-index-page"] [data-testid="cn-page-title"]').first()
+	content(page)
+		.locator('[data-testid="cn-index-page"] [data-testid="cn-page-title"]')
+		.first()
 
 // ── src/views/export/ExportDestinations.vue — route `/export/destinations` ────
-test('ExportDestinations: /export/destinations mounts src/views/export/ExportDestinations.vue', async ({ page }) => {
+test('ExportDestinations: /export/destinations mounts src/views/export/ExportDestinations.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, '/export/destinations')
 
-	await expect(content(page).locator('[data-testid="cn-index-page"]').first())
-		.toBeVisible({ timeout: 15000 })
+	await expect(
+		content(page).locator('[data-testid="cn-index-page"]').first(),
+	).toBeVisible({ timeout: 15000 })
 	await expect(indexTitle(page)).toHaveText('Export destinations')
 })
 
 // ── src/views/export/ExportDestinationForm.vue — `/export/destinations/new` ───
-test('ExportDestinationForm: /export/destinations/new mounts src/views/export/ExportDestinationForm.vue', async ({ page }) => {
+test('ExportDestinationForm: /export/destinations/new mounts src/views/export/ExportDestinationForm.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, '/export/destinations/new')
 
 	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
@@ -114,29 +121,40 @@ test('ExportDestinationForm: /export/destinations/new mounts src/views/export/Ex
 	// truth for this string, and the component's own 'New destination' /
 	// 'Edit destination' literals are dead strings that never reach a screen —
 	// reported, not worked around.
-	await expect(detail.locator('.cn-detail-page__title')).toHaveText('New export destination')
+	await expect(detail.locator('.cn-detail-page__title')).toHaveText(
+		'New export destination',
+	)
 })
 
 // ── src/views/export/ExportJobForm.vue — route `/export/jobs/new` ─────────────
-test('ExportJobForm: /export/jobs/new mounts src/views/export/ExportJobForm.vue', async ({ page }) => {
+test('ExportJobForm: /export/jobs/new mounts src/views/export/ExportJobForm.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, '/export/jobs/new')
 
 	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
 	await expect(detail).toBeVisible({ timeout: 15000 })
-	await expect(detail.locator('.cn-detail-page__title')).toHaveText('New export job')
+	await expect(detail.locator('.cn-detail-page__title')).toHaveText(
+		'New export job',
+	)
 })
 
 // ── src/views/export/ExportRuns.vue — route `/export/runs` ────────────────────
-test('ExportRuns: /export/runs mounts src/views/export/ExportRuns.vue', async ({ page }) => {
+test('ExportRuns: /export/runs mounts src/views/export/ExportRuns.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, '/export/runs')
 
-	await expect(content(page).locator('[data-testid="cn-index-page"]').first())
-		.toBeVisible({ timeout: 15000 })
+	await expect(
+		content(page).locator('[data-testid="cn-index-page"]').first(),
+	).toBeVisible({ timeout: 15000 })
 	await expect(indexTitle(page)).toHaveText('Export runs')
 })
 
 // ── src/views/export/ExportRunDetail.vue — route `/export/runs/:id` ───────────
-test('ExportRunDetail: /export/runs/:id mounts src/views/export/ExportRunDetail.vue', async ({ page }) => {
+test('ExportRunDetail: /export/runs/:id mounts src/views/export/ExportRunDetail.vue', async ({
+	page,
+}) => {
 	await openSpaRoute(page, `/export/runs/${ABSENT_RUN_ID}`)
 
 	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
@@ -160,8 +178,10 @@ test('ExportRunDetail: /export/runs/:id mounts src/views/export/ExportRunDetail.
 	// Pinned instead on the two CnDetailCards this component always renders —
 	// both read verbatim out of the failing run's own ARIA snapshot, so they are
 	// observed rather than guessed, and both are unique to this page.
-	await expect(detail.getByRole('heading', { name: 'Summary', level: 3 }))
-		.toBeVisible({ timeout: 15000 })
-	await expect(detail.getByRole('heading', { name: 'File manifest', level: 3 }))
-		.toBeVisible()
+	await expect(
+		detail.getByRole('heading', { name: 'Summary', level: 3 }),
+	).toBeVisible({ timeout: 15000 })
+	await expect(
+		detail.getByRole('heading', { name: 'File manifest', level: 3 }),
+	).toBeVisible()
 })

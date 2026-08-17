@@ -26,21 +26,36 @@
  * the kind of green that says nothing.
  */
 import { test, expect } from '@playwright/test'
-import { openApp, navClick, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
+import {
+	openApp,
+	navClick,
+	trackPipelinqErrors,
+	assertNoHardError,
+} from '../helpers/pipelinq'
 
 /** EAN-13 carried by the seeded "[Demo] Koffie zwart" product. */
 const SEEDED_BARCODE = '8714100000017'
 
 // @e2e openspec/specs/pos-barcode-scan/spec.md#barcode-lookup-page
-test('Barcode lookup: the Products index is the barcode surface and declares the column', async ({ page }) => {
+test('Barcode lookup: the Products index is the barcode surface and declares the column', async ({
+	page,
+}) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
 	await navClick(page, 'Products', /\/products/)
 
-	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Products' }).first()).toBeVisible()
+	await expect(
+		page
+			.locator('#content-vue')
+			.getByRole('heading', { name: 'Products' })
+			.first(),
+	).toBeVisible()
 	// `barcode` is the second declared column on the Products index.
 	await expect(
-		page.locator('#content-vue').getByRole('columnheader', { name: /barcode/i }).first(),
+		page
+			.locator('#content-vue')
+			.getByRole('columnheader', { name: /barcode/i })
+			.first(),
 	).toBeVisible({ timeout: 15000 })
 
 	await assertNoHardError(page)
@@ -48,14 +63,19 @@ test('Barcode lookup: the Products index is the barcode surface and declares the
 })
 
 // @e2e openspec/specs/pos-barcode-scan/spec.md#barcode-lookup-input
-test('Barcode lookup: a seeded product shows its EAN on the row', async ({ page }) => {
+test('Barcode lookup: a seeded product shows its EAN on the row', async ({
+	page,
+}) => {
 	await openApp(page)
 	await navClick(page, 'Products', /\/products/)
 
 	// The whole point of promoting barcode to a column: the value is READABLE on
 	// the row, not merely a key you can search by. A missing/blank barcode cell
 	// fails here even though the table itself renders.
-	await expect(page.locator('#content-vue table tbody')).toContainText(SEEDED_BARCODE, { timeout: 15000 })
+	await expect(page.locator('#content-vue table tbody')).toContainText(
+		SEEDED_BARCODE,
+		{ timeout: 15000 },
+	)
 })
 
 /*

@@ -20,20 +20,20 @@
         "description": "Tracks the per-gemeente ZGW deployment configuration: the six component base URLs (ZRC, DRC, BRC, ZTC, AC, NRC), the bound ZgwClient credential reference, the actief/readOnly write toggles, and the optional mTLS material. Currently addressed only by the inbound status path (NrcNotificationListener via ZrcClient::getStatus) and NrcSubscriptionService; the ZGW write bridge (zaak/document/besluit creation) is not wired in this app — ZGW writes are routed via the openconnector ZGW connector instead. One endpoint per gemeente (gemeenteCode is the natural key). Mapped to Schema.org SoftwareApplication for register tooling.",
         "x-schema-org": "schema:SoftwareApplication",
         "required": [
-          "naam",
-          "gemeenteCode",
+          "name",
+          "municipalityCode",
           "componenten",
           "clientId"
         ],
         "properties": {
-          "naam": {
+          "name": {
             "type": "string",
             "description": "Display name (e.g. 'Gemeente Zoetermeer - Open Zaak (Dimpact)')",
             "maxLength": 200,
             "facetable": true,
             "title": "Naam"
           },
-          "gemeenteCode": {
+          "municipalityCode": {
             "type": "string",
             "description": "4-digit CBS gemeente code (e.g. '0637' for Zoetermeer)",
             "maxLength": 8,
@@ -116,7 +116,7 @@
             "maxLength": 256,
             "title": "Mutual Tls Key"
           },
-          "aangemaakt": {
+          "created": {
             "type": "string",
             "format": "date-time",
             "description": "ISO 8601 creation timestamp",
@@ -134,7 +134,7 @@
         "x-schema-org": "schema:CreativeWork",
         "required": [
           "clientIdentifier",
-          "secretKluisRef",
+          "secretVaultRef",
           "userId",
           "userRepresentation"
         ],
@@ -146,7 +146,7 @@
             "facetable": true,
             "title": "Client Identifier"
           },
-          "secretKluisRef": {
+          "secretVaultRef": {
             "type": "string",
             "description": "Vault reference (e.g. 'vault://zgw/zoetermeer/client-secret') to the HS256 client secret",
             "maxLength": 256,
@@ -164,7 +164,7 @@
             "maxLength": 256,
             "title": "User Representation"
           },
-          "tokenLevensduurSeconden": {
+          "tokenLifespanSeconds": {
             "type": "integer",
             "description": "JWT lifetime in seconds (default 3600)",
             "default": 3600,
@@ -172,7 +172,7 @@
             "maximum": 86400,
             "title": "Token Levensduur Seconden"
           },
-          "aangemaakt": {
+          "created": {
             "type": "string",
             "format": "date-time",
             "description": "ISO 8601 creation timestamp",
@@ -229,7 +229,7 @@
             "items": {
               "type": "object",
               "properties": {
-                "naam": {
+                "name": {
                   "type": "string",
                   "description": "Kanaal name (e.g. zaken, besluiten, catalogi)",
                   "title": "Naam"
@@ -243,7 +243,7 @@
             },
             "title": "Kanalen"
           },
-          "laatstOntvangenOp": {
+          "latestReceivedOn": {
             "type": "string",
             "format": "date-time",
             "description": "ISO 8601 timestamp of the last successfully processed NRC notification",
@@ -267,14 +267,14 @@
         "description": "ZGW uses absolute URLs as the canonical identifier for zaken, besluiten, rollen and informatieobjecten. This mapping persists the URL + UUID + most-recent ETag per resource so inbound NRC notifications (which reference resources by URL) can be correlated back to the originating pipelinq entity, and so PATCH operations can include If-Match for optimistic concurrency. Multiple mappings per Request are expected during ZGW <-> StUF coexistence migration. Mapped to Schema.org Thing as a pure relation row.",
         "x-schema-org": "schema:Thing",
         "required": [
-          "pipelinqEntiteit",
+          "pipelinqEntity",
           "pipelinqId",
           "zgwResourceType",
           "zgwUrl",
           "endpointId"
         ],
         "properties": {
-          "pipelinqEntiteit": {
+          "pipelinqEntity": {
             "type": "string",
             "enum": [
               "request",
@@ -325,7 +325,7 @@
             "facetable": true,
             "title": "Endpoint ID"
           },
-          "laatsteSynchronisatie": {
+          "lastSynchronisation": {
             "type": "string",
             "format": "date-time",
             "description": "ISO 8601 timestamp of last successful read from ZGW",
@@ -362,8 +362,8 @@
           "slug": "zgw-ep-zoetermeer-openzaak",
           "id": "d1a0e0c0-zgw0-4001-a001-000000000001"
         },
-        "naam": "Gemeente Zoetermeer - Open Zaak (Dimpact)",
-        "gemeenteCode": "0637",
+        "name": "Gemeente Zoetermeer - Open Zaak (Dimpact)",
+        "municipalityCode": "0637",
         "componenten": {
           "zrc": "https://open-zaak.zoetermeer.nl/zaken/api/v1",
           "drc": "https://open-zaak.zoetermeer.nl/documenten/api/v1",
@@ -375,7 +375,7 @@
         "clientId": "zgw-client-zoetermeer",
         "actief": true,
         "readOnly": false,
-        "aangemaakt": "2026-04-12T09:14:00+02:00"
+        "created": "2026-04-12T09:14:00+02:00"
       },
       {
         "@self": {
@@ -384,8 +384,8 @@
           "slug": "zgw-ep-amsterdam-openzaak",
           "id": "d1a0e0c0-zgw0-4001-a001-000000000002"
         },
-        "naam": "Gemeente Amsterdam - Open Zaak",
-        "gemeenteCode": "0363",
+        "name": "Gemeente Amsterdam - Open Zaak",
+        "municipalityCode": "0363",
         "componenten": {
           "zrc": "https://open-zaak.amsterdam.nl/zaken/api/v1",
           "drc": "https://open-zaak.amsterdam.nl/documenten/api/v1",
@@ -397,7 +397,7 @@
         "clientId": "zgw-client-amsterdam",
         "actief": true,
         "readOnly": false,
-        "aangemaakt": "2026-03-04T08:00:00+01:00"
+        "created": "2026-03-04T08:00:00+01:00"
       },
       {
         "@self": {
@@ -406,8 +406,8 @@
           "slug": "zgw-ep-utrecht-rxmission",
           "id": "d1a0e0c0-zgw0-4001-a001-000000000003"
         },
-        "naam": "Gemeente Utrecht - RxMission ZGW",
-        "gemeenteCode": "0344",
+        "name": "Gemeente Utrecht - RxMission ZGW",
+        "municipalityCode": "0344",
         "componenten": {
           "zrc": "https://rxmission.utrecht.nl/zrc/api/v1",
           "drc": "https://rxmission.utrecht.nl/drc/api/v1",
@@ -421,7 +421,7 @@
         "readOnly": true,
         "mutualTlsCert": "vault://zgw/utrecht/client-cert",
         "mutualTlsKey": "vault://zgw/utrecht/client-key",
-        "aangemaakt": "2026-04-29T11:45:00+02:00"
+        "created": "2026-04-29T11:45:00+02:00"
       },
       {
         "@self": {
@@ -431,11 +431,11 @@
           "id": "d1a0e0c0-zgw1-4001-a001-000000000001"
         },
         "clientIdentifier": "pipelinq-zoetermeer",
-        "secretKluisRef": "vault://zgw/zoetermeer/client-secret",
+        "secretVaultRef": "vault://zgw/zoetermeer/client-secret",
         "userId": "pipelinq",
         "userRepresentation": "Pipelinq backend (Conduction)",
-        "tokenLevensduurSeconden": 3600,
-        "aangemaakt": "2026-04-12T09:14:00+02:00"
+        "tokenLifespanSeconds": 3600,
+        "created": "2026-04-12T09:14:00+02:00"
       },
       {
         "@self": {
@@ -445,11 +445,11 @@
           "id": "d1a0e0c0-zgw1-4001-a001-000000000002"
         },
         "clientIdentifier": "pipelinq-amsterdam",
-        "secretKluisRef": "vault://zgw/amsterdam/client-secret",
+        "secretVaultRef": "vault://zgw/amsterdam/client-secret",
         "userId": "pipelinq",
         "userRepresentation": "Pipelinq backend (Conduction)",
-        "tokenLevensduurSeconden": 3600,
-        "aangemaakt": "2026-03-04T08:00:00+01:00"
+        "tokenLifespanSeconds": 3600,
+        "created": "2026-03-04T08:00:00+01:00"
       },
       {
         "@self": {
@@ -459,11 +459,11 @@
           "id": "d1a0e0c0-zgw1-4001-a001-000000000003"
         },
         "clientIdentifier": "pipelinq-utrecht",
-        "secretKluisRef": "vault://zgw/utrecht/client-secret",
+        "secretVaultRef": "vault://zgw/utrecht/client-secret",
         "userId": "pipelinq",
         "userRepresentation": "Pipelinq backend (Conduction)",
-        "tokenLevensduurSeconden": 1800,
-        "aangemaakt": "2026-04-29T11:45:00+02:00"
+        "tokenLifespanSeconds": 1800,
+        "created": "2026-04-29T11:45:00+02:00"
       },
       {
         "@self": {
@@ -478,19 +478,19 @@
         "callbackAuth": "vault://zgw/zoetermeer/nrc-callback-bearer",
         "kanalen": [
           {
-            "naam": "zaken",
+            "name": "zaken",
             "filters": {
               "bronorganisatie": "002564440"
             }
           },
           {
-            "naam": "besluiten"
+            "name": "besluiten"
           },
           {
-            "naam": "catalogi"
+            "name": "catalogi"
           }
         ],
-        "laatstOntvangenOp": "2026-05-21T08:44:13+02:00",
+        "latestReceivedOn": "2026-05-21T08:44:13+02:00",
         "actief": true
       },
       {
@@ -506,16 +506,16 @@
         "callbackAuth": "vault://zgw/amsterdam/nrc-callback-bearer",
         "kanalen": [
           {
-            "naam": "zaken",
+            "name": "zaken",
             "filters": {
               "bronorganisatie": "002220647"
             }
           },
           {
-            "naam": "besluiten"
+            "name": "besluiten"
           }
         ],
-        "laatstOntvangenOp": "2026-06-04T14:08:12+02:00",
+        "latestReceivedOn": "2026-06-04T14:08:12+02:00",
         "actief": true
       },
       {
@@ -531,7 +531,7 @@
         "callbackAuth": "vault://zgw/utrecht/nrc-callback-bearer",
         "kanalen": [
           {
-            "naam": "catalogi"
+            "name": "catalogi"
           }
         ],
         "actief": false
@@ -543,13 +543,13 @@
           "slug": "map-evenement-tour-zoetermeer",
           "id": "d1a0e0c0-zgw3-4001-a001-000000000001"
         },
-        "pipelinqEntiteit": "request",
+        "pipelinqEntity": "request",
         "pipelinqId": "req-2026-evenement-zoetermeer-0456",
         "zgwResourceType": "zaak",
         "zgwUrl": "https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/3f9a4f1e-1a0d-4d10-9b22-c1ef0b8fbb2a",
         "zgwUuid": "3f9a4f1e-1a0d-4d10-9b22-c1ef0b8fbb2a",
         "endpointId": "zgw-ep-zoetermeer-openzaak",
-        "laatsteSynchronisatie": "2026-05-21T08:44:13+02:00",
+        "lastSynchronisation": "2026-05-21T08:44:13+02:00",
         "etag": "W/\"a1b2c3\""
       },
       {
@@ -559,13 +559,13 @@
           "slug": "map-evenement-stadshart-run",
           "id": "d1a0e0c0-zgw3-4001-a001-000000000002"
         },
-        "pipelinqEntiteit": "request",
+        "pipelinqEntity": "request",
         "pipelinqId": "req-2026-stadshart-run-0457",
         "zgwResourceType": "zaak",
         "zgwUrl": "https://open-zaak.zoetermeer.nl/zaken/api/v1/zaken/8e0c2a44-7d4b-4d10-9b22-1234567890ab",
         "zgwUuid": "8e0c2a44-7d4b-4d10-9b22-1234567890ab",
         "endpointId": "zgw-ep-zoetermeer-openzaak",
-        "laatsteSynchronisatie": "2026-05-25T10:22:00+02:00",
+        "lastSynchronisation": "2026-05-25T10:22:00+02:00",
         "etag": "W/\"b7d2e1\""
       },
       {
@@ -575,13 +575,13 @@
           "slug": "map-besluit-stadshart-run",
           "id": "d1a0e0c0-zgw3-4001-a001-000000000003"
         },
-        "pipelinqEntiteit": "request",
+        "pipelinqEntity": "request",
         "pipelinqId": "req-2026-stadshart-run-0457",
         "zgwResourceType": "besluit",
         "zgwUrl": "https://open-zaak.zoetermeer.nl/besluiten/api/v1/besluiten/c93d2a11-eeee-4d10-9b22-1234567890aa",
         "zgwUuid": "c93d2a11-eeee-4d10-9b22-1234567890aa",
         "endpointId": "zgw-ep-zoetermeer-openzaak",
-        "laatsteSynchronisatie": "2026-06-15T15:00:00+02:00",
+        "lastSynchronisation": "2026-06-15T15:00:00+02:00",
         "etag": "W/\"c1e2f3\""
       },
       {
@@ -591,13 +591,13 @@
           "slug": "map-rol-initiator-stadshart",
           "id": "d1a0e0c0-zgw3-4001-a001-000000000004"
         },
-        "pipelinqEntiteit": "contact",
+        "pipelinqEntity": "contact",
         "pipelinqId": "contact-jeroen-van-der-velde",
         "zgwResourceType": "rol",
         "zgwUrl": "https://open-zaak.zoetermeer.nl/zaken/api/v1/rollen/77ee44aa-1234-4d10-9b22-aabbccddeeff",
         "zgwUuid": "77ee44aa-1234-4d10-9b22-aabbccddeeff",
         "endpointId": "zgw-ep-zoetermeer-openzaak",
-        "laatsteSynchronisatie": "2026-05-21T08:50:00+02:00"
+        "lastSynchronisation": "2026-05-21T08:50:00+02:00"
       },
       {
         "@self": {
@@ -606,13 +606,13 @@
           "slug": "map-eio-aanvraagformulier-stadshart",
           "id": "d1a0e0c0-zgw3-4001-a001-000000000005"
         },
-        "pipelinqEntiteit": "document",
+        "pipelinqEntity": "document",
         "pipelinqId": "doc-aanvraagformulier-stadshart-pdf",
         "zgwResourceType": "informatieobject",
         "zgwUrl": "https://open-zaak.zoetermeer.nl/documenten/api/v1/enkelvoudiginformatieobjecten/55dd33ee-9876-4d10-9b22-fedcba987654",
         "zgwUuid": "55dd33ee-9876-4d10-9b22-fedcba987654",
         "endpointId": "zgw-ep-zoetermeer-openzaak",
-        "laatsteSynchronisatie": "2026-05-21T08:55:00+02:00",
+        "lastSynchronisation": "2026-05-21T08:55:00+02:00",
         "etag": "W/\"e9a1d0\""
       },
       {
@@ -622,13 +622,13 @@
           "slug": "map-amsterdam-omgevingsvergunning",
           "id": "d1a0e0c0-zgw3-4001-a001-000000000006"
         },
-        "pipelinqEntiteit": "request",
+        "pipelinqEntity": "request",
         "pipelinqId": "req-2026-omgeving-amsterdam-0322",
         "zgwResourceType": "zaak",
         "zgwUrl": "https://open-zaak.amsterdam.nl/zaken/api/v1/zaken/22aa33bb-5544-4d10-9b22-aabbccddffee",
         "zgwUuid": "22aa33bb-5544-4d10-9b22-aabbccddffee",
         "endpointId": "zgw-ep-amsterdam-openzaak",
-        "laatsteSynchronisatie": "2026-06-04T14:08:12+02:00",
+        "lastSynchronisation": "2026-06-04T14:08:12+02:00",
         "etag": "W/\"f3a8b1\""
       },
       {
@@ -638,13 +638,13 @@
           "slug": "map-amsterdam-besluit-omgeving",
           "id": "d1a0e0c0-zgw3-4001-a001-000000000007"
         },
-        "pipelinqEntiteit": "request",
+        "pipelinqEntity": "request",
         "pipelinqId": "req-2026-omgeving-amsterdam-0322",
         "zgwResourceType": "besluit",
         "zgwUrl": "https://open-zaak.amsterdam.nl/besluiten/api/v1/besluiten/87fe66cc-1100-4d10-9b22-bbccddeeff00",
         "zgwUuid": "87fe66cc-1100-4d10-9b22-bbccddeeff00",
         "endpointId": "zgw-ep-amsterdam-openzaak",
-        "laatsteSynchronisatie": "2026-06-04T14:09:30+02:00",
+        "lastSynchronisation": "2026-06-04T14:09:30+02:00",
         "etag": "W/\"a2c4e6\""
       },
       {
@@ -654,13 +654,13 @@
           "slug": "map-utrecht-vergunning-historic",
           "id": "d1a0e0c0-zgw3-4001-a001-000000000008"
         },
-        "pipelinqEntiteit": "request",
+        "pipelinqEntity": "request",
         "pipelinqId": "req-2025-utrecht-vergunning-0118",
         "zgwResourceType": "zaak",
         "zgwUrl": "https://rxmission.utrecht.nl/zrc/api/v1/zaken/11bb22cc-3344-4d10-9b22-ccddeeff1122",
         "zgwUuid": "11bb22cc-3344-4d10-9b22-ccddeeff1122",
         "endpointId": "zgw-ep-utrecht-rxmission",
-        "laatsteSynchronisatie": "2025-12-01T09:00:00+01:00"
+        "lastSynchronisation": "2025-12-01T09:00:00+01:00"
       }
     ]
   }

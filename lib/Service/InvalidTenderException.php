@@ -46,26 +46,26 @@ use Exception;
  *
  * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-002
  */
-class InvalidTenderException extends Exception
-{
-    /**
-     * Constructor.
-     *
-     * @param string $message    The user-facing safe message.
-     * @param int    $statusCode The HTTP status the controller should map to (400 or 409).
-     */
-    public function __construct(string $message, private int $statusCode=400)
-    {
-        parent::__construct(message: $message);
-    }//end __construct()
+class InvalidTenderException extends Exception {
+	/**
+	 * Constructor.
+	 *
+	 * @param string $message The user-facing safe message.
+	 * @param int $statusCode The HTTP status the controller should map to (400 or 409).
+	 */
+	public function __construct(
+		string $message,
+		private int $statusCode = 400,
+	) {
+		parent::__construct(message: $message);
+	}//end __construct()
 
-    /**
-     * The HTTP status code the controller should map to.
-     *
-     * @return int The status code.
-     */
-    public function getStatusCode(): int
-    {
-        return $this->statusCode;
-    }//end getStatusCode()
+	/**
+	 * The HTTP status code the controller should map to.
+	 *
+	 * @return int The status code.
+	 */
+	public function getStatusCode(): int {
+		return $this->statusCode;
+	}//end getStatusCode()
 }//end class
