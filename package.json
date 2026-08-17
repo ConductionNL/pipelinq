@@ -65,7 +65,7 @@
     "@nextcloud/eslint-config": "^9.0.1",
     "@nextcloud/prettier-config": "^1.2.0",
     "@nextcloud/stylelint-config": "^2.4.0",
-    "@nextcloud/webpack-vue-config": "^7.0.2",
+    "@nextcloud/webpack-vue-config": "^7.0.4",
     "@playwright/test": "^1.49.0",
     "@typescript-eslint/parser": "^8.67.0",
     "@vue/compiler-sfc": "^3.5.13",
