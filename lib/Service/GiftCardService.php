@@ -48,6 +48,7 @@ class GiftCardService {
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-084).
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -94,7 +95,7 @@ class GiftCardService {
 			'pin' => $hash,
 			'initialBalance' => $initialBalance,
 			'currentBalance' => $initialBalance,
-			'valuta' => 'EUR',
+			'currency' => 'EUR',
 			'status' => 'issued',
 			'issuedOn' => $now,
 			'issuedIn' => $issuedIn,

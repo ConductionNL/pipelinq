@@ -62,14 +62,14 @@ For a subject with `audience = 'client'`, `getContribution()` MUST return a mani
 
 ### Requirement: Customer Audience Contribution
 
-For a subject with `audience = 'customer'`, `getContribution()` MUST return a manifest whose collections expose exactly `avgVerzoek` (scopeField `verzoekerContact`, `scopeClaim: "contactId"`, `minTrust: "substantial"`) and `klantLoyaltyAccount` (scopeField `klantId`, `scopeClaim: "customerUid"`) from the `pipelinq` register, and whose actions whitelist exactly one `create` action: `avgVerzoek` (DSAR intake) with fields `artikel`, `specifiekeVraag`, `scope`. Lifecycle, handler, deadline and verification properties MUST stay server-side.
+For a subject with `audience = 'customer'`, `getContribution()` MUST return a manifest whose collections expose exactly `avgVerzoek` (scopeField `verzoekerContact`, `scopeClaim: "contactId"`, `minTrust: "substantial"`) and `customerLoyaltyAccount` (scopeField `customerId`, `scopeClaim: "customerUid"`) from the `pipelinq` register, and whose actions whitelist exactly one `create` action: `avgVerzoek` (DSAR intake) with fields `artikel`, `specifiekeVraag`, `scope`. Lifecycle, handler, deadline and verification properties MUST stay server-side.
 
 #### Scenario: Customer sees own DSAR and loyalty surfaces
 
 - **GIVEN** a resolved subject with `audience = 'customer'`
 - **WHEN** `getContribution($subject)` is called
 - **THEN** the manifest MUST contain an `avgVerzoek` collection scoped by `verzoekerContact` via claim `contactId` with `minTrust` `substantial`
-- **AND** a `klantLoyaltyAccount` collection scoped by `klantId` via claim `customerUid`
+- **AND** a `customerLoyaltyAccount` collection scoped by `customerId` via claim `customerUid`
 - **AND** it MUST NOT contain `booking` (staff-only `internalNotes` — see the change design.md) or any `berichtenboxMessage` inbox (BSN-scoped, not a contact/customer UUID ref)
 - `@e2e exclude` portal rendering happens in portaliq, not pipelinq CI; manifest shape pinned by PHPUnit
 

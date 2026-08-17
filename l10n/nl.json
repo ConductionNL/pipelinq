@@ -2641,7 +2641,7 @@
         "Create loyalty account": "Loyaliteitsaccount aanmaken",
         "Credentials live on the OpenConnector source above, not on this provider row. Configure the vendor API key/secret on that source.": "Inloggegevens staan op de OpenConnector-bron hierboven, niet op deze aanbiedersregel. Configureer de API-sleutel/het geheim van de leverancier op die bron.",
         "Creditcard": "Creditcard",
-        "Customer (klantId / contact UID)": "Klant (klantId / contact-UID)",
+        "Customer (customerId / contact UID)": "Klant (customerId / contact-UID)",
         "Customer-facing notes": "Notities zichtbaar voor klant",
         "Date / time": "Datum / tijd",
         "Default country code (ISO-3166)": "Standaard landcode (ISO-3166)",

@@ -17,7 +17,7 @@
 		<form @submit.prevent="enroll">
 			<NcTextField
 				v-model="customerId"
-				:label="t('pipelinq', 'Customer (klantId / contact UID)')"
+				:label="t('pipelinq', 'Customer (customerId / contact UID)')"
 				required />
 
 			<NcSelect
@@ -151,6 +151,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 */
 		async enroll() {
 			if (!this.canSubmit) {
 				return
@@ -172,7 +175,7 @@ export default {
 				}
 				const response = await axios.post(
 					generateUrl(
-						'/apps/openregister/api/objects/pipelinq/klantLoyaltyAccount',
+						'/apps/openregister/api/objects/pipelinq/customerLoyaltyAccount',
 					),
 					payload,
 				)

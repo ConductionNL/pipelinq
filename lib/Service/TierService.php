@@ -3,7 +3,7 @@
 /**
  * Pipelinq TierService.
  *
- * Owns automatic tier classification for a KlantLoyaltyAccount: walks TierRule
+ * Owns automatic tier classification for a CustomerLoyaltyAccount: walks TierRule
  * thresholds (lifetimePoints / rollingPoints12m / jaarlijkseSpend), picks the
  * matching tier, applies upgrade/downgrade policies (immediate vs end_of_year),
  * and emits a tier-changed CloudEvent payload via NotificationService.
@@ -52,6 +52,7 @@ class TierService {
 	 * @param LoyaltyAccountService $accountService The loyalty account service.
 	 * @param IEventDispatcher $eventDispatcher The event dispatcher.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-084).
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

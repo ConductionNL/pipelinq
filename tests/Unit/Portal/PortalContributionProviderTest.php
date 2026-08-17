@@ -280,7 +280,7 @@ final class PortalContributionProviderTest extends TestCase {
 
 		$loyalty = $collections['customerLoyalty'];
 		$this->assertSame('pipelinq', $loyalty['register']);
-		$this->assertSame('klantLoyaltyAccount', $loyalty['schema']);
+		$this->assertSame('customerLoyaltyAccount', $loyalty['schema']);
 		$this->assertSame('customerId', $loyalty['scopeField']);
 		$this->assertSame('customerUid', $loyalty['scopeClaim'], 'Loyalty scopes by the NC contact UID claim — a different identifier space than contactId');
 		$this->assertTrue($loyalty['listable']);

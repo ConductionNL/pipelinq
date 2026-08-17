@@ -105,7 +105,7 @@ class SettingsLoadService {
 		'loyaltyProgramme',
 		'pointsRule',
 		'tierRule',
-		'klantLoyaltyAccount',
+		'customerLoyaltyAccount',
 		'pointsLedgerEntry',
 		'redemptionOption',
 		'redemption',
@@ -175,6 +175,7 @@ class SettingsLoadService {
 	 * @param IAppManager $appManager The app manager.
 	 * @param SettingsMapBuilder $mapBuilder The map builder.
 	 * @param ConfigFileLoaderService $fileLoader The file loader.
+	 * @param ConfigurationService $configurationService OpenRegister's configuration importer.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -273,29 +274,52 @@ class SettingsLoadService {
 	}//end applyRegisterConfig()
 
 	/**
-	 * Store the imported schema ids (including the SLA schema-key overrides
-	 * and the generic `<slug>_schema` set) in app config.
+	 * App-config keys that are pinned instead of derived from the schema slug.
+	 *
+	 * `applySchemaConfig()` otherwise derives the key as `<slug>_schema`, which
+	 * couples a PERSISTED app-config key to the slug: rename the slug and the
+	 * writer silently emits a new key while every reader keeps looking at the old
+	 * one, with no migration in between. The app then reads an empty schema id and
+	 * refuses its own OpenRegister calls — an outage that no linter and no unit
+	 * test can see, because both halves are individually correct.
+	 *
+	 * A slug whose app-config key must NOT follow it is pinned here:
+	 *
+	 * - `slaPolicy` / `slaBreachEvent` — the engine has always read the snake_case
+	 *   `sla_policy_schema` / `sla_breach_event_schema` keys.
+	 * - `customerLoyaltyAccount` — the slug moved from `klantLoyaltyAccount` in the
+	 *   English-vocabulary pass, but `klantLoyaltyAccount_schema` is live persisted
+	 *   state on existing installs. Pinning it here is what makes "the key stays
+	 *   until a migration ships" TRUE: intent alone does not hold a derived key
+	 *   still, because the key is computed from the very slug that moved.
+	 *
+	 * @var array<string, string>
+	 */
+	private const SCHEMA_CONFIG_KEYS = [
+		'slaPolicy' => 'sla_policy_schema',
+		'slaBreachEvent' => 'sla_breach_event_schema',
+		'customerLoyaltyAccount' => 'klantLoyaltyAccount_schema',
+	];
+
+	/**
+	 * Store the imported schema ids in app config.
+	 *
+	 * Keys come from {@see SCHEMA_CONFIG_KEYS} where the slug is pinned, and are
+	 * derived as `<slug>_schema` otherwise.
 	 *
 	 * @param array $schemaMap The slug => schema id map.
 	 *
 	 * @return void
 	 */
 	private function applySchemaConfig(array $schemaMap): void {
-		// SLA schema config keys diverge from the auto-derived `<slug>_schema`
-		// naming because the engine expects `sla_policy_schema` and
-		// `sla_breach_event_schema` rather than `slaPolicy_schema`.
-		if (isset($schemaMap['slaPolicy']) === true && $schemaMap['slaPolicy'] !== null) {
-			$this->appConfig->setValueString(Application::APP_ID, 'sla_policy_schema', (string)$schemaMap['slaPolicy']);
-		}
-
-		if (isset($schemaMap['slaBreachEvent']) === true && $schemaMap['slaBreachEvent'] !== null) {
-			$this->appConfig->setValueString(Application::APP_ID, 'sla_breach_event_schema', (string)$schemaMap['slaBreachEvent']);
-		}
-
 		foreach (self::SCHEMA_SLUGS as $slug) {
-			if (isset($schemaMap[$slug]) === true && $schemaMap[$slug] !== null) {
-				$this->appConfig->setValueString(Application::APP_ID, "{$slug}_schema", (string)$schemaMap[$slug]);
+			// A null value is not isset(), so this is already the whole guard.
+			if (isset($schemaMap[$slug]) === false) {
+				continue;
 			}
+
+			$key = (self::SCHEMA_CONFIG_KEYS[$slug] ?? "{$slug}_schema");
+			$this->appConfig->setValueString(Application::APP_ID, $key, (string)$schemaMap[$slug]);
 		}
 	}//end applySchemaConfig()
 
