@@ -17,7 +17,7 @@
 		<form @submit.prevent="enroll">
 			<NcTextField
 				v-model="customerId"
-				:label="t('pipelinq', 'Customer (klantId / contact UID)')"
+				:label="t('pipelinq', 'Customer (customerId / contact UID)')"
 				required />
 
 			<NcSelect
