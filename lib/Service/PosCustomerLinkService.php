@@ -105,6 +105,7 @@ class PosCustomerLinkService {
 	 *
 	 * @param IAppConfig $appConfig The app config (register + schema IDs + admin settings).
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

@@ -79,6 +79,7 @@ class ReminderDispatchJob extends TimedJob {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ContainerInterface $container The DI container (OR ObjectService + email service).
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		ITimeFactory $time,

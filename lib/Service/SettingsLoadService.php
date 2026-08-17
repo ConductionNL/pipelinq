@@ -175,6 +175,7 @@ class SettingsLoadService {
 	 * @param IAppManager $appManager The app manager.
 	 * @param SettingsMapBuilder $mapBuilder The map builder.
 	 * @param ConfigFileLoaderService $fileLoader The file loader.
+	 * @param ConfigurationService $configurationService OpenRegister configuration import service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

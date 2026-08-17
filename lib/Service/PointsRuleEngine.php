@@ -46,6 +46,7 @@ class PointsRuleEngine {
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

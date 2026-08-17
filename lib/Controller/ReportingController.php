@@ -57,6 +57,7 @@ class ReportingController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param ReportingService $reportingService The reporting service.
 	 * @param IUserSession $userSession The user session.
+	 * @param ObjectOwnerAccessPolicy $accessPolicy Owner-based access policy.
 	 */
 	public function __construct(
 		IRequest $request,

@@ -64,6 +64,7 @@ class CtiController extends Controller {
 	 * @param IRequest $request The HTTP request.
 	 * @param CtiService $ctiService The CTI service.
 	 * @param IUserSession $userSession The user session.
+	 * @param ObjectOwnerAccessPolicy $policy The owner-based access policy.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
 	 */
@@ -84,6 +85,9 @@ class CtiController extends Controller {
 	 * The route is PublicPage (the platform cannot CSRF-token sign);
 	 * authenticity is enforced by the adapter's signature verification.
 	 *
+	 * The AnonRateLimit below sizes telephony platform events — one per call
+	 * state change, so a busy contact centre generates these steadily.
+	 *
 	 * @param string $platform Platform identifier from the URL.
 	 *
 	 * @return JSONResponse Acknowledgement.
@@ -92,8 +96,6 @@ class CtiController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Telephony platform events — one per call state change, so a busy contact
-	// centre generates these steadily.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function webhook(string $platform): JSONResponse {
 		$rawBody = (string)file_get_contents('php://input');

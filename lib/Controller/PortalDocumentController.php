@@ -82,14 +82,15 @@ class PortalDocumentController extends PortalApiController {
 	/**
 	 * Issue a signed download link for an object the customer can access.
 	 *
+	 * The AnonRateLimit below is deliberately tight: signing is a legally
+	 * meaningful act, and the token that authorises it is the only barrier.
+	 *
 	 * @return JSONResponse The signed link descriptor.
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
-	// Tight: signing is a legally meaningful act, and the token that authorises
-	// it is the only barrier.
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function sign(): JSONResponse {
 		return $this->guarded(

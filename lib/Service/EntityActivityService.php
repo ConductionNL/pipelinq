@@ -95,15 +95,13 @@ class EntityActivityService {
 	/**
 	 * Constructor.
 	 *
-	 *                                      lazily resolve the OpenRegister
-	 *                                      `ObjectService` so an outage of
-	 *                                      OR cannot break Pipelinq DI.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
 	 * @param TicketService $ticketService Resolver for the unified `ticket`
 	 *                                     supertype — both the contactmoment
 	 *                                     source and the `request` entity are
 	 *                                     tickets after unify-ticket-supertype.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,

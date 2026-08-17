@@ -60,6 +60,8 @@ class LoyaltyReportingService {
 	 * @param PointsLedgerService $ledgerService The ledger service.
 	 * @param LoyaltyProgrammeService $programmeService The programme service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
+	 * @param AggregationRunner $aggregationRunner OpenRegister aggregation runner.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

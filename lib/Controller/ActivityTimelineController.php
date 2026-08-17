@@ -55,6 +55,7 @@ class ActivityTimelineController extends Controller {
 	 * @param IUserSession $userSession The user session.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ContainerInterface $container The DI container.
+	 * @param ObjectOwnerAccessPolicy $policy The owner-based access policy.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -86,6 +87,7 @@ class ActivityTimelineController extends Controller {
 	 * denies, and the warning still records the outage.
 	 *
 	 * @param string $entityId The OR object UUID.
+	 * @param string $userId The uid of the caller whose access is being checked.
 	 *
 	 * @return bool Whether the object could be verified.
 	 */
@@ -137,9 +139,14 @@ class ActivityTimelineController extends Controller {
 				$payload = $object->jsonSerialize();
 			}
 
+			$objectArray = [];
+			if (is_array($payload) === true) {
+				$objectArray = $payload;
+			}
+
 			return $this->policy->mayAccess(
 				uid: $userId,
-				object: is_array($payload) ? $payload : [],
+				object: $objectArray,
 				ownerField: 'ownerId'
 			);
 		} catch (\Throwable $e) {

@@ -56,6 +56,7 @@ abstract class AbstractExportService {
 	 *
 	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 */
 	public function __construct(
 		protected ContainerInterface $container,

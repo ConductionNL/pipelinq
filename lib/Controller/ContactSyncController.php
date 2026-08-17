@@ -45,6 +45,7 @@ class ContactSyncController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param ContactSyncService $contactSyncService The contact sync service.
 	 * @param IUserSession $userSession The user session.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner authorization.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */

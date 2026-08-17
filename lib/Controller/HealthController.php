@@ -113,13 +113,15 @@ class HealthController extends Controller {
 	 * disabled — the endpoint still answers (the whole point of a health
 	 * probe): `status: degraded`, `checks.openregister: unavailable`, HTTP 200.
 	 *
+	 * The AnonRateLimit below is generous because this is a liveness probe —
+	 * polled on a schedule by monitoring.
+	 *
 	 * @return JSONResponse `{status, app, version, checks}` with HTTP code per policy.
 	 *
 	 * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Liveness probe — polled on a schedule by monitoring.
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function index(): JSONResponse {
 		$engine = $this->engineResult();
@@ -157,7 +159,7 @@ class HealthController extends Controller {
 	 * Run the AppHost observability engine for this app.
 	 *
 	 * @return array{status: string, version: string, checks: array<string, string>, httpStatus: int, cors: bool}|null
-	 *                                                                                                                 Null when the engine is unavailable (openregister absent/disabled).
+	 *         Null when the engine is unavailable (openregister absent/disabled).
 	 */
 	private function engineResult(): ?array {
 		try {

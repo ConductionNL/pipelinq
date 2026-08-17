@@ -49,6 +49,7 @@ class LoyaltyProgrammeService {
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 * @param SchemaLifecycleGraph $lifecycleGraph Reads the programme status graph from its schema.
 	 */
 	public function __construct(

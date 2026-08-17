@@ -95,6 +95,7 @@ class NotesController extends Controller {
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param SettingsService $settingsService The settings service.
 	 * @param TicketService $ticketService The unified ticket resolver.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner authorization.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Nextcloud controllers are wired
 	 *  purely by constructor DI; every parameter is a collaborator the notes endpoint

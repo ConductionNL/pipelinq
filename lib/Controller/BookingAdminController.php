@@ -67,6 +67,7 @@ class BookingAdminController extends Controller {
 	 * @param BookingService $bookings The booking lifecycle service.
 	 * @param AppointmentEmailService $emailService The email service (reminder seam).
 	 * @param IUserSession $userSession The current user session.
+	 * @param ObjectOwnerAccessPolicy $accessPolicy Owner-based access policy.
 	 * @param IL10N $l10n Localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */

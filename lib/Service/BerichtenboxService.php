@@ -95,6 +95,7 @@ class BerichtenboxService {
 	 * @param DutchHolidayCalendar $holidayCalendar Working-day helper.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
 	 * @param LoggerInterface $logger NC logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 *
 	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
 	 *

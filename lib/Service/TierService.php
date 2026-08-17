@@ -52,6 +52,7 @@ class TierService {
 	 * @param LoyaltyAccountService $accountService The loyalty account service.
 	 * @param IEventDispatcher $eventDispatcher The event dispatcher.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

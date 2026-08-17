@@ -49,6 +49,7 @@ class TemplateController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param ComplianceService $complianceService Compliance + template repo.
 	 * @param IUserSession $userSession Current user session.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner authorization.
 	 */
 	public function __construct(
 		IRequest $request,

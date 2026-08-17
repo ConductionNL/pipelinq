@@ -99,6 +99,7 @@ class BlastTrackingController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param TrackingLinkService $trackingLinkService Sign/verify/record.
+	 * @param IThrottler $throttler Brute-force throttler for rejected tracking tokens.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -118,6 +119,12 @@ class BlastTrackingController extends Controller {
 	 * open only when the token verifies — fail closed on the *record*, not
 	 * the response, and never raises a 500.
 	 *
+	 * The open pixel deliberately does NOT register a rejected token: it always
+	 * answers with the same 1x1 GIF whatever the token, precisely so a mail
+	 * client never renders a broken image. There is no failure branch to hang
+	 * a counter on, and inventing one would leak the very signal the uniform
+	 * response exists to hide. The AnonRateLimit below is the control here.
+	 *
 	 * @param string $token The signed open token.
 	 *
 	 * @return DataDisplayResponse The 1x1 GIF (200), caching disabled.
@@ -126,11 +133,6 @@ class BlastTrackingController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// The open pixel deliberately does NOT register a rejected token: it always
-	// answers with the same 1x1 GIF whatever the token, precisely so a mail
-	// client never renders a broken image. There is no failure branch to hang
-	// a counter on, and inventing one would leak the very signal the uniform
-	// response exists to hide. The rate limit is the control here.
 	#[AnonRateLimit(limit: 240, period: 60)]
 	public function open(string $token): DataDisplayResponse {
 		try {

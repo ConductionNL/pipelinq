@@ -53,6 +53,8 @@ class PosStaffReportService {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param PosStaffService $posStaffService The POS staff service (for name lookup).
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param AggregationRunner $aggregationRunner The OpenRegister ad-hoc aggregation runner.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -122,7 +124,7 @@ class PosStaffReportService {
 	 * included.
 	 *
 	 * @return array<string, array{staffMemberId: string, displayName: string, transactionCount: int, total: float, totalTax: float}>
-	 *                                                                                                                                Keyed by staffMemberId.
+	 *         Keyed by staffMemberId.
 	 *
 	 * @throws \RuntimeException When OpenRegister is unavailable.
 	 */
@@ -252,7 +254,7 @@ class PosStaffReportService {
 	 * @param array<int, array<string, mixed>> $rows The final-status transactions.
 	 *
 	 * @return array<string, array{staffMemberId: string, displayName: string, transactionCount: int, total: float, totalTax: float}>
-	 *                                                                                                                                Keyed by staffMemberId.
+	 *         Keyed by staffMemberId.
 	 */
 	private function aggregateStaffTotalsPhp(array $rows): array {
 		$byStaff = [];

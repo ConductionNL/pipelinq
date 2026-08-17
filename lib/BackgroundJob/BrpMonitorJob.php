@@ -62,6 +62,7 @@ class BrpMonitorJob extends TimedJob {
 	 * @param IGroupManager $groupManager Group manager.
 	 * @param INotificationManager $notificationManager NC notifications.
 	 * @param LoggerInterface $logger Logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 */
 	public function __construct(
 		ITimeFactory $time,

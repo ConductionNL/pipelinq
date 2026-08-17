@@ -76,12 +76,14 @@ class BerichtenboxWebhookController extends Controller {
 	 *     "readAt": "ISO 8601 timestamp"
 	 *   }
 	 *
+	 * The AnonRateLimit below sizes Berichtenbox delivery callbacks — same
+	 * posture as every receiver here.
+	 *
 	 * @return JSONResponse 200 on success; 422 on signature failure;
 	 *                      400 on malformed payload.
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Berichtenbox delivery callbacks — same posture as every receiver here.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function readReceipt(): JSONResponse {
 		$rawBody = $this->readRawBody();

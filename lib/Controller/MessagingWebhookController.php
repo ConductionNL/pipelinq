@@ -76,6 +76,9 @@ class MessagingWebhookController extends Controller {
 	/**
 	 * POST /api/messaging-webhooks/whatsapp/{providerId}.
 	 *
+	 * The AnonRateLimit below sizes inbound message + delivery-status webhooks.
+	 * A conversation burst is normal traffic here, not abuse.
+	 *
 	 * @param string $providerId channelProvider UUID.
 	 *
 	 * @return JSONResponse Outcome.
@@ -84,8 +87,6 @@ class MessagingWebhookController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Inbound message + delivery-status webhooks. A conversation burst is
-	// normal traffic here, not abuse.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function whatsapp(string $providerId): JSONResponse {
 		$rawBody = $this->readRawBody();

@@ -88,6 +88,12 @@ class AppointmentPaymentWebhookController extends Controller {
 	 * The signature is sent in the `X-Pipelinq-Signature` header as a
 	 * hex-encoded HMAC-SHA256 of the raw body using the shared secret.
 	 *
+	 * The AnonRateLimit below guards an inbound provider webhook: the caller is
+	 * a payment provider retrying on its own schedule, authenticated by its own
+	 * signature. Generous ceiling — dropping a payment notification is a worse
+	 * failure than absorbing a burst, and it would land on the provider's side
+	 * where we cannot see it.
+	 *
 	 * @return JSONResponse Acknowledgement (HTTP 200 + status), 422 on
 	 *                      invalid signature, 400 on malformed payload.
 	 *
@@ -95,10 +101,6 @@ class AppointmentPaymentWebhookController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Inbound provider webhook: the caller is a payment provider retrying on
-	// its own schedule, authenticated by its own signature. Generous ceiling —
-	// dropping a payment notification is a worse failure than absorbing a
-	// burst, and it would land on the provider's side where we cannot see it.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function callback(): JSONResponse {
 		$rawBody = $this->readRawBody();

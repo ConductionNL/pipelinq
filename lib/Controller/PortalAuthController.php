@@ -83,17 +83,19 @@ class PortalAuthController extends PortalApiController {
 	/**
 	 * Authenticate with email + password (+ optional TOTP).
 	 *
+	 * The AnonRateLimit below is an IP-scoped ceiling ALONGSIDE the
+	 * account-scoped lockout, not instead of it. PortalAuthService already arms
+	 * a sliding-window lockout after repeated failures on ONE account — but an
+	 * account lockout cannot see PASSWORD SPRAYING, where one IP tries one
+	 * password against many accounts and never trips any single account's
+	 * counter. That is the gap this closes.
+	 *
 	 * @return JSONResponse The login result (token or mfa-required marker).
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
-	// An IP-scoped ceiling ALONGSIDE the account-scoped lockout, not instead of
-	// it. PortalAuthService already arms a sliding-window lockout after repeated
-	// failures on ONE account — but an account lockout cannot see PASSWORD
-	// SPRAYING, where one IP tries one password against many accounts and never
-	// trips any single account's counter. That is the gap this closes.
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function login(): JSONResponse {
 		return $this->guarded(
@@ -164,14 +166,16 @@ class PortalAuthController extends PortalApiController {
 	/**
 	 * Begin a password reset (uniform response — no account enumeration).
 	 *
+	 * The AnonRateLimit below is deliberately tight: this one sends mail to an
+	 * address the caller supplies, so an unbounded caller can use it to
+	 * mail-bomb a third party.
+	 *
 	 * @return JSONResponse The uniform acknowledgement.
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
-	// Tight: this one sends mail to an address the caller supplies, so an
-	// unbounded caller can use it to mail-bomb a third party.
 	#[AnonRateLimit(limit: 10, period: 60)]
 	public function passwordResetRequest(): JSONResponse {
 		return $this->guarded(
@@ -186,14 +190,16 @@ class PortalAuthController extends PortalApiController {
 	/**
 	 * Complete a password reset with a token + new password.
 	 *
+	 * The AnonRateLimit below is deliberately tight: the token is the only
+	 * thing standing between a caller and an account takeover, so the ceiling
+	 * bounds how fast one can be guessed.
+	 *
 	 * @return JSONResponse The result.
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
-	// Tight: the token is the only thing standing between a caller and an
-	// account takeover, so the ceiling bounds how fast one can be guessed.
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function passwordReset(): JSONResponse {
 		return $this->guarded(
@@ -245,14 +251,16 @@ class PortalAuthController extends PortalApiController {
 	/**
 	 * Verify a TOTP code to activate MFA on the account.
 	 *
+	 * The AnonRateLimit below is the tightest in this controller: a TOTP code
+	 * is six digits, so the whole keyspace is a million guesses. Without a
+	 * ceiling that is minutes of work.
+	 *
 	 * @return JSONResponse The result.
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
-	// Tightest in this controller: a TOTP code is six digits, so the whole
-	// keyspace is a million guesses. Without a ceiling that is minutes of work.
 	#[AnonRateLimit(limit: 10, period: 60)]
 	public function mfaVerify(): JSONResponse {
 		return $this->guarded(

@@ -150,6 +150,7 @@ class WorklistService {
 	 * @param IL10N $l10n Localisation (request status labels).
 	 * @param LoggerInterface $logger The logger.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

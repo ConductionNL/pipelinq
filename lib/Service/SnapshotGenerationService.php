@@ -81,6 +81,7 @@ class SnapshotGenerationService {
 	 * @param QuotaService $quotaService The quota service.
 	 * @param NotificationService $notifier The notification service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

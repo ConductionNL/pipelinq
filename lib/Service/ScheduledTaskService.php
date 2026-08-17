@@ -118,6 +118,8 @@ class ScheduledTaskService {
 	 * @param IGroupManager $groupManager Group manager (admin + group checks).
 	 * @param NotificationService $notificationService Notification dispatch.
 	 * @param LoggerInterface $logger Logger.
+	 * @param LanguageService $languageService Preferred-language resolution for task notifications.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,

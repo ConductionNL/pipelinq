@@ -58,6 +58,7 @@ class RapportageService {
 	 *
 	 * @param IAppConfig $appConfig The app config (register/schema slugs).
 	 * @param LoggerInterface $logger Logger for fallback paths.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

@@ -59,6 +59,8 @@ class PointsLedgerService {
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoyaltyAccountService $accountService The loyalty account service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
+	 * @param AggregationRunner $aggregationRunner OpenRegister ad-hoc aggregation runner (ledger balance sums).
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

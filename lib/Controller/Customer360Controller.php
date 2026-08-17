@@ -54,6 +54,7 @@ class Customer360Controller extends Controller {
 	 * @param Customer360SummaryService $summaryService The customer 360 summary aggregator.
 	 * @param IUserSession $userSession Current user.
 	 * @param IAppConfig $appConfig App config (register/schema resolution for the read guard).
+	 * @param ObjectOwnerAccessPolicy $accessPolicy Owner-based access policy.
 	 * @param ContainerInterface $container DI container (OpenRegister ObjectService).
 	 * @param LoggerInterface $logger Logger — also the doelbinding access-log sink
 	 *                                (MVP).

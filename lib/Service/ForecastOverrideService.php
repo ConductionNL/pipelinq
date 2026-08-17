@@ -58,6 +58,7 @@ class ForecastOverrideService {
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param ForecastService $forecastService The forecast computation service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

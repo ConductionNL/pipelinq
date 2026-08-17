@@ -284,6 +284,9 @@ class PosPaymentController extends Controller {
 	 *   invalid                  → 400
 	 *   unmatched                → 503, so the provider redelivers
 	 *
+	 * The AnonRateLimit below is a volume ceiling for the POS payment provider
+	 * callback.
+	 *
 	 * @param string $provider The provider name.
 	 *
 	 * @return JSONResponse
@@ -292,7 +295,6 @@ class PosPaymentController extends Controller {
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// POS payment provider callback.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function webhook(string $provider): JSONResponse {
 		$rawBody = $this->readRawBody();

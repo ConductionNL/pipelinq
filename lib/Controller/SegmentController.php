@@ -49,6 +49,7 @@ class SegmentController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param SegmentService $segmentService Segment service (member 02).
 	 * @param IUserSession $userSession Current user session.
+	 * @param ObjectOwnerAccessPolicy $policy Owner-based access policy.
 	 */
 	public function __construct(
 		IRequest $request,
