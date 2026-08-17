@@ -353,6 +353,33 @@ class PortalAuthControllerTest extends TestCase {
 	}//end testLogoutReturnsUnauthorizedWithoutASession()
 
 	/**
+	 * `extendSession()` refuses without a session, and extends nothing.
+	 *
+	 * This is the same fail-closed property already pinned for `logout()` and
+	 * `mfaVerify()`, and `extendSession()` was the one session-mutating endpoint
+	 * on this controller with no test at all. It is `#[PublicPage]`, so the ONLY
+	 * thing standing between an anonymous caller and a TTL extension is
+	 * `requireSession()` throwing — an unasserted guard is indistinguishable
+	 * from an absent one.
+	 *
+	 * The `never()` expectation is the load-bearing half: a 401 status with the
+	 * session already extended would still look like a pass on status alone.
+	 *
+	 * @return void
+	 */
+	public function testExtendSessionReturnsUnauthorizedWithoutASession(): void {
+		$this->guard->method('authenticate')->willThrowException(
+			new PortalException(Http::STATUS_UNAUTHORIZED, 'unauthenticated', 'Niet ingelogd.')
+		);
+		$this->sessions->expects($this->never())->method('extendSessionOrThrow');
+
+		$response = $this->build()->extendSession();
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame('unauthenticated', $response->getData()['errorCode']);
+	}//end testExtendSessionReturnsUnauthorizedWithoutASession()
+
+	/**
 	 * Build a real PasswordResetService over a mocked store.
 	 *
 	 * @param array<string, mixed>|null $stored The account findOneBy returns, or null.
