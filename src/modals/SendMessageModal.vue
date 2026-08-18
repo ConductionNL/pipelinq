@@ -179,10 +179,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
 		today() {
 			return new Date().toLocaleDateString()
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
 		channelOptions() {
 			const options = []
 			if (this.preflight.channels && this.preflight.channels.sms) {
@@ -194,6 +200,9 @@ export default {
 			return options
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
 		channelLabel() {
 			return this.channel === 'sms'
 				? t('pipelinq', 'SMS')
@@ -211,6 +220,9 @@ export default {
 			}))
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
 		selectedTemplate() {
 			return (
 				(this.preflight.templates || []).find(
@@ -219,6 +231,9 @@ export default {
 			)
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
 		effectiveConsentState() {
 			if (this.localConsent && this.localConsent.channel === this.channel) {
 				return this.localConsent.state
@@ -229,6 +244,9 @@ export default {
 			)
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
 		consentLabel() {
 			const labels = {
 				'opted-in': t('pipelinq', 'opted in'),
@@ -245,6 +263,7 @@ export default {
 		 * only needs the contact to not have opted out. This mirrors the
 		 * server's own gating (REQ-OM-005) purely for UX — the server
 		 * decides authoritatively on send regardless of this value.
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		consentOk() {
 			if (!this.channel) {
@@ -267,6 +286,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
 		canSend() {
 			if (this.sending || !this.channel || !this.consentOk) {
 				return false
@@ -321,6 +343,9 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
 		channel() {
 			this.sendResult = null
 			this.body = ''
@@ -340,6 +365,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
 		async recordConsent() {
 			if (!this.consentEvidence) {
 				return
@@ -369,6 +397,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 */
 		async send() {
 			if (!this.canSend) {
 				return

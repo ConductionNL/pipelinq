@@ -106,6 +106,7 @@ class LoyaltyProgrammeService {
 	 * @return array<string, mixed> The activated programme.
 	 *
 	 * @throws RuntimeException When validation fails.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001
 	 */
 	public function activate(string $programmeId, string $activatedBy): array {
 		$programme = $this->getProgramme(programmeId: $programmeId);

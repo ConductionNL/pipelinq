@@ -166,6 +166,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+		 */
 		async primeLabels() {
 			const serviceIds = [
 				...new Set(this.bookings.map((b) => b.serviceId).filter(Boolean)),

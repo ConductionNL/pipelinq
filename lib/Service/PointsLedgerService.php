@@ -192,6 +192,7 @@ class PointsLedgerService {
 	 * @param string $processedBy Who processed.
 	 *
 	 * @return array<string, mixed> The ledger entry.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function adjustPoints(string $accountId, int $delta, string $reason, string $processedBy): array {
 		if ($delta === 0) {
@@ -218,6 +219,7 @@ class PointsLedgerService {
 	 * @param string $processedBy Who processed.
 	 *
 	 * @return array<string, mixed> The ledger entry.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function refundPoints(
 		string $accountId,
@@ -248,6 +250,7 @@ class PointsLedgerService {
 	 * @return int The sum of all ledger entry amounts.
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) AggregationQuery::create() is OpenRegister's documented query-builder factory, not app state
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function getAccountBalance(string $accountId): int {
 		[$register, $schema] = $this->config();
@@ -365,6 +368,7 @@ class PointsLedgerService {
 	 * @param ?string $to ISO-8601 upper bound (inclusive).
 	 *
 	 * @return array<int, array<string, mixed>>
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function getLedgerEntriesForProgramme(
 		string $programmeId,

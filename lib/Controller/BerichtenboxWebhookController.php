@@ -136,6 +136,7 @@ class BerichtenboxWebhookController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the created contactmomentId; 422 on
 	 *                      signature failure; 400 on malformed payload.
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-receipt-005
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

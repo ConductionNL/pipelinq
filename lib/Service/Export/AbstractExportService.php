@@ -183,6 +183,7 @@ abstract class AbstractExportService {
 	 * @return object The object service.
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
+	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	protected function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

@@ -114,6 +114,7 @@ class ZtcClient {
 	 * @return string Statustype URL.
 	 *
 	 * @throws ZaaktypeNotInCatalogusException When no statustype matches.
+	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-004
 	 */
 	public function resolveStatustype(array $endpoint, string $caseTypeUrl, string $omschrijving): string {
 		$hit = $this->resolveByOmschrijving(
@@ -139,6 +140,7 @@ class ZtcClient {
 	 * @return string Roltype URL.
 	 *
 	 * @throws ZaaktypeNotInCatalogusException When no roltype matches.
+	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-004
 	 */
 	public function resolveRoltype(array $endpoint, string $caseTypeUrl, string $omschrijving): string {
 		$hit = $this->resolveByOmschrijving(

@@ -282,6 +282,7 @@ export default {
 		 * Headline for the verification pill.
 		 *
 		 * @return {string} The headline.
+		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#6.1
 		 */
 		verifyHeadline() {
 			if (this.entry.verified === true) {
@@ -297,6 +298,7 @@ export default {
 		 * Body text for the verification status card.
 		 *
 		 * @return {string} The body text.
+		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#6.1
 		 */
 		verifyDescription() {
 			if (this.entry.verified === true) {
@@ -321,6 +323,7 @@ export default {
 		 * Human readable result of the verify action.
 		 *
 		 * @return {string} The result text.
+		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#6.1
 		 */
 		chainResultText() {
 			if (!this.chainResult) {
@@ -343,6 +346,7 @@ export default {
 	methods: {
 		/**
 		 * Fetch the entry from the API.
+		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#6.1
 		 */
 		async load() {
 			if (!this.entryId) {
@@ -377,6 +381,7 @@ export default {
 
 		/**
 		 * Trigger a server-side re-verification of the signature + chain hash.
+		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#6.1
 		 */
 		async verify() {
 			if (!this.entryId) {
@@ -489,6 +494,7 @@ export default {
 		 *
 		 * @param {string} value The full value.
 		 * @param {string} label A label for the toast.
+		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#6.1
 		 */
 		async copy(value, label) {
 			if (!value) {
