@@ -312,6 +312,7 @@ export default {
 		 * are not.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
 		 */
 		canSubmit() {
 			return (
