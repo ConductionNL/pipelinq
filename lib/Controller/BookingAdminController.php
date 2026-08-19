@@ -67,6 +67,7 @@ class BookingAdminController extends Controller {
 	 * @param BookingService $bookings The booking lifecycle service.
 	 * @param AppointmentEmailService $emailService The email service (reminder seam).
 	 * @param IUserSession $userSession The current user session.
+	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
 	 * @param IL10N $l10n Localization service.
 	 * @param LoggerInterface $logger The logger.
 	 */
@@ -190,6 +191,7 @@ class BookingAdminController extends Controller {
 	 * @param string $id The booking UUID.
 	 *
 	 * @return JSONResponse The result, or an error.
+	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	#[NoAdminRequired]
 	public function markNoShow(string $id): JSONResponse {

@@ -60,6 +60,7 @@ class RoutingController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param RoutingService $routingService The routing service.
 	 * @param IUserSession $userSession The user session.
+	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(

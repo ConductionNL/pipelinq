@@ -63,6 +63,7 @@ class PointsRuleEngine {
 	 * @param array<string, mixed> $context The evaluation context.
 	 *
 	 * @return array<int, array<string, mixed>> Matching rules, highest prioriteit first.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function evaluateRules(string $programmeId, string $trigger, array $context): array {
 		$rules = $this->loadRules(programmeId: $programmeId, trigger: $trigger);
@@ -284,6 +285,7 @@ class PointsRuleEngine {
 	 * @param float $multiplier Tier multiplier (default 1.0).
 	 *
 	 * @return int Points awarded (floored).
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function calculatePoints(array $formula, float $amount, float $multiplier = 1.0): int {
 		$type = (string)($formula['type'] ?? '');

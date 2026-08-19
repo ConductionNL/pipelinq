@@ -48,6 +48,7 @@ class OptOutService {
 	 *
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

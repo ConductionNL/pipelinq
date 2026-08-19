@@ -239,6 +239,9 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
 		environmentOptions() {
 			return [
 				{ value: 'sandbox', label: t('pipelinq', 'Sandbox') },
@@ -255,6 +258,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
 		async refresh() {
 			this.loading = true
 			try {
@@ -288,6 +294,7 @@ export default {
 		 *
 		 * @param {object} p Raw provider from the API.
 		 * @return {object} Provider with string-safe, reactive fields.
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		normalizeProvider(p) {
 			const config = { ...(p.config || {}) }
@@ -313,6 +320,7 @@ export default {
 		 *
 		 * @param {string} name The Pipelinq provider name.
 		 * @return {Array} NcSelect options.
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		credentialsFor(name) {
 			const wanted = BROKER_PROVIDERS[name] || [name]
@@ -333,6 +341,7 @@ export default {
 		 * carries no secrets — only names, providers and UUIDs.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async fetchCredentials() {
 			this.loadingCredentials = true
@@ -348,6 +357,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
 		onCredentialChange(provider, option) {
 			provider.credentialId = option ? option.value : ''
 		},
@@ -365,6 +377,9 @@ export default {
 			provider[field] = value
 		},
 
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
 		async onSave(provider) {
 			this.savingProvider = provider.name
 			try {
@@ -402,6 +417,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
+		 */
 		async onTest(provider) {
 			this.testingProvider = provider.name
 			try {
