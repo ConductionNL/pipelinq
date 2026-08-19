@@ -53,6 +53,7 @@ class AnalyticsController extends Controller {
 	 * @param IRequest $request The HTTP request.
 	 * @param AnalyticsService $analyticsService Analytics summary service.
 	 * @param IUserSession $userSession Active user session.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(

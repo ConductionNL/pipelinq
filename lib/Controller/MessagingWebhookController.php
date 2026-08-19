@@ -80,12 +80,13 @@ class MessagingWebhookController extends Controller {
 	 *
 	 * @return JSONResponse Outcome.
 	 *
+	 * Inbound message + delivery-status webhooks. The rate-limit ceiling is
+	 * generous because a conversation burst is normal traffic here, not abuse.
+	 *
 	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Inbound message + delivery-status webhooks. A conversation burst is
-	// normal traffic here, not abuse.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function whatsapp(string $providerId): JSONResponse {
 		$rawBody = $this->readRawBody();

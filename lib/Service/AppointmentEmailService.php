@@ -112,6 +112,7 @@ class AppointmentEmailService {
 	 * @param IURLGenerator $urlGenerator The URL generator for signed links.
 	 * @param IL10N $l10n The localisation service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
