@@ -99,6 +99,7 @@ class BlastTrackingController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param TrackingLinkService $trackingLinkService Sign/verify/record.
+	 * @param IThrottler $throttler Brute-force throttler for rejected tracking tokens.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(

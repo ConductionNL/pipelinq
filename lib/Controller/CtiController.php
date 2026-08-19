@@ -64,6 +64,7 @@ class CtiController extends Controller {
 	 * @param IRequest $request The HTTP request.
 	 * @param CtiService $ctiService The CTI service.
 	 * @param IUserSession $userSession The user session.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
 	 */
