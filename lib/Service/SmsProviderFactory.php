@@ -42,69 +42,71 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
  */
-class SmsProviderFactory {
-	/**
-	 * Constructor.
-	 *
-	 * @param ContainerInterface $container DI container.
-	 * @param LoggerInterface $logger Logger.
-	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
-	 */
-	public function __construct(
-		private ContainerInterface $container,
-		private LoggerInterface $logger,
-	) {
-	}//end __construct()
+class SmsProviderFactory
+{
+    /**
+     * Constructor.
+     *
+     * @param ContainerInterface $container DI container.
+     * @param LoggerInterface    $logger    Logger.
+     *
+     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+     */
+    public function __construct(
+        private ContainerInterface $container,
+        private LoggerInterface $logger,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Create a vendor client for a channelProvider row.
-	 *
-	 * @param array<string, mixed> $channelProvider channelProvider row.
-	 *
-	 * @return SmsProviderClientInterface|null Client or null when the
-	 *                                         vendor key is not supported.
-	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
-	 */
-	public function create(array $channelProvider): ?SmsProviderClientInterface {
-		$vendor = (string)($channelProvider['vendor'] ?? '');
-		$fromNumber = (string)($channelProvider['phoneNumber'] ?? '');
-		$secret = (string)($channelProvider['webhookSecret'] ?? '');
-		$sourceId = (string)($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
-		$credentials = (array)($channelProvider['credentials'] ?? []);
+    /**
+     * Create a vendor client for a channelProvider row.
+     *
+     * @param array<string, mixed> $channelProvider channelProvider row.
+     *
+     * @return SmsProviderClientInterface|null Client or null when the
+     *         vendor key is not supported.
+     *
+     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+     */
+    public function create(array $channelProvider): ?SmsProviderClientInterface
+    {
+        $vendor      = (string) ($channelProvider['vendor'] ?? '');
+        $fromNumber  = (string) ($channelProvider['phoneNumber'] ?? '');
+        $secret      = (string) ($channelProvider['webhookSecret'] ?? '');
+        $sourceId    = (string) ($channelProvider['sourceId'] ?? ($channelProvider['openconnectorSourceId'] ?? ''));
+        $credentials = (array) ($channelProvider['credentials'] ?? []);
 
-		$sourceIdOrNull = $sourceId;
-		if ($sourceId === '') {
-			$sourceIdOrNull = null;
-		}
+        $sourceIdOrNull = $sourceId;
+        if ($sourceId === '') {
+            $sourceIdOrNull = null;
+        }
 
-		return match ($vendor) {
-			'twilio' => new TwilioSmsClient(
-				container: $this->container,
-				logger: $this->logger,
-				credentials: $credentials,
-				fromNumber: $fromNumber,
-				webhookSecret: $secret,
-				sourceId: $sourceIdOrNull,
-			),
-			'messagebird' => new MessageBirdSmsClient(
-				container: $this->container,
-				logger: $this->logger,
-				credentials: $credentials,
-				fromNumber: $fromNumber,
-				webhookSecret: $secret,
-				sourceId: $sourceIdOrNull,
-			),
-			'cm-com' => new CmComSmsClient(
-				container: $this->container,
-				logger: $this->logger,
-				credentials: $credentials,
-				fromNumber: $fromNumber,
-				webhookSecret: $secret,
-				sourceId: $sourceIdOrNull,
-			),
-			default => null,
-		};//end match
-	}//end create()
+        return match ($vendor) {
+            'twilio'      => new TwilioSmsClient(
+                container: $this->container,
+                logger: $this->logger,
+                credentials: $credentials,
+                fromNumber: $fromNumber,
+                webhookSecret: $secret,
+                sourceId: $sourceIdOrNull,
+            ),
+            'messagebird' => new MessageBirdSmsClient(
+                container: $this->container,
+                logger: $this->logger,
+                credentials: $credentials,
+                fromNumber: $fromNumber,
+                webhookSecret: $secret,
+                sourceId: $sourceIdOrNull,
+            ),
+            'cm-com'      => new CmComSmsClient(
+                container: $this->container,
+                logger: $this->logger,
+                credentials: $credentials,
+                fromNumber: $fromNumber,
+                webhookSecret: $secret,
+                sourceId: $sourceIdOrNull,
+            ),
+            default       => null,
+        };//end match
+    }//end create()
 }//end class

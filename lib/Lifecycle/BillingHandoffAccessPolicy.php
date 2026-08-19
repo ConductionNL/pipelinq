@@ -40,55 +40,57 @@ use OCP\IGroupManager;
  *
  * @spec openspec/specs/time-approval-workflow/spec.md
  */
-class BillingHandoffAccessPolicy {
-	/**
-	 * App-config key for the billing-handoff manager group.
-	 *
-	 * @var string
-	 */
-	public const MANAGER_GROUP_KEY = 'billing_handoff_manager_group';
+class BillingHandoffAccessPolicy
+{
+    /**
+     * App-config key for the billing-handoff manager group.
+     *
+     * @var string
+     */
+    public const MANAGER_GROUP_KEY = 'billing_handoff_manager_group';
 
-	/**
-	 * Constructor.
-	 *
-	 * @param IAppConfig $appConfig The app config.
-	 * @param IGroupManager $groupManager The group manager.
-	 */
-	public function __construct(
-		private IAppConfig $appConfig,
-		private IGroupManager $groupManager,
-	) {
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param IAppConfig    $appConfig    The app config.
+     * @param IGroupManager $groupManager The group manager.
+     */
+    public function __construct(
+        private IAppConfig $appConfig,
+        private IGroupManager $groupManager,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Whether a user may trigger the "Send to billing" handoff.
-	 *
-	 * A manager is a member of the configured manager group
-	 * (`billing_handoff_manager_group`) or a Nextcloud administrator. Fails
-	 * closed: an empty user or an unconfigured group never grants access
-	 * beyond the explicit admin check (closes the IDOR — any authenticated
-	 * user could otherwise trigger a billing batch for any client).
-	 *
-	 * @param string $userId The acting user UID.
-	 *
-	 * @return bool Whether the user may trigger the billing handoff.
-	 *
-	 * @spec openspec/specs/time-approval-workflow/spec.md
-	 */
-	public function isManager(string $userId): bool {
-		if ($userId === '') {
-			return false;
-		}
+    /**
+     * Whether a user may trigger the "Send to billing" handoff.
+     *
+     * A manager is a member of the configured manager group
+     * (`billing_handoff_manager_group`) or a Nextcloud administrator. Fails
+     * closed: an empty user or an unconfigured group never grants access
+     * beyond the explicit admin check (closes the IDOR — any authenticated
+     * user could otherwise trigger a billing batch for any client).
+     *
+     * @param string $userId The acting user UID.
+     *
+     * @return bool Whether the user may trigger the billing handoff.
+     *
+     * @spec openspec/specs/time-approval-workflow/spec.md
+     */
+    public function isManager(string $userId): bool
+    {
+        if ($userId === '') {
+            return false;
+        }
 
-		if ($this->groupManager->isAdmin($userId) === true) {
-			return true;
-		}
+        if ($this->groupManager->isAdmin($userId) === true) {
+            return true;
+        }
 
-		$managerGroup = $this->appConfig->getValueString(Application::APP_ID, self::MANAGER_GROUP_KEY, '');
-		if ($managerGroup === '') {
-			return false;
-		}
+        $managerGroup = $this->appConfig->getValueString(Application::APP_ID, self::MANAGER_GROUP_KEY, '');
+        if ($managerGroup === '') {
+            return false;
+        }
 
-		return $this->groupManager->isInGroup($userId, $managerGroup);
-	}//end isManager()
+        return $this->groupManager->isInGroup($userId, $managerGroup);
+    }//end isManager()
 }//end class

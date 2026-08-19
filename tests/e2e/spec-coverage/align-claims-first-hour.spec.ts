@@ -28,22 +28,18 @@ async function autoDismissWalkthrough(page: Page): Promise<void> {
 	await page.addLocatorHandler(
 		page.locator('.cn-walkthrough'),
 		async () => {
-			await page
-				.locator('.cn-walkthrough')
-				.getByRole('button', { name: /Skip/i })
-				.click()
+			await page.locator('.cn-walkthrough').getByRole('button', { name: /Skip/i }).click()
 		},
 		{ noWaitAfter: true, times: 15 },
 	)
 }
 
 test.describe('Operational dashboard — no permanently-null widgets', () => {
+
 	test.beforeEach(async ({ page }) => {
 		// The shared dev instance can be slow to fire `load`; DOMContentLoaded
 		// is enough — the assertions below wait for the widgets themselves.
-		await page.goto('/apps/pipelinq/#/operational', {
-			waitUntil: 'domcontentloaded',
-		})
+		await page.goto('/apps/pipelinq/#/operational', { waitUntil: 'domcontentloaded' })
 		await expect(page.locator('body')).not.toContainText('Internal Server Error')
 		await page.reload({ waitUntil: 'domcontentloaded' })
 	})
@@ -54,17 +50,13 @@ test.describe('Operational dashboard — no permanently-null widgets', () => {
 	 *
 	 * @spec openspec/changes/align-claims-and-first-hour/specs/dashboard/spec.md#requirement-no-permanently-null-default-widgets
 	 */
-	test('renders KPI row without the Customer Satisfaction tile', async ({
-		page,
-	}) => {
+	test('renders KPI row without the Customer Satisfaction tile', async ({ page }) => {
 		await expect(
 			page.getByRole('heading', { name: /Operational overview/i }),
 		).toBeVisible({ timeout: 15000 })
 
 		// The live KPI widgets are present…
-		await expect(page.getByText('Lead Conversion Rate').first()).toBeVisible({
-			timeout: 15000,
-		})
+		await expect(page.getByText('Lead Conversion Rate').first()).toBeVisible({ timeout: 15000 })
 		await expect(page.getByText(/Avg Request Resol/).first()).toBeVisible()
 
 		// …but no Customer Satisfaction widget renders anywhere on the page.
@@ -73,6 +65,7 @@ test.describe('Operational dashboard — no permanently-null widgets', () => {
 })
 
 test.describe('Demo-data seed setup action', () => {
+
 	/**
 	 * Scenario: Offered as an optional wizard step (action surface).
 	 * Scenario: Idempotent re-run.
@@ -91,23 +84,17 @@ test.describe('Demo-data seed setup action', () => {
 		test.setTimeout(120000)
 		await page.goto('/apps/pipelinq/')
 
-		const run = async () =>
-			await page.evaluate(async () => {
-				const response = await fetch(
-					'/index.php/apps/pipelinq/api/setup/action/seed-demo-data',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: (
-								window as unknown as { OC: { requestToken: string } }
-							).OC.requestToken,
-						},
-						body: '{}',
-					},
-				)
-				return { status: response.status, body: await response.json() }
+		const run = async () => await page.evaluate(async () => {
+			const response = await fetch('/index.php/apps/pipelinq/api/setup/action/seed-demo-data', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					requesttoken: (window as unknown as { OC: { requestToken: string } }).OC.requestToken,
+				},
+				body: '{}',
 			})
+			return { status: response.status, body: await response.json() }
+		})
 
 		const first = await run()
 		expect(first.status).toBe(200)
@@ -134,9 +121,7 @@ test.describe('Demo-data seed setup action', () => {
 		await page.reload()
 
 		// Wait for the table to load rows.
-		await expect(page.locator('table tbody tr').first()).toBeVisible({
-			timeout: 20000,
-		})
+		await expect(page.locator('table tbody tr').first()).toBeVisible({ timeout: 20000 })
 
 		// The list paginates (20/page); walk pages until the seeded demo
 		// client shows (page 1 on a clean install; later pages on a
@@ -145,10 +130,7 @@ test.describe('Demo-data seed setup action', () => {
 		let found = await target.isVisible().catch(() => false)
 		for (let i = 0; i < 10 && !found; i++) {
 			// Scope to the table pagination so the tour's own Next never matches.
-			const next = page
-				.locator('[class*="pagination"]')
-				.getByRole('button', { name: 'Next' })
-				.first()
+			const next = page.locator('[class*="pagination"]').getByRole('button', { name: 'Next' }).first()
 			if (!(await next.isEnabled().catch(() => false))) break
 			await next.click()
 			await page.waitForTimeout(1500)

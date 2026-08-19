@@ -6,62 +6,47 @@
 	<div>
 		<CnIndexPage
 			:title="t('pipelinq', 'BI export jobs')"
-			:description="
-				t(
-					'pipelinq',
-					'Scheduled exports of pipelinq data to a data warehouse or BI tool',
-				)
-			"
+			:description="t('pipelinq', 'Scheduled exports of pipelinq data to a data warehouse or BI tool')"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
 			:refreshing="refreshing"
-			:sortKey="sortKey"
-			:sortOrder="sortOrder"
-			:includeColumns="visibleColumns"
-			:emptyTitle="t('pipelinq', 'No export jobs yet')"
-			:emptyActionLabel="t('pipelinq', 'New export job')"
+			:sort-key="sortKey"
+			:sort-order="sortOrder"
+			:include-columns="visibleColumns"
+			:empty-title="t('pipelinq', 'No export jobs yet')"
+			:empty-action-label="t('pipelinq', 'New export job')"
 			@add="createNew"
-			@emptyAction="createNew"
+			@empty-action="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
 			@view="openJob"
-			@pageChanged="onPageChange">
+			@page-changed="onPageChange">
 			<template #row-actions="{ row }">
-				<NcButton
-					variant="tertiary"
-					:disabled="busyId === row.id"
-					@click.stop="testRun(row)">
+				<NcButton variant="tertiary" :disabled="busyId === row.id" @click.stop="testRun(row)">
 					{{ t('pipelinq', 'Test run') }}
 				</NcButton>
-				<NcButton
-					variant="tertiary"
-					:disabled="busyId === row.id"
-					@click.stop="toggleEnabled(row)">
-					{{
-						row.enabled
-							? t('pipelinq', 'Disable')
-							: t('pipelinq', 'Enable')
-					}}
+				<NcButton variant="tertiary" :disabled="busyId === row.id" @click.stop="toggleEnabled(row)">
+					{{ row.enabled ? t('pipelinq', 'Disable') : t('pipelinq', 'Enable') }}
 				</NcButton>
 			</template>
 		</CnIndexPage>
 		<ExportTestRunModal
 			v-if="testRunJobId"
-			:jobId="testRunJobId"
+			:job-id="testRunJobId"
 			@close="testRunJobId = null" />
 	</div>
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton } from '@nextcloud/vue'
 import { inject } from 'vue'
-import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
-import { exportApi } from '../../services/exportApi.js'
+import { NcButton } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { exportApi } from '../../services/exportApi.js'
+import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 
 export default {
 	name: 'ExportJobs',
@@ -70,13 +55,11 @@ export default {
 		NcButton,
 		ExportTestRunModal,
 	},
-
 	setup() {
 		const sidebarState = inject('sidebarState', null)
 		const objectStore = useObjectStore()
 		return useListView('exportJob', { sidebarState, objectStore })
 	},
-
 	data() {
 		return {
 			busyId: null,
@@ -84,7 +67,6 @@ export default {
 			refreshing: false,
 		}
 	},
-
 	computed: {
 		/**
 		 * Columns shown on the list, in order.
@@ -92,17 +74,9 @@ export default {
 		 * @return {Array<string>} The column keys.
 		 */
 		visibleColumns() {
-			return [
-				'name',
-				'destinationId',
-				'format',
-				'mode',
-				'scheduleCron',
-				'enabled',
-			]
+			return ['name', 'destinationId', 'format', 'mode', 'scheduleCron', 'enabled']
 		},
 	},
-
 	methods: {
 		/**
 		 * Refresh handler for the Actions-menu Refresh item. Drives the
@@ -118,7 +92,6 @@ export default {
 				this.refreshing = false
 			}
 		},
-
 		/**
 		 * Navigate to a job's detail/edit form.
 		 *
@@ -127,14 +100,12 @@ export default {
 		openJob(row) {
 			this.$router.push({ name: 'ExportJobDetail', params: { id: row.id } })
 		},
-
 		/**
 		 * Start a new job.
 		 */
 		createNew() {
 			this.$router.push({ name: 'ExportJobNew' })
 		},
-
 		/**
 		 * Open the test-run modal for a job. The modal auto-executes the run.
 		 *
@@ -143,7 +114,6 @@ export default {
 		testRun(row) {
 			this.testRunJobId = row.id
 		},
-
 		/**
 		 * Enable or disable a job.
 		 *

@@ -21,35 +21,24 @@
 						v-for="(variant, index) in variants"
 						:key="index"
 						class="viewTableRow"
-						:class="{
-							'product-variant-panel__row--highlight':
-								variant.sku === highlightSku,
-						}">
+						:class="{ 'product-variant-panel__row--highlight': variant.sku === highlightSku }">
 						<td>{{ variant.sku }}</td>
 						<td>{{ variant.name || '-' }}</td>
 						<td>{{ attributesLabel(variant.attributes) }}</td>
 						<td>{{ formatCurrency(variant.unitPrice) }}</td>
 						<td>{{ variant.barcode || '-' }}</td>
 						<td>
-							<span
-								class="status-badge"
-								:class="'status--' + (variant.status || 'active')">
+							<span class="status-badge" :class="'status--' + (variant.status || 'active')">
 								{{ variant.status || 'active' }}
 							</span>
 						</td>
 						<td class="product-variant-panel__actions-col">
-							<NcButton
-								variant="tertiary"
-								:aria-label="t('pipelinq', 'Edit variant')"
-								@click="openEdit(index)">
+							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Edit variant')" @click="openEdit(index)">
 								<template #icon>
 									<Pencil :size="20" />
 								</template>
 							</NcButton>
-							<NcButton
-								variant="tertiary"
-								:aria-label="t('pipelinq', 'Remove variant')"
-								@click="removeVariant(index)">
+							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove variant')" @click="removeVariant(index)">
 								<template #icon>
 									<Delete :size="20" />
 								</template>
@@ -75,22 +64,22 @@
 		<ProductVariantDialog
 			v-if="dialogOpen"
 			:variant="editingVariant"
-			:defaultPrice="product.unitPrice || 0"
-			:existingSkus="variantSkus"
+			:default-price="product.unitPrice || 0"
+			:existing-skus="variantSkus"
 			@close="dialogOpen = false"
 			@save="onDialogSave" />
 	</div>
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
-import Delete from 'vue-material-design-icons/Delete.vue'
-import Pencil from 'vue-material-design-icons/Pencil.vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
+import Delete from 'vue-material-design-icons/Delete.vue'
 import ProductVariantDialog from '../../modals/ProductVariantDialog.vue'
-import { formatCurrency as formatLocaleCurrency } from '../../services/localeUtils.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { formatCurrency as formatLocaleCurrency } from '../../services/localeUtils.js'
 
 export default {
 	name: 'ProductVariantPanel',
@@ -101,19 +90,16 @@ export default {
 		Delete,
 		ProductVariantDialog,
 	},
-
 	props: {
 		product: {
 			type: Object,
 			required: true,
 		},
-
 		highlightSku: {
 			type: String,
 			default: '',
 		},
 	},
-
 	emits: ['saved'],
 	data() {
 		return {
@@ -123,23 +109,17 @@ export default {
 			saving: false,
 		}
 	},
-
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
-
 		editingVariant() {
-			return this.editingIndex !== null
-				? this.variants[this.editingIndex]
-				: null
+			return this.editingIndex !== null ? this.variants[this.editingIndex] : null
 		},
-
 		variantSkus() {
-			return this.variants.map((v) => v.sku)
+			return this.variants.map(v => v.sku)
 		},
 	},
-
 	watch: {
 		product: {
 			immediate: true,
@@ -148,16 +128,13 @@ export default {
 			},
 		},
 	},
-
 	methods: {
 		/**
 		 * Deep-clone the product's variants into editable state.
 		 */
 		loadVariants() {
-			const raw = Array.isArray(this.product.variants)
-				? this.product.variants
-				: []
-			this.variants = raw.map((v) => ({
+			const raw = Array.isArray(this.product.variants) ? this.product.variants : []
+			this.variants = raw.map(v => ({
 				sku: v.sku || '',
 				name: v.name || '',
 				attributes: { ...(v.attributes || {}) },
@@ -166,7 +143,6 @@ export default {
 				status: v.status || 'active',
 			}))
 		},
-
 		/**
 		 * Render an attributes map as a compact label.
 		 *
@@ -180,7 +156,6 @@ export default {
 			const parts = Object.entries(attributes).map(([k, v]) => `${k}: ${v}`)
 			return parts.length > 0 ? parts.join(', ') : '-'
 		},
-
 		/**
 		 * Format a currency value.
 		 *
@@ -193,7 +168,6 @@ export default {
 			}
 			return formatLocaleCurrency(value)
 		},
-
 		/**
 		 * Open the add-variant dialog.
 		 */
@@ -201,7 +175,6 @@ export default {
 			this.editingIndex = null
 			this.dialogOpen = true
 		},
-
 		/**
 		 * Open the edit-variant dialog for a row.
 		 *
@@ -211,7 +184,6 @@ export default {
 			this.editingIndex = index
 			this.dialogOpen = true
 		},
-
 		/**
 		 * Apply a saved variant from the dialog (SKU uniqueness already enforced).
 		 *
@@ -226,7 +198,6 @@ export default {
 			this.dialogOpen = false
 			this.editingIndex = null
 		},
-
 		/**
 		 * Remove a variant row.
 		 *
@@ -235,7 +206,6 @@ export default {
 		removeVariant(index) {
 			this.variants.splice(index, 1)
 		},
-
 		/**
 		 * Persist the variants to the product.
 		 */

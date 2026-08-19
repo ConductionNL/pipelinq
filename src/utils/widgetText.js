@@ -32,14 +32,8 @@ export function toText(value) {
 	if (typeof value === 'object') {
 		// Expanded relation or wrapper map ({"nl":"test"} — the key carries no
 		// meaning): prefer an explicit display field, then the `nl` wrapper key.
-		const display =
-			value.title
-			?? value.name
-			?? value.label
-			?? value.value
-			?? value.nl
-			?? value['@self']?.title
-			?? value['@self']?.name
+		const display = value.title ?? value.name ?? value.label ?? value.value ?? value.nl
+			?? value['@self']?.title ?? value['@self']?.name
 		if (display !== null && display !== undefined) {
 			return toText(display)
 		}

@@ -1,17 +1,15 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<CnDataTable
-		:rows="items"
+	<CnDataTable :rows="items"
 		:columns="columns"
 		:loading="loading"
-		hideHeader
+		hide-header
 		borderless
-		:emptyText="t('pipelinq', 'No leads found')"
-		@rowClick="onShow">
+		:empty-text="t('pipelinq', 'No leads found')"
+		@row-click="onShow">
 		<template #footer>
-			<a
-				class="cn-data-table__view-all"
+			<a class="cn-data-table__view-all"
 				role="button"
 				tabindex="0"
 				@click.prevent="onViewAll"
@@ -36,14 +34,12 @@ export default {
 	components: {
 		CnDataTable,
 	},
-
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
-
 	data() {
 		return {
 			loading: false,
@@ -52,7 +48,6 @@ export default {
 			columns: LIST_COLUMNS,
 		}
 	},
-
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-28
@@ -64,21 +59,15 @@ export default {
 			}
 			return map
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-31
 		 */
 		items() {
 			return this.leads.map((lead) => {
-				const client =
-					this.clientMap[lead.client] || this.clientMap[lead.clientId]
-				const clientName = client
-					? toText(client.name) || toText(client.title)
-					: ''
+				const client = this.clientMap[lead.client] || this.clientMap[lead.clientId]
+				const clientName = client ? (toText(client.name) || toText(client.title)) : ''
 				const value = lead.value ? formatCurrency(lead.value) : ''
-				const subParts = [clientName, value, toText(lead.stage)].filter(
-					Boolean,
-				)
+				const subParts = [clientName, value, toText(lead.stage)].filter(Boolean)
 
 				return {
 					id: lead.id,
@@ -88,11 +77,9 @@ export default {
 			})
 		},
 	},
-
 	async mounted() {
 		await this.fetchData()
 	},
-
 	methods: {
 		/**
 		 * Navigate to the clicked lead in the same tab.
@@ -103,7 +90,6 @@ export default {
 		onShow(item) {
 			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id))
 		},
-
 		/**
 		 * Navigate to the full leads list.
 		 *
@@ -112,7 +98,6 @@ export default {
 		onViewAll() {
 			navigateTo(generateUrl('/apps/pipelinq/leads'))
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-29
 		 */
@@ -123,15 +108,10 @@ export default {
 				const config = objectStore.objectTypeRegistry
 
 				if (config.lead) {
-					this.leads = await this.fetchRaw(config, 'lead', {
-						_limit: 20,
-						_order: 'created_at:desc',
-					})
+					this.leads = await this.fetchRaw(config, 'lead', { _limit: 20, _order: 'created_at:desc' })
 				}
 				if (config.client) {
-					this.clients = await this.fetchRaw(config, 'client', {
-						_limit: 500,
-					})
+					this.clients = await this.fetchRaw(config, 'client', { _limit: 500 })
 				}
 			} catch (err) {
 				console.error('DealsOverviewWidget fetch error:', err)
@@ -139,7 +119,6 @@ export default {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * @param {object} config The object-type registry (register/schema per type).
 		 * @param {string} type The object type to fetch.
@@ -156,13 +135,8 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = generateUrl(
-				'/apps/openregister/api/objects/'
-					+ typeConfig.register
-					+ '/'
-					+ typeConfig.schema
-					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
-			)
+			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
+				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
 
 			const response = await fetch(url, {
 				headers: {

@@ -30,67 +30,73 @@ namespace OCA\Pipelinq\Service\Portal;
 /**
  * Per-customer contract read facade.
  */
-class PortalContractService extends AbstractPortalReadFacade {
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @return string The schema key.
-	 */
-	protected function schemaKey(): string {
-		return 'contract';
-	}//end schemaKey()
+class PortalContractService extends AbstractPortalReadFacade
+{
+    /**
+     * {@inheritDoc}
+     *
+     * @return string The schema key.
+     */
+    protected function schemaKey(): string
+    {
+        return 'contract';
+    }//end schemaKey()
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @return string The scope.
-	 */
-	protected function delegationScope(): string {
-		return 'view-contracts';
-	}//end delegationScope()
+    /**
+     * {@inheritDoc}
+     *
+     * @return string The scope.
+     */
+    protected function delegationScope(): string
+    {
+        return 'view-contracts';
+    }//end delegationScope()
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @param array<string, mixed> $object The raw contract.
-	 *
-	 * @return array{0: string|null, 1: string|null} The [contactId, clientId].
-	 */
-	protected function ownerIds(array $object): array {
-		return [
-			$this->readId(value: ($object['contact'] ?? null)),
-			$this->readId(value: ($object['client'] ?? null)),
-		];
-	}//end ownerIds()
+    /**
+     * {@inheritDoc}
+     *
+     * @param array<string, mixed> $object The raw contract.
+     *
+     * @return array{0: string|null, 1: string|null} The [contactId, clientId].
+     */
+    protected function ownerIds(array $object): array
+    {
+        return [
+            $this->readId(value: ($object['contact'] ?? null)),
+            $this->readId(value: ($object['client'] ?? null)),
+        ];
+    }//end ownerIds()
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @param array<string, mixed> $object The raw contract.
-	 * @param string|null $delegatedFrom The grantor id, or null.
-	 *
-	 * @return array<string, mixed> The contract row.
-	 */
-	protected function present(array $object, ?string $delegatedFrom): array {
-		return [
-			'id' => $this->objectId(object: $object),
-			'contractNumber' => ($object['contractNumber'] ?? $object['reference'] ?? null),
-			'startDate' => ($object['startDate'] ?? null),
-			'endDate' => ($object['endDate'] ?? null),
-			'value' => ($object['value'] ?? null),
-			'status' => ($object['status'] ?? null),
-			'delegatedFrom' => $delegatedFrom,
-		];
-	}//end present()
+    /**
+     * {@inheritDoc}
+     *
+     * @param array<string, mixed> $object        The raw contract.
+     * @param string|null          $delegatedFrom The grantor id, or null.
+     *
+     * @return array<string, mixed> The contract row.
+     */
+    protected function present(array $object, ?string $delegatedFrom): array
+    {
+        return [
+            'id'             => $this->objectId(object: $object),
+            'contractNumber' => ($object['contractNumber'] ?? $object['reference'] ?? null),
+            'startDate'      => ($object['startDate'] ?? null),
+            'endDate'        => ($object['endDate'] ?? null),
+            'value'          => ($object['value'] ?? null),
+            'status'         => ($object['status'] ?? null),
+            'delegatedFrom'  => $delegatedFrom,
+        ];
+    }//end present()
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @param array<string, mixed> $object The raw contract.
-	 *
-	 * @return string The sort key.
-	 */
-	protected function sortKey(array $object): string {
-		return (string)($object['startDate'] ?? '');
-	}//end sortKey()
+    /**
+     * {@inheritDoc}
+     *
+     * @param array<string, mixed> $object The raw contract.
+     *
+     * @return string The sort key.
+     */
+    protected function sortKey(array $object): string
+    {
+        return (string) ($object['startDate'] ?? '');
+    }//end sortKey()
 }//end class

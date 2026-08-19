@@ -12,12 +12,9 @@
 				<NcTextField
 					class="modifier-group-panel__name"
 					:label="t('pipelinq', 'Group name')"
-					:modelValue="group.name || ''"
-					@update:modelValue="(v) => (group.name = v)" />
-				<NcButton
-					variant="tertiary"
-					:aria-label="t('pipelinq', 'Remove group')"
-					@click="removeGroup(gIndex)">
+					:model-value="group.name || ''"
+					@update:model-value="v => group.name = v" />
+				<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove group')" @click="removeGroup(gIndex)">
 					<template #icon>
 						<Delete :size="20" />
 					</template>
@@ -26,28 +23,28 @@
 
 			<div class="modifier-group-panel__flags">
 				<NcCheckboxRadioSwitch
-					:modelValue="!!group.required"
-					@update:modelValue="(v) => (group.required = v)">
+					:model-value="!!group.required"
+					@update:model-value="v => group.required = v">
 					{{ t('pipelinq', 'Required') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
-					:modelValue="!!group.multiSelect"
-					@update:modelValue="(v) => (group.multiSelect = v)">
+					:model-value="!!group.multiSelect"
+					@update:model-value="v => group.multiSelect = v">
 					{{ t('pipelinq', 'Multiple selection') }}
 				</NcCheckboxRadioSwitch>
 				<div class="modifier-group-panel__minmax">
 					<NcTextField
 						class="modifier-group-panel__minmax-field"
 						:label="t('pipelinq', 'Min')"
-						:modelValue="String(group.min ?? 0)"
+						:model-value="String(group.min ?? 0)"
 						type="number"
-						@update:modelValue="(v) => (group.min = Number(v))" />
+						@update:model-value="v => group.min = Number(v)" />
 					<NcTextField
 						class="modifier-group-panel__minmax-field"
 						:label="t('pipelinq', 'Max')"
-						:modelValue="String(group.max ?? 1)"
+						:model-value="String(group.max ?? 1)"
 						type="number"
-						@update:modelValue="(v) => (group.max = Number(v))" />
+						@update:model-value="v => group.max = Number(v)" />
 				</div>
 			</div>
 
@@ -64,28 +61,21 @@
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'Option name')"
-								:labelVisible="false"
-								:modelValue="option.name || ''"
-								@update:modelValue="(v) => (option.name = v)" />
+								:label-visible="false"
+								:model-value="option.name || ''"
+								@update:model-value="v => option.name = v" />
 						</td>
 						<td>
 							<NcTextField
 								:label="t('pipelinq', 'Price adjustment')"
-								:labelVisible="false"
-								:modelValue="String(option.priceAdjustment ?? 0)"
+								:label-visible="false"
+								:model-value="String(option.priceAdjustment ?? 0)"
 								type="number"
-								@update:modelValue="
-									(v) => (option.priceAdjustment = Number(v))
-								" />
-							<span class="modifier-group-panel__hint">{{
-								adjustmentLabel(option.priceAdjustment)
-							}}</span>
+								@update:model-value="v => option.priceAdjustment = Number(v)" />
+							<span class="modifier-group-panel__hint">{{ adjustmentLabel(option.priceAdjustment) }}</span>
 						</td>
 						<td class="modifier-group-panel__actions-col">
-							<NcButton
-								variant="tertiary"
-								:aria-label="t('pipelinq', 'Remove option')"
-								@click="removeOption(group, oIndex)">
+							<NcButton variant="tertiary" :aria-label="t('pipelinq', 'Remove option')" @click="removeOption(group, oIndex)">
 								<template #icon>
 									<Delete :size="20" />
 								</template>
@@ -118,10 +108,10 @@
 </template>
 
 <script>
+import { NcButton, NcTextField, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcCheckboxRadioSwitch, NcTextField } from '@nextcloud/vue'
-import Delete from 'vue-material-design-icons/Delete.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import Delete from 'vue-material-design-icons/Delete.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -133,14 +123,12 @@ export default {
 		Plus,
 		Delete,
 	},
-
 	props: {
 		product: {
 			type: Object,
 			required: true,
 		},
 	},
-
 	emits: ['saved'],
 	data() {
 		return {
@@ -148,13 +136,11 @@ export default {
 			saving: false,
 		}
 	},
-
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
 	},
-
 	watch: {
 		product: {
 			immediate: true,
@@ -163,30 +149,23 @@ export default {
 			},
 		},
 	},
-
 	methods: {
 		/**
 		 * Deep-clone the product's modifier groups into local editable state.
 		 */
 		loadGroups() {
-			const raw = Array.isArray(this.product.modifierGroups)
-				? this.product.modifierGroups
-				: []
-			this.groups = raw.map((g) => ({
+			const raw = Array.isArray(this.product.modifierGroups) ? this.product.modifierGroups : []
+			this.groups = raw.map(g => ({
 				name: g.name || '',
 				required: !!g.required,
 				multiSelect: !!g.multiSelect,
 				min: Number(g.min ?? 0),
 				max: Number(g.max ?? 1),
 				options: Array.isArray(g.options)
-					? g.options.map((o) => ({
-							name: o.name || '',
-							priceAdjustment: Number(o.priceAdjustment ?? 0),
-						}))
+					? g.options.map(o => ({ name: o.name || '', priceAdjustment: Number(o.priceAdjustment ?? 0) }))
 					: [],
 			}))
 		},
-
 		/**
 		 * Human-readable price adjustment label.
 		 *
@@ -201,21 +180,12 @@ export default {
 			const sign = amount > 0 ? '+' : '−'
 			return `${sign}€${Math.abs(amount).toFixed(2)}`
 		},
-
 		/**
 		 * Append a new empty modifier group.
 		 */
 		addGroup() {
-			this.groups.push({
-				name: '',
-				required: false,
-				multiSelect: false,
-				min: 0,
-				max: 1,
-				options: [],
-			})
+			this.groups.push({ name: '', required: false, multiSelect: false, min: 0, max: 1, options: [] })
 		},
-
 		/**
 		 * Remove a modifier group.
 		 *
@@ -224,7 +194,6 @@ export default {
 		removeGroup(index) {
 			this.groups.splice(index, 1)
 		},
-
 		/**
 		 * Append an option to a group.
 		 *
@@ -233,7 +202,6 @@ export default {
 		addOption(group) {
 			group.options.push({ name: '', priceAdjustment: 0 })
 		},
-
 		/**
 		 * Remove an option from a group.
 		 *
@@ -243,7 +211,6 @@ export default {
 		removeOption(group, index) {
 			group.options.splice(index, 1)
 		},
-
 		/**
 		 * Persist the modifier groups to the product.
 		 */

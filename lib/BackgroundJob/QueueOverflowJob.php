@@ -41,70 +41,72 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-2
  */
-class QueueOverflowJob extends TimedJob {
-	/**
-	 * Default poll interval in seconds (5 minutes) when unconfigured.
-	 *
-	 * @var int
-	 */
-	private const DEFAULT_INTERVAL = 300;
+class QueueOverflowJob extends TimedJob
+{
+    /**
+     * Default poll interval in seconds (5 minutes) when unconfigured.
+     *
+     * @var int
+     */
+    private const DEFAULT_INTERVAL = 300;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param ITimeFactory $time The time factory.
-	 * @param QueueService $queueService The queue service.
-	 * @param SettingsService $settingsService The settings service.
-	 * @param LoggerInterface $logger The logger.
-	 */
-	public function __construct(
-		ITimeFactory $time,
-		private QueueService $queueService,
-		private SettingsService $settingsService,
-		private LoggerInterface $logger,
-	) {
-		parent::__construct(time: $time);
-		$this->setInterval(
-			seconds: $this->settingsService->getIntValue(
-				'queue_overflow.poll_interval_seconds',
-				self::DEFAULT_INTERVAL
-			)
-		);
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param ITimeFactory    $time            The time factory.
+     * @param QueueService    $queueService    The queue service.
+     * @param SettingsService $settingsService The settings service.
+     * @param LoggerInterface $logger          The logger.
+     */
+    public function __construct(
+        ITimeFactory $time,
+        private QueueService $queueService,
+        private SettingsService $settingsService,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(time: $time);
+        $this->setInterval(
+            seconds: $this->settingsService->getIntValue(
+                'queue_overflow.poll_interval_seconds',
+                self::DEFAULT_INTERVAL
+            )
+        );
+    }//end __construct()
 
-	/**
-	 * Execute the background job.
-	 *
-	 * Delegates to QueueService::processOverflow() to check all queues
-	 * and move excess items to their configured overflow targets.
-	 *
-	 * @param mixed $argument The job argument (unused).
-	 *
-	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 * @spec                                          openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-2
-	 */
-	protected function run(mixed $argument): void {
-		$this->logger->info('QueueOverflowJob: Starting overflow check');
+    /**
+     * Execute the background job.
+     *
+     * Delegates to QueueService::processOverflow() to check all queues
+     * and move excess items to their configured overflow targets.
+     *
+     * @param mixed $argument The job argument (unused).
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     * @spec                                          openspec/changes/reverse-2026-05-26-be-background-jobs/tasks.md#task-2
+     */
+    protected function run(mixed $argument): void
+    {
+        $this->logger->info('QueueOverflowJob: Starting overflow check');
 
-		try {
-			$moved = $this->queueService->processOverflow();
+        try {
+            $moved = $this->queueService->processOverflow();
 
-			if ($moved > 0) {
-				$this->logger->info("QueueOverflowJob: Moved {$moved} items to overflow queues");
-			}
+            if ($moved > 0) {
+                $this->logger->info("QueueOverflowJob: Moved {$moved} items to overflow queues");
+            }
 
-			if ($moved === 0) {
-				$this->logger->debug('QueueOverflowJob: No overflow items to move');
-			}
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'QueueOverflowJob: Error during overflow check',
-				['exception' => $e->getMessage()]
-			);
-		}//end try
+            if ($moved === 0) {
+                $this->logger->debug('QueueOverflowJob: No overflow items to move');
+            }
+        } catch (\Exception $e) {
+            $this->logger->error(
+                'QueueOverflowJob: Error during overflow check',
+                ['exception' => $e->getMessage()]
+            );
+        }//end try
 
-		$this->logger->info('QueueOverflowJob: Overflow check completed');
-	}//end run()
+        $this->logger->info('QueueOverflowJob: Overflow check completed');
+    }//end run()
 }//end class

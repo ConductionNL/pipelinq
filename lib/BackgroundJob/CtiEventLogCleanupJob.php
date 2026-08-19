@@ -39,51 +39,53 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-7.2
  */
-class CtiEventLogCleanupJob extends TimedJob {
-	/**
-	 * Run interval in seconds (24 hours).
-	 *
-	 * @var int
-	 */
-	private const INTERVAL = 86400;
+class CtiEventLogCleanupJob extends TimedJob
+{
+    /**
+     * Run interval in seconds (24 hours).
+     *
+     * @var int
+     */
+    private const INTERVAL = 86400;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param ITimeFactory $time The time factory.
-	 * @param CtiService $ctiService The CTI service.
-	 * @param LoggerInterface $logger The logger.
-	 */
-	public function __construct(
-		ITimeFactory $time,
-		private CtiService $ctiService,
-		private LoggerInterface $logger,
-	) {
-		parent::__construct(time: $time);
-		$this->setInterval(seconds: self::INTERVAL);
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param ITimeFactory    $time       The time factory.
+     * @param CtiService      $ctiService The CTI service.
+     * @param LoggerInterface $logger     The logger.
+     */
+    public function __construct(
+        ITimeFactory $time,
+        private CtiService $ctiService,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(time: $time);
+        $this->setInterval(seconds: self::INTERVAL);
+    }//end __construct()
 
-	/**
-	 * Run the daily cleanup.
-	 *
-	 * @param mixed $argument Unused.
-	 *
-	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
-	 */
-	protected function run(mixed $argument): void {
-		try {
-			$deleted = $this->ctiService->purgeOldEventLog();
-			$this->logger->info(
-				'CTI event log cleanup completed',
-				['deleted' => $deleted]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'CTI event log cleanup failed',
-				['exception' => $e->getMessage()]
-			);
-		}
-	}//end run()
+    /**
+     * Run the daily cleanup.
+     *
+     * @param mixed $argument Unused.
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+     */
+    protected function run(mixed $argument): void
+    {
+        try {
+            $deleted = $this->ctiService->purgeOldEventLog();
+            $this->logger->info(
+                'CTI event log cleanup completed',
+                ['deleted' => $deleted]
+            );
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                'CTI event log cleanup failed',
+                ['exception' => $e->getMessage()]
+            );
+        }
+    }//end run()
 }//end class

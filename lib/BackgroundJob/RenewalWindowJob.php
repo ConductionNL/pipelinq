@@ -43,80 +43,82 @@ use Throwable;
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-lead-automation
  */
-class RenewalWindowJob extends TimedJob {
-	/**
-	 * Constructor.
-	 *
-	 * @param ITimeFactory $time Time factory.
-	 * @param ContractService $contractService Contract lifecycle service.
-	 * @param RenewalEngineService $engine Renewal engine.
-	 * @param LoggerInterface $logger PSR logger.
-	 */
-	public function __construct(
-		ITimeFactory $time,
-		private ContractService $contractService,
-		private RenewalEngineService $engine,
-		private LoggerInterface $logger,
-	) {
-		parent::__construct(time: $time);
-		// Daily; renewal windows are evaluated on a calendar-day granularity.
-		$this->setInterval(seconds: 86400);
-		$this->setTimeSensitivity(sensitivity: self::TIME_INSENSITIVE);
-	}//end __construct()
+class RenewalWindowJob extends TimedJob
+{
+    /**
+     * Constructor.
+     *
+     * @param ITimeFactory         $time            Time factory.
+     * @param ContractService      $contractService Contract lifecycle service.
+     * @param RenewalEngineService $engine          Renewal engine.
+     * @param LoggerInterface      $logger          PSR logger.
+     */
+    public function __construct(
+        ITimeFactory $time,
+        private ContractService $contractService,
+        private RenewalEngineService $engine,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(time: $time);
+        // Daily; renewal windows are evaluated on a calendar-day granularity.
+        $this->setInterval(seconds: 86400);
+        $this->setTimeSensitivity(sensitivity: self::TIME_INSENSITIVE);
+    }//end __construct()
 
-	/**
-	 * Run the renewal-window sweep.
-	 *
-	 * @param mixed $argument Job argument (unused).
-	 *
-	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 *
-	 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
-	 */
-	protected function run($argument): void {
-		unset($argument);
+    /**
+     * Run the renewal-window sweep.
+     *
+     * @param mixed $argument Job argument (unused).
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-renewal-window-detection
+     */
+    protected function run($argument): void
+    {
+        unset($argument);
 
-		$contracts = $this->contractService->loadAll();
-		if (empty($contracts) === true) {
-			return;
-		}
+        $contracts = $this->contractService->loadAll();
+        if (empty($contracts) === true) {
+            return;
+        }
 
-		$today = date('Y-m-d');
-		$transitions = 0;
+        $today       = date('Y-m-d');
+        $transitions = 0;
 
-		foreach ($contracts as $contract) {
-			try {
-				// First reconcile any expiring contract whose renewal lead resolved.
-				if ((string)($contract['status'] ?? '') === 'expiring'
-					&& ((string)($contract['renewalLeadOutcome'] ?? '')) !== ''
-				) {
-					$action = $this->engine->reconcile($contract);
-					if ($action !== 'noop') {
-						$transitions++;
-					}
+        foreach ($contracts as $contract) {
+            try {
+                // First reconcile any expiring contract whose renewal lead resolved.
+                if ((string) ($contract['status'] ?? '') === 'expiring'
+                    && ((string) ($contract['renewalLeadOutcome'] ?? '')) !== ''
+                ) {
+                    $action = $this->engine->reconcile($contract);
+                    if ($action !== 'noop') {
+                        $transitions++;
+                    }
 
-					continue;
-				}
+                    continue;
+                }
 
-				$action = $this->engine->processContract($contract, $today);
-				if ($action !== 'noop') {
-					$transitions++;
-				}
-			} catch (Throwable $e) {
-				$this->logger->error(
-					'RenewalWindowJob: contract processing failed',
-					[
-						'contract' => ($contract['id'] ?? ''),
-						'error' => $e->getMessage(),
-					]
-				);
-			}//end try
-		}//end foreach
+                $action = $this->engine->processContract($contract, $today);
+                if ($action !== 'noop') {
+                    $transitions++;
+                }
+            } catch (Throwable $e) {
+                $this->logger->error(
+                    'RenewalWindowJob: contract processing failed',
+                    [
+                        'contract' => ($contract['id'] ?? ''),
+                        'error'    => $e->getMessage(),
+                    ]
+                );
+            }//end try
+        }//end foreach
 
-		if ($transitions > 0) {
-			$this->logger->info('RenewalWindowJob: processed contracts', ['transitions' => $transitions]);
-		}
-	}//end run()
+        if ($transitions > 0) {
+            $this->logger->info('RenewalWindowJob: processed contracts', ['transitions' => $transitions]);
+        }
+    }//end run()
 }//end class

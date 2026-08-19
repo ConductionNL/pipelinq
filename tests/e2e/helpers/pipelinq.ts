@@ -66,13 +66,9 @@ export async function dismissWalkthrough(page: Page): Promise<void> {
 
 /** Dismiss the fleet-wide support dialog if it is overlaying the content. */
 export async function dismissSupportDialog(page: Page): Promise<void> {
-	const dialog = page
-		.locator('.cn-support-dialog, [data-testid="cn-support-dialog"]')
-		.first()
+	const dialog = page.locator('.cn-support-dialog, [data-testid="cn-support-dialog"]').first()
 	if (await dialog.isVisible().catch(() => false)) {
-		const close = dialog
-			.getByRole('button', { name: /close|sluiten|dismiss|got it|×/i })
-			.first()
+		const close = dialog.getByRole('button', { name: /close|sluiten|dismiss|got it|×/i }).first()
 		if (await close.isVisible().catch(() => false)) {
 			await close.click().catch(() => {})
 		} else {
@@ -122,11 +118,7 @@ async function expandCollapsedAncestors(link: Locator): Promise<void> {
 		const toggle = group.locator('button.icon-collapse').first()
 		if (!(await toggle.count().catch(() => 0))) continue
 		await toggle.click().catch(() => {})
-		await group
-			.locator('ul')
-			.first()
-			.waitFor({ state: 'visible', timeout: 5000 })
-			.catch(() => {})
+		await group.locator('ul').first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
 	}
 	await link.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
 }
@@ -149,11 +141,7 @@ export async function revealNavEntry(page: Page, label: string): Promise<Locator
 	// Filter by exact visible text so the entry — not the caption — is targeted.
 	const link = page
 		.locator('#app-navigation-vue a.app-navigation-entry-link[href*="#/"]')
-		.filter({
-			hasText: new RegExp(
-				`^\\s*${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`,
-			),
-		})
+		.filter({ hasText: new RegExp(`^\\s*${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`) })
 		.first()
 	// The entry is present in the DOM, but a leaf can be hidden because its
 	// container is collapsed by default:
@@ -205,7 +193,7 @@ async function openSettingsFoldout(page: Page): Promise<void> {
 	const toggle = page
 		.locator(
 			'#app-navigation-vue [data-testid="cn-nav-settings"] button[aria-expanded="false"],'
-				+ ' #app-navigation-vue button.settings-button[aria-expanded="false"]',
+			+ ' #app-navigation-vue button.settings-button[aria-expanded="false"]',
 		)
 		.first()
 	if (!(await toggle.isVisible().catch(() => false))) {
@@ -215,11 +203,7 @@ async function openSettingsFoldout(page: Page): Promise<void> {
 }
 
 /** Click a sidebar nav link by exact label and wait for the URL to settle. */
-export async function navClick(
-	page: Page,
-	label: string,
-	urlRe: RegExp,
-): Promise<void> {
+export async function navClick(page: Page, label: string, urlRe: RegExp): Promise<void> {
 	const link = await revealNavEntry(page, label)
 	await expect(link).toBeVisible({ timeout: 10000 })
 	await link.click()
@@ -230,10 +214,7 @@ export async function navClick(
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
 	// Give the view a beat to fetch + render its first surface.
-	await page
-		.locator('#content-vue')
-		.waitFor({ state: 'visible', timeout: 10000 })
-		.catch(() => {})
+	await page.locator('#content-vue').waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
 }
 
 /**
@@ -251,10 +232,7 @@ export async function navClick(
  * strip (src/manifest.json, page id `Tickets`).
  */
 export async function clickQuickFilter(page: Page, label: string): Promise<void> {
-	const tab = page
-		.locator('#content-vue')
-		.getByRole('tab', { name: label, exact: true })
-		.first()
+	const tab = page.locator('#content-vue').getByRole('tab', { name: label, exact: true }).first()
 	await expect(tab).toBeVisible({ timeout: 10000 })
 	await tab.click()
 	await expect(tab).toHaveAttribute('aria-selected', 'true', { timeout: 10000 })
@@ -286,17 +264,11 @@ export async function clickQuickFilter(page: Page, label: string): Promise<void>
  * `#content-vue` — so both the toggle click and the field lookup are page-wide.
  */
 export async function openIndexSearch(page: Page): Promise<Locator> {
-	const field = page
-		.locator('.app-sidebar input.input-field__input[type="text"]')
-		.first()
+	const field = page.locator('.app-sidebar input.input-field__input[type="text"]').first()
 	if (!(await field.isVisible().catch(() => false))) {
-		const toggle = page
-			.getByRole('button', { name: /search and columns/i })
-			.first()
-		await expect(
-			toggle,
-			'the index Search/Columns toggle must be rendered when sidebar.enabled is set',
-		).toBeVisible({ timeout: 10000 })
+		const toggle = page.getByRole('button', { name: /search and columns/i }).first()
+		await expect(toggle, 'the index Search/Columns toggle must be rendered when sidebar.enabled is set')
+			.toBeVisible({ timeout: 10000 })
 		await toggle.click()
 	}
 	await field.waitFor({ state: 'visible', timeout: 10000 })
@@ -330,12 +302,7 @@ export async function openActionsOverflow(page: Page): Promise<void> {
 	const toggle = page
 		.locator('#content-vue [data-testid="cn-actions"] button')
 		.first()
-		.or(
-			page
-				.locator('#content-vue')
-				.getByRole('button', { name: 'Actions' })
-				.first(),
-		)
+		.or(page.locator('#content-vue').getByRole('button', { name: 'Actions' }).first())
 	await expect(toggle.first()).toBeVisible({ timeout: 10000 })
 	await toggle.first().click()
 }
@@ -348,25 +315,15 @@ export async function openActionsOverflow(page: Page): Promise<void> {
  * NcActions teleports its menu to the document body, so the entry is matched
  * page-wide rather than inside `#content-vue`.
  */
-export async function clickHeaderAction(
-	page: Page,
-	label: string | RegExp,
-): Promise<void> {
+export async function clickHeaderAction(page: Page, label: string | RegExp): Promise<void> {
 	await openActionsOverflow(page)
 	// NcActionButton renders `<li class="action"><button class="action-button">`,
 	// and NcActions teleports the popover to the document body — so the entry is
 	// matched page-wide, not inside `#content-vue`. `menuitem` is tried first
 	// because it is the role NcActions assigns; the class selector is the
 	// fallback for the same element.
-	const entry = page
-		.getByRole('menuitem', { name: label })
-		.first()
-		.or(
-			page
-				.locator('button.action-button, a.action-link')
-				.filter({ hasText: label })
-				.first(),
-		)
+	const entry = page.getByRole('menuitem', { name: label }).first()
+		.or(page.locator('button.action-button, a.action-link').filter({ hasText: label }).first())
 	await expect(entry.first()).toBeVisible({ timeout: 10000 })
 	await entry.first().click()
 }
@@ -404,8 +361,7 @@ const KNOWN_SHELL_ERRORS = [
  */
 export function trackPipelinqErrors(page: Page): () => string[] {
 	const errors: string[] = []
-	const noise =
-		/Failed to load resource|favicon|net::ERR|\b404\b|Download the (React|Vue) DevTools|preload/i
+	const noise = /Failed to load resource|favicon|net::ERR|\b404\b|Download the (React|Vue) DevTools|preload/i
 	const onConsole = (m: ConsoleMessage) => {
 		const t = m.text()
 		if (m.type() !== 'error') return
@@ -414,8 +370,7 @@ export function trackPipelinqErrors(page: Page): () => string[] {
 		errors.push(t)
 	}
 	const onError = (e: Error) => {
-		if (!KNOWN_SHELL_ERRORS.some((re) => re.test(e.message)))
-			errors.push('PAGEERROR: ' + e.message)
+		if (!KNOWN_SHELL_ERRORS.some((re) => re.test(e.message))) errors.push('PAGEERROR: ' + e.message)
 	}
 	page.on('console', onConsole)
 	page.on('pageerror', onError)
@@ -452,11 +407,9 @@ export async function assertNoHardError(page: Page): Promise<void> {
  * genuinely absent app. This locator targets the chrome NC actually serves.
  */
 export function nextcloudErrorPage(page: Page) {
-	return page.locator('.guest-box, .body-login-container').filter({
-		has: page.getByRole('heading', {
-			name: /^(Page not found|Internal Server Error|Error)$/,
-		}),
-	})
+	return page
+		.locator('.guest-box, .body-login-container')
+		.filter({ has: page.getByRole('heading', { name: /^(Page not found|Internal Server Error|Error)$/ }) })
 }
 
 /**
@@ -470,10 +423,7 @@ export function nextcloudErrorPage(page: Page) {
  * The positive signal matters: (1) and (2) are both assertions about something
  * NOT being there, and an empty page satisfies both.
  */
-export async function assertAppShellServed(
-	page: Page,
-	response: { status(): number } | null,
-): Promise<void> {
+export async function assertAppShellServed(page: Page, response: { status(): number } | null): Promise<void> {
 	expect(response, 'navigation produced no response').not.toBeNull()
 	expect(response?.status(), 'app must be served, not an NC error page').toBe(200)
 	await expect(nextcloudErrorPage(page)).toHaveCount(0)

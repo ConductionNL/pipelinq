@@ -19,18 +19,18 @@
 					class="xwiki-widget__search-input"
 					:aria-label="t('pipelinq', 'Search knowledge base')"
 					:placeholder="t('pipelinq', 'Search knowledge base')"
-					@input="onSearchInput" />
+					@input="onSearchInput">
 			</div>
 		</header>
-		<div
-			v-if="store.available === false && store.status !== null"
-			class="xwiki-widget__unavailable">
+		<div v-if="store.available === false && store.status !== null" class="xwiki-widget__unavailable">
 			{{ t('pipelinq', 'xWiki integration unavailable') }}
 		</div>
 		<NcLoadingIcon v-else-if="store.loading" />
-		<XWikiArticleList v-else :articles="visibleArticles" @select="onSelect" />
-		<a
-			v-if="hasMore"
+		<XWikiArticleList
+			v-else
+			:articles="visibleArticles"
+			@select="onSelect" />
+		<a v-if="hasMore"
 			class="xwiki-widget__more"
 			href="#"
 			@click.prevent="$emit('view-more')">
@@ -41,8 +41,8 @@
 
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
-import XWikiArticleList from './XWikiArticleList.vue'
 import { useXwikiStore } from '../../store/modules/xwiki.js'
+import XWikiArticleList from './XWikiArticleList.vue'
 
 export default {
 	name: 'XWikiWidget',
@@ -52,60 +52,49 @@ export default {
 			type: String,
 			default: '',
 		},
-
 		tags: {
 			type: Array,
 			default: () => [],
 		},
-
 		query: {
 			type: String,
 			default: '',
 		},
-
 		limit: {
 			type: Number,
 			default: 5,
 		},
-
 		title: {
 			type: String,
 			default: 'Knowledge base',
 		},
-
 		showSearch: {
 			type: Boolean,
 			default: false,
 		},
 	},
-
 	emits: ['select', 'view-more'],
 	setup() {
 		return { store: useXwikiStore() }
 	},
-
 	data() {
 		return {
 			localQuery: this.query,
 			debounceHandle: null,
 		}
 	},
-
 	computed: {
 		visibleArticles() {
 			return (this.store.articles || []).slice(0, this.limit)
 		},
-
 		hasMore() {
 			return (this.store.articles || []).length > this.limit
 		},
 	},
-
 	async mounted() {
 		await this.store.checkStatus()
 		await this.refresh()
 	},
-
 	methods: {
 		async refresh() {
 			await this.store.search({
@@ -115,11 +104,9 @@ export default {
 				limit: this.limit + 1,
 			})
 		},
-
 		onSelect(article) {
 			this.$emit('select', article)
 		},
-
 		onSearchInput() {
 			if (this.debounceHandle) clearTimeout(this.debounceHandle)
 			this.debounceHandle = setTimeout(() => {

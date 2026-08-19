@@ -4,15 +4,11 @@
   -->
 <template>
 	<div class="receipt-preview">
-		<span class="receipt-preview__label">{{
-			t('pipelinq', 'Receipt preview')
-		}}</span>
+		<span class="receipt-preview__label">{{ t('pipelinq', 'Receipt preview') }}</span>
 		<div v-if="loading" class="receipt-preview__loading">
 			<NcLoadingIcon :size="20" />
 		</div>
-		<pre v-else class="receipt-preview__body">{{
-			content || t('pipelinq', 'No preview available')
-		}}</pre>
+		<pre v-else class="receipt-preview__body">{{ content || t('pipelinq', 'No preview available') }}</pre>
 	</div>
 </template>
 
@@ -24,13 +20,11 @@ export default {
 	components: {
 		NcLoadingIcon,
 	},
-
 	props: {
 		content: {
 			type: String,
 			default: '',
 		},
-
 		loading: {
 			type: Boolean,
 			default: false,

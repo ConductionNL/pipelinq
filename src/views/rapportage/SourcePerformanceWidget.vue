@@ -12,7 +12,11 @@
 		:name="t('pipelinq', 'No source data')"
 		:description="t('pipelinq', 'No lead source performance to report yet.')" />
 
-	<CnDataTable v-else :rows="rows" :columns="columns" borderless />
+	<CnDataTable
+		v-else
+		:rows="rows"
+		:columns="columns"
+		borderless />
 </template>
 
 <script>
@@ -28,7 +32,6 @@ export default {
 			default: () => [],
 		},
 	},
-
 	computed: {
 		/**
 		 * Column descriptors consumed by CnDataTable. Each row is
@@ -39,36 +42,12 @@ export default {
 		columns() {
 			return [
 				{ key: 'source', label: t('pipelinq', 'Source'), sortable: true },
-				{
-					key: 'total',
-					label: t('pipelinq', 'Total leads'),
-					sortable: true,
-					align: 'right',
-				},
-				{
-					key: 'won',
-					label: t('pipelinq', 'Won'),
-					sortable: true,
-					align: 'right',
-				},
-				{
-					key: 'conversionRate',
-					label: t('pipelinq', 'Conversion %'),
-					sortable: true,
-					align: 'right',
-					format: (v) => `${v}%`,
-				},
-				{
-					key: 'avgWonValue',
-					label: t('pipelinq', 'Avg deal value'),
-					sortable: true,
-					align: 'right',
-					format: (v) =>
-						v > 0 ? `EUR ${v.toLocaleString('nl-NL')}` : '—',
-				},
+				{ key: 'total', label: t('pipelinq', 'Total leads'), sortable: true, align: 'right' },
+				{ key: 'won', label: t('pipelinq', 'Won'), sortable: true, align: 'right' },
+				{ key: 'conversionRate', label: t('pipelinq', 'Conversion %'), sortable: true, align: 'right', format: v => `${v}%` },
+				{ key: 'avgWonValue', label: t('pipelinq', 'Avg deal value'), sortable: true, align: 'right', format: v => v > 0 ? `EUR ${v.toLocaleString('nl-NL')}` : '—' },
 			]
 		},
-
 		rows() {
 			return Array.isArray(this.data) ? this.data : []
 		},

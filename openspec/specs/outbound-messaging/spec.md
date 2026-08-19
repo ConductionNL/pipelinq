@@ -70,8 +70,6 @@ The system MUST render a Messages conversation section (registered `kind:'sectio
 
 ### Requirement: REQ-OM-004 — Server-side send endpoint
 
-@e2e exclude API contract, requirement-scoped: every scenario here asserts the HTTP endpoint, which is exercised by Newman (`tests/newman`) and by MessagingControllerTest / OutboundMessagingContractTest — never by Playwright, because API assertions do not belong in the UI ring. The UI path over this endpoint is covered by REQ-OM-003's scenarios. Marker moved here from the end of the requirement body, where it bound to the last scenario only.
-
 The system MUST expose an authenticated send endpoint (`messaging#send`, POST `/api/messaging/send`) that accepts contact id, channel, body or `templateId` + parameters, and an optional provider hint, orchestrates `WhatsAppAdapter::send()` / `SmsAdapter::send()` (all consent, budget, template, and failover gating server-side), and returns the adapter outcome envelope (sent / consent-missing / budget-exceeded / template-missing / failed) with an HTTP status that never leaks provider credentials or raw vendor errors. A preflight response (or dedicated GET) MUST expose the composer's gating facts: available channels, session-window state, consent state, approved templates. The endpoint MUST be group-authorized (`#[NoAdminRequired]` + per-object access via the contact's register RBAC) — no admin requirement, no public access.
 
 #### Scenario: Send API dispatches and persists
@@ -90,6 +88,7 @@ The system MUST expose an authenticated send endpoint (`messaging#send`, POST `/
 - **WHEN** a user without access to the contact's register objects calls the send endpoint
 - **THEN** the request MUST be rejected before any adapter is invoked
 
+`@e2e exclude` API contract — asserted in Newman (`tests/newman`), never in Playwright (API assertions do not belong in the UI ring); the UI path over this endpoint is covered by REQ-OM-003's scenarios.
 
 ### Requirement: REQ-OM-005 — Consent gating and recording
 
@@ -116,8 +115,6 @@ Business-initiated WhatsApp messages (template sends outside the 24h session win
 
 ### Requirement: REQ-OM-006 — Outbound sends audited as contactmomenten
 
-@e2e exclude backend audit side-effect, requirement-scoped: OutboundMessagingContractTest::testSmsSendPersistsAndAudits asserts exactly one ticket row with ticketType=contactmoment, channel=sms, the client link and channelMetadata.direction/platform. NOT asserted: metadata.messageId pointing at the persisted message row — an unwritten PHPUnit case, not an e2e gap. The visible contactmoment list is covered by the contactmomenten e2e specs. Marker moved here from the end of the requirement body, where it bound to the last scenario only.
-
 Every successful outbound send (agent composer or SLA escalation) MUST write a `contactmoment` linked to the client/contact: WhatsApp with `channel: "chat"` and `metadata: {platform: "whatsapp", direction: "outbound", messageId, conversationId}` (omnichannel convention); SMS with the new `channel: "sms"` enum value and the same metadata shape. The audit write MUST be log-and-continue — it MUST never block, fail, or roll back the send itself.
 
 #### Scenario: SMS send produces a contactmoment
@@ -131,10 +128,9 @@ Every successful outbound send (agent composer or SLA escalation) MUST write a `
 - **WHEN** a send succeeds
 - **THEN** the send outcome MUST still be `sent` and the failure MUST be logged
 
+`@e2e exclude` backend audit side-effect — asserted by PHPUnit (adapter audit-hook tests) and Newman (contactmoment row present after API send); the visible contactmoment list is already covered by contactmomenten e2e specs.
 
 ### Requirement: REQ-OM-007 — Contract tests in CI and the live gate
-
-@e2e exclude test-infrastructure requirement, requirement-scoped: the subject is the CI/Newman/PHPUnit rings themselves, so demanding a Playwright test OF the test rings is a category error. The Playwright coverage this requirement mandates is declared on REQ-OM-001/002/003's scenarios. Marker moved here from the end of the requirement body, where it bound to the last scenario only.
 
 The default CI pipeline MUST run the outbound pipeline end-to-end with zero external network by using OpenConnector's seeded mock-mode sources (`configuration.mock: true` — OR's `ExternalIntegrationRouter` short-circuits and returns the canned vendor-shaped `mockResponse`): PHPUnit integration tests through `MessageDispatchTrait`, Newman against the send/consent/test endpoints, Playwright over the settings + composer surfaces. An env-guarded live-gate variant (gate-19 conventions) MUST validate real provider request shapes at zero cost: SMS via the `messagebird-sms` source configured with a Bird **test access key** (`test_…` — request validated, nothing sent, no charge), WhatsApp via the `whatsapp-cloud-api` source using the Meta **test number + registered test recipients** (real `wamid.*` + production status webhooks). The live gate MUST be skipped (not failed) when its env credentials are absent.
 
@@ -158,6 +154,7 @@ The default CI pipeline MUST run the outbound pipeline end-to-end with zero exte
 - **WHEN** the live-gate suite runs without the messaging env credentials
 - **THEN** the messaging live tests MUST report skipped, not failed
 
+`@e2e exclude` test-infrastructure requirement — this requirement is about the CI/Newman/PHPUnit rings themselves; the Playwright coverage it mandates is declared on REQ-OM-001/002/003's scenarios.
 
 ### Requirement: REQ-OM-008 — Promotion of omnichannel-registratie to stable
 

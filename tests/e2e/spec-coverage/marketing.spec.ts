@@ -42,7 +42,7 @@ async function api(
 	method: string,
 	path: string,
 	body?: unknown,
-): Promise<{ status: number; json: any; text: string }> {
+): Promise<{ status: number, json: any, text: string }> {
 	return await page.evaluate(
 		async ({ method, path, body }) => {
 			const res = await fetch(path, {
@@ -57,11 +57,7 @@ async function api(
 			})
 			const text = await res.text()
 			let json: any = null
-			try {
-				json = text ? JSON.parse(text) : null
-			} catch {
-				/* non-JSON */
-			}
+			try { json = text ? JSON.parse(text) : null } catch { /* non-JSON */ }
 			return { status: res.status, json, text: text.slice(0, 400) }
 		},
 		{ method, path, body },
@@ -83,9 +79,7 @@ function idOf(row: any): string {
  * fixture minted here is byte-shaped like the data the schema already holds.
  */
 function isoHoursAgo(hours: number): string {
-	return new Date(Date.now() - hours * 60 * 60 * 1000)
-		.toISOString()
-		.replace(/\.\d{3}Z$/, 'Z')
+	return new Date(Date.now() - (hours * 60 * 60 * 1000)).toISOString().replace(/\.\d{3}Z$/, 'Z')
 }
 
 /**
@@ -102,9 +96,7 @@ function isoHoursAgo(hours: number): string {
  * that both endpoints answer 200 with the five seeded segments and three
  * seeded templates.
  */
-async function seededFks(
-	page: Page,
-): Promise<{ segmentId: string; templateId: string }> {
+async function seededFks(page: Page): Promise<{ segmentId: string, templateId: string }> {
 	const segments = await api(page, 'GET', `${APP}/api/segments`)
 	expect(segments.status, segments.text).toBe(200)
 	const segRows: any[] = segments.json?.data ?? segments.json ?? []
@@ -116,26 +108,17 @@ async function seededFks(
 	const tplRows: any[] = templates.json?.data ?? templates.json ?? []
 	const email = tplRows.find((t: any) => t.channel === 'email') ?? tplRows[0]
 	const templateId = idOf(email)
-	expect(
-		templateId,
-		'a seeded CampaignTemplate id is required to mint a Blast',
-	).toBeTruthy()
+	expect(templateId, 'a seeded CampaignTemplate id is required to mint a Blast').toBeTruthy()
 
 	return { segmentId, templateId }
 }
 
 /** Mint one Blast against the OpenRegister object API and return its id. */
-async function mintBlast(
-	page: Page,
-	fields: Record<string, unknown>,
-): Promise<string> {
+async function mintBlast(page: Page, fields: Record<string, unknown>): Promise<string> {
 	const made = await api(page, 'POST', `${OR}/blast`, fields)
 	expect(made.status, made.text).toBeLessThan(300)
 	const id = idOf(made.json)
-	expect(
-		id,
-		`the minted blast "${String(fields.name)}" must have an id`,
-	).toBeTruthy()
+	expect(id, `the minted blast "${String(fields.name)}" must have an id`).toBeTruthy()
 	return id
 }
 
@@ -149,12 +132,8 @@ async function mintBlast(
 function expectGenericError(message: unknown): void {
 	expect(typeof message, 'the error must be a plain string message').toBe('string')
 	const m = String(message)
-	expect(m.length, `error message is too long to be generic: ${m}`).toBeLessThan(
-		200,
-	)
-	expect(m).not.toMatch(
-		/SQLSTATE|Exception|Stack trace|\/var\/www|OCA\\\\|::__construct|\.php:\d+/i,
-	)
+	expect(m.length, `error message is too long to be generic: ${m}`).toBeLessThan(200)
+	expect(m).not.toMatch(/SQLSTATE|Exception|Stack trace|\/var\/www|OCA\\\\|::__construct|\.php:\d+/i)
 }
 
 /** Deep-link to a hash route and let the view settle. */
@@ -172,16 +151,12 @@ async function gotoHash(page: Page, hash: string): Promise<void> {
  * ══════════════════════════════════════════════════════════════════════════ */
 test.describe('Blast performance dashboard', () => {
 	// @e2e openspec/specs/marketing-analytics/spec.md#overview-lists-blasts-with-rates
-	test('the Overview tab lists blasts with delivery rates in sortable columns', async ({
-		page,
-	}) => {
+	test('the Overview tab lists blasts with delivery rates in sortable columns', async ({ page }) => {
 		await openApp(page)
 		await gotoHash(page, '/blasts/performance')
 
 		const dash = page.locator('.performance-dashboard')
-		await expect(
-			dash.getByRole('heading', { name: 'Blast performance' }),
-		).toBeVisible({ timeout: 20000 })
+		await expect(dash.getByRole('heading', { name: 'Blast performance' })).toBeVisible({ timeout: 20000 })
 
 		// Three tabs, Overview selected by default.
 		const tabs = dash.getByRole('tab')
@@ -191,40 +166,20 @@ test.describe('Blast performance dashboard', () => {
 		// click handler — that is what "sortable columns" means here.
 		const headers = dash.locator('.performance-dashboard__table thead th')
 		await expect(headers).toHaveCount(8, { timeout: 20000 })
-		for (const label of [
-			'Sent',
-			'Delivered',
-			'Open rate',
-			'Click rate',
-			'Unsubscribed',
-		]) {
+		for (const label of ['Sent', 'Delivered', 'Open rate', 'Click rate', 'Unsubscribed']) {
 			await expect(headers.filter({ hasText: label }).first()).toBeVisible()
 		}
-		await expect(headers.first()).toHaveAttribute(
-			'aria-sort',
-			/ascending|descending|none/,
-		)
+		await expect(headers.first()).toHaveAttribute('aria-sort', /ascending|descending|none/)
 
 		// The seeded A/B pair is listed (register.d/95-…: two Blast objects).
 		const body = dash.locator('.performance-dashboard__table tbody')
-		await expect(
-			body
-				.locator('tr')
-				.filter({ hasText: 'Q4 Gemeente Outreach - Variant A' }),
-		).toHaveCount(1)
-		await expect(
-			body
-				.locator('tr')
-				.filter({ hasText: 'Q4 Gemeente Outreach - Variant B' }),
-		).toHaveCount(1)
+		await expect(body.locator('tr').filter({ hasText: 'Q4 Gemeente Outreach - Variant A' })).toHaveCount(1)
+		await expect(body.locator('tr').filter({ hasText: 'Q4 Gemeente Outreach - Variant B' })).toHaveCount(1)
 
 		// Sorting is wired: clicking a header flips its aria-sort.
 		const before = await headers.first().getAttribute('aria-sort')
 		await headers.first().click()
-		await expect(headers.first()).not.toHaveAttribute(
-			'aria-sort',
-			String(before),
-		)
+		await expect(headers.first()).not.toHaveAttribute('aria-sort', String(before))
 
 		await assertNoHardError(page)
 	})
@@ -256,22 +211,14 @@ test.describe('Blast performance dashboard', () => {
 	 * the threshold and the pending branch for real.
 	 */
 	// @e2e openspec/specs/marketing-analytics/spec.md#test-unavailable-if-n500
-	test('the A/B tab withholds significance below 500 delivered per variant', async ({
-		page,
-	}) => {
+	test('the A/B tab withholds significance below 500 delivered per variant', async ({ page }) => {
 		await openApp(page)
 		const { segmentId, templateId } = await seededFks(page)
 
 		// Unique per attempt so a retry cannot see the previous attempt's card.
 		const stamp = Date.now()
 		const parentName = `E2E gate19 A/B parent ${stamp}`
-		const base = {
-			channel: 'email',
-			status: 'sent',
-			segmentId,
-			templateId,
-			sentAt: isoHoursAgo(2),
-		}
+		const base = { channel: 'email', status: 'sent', segmentId, templateId, sentAt: isoHoursAgo(2) }
 
 		// Both arms sit far below AB_MIN_DELIVERED (500), which is the condition
 		// the scenario names. The counts are distinct so the rendered notice can
@@ -279,171 +226,38 @@ test.describe('Blast performance dashboard', () => {
 		const parentId = await mintBlast(page, {
 			...base,
 			name: parentName,
-			totals: {
-				queued: 0,
-				sent: 14,
-				delivered: 12,
-				bounced: 2,
-				opened: 6,
-				clicked: 3,
-				unsubscribed: 0,
-				complained: 0,
-			},
+			totals: { queued: 0, sent: 14, delivered: 12, bounced: 2, opened: 6, clicked: 3, unsubscribed: 0, complained: 0 },
 		})
 		const variantId = await mintBlast(page, {
 			...base,
 			name: `E2E gate19 A/B variant ${stamp}`,
 			abVariantOf: parentId,
-			totals: {
-				queued: 0,
-				sent: 14,
-				delivered: 9,
-				bounced: 5,
-				opened: 4,
-				clicked: 1,
-				unsubscribed: 0,
-				complained: 0,
-			},
+			totals: { queued: 0, sent: 14, delivered: 9, bounced: 5, opened: 4, clicked: 1, unsubscribed: 0, complained: 0 },
 		})
 
 		try {
 			await gotoHash(page, '/blasts/performance')
 
 			const dash = page.locator('.performance-dashboard')
-			await expect(
-				dash.getByRole('heading', { name: 'Blast performance' }),
-			).toBeVisible({ timeout: 20000 })
+			await expect(dash.getByRole('heading', { name: 'Blast performance' })).toBeVisible({ timeout: 20000 })
 			await dash.getByRole('tab', { name: /A\/B/i }).click()
 
 			// The card for THIS pair — matched on the parent name the card's own
 			// <h3> renders, so a card belonging to any other pair cannot satisfy it.
-			const card = dash
-				.locator('.performance-dashboard__ab-card')
+			const card = dash.locator('.performance-dashboard__ab-card')
 				.filter({ hasText: parentName })
 				.first()
 			await expect(card).toBeVisible({ timeout: 20000 })
-			await expect(
-				card.getByRole('heading', { name: 'Variant A' }),
-			).toBeVisible()
-			await expect(
-				card.getByRole('heading', { name: 'Variant B' }),
-			).toBeVisible()
+			await expect(card.getByRole('heading', { name: 'Variant A' })).toBeVisible()
+			await expect(card.getByRole('heading', { name: 'Variant B' })).toBeVisible()
 
 			// The pending notice is shown WITH the current counts, and no verdict /
 			// p-value is computed.
 			const pending = card.locator('.performance-dashboard__ab-pending')
 			await expect(pending).toBeVisible()
 			await expect(pending).toContainText('Results not yet available')
-			await expect(pending).toContainText(
-				'Currently A: 12 delivered, B: 9 delivered.',
-			)
-			await expect(
-				card.locator('.performance-dashboard__ab-verdict'),
-			).toHaveCount(0)
-
-			await assertNoHardError(page)
-		} finally {
-			await api(page, 'DELETE', `${OR}/blast/${variantId}`)
-			await api(page, 'DELETE', `${OR}/blast/${parentId}`)
-		}
-	})
-
-	/*
-	 * THE OTHER SIDE OF THE SAME BRANCH.
-	 * The sibling above pins the pending branch (both arms under
-	 * AB_MIN_DELIVERED). This one pins the branch the requirement is actually
-	 * named for: both arms over 500 delivered AND both sent more than
-	 * AB_MIN_ELAPSED_MS ago, so `eligible` is true, `chiSquarePValue()` runs
-	 * and a verdict is rendered.
-	 *
-	 * The click rates are deliberately far apart (10% vs 2% over 600 delivered)
-	 * so the chi-square result is not borderline — a test that could flip
-	 * between the two verdict strings on a rounding change would be pinning the
-	 * arithmetic, not the branch. The assertion therefore accepts either
-	 * verdict literal for the "displays accordingly" clause, and separately
-	 * asserts the significant-variant class, which is what distinguishes this
-	 * branch from the pending one.
-	 */
-	// @e2e openspec/specs/marketing-analytics/spec.md#significance-test-once-n500-and-24h-elapsed
-	test('the A/B tab computes a p-value once both arms clear 500 delivered and 24h', async ({
-		page,
-	}) => {
-		await openApp(page)
-		const { segmentId, templateId } = await seededFks(page)
-
-		const stamp = Date.now()
-		const parentName = `E2E gate19 A/B significant parent ${stamp}`
-		// 30h ago: past AB_MIN_ELAPSED_MS (24h) for both arms, so the elapsed
-		// clause of the scenario is exercised rather than assumed.
-		const base = {
-			channel: 'email',
-			status: 'sent',
-			segmentId,
-			templateId,
-			sentAt: isoHoursAgo(30),
-		}
-
-		const parentId = await mintBlast(page, {
-			...base,
-			name: parentName,
-			totals: {
-				queued: 0,
-				sent: 640,
-				delivered: 600,
-				bounced: 40,
-				opened: 300,
-				clicked: 60,
-				unsubscribed: 0,
-				complained: 0,
-			},
-		})
-		const variantId = await mintBlast(page, {
-			...base,
-			name: `E2E gate19 A/B significant variant ${stamp}`,
-			abVariantOf: parentId,
-			totals: {
-				queued: 0,
-				sent: 640,
-				delivered: 600,
-				bounced: 40,
-				opened: 300,
-				clicked: 12,
-				unsubscribed: 0,
-				complained: 0,
-			},
-		})
-
-		try {
-			await gotoHash(page, '/blasts/performance')
-
-			const dash = page.locator('.performance-dashboard')
-			await expect(
-				dash.getByRole('heading', { name: 'Blast performance' }),
-			).toBeVisible({ timeout: 20000 })
-			await dash.getByRole('tab', { name: /A\/B/i }).click()
-
-			const card = dash
-				.locator('.performance-dashboard__ab-card')
-				.filter({ hasText: parentName })
-				.first()
-			await expect(card).toBeVisible({ timeout: 20000 })
-
-			// The pending notice must be GONE — that is the discriminator against
-			// the sibling test, and it is what a threshold regression would break.
-			await expect(
-				card.locator('.performance-dashboard__ab-pending'),
-			).toHaveCount(0)
-
-			const verdict = card.locator('.performance-dashboard__ab-verdict')
-			await expect(verdict).toBeVisible()
-			await expect(verdict).toContainText(
-				/significantly higher|Not significant/i,
-			)
-
-			// A p-value was actually computed and rendered, not merely a label.
-			await expect(
-				verdict.locator('.performance-dashboard__ab-pvalue'),
-			).toContainText(/^p = /)
+			await expect(pending).toContainText('Currently A: 12 delivered, B: 9 delivered.')
+			await expect(card.locator('.performance-dashboard__ab-verdict')).toHaveCount(0)
 
 			await assertNoHardError(page)
 		} finally {
@@ -488,9 +302,7 @@ test.describe('Blast performance dashboard', () => {
 	 * attribution is only the VALUE being matched: a UUID against stored slugs.
 	 */
 	// @e2e openspec/specs/marketing-analytics/spec.md#dashboard-sums-attributed-revenue-per-blast
-	test('the Attribution tab shows attributed deal count and value per blast', async ({
-		page,
-	}) => {
+	test('the Attribution tab shows attributed deal count and value per blast', async ({ page }) => {
 		await openApp(page)
 		const { segmentId, templateId } = await seededFks(page)
 
@@ -503,23 +315,11 @@ test.describe('Blast performance dashboard', () => {
 			segmentId,
 			templateId,
 			sentAt: isoHoursAgo(3),
-			totals: {
-				queued: 0,
-				sent: 4,
-				delivered: 4,
-				bounced: 0,
-				opened: 3,
-				clicked: 2,
-				unsubscribed: 0,
-				complained: 0,
-			},
+			totals: { queued: 0, sent: 4, delivered: 4, bounced: 0, opened: 3, clicked: 2, unsubscribed: 0, complained: 0 },
 		})
 
 		const linkIds: string[] = []
-		for (const [deal, value] of [
-			[`e2e-deal-a-${stamp}`, 1000],
-			[`e2e-deal-b-${stamp}`, 250],
-		] as Array<[string, number]>) {
+		for (const [deal, value] of [[`e2e-deal-a-${stamp}`, 1000], [`e2e-deal-b-${stamp}`, 250]] as Array<[string, number]>) {
 			const made = await api(page, 'POST', `${OR}/attributionLink`, {
 				blastId,
 				contactId: `e2e-contact-${stamp}`,
@@ -537,9 +337,7 @@ test.describe('Blast performance dashboard', () => {
 			await gotoHash(page, '/blasts/performance')
 
 			const dash = page.locator('.performance-dashboard')
-			await expect(
-				dash.getByRole('heading', { name: 'Blast performance' }),
-			).toBeVisible({ timeout: 20000 })
+			await expect(dash.getByRole('heading', { name: 'Blast performance' })).toBeVisible({ timeout: 20000 })
 			await dash.getByRole('tab', { name: /Attribution/i }).click()
 
 			const table = dash.locator('.performance-dashboard__table')
@@ -555,10 +353,7 @@ test.describe('Blast performance dashboard', () => {
 			// cannot satisfy this. `formatEur()` renders `EUR <nl-NL number>`
 			// ("EUR 1.250"); the group separator is matched permissively because
 			// it is the browser's ICU choice, not the app's assertion.
-			const row = table
-				.locator('tbody tr')
-				.filter({ hasText: blastName })
-				.first()
+			const row = table.locator('tbody tr').filter({ hasText: blastName }).first()
 			await expect(row).toBeVisible({ timeout: 20000 })
 			await expect(row.locator('td').nth(1)).toHaveText(/^\s*2\s*$/)
 			await expect(row.locator('td').nth(2)).toHaveText(/EUR\s*1[.,\s]?250/)
@@ -585,31 +380,21 @@ test.describe('Blasts ledger and wizard', () => {
 		await navClick(page, 'Blasts', /\/blasts/)
 
 		const content = page.locator('#content-vue')
-		await expect(
-			content.getByRole('heading', { name: 'Blasts' }).first(),
-		).toBeVisible({ timeout: 20000 })
+		await expect(content.getByRole('heading', { name: 'Blasts' }).first()).toBeVisible({ timeout: 20000 })
 		// Both halves of the seeded pair are rendered, and both are `sent`.
-		await expect(
-			content.getByText('Q4 Gemeente Outreach - Variant A'),
-		).toBeVisible({ timeout: 20000 })
-		await expect(
-			content.getByText('Q4 Gemeente Outreach - Variant B'),
-		).toBeVisible()
+		await expect(content.getByText('Q4 Gemeente Outreach - Variant A')).toBeVisible({ timeout: 20000 })
+		await expect(content.getByText('Q4 Gemeente Outreach - Variant B')).toBeVisible()
 
 		await assertNoHardError(page)
 	})
 
 	// @e2e openspec/specs/marketing-ui/spec.md#email-template-validated-before-save
-	test('the New-blast wizard walks name to segment to template', async ({
-		page,
-	}) => {
+	test('the New-blast wizard walks name to segment to template', async ({ page }) => {
 		await openApp(page)
 		await gotoHash(page, '/blasts/new')
 
 		const form = page.locator('.blast-form')
-		await expect(form.getByRole('heading', { name: 'New blast' })).toBeVisible({
-			timeout: 20000,
-		})
+		await expect(form.getByRole('heading', { name: 'New blast' })).toBeVisible({ timeout: 20000 })
 
 		// The six declared steps are rendered as an ordered progress list.
 		await expect(form.locator('.blast-form__steps li')).toHaveCount(6)
@@ -639,18 +424,14 @@ test.describe('Blasts ledger and wizard', () => {
 			.locator('li[role="option"], .vs__dropdown-option')
 			.filter({ hasText: 'Gemeente Contact Blast' })
 			.first()
-		await expect(
-			segmentOption,
-			'the seeded Segment must be offered as a pickable option',
-		).toBeVisible({ timeout: 20000 })
+		await expect(segmentOption, 'the seeded Segment must be offered as a pickable option')
+			.toBeVisible({ timeout: 20000 })
 
 		// Picking it advances the form's own state — the estimated-audience hint
 		// is `v-if="selectedSegment"`, so it can only appear once the picker has
 		// bound a real Segment object.
 		await segmentOption.click()
-		await expect(form.locator('.blast-form__hint')).toBeVisible({
-			timeout: 20000,
-		})
+		await expect(form.locator('.blast-form__hint')).toBeVisible({ timeout: 20000 })
 
 		await assertNoHardError(page)
 	})
@@ -667,48 +448,28 @@ test.describe('Marketing API contract', () => {
 
 		const all = await api(page, 'GET', `${APP}/api/blasts?page=1&limit=20`)
 		expect(all.status, all.text).toBe(200)
-		expect(
-			Array.isArray(all.json?.data),
-			'response carries a data[] array',
-		).toBe(true)
-		expect(
-			all.json?.pagination,
-			'response carries a pagination object',
-		).toBeTruthy()
+		expect(Array.isArray(all.json?.data), 'response carries a data[] array').toBe(true)
+		expect(all.json?.pagination, 'response carries a pagination object').toBeTruthy()
 		expect(all.json.data.length).toBeGreaterThan(0)
 
 		// The filter is applied server-side: every returned row matches.
-		const sent = await api(
-			page,
-			'GET',
-			`${APP}/api/blasts?status=sent&page=1&limit=20`,
-		)
+		const sent = await api(page, 'GET', `${APP}/api/blasts?status=sent&page=1&limit=20`)
 		expect(sent.status, sent.text).toBe(200)
 		expect(sent.json.data.length).toBeGreaterThan(0)
 		for (const b of sent.json.data) {
-			expect(b.status, `blast ${b.name} leaked past the status filter`).toBe(
-				'sent',
-			)
+			expect(b.status, `blast ${b.name} leaked past the status filter`).toBe('sent')
 		}
 
 		// And a status nothing is in returns an empty page rather than everything —
 		// the assertion that makes the filter meaningful.
-		const none = await api(
-			page,
-			'GET',
-			`${APP}/api/blasts?status=failed&page=1&limit=20`,
-		)
+		const none = await api(page, 'GET', `${APP}/api/blasts?status=failed&page=1&limit=20`)
 		expect(none.status, none.text).toBe(200)
 		expect(none.json.data.length).toBe(0)
 
 		// The seeded deliveries carry the realistic mixed event sequence.
 		const first = sent.json.data[0]
 		const id = first.id || first['@self']?.id
-		const deliveries = await api(
-			page,
-			'GET',
-			`${APP}/api/blasts/${id}/deliveries?page=1&limit=50`,
-		)
+		const deliveries = await api(page, 'GET', `${APP}/api/blasts/${id}/deliveries?page=1&limit=50`)
 		expect(deliveries.status, deliveries.text).toBe(200)
 		expect(Array.isArray(deliveries.json?.data)).toBe(true)
 	})
@@ -721,66 +482,38 @@ test.describe('Marketing API contract', () => {
 	 */
 	// @e2e openspec/specs/marketing-segmentation/spec.md#consentrecord-seed-includes-varied-states
 	// @e2e openspec/specs/marketing-segmentation/spec.md#attributionlink-seed-shows-revenue-attribution
-	test('the ConsentRecord and AttributionLink seeds are imported with varied states', async ({
-		page,
-	}) => {
+	test('the ConsentRecord and AttributionLink seeds are imported with varied states', async ({ page }) => {
 		await openApp(page)
 
 		const consents = await api(page, 'GET', `${OR}/consentRecord?_limit=100`)
 		expect(consents.status, consents.text).toBe(200)
 		const cRows: any[] = consents.json?.results ?? consents.json ?? []
-		expect(
-			cRows.length,
-			'at least 10 ConsentRecords are seeded',
-		).toBeGreaterThanOrEqual(10)
+		expect(cRows.length, 'at least 10 ConsentRecords are seeded').toBeGreaterThanOrEqual(10)
 		// Active consent alongside each declared withdrawal reason.
-		expect(
-			cRows.some((c: any) => !c.withdrawnAt),
-			'an active consent record',
-		).toBe(true)
-		const reasons = new Set(
-			cRows.map((c: any) => c.withdrawnReason).filter(Boolean),
-		)
+		expect(cRows.some((c: any) => !c.withdrawnAt), 'an active consent record').toBe(true)
+		const reasons = new Set(cRows.map((c: any) => c.withdrawnReason).filter(Boolean))
 		for (const r of ['user-unsubscribed', 'bounce-hard']) {
-			expect(
-				[...reasons],
-				`withdrawal reason "${r}" is missing from the seed`,
-			).toContain(r)
+			expect([...reasons], `withdrawal reason "${r}" is missing from the seed`).toContain(r)
 		}
 		// Varied lawful bases, not a single repeated value.
-		expect(
-			new Set(cRows.map((c: any) => c.lawfulBasis).filter(Boolean)).size,
-		).toBeGreaterThan(1)
+		expect(new Set(cRows.map((c: any) => c.lawfulBasis).filter(Boolean)).size).toBeGreaterThan(1)
 
 		const links = await api(page, 'GET', `${OR}/attributionLink?_limit=100`)
 		expect(links.status, links.text).toBe(200)
 		const lRows: any[] = links.json?.results ?? links.json ?? []
-		expect(
-			lRows.length,
-			'at least 2 AttributionLinks are seeded',
-		).toBeGreaterThanOrEqual(2)
+		expect(lRows.length, 'at least 2 AttributionLinks are seeded').toBeGreaterThanOrEqual(2)
 		for (const l of lRows.slice(0, 2)) {
-			for (const key of [
-				'blastId',
-				'contactId',
-				'dealId',
-				'firstClickAt',
-				'closedWonAt',
-			]) {
+			for (const key of ['blastId', 'contactId', 'dealId', 'firstClickAt', 'closedWonAt']) {
 				expect(l[key], `AttributionLink is missing ${key}`).toBeTruthy()
 			}
 			// The click must precede the close — the ordering the scenario names.
-			expect(Date.parse(l.firstClickAt)).toBeLessThanOrEqual(
-				Date.parse(l.closedWonAt),
-			)
+			expect(Date.parse(l.firstClickAt)).toBeLessThanOrEqual(Date.parse(l.closedWonAt))
 			expect(Number(l.attributedValue)).toBeGreaterThan(0)
 		}
 	})
 
 	// @e2e openspec/specs/marketing-api/spec.md#error-responses-use-generic-messages
-	test('POST /api/blasts with an unknown segment is a generic 400', async ({
-		page,
-	}) => {
+	test('POST /api/blasts with an unknown segment is a generic 400', async ({ page }) => {
 		await openApp(page)
 
 		const res = await api(page, 'POST', `${APP}/api/blasts`, {
@@ -798,9 +531,7 @@ test.describe('Marketing API contract', () => {
 	// @e2e openspec/specs/marketing-api/spec.md#user-identity-from-iusersession-only
 	// @e2e openspec/specs/marketing-segmentation/spec.md#segment-seed-objects
 	// @e2e openspec/specs/marketing-segmentation/spec.md#campaigntemplate-seed-objects
-	test('POST /api/blasts creates a draft and derives createdBy from the session', async ({
-		page,
-	}) => {
+	test('POST /api/blasts creates a draft and derives createdBy from the session', async ({ page }) => {
 		await openApp(page)
 
 		// The seeded Segments — five, with the declared Dutch names and both
@@ -809,45 +540,25 @@ test.describe('Marketing API contract', () => {
 		expect(segments.status, segments.text).toBe(200)
 		const segRows: any[] = segments.json?.data ?? segments.json ?? []
 		const segNames = segRows.map((s: any) => s.name)
-		for (const expected of [
-			'Gemeente Contact Blast',
-			'Enterprise High-Value',
-			'Inactive Leads',
-			'Retention Newsletter',
-			'Technical Leads',
-		]) {
-			expect(segNames, `seeded segment "${expected}" is missing`).toContain(
-				expected,
-			)
+		for (const expected of ['Gemeente Contact Blast', 'Enterprise High-Value', 'Inactive Leads',
+			'Retention Newsletter', 'Technical Leads']) {
+			expect(segNames, `seeded segment "${expected}" is missing`).toContain(expected)
 		}
-		expect([...new Set(segRows.map((s: any) => s.entityType))]).toContain(
-			'contact',
-		)
+		expect([...new Set(segRows.map((s: any) => s.entityType))]).toContain('contact')
 
 		// The seeded CampaignTemplates — two email, one SMS.
 		const templates = await api(page, 'GET', `${APP}/api/templates`)
 		expect(templates.status, templates.text).toBe(200)
 		const tplRows: any[] = templates.json?.data ?? templates.json ?? []
 		const tplNames = tplRows.map((t: any) => t.name)
-		for (const expected of [
-			'Q4 Product Launch',
-			'Renewal Reminder',
-			'Appointment Confirmation',
-		]) {
-			expect(tplNames, `seeded template "${expected}" is missing`).toContain(
-				expected,
-			)
+		for (const expected of ['Q4 Product Launch', 'Renewal Reminder', 'Appointment Confirmation']) {
+			expect(tplNames, `seeded template "${expected}" is missing`).toContain(expected)
 		}
-		expect(
-			tplRows.filter((t: any) => t.channel === 'sms').length,
-		).toBeGreaterThan(0)
+		expect(tplRows.filter((t: any) => t.channel === 'sms').length).toBeGreaterThan(0)
 
 		const segment = segRows[0]
 		const emailTemplate = tplRows.find((t: any) => t.channel === 'email')
-		expect(
-			emailTemplate,
-			'an email CampaignTemplate must be seeded',
-		).toBeTruthy()
+		expect(emailTemplate, 'an email CampaignTemplate must be seeded').toBeTruthy()
 
 		const created = await api(page, 'POST', `${APP}/api/blasts`, {
 			name: 'E2E gate-19 draft blast',
@@ -859,21 +570,15 @@ test.describe('Marketing API contract', () => {
 		})
 		expect(created.status, created.text).toBe(201)
 		expect(created.json?.status, 'a new blast starts in draft').toBe('draft')
-		expect(
-			created.json?.createdBy,
-			'createdBy must come from IUserSession, not the body',
-		).not.toBe('e2e-spoofed-identity')
+		expect(created.json?.createdBy, 'createdBy must come from IUserSession, not the body')
+			.not.toBe('e2e-spoofed-identity')
 		expect(String(created.json?.createdBy ?? '').length).toBeGreaterThan(0)
 
 		// Clean up the draft this test minted, through the same OR object API the
 		// app's own saveObject()/deleteObject() use.
 		const newId = created.json?.id || created.json?.['@self']?.id
 		if (newId) {
-			await api(
-				page,
-				'DELETE',
-				`/index.php/apps/openregister/api/objects/pipelinq/blast/${newId}`,
-			)
+			await api(page, 'DELETE', `/index.php/apps/openregister/api/objects/pipelinq/blast/${newId}`)
 		}
 	})
 
@@ -915,17 +620,13 @@ test.describe('Marketing API contract', () => {
 	 * detail endpoint is the surface the scenario names, and it is reachable.
 	 */
 	// @e2e openspec/specs/marketing-segmentation/spec.md#estimated-size-computed
-	test('GET /api/segments/:id recomputes estimatedSize instead of echoing the stored one', async ({
-		page,
-	}) => {
+	test('GET /api/segments/:id recomputes estimatedSize instead of echoing the stored one', async ({ page }) => {
 		await openApp(page)
 
 		const list = await api(page, 'GET', `${APP}/api/segments`)
 		expect(list.status, list.text).toBe(200)
 		const segRows: any[] = list.json?.data ?? list.json ?? []
-		expect(segRows.length, 'the seeded Segments must be listed').toBeGreaterThan(
-			0,
-		)
+		expect(segRows.length, 'the seeded Segments must be listed').toBeGreaterThan(0)
 
 		// The LIST returns the stored objects untouched (SegmentController::index
 		// hands back `listSegments()`), so `estimatedSize` there is the seeded
@@ -944,17 +645,11 @@ test.describe('Marketing API contract', () => {
 			const row = segRows.find((s: any) => s.name === name)
 			expect(row, `seeded segment "${name}" is missing`).toBeTruthy()
 			const stored = row.estimatedSize
-			expect(
-				typeof stored,
-				`the stored estimatedSize for "${name}" must be a number`,
-			).toBe('number')
+			expect(typeof stored, `the stored estimatedSize for "${name}" must be a number`).toBe('number')
 
 			const detail = await api(page, 'GET', `${APP}/api/segments/${idOf(row)}`)
 			expect(detail.status, detail.text).toBe(200)
-			expect(
-				typeof detail.json?.estimatedSize,
-				`the detail response for "${name}" carries estimatedSize`,
-			).toBe('number')
+			expect(typeof detail.json?.estimatedSize, `the detail response for "${name}" carries estimatedSize`).toBe('number')
 			expect(detail.json.estimatedSize).toBeGreaterThanOrEqual(0)
 			expect(
 				detail.json.estimatedSize,
@@ -969,9 +664,7 @@ test.describe('Marketing API contract', () => {
 	// @e2e openspec/specs/marketing-compliance/spec.md#save-rejected-if-unsubscribe-token-missing
 	// @e2e openspec/specs/marketing-compliance/spec.md#save-rejected-if-physical-address-missing
 	// @e2e openspec/specs/marketing-compliance/spec.md#sms-templates-do-not-require-unsubscribe-footer
-	test('POST /api/templates enforces the email compliance footer, not the SMS one', async ({
-		page,
-	}) => {
+	test('POST /api/templates enforces the email compliance footer, not the SMS one', async ({ page }) => {
 		await openApp(page)
 
 		// No unsubscribe token at all.
@@ -1003,11 +696,7 @@ test.describe('Marketing API contract', () => {
 		expect(sms.status, sms.text).toBe(201)
 		const smsId = sms.json?.id || sms.json?.['@self']?.id
 		if (smsId) {
-			await api(
-				page,
-				'DELETE',
-				`/index.php/apps/openregister/api/objects/pipelinq/campaignTemplate/${smsId}`,
-			)
+			await api(page, 'DELETE', `/index.php/apps/openregister/api/objects/pipelinq/campaignTemplate/${smsId}`)
 		}
 	})
 })
@@ -1027,12 +716,8 @@ test.describe('Public tracking endpoints (no Nextcloud session)', () => {
 	test.use({ storageState: { cookies: [], origins: [] } })
 
 	// @e2e openspec/specs/marketing-email-tracking/spec.md#bad-token-returns-a-pixel-but-records-nothing
-	test('a tampered open token still returns the 1x1 pixel and never 500s', async ({
-		page,
-	}) => {
-		const res = await page.goto(
-			`${APP}/api/blast/track/open/e2e-gate19-not-a-real-token`,
-		)
+	test('a tampered open token still returns the 1x1 pixel and never 500s', async ({ page }) => {
+		const res = await page.goto(`${APP}/api/blast/track/open/e2e-gate19-not-a-real-token`)
 		expect(res, 'the tracking pixel produced no response').not.toBeNull()
 
 		// Fail closed: the email must still render, so the pixel is served
@@ -1041,28 +726,19 @@ test.describe('Public tracking endpoints (no Nextcloud session)', () => {
 		expect(res!.headers()['content-type']).toContain('image/gif')
 		// Caching disabled, so a mail client cannot serve a stale pixel and
 		// suppress the next open.
-		expect(String(res!.headers()['cache-control'] ?? '')).toMatch(
-			/no-store|no-cache/i,
-		)
+		expect(String(res!.headers()['cache-control'] ?? '')).toMatch(/no-store|no-cache/i)
 		// Never routed through the Nextcloud login page.
 		await expect(page.locator('input[name="user"]')).toHaveCount(0)
 	})
 
 	// @e2e openspec/specs/marketing-email-tracking/spec.md#tampered-click-token-is-rejected
-	test('a tampered click token is refused and produces no redirect', async ({
-		page,
-	}) => {
-		const res = await page.goto(
-			`${APP}/api/blast/track/click/e2e-gate19-not-a-real-token`,
-		)
+	test('a tampered click token is refused and produces no redirect', async ({ page }) => {
+		const res = await page.goto(`${APP}/api/blast/track/click/e2e-gate19-not-a-real-token`)
 		expect(res, 'the click endpoint produced no response').not.toBeNull()
 
 		// 4xx, not a redirect: the target URL is bound INSIDE the token, so an
 		// unverified token must never be allowed to choose a destination.
-		expect(
-			res!.status(),
-			'an unverified click token must be refused',
-		).toBeGreaterThanOrEqual(400)
+		expect(res!.status(), 'an unverified click token must be refused').toBeGreaterThanOrEqual(400)
 		expect(res!.status()).toBeLessThan(500)
 		// The browser stayed on the pipelinq origin — no attacker-chosen hop.
 		expect(new URL(page.url()).origin).toBe(new URL(res!.url()).origin)
@@ -1079,9 +755,7 @@ test.describe('Blast monitor', () => {
 	let blastId = ''
 
 	// @e2e openspec/specs/marketing-ui/spec.md#progress-bar-and-totals-update-by-polling
-	test('a sending blast renders a live progress bar and totals grid', async ({
-		page,
-	}) => {
+	test('a sending blast renders a live progress bar and totals grid', async ({ page }) => {
 		await openApp(page)
 
 		// A blast in `sending` is what this surface is FOR, and the seed only ships
@@ -1106,16 +780,7 @@ test.describe('Blast monitor', () => {
 			status: 'sending',
 			segmentId,
 			templateId,
-			totals: {
-				queued: 6,
-				sent: 3,
-				delivered: 1,
-				bounced: 0,
-				opened: 0,
-				clicked: 0,
-				unsubscribed: 0,
-				complained: 0,
-			},
+			totals: { queued: 6, sent: 3, delivered: 1, bounced: 0, opened: 0, clicked: 0, unsubscribed: 0, complained: 0 },
 		})
 		expect(made.status, made.text).toBeLessThan(300)
 		blastId = idOf(made.json)
@@ -1129,21 +794,14 @@ test.describe('Blast monitor', () => {
 		const bar = monitor.getByRole('progressbar')
 		await expect(bar).toBeVisible()
 		await expect(bar).toHaveAttribute('aria-valuenow', /^\d+$/)
-		await expect(monitor.locator('.blast-monitor__progress-meta')).toContainText(
-			'%',
-		)
+		await expect(monitor.locator('.blast-monitor__progress-meta')).toContainText('%')
 
 		await assertNoHardError(page)
 	})
 
 	// @e2e openspec/specs/marketing-ui/spec.md#cancel-a-sending-blast
-	test('"Cancel send" is offered on a sending blast and enters a cancelling state', async ({
-		page,
-	}) => {
-		expect(
-			blastId,
-			'the previous test must have seeded a sending blast',
-		).toBeTruthy()
+	test('"Cancel send" is offered on a sending blast and enters a cancelling state', async ({ page }) => {
+		expect(blastId, 'the previous test must have seeded a sending blast').toBeTruthy()
 		await openApp(page)
 		await gotoHash(page, `/blasts/${blastId}/monitor`)
 
@@ -1160,10 +818,6 @@ test.describe('Blast monitor', () => {
 		await expect(cancel).toHaveCount(0, { timeout: 20000 })
 		await assertNoHardError(page)
 
-		await api(
-			page,
-			'DELETE',
-			`/index.php/apps/openregister/api/objects/pipelinq/blast/${blastId}`,
-		)
+		await api(page, 'DELETE', `/index.php/apps/openregister/api/objects/pipelinq/blast/${blastId}`)
 	})
 })

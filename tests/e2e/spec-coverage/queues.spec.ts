@@ -6,13 +6,7 @@
  * Maps to openspec/specs/queue-management/spec.md.
  */
 import { test, expect } from '@playwright/test'
-import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
-	assertNoHardError,
-	dismissSupportDialog,
-} from '../helpers/pipelinq'
+import { openApp, navClick, trackPipelinqErrors, assertNoHardError, dismissSupportDialog } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/queue-management/spec.md#queues-index
 test('Queues: navigates from sidebar and shows index surface', async ({ page }) => {
@@ -20,31 +14,20 @@ test('Queues: navigates from sidebar and shows index surface', async ({ page }) 
 	await openApp(page)
 	await navClick(page, 'Queues', /\/queues/)
 
-	await expect(
-		page
-			.locator('#content-vue')
-			.getByRole('heading', { name: 'Queues' })
-			.first(),
-	).toBeVisible()
+	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Queues' }).first()).toBeVisible()
 	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible()
 	await assertNoHardError(page)
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
 // @e2e openspec/specs/queue-management/spec.md#queues-list-table
-test('Queues: list table and primary actions render on a single page', async ({
-	page,
-}) => {
+test('Queues: list table and primary actions render on a single page', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Queues', /\/queues/)
 
 	const content = page.locator('#content-vue')
 	await expect(content.getByRole('button', { name: 'Add Queue' })).toBeVisible()
-	await expect(
-		content
-			.locator('table, .cn-data-table, [data-testid="cn-data-table"]')
-			.first(),
-	).toBeVisible()
+	await expect(content.locator('table, .cn-data-table, [data-testid="cn-data-table"]').first()).toBeVisible()
 
 	// CORRECTED 2026-08-06. This used to assert a visible "Next" button with the
 	// comment "Queues has seeded data → a pagination control is present". Both
@@ -62,10 +45,7 @@ test('Queues: list table and primary actions render on a single page', async ({
 	// drives a page change there.
 	const rows = content.locator('table tbody tr')
 	await expect(rows.first()).toBeVisible()
-	expect(
-		await rows.count(),
-		'the queue collection fits one page',
-	).toBeLessThanOrEqual(20)
+	expect(await rows.count(), 'the queue collection fits one page').toBeLessThanOrEqual(20)
 	await expect(content.locator('.cn-index-page__pagination')).toHaveCount(0)
 })
 
@@ -75,15 +55,10 @@ test('Queues: Add Queue opens a create modal with a form', async ({ page }) => {
 	await navClick(page, 'Queues', /\/queues/)
 	await dismissSupportDialog(page)
 
-	await page
-		.locator('#content-vue')
-		.getByRole('button', { name: 'Add Queue' })
-		.click()
+	await page.locator('#content-vue').getByRole('button', { name: 'Add Queue' }).click()
 	const modal = page.locator('.modal-container, [role="dialog"]').first()
 	await expect(modal).toBeVisible({ timeout: 10000 })
-	await expect(
-		modal.locator('input, .input-field__input, textarea').first(),
-	).toBeVisible()
+	await expect(modal.locator('input, .input-field__input, textarea').first()).toBeVisible()
 })
 
 /*

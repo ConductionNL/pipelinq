@@ -27,95 +27,105 @@ use OCP\IL10N;
 /**
  * Activity setting for note events.
  */
-class NoteSetting extends ActivitySettings {
-	/**
-	 * Constructor.
-	 *
-	 * @param IL10N $l The localization service.
-	 */
-	public function __construct(
-		private IL10N $l,
-	) {
-	}//end __construct()
+class NoteSetting extends ActivitySettings
+{
+    /**
+     * Constructor.
+     *
+     * @param IL10N $l The localization service.
+     */
+    public function __construct(
+        private IL10N $l,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Get the identifier for this setting.
-	 *
-	 * @return string The setting identifier.
-	 */
-	public function getIdentifier(): string {
-		return 'pipelinq_notes';
-	}//end getIdentifier()
+    /**
+     * Get the identifier for this setting.
+     *
+     * @return string The setting identifier.
+     */
+    public function getIdentifier(): string
+    {
+        return 'pipelinq_notes';
+    }//end getIdentifier()
 
-	/**
-	 * Get the name for this setting.
-	 *
-	 * @return string The setting name.
-	 */
-	public function getName(): string {
-		return $this->l->t('Notes & comments');
-	}//end getName()
+    /**
+     * Get the name for this setting.
+     *
+     * @return string The setting name.
+     */
+    public function getName(): string
+    {
+        return $this->l->t('Notes & comments');
+    }//end getName()
 
-	/**
-	 * Get the group identifier for this setting.
-	 *
-	 * @return string The group identifier.
-	 */
-	public function getGroupIdentifier(): string {
-		return 'pipelinq';
-	}//end getGroupIdentifier()
+    /**
+     * Get the group identifier for this setting.
+     *
+     * @return string The group identifier.
+     */
+    public function getGroupIdentifier(): string
+    {
+        return 'pipelinq';
+    }//end getGroupIdentifier()
 
-	/**
-	 * Get the group name for this setting.
-	 *
-	 * @return string The group name.
-	 */
-	public function getGroupName(): string {
-		return $this->l->t('Pipelinq');
-	}//end getGroupName()
+    /**
+     * Get the group name for this setting.
+     *
+     * @return string The group name.
+     */
+    public function getGroupName(): string
+    {
+        return $this->l->t('Pipelinq');
+    }//end getGroupName()
 
-	/**
-	 * Get the priority for this setting.
-	 *
-	 * @return int The priority.
-	 */
-	public function getPriority(): int {
-		return 52;
-	}//end getPriority()
+    /**
+     * Get the priority for this setting.
+     *
+     * @return int The priority.
+     */
+    public function getPriority(): int
+    {
+        return 52;
+    }//end getPriority()
 
-	/**
-	 * Whether the user can change the stream setting.
-	 *
-	 * @return bool True if changeable.
-	 */
-	public function canChangeStream(): bool {
-		return true;
-	}//end canChangeStream()
+    /**
+     * Whether the user can change the stream setting.
+     *
+     * @return bool True if changeable.
+     */
+    public function canChangeStream(): bool
+    {
+        return true;
+    }//end canChangeStream()
 
-	/**
-	 * Whether the stream is enabled by default.
-	 *
-	 * @return bool True if enabled by default.
-	 */
-	public function isDefaultEnabledStream(): bool {
-		return true;
-	}//end isDefaultEnabledStream()
+    /**
+     * Whether the stream is enabled by default.
+     *
+     * @return bool True if enabled by default.
+     */
+    public function isDefaultEnabledStream(): bool
+    {
+        return true;
+    }//end isDefaultEnabledStream()
 
-	/**
-	 * Whether the user can change the mail setting.
-	 *
-	 * @return bool True if changeable.
-	 */
-	public function canChangeMail(): bool {
-		return true;
-	}//end canChangeMail()
+    /**
+     * Whether the user can change the mail setting.
+     *
+     * @return bool True if changeable.
+     */
+    public function canChangeMail(): bool
+    {
+        return true;
+    }//end canChangeMail()
 
-	/**
-	 * Whether mail is enabled by default.
-	 *
-	 * @return bool True if enabled by default.
-	 */
-	public function isDefaultEnabledMail(): bool {
-		return false;
-	}//end isDefaultEnabledMail()
+    /**
+     * Whether mail is enabled by default.
+     *
+     * @return bool True if enabled by default.
+     */
+    public function isDefaultEnabledMail(): bool
+    {
+        return false;
+    }//end isDefaultEnabledMail()
 }//end class

@@ -11,34 +11,27 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
 
-import BookingConfirmationPage from '../views/portal/BookingConfirmationPage.vue'
-import BookingPortal from '../views/portal/BookingPortal.vue'
-import PortalDashboard from './views/PortalDashboard.vue'
-import PortalDelegations from './views/PortalDelegations.vue'
-import PortalExport from './views/PortalExport.vue'
+import { getToken, getExpiry } from './portalApi.js'
+
 import PortalLogin from './views/PortalLogin.vue'
 import PortalPasswordReset from './views/PortalPasswordReset.vue'
-import PortalProfile from './views/PortalProfile.vue'
+import PortalDashboard from './views/PortalDashboard.vue'
 import PortalRequests from './views/PortalRequests.vue'
+import PortalProfile from './views/PortalProfile.vue'
+import PortalDelegations from './views/PortalDelegations.vue'
+import PortalExport from './views/PortalExport.vue'
 import PortalWidget from './views/PortalWidget.vue'
-import { getExpiry, getToken } from './portalApi.js'
+import BookingPortal from '../views/portal/BookingPortal.vue'
+import BookingConfirmationPage from '../views/portal/BookingConfirmationPage.vue'
 
 export const portalRoutes = [
 	{ path: '/', redirect: '/dashboard' },
 	{ path: '/login', component: PortalLogin, meta: { public: true } },
-	{
-		path: '/password-reset',
-		component: PortalPasswordReset,
-		meta: { public: true },
-	},
+	{ path: '/password-reset', component: PortalPasswordReset, meta: { public: true } },
 	{ path: '/widget', component: PortalWidget, meta: { public: true } },
 	// Public appointment-booking portal (member 06) — no portal session required.
 	{ path: '/book/:serviceSlug', component: BookingPortal, meta: { public: true } },
-	{
-		path: '/booking-confirmation/:bookingId',
-		component: BookingConfirmationPage,
-		meta: { public: true },
-	},
+	{ path: '/booking-confirmation/:bookingId', component: BookingConfirmationPage, meta: { public: true } },
 	{ path: '/dashboard', component: PortalDashboard },
 	{ path: '/requests', component: PortalRequests },
 	{ path: '/profile', component: PortalProfile },

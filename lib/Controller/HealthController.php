@@ -42,7 +42,6 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
@@ -61,123 +60,125 @@ use Psr\Container\ContainerInterface;
  *
  * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
  */
-class HealthController extends Controller {
+class HealthController extends Controller
+{
 
-	/**
-	 * FQCN of the AppHost observability manifest loader.
-	 *
-	 * Referenced as a string, never imported: the class only exists when
-	 * openregister is installed.
-	 *
-	 * @var string
-	 */
-	private const MANIFEST_LOADER = 'OCA\\OpenRegister\\AppHost\\Observability\\ManifestLoader';
+    /**
+     * FQCN of the AppHost observability manifest loader.
+     *
+     * Referenced as a string, never imported: the class only exists when
+     * openregister is installed.
+     *
+     * @var string
+     */
+    private const MANIFEST_LOADER = 'OCA\\OpenRegister\\AppHost\\Observability\\ManifestLoader';
 
-	/**
-	 * FQCN of the AppHost declarative health-check executor.
-	 *
-	 * Referenced as a string, never imported: the class only exists when
-	 * openregister is installed.
-	 *
-	 * @var string
-	 */
-	private const HEALTH_EXECUTOR = 'OCA\\OpenRegister\\AppHost\\Observability\\HealthCheckExecutor';
+    /**
+     * FQCN of the AppHost declarative health-check executor.
+     *
+     * Referenced as a string, never imported: the class only exists when
+     * openregister is installed.
+     *
+     * @var string
+     */
+    private const HEALTH_EXECUTOR = 'OCA\\OpenRegister\\AppHost\\Observability\\HealthCheckExecutor';
 
-	/**
-	 * Constructor.
-	 *
-	 * @param IRequest $request The HTTP request.
-	 * @param IConfig $config The Nextcloud config service (fallback version).
-	 * @param ContainerInterface $container DI container — resolves the AppHost engine lazily.
-	 *
-	 * @return void
-	 */
-	public function __construct(
-		IRequest $request,
-		private readonly IConfig $config,
-		private readonly ContainerInterface $container,
-	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+    /**
+     * Constructor.
+     *
+     * @param IRequest           $request   The HTTP request.
+     * @param IConfig            $config    The Nextcloud config service (fallback version).
+     * @param ContainerInterface $container DI container — resolves the AppHost engine lazily.
+     *
+     * @return void
+     */
+    public function __construct(
+        IRequest $request,
+        private readonly IConfig $config,
+        private readonly ContainerInterface $container
+    ) {
+        parent::__construct(appName: Application::APP_ID, request: $request);
 
-	}//end __construct()
+    }//end __construct()
 
-	/**
-	 * GET /api/health — declarative health check (ADR-006), public probe.
-	 *
-	 * Runs the manifest-declared checks through the AppHost engine and renders
-	 * the `{status, app, version, checks}` envelope with the status code the
-	 * engine's policy resolved. CORS headers are emitted only when the
-	 * manifest opts in, exactly as the engine does.
-	 *
-	 * When the AppHost engine cannot be resolved — openregister absent or
-	 * disabled — the endpoint still answers (the whole point of a health
-	 * probe): `status: degraded`, `checks.openregister: unavailable`, HTTP 200.
-	 *
-	 * @return JSONResponse `{status, app, version, checks}` with HTTP code per policy.
-	 *
-	 * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
-	 */
-	#[PublicPage]
-	#[NoCSRFRequired]
-	// Liveness probe — polled on a schedule by monitoring.
-	#[AnonRateLimit(limit: 120, period: 60)]
-	public function index(): JSONResponse {
-		$engine = $this->engineResult();
-		if ($engine === null) {
-			return new JSONResponse(
-				[
-					'status' => 'degraded',
-					'app' => $this->appName,
-					'version' => $this->config->getAppValue(Application::APP_ID, 'installed_version', ''),
-					'checks' => ['openregister' => 'unavailable'],
-				],
-				Http::STATUS_OK
-			);
-		}
+    /**
+     * GET /api/health — declarative health check (ADR-006), public probe.
+     *
+     * Runs the manifest-declared checks through the AppHost engine and renders
+     * the `{status, app, version, checks}` envelope with the status code the
+     * engine's policy resolved. CORS headers are emitted only when the
+     * manifest opts in, exactly as the engine does.
+     *
+     * When the AppHost engine cannot be resolved — openregister absent or
+     * disabled — the endpoint still answers (the whole point of a health
+     * probe): `status: degraded`, `checks.openregister: unavailable`, HTTP 200.
+     *
+     * @return JSONResponse `{status, app, version, checks}` with HTTP code per policy.
+     *
+     * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
+     */
+    #[PublicPage]
+    #[NoCSRFRequired]
+    public function index(): JSONResponse
+    {
+        $engine = $this->engineResult();
+        if ($engine === null) {
+            return new JSONResponse(
+                [
+                    'status'  => 'degraded',
+                    'app'     => $this->appName,
+                    'version' => $this->config->getAppValue(Application::APP_ID, 'installed_version', ''),
+                    'checks'  => ['openregister' => 'unavailable'],
+                ],
+                Http::STATUS_OK
+            );
+        }
 
-		$response = new JSONResponse(
-			[
-				'status' => $engine['status'],
-				'app' => $this->appName,
-				'version' => $engine['version'],
-				'checks' => $engine['checks'],
-			],
-			$engine['httpStatus']
-		);
+        $response = new JSONResponse(
+            [
+                'status'  => $engine['status'],
+                'app'     => $this->appName,
+                'version' => $engine['version'],
+                'checks'  => $engine['checks'],
+            ],
+            $engine['httpStatus']
+        );
 
-		if ($engine['cors'] === true) {
-			$response->addHeader('Access-Control-Allow-Origin', '*');
-			$response->addHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-		}
+        if ($engine['cors'] === true) {
+            $response->addHeader('Access-Control-Allow-Origin', '*');
+            $response->addHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        }
 
-		return $response;
-	}//end index()
+        return $response;
 
-	/**
-	 * Run the AppHost observability engine for this app.
-	 *
-	 * @return array{status: string, version: string, checks: array<string, string>, httpStatus: int, cors: bool}|null
-	 *                                                                                                                 Null when the engine is unavailable (openregister absent/disabled).
-	 */
-	private function engineResult(): ?array {
-		try {
-			$manifestLoader = $this->container->get(self::MANIFEST_LOADER);
-			$executor = $this->container->get(self::HEALTH_EXECUTOR);
+    }//end index()
 
-			$appId = $this->appName;
-			$manifest = $manifestLoader->load(appId: $appId);
-			$result = $executor->execute(manifest: $manifest);
+    /**
+     * Run the AppHost observability engine for this app.
+     *
+     * @return array{status: string, version: string, checks: array<string, string>, httpStatus: int, cors: bool}|null
+     *         Null when the engine is unavailable (openregister absent/disabled).
+     */
+    private function engineResult(): ?array
+    {
+        try {
+            $manifestLoader = $this->container->get(self::MANIFEST_LOADER);
+            $executor       = $this->container->get(self::HEALTH_EXECUTOR);
 
-			return [
-				'status' => (string)$result->status,
-				'version' => (string)$manifestLoader->appVersion(appId: $appId),
-				'checks' => (array)$result->checks,
-				'httpStatus' => (int)$result->httpStatusCode,
-				'cors' => ($manifest->cors === true),
-			];
-		} catch (\Throwable $e) {
-			return null;
-		}//end try
+            $appId    = $this->appName;
+            $manifest = $manifestLoader->load(appId: $appId);
+            $result   = $executor->execute(manifest: $manifest);
 
-	}//end engineResult()
+            return [
+                'status'     => (string) $result->status,
+                'version'    => (string) $manifestLoader->appVersion(appId: $appId),
+                'checks'     => (array) $result->checks,
+                'httpStatus' => (int) $result->httpStatusCode,
+                'cors'       => ($manifest->cors === true),
+            ];
+        } catch (\Throwable $e) {
+            return null;
+        }//end try
+
+    }//end engineResult()
 }//end class

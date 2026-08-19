@@ -26,9 +26,7 @@ describe('rangeToPeriod', () => {
 	it('maps a custom range to the nearest trailing window by day span', () => {
 		const range = (days) => ({
 			from: '2026-01-01T00:00:00Z',
-			to: new Date(
-				Date.parse('2026-01-01T00:00:00Z') + days * 86400000,
-			).toISOString(),
+			to: new Date(Date.parse('2026-01-01T00:00:00Z') + days * 86400000).toISOString(),
 			preset: 'custom',
 		})
 		expect(rangeToPeriod(range(3))).toBe('week')
@@ -42,19 +40,11 @@ describe('rangeToPeriod', () => {
 	})
 
 	it('falls back to month on unparseable or inverted ranges', () => {
-		expect(
-			rangeToPeriod({
-				from: 'nonsense',
-				to: 'also nonsense',
-				preset: 'custom',
-			}),
-		).toBe('month')
-		expect(
-			rangeToPeriod({
-				from: '2026-02-01T00:00:00Z',
-				to: '2026-01-01T00:00:00Z',
-				preset: 'custom',
-			}),
-		).toBe('month')
+		expect(rangeToPeriod({ from: 'nonsense', to: 'also nonsense', preset: 'custom' })).toBe('month')
+		expect(rangeToPeriod({
+			from: '2026-02-01T00:00:00Z',
+			to: '2026-01-01T00:00:00Z',
+			preset: 'custom',
+		})).toBe('month')
 	})
 })

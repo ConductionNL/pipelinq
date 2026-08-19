@@ -33,23 +33,8 @@ const SCHEMA_CANDIDATES = [
 	// src/manifest.json is a v2 manifest — validate against the canonical v2
 	// schema (vendored; includes the setup block + metric cacheTtl).
 	path.join(REPO_ROOT, 'tests', 'schemas', 'app-manifest-v2.schema.json'),
-	path.join(
-		REPO_ROOT,
-		'node_modules',
-		'@conduction',
-		'nextcloud-vue',
-		'src',
-		'schemas',
-		'app-manifest-v2.schema.json',
-	),
-	path.join(
-		REPO_ROOT,
-		'..',
-		'nextcloud-vue',
-		'src',
-		'schemas',
-		'app-manifest-v2.schema.json',
-	),
+	path.join(REPO_ROOT, 'node_modules', '@conduction', 'nextcloud-vue', 'src', 'schemas', 'app-manifest-v2.schema.json'),
+	path.join(REPO_ROOT, '..', 'nextcloud-vue', 'src', 'schemas', 'app-manifest-v2.schema.json'),
 ].filter(Boolean)
 
 function findSchemaPath() {
@@ -87,12 +72,8 @@ function loadAjv() {
 			Ajv2020 = require('ajv').default || require('ajv')
 		} catch (__) {
 			console.error('[validate-manifest] Ajv not installed in node_modules.')
-			console.error(
-				'[validate-manifest] Install with: npm i -D ajv ajv-formats',
-			)
-			console.error(
-				'[validate-manifest] Falling back to a structural lint pass.',
-			)
+			console.error('[validate-manifest] Install with: npm i -D ajv ajv-formats')
+			console.error('[validate-manifest] Falling back to a structural lint pass.')
 			return { Ajv: null, addFormats: null }
 		}
 	}
@@ -112,20 +93,9 @@ function structuralLint(manifest) {
 	if (!manifest.version || typeof manifest.version !== 'string') {
 		errors.push('top-level: version (string) is required')
 	}
-	if (!Array.isArray(manifest.menu))
-		errors.push('top-level: menu (array) is required')
-	if (!Array.isArray(manifest.pages))
-		errors.push('top-level: pages (array) is required')
-	const allowedTypes = new Set([
-		'index',
-		'detail',
-		'dashboard',
-		'logs',
-		'settings',
-		'chat',
-		'files',
-		'custom',
-	])
+	if (!Array.isArray(manifest.menu)) errors.push('top-level: menu (array) is required')
+	if (!Array.isArray(manifest.pages)) errors.push('top-level: pages (array) is required')
+	const allowedTypes = new Set(['index', 'detail', 'dashboard', 'logs', 'settings', 'chat', 'files', 'custom'])
 	const seenIds = new Set()
 	for (let i = 0; i < (manifest.pages || []).length; i++) {
 		const page = manifest.pages[i]
@@ -135,17 +105,14 @@ function structuralLint(manifest) {
 		}
 		for (const required of ['id', 'route', 'type', 'title']) {
 			if (!page[required] || typeof page[required] !== 'string') {
-				errors.push(
-					`pages[${i}]: missing required string field "${required}"`,
-				)
+				errors.push(`pages[${i}]: missing required string field "${required}"`)
 			}
 		}
 		if (page.type && !allowedTypes.has(page.type)) {
 			errors.push(`pages[${i}].type: "${page.type}" not in v1.x enum`)
 		}
 		if (page.id) {
-			if (seenIds.has(page.id))
-				errors.push(`pages[${i}].id: duplicate "${page.id}"`)
+			if (seenIds.has(page.id)) errors.push(`pages[${i}].id: duplicate "${page.id}"`)
 			seenIds.add(page.id)
 		}
 		if (page.type === 'custom' && !page.component) {
@@ -168,9 +135,7 @@ function main() {
 
 	const schemaPath = findSchemaPath()
 	if (!schemaPath) {
-		console.warn(
-			'[validate-manifest] no schema candidate resolved; falling back to structural lint.',
-		)
+		console.warn('[validate-manifest] no schema candidate resolved; falling back to structural lint.')
 		const errors = structuralLint(manifest)
 		if (errors.length === 0) {
 			console.log('[validate-manifest] structural lint: PASS (0 issues)')
@@ -188,9 +153,7 @@ function main() {
 	if (!Ajv) {
 		const errors = structuralLint(manifest)
 		if (errors.length === 0) {
-			console.log(
-				'[validate-manifest] structural lint (no Ajv): PASS (0 issues)',
-			)
+			console.log('[validate-manifest] structural lint (no Ajv): PASS (0 issues)')
 			process.exit(0)
 		}
 		console.error('[validate-manifest] structural lint (no Ajv): FAIL')
@@ -208,9 +171,7 @@ function main() {
 	}
 	console.error('[validate-manifest] Ajv validation: FAIL')
 	for (const err of validate.errors || []) {
-		console.error(
-			`  - ${err.instancePath || '(root)'} ${err.message} (keyword=${err.keyword})`,
-		)
+		console.error(`  - ${err.instancePath || '(root)'} ${err.message} (keyword=${err.keyword})`)
 	}
 	process.exit(1)
 }

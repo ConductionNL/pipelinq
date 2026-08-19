@@ -55,10 +55,10 @@ export function resolveBaseUrl(): string {
 	if (!url) {
 		throw new Error(
 			'No target instance configured. Set PLAYWRIGHT_BASE_URL (or BASE_URL, '
-				+ 'which is what the shared CI workflow exports) to the Nextcloud '
-				+ 'instance this suite should run against. There is deliberately no '
-				+ 'default — a localhost:8080 fallback silently retargets the suite at '
-				+ 'the SHARED dev container.',
+			+ 'which is what the shared CI workflow exports) to the Nextcloud '
+			+ 'instance this suite should run against. There is deliberately no '
+			+ 'default — a localhost:8080 fallback silently retargets the suite at '
+			+ 'the SHARED dev container.',
 		)
 	}
 	return url.replace(/\/+$/, '')

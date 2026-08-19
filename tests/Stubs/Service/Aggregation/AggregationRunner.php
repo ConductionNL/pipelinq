@@ -26,23 +26,25 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service\Aggregation;
 
 if (class_exists(AggregationRunner::class) === false) {
-	/**
-	 * Stub AggregationRunner — used only in standalone unit tests.
-	 *
-	 * Replaced by the real implementation when openregister is installed.
-	 */
-	class AggregationRunner {
-		/**
-		 * Run an ad-hoc aggregation by register/schema ref.
-		 *
-		 * @param string $registerRef The register ref.
-		 * @param string $schemaRef The schema ref.
-		 * @param AggregationQuery $query The query value object.
-		 *
-		 * @return array<string, mixed> The result envelope.
-		 */
-		public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query): array {
-			return ['value' => null, 'backend' => 'stub', 'cached' => false];
-		}//end runAdhocByRef()
-	}//end class
+    /**
+     * Stub AggregationRunner — used only in standalone unit tests.
+     *
+     * Replaced by the real implementation when openregister is installed.
+     */
+    class AggregationRunner
+    {
+        /**
+         * Run an ad-hoc aggregation by register/schema ref.
+         *
+         * @param string           $registerRef The register ref.
+         * @param string           $schemaRef   The schema ref.
+         * @param AggregationQuery $query        The query value object.
+         *
+         * @return array<string, mixed> The result envelope.
+         */
+        public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query): array
+        {
+            return ['value' => null, 'backend' => 'stub', 'cached' => false];
+        }//end runAdhocByRef()
+    }//end class
 }//end if

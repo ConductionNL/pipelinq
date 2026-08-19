@@ -24,9 +24,7 @@ test('export jobs list page renders without error', async ({ page }) => {
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-01
 test('export jobs page main content area renders', async ({ page }) => {
 	await page.goto('/apps/pipelinq/export/jobs')
-	await expect(
-		page.locator('#app-content, .app-content, main').first(),
-	).toBeVisible({ timeout: 10000 })
+	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002-02
@@ -47,15 +45,11 @@ test('export destinations list page renders without error', async ({ page }) => 
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-01
 test('export destinations page main content area renders', async ({ page }) => {
 	await page.goto('/apps/pipelinq/export/destinations')
-	await expect(
-		page.locator('#app-content, .app-content, main').first(),
-	).toBeVisible({ timeout: 10000 })
+	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001-03
-test('export destination form page renders for new destination', async ({
-	page,
-}) => {
+test('export destination form page renders for new destination', async ({ page }) => {
 	await page.goto('/apps/pipelinq/export/destinations/new')
 	await expect(page).toHaveURL(/export\/destinations\/new/, { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
@@ -72,9 +66,7 @@ test('export runs list page renders without error', async ({ page }) => {
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-011-01
 test('export runs page main content area renders', async ({ page }) => {
 	await page.goto('/apps/pipelinq/export/runs')
-	await expect(
-		page.locator('#app-content, .app-content, main').first(),
-	).toBeVisible({ timeout: 10000 })
+	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
 })
 
 /*

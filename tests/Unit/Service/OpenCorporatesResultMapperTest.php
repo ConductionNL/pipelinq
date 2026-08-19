@@ -25,95 +25,101 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for OpenCorporatesResultMapper.
  */
-class OpenCorporatesResultMapperTest extends TestCase {
-	/**
-	 * The service under test.
-	 *
-	 * @var OpenCorporatesResultMapper
-	 */
-	private OpenCorporatesResultMapper $mapper;
+class OpenCorporatesResultMapperTest extends TestCase
+{
+    /**
+     * The service under test.
+     *
+     * @var OpenCorporatesResultMapper
+     */
+    private OpenCorporatesResultMapper $mapper;
 
-	/**
-	 * Set up the test.
-	 *
-	 * @return void
-	 */
-	protected function setUp(): void {
-		$this->mapper = new OpenCorporatesResultMapper();
-	}//end setUp()
+    /**
+     * Set up the test.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        $this->mapper = new OpenCorporatesResultMapper();
+    }//end setUp()
 
-	/**
-	 * Test mapResult returns mapped prospect data.
-	 *
-	 * @return void
-	 */
-	public function testMapResultReturnsMappedData(): void {
-		$company = [
-			'company_number' => '12345678',
-			'name' => 'Test Corp',
-			'company_type' => 'BV',
-			'current_status' => 'Active',
-			'incorporation_date' => '2020-01-01',
-			'registered_address' => [
-				'street_address' => 'Main St 1',
-				'locality' => 'Amsterdam',
-				'region' => 'Noord-Holland',
-				'postal_code' => '1012AB',
-			],
-			'industry_codes' => [
-				['description' => 'Software'],
-			],
-		];
+    /**
+     * Test mapResult returns mapped prospect data.
+     *
+     * @return void
+     */
+    public function testMapResultReturnsMappedData(): void
+    {
+        $company = [
+            'company_number'     => '12345678',
+            'name'               => 'Test Corp',
+            'company_type'       => 'BV',
+            'current_status'     => 'Active',
+            'incorporation_date' => '2020-01-01',
+            'registered_address' => [
+                'street_address' => 'Main St 1',
+                'locality'       => 'Amsterdam',
+                'region'         => 'Noord-Holland',
+                'postal_code'    => '1012AB',
+            ],
+            'industry_codes'     => [
+                ['description' => 'Software'],
+            ],
+        ];
 
-		$result = $this->mapper->mapResult($company);
+        $result = $this->mapper->mapResult($company);
 
-		$this->assertSame('12345678', $result['kvkNumber']);
-		$this->assertSame('Test Corp', $result['tradeName']);
-		$this->assertSame('BV', $result['legalForm']);
-		$this->assertTrue($result['isActive']);
-		$this->assertSame('opencorporates', $result['source']);
-		$this->assertSame('Amsterdam', $result['address']['city']);
-		$this->assertSame('Software', $result['sbiDescription']);
-	}//end testMapResultReturnsMappedData()
+        $this->assertSame('12345678', $result['kvkNumber']);
+        $this->assertSame('Test Corp', $result['tradeName']);
+        $this->assertSame('BV', $result['legalForm']);
+        $this->assertTrue($result['isActive']);
+        $this->assertSame('opencorporates', $result['source']);
+        $this->assertSame('Amsterdam', $result['address']['city']);
+        $this->assertSame('Software', $result['sbiDescription']);
+    }//end testMapResultReturnsMappedData()
 
-	/**
-	 * Test mapResult returns null without company number.
-	 *
-	 * @return void
-	 */
-	public function testMapResultReturnsNullWithoutNumber(): void {
-		$this->assertNull($this->mapper->mapResult([]));
-	}//end testMapResultReturnsNullWithoutNumber()
+    /**
+     * Test mapResult returns null without company number.
+     *
+     * @return void
+     */
+    public function testMapResultReturnsNullWithoutNumber(): void
+    {
+        $this->assertNull($this->mapper->mapResult([]));
+    }//end testMapResultReturnsNullWithoutNumber()
 
-	/**
-	 * Test mapResult handles inactive company.
-	 *
-	 * @return void
-	 */
-	public function testMapResultInactive(): void {
-		$company = [
-			'company_number' => '99999999',
-			'current_status' => 'Dissolved',
-		];
+    /**
+     * Test mapResult handles inactive company.
+     *
+     * @return void
+     */
+    public function testMapResultInactive(): void
+    {
+        $company = [
+            'company_number' => '99999999',
+            'current_status' => 'Dissolved',
+        ];
 
-		$result = $this->mapper->mapResult($company);
+        $result = $this->mapper->mapResult($company);
 
-		$this->assertFalse($result['isActive']);
-	}//end testMapResultInactive()
+        $this->assertFalse($result['isActive']);
+    }//end testMapResultInactive()
 
-	/**
-	 * Test mapResult handles missing address.
-	 *
-	 * @return void
-	 */
-	public function testMapResultMissingAddress(): void {
-		$company = [
-			'company_number' => '11111111',
-		];
+    /**
+     * Test mapResult handles missing address.
+     *
+     * @return void
+     */
+    public function testMapResultMissingAddress(): void
+    {
+        $company = [
+            'company_number' => '11111111',
+        ];
 
-		$result = $this->mapper->mapResult($company);
+        $result = $this->mapper->mapResult($company);
 
-		$this->assertSame('', $result['address']['city']);
-		$this->assertSame('', $result['address']['street']);
-	}//end testMapResultMissingAddress()
+        $this->assertSame('', $result['address']['city']);
+        $this->assertSame('', $result['address']['street']);
+    }//end testMapResultMissingAddress()
 }//end class

@@ -18,7 +18,7 @@ const base = (path) => generateUrl('/apps/pipelinq' + path)
  */
 export async function listProviders() {
 	const { data } = await axios.get(base('/api/payment-providers'))
-	return data && data.providers ? data.providers : []
+	return (data && data.providers) ? data.providers : []
 }
 
 /**
@@ -28,10 +28,8 @@ export async function listProviders() {
  * @return {Promise<object>} The provider config.
  */
 export async function getProvider(name) {
-	const { data } = await axios.get(
-		base('/api/payment-providers/' + encodeURIComponent(name)),
-	)
-	return data && data.provider ? data.provider : null
+	const { data } = await axios.get(base('/api/payment-providers/' + encodeURIComponent(name)))
+	return (data && data.provider) ? data.provider : null
 }
 
 /**
@@ -42,11 +40,8 @@ export async function getProvider(name) {
  * @return {Promise<object>} The updated provider config (credentials masked).
  */
 export async function updateProvider(name, config) {
-	const { data } = await axios.put(
-		base('/api/payment-providers/' + encodeURIComponent(name)),
-		config,
-	)
-	return data && data.provider ? data.provider : null
+	const { data } = await axios.put(base('/api/payment-providers/' + encodeURIComponent(name)), config)
+	return (data && data.provider) ? data.provider : null
 }
 
 /**
@@ -56,12 +51,8 @@ export async function updateProvider(name, config) {
  * @return {Promise<{status: string, message: string}>} The test result.
  */
 export async function testConnection(name) {
-	const { data } = await axios.post(
-		base('/api/payment-providers/' + encodeURIComponent(name) + '/test'),
-	)
-	return data && data.result
-		? data.result
-		: { status: 'error', message: 'No result' }
+	const { data } = await axios.post(base('/api/payment-providers/' + encodeURIComponent(name) + '/test'))
+	return (data && data.result) ? data.result : { status: 'error', message: 'No result' }
 }
 
 /**

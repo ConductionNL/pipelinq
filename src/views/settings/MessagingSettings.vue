@@ -21,12 +21,7 @@
 	<div class="messaging-settings">
 		<NcSettingsSection
 			:name="t('pipelinq', 'Providers')"
-			:description="
-				t(
-					'pipelinq',
-					'WhatsApp and SMS senders. Credentials live on the OpenConnector source (sourceId) — never here.',
-				)
-			">
+			:description="t('pipelinq', 'WhatsApp and SMS senders. Credentials live on the OpenConnector source (sourceId) — never here.')">
 			<div class="messaging-settings__toolbar">
 				<NcButton :disabled="loadingProviders" @click="fetchProviders">
 					{{ t('pipelinq', 'Refresh') }}
@@ -40,9 +35,7 @@
 
 			<NcEmptyContent
 				v-else-if="providers.length === 0"
-				:description="
-					t('pipelinq', 'No channel providers configured yet.')
-				" />
+				:description="t('pipelinq', 'No channel providers configured yet.')" />
 
 			<div v-else class="messaging-settings__table-wrap">
 				<table class="messaging-settings__table">
@@ -52,9 +45,7 @@
 							<th scope="col">{{ t('pipelinq', 'Kind') }}</th>
 							<th scope="col">{{ t('pipelinq', 'Vendor') }}</th>
 							<th scope="col">{{ t('pipelinq', 'Source') }}</th>
-							<th scope="col">
-								{{ t('pipelinq', 'Phone / account') }}
-							</th>
+							<th scope="col">{{ t('pipelinq', 'Phone / account') }}</th>
 							<th scope="col">{{ t('pipelinq', 'Priority') }}</th>
 							<th scope="col">{{ t('pipelinq', 'Status') }}</th>
 							<th scope="col">{{ t('pipelinq', 'Webhook URL') }}</th>
@@ -68,35 +59,21 @@
 							<td>{{ provider.displayName }}</td>
 							<td>{{ kindLabel(provider.kind) }}</td>
 							<td>{{ vendorLabel(provider.vendor) }}</td>
-							<td>
-								<code>{{ provider.sourceId || '—' }}</code>
-							</td>
+							<td><code>{{ provider.sourceId || '—' }}</code></td>
 							<td>{{ provider.phoneNumber || '—' }}</td>
 							<td>{{ provider.priority ?? 10 }}</td>
 							<td>
 								<span
 									class="messaging-settings__badge"
-									:class="
-										provider.active
-											? 'messaging-settings__badge--on'
-											: 'messaging-settings__badge--off'
-									">
-									{{
-										provider.active
-											? t('pipelinq', 'Active')
-											: t('pipelinq', 'Inactive')
-									}}
+									:class="provider.active ? 'messaging-settings__badge--on' : 'messaging-settings__badge--off'">
+									{{ provider.active ? t('pipelinq', 'Active') : t('pipelinq', 'Inactive') }}
 								</span>
-								<span
-									v-if="provider.sandbox"
-									class="messaging-settings__badge messaging-settings__badge--sandbox">
+								<span v-if="provider.sandbox" class="messaging-settings__badge messaging-settings__badge--sandbox">
 									{{ t('pipelinq', 'Sandbox') }}
 								</span>
 							</td>
 							<td class="messaging-settings__webhook-cell">
-								<code class="messaging-settings__webhook-url">{{
-									webhookUrl(provider)
-								}}</code>
+								<code class="messaging-settings__webhook-url">{{ webhookUrl(provider) }}</code>
 								<NcButton
 									variant="tertiary"
 									:aria-label="t('pipelinq', 'Copy webhook URL')"
@@ -110,45 +87,22 @@
 								<NcButton
 									:disabled="testingProviderId === provider.id"
 									@click="testProviderConnection(provider)">
-									{{
-										testingProviderId === provider.id
-											? t('pipelinq', 'Testing…')
-											: t('pipelinq', 'Test connection')
-									}}
+									{{ testingProviderId === provider.id ? t('pipelinq', 'Testing…') : t('pipelinq', 'Test connection') }}
 								</NcButton>
 								<NcButton @click="editProvider(provider)">
 									{{ t('pipelinq', 'Edit') }}
 								</NcButton>
-								<NcButton
-									variant="error"
-									@click="deleteProvider(provider)">
+								<NcButton variant="error" @click="deleteProvider(provider)">
 									{{ t('pipelinq', 'Delete') }}
 								</NcButton>
-								<div
-									v-if="testResults[provider.id]"
-									class="messaging-settings__test-result">
+								<div v-if="testResults[provider.id]" class="messaging-settings__test-result">
 									<span
 										v-if="testResults[provider.id].reachable"
 										class="messaging-settings__badge messaging-settings__badge--on">
-										{{
-											testResults[provider.id].mock
-												? t(
-														'pipelinq',
-														'Reachable (mock mode)',
-													)
-												: t('pipelinq', 'Reachable')
-										}}
+										{{ testResults[provider.id].mock ? t('pipelinq', 'Reachable (mock mode)') : t('pipelinq', 'Reachable') }}
 									</span>
-									<span
-										v-else
-										class="messaging-settings__badge messaging-settings__badge--error">
-										{{
-											t('pipelinq', 'Degraded: {cause}', {
-												cause:
-													testResults[provider.id].cause
-													|| t('pipelinq', 'unknown'),
-											})
-										}}
+									<span v-else class="messaging-settings__badge messaging-settings__badge--error">
+										{{ t('pipelinq', 'Degraded: {cause}', { cause: testResults[provider.id].cause || t('pipelinq', 'unknown') }) }}
 									</span>
 								</div>
 							</td>
@@ -158,13 +112,7 @@
 			</div>
 
 			<div v-if="showProviderForm" class="messaging-settings__form-panel">
-				<h3>
-					{{
-						editingProvider
-							? t('pipelinq', 'Edit provider')
-							: t('pipelinq', 'Add provider')
-					}}
-				</h3>
+				<h3>{{ editingProvider ? t('pipelinq', 'Edit provider') : t('pipelinq', 'Add provider') }}</h3>
 				<NcTextField
 					v-model="providerForm.displayName"
 					:label="t('pipelinq', 'Display name')"
@@ -172,13 +120,13 @@
 				<NcSelect
 					v-model="providerForm.kind"
 					:options="kindOptions"
-					:inputLabel="t('pipelinq', 'Kind')"
+					:input-label="t('pipelinq', 'Kind')"
 					label="label"
 					:reduce="(o) => o.value" />
 				<NcSelect
 					v-model="providerForm.vendor"
 					:options="vendorOptions"
-					:inputLabel="t('pipelinq', 'Vendor')"
+					:input-label="t('pipelinq', 'Vendor')"
 					label="label"
 					:reduce="(o) => o.value" />
 				<NcTextField
@@ -186,22 +134,17 @@
 					:label="t('pipelinq', 'OpenConnector source ID')"
 					:placeholder="t('pipelinq', 'e.g. twilio-sms')" />
 				<p class="messaging-settings__hint">
-					{{
-						t(
-							'pipelinq',
-							'Credentials live on the OpenConnector source above, not on this provider row. Configure the vendor API key/secret on that source.',
-						)
-					}}
+					{{ t('pipelinq', 'Credentials live on the OpenConnector source above, not on this provider row. Configure the vendor API key/secret on that source.') }}
 				</p>
 				<NcTextField
 					v-model="providerForm.phoneNumber"
 					:label="t('pipelinq', 'Phone number / account ID')"
 					placeholder="+31600000000" />
 				<NcTextField
-					:modelValue="providerForm.webhookSecret"
+					:model-value="providerForm.webhookSecret"
 					:label="t('pipelinq', 'Webhook secret')"
 					type="password"
-					@update:modelValue="(v) => (providerForm.webhookSecret = v)" />
+					@update:model-value="(v) => (providerForm.webhookSecret = v)" />
 				<NcTextField
 					v-model.number="providerForm.priority"
 					:label="t('pipelinq', 'Priority (lower wins failover)')"
@@ -219,18 +162,9 @@
 					</NcButton>
 					<NcButton
 						variant="primary"
-						:disabled="
-							!providerForm.displayName
-							|| !providerForm.kind
-							|| !providerForm.vendor
-							|| savingProvider
-						"
+						:disabled="!providerForm.displayName || !providerForm.kind || !providerForm.vendor || savingProvider"
 						@click="saveProvider">
-						{{
-							savingProvider
-								? t('pipelinq', 'Saving…')
-								: t('pipelinq', 'Save')
-						}}
+						{{ savingProvider ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 					</NcButton>
 				</div>
 			</div>
@@ -238,20 +172,12 @@
 
 		<NcSettingsSection
 			:name="t('pipelinq', 'Send budgets')"
-			:description="
-				t(
-					'pipelinq',
-					'Per-provider send caps. Hard-stop refuses further sends past the cap; alert-only just notifies once per period.',
-				)
-			">
+			:description="t('pipelinq', 'Per-provider send caps. Hard-stop refuses further sends past the cap; alert-only just notifies once per period.')">
 			<div class="messaging-settings__toolbar">
 				<NcButton :disabled="loadingBudgets" @click="fetchBudgets">
 					{{ t('pipelinq', 'Refresh') }}
 				</NcButton>
-				<NcButton
-					variant="primary"
-					:disabled="providers.length === 0"
-					@click="startNewBudget">
+				<NcButton variant="primary" :disabled="providers.length === 0" @click="startNewBudget">
 					{{ t('pipelinq', 'Add budget') }}
 				</NcButton>
 			</div>
@@ -272,9 +198,7 @@
 							<th scope="col">{{ t('pipelinq', 'Max cost (€)') }}</th>
 							<th scope="col">{{ t('pipelinq', 'Alert at') }}</th>
 							<th scope="col">{{ t('pipelinq', 'Hard stop') }}</th>
-							<th scope="col">
-								{{ t('pipelinq', 'Used this period') }}
-							</th>
+							<th scope="col">{{ t('pipelinq', 'Used this period') }}</th>
 							<th scope="col" class="messaging-settings__col-actions">
 								{{ t('pipelinq', 'Actions') }}
 							</th>
@@ -287,7 +211,7 @@
 								<NcSelect
 									v-model="budget.period"
 									:options="periodOptions"
-									:inputLabel="t('pipelinq', 'Period')"
+									:input-label="t('pipelinq', 'Period')"
 									label="label"
 									:reduce="(o) => o.value" />
 							</td>
@@ -316,32 +240,22 @@
 									step="0.05" />
 							</td>
 							<td>
-								<NcCheckboxRadioSwitch
-									v-model="budget.hardStop"
-									type="switch">
+								<NcCheckboxRadioSwitch v-model="budget.hardStop" type="switch">
 									{{ t('pipelinq', 'Hard stop') }}
 								</NcCheckboxRadioSwitch>
 							</td>
 							<td>
-								{{ budget.currentPeriodMessages || 0 }}
-								{{ t('pipelinq', 'msgs') }} / €{{
-									(budget.currentPeriodCostEur || 0).toFixed(2)
-								}}
+								{{ budget.currentPeriodMessages || 0 }} {{ t('pipelinq', 'msgs') }} /
+								€{{ (budget.currentPeriodCostEur || 0).toFixed(2) }}
 							</td>
 							<td class="messaging-settings__col-actions">
 								<NcButton
 									variant="primary"
 									:disabled="savingBudgetId === budget.id"
 									@click="saveBudget(budget)">
-									{{
-										savingBudgetId === budget.id
-											? t('pipelinq', 'Saving…')
-											: t('pipelinq', 'Save')
-									}}
+									{{ savingBudgetId === budget.id ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 								</NcButton>
-								<NcButton
-									variant="error"
-									@click="deleteBudget(budget)">
+								<NcButton variant="error" @click="deleteBudget(budget)">
 									{{ t('pipelinq', 'Delete') }}
 								</NcButton>
 							</td>
@@ -355,19 +269,17 @@
 				<NcTextField
 					v-model="budgetForm.tenantId"
 					:label="t('pipelinq', 'Tenant ID')"
-					:placeholder="
-						t('pipelinq', 'Defaults to this Nextcloud instance')
-					" />
+					:placeholder="t('pipelinq', 'Defaults to this Nextcloud instance')" />
 				<NcSelect
 					v-model="budgetForm.providerId"
 					:options="providerOptions"
-					:inputLabel="t('pipelinq', 'Provider')"
+					:input-label="t('pipelinq', 'Provider')"
 					label="label"
 					:reduce="(o) => o.value" />
 				<NcSelect
 					v-model="budgetForm.period"
 					:options="periodOptions"
-					:inputLabel="t('pipelinq', 'Period')"
+					:input-label="t('pipelinq', 'Period')"
 					label="label"
 					:reduce="(o) => o.value" />
 				<NcTextField
@@ -392,11 +304,7 @@
 						variant="primary"
 						:disabled="!budgetForm.providerId || creatingBudget"
 						@click="createBudget">
-						{{
-							creatingBudget
-								? t('pipelinq', 'Saving…')
-								: t('pipelinq', 'Save')
-						}}
+						{{ creatingBudget ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 					</NcButton>
 				</div>
 			</div>
@@ -404,12 +312,7 @@
 
 		<NcSettingsSection
 			:name="t('pipelinq', 'Templates')"
-			:description="
-				t(
-					'pipelinq',
-					'Local mirror of provider-side WhatsApp HSM templates. Approval status and sync time come from the provider; templates are synced, not authored here.',
-				)
-			">
+			:description="t('pipelinq', 'Local mirror of provider-side WhatsApp HSM templates. Approval status and sync time come from the provider; templates are synced, not authored here.')">
 			<div class="messaging-settings__toolbar">
 				<NcButton :disabled="loadingTemplates" @click="fetchTemplates">
 					{{ t('pipelinq', 'Refresh') }}
@@ -436,9 +339,7 @@
 					<tbody>
 						<tr v-for="template in templates" :key="template.id">
 							<td>{{ providerDisplayName(template.providerId) }}</td>
-							<td>
-								<code>{{ template.externalId }}</code>
-							</td>
+							<td><code>{{ template.externalId }}</code></td>
 							<td>{{ template.language }}</td>
 							<td>
 								<span
@@ -453,27 +354,22 @@
 				</table>
 			</div>
 		</NcSettingsSection>
-		<ConfirmDialog
-			v-if="pendingDeleteProvider"
+		<ConfirmDialog v-if="pendingDeleteProvider"
 			:name="t('pipelinq', 'Delete provider')"
 			:message="deleteProviderMessage"
-			:confirmLabel="t('pipelinq', 'Delete')"
+			:confirm-label="t('pipelinq', 'Delete')"
 			@confirm="performDeleteProvider"
 			@cancel="pendingDeleteProvider = null" />
-		<ConfirmDialog
-			v-if="pendingDeleteBudget"
+		<ConfirmDialog v-if="pendingDeleteBudget"
 			:name="t('pipelinq', 'Delete send budget')"
 			:message="t('pipelinq', 'Delete this send budget?')"
-			:confirmLabel="t('pipelinq', 'Delete')"
+			:confirm-label="t('pipelinq', 'Delete')"
 			@confirm="performDeleteBudget"
 			@cancel="pendingDeleteBudget = null" />
 	</div>
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -483,6 +379,9 @@ import {
 	NcSettingsSection,
 	NcTextField,
 } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -509,37 +408,27 @@ const TEMPLATE_STATUS_CLASSES = {
 	disabled: 'messaging-settings__badge--off',
 }
 
-/**
- *
- */
-function DEFAULT_PROVIDER_FORM() {
-	return {
-		id: null,
-		displayName: '',
-		kind: 'sms',
-		vendor: 'twilio',
-		sourceId: '',
-		phoneNumber: '',
-		webhookSecret: '',
-		priority: 10,
-		active: true,
-		sandbox: false,
-	}
-}
+const DEFAULT_PROVIDER_FORM = () => ({
+	id: null,
+	displayName: '',
+	kind: 'sms',
+	vendor: 'twilio',
+	sourceId: '',
+	phoneNumber: '',
+	webhookSecret: '',
+	priority: 10,
+	active: true,
+	sandbox: false,
+})
 
-/**
- *
- */
-function DEFAULT_BUDGET_FORM() {
-	return {
-		tenantId: '',
-		providerId: null,
-		period: 'monthly',
-		maxMessages: 0,
-		maxCostEur: 0,
-		hardStop: false,
-	}
-}
+const DEFAULT_BUDGET_FORM = () => ({
+	tenantId: '',
+	providerId: null,
+	period: 'monthly',
+	maxMessages: 0,
+	maxCostEur: 0,
+	hardStop: false,
+})
 
 export default {
 	name: 'MessagingSettings',
@@ -554,7 +443,6 @@ export default {
 		NcTextField,
 		ContentCopy,
 	},
-
 	data() {
 		return {
 			providers: [],
@@ -577,12 +465,10 @@ export default {
 			testResults: {},
 		}
 	},
-
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
-
 		/**
 		 * Built here rather than inline in the template so the t() key stays
 		 * byte-identical to the one the old window.confirm used. Escaping the
@@ -597,22 +483,15 @@ export default {
 			if (!this.pendingDeleteProvider) {
 				return ''
 			}
-			return t('pipelinq', 'Delete provider "{name}"?', {
-				name: this.pendingDeleteProvider.displayName,
-			})
+			return t('pipelinq', 'Delete provider "{name}"?', { name: this.pendingDeleteProvider.displayName })
 		},
-
 		kindOptions() {
 			return [
-				{
-					value: 'whatsapp-cloud-api',
-					label: t('pipelinq', 'WhatsApp Cloud API'),
-				},
+				{ value: 'whatsapp-cloud-api', label: t('pipelinq', 'WhatsApp Cloud API') },
 				{ value: 'whatsapp-bsp', label: t('pipelinq', 'WhatsApp (BSP)') },
 				{ value: 'sms', label: t('pipelinq', 'SMS') },
 			]
 		},
-
 		vendorOptions() {
 			return [
 				{ value: 'meta', label: t('pipelinq', 'Meta') },
@@ -623,7 +502,6 @@ export default {
 				{ value: 'vonage', label: t('pipelinq', 'Vonage') },
 			]
 		},
-
 		periodOptions() {
 			return [
 				{ value: 'daily', label: t('pipelinq', 'Daily') },
@@ -631,29 +509,20 @@ export default {
 				{ value: 'monthly', label: t('pipelinq', 'Monthly') },
 			]
 		},
-
 		providerOptions() {
 			return this.providers.map((p) => ({ value: p.id, label: p.displayName }))
 		},
 	},
-
 	async mounted() {
-		await Promise.all([
-			this.fetchProviders(),
-			this.fetchBudgets(),
-			this.fetchTemplates(),
-		])
+		await Promise.all([this.fetchProviders(), this.fetchBudgets(), this.fetchTemplates()])
 	},
-
 	methods: {
 		kindLabel(kind) {
 			return KIND_LABELS[kind] || kind || '—'
 		},
-
 		vendorLabel(vendor) {
 			return VENDOR_LABELS[vendor] || vendor || '—'
 		},
-
 		templateStatusLabel(status) {
 			const labels = {
 				approved: t('pipelinq', 'Approved'),
@@ -663,18 +532,13 @@ export default {
 			}
 			return labels[status] || status || '—'
 		},
-
 		templateStatusClass(status) {
-			return (
-				TEMPLATE_STATUS_CLASSES[status] || 'messaging-settings__badge--off'
-			)
+			return TEMPLATE_STATUS_CLASSES[status] || 'messaging-settings__badge--off'
 		},
-
 		providerDisplayName(providerId) {
 			const provider = this.providers.find((p) => p.id === providerId)
-			return provider ? provider.displayName : providerId || '—'
+			return provider ? provider.displayName : (providerId || '—')
 		},
-
 		formatDate(value) {
 			if (!value) {
 				return '—'
@@ -685,19 +549,14 @@ export default {
 			}
 			return parsed.toLocaleString()
 		},
-
 		webhookUrl(provider) {
 			const channel = provider.kind === 'sms' ? 'sms' : 'whatsapp'
-			const path = generateUrl(
-				'/apps/pipelinq/api/messaging-webhooks/{channel}/{id}',
-				{
-					channel,
-					id: provider.id,
-				},
-			)
+			const path = generateUrl('/apps/pipelinq/api/messaging-webhooks/{channel}/{id}', {
+				channel,
+				id: provider.id,
+			})
 			return window.location.origin + path
 		},
-
 		async copyWebhookUrl(provider) {
 			try {
 				await navigator.clipboard.writeText(this.webhookUrl(provider))
@@ -706,14 +565,10 @@ export default {
 				showError(t('pipelinq', 'Could not copy the webhook URL.'))
 			}
 		},
-
 		async fetchProviders() {
 			this.loadingProviders = true
 			try {
-				this.providers =
-					(await this.objectStore.fetchCollection('channelProvider', {
-						_limit: 200,
-					})) || []
+				this.providers = await this.objectStore.fetchCollection('channelProvider', { _limit: 200 }) || []
 			} catch (e) {
 				this.providers = []
 				showError(t('pipelinq', 'Failed to load channel providers.'))
@@ -721,25 +576,21 @@ export default {
 				this.loadingProviders = false
 			}
 		},
-
 		startNewProvider() {
 			this.editingProvider = null
 			this.providerForm = DEFAULT_PROVIDER_FORM()
 			this.showProviderForm = true
 		},
-
 		editProvider(provider) {
 			this.editingProvider = provider
 			this.providerForm = { ...DEFAULT_PROVIDER_FORM(), ...provider }
 			this.showProviderForm = true
 		},
-
 		cancelProviderForm() {
 			this.showProviderForm = false
 			this.editingProvider = null
 			this.providerForm = DEFAULT_PROVIDER_FORM()
 		},
-
 		/**
 		 * Create or update a channel provider.
 		 *
@@ -750,9 +601,7 @@ export default {
 		async saveProvider() {
 			this.savingProvider = true
 			try {
-				await this.objectStore.saveObject('channelProvider', {
-					...this.providerForm,
-				})
+				await this.objectStore.saveObject('channelProvider', { ...this.providerForm })
 				showSuccess(t('pipelinq', 'Provider saved.'))
 				this.cancelProviderForm()
 				await this.fetchProviders()
@@ -762,7 +611,6 @@ export default {
 				this.savingProvider = false
 			}
 		},
-
 		/**
 		 * Open the delete confirmation for a provider.
 		 *
@@ -775,7 +623,6 @@ export default {
 		deleteProvider(provider) {
 			this.pendingDeleteProvider = provider
 		},
-
 		/**
 		 * Delete the pending provider once the dialog confirms.
 		 *
@@ -794,39 +641,27 @@ export default {
 				showSuccess(t('pipelinq', 'Provider deleted.'))
 				await this.fetchProviders()
 			} catch (e) {
-				showError(
-					e.message || t('pipelinq', 'Failed to delete the provider.'),
-				)
+				showError(e.message || t('pipelinq', 'Failed to delete the provider.'))
 			}
 		},
-
 		async testProviderConnection(provider) {
 			this.testingProviderId = provider.id
 			try {
 				const { data } = await axios.post(
-					generateUrl('/apps/pipelinq/api/messaging/providers/{id}/test', {
-						id: provider.id,
-					}),
+					generateUrl('/apps/pipelinq/api/messaging/providers/{id}/test', { id: provider.id }),
 				)
 				this.testResults[provider.id] = data
 			} catch (e) {
-				const data = (e.response && e.response.data) || {
-					reachable: false,
-					cause: 'request-failed',
-				}
+				const data = (e.response && e.response.data) || { reachable: false, cause: 'request-failed' }
 				this.testResults[provider.id] = data
 			} finally {
 				this.testingProviderId = null
 			}
 		},
-
 		async fetchBudgets() {
 			this.loadingBudgets = true
 			try {
-				this.budgets =
-					(await this.objectStore.fetchCollection('messageSendBudget', {
-						_limit: 200,
-					})) || []
+				this.budgets = await this.objectStore.fetchCollection('messageSendBudget', { _limit: 200 }) || []
 			} catch (e) {
 				this.budgets = []
 				showError(t('pipelinq', 'Failed to load send budgets.'))
@@ -834,12 +669,10 @@ export default {
 				this.loadingBudgets = false
 			}
 		},
-
 		startNewBudget() {
 			this.budgetForm = DEFAULT_BUDGET_FORM()
 			this.showBudgetForm = true
 		},
-
 		/**
 		 * Close the send-budget form and reset it.
 		 *
@@ -851,7 +684,6 @@ export default {
 			this.showBudgetForm = false
 			this.budgetForm = DEFAULT_BUDGET_FORM()
 		},
-
 		/**
 		 * Create a message send budget.
 		 *
@@ -862,9 +694,7 @@ export default {
 		async createBudget() {
 			this.creatingBudget = true
 			try {
-				await this.objectStore.saveObject('messageSendBudget', {
-					...this.budgetForm,
-				})
+				await this.objectStore.saveObject('messageSendBudget', { ...this.budgetForm })
 				showSuccess(t('pipelinq', 'Budget created.'))
 				this.cancelBudgetForm()
 				await this.fetchBudgets()
@@ -874,7 +704,6 @@ export default {
 				this.creatingBudget = false
 			}
 		},
-
 		async saveBudget(budget) {
 			this.savingBudgetId = budget.id
 			try {
@@ -886,7 +715,6 @@ export default {
 				this.savingBudgetId = null
 			}
 		},
-
 		/**
 		 * Open the delete confirmation for a send budget.
 		 *
@@ -899,7 +727,6 @@ export default {
 		deleteBudget(budget) {
 			this.pendingDeleteBudget = budget
 		},
-
 		/**
 		 * Delete the pending send budget once the dialog confirms.
 		 *
@@ -921,14 +748,10 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to delete the budget.'))
 			}
 		},
-
 		async fetchTemplates() {
 			this.loadingTemplates = true
 			try {
-				this.templates =
-					(await this.objectStore.fetchCollection('messageTemplate', {
-						_limit: 200,
-					})) || []
+				this.templates = await this.objectStore.fetchCollection('messageTemplate', { _limit: 200 }) || []
 			} catch (e) {
 				this.templates = []
 				showError(t('pipelinq', 'Failed to load templates.'))

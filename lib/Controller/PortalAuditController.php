@@ -30,7 +30,6 @@ namespace OCA\Pipelinq\Controller;
 use OCA\Pipelinq\Service\Portal\PortalAuditService;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -38,52 +37,53 @@ use Psr\Log\LoggerInterface;
 /**
  * Portal own-audit-trail endpoint.
  */
-class PortalAuditController extends PortalApiController {
-	/**
-	 * Constructor.
-	 *
-	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal guard.
-	 * @param LoggerInterface $logger The logger.
-	 * @param PortalAuditService $audit The audit service.
-	 */
-	public function __construct(
-		IRequest $request,
-		PortalRequestGuard $guard,
-		LoggerInterface $logger,
-		private PortalAuditService $audit,
-	) {
-		parent::__construct(request: $request, guard: $guard, logger: $logger);
-	}//end __construct()
+class PortalAuditController extends PortalApiController
+{
+    /**
+     * Constructor.
+     *
+     * @param IRequest           $request The request.
+     * @param PortalRequestGuard $guard   The portal guard.
+     * @param LoggerInterface    $logger  The logger.
+     * @param PortalAuditService $audit   The audit service.
+     */
+    public function __construct(
+        IRequest $request,
+        PortalRequestGuard $guard,
+        LoggerInterface $logger,
+        private PortalAuditService $audit,
+    ) {
+        parent::__construct(request: $request, guard: $guard, logger: $logger);
+    }//end __construct()
 
-	/**
-	 * List the current account's own audit events (paginated, newest-first).
-	 *
-	 * @return JSONResponse The events.
-	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 * @PublicPage
-	 */
-	#[AnonRateLimit(limit: 120, period: 60)]
-	public function index(): JSONResponse {
-		return $this->guarded(
-			handler: function (): array {
-				$ctx = $this->requireSession();
-				$events = $this->audit->getForAccount($ctx['accountId']);
-				$page = max(1, $this->intParam(name: 'page', default: 1));
-				$perPage = min(100, max(1, $this->intParam(name: 'perPage', default: 25)));
+    /**
+     * List the current account's own audit events (paginated, newest-first).
+     *
+     * @return JSONResponse The events.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     * @PublicPage
+     */
+    public function index(): JSONResponse
+    {
+        return $this->guarded(
+                handler: function (): array {
+                    $ctx     = $this->requireSession();
+                    $events  = $this->audit->getForAccount($ctx['accountId']);
+                    $page    = max(1, $this->intParam(name: 'page', default: 1));
+                    $perPage = min(100, max(1, $this->intParam(name: 'perPage', default: 25)));
 
-				return [
-					[
-						'total' => count($events),
-						'page' => $page,
-						'perPage' => $perPage,
-						'items' => array_slice($events, (($page - 1) * $perPage), $perPage),
-					],
-					Http::STATUS_OK,
-				];
-			}
-		);
-	}//end index()
+                    return [
+                        [
+                            'total'   => count($events),
+                            'page'    => $page,
+                            'perPage' => $perPage,
+                            'items'   => array_slice($events, (($page - 1) * $perPage), $perPage),
+                        ],
+                        Http::STATUS_OK,
+                    ];
+                }
+                );
+    }//end index()
 }//end class

@@ -8,17 +8,16 @@
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
-	<NcDialog :name="t('pipelinq', 'Reschedule booking')" @closing="$emit('cancel')">
+	<NcDialog
+		:name="t('pipelinq', 'Reschedule booking')"
+		@closing="$emit('cancel')">
 		<div class="reschedule-form">
 			<div class="form-group">
-				<label for="new-start-at">{{
-					t('pipelinq', 'New start time')
-				}}</label>
-				<input
-					id="new-start-at"
+				<label for="new-start-at">{{ t('pipelinq', 'New start time') }}</label>
+				<input id="new-start-at"
 					v-model="newStartAt"
 					type="datetime-local"
-					:aria-label="t('pipelinq', 'New start time')" />
+					:aria-label="t('pipelinq', 'New start time')">
 			</div>
 			<p v-if="error" class="error-text">
 				{{ error }}
@@ -44,7 +43,6 @@ export default {
 	props: {
 		currentStartAt: { type: String, default: '' },
 	},
-
 	emits: ['confirm', 'cancel'],
 	data() {
 		return {
@@ -52,16 +50,11 @@ export default {
 			error: '',
 		}
 	},
-
 	computed: {
 		isValid() {
-			return (
-				!!this.newStartAt
-				&& this.newStartAt !== this.formatForInput(this.currentStartAt)
-			)
+			return !!this.newStartAt && this.newStartAt !== this.formatForInput(this.currentStartAt)
 		},
 	},
-
 	methods: {
 		/**
 		 * Convert an ISO-8601 timestamp to the value format expected by
@@ -77,7 +70,6 @@ export default {
 			const pad = (n) => String(n).padStart(2, '0')
 			return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 		},
-
 		onConfirm() {
 			if (!this.newStartAt) {
 				this.error = t('pipelinq', 'Pick a new start time.')

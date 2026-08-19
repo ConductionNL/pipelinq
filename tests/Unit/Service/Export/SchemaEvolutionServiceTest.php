@@ -30,114 +30,123 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for SchemaEvolutionService.
  */
-class SchemaEvolutionServiceTest extends TestCase {
-	/**
-	 * The service under test.
-	 *
-	 * @var SchemaEvolutionService
-	 */
-	private SchemaEvolutionService $service;
+class SchemaEvolutionServiceTest extends TestCase
+{
+    /**
+     * The service under test.
+     *
+     * @var SchemaEvolutionService
+     */
+    private SchemaEvolutionService $service;
 
-	/**
-	 * Instantiate the dependency-free service.
-	 *
-	 * @return void
-	 */
-	protected function setUp(): void {
-		parent::setUp();
-		$this->service = new SchemaEvolutionService();
-	}//end setUp()
+    /**
+     * Instantiate the dependency-free service.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->service = new SchemaEvolutionService();
+    }//end setUp()
 
-	/**
-	 * An added column is reported as "added: <col>".
-	 *
-	 * @return void
-	 */
-	public function testDetectsAddedColumn(): void {
-		$changes = $this->service->compareColumns(
-			current: ['id' => 'integer', 'name' => 'string', 'email' => 'string'],
-			previous: ['id' => 'integer', 'name' => 'string']
-		);
+    /**
+     * An added column is reported as "added: <col>".
+     *
+     * @return void
+     */
+    public function testDetectsAddedColumn(): void
+    {
+        $changes = $this->service->compareColumns(
+            current: ['id' => 'integer', 'name' => 'string', 'email' => 'string'],
+            previous: ['id' => 'integer', 'name' => 'string']
+        );
 
-		$this->assertContains('added: email', $changes);
-	}//end testDetectsAddedColumn()
+        $this->assertContains('added: email', $changes);
+    }//end testDetectsAddedColumn()
 
-	/**
-	 * A removed column is reported as "removed: <col>".
-	 *
-	 * @return void
-	 */
-	public function testDetectsRemovedColumn(): void {
-		$changes = $this->service->compareColumns(
-			current: ['id' => 'integer'],
-			previous: ['id' => 'integer', 'legacy' => 'string']
-		);
+    /**
+     * A removed column is reported as "removed: <col>".
+     *
+     * @return void
+     */
+    public function testDetectsRemovedColumn(): void
+    {
+        $changes = $this->service->compareColumns(
+            current: ['id' => 'integer'],
+            previous: ['id' => 'integer', 'legacy' => 'string']
+        );
 
-		$this->assertContains('removed: legacy', $changes);
-	}//end testDetectsRemovedColumn()
+        $this->assertContains('removed: legacy', $changes);
+    }//end testDetectsRemovedColumn()
 
-	/**
-	 * A type change is reported as "changed: <col> (a -> b)".
-	 *
-	 * @return void
-	 */
-	public function testDetectsTypeChange(): void {
-		$changes = $this->service->compareColumns(
-			current: ['amount' => 'decimal'],
-			previous: ['amount' => 'integer']
-		);
+    /**
+     * A type change is reported as "changed: <col> (a -> b)".
+     *
+     * @return void
+     */
+    public function testDetectsTypeChange(): void
+    {
+        $changes = $this->service->compareColumns(
+            current: ['amount' => 'decimal'],
+            previous: ['amount' => 'integer']
+        );
 
-		$this->assertContains('changed: amount (integer -> decimal)', $changes);
-	}//end testDetectsTypeChange()
+        $this->assertContains('changed: amount (integer -> decimal)', $changes);
+    }//end testDetectsTypeChange()
 
-	/**
-	 * Identical column maps produce no changes.
-	 *
-	 * @return void
-	 */
-	public function testNoChangesWhenIdentical(): void {
-		$columns = ['id' => 'integer', 'name' => 'string'];
+    /**
+     * Identical column maps produce no changes.
+     *
+     * @return void
+     */
+    public function testNoChangesWhenIdentical(): void
+    {
+        $columns = ['id' => 'integer', 'name' => 'string'];
 
-		$this->assertSame([], $this->service->compareColumns(current: $columns, previous: $columns));
-	}//end testNoChangesWhenIdentical()
+        $this->assertSame([], $this->service->compareColumns(current: $columns, previous: $columns));
+    }//end testNoChangesWhenIdentical()
 
-	/**
-	 * Comparing against a null previous snapshot (first run) yields no drift.
-	 *
-	 * @return void
-	 */
-	public function testCompareToSnapshotNullIsEmpty(): void {
-		$this->assertSame(
-			[],
-			$this->service->compareToSnapshot(current: ['id' => 'integer'], previous: null)
-		);
-	}//end testCompareToSnapshotNullIsEmpty()
+    /**
+     * Comparing against a null previous snapshot (first run) yields no drift.
+     *
+     * @return void
+     */
+    public function testCompareToSnapshotNullIsEmpty(): void
+    {
+        $this->assertSame(
+            [],
+            $this->service->compareToSnapshot(current: ['id' => 'integer'], previous: null)
+        );
+    }//end testCompareToSnapshotNullIsEmpty()
 
-	/**
-	 * Comparing against a stored snapshot record reads columnDefinitionsJson.
-	 *
-	 * @return void
-	 */
-	public function testCompareToSnapshotReadsStoredDefinitions(): void {
-		$previous = ['columnDefinitionsJson' => ['id' => 'integer']];
+    /**
+     * Comparing against a stored snapshot record reads columnDefinitionsJson.
+     *
+     * @return void
+     */
+    public function testCompareToSnapshotReadsStoredDefinitions(): void
+    {
+        $previous = ['columnDefinitionsJson' => ['id' => 'integer']];
 
-		$changes = $this->service->compareToSnapshot(
-			current: ['id' => 'integer', 'status' => 'string'],
-			previous: $previous
-		);
+        $changes = $this->service->compareToSnapshot(
+            current: ['id' => 'integer', 'status' => 'string'],
+            previous: $previous
+        );
 
-		$this->assertContains('added: status', $changes);
-	}//end testCompareToSnapshotReadsStoredDefinitions()
+        $this->assertContains('added: status', $changes);
+    }//end testCompareToSnapshotReadsStoredDefinitions()
 
-	/**
-	 * Column definitions are derived per column from representative rows.
-	 *
-	 * @return void
-	 */
-	public function testDeriveColumnDefinitions(): void {
-		$defs = $this->service->deriveColumnDefinitions(rows: [['id' => 1, 'name' => 'Alice']]);
+    /**
+     * Column definitions are derived per column from representative rows.
+     *
+     * @return void
+     */
+    public function testDeriveColumnDefinitions(): void
+    {
+        $defs = $this->service->deriveColumnDefinitions(rows: [['id' => 1, 'name' => 'Alice']]);
 
-		$this->assertArrayHasKey('id', $defs);
-		$this->assertArrayHasKey('name', $defs);
-	}//end testDeriveColumnDefinitions()
+        $this->assertArrayHasKey('id', $defs);
+        $this->assertArrayHasKey('name', $defs);
+    }//end testDeriveColumnDefinitions()
 }//end class

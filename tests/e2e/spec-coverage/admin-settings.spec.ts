@@ -14,36 +14,28 @@ import { nextcloudErrorPage } from '../helpers/pipelinq'
 // @e2e openspec/specs/admin-settings/spec.md#admin-user-accesses-settings
 test('admin user accesses pipelinq settings', async ({ page }) => {
 	await page.goto('/settings/admin/pipelinq')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
-		timeout: 10000,
-	})
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('403')
 })
 
 // @e2e openspec/specs/admin-settings/spec.md#settings-page-structure
 test('pipelinq settings section renders in admin panel', async ({ page }) => {
 	await page.goto('/settings/admin/pipelinq')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
-		timeout: 15000,
-	})
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 15000 })
 })
 
 // @e2e openspec/specs/admin-settings/spec.md#version-info-card-renders
 test('admin settings loads without uncaught errors', async ({ page }) => {
 	await page.goto('/settings/admin/pipelinq')
 	await page.waitForTimeout(2000)
-	await expect(page.locator('body')).not.toContainText('Uncaught Error', {
-		timeout: 10000,
-	})
+	await expect(page.locator('body')).not.toContainText('Uncaught Error', { timeout: 10000 })
 })
 
 // @e2e openspec/specs/admin-settings/spec.md#settings-page-structure (second occurrence)
 test('settings navigation available in sidebar', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	// Settings is a button at the bottom of the app navigation
-	const settingsBtn = page
-		.locator('#app-navigation-vue button')
-		.filter({ hasText: 'Settings' })
+	const settingsBtn = page.locator('#app-navigation-vue button').filter({ hasText: 'Settings' })
 	await expect(settingsBtn).toBeVisible({ timeout: 10000 })
 })
 
@@ -51,9 +43,7 @@ test('settings navigation available in sidebar', async ({ page }) => {
 test('admin settings accessible via settings navigation', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
 	// Settings button in app sidebar
-	const settingsBtn = page
-		.locator('#app-navigation-vue button')
-		.filter({ hasText: 'Settings' })
+	const settingsBtn = page.locator('#app-navigation-vue button').filter({ hasText: 'Settings' })
 	if (await settingsBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
 		await settingsBtn.click()
 		await page.waitForTimeout(1000)
@@ -61,10 +51,7 @@ test('admin settings accessible via settings navigation', async ({ page }) => {
 	} else {
 		// Fallback: check admin settings page directly
 		await page.goto('/settings/admin/pipelinq')
-		await expect(page.locator('body')).not.toContainText(
-			'Internal Server Error',
-			{ timeout: 10000 },
-		)
+		await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
 	}
 })
 
@@ -90,9 +77,7 @@ test('admin settings page does not throw server errors', async ({ page }) => {
 test('admin settings stage management area accessible', async ({ page }) => {
 	await page.goto('/settings/admin/pipelinq')
 	// Just confirm the page loaded without error
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
-		timeout: 15000,
-	})
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 15000 })
 })
 
 /*

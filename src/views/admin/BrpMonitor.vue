@@ -38,26 +38,21 @@
 			<section class="brp-monitor__card">
 				<h3>{{ t('pipelinq', 'mTLS Certificate') }}</h3>
 				<div v-if="!cert" class="brp-monitor__cert">
-					<span
-						class="brp-monitor__badge brp-monitor__badge--unconfigured">
+					<span class="brp-monitor__badge brp-monitor__badge--unconfigured">
 						{{ t('pipelinq', 'Not configured') }}
 					</span>
 				</div>
 				<div v-else class="brp-monitor__cert">
 					<div>
-						<span
-							class="brp-monitor__badge"
-							:class="['brp-monitor__badge--' + cert.status]">
+						<span :class="['brp-monitor__badge', 'brp-monitor__badge--' + cert.status]">
 							{{ certStatusLabel }}
 						</span>
 					</div>
 					<div v-if="cert.expiry">
-						<strong>{{ t('pipelinq', 'Expires on') }}:</strong>
-						{{ cert.expiry }}
+						<strong>{{ t('pipelinq', 'Expires on') }}:</strong> {{ cert.expiry }}
 					</div>
 					<div v-if="cert.daysLeft !== undefined">
-						<strong>{{ t('pipelinq', 'Days remaining') }}:</strong>
-						{{ cert.daysLeft }}
+						<strong>{{ t('pipelinq', 'Days remaining') }}:</strong> {{ cert.daysLeft }}
 					</div>
 				</div>
 			</section>
@@ -84,9 +79,9 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
+import axios from '@nextcloud/axios'
 
 export default {
 	name: 'BrpMonitor',
@@ -94,7 +89,6 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 	},
-
 	data() {
 		return {
 			loading: false,
@@ -103,33 +97,26 @@ export default {
 			cert: null,
 		}
 	},
-
 	computed: {
 		cacheHitPct() {
 			if (!this.report || !this.report.cacheHitRatio) return 0
 			return Math.round(this.report.cacheHitRatio * 100)
 		},
-
 		errorPct() {
 			if (!this.report || !this.report.errorRate) return 0
 			return Math.round(this.report.errorRate * 100)
 		},
-
 		certStatusLabel() {
 			if (!this.cert) return ''
 			if (this.cert.status === 'ok') return this.t('pipelinq', 'OK')
-			if (this.cert.status === 'warning')
-				return this.t('pipelinq', 'Expires soon')
-			if (this.cert.status === 'critical')
-				return this.t('pipelinq', 'Critical — replace now')
+			if (this.cert.status === 'warning') return this.t('pipelinq', 'Expires soon')
+			if (this.cert.status === 'critical') return this.t('pipelinq', 'Critical — replace now')
 			return this.cert.status
 		},
 	},
-
 	mounted() {
 		this.load()
 	},
-
 	methods: {
 		async load() {
 			this.loading = true
@@ -141,8 +128,7 @@ export default {
 				this.cert = response.data?.cert || null
 			} catch (err) {
 				const data = err?.response?.data || {}
-				this.loadError =
-					data.error || this.t('pipelinq', 'Could not load BRP Monitor.')
+				this.loadError = data.error || this.t('pipelinq', 'Could not load BRP Monitor.')
 			} finally {
 				this.loading = false
 			}

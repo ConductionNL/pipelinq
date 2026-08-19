@@ -5,12 +5,8 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 <template>
 	<div class="portal-dashboard">
 		<h1>{{ t('pipelinq', 'My documents') }}</h1>
-		<div
-			class="portal-tabs"
-			role="tablist"
-			:aria-label="t('pipelinq', 'My documents')">
-			<button
-				v-for="tab in availableTabs"
+		<div class="portal-tabs" role="tablist" :aria-label="t('pipelinq', 'My documents')">
+			<button v-for="tab in availableTabs"
 				:id="`portal-tab-${tab.key}`"
 				:key="tab.key"
 				role="tab"
@@ -24,8 +20,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			</button>
 		</div>
 
-		<div
-			:id="`portal-tabpanel-${activeTab}`"
+		<div :id="`portal-tabpanel-${activeTab}`"
 			role="tabpanel"
 			:aria-labelledby="`portal-tab-${activeTab}`"
 			tabindex="0">
@@ -38,9 +33,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 
 			<table v-else-if="rows.length" class="portal-table">
 				<caption class="portal-visually-hidden">
-					{{
-						tableCaption
-					}}
+					{{ tableCaption }}
 				</caption>
 				<thead>
 					<tr>
@@ -63,24 +56,12 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				</thead>
 				<tbody>
 					<tr v-for="row in rows" :key="row.id">
-						<td>
-							{{
-								row.invoiceNumber
-								|| row.contractNumber
-								|| row.orderNumber
-							}}
-						</td>
+						<td>{{ row.invoiceNumber || row.contractNumber || row.orderNumber }}</td>
 						<td>{{ row.date || row.startDate }}</td>
 						<td>{{ row.amount || row.value || row.total }}</td>
+						<td>{{ row.status }}<span v-if="row.delegatedFrom"> · {{ t('pipelinq', 'shared') }}</span></td>
 						<td>
-							{{ row.status
-							}}<span v-if="row.delegatedFrom">
-								· {{ t('pipelinq', 'shared') }}</span
-							>
-						</td>
-						<td>
-							<button
-								class="portal-button-link"
+							<button class="portal-button-link"
 								:aria-label="downloadLabel(row)"
 								@click="download(row)">
 								{{ t('pipelinq', 'Download') }}
@@ -102,16 +83,11 @@ import { portalApi } from '../portalApi.js'
 export default {
 	name: 'PortalDashboard',
 	props: {
-		features: {
-			type: Array,
-			default: () => ['invoices', 'contracts', 'orders'],
-		},
+		features: { type: Array, default: () => ['invoices', 'contracts', 'orders'] },
 	},
-
 	data() {
 		return { activeTab: 'invoices', rows: [], loading: false, error: '' }
 	},
-
 	computed: {
 		availableTabs() {
 			const all = [
@@ -121,7 +97,6 @@ export default {
 			]
 			return all.filter((tab) => this.features.includes(tab.key))
 		},
-
 		tableCaption() {
 			const labels = {
 				invoices: t('pipelinq', 'Invoices'),
@@ -131,13 +106,11 @@ export default {
 			return labels[this.activeTab] || t('pipelinq', 'My documents')
 		},
 	},
-
 	mounted() {
 		if (this.availableTabs.length) {
 			this.select(this.availableTabs[0].key)
 		}
 	},
-
 	methods: {
 		onTabKeydown(event, key) {
 			// WAI-ARIA Authoring Practices: tab roving focus on Arrow keys.
@@ -167,7 +140,6 @@ export default {
 				})
 			}
 		},
-
 		async select(tab) {
 			this.activeTab = tab
 			this.loading = true
@@ -182,28 +154,16 @@ export default {
 				this.loading = false
 			}
 		},
-
 		downloadLabel(row) {
-			return t('pipelinq', 'Download {number}', {
-				number:
-					row.invoiceNumber || row.contractNumber || row.orderNumber || '',
-			})
+			return t('pipelinq', 'Download {number}', { number: row.invoiceNumber || row.contractNumber || row.orderNumber || '' })
 		},
-
 		async download(row) {
 			try {
-				const objectType =
-					this.activeTab === 'orders'
-						? 'order'
-						: this.activeTab.replace(/s$/, '')
+				const objectType = this.activeTab === 'orders' ? 'order' : this.activeTab.replace(/s$/, '')
 				const signed = await portalApi.signDocument(row.id, objectType)
-				window.open(
-					OC.generateUrl('/apps/pipelinq' + signed.downloadUrl),
-					'_blank',
-				)
+				window.open(OC.generateUrl('/apps/pipelinq' + signed.downloadUrl), '_blank')
 			} catch (e) {
-				this.error =
-					e.message || t('pipelinq', 'Could not download the document.')
+				this.error = e.message || t('pipelinq', 'Could not download the document.')
 			}
 		},
 	},

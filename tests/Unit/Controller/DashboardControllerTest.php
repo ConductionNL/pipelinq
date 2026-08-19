@@ -27,19 +27,21 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for DashboardController.
  */
-class DashboardControllerTest extends TestCase {
-	/**
-	 * Test page returns TemplateResponse.
-	 *
-	 * @return void
-	 */
-	public function testPageReturnsTemplateResponse(): void {
-		$request = $this->createMock(IRequest::class);
-		$controller = new DashboardController($request);
+class DashboardControllerTest extends TestCase
+{
+    /**
+     * Test page returns TemplateResponse.
+     *
+     * @return void
+     */
+    public function testPageReturnsTemplateResponse(): void
+    {
+        $request    = $this->createMock(IRequest::class);
+        $controller = new DashboardController($request);
 
-		$response = $controller->page();
+        $response = $controller->page();
 
-		$this->assertInstanceOf(TemplateResponse::class, $response);
-		$this->assertSame('index', $response->getTemplateName());
-	}//end testPageReturnsTemplateResponse()
+        $this->assertInstanceOf(TemplateResponse::class, $response);
+        $this->assertSame('index', $response->getTemplateName());
+    }//end testPageReturnsTemplateResponse()
 }//end class

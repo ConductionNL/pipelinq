@@ -41,114 +41,121 @@ use Psr\Log\LoggerInterface;
 /**
  * Shared base for portal API controllers.
  */
-abstract class PortalApiController extends Controller {
-	/**
-	 * Constructor.
-	 *
-	 * @param IRequest $request The request.
-	 * @param PortalRequestGuard $guard The portal auth/tenant guard.
-	 * @param LoggerInterface $logger The logger.
-	 */
-	public function __construct(
-		IRequest $request,
-		protected PortalRequestGuard $guard,
-		protected LoggerInterface $logger,
-	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
-	}//end __construct()
+abstract class PortalApiController extends Controller
+{
+    /**
+     * Constructor.
+     *
+     * @param IRequest           $request The request.
+     * @param PortalRequestGuard $guard   The portal auth/tenant guard.
+     * @param LoggerInterface    $logger  The logger.
+     */
+    public function __construct(
+        IRequest $request,
+        protected PortalRequestGuard $guard,
+        protected LoggerInterface $logger,
+    ) {
+        parent::__construct(appName: Application::APP_ID, request: $request);
+    }//end __construct()
 
-	/**
-	 * Authenticate the current request and return the portal context.
-	 *
-	 * @return array{account: array<string, mixed>, accountId: string, session: array<string, mixed>, tenantId: string}
-	 *
-	 * @throws PortalException When not authenticated.
-	 */
-	protected function context(): array {
-		return $this->guard->authenticate(request: $this->request);
-	}//end context()
+    /**
+     * Authenticate the current request and return the portal context.
+     *
+     * @return array{account: array<string, mixed>, accountId: string, session: array<string, mixed>, tenantId: string}
+     *
+     * @throws PortalException When not authenticated.
+     */
+    protected function context(): array
+    {
+        return $this->guard->authenticate(request: $this->request);
+    }//end context()
 
-	/**
-	 * Require an authenticated portal session for this request — alias of
-	 * {@see self::context()} with a name that documents the auth posture (the
-	 * call throws PortalException(STATUS_UNAUTHORIZED) when no valid bearer
-	 * session is presented). Used by every portal endpoint that operates on
-	 * customer-scoped data.
-	 *
-	 * @return array{account: array<string, mixed>, accountId: string, session: array<string, mixed>, tenantId: string}
-	 *
-	 * @throws PortalException When not authenticated.
-	 */
-	protected function requireSession(): array {
-		return $this->context();
-	}//end requireSession()
+    /**
+     * Require an authenticated portal session for this request — alias of
+     * {@see self::context()} with a name that documents the auth posture (the
+     * call throws PortalException(STATUS_UNAUTHORIZED) when no valid bearer
+     * session is presented). Used by every portal endpoint that operates on
+     * customer-scoped data.
+     *
+     * @return array{account: array<string, mixed>, accountId: string, session: array<string, mixed>, tenantId: string}
+     *
+     * @throws PortalException When not authenticated.
+     */
+    protected function requireSession(): array
+    {
+        return $this->context();
+    }//end requireSession()
 
-	/**
-	 * Require the resolved tenant id for this request — wraps the guard's
-	 * server-trusted tenant resolution (host header + X-Portal-Tenant). Used
-	 * by pre-session entry points (login, password reset) and tenant-scoped
-	 * public configuration so the auth posture is explicit at the call site.
-	 *
-	 * @return string The tenant id.
-	 */
-	protected function requireTenant(): string {
-		return $this->guard->resolveTenant(request: $this->request);
-	}//end requireTenant()
+    /**
+     * Require the resolved tenant id for this request — wraps the guard's
+     * server-trusted tenant resolution (host header + X-Portal-Tenant). Used
+     * by pre-session entry points (login, password reset) and tenant-scoped
+     * public configuration so the auth posture is explicit at the call site.
+     *
+     * @return string The tenant id.
+     */
+    protected function requireTenant(): string
+    {
+        return $this->guard->resolveTenant(request: $this->request);
+    }//end requireTenant()
 
-	/**
-	 * Run a handler, mapping PortalException to a safe JSON error and any other
-	 * throwable to an opaque 500 (no internal detail leaks to the client).
-	 *
-	 * @param callable $handler The action body returning [body, status].
-	 *
-	 * @return JSONResponse The response.
-	 */
-	protected function guarded(callable $handler): JSONResponse {
-		try {
-			[$body, $status] = $handler();
-			return new JSONResponse($body, $status);
-		} catch (PortalException $e) {
-			return new JSONResponse($e->toBody(), $e->getStatus());
-		} catch (\Throwable $e) {
-			$this->logger->error('Pipelinq portal: unhandled error', ['exception' => $e->getMessage()]);
-			return new JSONResponse(
-				['errorCode' => 'serverError', 'message' => 'Er is een fout opgetreden.'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}
-	}//end guarded()
+    /**
+     * Run a handler, mapping PortalException to a safe JSON error and any other
+     * throwable to an opaque 500 (no internal detail leaks to the client).
+     *
+     * @param callable $handler The action body returning [body, status].
+     *
+     * @return JSONResponse The response.
+     */
+    protected function guarded(callable $handler): JSONResponse
+    {
+        try {
+            [$body, $status] = $handler();
+            return new JSONResponse($body, $status);
+        } catch (PortalException $e) {
+            return new JSONResponse($e->toBody(), $e->getStatus());
+        } catch (\Throwable $e) {
+            $this->logger->error('Pipelinq portal: unhandled error', ['exception' => $e->getMessage()]);
+            return new JSONResponse(
+                ['errorCode' => 'serverError', 'message' => 'Er is een fout opgetreden.'],
+                Http::STATUS_INTERNAL_SERVER_ERROR
+            );
+        }
+    }//end guarded()
 
-	/**
-	 * Read a string field from the request body, trimmed.
-	 *
-	 * @param string $name The field name.
-	 * @param string $default The default.
-	 *
-	 * @return string The value.
-	 */
-	protected function strParam(string $name, string $default = ''): string {
-		$value = $this->request->getParam($name, $default);
-		if (is_string($value) === true) {
-			return trim($value);
-		}
+    /**
+     * Read a string field from the request body, trimmed.
+     *
+     * @param string $name    The field name.
+     * @param string $default The default.
+     *
+     * @return string The value.
+     */
+    protected function strParam(string $name, string $default=''): string
+    {
+        $value = $this->request->getParam($name, $default);
+        if (is_string($value) === true) {
+            return trim($value);
+        }
 
-		return $default;
-	}//end strParam()
+        return $default;
+    }//end strParam()
 
-	/**
-	 * Read an int field from the request body.
-	 *
-	 * @param string $name The field name.
-	 * @param int $default The default.
-	 *
-	 * @return int The value.
-	 */
-	protected function intParam(string $name, int $default = 0): int {
-		$value = $this->request->getParam($name, $default);
-		if (is_numeric($value) === true) {
-			return (int)$value;
-		}
+    /**
+     * Read an int field from the request body.
+     *
+     * @param string $name    The field name.
+     * @param int    $default The default.
+     *
+     * @return int The value.
+     */
+    protected function intParam(string $name, int $default=0): int
+    {
+        $value = $this->request->getParam($name, $default);
+        if (is_numeric($value) === true) {
+            return (int) $value;
+        }
 
-		return $default;
-	}//end intParam()
+        return $default;
+    }//end intParam()
 }//end class

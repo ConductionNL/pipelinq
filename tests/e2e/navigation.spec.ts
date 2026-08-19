@@ -2,29 +2,16 @@ import { test, expect, Page } from '@playwright/test'
 
 const sidebarNav = (page: Page) => page.locator('[id^="app-navigation"]').first()
 
-test.describe.skip('Sidebar Navigation', () => {
-	// TODO(#392): rewrite for manifest-driven app shell
+test.describe.skip('Sidebar Navigation', () => {  // TODO(#392): rewrite for manifest-driven app shell
 
 	test('shows all navigation items', async ({ page }) => {
 		await page.goto('/apps/pipelinq/')
 		const nav = sidebarNav(page)
 
 		for (const label of [
-			'Dashboard',
-			'Clients',
-			'Contacts',
-			'Leads',
-			'Requests',
-			'Tasks',
-			'Contactmomenten',
-			'Complaints',
-			'Products',
-			'Pipeline',
-			'Surveys',
-			'Queues',
-			'My Work',
-			'Reporting',
-			'Documentation',
+			'Dashboard', 'Clients', 'Contacts', 'Leads', 'Requests',
+			'Tasks', 'Contactmomenten', 'Complaints', 'Products', 'Pipeline',
+			'Surveys', 'Queues', 'My Work', 'Reporting', 'Documentation',
 		]) {
 			await expect(nav.getByText(label, { exact: true })).toBeVisible()
 		}
@@ -51,20 +38,13 @@ test.describe.skip('Sidebar Navigation', () => {
 		}
 
 		for (const [name, href] of Object.entries(expected)) {
-			await expect(nav.getByRole('link', { name })).toHaveAttribute(
-				'href',
-				href,
-			)
+			await expect(nav.getByRole('link', { name })).toHaveAttribute('href', href)
 		}
 	})
 
 	test('settings button expands sub-menu', async ({ page }) => {
 		await page.goto('/apps/pipelinq/')
-		await page.evaluate(() =>
-			document
-				.querySelector('.settings-button')
-				?.dispatchEvent(new Event('click', { bubbles: true })),
-		)
+		await page.evaluate(() => document.querySelector('.settings-button')?.dispatchEvent(new Event('click', { bubbles: true })))
 		await expect(page.getByText('Pipelines')).toBeVisible()
 		await expect(page.getByText('Forms')).toBeVisible()
 		await expect(page.getByText('Automations')).toBeVisible()

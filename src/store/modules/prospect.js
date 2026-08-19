@@ -1,8 +1,8 @@
-import { generateUrl } from '@nextcloud/router'
 /**
  * Prospect store — fetches prospect discovery data from the Pipelinq API.
  */
 import { defineStore } from 'pinia'
+import { generateUrl } from '@nextcloud/router'
 
 export const useProspectStore = defineStore('prospect', {
 	state: () => ({
@@ -24,9 +24,7 @@ export const useProspectStore = defineStore('prospect', {
 			this.error = null
 
 			try {
-				const url = generateUrl(
-					`/apps/pipelinq/api/prospects${refresh ? '?refresh=true' : ''}`,
-				)
+				const url = generateUrl(`/apps/pipelinq/api/prospects${refresh ? '?refresh=true' : ''}`)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',
@@ -38,8 +36,7 @@ export const useProspectStore = defineStore('prospect', {
 				const data = await response.json()
 
 				if (!response.ok) {
-					this.error =
-						data.message || data.error || 'Failed to fetch prospects'
+					this.error = data.message || data.error || 'Failed to fetch prospects'
 					return null
 				}
 
@@ -64,18 +61,15 @@ export const useProspectStore = defineStore('prospect', {
 		 */
 		async createLeadFromProspect(prospectData) {
 			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/prospects/create-lead'),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(prospectData),
+				const response = await fetch(generateUrl('/apps/pipelinq/api/prospects/create-lead'), {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken: OC.requestToken,
+						'OCS-APIREQUEST': 'true',
 					},
-				)
+					body: JSON.stringify(prospectData),
+				})
 
 				const data = await response.json()
 

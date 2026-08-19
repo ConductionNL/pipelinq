@@ -9,24 +9,17 @@
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-count">
-			<p>
-				{{
-					t(
-						'pipelinq',
-						'Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).',
-					)
-				}}
-			</p>
+			<p>{{ t('pipelinq', 'Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).') }}</p>
 			<NcTextField
 				v-model="amount"
 				type="number"
 				:label="t('pipelinq', 'Counted amount')"
 				placeholder="€ 0.00"
 				:error="showError"
-				:helperText="
-					showError ? t('pipelinq', 'Enter a valid amount') : ''
-				" />
-			<NcTextArea v-model="notes" :label="t('pipelinq', 'Notes (optional)')" />
+				:helper-text="showError ? t('pipelinq', 'Enter a valid amount') : ''" />
+			<NcTextArea
+				v-model="notes"
+				:label="t('pipelinq', 'Notes (optional)')" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
@@ -40,7 +33,7 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcTextArea, NcTextField } from '@nextcloud/vue'
+import { NcDialog, NcButton, NcTextField, NcTextArea } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftCountDialog',
@@ -50,14 +43,12 @@ export default {
 		NcTextField,
 		NcTextArea,
 	},
-
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
-
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -66,7 +57,6 @@ export default {
 			showError: false,
 		}
 	},
-
 	methods: {
 		/**
 		 * Validate the counted amount and emit the count payload.

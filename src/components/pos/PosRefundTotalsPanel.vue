@@ -30,7 +30,6 @@ export default {
 			default: () => [],
 		},
 	},
-
 	computed: {
 		/**
 		 * Real-time refund totals. The same proportional formula runs
@@ -43,7 +42,6 @@ export default {
 			return computeRefundTotals(this.lines)
 		},
 	},
-
 	methods: {
 		formatEur,
 	},

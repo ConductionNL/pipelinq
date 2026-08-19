@@ -21,14 +21,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const shim = path.resolve(
-	__dirname,
-	'..',
-	'node_modules',
-	'vue-demi',
-	'lib',
-	'index.mjs',
-)
+const shim = path.resolve(__dirname, '..', 'node_modules', 'vue-demi', 'lib', 'index.mjs')
 
 if (!fs.existsSync(shim)) {
 	// Not installed at all is fine — nothing can be on the wrong shim.
@@ -41,13 +34,13 @@ const isVue3Shim = src.includes('import * as Vue') && src.includes('isVue2 = fal
 if (!isVue3Shim) {
 	console.error(
 		'\n[check:vue-demi] vue-demi is still on its Vue 2 shim.\n'
-			+ `  ${shim}\n`
-			+ '  Expected it to contain both `import * as Vue` and `isVue2 = false`.\n\n'
-			+ '  vue-demi selects its shim in a postinstall hook, and `npm install`\n'
-			+ '  does not re-run a postinstall for an already-present version. Run\n'
-			+ '  `npm ci` (postinstalls always re-run) and try again.\n\n'
-			+ '  Building past this produces ~25 unrelated-looking module errors and\n'
-			+ '  a broken pinia, none of which mention vue-demi.\n',
+		+ `  ${shim}\n`
+		+ '  Expected it to contain both `import * as Vue` and `isVue2 = false`.\n\n'
+		+ '  vue-demi selects its shim in a postinstall hook, and `npm install`\n'
+		+ '  does not re-run a postinstall for an already-present version. Run\n'
+		+ '  `npm ci` (postinstalls always re-run) and try again.\n\n'
+		+ '  Building past this produces ~25 unrelated-looking module errors and\n'
+		+ '  a broken pinia, none of which mention vue-demi.\n',
 	)
 	process.exit(1)
 }

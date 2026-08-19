@@ -6,13 +6,7 @@
  * Maps to openspec/specs/task-background-jobs/spec.md.
  */
 import { test, expect } from '@playwright/test'
-import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
-	assertNoHardError,
-	dismissSupportDialog,
-} from '../helpers/pipelinq'
+import { openApp, navClick, trackPipelinqErrors, assertNoHardError, dismissSupportDialog } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/task-background-jobs/spec.md#tasks-index
 test('Tasks: navigates from sidebar and shows index surface', async ({ page }) => {
@@ -20,9 +14,7 @@ test('Tasks: navigates from sidebar and shows index surface', async ({ page }) =
 	await openApp(page)
 	await navClick(page, 'Tasks', /\/tasks/)
 
-	await expect(
-		page.locator('#content-vue').getByRole('heading', { name: 'Tasks' }).first(),
-	).toBeVisible()
+	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Tasks' }).first()).toBeVisible()
 	await expect(page.locator('[data-testid="cn-index-page"]').first()).toBeVisible()
 	await assertNoHardError(page)
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
@@ -35,11 +27,7 @@ test('Tasks: list table and primary actions render', async ({ page }) => {
 
 	const content = page.locator('#content-vue')
 	await expect(content.getByRole('button', { name: 'Add Task' })).toBeVisible()
-	await expect(
-		content
-			.locator('table, .cn-data-table, [data-testid="cn-data-table"]')
-			.first(),
-	).toBeVisible()
+	await expect(content.locator('table, .cn-data-table, [data-testid="cn-data-table"]').first()).toBeVisible()
 })
 
 // @e2e openspec/specs/task-background-jobs/spec.md#tasks-create-modal
@@ -48,15 +36,10 @@ test('Tasks: Add Task opens a create modal with a form', async ({ page }) => {
 	await navClick(page, 'Tasks', /\/tasks/)
 	await dismissSupportDialog(page)
 
-	await page
-		.locator('#content-vue')
-		.getByRole('button', { name: 'Add Task' })
-		.click()
+	await page.locator('#content-vue').getByRole('button', { name: 'Add Task' }).click()
 	const modal = page.locator('.modal-container, [role="dialog"]').first()
 	await expect(modal).toBeVisible({ timeout: 10000 })
-	await expect(
-		modal.locator('input, .input-field__input, textarea').first(),
-	).toBeVisible()
+	await expect(modal.locator('input, .input-field__input, textarea').first()).toBeVisible()
 })
 
 /*

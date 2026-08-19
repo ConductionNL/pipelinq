@@ -4,13 +4,13 @@
 <template>
 	<CnFormDialog
 		ref="dialog"
-		:dialogTitle="t('pipelinq', 'New task')"
+		:dialog-title="t('pipelinq', 'New task')"
 		:fields="fields"
-		:confirmLabel="t('pipelinq', 'Create')"
-		:cancelLabel="t('pipelinq', 'Cancel')"
-		:successText="t('pipelinq', 'Task created.')"
-		nameField="subject"
-		:initialValues="initialValues"
+		:confirm-label="t('pipelinq', 'Create')"
+		:cancel-label="t('pipelinq', 'Cancel')"
+		:success-text="t('pipelinq', 'Task created.')"
+		name-field="subject"
+		:initial-values="initialValues"
 		@confirm="onConfirm"
 		@close="$emit('close')" />
 </template>
@@ -43,7 +43,6 @@ export default {
 			type: String,
 			default: '',
 		},
-
 		/**
 		 * Summary text carried over from the in-progress contactmoment;
 		 * shows up as a non-required free-text field on the task.
@@ -76,18 +75,9 @@ export default {
 					widget: 'select',
 					required: true,
 					enum: [
-						{
-							value: 'terugbelverzoek',
-							label: this.t('pipelinq', 'Callback'),
-						},
-						{
-							value: 'opvolgtaak',
-							label: this.t('pipelinq', 'Follow-up'),
-						},
-						{
-							value: 'informatievraag',
-							label: this.t('pipelinq', 'Information'),
-						},
+						{ value: 'terugbelverzoek', label: this.t('pipelinq', 'Callback') },
+						{ value: 'opvolgtaak', label: this.t('pipelinq', 'Follow-up') },
+						{ value: 'informatievraag', label: this.t('pipelinq', 'Information') },
 					],
 				},
 				{
@@ -115,7 +105,6 @@ export default {
 				},
 			]
 		},
-
 		/**
 		 * Initial values for the dialog (pre-filled context).
 		 *
@@ -129,7 +118,6 @@ export default {
 				contactMomentSummary: this.contactMomentSummary || '',
 			}
 		},
-
 		/**
 		 * Pinia object store handle.
 		 *
@@ -153,38 +141,18 @@ export default {
 			const payload = {
 				...values,
 				clientId: this.clientId,
-				contactMomentSummary:
-					this.contactMomentSummary || values.description || '',
-
+				contactMomentSummary: this.contactMomentSummary || values.description || '',
 				status: 'open',
 			}
 			try {
 				const result = await this.objectStore.saveObject('task', payload)
 				if (!result) {
-					try {
-						showError(
-							this.t(
-								'pipelinq',
-								'Could not create task. Please try again.',
-							),
-						)
-					} catch {
-						/* no-op */
-					}
+					try { showError(this.t('pipelinq', 'Could not create task. Please try again.')) } catch { /* no-op */ }
 					return
 				}
 				this.$emit('saved', result)
 			} catch (e) {
-				try {
-					showError(
-						this.t(
-							'pipelinq',
-							'Could not create task. Please try again.',
-						),
-					)
-				} catch {
-					/* no-op */
-				}
+				try { showError(this.t('pipelinq', 'Could not create task. Please try again.')) } catch { /* no-op */ }
 				// eslint-disable-next-line no-console
 				console.warn('[WerkplekNewTaskDialog] save failed', e)
 			}

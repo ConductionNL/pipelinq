@@ -45,12 +45,7 @@
  * @spec openspec/specs/admin-settings/spec.md
  */
 
-import {
-	test,
-	expect,
-	request as playwrightRequest,
-	type APIRequestContext,
-} from '@playwright/test'
+import { test, expect, request as playwrightRequest, type APIRequestContext } from '@playwright/test'
 
 import { resolveBaseUrl } from '../base-url'
 
@@ -106,10 +101,7 @@ async function newIdentity(authenticated: boolean): Promise<APIRequestContext> {
  * @param ctx      The context to interrogate.
  * @param expected The uid expected, or null for "must not be authenticated".
  */
-async function assertCallerIs(
-	ctx: APIRequestContext,
-	expected: string | null,
-): Promise<void> {
+async function assertCallerIs(ctx: APIRequestContext, expected: string | null): Promise<void> {
 	const res = await ctx.get('/ocs/v2.php/cloud/user?format=json')
 	const body = await res.json().catch(() => null)
 	// The OCS layer signals "not logged in" as HTTP 200 with
@@ -135,6 +127,7 @@ async function assertCallerIs(
 }
 
 test.describe('settings/preferences documented operations', () => {
+
 	// @e2e openspec/specs/admin-settings/spec.md#documented-operations-are-available
 	// @e2e openspec/specs/admin-settings/spec.md#results-reflect-live-state
 	test('a preference round-trips, and the read changes when the stored value changes', async () => {
@@ -151,19 +144,11 @@ test.describe('settings/preferences documented operations', () => {
 
 			// 1. Unset — the documented default is null, not an error and not ''.
 			const before = await ctx.get(`${API_BASE}/preferences/${key}`)
-			expect(
-				before.status(),
-				'reading an unset preference is a normal read',
-			).toBe(200)
-			expect(
-				(await before.json()).value,
-				'an unset preference reads back as null',
-			).toBeNull()
+			expect(before.status(), 'reading an unset preference is a normal read').toBe(200)
+			expect((await before.json()).value, 'an unset preference reads back as null').toBeNull()
 
 			// 2. Written.
-			const write = await ctx.put(`${API_BASE}/preferences/${key}`, {
-				data: { value },
-			})
+			const write = await ctx.put(`${API_BASE}/preferences/${key}`, { data: { value } })
 			expect(write.status()).toBe(200)
 			expect((await write.json()).value).toBe(value)
 
@@ -178,9 +163,7 @@ test.describe('settings/preferences documented operations', () => {
 
 			// 4. Cleared. An empty value CLEARS rather than storing '', so a
 			//    cleared preference and a never-set one must read identically.
-			const clear = await ctx.put(`${API_BASE}/preferences/${key}`, {
-				data: { value: '' },
-			})
+			const clear = await ctx.put(`${API_BASE}/preferences/${key}`, { data: { value: '' } })
 			expect(clear.status()).toBe(200)
 			const afterClear = await ctx.get(`${API_BASE}/preferences/${key}`)
 			expect(
@@ -206,18 +189,10 @@ test.describe('settings/preferences documented operations', () => {
 			const unusable = encodeURIComponent('!!!')
 			for (const res of [
 				await admin.get(`${API_BASE}/preferences/${unusable}`),
-				await admin.put(`${API_BASE}/preferences/${unusable}`, {
-					data: { value: 'x' },
-				}),
+				await admin.put(`${API_BASE}/preferences/${unusable}`, { data: { value: 'x' } }),
 			]) {
-				expect(
-					res.status(),
-					'an unusable key is a validation outcome (400), never a 500',
-				).toBe(400)
-				expect(
-					res.status(),
-					'the surrounding flow must not crash',
-				).toBeLessThan(500)
+				expect(res.status(), 'an unusable key is a validation outcome (400), never a 500').toBe(400)
+				expect(res.status(), 'the surrounding flow must not crash').toBeLessThan(500)
 				expect((await res.json()).message).toBeTruthy()
 			}
 
@@ -225,10 +200,7 @@ test.describe('settings/preferences documented operations', () => {
 			// user" — not "anyone". Asserted from a jar that has never
 			// authenticated.
 			const res = await anon.get(`${API_BASE}/preferences/e2e-anon-probe`)
-			expect(
-				res.status(),
-				'a per-user preference must not be readable without a session',
-			).not.toBe(200)
+			expect(res.status(), 'a per-user preference must not be readable without a session').not.toBe(200)
 		} finally {
 			await admin.dispose()
 			await anon.dispose()

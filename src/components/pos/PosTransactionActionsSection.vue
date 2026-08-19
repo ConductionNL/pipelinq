@@ -32,55 +32,47 @@
 				<NcButton v-if="canEdit" variant="secondary" @click="edit">
 					{{ t('pipelinq', 'Edit') }}
 				</NcButton>
-				<NcButton
-					v-if="canConfirm"
+				<NcButton v-if="canConfirm"
 					variant="primary"
 					:disabled="busy || lineCount === 0"
 					@click="confirm">
 					{{ t('pipelinq', 'Confirm') }}
 				</NcButton>
-				<NcButton
-					v-if="canPark"
+				<NcButton v-if="canPark"
 					variant="secondary"
 					:disabled="busy"
 					@click="park">
 					{{ t('pipelinq', 'Park') }}
 				</NcButton>
-				<NcButton
-					v-if="canResume"
+				<NcButton v-if="canResume"
 					variant="primary"
 					:disabled="busy"
 					@click="resume">
 					{{ t('pipelinq', 'Resume') }}
 				</NcButton>
-				<NcButton
-					v-if="canSettle"
+				<NcButton v-if="canSettle"
 					variant="primary"
 					:disabled="busy"
 					@click="settle">
 					{{ t('pipelinq', 'Check out') }}
 				</NcButton>
-				<NcButton
-					v-if="canRegisterReturn"
+				<NcButton v-if="canRegisterReturn"
 					variant="secondary"
 					@click="registerReturn">
 					{{ t('pipelinq', 'Register refund') }}
 				</NcButton>
-				<NcButton
-					v-if="canRefund"
+				<NcButton v-if="canRefund"
 					variant="error"
 					:disabled="busy"
 					@click="showRefund = true">
 					{{ t('pipelinq', 'Reverse') }}
 				</NcButton>
-				<NcButton
-					v-if="canIssueReceipt"
+				<NcButton v-if="canIssueReceipt"
 					variant="secondary"
 					@click="showPrint = true">
 					{{ t('pipelinq', 'Print Receipt') }}
 				</NcButton>
-				<NcButton
-					v-if="canIssueReceipt"
+				<NcButton v-if="canIssueReceipt"
 					variant="secondary"
 					@click="showEmail = true">
 					{{ t('pipelinq', 'Email Receipt') }}
@@ -89,22 +81,24 @@
 
 			<CnDetailCard :title="t('pipelinq', 'Tax breakdown')">
 				<TaxBreakdownCard :transaction="transaction" />
-				<PosTotalsPanel :lines="lines" :priceMode="priceMode" />
+				<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
 			</CnDetailCard>
 
 			<CnDetailCard
 				v-if="canShowTenderPanel"
 				:title="t('pipelinq', 'Tenders')">
 				<TenderEntryPanel
-					:transactionId="resolvedId"
-					:transactionStatus="status"
+					:transaction-id="resolvedId"
+					:transaction-status="status"
 					@changed="onTenderChanged" />
 			</CnDetailCard>
 
-			<CnDetailCard v-if="hasPaymentInfo" :title="t('pipelinq', 'Payment')">
+			<CnDetailCard
+				v-if="hasPaymentInfo"
+				:title="t('pipelinq', 'Payment')">
 				<PaymentStatusCard
 					:transaction="transaction"
-					:isManager="canRefund"
+					:is-manager="canRefund"
 					@updated="onPaymentUpdated" />
 			</CnDetailCard>
 
@@ -116,14 +110,14 @@
 
 			<PrintReceiptModal
 				v-if="showPrint"
-				:transactionId="resolvedId"
+				:transaction-id="resolvedId"
 				:templates="receiptTemplates"
 				@close="showPrint = false"
 				@printed="onReceiptIssued" />
 
 			<EmailReceiptModal
 				v-if="showEmail"
-				:transactionId="resolvedId"
+				:transaction-id="resolvedId"
 				:templates="receiptTemplates"
 				@close="showEmail = false"
 				@sent="onReceiptIssued" />
@@ -132,17 +126,17 @@
 </template>
 
 <script>
-import { CnDetailCard } from '@conduction/nextcloud-vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import EmailReceiptModal from '../../modals/EmailReceiptModal.vue'
-import PosRefundDialog from '../../modals/PosRefundDialog.vue'
-import PrintReceiptModal from '../../modals/PrintReceiptModal.vue'
-import PaymentStatusCard from './PaymentStatusCard.vue'
+import { CnDetailCard } from '@conduction/nextcloud-vue'
 import PosTotalsPanel from './PosTotalsPanel.vue'
 import TaxBreakdownCard from './TaxBreakdownCard.vue'
+import PaymentStatusCard from './PaymentStatusCard.vue'
 import TenderEntryPanel from './TenderEntryPanel.vue'
+import PosRefundDialog from '../../modals/PosRefundDialog.vue'
+import PrintReceiptModal from '../../modals/PrintReceiptModal.vue'
+import EmailReceiptModal from '../../modals/EmailReceiptModal.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -159,11 +153,9 @@ export default {
 		PrintReceiptModal,
 		EmailReceiptModal,
 	},
-
 	inject: {
 		cnSectionContext: { default: null },
 	},
-
 	props: {
 		/** The transaction id (token-resolved from @objectId by CnBodySections). */
 		transactionId: {
@@ -171,7 +163,6 @@ export default {
 			default: '',
 		},
 	},
-
 	data() {
 		return {
 			transaction: {},
@@ -184,35 +175,28 @@ export default {
 			receiptTemplates: [],
 		}
 	},
-
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
-
 		/** The resolved transaction id — prop wins, else the injected section context. */
 		resolvedId() {
 			if (this.transactionId) {
 				return this.transactionId
 			}
 			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
-
 		status() {
 			return this.transaction.status || 'draft'
 		},
-
 		priceMode() {
 			return this.transaction.priceMode === 'incl' ? 'incl' : 'excl'
 		},
-
 		lineCount() {
 			return this.lines.length
 		},
-
 		/**
 		 * Whether the current user is treated as a manager in the UI. Server-side
 		 * authorization is authoritative; this only hides the button for clearly
@@ -221,35 +205,26 @@ export default {
 		 * @return {boolean} Whether to show manager-only actions.
 		 */
 		isManager() {
-			return typeof window.OC?.isUserAdmin === 'function'
-				? window.OC.isUserAdmin()
-				: false
+			return typeof window.OC?.isUserAdmin === 'function' ? window.OC.isUserAdmin() : false
 		},
-
 		canEdit() {
 			return ['draft', 'parked'].includes(this.status)
 		},
-
 		canConfirm() {
 			return ['draft', 'parked'].includes(this.status)
 		},
-
 		canPark() {
 			return this.status === 'draft'
 		},
-
 		canResume() {
 			return this.status === 'parked'
 		},
-
 		canSettle() {
 			return this.status === 'confirmed'
 		},
-
 		canRefund() {
 			return ['confirmed', 'settled'].includes(this.status) && this.isManager
 		},
-
 		/**
 		 * Whether to render the tender entry panel. Shown whenever the transaction
 		 * has an id; the panel itself enforces read-only on settled/refunded.
@@ -261,15 +236,12 @@ export default {
 		canShowTenderPanel() {
 			return !!this.resolvedId
 		},
-
 		canRegisterReturn() {
 			return ['confirmed', 'settled'].includes(this.status)
 		},
-
 		canIssueReceipt() {
 			return ['confirmed', 'settled', 'refunded'].includes(this.status)
 		},
-
 		/**
 		 * Whether the transaction has any payment metadata to display.
 		 *
@@ -278,33 +250,21 @@ export default {
 		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
 		 */
 		hasPaymentInfo() {
-			return !!(
-				this.transaction.paymentProvider
+			return !!(this.transaction.paymentProvider
 				|| this.transaction.paymentSessionId
 				|| this.transaction.paymentStatus
-				|| this.transaction.paymentMethod
-			)
+				|| this.transaction.paymentMethod)
 		},
-
 		/**
 		 * Whether any action button is visible for the current status.
 		 *
 		 * @return {boolean}
 		 */
 		hasActions() {
-			return (
-				this.canEdit
-				|| this.canConfirm
-				|| this.canPark
-				|| this.canResume
-				|| this.canSettle
-				|| this.canRegisterReturn
-				|| this.canRefund
-				|| this.canIssueReceipt
-			)
+			return this.canEdit || this.canConfirm || this.canPark || this.canResume
+				|| this.canSettle || this.canRegisterReturn || this.canRefund || this.canIssueReceipt
 		},
 	},
-
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -313,7 +273,6 @@ export default {
 			},
 		},
 	},
-
 	methods: {
 		/**
 		 * Load the transaction and its lines so the toolbar gating + totals render.
@@ -324,77 +283,46 @@ export default {
 			}
 			this.loading = true
 			try {
-				this.transaction =
-					(await this.objectStore.fetchObject(
-						'posTransaction',
-						this.resolvedId,
-					)) || {}
-				await this.objectStore.fetchCollection('posTransactionLine', {
-					transaction: this.resolvedId,
-					_limit: 500,
-				})
-				const rows =
-					this.objectStore.getCollection('posTransactionLine')?.results
-					|| []
+				this.transaction = await this.objectStore.fetchObject('posTransaction', this.resolvedId) || {}
+				await this.objectStore.fetchCollection('posTransactionLine', { transaction: this.resolvedId, _limit: 500 })
+				const rows = this.objectStore.getCollection('posTransactionLine')?.results || []
 				this.lines = rows
-					.filter((l) => l.transaction === this.resolvedId)
+					.filter(l => l.transaction === this.resolvedId)
 					.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 				await this.loadReceiptTemplates()
 			} catch (err) {
-				showError(
-					err?.response?.data?.error
-						|| t('pipelinq', 'Could not load transaction.'),
-				)
+				showError(err?.response?.data?.error || t('pipelinq', 'Could not load transaction.'))
 			} finally {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * Load the active receipt templates for the print/email modal pickers.
 		 */
 		async loadReceiptTemplates() {
 			try {
-				await this.objectStore.fetchCollection('receiptTemplate', {
-					status: 'active',
-					_limit: 100,
-				})
-				const rows =
-					this.objectStore.getCollection('receiptTemplate')?.results || []
-				this.receiptTemplates = rows.filter(
-					(tpl) => (tpl.status || 'active') === 'active',
-				)
+				await this.objectStore.fetchCollection('receiptTemplate', { status: 'active', _limit: 100 })
+				const rows = this.objectStore.getCollection('receiptTemplate')?.results || []
+				this.receiptTemplates = rows.filter(tpl => (tpl.status || 'active') === 'active')
 			} catch (e) {
 				this.receiptTemplates = []
 			}
 		},
-
 		async onReceiptIssued() {
 			await this.load()
 		},
-
 		async onPaymentUpdated() {
 			await this.load()
 		},
-
 		async onTenderChanged() {
 			await this.load()
 		},
-
 		edit() {
-			this.$router.push({
-				name: 'PosTransactionEdit',
-				params: { id: this.resolvedId },
-			})
+			this.$router.push({ name: 'PosTransactionEdit', params: { id: this.resolvedId } })
 		},
-
 		registerReturn() {
-			this.$router.push({
-				name: 'PosRefundNewFromTransaction',
-				params: { transactionId: this.resolvedId },
-			})
+			this.$router.push({ name: 'PosRefundNewFromTransaction', params: { transactionId: this.resolvedId } })
 		},
-
 		/**
 		 * Call a lifecycle action endpoint and reload.
 		 *
@@ -407,9 +335,7 @@ export default {
 			this.busy = true
 			try {
 				const response = await fetch(
-					generateUrl(
-						`/apps/pipelinq/api/pos-transactions/${this.resolvedId}/${action}`,
-					),
+					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.resolvedId}/${action}`),
 					{
 						method: 'POST',
 						headers: {
@@ -435,34 +361,25 @@ export default {
 				this.busy = false
 			}
 		},
-
 		confirm() {
 			this.lifecycle('confirm', {}, t('pipelinq', 'Transaction confirmed.'))
 		},
-
 		settle() {
 			this.lifecycle('settle', {}, t('pipelinq', 'Transaction settled.'))
 		},
-
 		park() {
 			this.lifecycle('park', {}, t('pipelinq', 'Transaction parked.'))
 		},
-
 		resume() {
 			this.lifecycle('resume', {}, t('pipelinq', 'Transaction resumed.'))
 		},
-
 		/**
 		 * Submit a refund with a reason.
 		 *
 		 * @param {string} reason The refund reason.
 		 */
 		async refund(reason) {
-			const ok = await this.lifecycle(
-				'refund',
-				{ reason },
-				t('pipelinq', 'Transaction refunded.'),
-			)
+			const ok = await this.lifecycle('refund', { reason }, t('pipelinq', 'Transaction refunded.'))
 			if (ok) {
 				this.showRefund = false
 			}

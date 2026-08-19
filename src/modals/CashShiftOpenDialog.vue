@@ -9,19 +9,21 @@
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-open">
-			<NcTextField v-model="drawer" :label="t('pipelinq', 'Drawer')" />
+			<NcTextField
+				v-model="drawer"
+				:label="t('pipelinq', 'Drawer')" />
 			<NcTextField
 				v-model="floatAmount"
 				type="number"
 				:label="t('pipelinq', 'Opening amount (€)')"
 				:error="showError"
-				:helperText="
-					showError ? t('pipelinq', 'Opening amount required') : ''
-				" />
+				:helper-text="showError ? t('pipelinq', 'Opening amount required') : ''" />
 			<NcTextField
 				v-model="reference"
 				:label="t('pipelinq', 'Reference (optional)')" />
-			<NcTextArea v-model="notes" :label="t('pipelinq', 'Notes (optional)')" />
+			<NcTextArea
+				v-model="notes"
+				:label="t('pipelinq', 'Notes (optional)')" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
@@ -35,7 +37,7 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcTextArea, NcTextField } from '@nextcloud/vue'
+import { NcDialog, NcButton, NcTextField, NcTextArea } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftOpenDialog',
@@ -45,14 +47,12 @@ export default {
 		NcTextField,
 		NcTextArea,
 	},
-
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
-
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -63,7 +63,6 @@ export default {
 			showError: false,
 		}
 	},
-
 	methods: {
 		/**
 		 * Validate the float amount and emit the open payload.

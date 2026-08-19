@@ -41,109 +41,121 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-005
  */
-class ZtcClientTest extends TestCase {
-	/**
-	 * Endpoint payload.
-	 *
-	 * @var array<string, mixed>
-	 */
-	private array $endpoint;
+class ZtcClientTest extends TestCase
+{
+    /**
+     * Endpoint payload.
+     *
+     * @var array<string, mixed>
+     */
+    private array $endpoint;
 
-	/**
-	 * Set up.
-	 *
-	 * @return void
-	 */
-	protected function setUp(): void {
-		$this->endpoint = [
-			'id' => 'zgw-ep-zoetermeer-openzaak',
-			'componenten' => ['ztc' => 'https://open-zaak.zoetermeer.nl/catalogi/api/v1'],
-		];
-	}//end setUp()
 
-	/**
-	 * Helper to build a ZtcClient with a controllable transport.
-	 *
-	 * @param array<int, array<string, mixed>> $responses Sequential callComponent responses.
-	 *
-	 * @return array{0:ZtcClient, 1:int}
-	 */
-	private function build(array $responses): array {
-		$api = $this->createMock(ZgwApiClient::class);
-		$calls = 0;
-		$api->method('callComponent')->willReturnCallback(
-			function () use ($responses, &$calls): array {
-				$resp = $responses[$calls] ?? null;
-				$calls++;
-				if ($resp === null) {
-					throw new \RuntimeException('unexpected extra callComponent invocation');
-				}
-				return $resp;
-			}
-		);
+    /**
+     * Set up.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        $this->endpoint = [
+            'id'          => 'zgw-ep-zoetermeer-openzaak',
+            'componenten' => ['ztc' => 'https://open-zaak.zoetermeer.nl/catalogi/api/v1'],
+        ];
+    }//end setUp()
 
-		$registers = $this->createMock(ZgwRegisterAccess::class);
-		$registers->method('findClientForEndpoint')->willReturn([
-			'clientIdentifier' => 'pipelinq-zoetermeer',
-			'secretKluisRef' => 'vault://x',
-			'userId' => 'pipelinq',
-			'userRepresentation' => 'Pipelinq',
-		]);
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueInt')->willReturnArgument(2);
 
-		$client = new ZtcClient($api, $registers, $appConfig, $this->createMock(LoggerInterface::class));
-		return [$client, &$calls];
-	}//end build()
+    /**
+     * Helper to build a ZtcClient with a controllable transport.
+     *
+     * @param array<int, array<string, mixed>> $responses Sequential callComponent responses.
+     *
+     * @return array{0:ZtcClient, 1:int}
+     */
+    private function build(array $responses): array
+    {
+        $api = $this->createMock(ZgwApiClient::class);
+        $calls = 0;
+        $api->method('callComponent')->willReturnCallback(
+            function () use ($responses, &$calls): array {
+                $resp   = $responses[$calls] ?? null;
+                $calls++;
+                if ($resp === null) {
+                    throw new \RuntimeException('unexpected extra callComponent invocation');
+                }
+                return $resp;
+            }
+        );
 
-	/**
-	 * Zaaktype resolved from omschrijving and cached.
-	 *
-	 * @return void
-	 */
-	public function testResolveZaaktypeCachesUrl(): void {
-		$expectedUrl = 'https://open-zaak.zoetermeer.nl/catalogi/api/v1/zaaktypen/aa11-evenementen';
-		[$client, $calls] = $this->build([
-			['status' => 200, 'headers' => [], 'body' => ['results' => [['url' => $expectedUrl, 'omschrijving' => 'Evenementenvergunning']]]],
-		]);
+        $registers = $this->createMock(ZgwRegisterAccess::class);
+        $registers->method('findClientForEndpoint')->willReturn([
+            'clientIdentifier'   => 'pipelinq-zoetermeer',
+            'secretKluisRef'     => 'vault://x',
+            'userId'             => 'pipelinq',
+            'userRepresentation' => 'Pipelinq',
+        ]);
+        $appConfig = $this->createMock(IAppConfig::class);
+        $appConfig->method('getValueInt')->willReturnArgument(2);
 
-		$url1 = $client->resolveZaaktype($this->endpoint, 'Evenementenvergunning');
-		self::assertSame($expectedUrl, $url1);
+        $client = new ZtcClient($api, $registers, $appConfig, $this->createMock(LoggerInterface::class));
+        return [$client, &$calls];
+    }//end build()
 
-		// Cache hit on the second call → no second callComponent invocation.
-		$url2 = $client->resolveZaaktype($this->endpoint, 'Evenementenvergunning');
-		self::assertSame($expectedUrl, $url2);
-	}//end testResolveZaaktypeCachesUrl()
 
-	/**
-	 * Empty results → ZaaktypeNotInCatalogusException.
-	 *
-	 * @return void
-	 */
-	public function testEmptyResultsRaisesNotInCatalogus(): void {
-		[$client] = $this->build([
-			['status' => 200, 'headers' => [], 'body' => ['results' => []]],
-		]);
-		$this->expectException(ZaaktypeNotInCatalogusException::class);
-		$client->resolveZaaktype($this->endpoint, 'NietBestaand');
-	}//end testEmptyResultsRaisesNotInCatalogus()
+    /**
+     * Zaaktype resolved from omschrijving and cached.
+     *
+     * @return void
+     */
+    public function testResolveZaaktypeCachesUrl(): void
+    {
+        $expectedUrl = 'https://open-zaak.zoetermeer.nl/catalogi/api/v1/zaaktypen/aa11-evenementen';
+        [$client, $calls] = $this->build([
+            ['status' => 200, 'headers' => [], 'body' => ['results' => [['url' => $expectedUrl, 'omschrijving' => 'Evenementenvergunning']]]],
+        ]);
 
-	/**
-	 * invalidateCache forces a re-fetch on next resolve.
-	 *
-	 * @return void
-	 */
-	public function testInvalidateCacheClearsBucket(): void {
-		$expected1 = 'https://open-zaak.zoetermeer.nl/catalogi/api/v1/zaaktypen/aa11-v1';
-		$expected2 = 'https://open-zaak.zoetermeer.nl/catalogi/api/v1/zaaktypen/aa11-v2';
+        $url1 = $client->resolveZaaktype($this->endpoint, 'Evenementenvergunning');
+        self::assertSame($expectedUrl, $url1);
 
-		[$client] = $this->build([
-			['status' => 200, 'headers' => [], 'body' => ['results' => [['url' => $expected1, 'omschrijving' => 'Evenementenvergunning']]]],
-			['status' => 200, 'headers' => [], 'body' => ['results' => [['url' => $expected2, 'omschrijving' => 'Evenementenvergunning']]]],
-		]);
-		self::assertSame($expected1, $client->resolveZaaktype($this->endpoint, 'Evenementenvergunning'));
-		$client->invalidateCache($this->endpoint, ZtcClient::RESOURCE_ZAAKTYPE);
-		self::assertSame($expected2, $client->resolveZaaktype($this->endpoint, 'Evenementenvergunning'));
-	}//end testInvalidateCacheClearsBucket()
+        // Cache hit on the second call → no second callComponent invocation.
+        $url2 = $client->resolveZaaktype($this->endpoint, 'Evenementenvergunning');
+        self::assertSame($expectedUrl, $url2);
+    }//end testResolveZaaktypeCachesUrl()
+
+
+    /**
+     * Empty results → ZaaktypeNotInCatalogusException.
+     *
+     * @return void
+     */
+    public function testEmptyResultsRaisesNotInCatalogus(): void
+    {
+        [$client] = $this->build([
+            ['status' => 200, 'headers' => [], 'body' => ['results' => []]],
+        ]);
+        $this->expectException(ZaaktypeNotInCatalogusException::class);
+        $client->resolveZaaktype($this->endpoint, 'NietBestaand');
+    }//end testEmptyResultsRaisesNotInCatalogus()
+
+
+    /**
+     * invalidateCache forces a re-fetch on next resolve.
+     *
+     * @return void
+     */
+    public function testInvalidateCacheClearsBucket(): void
+    {
+        $expected1 = 'https://open-zaak.zoetermeer.nl/catalogi/api/v1/zaaktypen/aa11-v1';
+        $expected2 = 'https://open-zaak.zoetermeer.nl/catalogi/api/v1/zaaktypen/aa11-v2';
+
+        [$client] = $this->build([
+            ['status' => 200, 'headers' => [], 'body' => ['results' => [['url' => $expected1, 'omschrijving' => 'Evenementenvergunning']]]],
+            ['status' => 200, 'headers' => [], 'body' => ['results' => [['url' => $expected2, 'omschrijving' => 'Evenementenvergunning']]]],
+        ]);
+        self::assertSame($expected1, $client->resolveZaaktype($this->endpoint, 'Evenementenvergunning'));
+        $client->invalidateCache($this->endpoint, ZtcClient::RESOURCE_ZAAKTYPE);
+        self::assertSame($expected2, $client->resolveZaaktype($this->endpoint, 'Evenementenvergunning'));
+    }//end testInvalidateCacheClearsBucket()
+
 
 }//end class

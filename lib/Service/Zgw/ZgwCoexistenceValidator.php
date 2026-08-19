@@ -63,113 +63,117 @@ use Psr\Log\LoggerInterface;
 /**
  * Coexistence validator (write-path conflict detector).
  */
-class ZgwCoexistenceValidator {
-	/**
-	 * StUF endpoint schema slug introduced by `stuf-zkn-bg-adapter`.
-	 */
-	public const STUF_ENDPOINT_SCHEMA = 'stufEndpoint';
+class ZgwCoexistenceValidator
+{
+    /**
+     * StUF endpoint schema slug introduced by `stuf-zkn-bg-adapter`.
+     */
+    public const STUF_ENDPOINT_SCHEMA = 'stufEndpoint';
 
-	/**
-	 * Constructor.
-	 *
-	 * @param ZgwRegisterAccess $registers Register facade.
-	 * @param LoggerInterface $logger PSR-3 logger.
-	 */
-	public function __construct(
-		private ZgwRegisterAccess $registers,
-		private LoggerInterface $logger,
-	) {
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param ZgwRegisterAccess $registers Register facade.
+     * @param LoggerInterface   $logger    PSR-3 logger.
+     */
+    public function __construct(
+        private ZgwRegisterAccess $registers,
+        private LoggerInterface $logger,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Validate that at most one write path is active for a gemeente.
-	 *
-	 * @param string $municipalityCode CBS 4-digit gemeente code.
-	 *
-	 * @return void
-	 *
-	 * @throws DoubleWritePathException When both ZGW + StUF are write-enabled.
-	 */
-	public function validateWritePath(string $municipalityCode): void {
-		if ($municipalityCode === '') {
-			return;
-		}
+    /**
+     * Validate that at most one write path is active for a gemeente.
+     *
+     * @param string $gemeenteCode CBS 4-digit gemeente code.
+     *
+     * @return void
+     *
+     * @throws DoubleWritePathException When both ZGW + StUF are write-enabled.
+     */
+    public function validateWritePath(string $gemeenteCode): void
+    {
+        if ($gemeenteCode === '') {
+            return;
+        }
 
-		$zgwWriters = $this->activeZgwWriters(municipalityCode: $municipalityCode);
-		$stufWriters = $this->activeStufWriters(municipalityCode: $municipalityCode);
+        $zgwWriters  = $this->activeZgwWriters(gemeenteCode: $gemeenteCode);
+        $stufWriters = $this->activeStufWriters(gemeenteCode: $gemeenteCode);
 
-		if ($zgwWriters !== [] && $stufWriters !== []) {
-			$conflicting = array_values(array_unique(array_merge($zgwWriters, $stufWriters)));
-			$msg = sprintf(
-				'ZGW: dubbele schrijfpad-conflict voor gemeente "%s" — schakel een van de volgende endpoints uit: %s',
-				$municipalityCode,
-				implode(', ', $conflicting)
-			);
-			$this->logger->warning(
-				'ZGW: double-write conflict detected',
-				[
-					'gemeente' => $municipalityCode,
-					'conflicting' => $conflicting,
-				]
-			);
-			throw new DoubleWritePathException($msg, $conflicting);
-		}
-	}//end validateWritePath()
+        if ($zgwWriters !== [] && $stufWriters !== []) {
+            $conflicting = array_values(array_unique(array_merge($zgwWriters, $stufWriters)));
+            $msg         = sprintf(
+                'ZGW: dubbele schrijfpad-conflict voor gemeente "%s" — schakel een van de volgende endpoints uit: %s',
+                $gemeenteCode,
+                implode(', ', $conflicting)
+            );
+            $this->logger->warning(
+                    'ZGW: double-write conflict detected',
+                    [
+                        'gemeente'    => $gemeenteCode,
+                        'conflicting' => $conflicting,
+                    ]
+                    );
+            throw new DoubleWritePathException($msg, $conflicting);
+        }
+    }//end validateWritePath()
 
-	/**
-	 * IDs of all active ZGW write endpoints for a gemeente.
-	 *
-	 * @param string $municipalityCode CBS code.
-	 *
-	 * @return array<int, string>
-	 */
-	private function activeZgwWriters(string $municipalityCode): array {
-		$rows = $this->registers->findAll(
-			ZgwRegisterAccess::SCHEMA_ENDPOINT,
-			['municipalityCode' => $municipalityCode]
-		);
-		$ids = [];
-		foreach ($rows as $row) {
-			$actief = (bool)($row['actief'] ?? false);
-			$readOnly = (bool)($row['readOnly'] ?? false);
-			if ($actief === false || $readOnly === true) {
-				continue;
-			}
+    /**
+     * IDs of all active ZGW write endpoints for a gemeente.
+     *
+     * @param string $gemeenteCode CBS code.
+     *
+     * @return array<int, string>
+     */
+    private function activeZgwWriters(string $gemeenteCode): array
+    {
+        $rows = $this->registers->findAll(
+            ZgwRegisterAccess::SCHEMA_ENDPOINT,
+            ['gemeenteCode' => $gemeenteCode]
+        );
+        $ids  = [];
+        foreach ($rows as $row) {
+            $actief   = (bool) ($row['actief'] ?? false);
+            $readOnly = (bool) ($row['readOnly'] ?? false);
+            if ($actief === false || $readOnly === true) {
+                continue;
+            }
 
-			$id = (string)($row['id'] ?? ($row['@self']['slug'] ?? ''));
-			if ($id !== '') {
-				$ids[] = 'zgw:' . $id;
-			}
-		}
+            $id = (string) ($row['id'] ?? ($row['@self']['slug'] ?? ''));
+            if ($id !== '') {
+                $ids[] = 'zgw:'.$id;
+            }
+        }
 
-		return $ids;
-	}//end activeZgwWriters()
+        return $ids;
+    }//end activeZgwWriters()
 
-	/**
-	 * IDs of all active StUF write endpoints for a gemeente.
-	 *
-	 * @param string $municipalityCode CBS code.
-	 *
-	 * @return array<int, string>
-	 */
-	private function activeStufWriters(string $municipalityCode): array {
-		$rows = $this->registers->findAll(
-			self::STUF_ENDPOINT_SCHEMA,
-			['municipalityCode' => $municipalityCode]
-		);
-		$ids = [];
-		foreach ($rows as $row) {
-			$write = (string)($row['write'] ?? ($row['richting'] ?? ''));
-			if ($write !== 'on' && $write !== 'true' && $write !== '1') {
-				continue;
-			}
+    /**
+     * IDs of all active StUF write endpoints for a gemeente.
+     *
+     * @param string $gemeenteCode CBS code.
+     *
+     * @return array<int, string>
+     */
+    private function activeStufWriters(string $gemeenteCode): array
+    {
+        $rows = $this->registers->findAll(
+            self::STUF_ENDPOINT_SCHEMA,
+            ['gemeenteCode' => $gemeenteCode]
+        );
+        $ids  = [];
+        foreach ($rows as $row) {
+            $write = (string) ($row['write'] ?? ($row['richting'] ?? ''));
+            if ($write !== 'on' && $write !== 'true' && $write !== '1') {
+                continue;
+            }
 
-			$id = (string)($row['id'] ?? ($row['@self']['slug'] ?? ''));
-			if ($id !== '') {
-				$ids[] = 'stuf:' . $id;
-			}
-		}
+            $id = (string) ($row['id'] ?? ($row['@self']['slug'] ?? ''));
+            if ($id !== '') {
+                $ids[] = 'stuf:'.$id;
+            }
+        }
 
-		return $ids;
-	}//end activeStufWriters()
+        return $ids;
+    }//end activeStufWriters()
 }//end class

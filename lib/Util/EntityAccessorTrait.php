@@ -80,35 +80,37 @@ use Throwable;
  *       behind its callers already mandate. Pinned by
  *       tests/Unit/Util/EntityAccessorTraitTest.php.
  */
-trait EntityAccessorTrait {
-	/**
-	 * Read a scalar value off an entity through a possibly-magic accessor.
-	 *
-	 * @param object|null $entity The OpenRegister entity (or any object).
-	 * @param string $getter The accessor name, e.g. 'getSchema'.
-	 *
-	 * @return string The value as a string, or '' when unavailable.
-	 *
-	 * @spec exclude See the trait docblock — infrastructure helper, no product
-	 *       requirement of its own.
-	 */
-	private function readEntityValue(?object $entity, string $getter): string {
-		if ($entity === null) {
-			return '';
-		}
+trait EntityAccessorTrait
+{
+    /**
+     * Read a scalar value off an entity through a possibly-magic accessor.
+     *
+     * @param object|null $entity The OpenRegister entity (or any object).
+     * @param string      $getter The accessor name, e.g. 'getSchema'.
+     *
+     * @return string The value as a string, or '' when unavailable.
+     *
+     * @spec exclude See the trait docblock — infrastructure helper, no product
+     *       requirement of its own.
+     */
+    private function readEntityValue(?object $entity, string $getter): string
+    {
+        if ($entity === null) {
+            return '';
+        }
 
-		try {
-			$value = $entity->{$getter}();
-		} catch (Throwable $e) {
-			// Entity::getter() throws BadFunctionCallException for a property the
-			// entity does not declare; treat that exactly as "no value".
-			return '';
-		}
+        try {
+            $value = $entity->{$getter}();
+        } catch (Throwable $e) {
+            // Entity::getter() throws BadFunctionCallException for a property the
+            // entity does not declare; treat that exactly as "no value".
+            return '';
+        }
 
-		if (is_scalar($value) === false) {
-			return '';
-		}
+        if (is_scalar($value) === false) {
+            return '';
+        }
 
-		return (string)$value;
-	}//end readEntityValue()
+        return (string) $value;
+    }//end readEntityValue()
 }//end trait

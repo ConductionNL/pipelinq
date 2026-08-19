@@ -36,45 +36,47 @@ use OCP\IGroupManager;
  *
  * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
  */
-class WipSyncNotifier {
-	/**
-	 * Constructor.
-	 *
-	 * @param NotificationService $notificationService The notification service.
-	 * @param IGroupManager $groupManager The group manager (admin resolution).
-	 */
-	public function __construct(
-		private NotificationService $notificationService,
-		private IGroupManager $groupManager,
-	) {
-	}//end __construct()
+class WipSyncNotifier
+{
+    /**
+     * Constructor.
+     *
+     * @param NotificationService $notificationService The notification service.
+     * @param IGroupManager       $groupManager        The group manager (admin resolution).
+     */
+    public function __construct(
+        private NotificationService $notificationService,
+        private IGroupManager $groupManager,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Notify every admin user that a WIP dispatch permanently failed.
-	 *
-	 * @param string $title The time entry title (used in the notification text).
-	 * @param string $uuid The time entry UUID (for the detail-view reference).
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
-	 */
-	public function notifyFailure(string $title, string $uuid): void {
-		$adminGroup = $this->groupManager->get('admin');
-		if ($adminGroup === null) {
-			return;
-		}
+    /**
+     * Notify every admin user that a WIP dispatch permanently failed.
+     *
+     * @param string $title The time entry title (used in the notification text).
+     * @param string $uuid  The time entry UUID (for the detail-view reference).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+     */
+    public function notifyFailure(string $title, string $uuid): void
+    {
+        $adminGroup = $this->groupManager->get('admin');
+        if ($adminGroup === null) {
+            return;
+        }
 
-		foreach ($adminGroup->getUsers() as $user) {
-			$this->notificationService->sendNotification(
-				userId: $user->getUID(),
-				subject: 'wip_sync_failed',
-				parameters: [
-					'title' => $title,
-				],
-				objectType: 'timeEntry',
-				objectId: $uuid
-			);
-		}
-	}//end notifyFailure()
+        foreach ($adminGroup->getUsers() as $user) {
+            $this->notificationService->sendNotification(
+                userId: $user->getUID(),
+                subject: 'wip_sync_failed',
+                parameters: [
+                    'title' => $title,
+                ],
+                objectType: 'timeEntry',
+                objectId: $uuid
+            );
+        }
+    }//end notifyFailure()
 }//end class

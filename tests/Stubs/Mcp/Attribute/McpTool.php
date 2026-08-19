@@ -29,35 +29,36 @@ namespace OCA\OpenRegister\Mcp\Attribute;
 use Attribute;
 
 if (class_exists(McpTool::class) === false) {
-	/**
-	 * Stub attribute for McpTool — used only in standalone unit tests.
-	 *
-	 * Deferred until openregister PR #363 (or-mcp-tool-attribute) ships the
-	 * real attribute. Pipelinq attributes its service methods with this stub
-	 * in tests; the stub is replaced by the real attribute when the
-	 * openregister app is installed.
-	 */
-	#[Attribute(Attribute::TARGET_METHOD)]
-	final class McpTool {
-		/**
-		 * Constructor.
-		 *
-		 * @param string|null $name Local tool name; defaults to the method name when null.
-		 * @param string|null $description LLM-facing description; defaults to the docblock summary when null.
-		 * @param bool|null $readOnlyHint Optional MCP 2025-11-25 annotation hint.
-		 * @param bool|null $destructiveHint Optional MCP 2025-11-25 annotation hint.
-		 * @param bool|null $idempotentHint Optional MCP 2025-11-25 annotation hint.
-		 * @param string|null $scope Optional advisory scope (one of openregister's
-		 *                           McpAnnotationValidator::SCOPES).
-		 */
-		public function __construct(
-			public readonly ?string $name = null,
-			public readonly ?string $description = null,
-			public readonly ?bool $readOnlyHint = null,
-			public readonly ?bool $destructiveHint = null,
-			public readonly ?bool $idempotentHint = null,
-			public readonly ?string $scope = null,
-		) {
-		}//end __construct()
-	}//end class
+    /**
+     * Stub attribute for McpTool — used only in standalone unit tests.
+     *
+     * Deferred until openregister PR #363 (or-mcp-tool-attribute) ships the
+     * real attribute. Pipelinq attributes its service methods with this stub
+     * in tests; the stub is replaced by the real attribute when the
+     * openregister app is installed.
+     */
+    #[Attribute(Attribute::TARGET_METHOD)]
+    final class McpTool
+    {
+        /**
+         * Constructor.
+         *
+         * @param string|null $name            Local tool name; defaults to the method name when null.
+         * @param string|null $description     LLM-facing description; defaults to the docblock summary when null.
+         * @param bool|null   $readOnlyHint    Optional MCP 2025-11-25 annotation hint.
+         * @param bool|null   $destructiveHint Optional MCP 2025-11-25 annotation hint.
+         * @param bool|null   $idempotentHint  Optional MCP 2025-11-25 annotation hint.
+         * @param string|null $scope           Optional advisory scope (one of openregister's
+         *                                     McpAnnotationValidator::SCOPES).
+         */
+        public function __construct(
+            public readonly ?string $name=null,
+            public readonly ?string $description=null,
+            public readonly ?bool $readOnlyHint=null,
+            public readonly ?bool $destructiveHint=null,
+            public readonly ?bool $idempotentHint=null,
+            public readonly ?string $scope=null,
+        ) {
+        }//end __construct()
+    }//end class
 }//end if

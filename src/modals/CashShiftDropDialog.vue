@@ -14,17 +14,13 @@
 				type="number"
 				:label="t('pipelinq', 'Amount (€)')"
 				:error="showError"
-				:helperText="
-					showError
-						? t('pipelinq', 'Enter an amount greater than zero')
-						: ''
-				" />
+				:helper-text="showError ? t('pipelinq', 'Enter an amount greater than zero') : ''" />
 			<NcSelect
 				v-model="reason"
 				:options="reasonOptions"
-				:inputLabel="t('pipelinq', 'Reason')"
+				:input-label="t('pipelinq', 'Reason')"
 				label="label"
-				trackBy="id" />
+				track-by="id" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
@@ -38,7 +34,7 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcDialog, NcButton, NcTextField, NcSelect } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftDropDialog',
@@ -48,14 +44,12 @@ export default {
 		NcTextField,
 		NcSelect,
 	},
-
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
-
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -64,7 +58,6 @@ export default {
 			showError: false,
 		}
 	},
-
 	computed: {
 		/**
 		 * Selectable drop reasons.
@@ -73,17 +66,13 @@ export default {
 		 */
 		reasonOptions() {
 			return [
-				{
-					id: 'manager-deposit',
-					label: t('pipelinq', 'Cash drop to manager'),
-				},
+				{ id: 'manager-deposit', label: t('pipelinq', 'Cash drop to manager') },
 				{ id: 'bank-run', label: t('pipelinq', 'Bank run') },
 				{ id: 'security-removal', label: t('pipelinq', 'Security removal') },
 				{ id: 'other', label: t('pipelinq', 'Other') },
 			]
 		},
 	},
-
 	methods: {
 		/**
 		 * Validate the amount and emit the drop payload.

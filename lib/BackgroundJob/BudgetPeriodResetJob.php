@@ -38,48 +38,50 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.2
  */
-class BudgetPeriodResetJob extends TimedJob {
-	/**
-	 * Constructor.
-	 *
-	 * @param ITimeFactory $time Time factory.
-	 * @param BudgetService $budgetService Budget reset orchestrator.
-	 * @param LoggerInterface $logger Logger.
-	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.2
-	 */
-	public function __construct(
-		ITimeFactory $time,
-		private BudgetService $budgetService,
-		private LoggerInterface $logger,
-	) {
-		parent::__construct(time: $time);
+class BudgetPeriodResetJob extends TimedJob
+{
+    /**
+     * Constructor.
+     *
+     * @param ITimeFactory    $time          Time factory.
+     * @param BudgetService   $budgetService Budget reset orchestrator.
+     * @param LoggerInterface $logger        Logger.
+     *
+     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.2
+     */
+    public function __construct(
+        ITimeFactory $time,
+        private BudgetService $budgetService,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(time: $time);
 
-		// Once a day.
-		$this->setInterval(seconds: 86400);
-	}//end __construct()
+        // Once a day.
+        $this->setInterval(seconds: 86400);
+    }//end __construct()
 
-	/**
-	 * Run the reset.
-	 *
-	 * @param mixed $argument Unused job argument.
-	 *
-	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 */
-	protected function run($argument): void {
-		try {
-			$reset = $this->budgetService->resetPeriods();
-			$this->logger->info(
-				'BudgetPeriodResetJob complete',
-				['rowsReset' => $reset]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'BudgetPeriodResetJob failed',
-				['exception' => $e->getMessage()]
-			);
-		}
-	}//end run()
+    /**
+     * Run the reset.
+     *
+     * @param mixed $argument Unused job argument.
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    protected function run($argument): void
+    {
+        try {
+            $reset = $this->budgetService->resetPeriods();
+            $this->logger->info(
+                'BudgetPeriodResetJob complete',
+                ['rowsReset' => $reset]
+            );
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                'BudgetPeriodResetJob failed',
+                ['exception' => $e->getMessage()]
+            );
+        }
+    }//end run()
 }//end class

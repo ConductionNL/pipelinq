@@ -9,9 +9,7 @@
   -->
 <template>
 	<span class="cti-click-to-dial">
-		<a :href="'tel:' + targetNumber" class="cti-click-to-dial__number">{{
-			targetNumber
-		}}</a>
+		<a :href="'tel:' + targetNumber" class="cti-click-to-dial__number">{{ targetNumber }}</a>
 		<NcButton
 			v-if="enabled"
 			variant="tertiary-no-background"
@@ -28,9 +26,9 @@
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import PhoneIcon from 'vue-material-design-icons/Phone.vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { clickToDial } from '../services/ctiApi.js'
 
 export default {
@@ -41,43 +39,29 @@ export default {
 		extension: { type: String, default: '' },
 		enabled: { type: Boolean, default: true },
 	},
-
 	emits: ['initiated'],
 	data() {
 		return {
 			dialing: false,
 		}
 	},
-
 	methods: {
 		async dial() {
 			if (!this.targetNumber || !this.extension) {
-				showError(
-					t('pipelinq', 'Click-to-dial: extension or target missing.'),
-				)
+				showError(t('pipelinq', 'Click-to-dial: extension or target missing.'))
 				return
 			}
 			this.dialing = true
 			try {
 				const result = await clickToDial(this.targetNumber, this.extension)
 				if (result && result.success) {
-					showSuccess(
-						t('pipelinq', 'Call initiated — your extension will ring.'),
-					)
+					showSuccess(t('pipelinq', 'Call initiated — your extension will ring.'))
 					this.$emit('initiated', result)
 				} else {
-					showError(
-						t('pipelinq', 'Click-to-dial failed: {error}', {
-							error: (result && result.error) || 'unknown error',
-						}),
-					)
+					showError(t('pipelinq', 'Click-to-dial failed: {error}', { error: (result && result.error) || 'unknown error' }))
 				}
 			} catch (e) {
-				showError(
-					t('pipelinq', 'Click-to-dial failed: {error}', {
-						error: e.message || 'network error',
-					}),
-				)
+				showError(t('pipelinq', 'Click-to-dial failed: {error}', { error: e.message || 'network error' }))
 			} finally {
 				this.dialing = false
 			}

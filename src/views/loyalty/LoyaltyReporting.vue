@@ -9,18 +9,18 @@
 			<div class="loyalty-reporting__controls">
 				<NcSelect
 					v-model="selectedProgramme"
-					:inputLabel="t('pipelinq', 'Programme')"
+					:input-label="t('pipelinq', 'Programme')"
 					:options="programmeOptions"
 					label="label"
 					:clearable="false"
-					@update:modelValue="loadKpis" />
+					@update:model-value="loadKpis" />
 				<NcSelect
 					v-model="selectedPeriod"
-					:inputLabel="t('pipelinq', 'Period')"
+					:input-label="t('pipelinq', 'Period')"
 					:options="periodOptions"
 					label="label"
 					:clearable="false"
-					@update:modelValue="loadKpis" />
+					@update:model-value="loadKpis" />
 			</div>
 		</div>
 
@@ -29,68 +29,36 @@
 		<template v-else-if="kpis">
 			<div class="loyalty-kpis">
 				<div class="loyalty-kpi">
-					<span class="loyalty-kpi__label">{{
-						t('pipelinq', 'Active accounts')
-					}}</span>
-					<span class="loyalty-kpi__value">{{
-						formatNumber(kpis.activeAccounts)
-					}}</span>
+					<span class="loyalty-kpi__label">{{ t('pipelinq', 'Active accounts') }}</span>
+					<span class="loyalty-kpi__value">{{ formatNumber(kpis.activeAccounts) }}</span>
 				</div>
 				<div class="loyalty-kpi">
-					<span class="loyalty-kpi__label">{{
-						t('pipelinq', 'Points issued')
-					}}</span>
-					<span class="loyalty-kpi__value">{{
-						formatNumber(kpis.pointsIssued)
-					}}</span>
+					<span class="loyalty-kpi__label">{{ t('pipelinq', 'Points issued') }}</span>
+					<span class="loyalty-kpi__value">{{ formatNumber(kpis.pointsIssued) }}</span>
 				</div>
 				<div class="loyalty-kpi">
-					<span class="loyalty-kpi__label">{{
-						t('pipelinq', 'Points redeemed')
-					}}</span>
-					<span class="loyalty-kpi__value">{{
-						formatNumber(kpis.pointsRedeemed)
-					}}</span>
+					<span class="loyalty-kpi__label">{{ t('pipelinq', 'Points redeemed') }}</span>
+					<span class="loyalty-kpi__value">{{ formatNumber(kpis.pointsRedeemed) }}</span>
 				</div>
 				<div class="loyalty-kpi">
-					<span class="loyalty-kpi__label">{{
-						t('pipelinq', 'Points expired')
-					}}</span>
-					<span class="loyalty-kpi__value">{{
-						formatNumber(kpis.pointsExpired)
-					}}</span>
+					<span class="loyalty-kpi__label">{{ t('pipelinq', 'Points expired') }}</span>
+					<span class="loyalty-kpi__value">{{ formatNumber(kpis.pointsExpired) }}</span>
 				</div>
 				<div class="loyalty-kpi">
-					<span class="loyalty-kpi__label">{{
-						t('pipelinq', 'Breakage %')
-					}}</span>
-					<span class="loyalty-kpi__value"
-						>{{ kpis.breakagePercent }}%</span
-					>
+					<span class="loyalty-kpi__label">{{ t('pipelinq', 'Breakage %') }}</span>
+					<span class="loyalty-kpi__value">{{ kpis.breakagePercent }}%</span>
 				</div>
 				<div class="loyalty-kpi">
-					<span class="loyalty-kpi__label">{{
-						t('pipelinq', 'Redemption rate %')
-					}}</span>
-					<span class="loyalty-kpi__value"
-						>{{ kpis.redemptionRate }}%</span
-					>
+					<span class="loyalty-kpi__label">{{ t('pipelinq', 'Redemption rate %') }}</span>
+					<span class="loyalty-kpi__value">{{ kpis.redemptionRate }}%</span>
 				</div>
 				<div class="loyalty-kpi">
-					<span class="loyalty-kpi__label">{{
-						t('pipelinq', 'Outstanding points')
-					}}</span>
-					<span class="loyalty-kpi__value">{{
-						formatNumber(kpis.outstandingPoints)
-					}}</span>
+					<span class="loyalty-kpi__label">{{ t('pipelinq', 'Outstanding points') }}</span>
+					<span class="loyalty-kpi__value">{{ formatNumber(kpis.outstandingPoints) }}</span>
 				</div>
 				<div class="loyalty-kpi">
-					<span class="loyalty-kpi__label">{{
-						t('pipelinq', 'Estimated liability')
-					}}</span>
-					<span class="loyalty-kpi__value">{{
-						formatMoney(kpis.estimatedLiability)
-					}}</span>
+					<span class="loyalty-kpi__label">{{ t('pipelinq', 'Estimated liability') }}</span>
+					<span class="loyalty-kpi__value">{{ formatMoney(kpis.estimatedLiability) }}</span>
 				</div>
 			</div>
 
@@ -121,23 +89,18 @@
 		<NcEmptyContent
 			v-else
 			:title="t('pipelinq', 'Select a programme to view KPIs')"
-			:description="
-				t(
-					'pipelinq',
-					'Pick an active programme above to load its reporting dashboard.',
-				)
-			" />
+			:description="t('pipelinq', 'Pick an active programme above to load its reporting dashboard.')" />
 	</div>
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { showError } from '@nextcloud/dialogs'
-import { generateUrl } from '@nextcloud/router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcEmptyContent from '@nextcloud/vue/components/NcEmptyContent'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 import NcSelect from '@nextcloud/vue/components/NcSelect'
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'LoyaltyReporting',
@@ -153,60 +116,41 @@ export default {
 				{ id: '90d', label: 'Last 90 days', days: 90 },
 				{ id: '365d', label: 'Last 12 months', days: 365 },
 			],
-
 			kpis: null,
 		}
 	},
-
 	computed: {
 		programmeOptions() {
-			return this.programmes.map((p) => ({
-				id: p.id,
-				label: p.name || p.merk || p.id,
-			}))
+			return this.programmes.map(p => ({ id: p.id, label: p.naam || p.merk || p.id }))
 		},
-
 		tierRows() {
 			if (!this.kpis || !this.kpis.tierDistribution) {
 				return []
 			}
-			return Object.keys(this.kpis.tierDistribution).map((tierId) => ({
+			return Object.keys(this.kpis.tierDistribution).map(tierId => ({
 				tierId,
 				count: this.kpis.tierDistribution[tierId],
 			}))
 		},
 	},
-
 	mounted() {
 		this.selectedPeriod = this.periodOptions[1]
 		this.loadProgrammes()
 	},
-
 	methods: {
 		formatNumber(n) {
 			return new Intl.NumberFormat('nl-NL').format(Number(n || 0))
 		},
-
 		formatMoney(amount) {
-			return new Intl.NumberFormat('nl-NL', {
-				style: 'currency',
-				currency: 'EUR',
-			}).format(Number(amount || 0))
+			return new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' })
+				.format(Number(amount || 0))
 		},
-
 		async loadProgrammes() {
 			try {
-				const url = generateUrl(
-					'/apps/openregister/api/objects/pipelinq/loyaltyProgramme?_limit=200',
-				)
+				const url = generateUrl('/apps/openregister/api/objects/pipelinq/loyaltyProgramme?_limit=200')
 				const response = await axios.get(url)
-				const list =
-					(response.data && (response.data.results || response.data)) || []
-				this.programmes = list.map((p) => ({
-					id: p['@self']?.id || p.id || p.programmeId,
-					name: p.name,
-					merk: p.merk,
-				}))
+				const list = (response.data && (response.data.results || response.data)) || []
+				this.programmes = list.map(p => ({ id: p['@self']?.id || p.id || p.programmeId, naam: p.naam, merk: p.merk }))
 				if (this.programmes.length && !this.selectedProgramme) {
 					this.selectedProgramme = this.programmeOptions[0]
 					this.loadKpis()
@@ -215,7 +159,6 @@ export default {
 				showError(this.t('pipelinq', 'Failed to load programmes'))
 			}
 		},
-
 		async loadKpis() {
 			if (!this.selectedProgramme) {
 				return
@@ -224,9 +167,7 @@ export default {
 			try {
 				const period = this.selectedPeriod || this.periodOptions[1]
 				const to = new Date().toISOString()
-				const from = new Date(
-					Date.now() - period.days * 86400000,
-				).toISOString()
+				const from = new Date(Date.now() - period.days * 86400000).toISOString()
 				const url = generateUrl(
 					`/apps/pipelinq/api/loyalty/reporting/${this.selectedProgramme.id}/kpis?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
 				)
@@ -238,7 +179,6 @@ export default {
 				this.loading = false
 			}
 		},
-
 		exportCsv() {
 			if (!this.kpis) {
 				return

@@ -53,7 +53,7 @@
             "description": "UUID reference to the linked Contactmoment.",
             "title": "Contactmoment ID"
           },
-          "caseId": {
+          "zaakId": {
             "type": "string",
             "description": "External zaak ID (e.g., Z-2026-0042).",
             "title": "Zaak ID"
@@ -226,14 +226,14 @@
         "version": "1.0.0",
         "type": "object",
         "required": [
-          "caseType",
+          "zaaktype",
           "status",
           "language",
           "subject",
           "body"
         ],
         "properties": {
-          "caseType": {
+          "zaaktype": {
             "type": "string",
             "description": "CIMS code or local zaaktype identifier (indexed).",
             "title": "Zaaktype"

@@ -41,61 +41,63 @@ use Psr\Log\LoggerInterface;
 /**
  * Daily 5-working-day fallback email job.
  */
-class FallbackEmailJob extends TimedJob {
-	/**
-	 * Job interval in seconds (24 hours).
-	 *
-	 * @var int
-	 */
-	public const INTERVAL_SECONDS = 86400;
+class FallbackEmailJob extends TimedJob
+{
+    /**
+     * Job interval in seconds (24 hours).
+     *
+     * @var int
+     */
+    public const INTERVAL_SECONDS = 86400;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param ITimeFactory $time Time factory.
-	 * @param ContainerInterface $container DI container.
-	 * @param LoggerInterface $logger Logger.
-	 */
-	public function __construct(
-		ITimeFactory $time,
-		private ContainerInterface $container,
-		private LoggerInterface $logger,
-	) {
-		parent::__construct(time: $time);
-		$this->setInterval(seconds: self::INTERVAL_SECONDS);
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param ITimeFactory       $time      Time factory.
+     * @param ContainerInterface $container DI container.
+     * @param LoggerInterface    $logger    Logger.
+     */
+    public function __construct(
+        ITimeFactory $time,
+        private ContainerInterface $container,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(time: $time);
+        $this->setInterval(seconds: self::INTERVAL_SECONDS);
+    }//end __construct()
 
-	/**
-	 * Run the daily fallback pass.
-	 *
-	 * @param mixed $argument Job argument (unused).
-	 *
-	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
-	 */
-	protected function run(mixed $argument): void {
-		try {
-			$service = $this->container->get(BerichtenboxService::class);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'FallbackEmailJob: BerichtenboxService unavailable.',
-				['exception' => $e->getMessage()]
-			);
-			return;
-		}
+    /**
+     * Run the daily fallback pass.
+     *
+     * @param mixed $argument Job argument (unused).
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+     */
+    protected function run(mixed $argument): void
+    {
+        try {
+            $service = $this->container->get(BerichtenboxService::class);
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'FallbackEmailJob: BerichtenboxService unavailable.',
+                ['exception' => $e->getMessage()]
+            );
+            return;
+        }
 
-		try {
-			$sent = $service->processFallbackQueue();
-			$this->logger->info(
-				'FallbackEmailJob: processed fallbacks.',
-				['sent' => $sent]
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'FallbackEmailJob run failed.',
-				['exception' => $e->getMessage()]
-			);
-		}
-	}//end run()
+        try {
+            $sent = $service->processFallbackQueue();
+            $this->logger->info(
+                'FallbackEmailJob: processed fallbacks.',
+                ['sent' => $sent]
+            );
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                'FallbackEmailJob run failed.',
+                ['exception' => $e->getMessage()]
+            );
+        }
+    }//end run()
 }//end class

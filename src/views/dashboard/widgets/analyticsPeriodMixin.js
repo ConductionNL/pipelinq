@@ -30,10 +30,9 @@ export default {
 			// already unwrapped (CnChartWidget re-reads it in setup() for
 			// the same reason) — support both shapes.
 			const injected = this.cnDashboardDateRange
-			const range =
-				injected && typeof injected === 'object' && 'value' in injected
-					? injected.value
-					: injected
+			const range = (injected && typeof injected === 'object' && 'value' in injected)
+				? injected.value
+				: injected
 			return rangeToPeriod(range || null)
 		},
 	},

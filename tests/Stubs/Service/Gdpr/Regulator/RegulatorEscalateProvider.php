@@ -22,17 +22,18 @@ namespace OCA\OpenRegister\Service\Gdpr\Regulator;
 /**
  * Stub of OR's registerable regulator-escalation provider.
  */
-interface RegulatorEscalateProvider {
-	/**
-	 * @return string
-	 */
-	public function getProviderId(): string;
+interface RegulatorEscalateProvider
+{
+    /**
+     * @return string
+     */
+    public function getProviderId(): string;
 
-	/**
-	 * @param string $caseUuid The case object uuid.
-	 * @param array<string, mixed> $case The case's serialised payload.
-	 *
-	 * @return RegulatorEscalateResult
-	 */
-	public function escalate(string $caseUuid, array $case): RegulatorEscalateResult;
+    /**
+     * @param string               $caseUuid The case object uuid.
+     * @param array<string, mixed> $case     The case's serialised payload.
+     *
+     * @return RegulatorEscalateResult
+     */
+    public function escalate(string $caseUuid, array $case): RegulatorEscalateResult;
 }

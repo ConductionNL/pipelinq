@@ -15,13 +15,7 @@
 		@closing="$emit('close')">
 		<div class="screen-pop">
 			<p class="screen-pop__intro">
-				{{
-					t(
-						'pipelinq',
-						'Multiple contacts match {number}. Select one to open, or create a new contact.',
-						{ number: e164 || rawNumber },
-					)
-				}}
+				{{ t('pipelinq', 'Multiple contacts match {number}. Select one to open, or create a new contact.', { number: e164 || rawNumber }) }}
 			</p>
 			<table class="screen-pop__table" data-testid="screen-pop-matches">
 				<thead>
@@ -38,9 +32,7 @@
 						<td>{{ match.clientName || match.organisation || '—' }}</td>
 						<td>{{ match._matchType || 'contact' }}</td>
 						<td class="screen-pop__actions">
-							<NcButton
-								variant="primary"
-								@click="$emit('select', match)">
+							<NcButton variant="primary" @click="$emit('select', match)">
 								{{ t('pipelinq', 'Select') }}
 							</NcButton>
 						</td>
@@ -70,7 +62,6 @@ export default {
 		e164: { type: String, default: '' },
 		rawNumber: { type: String, default: '' },
 	},
-
 	emits: ['close', 'select', 'intake'],
 	methods: {
 		displayName(match) {

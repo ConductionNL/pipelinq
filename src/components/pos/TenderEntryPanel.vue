@@ -51,9 +51,7 @@
 							{{ formatEur(tender.amount) }}
 						</td>
 						<td class="num">
-							<span
-								v-if="(tender.change || 0) > 0"
-								class="tender-panel__change">
+							<span v-if="(tender.change || 0) > 0" class="tender-panel__change">
 								{{ formatEur(tender.change) }}
 							</span>
 							<span v-else>-</span>
@@ -77,16 +75,13 @@
 
 			<div class="tender-panel__summary" :class="summaryClass">
 				<div>
-					<strong>{{ t('pipelinq', 'Tender sum:') }}</strong>
-					{{ formatEur(validation.tenderSum) }}
+					<strong>{{ t('pipelinq', 'Tender sum:') }}</strong> {{ formatEur(validation.tenderSum) }}
 				</div>
 				<div>
-					<strong>{{ t('pipelinq', 'Transaction total:') }}</strong>
-					{{ formatEur(validation.transactionTotal) }}
+					<strong>{{ t('pipelinq', 'Transaction total:') }}</strong> {{ formatEur(validation.transactionTotal) }}
 				</div>
 				<div v-if="!validation.balanced">
-					<strong>{{ remainingLabel }}:</strong>
-					{{ formatEur(Math.abs(validation.variance)) }}
+					<strong>{{ remainingLabel }}:</strong> {{ formatEur(Math.abs(validation.variance)) }}
 				</div>
 				<div v-else>
 					{{ t('pipelinq', 'Payment balanced — ready to settle.') }}
@@ -100,17 +95,16 @@
 
 		<AddTenderDialog
 			v-if="showAdd"
-			:transactionId="transactionId"
-			:transactionTotal="validation.transactionTotal"
+			:transaction-id="transactionId"
+			:transaction-total="validation.transactionTotal"
 			:remaining="remainingAmount"
-			:tenderTypes="activeTenderTypes"
+			:tender-types="activeTenderTypes"
 			@close="showAdd = false"
 			@added="onTenderAdded" />
-		<ConfirmDialog
-			v-if="pendingRemoveTender"
+		<ConfirmDialog v-if="pendingRemoveTender"
 			:name="t('pipelinq', 'Remove tender')"
 			:message="t('pipelinq', 'Remove this tender?')"
-			:confirmLabel="t('pipelinq', 'Remove')"
+			:confirm-label="t('pipelinq', 'Remove')"
 			@confirm="performRemoveTender"
 			@cancel="pendingRemoveTender = null" />
 	</div>
@@ -118,11 +112,11 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import AddTenderDialog from '../../modals/AddTenderDialog.vue'
+import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { formatEur } from '../../services/posTotals.js'
 
 export default {
@@ -133,48 +127,34 @@ export default {
 			type: String,
 			required: true,
 		},
-
 		transactionStatus: {
 			type: String,
 			default: 'draft',
 		},
 	},
-
 	emits: ['changed'],
 	data() {
 		return {
 			tenders: [],
 			tenderTypes: [],
-			validation: {
-				tenderSum: 0,
-				transactionTotal: 0,
-				variance: 0,
-				balanced: true,
-			},
-
+			validation: { tenderSum: 0, transactionTotal: 0, variance: 0, balanced: true },
 			loading: false,
 			showAdd: false,
 			errorMessage: '',
 			pendingRemoveTender: null,
 		}
 	},
-
 	computed: {
 		canEdit() {
-			return (
-				this.transactionStatus !== 'settled'
+			return this.transactionStatus !== 'settled'
 				&& this.transactionStatus !== 'refunded'
-			)
 		},
-
 		activeTenderTypes() {
-			return this.tenderTypes.filter((type) => type.isActive !== false)
+			return this.tenderTypes.filter(type => type.isActive !== false)
 		},
-
 		remainingAmount() {
 			return Math.max(0, Number(this.validation?.variance || 0))
 		},
-
 		remainingLabel() {
 			const variance = Number(this.validation?.variance || 0)
 			if (variance > 0) {
@@ -185,7 +165,6 @@ export default {
 			}
 			return t('pipelinq', 'Variance')
 		},
-
 		summaryClass() {
 			if (this.validation.balanced) {
 				return 'tender-panel__summary--ok'
@@ -195,11 +174,9 @@ export default {
 				: 'tender-panel__summary--error'
 		},
 	},
-
 	async mounted() {
 		await Promise.all([this.loadTenders(), this.loadTenderTypes()])
 	},
-
 	methods: {
 		formatEur,
 		tenderId(tender) {
@@ -208,23 +185,20 @@ export default {
 			}
 			return tender?.id || tender?.uuid || ''
 		},
-
 		tenderTypeLabel(tender) {
 			const id = tender?.tenderType || ''
-			const found = this.tenderTypes.find((t) => this.idOf(t) === id)
+			const found = this.tenderTypes.find(t => this.idOf(t) === id)
 			if (found) {
 				return found.name || found.code || id
 			}
 			return id || t('pipelinq', 'Unknown')
 		},
-
 		idOf(type) {
 			if (type?.['@self']?.id) {
 				return type['@self'].id
 			}
 			return type?.id || type?.uuid || ''
 		},
-
 		async loadTenders() {
 			this.loading = true
 			this.errorMessage = ''
@@ -239,39 +213,31 @@ export default {
 					this.validation = response.data.validation
 				}
 			} catch (error) {
-				this.errorMessage =
-					error?.response?.data?.error
-					|| t('pipelinq', 'Failed to load tenders')
+				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to load tenders')
 			} finally {
 				this.loading = false
 			}
 		},
-
 		async loadTenderTypes() {
 			try {
-				const url = generateUrl(
-					'/apps/pipelinq/api/pos/tender-types?activeOnly=1',
-				)
+				const url = generateUrl('/apps/pipelinq/api/pos/tender-types?activeOnly=1')
 				const response = await axios.get(url)
 				this.tenderTypes = response?.data?.results || []
 			} catch (error) {
 				this.tenderTypes = []
 			}
 		},
-
 		openAddDialog() {
 			if (this.tenderTypes.length === 0) {
 				this.loadTenderTypes()
 			}
 			this.showAdd = true
 		},
-
 		async onTenderAdded() {
 			this.showAdd = false
 			await this.loadTenders()
 			this.$emit('changed')
 		},
-
 		/**
 		 * Open the remove confirmation for a tender.
 		 *
@@ -287,7 +253,6 @@ export default {
 			}
 			this.pendingRemoveTender = tender
 		},
-
 		/**
 		 * Remove the pending tender once the dialog confirms.
 		 *
@@ -312,9 +277,7 @@ export default {
 				await this.loadTenders()
 				this.$emit('changed')
 			} catch (error) {
-				const msg =
-					error?.response?.data?.error
-					|| t('pipelinq', 'Failed to remove tender')
+				const msg = error?.response?.data?.error || t('pipelinq', 'Failed to remove tender')
 				showError(msg)
 			}
 		},

@@ -54,88 +54,98 @@ use OCP\AppFramework\Db\Entity;
  * Stub for ObjectEntity; mirrors the production class's real member set.
  *
  * @method string|null getUuid()
- * @method void setUuid(?string $uuid)
+ * @method void        setUuid(?string $uuid)
  * @method string|null getRegister()
- * @method void setRegister(?string $register)
+ * @method void        setRegister(?string $register)
  * @method string|null getSchema()
- * @method void setSchema(?string $schema)
- * @method void setObject(?array $object)
+ * @method void        setSchema(?string $schema)
+ * @method void        setObject(?array $object)
  */
-class ObjectEntity extends Entity implements JsonSerializable {
+class ObjectEntity extends Entity implements JsonSerializable
+{
 
-	/**
-	 * Unique identifier for the object.
-	 *
-	 * @var string|null
-	 */
-	protected ?string $uuid = null;
+    /**
+     * Unique identifier for the object.
+     *
+     * @var string|null
+     */
+    protected ?string $uuid = null;
 
-	/**
-	 * Register the object belongs to.
-	 *
-	 * @var string|null
-	 */
-	protected ?string $register = null;
+    /**
+     * Register the object belongs to.
+     *
+     * @var string|null
+     */
+    protected ?string $register = null;
 
-	/**
-	 * Schema the object belongs to.
-	 *
-	 * @var string|null
-	 */
-	protected ?string $schema = null;
+    /**
+     * Schema the object belongs to.
+     *
+     * @var string|null
+     */
+    protected ?string $schema = null;
 
-	/**
-	 * Object data stored as an array.
-	 *
-	 * @var array<string,mixed>|null
-	 */
-	protected ?array $object = null;
+    /**
+     * Object data stored as an array.
+     *
+     * @var array<string,mixed>|null
+     */
+    protected ?array $object = null;
 
-	/**
-	 * Register the field types, as the production entity does.
-	 */
-	public function __construct() {
-		$this->addType('uuid', 'string');
-		$this->addType('register', 'string');
-		$this->addType('schema', 'string');
-		$this->addType('object', 'json');
 
-	}//end __construct()
+    /**
+     * Register the field types, as the production entity does.
+     */
+    public function __construct()
+    {
+        $this->addType('uuid', 'string');
+        $this->addType('register', 'string');
+        $this->addType('schema', 'string');
+        $this->addType('object', 'json');
 
-	/**
-	 * Return the object data with 'id' injected from the UUID.
-	 *
-	 * Mirrors production (lib/Db/ObjectEntity.php:781): the id is prepended via
-	 * array_merge, so a payload that carries its own 'id' wins.
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function getObject(): array {
-		return array_merge(['id' => $this->uuid], ($this->object ?? []));
-	}//end getObject()
+    }//end __construct()
 
-	/**
-	 * Return a JSON-serialisable representation of the entity.
-	 *
-	 * Mirrors the shape production emits: the payload, plus an '@self' metadata
-	 * envelope, plus a top-level 'id' when the UUID is known.
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function jsonSerialize(): array {
-		$object = ($this->object ?? []);
-		$object['@self'] = [
-			'id' => $this->uuid,
-			'name' => $this->uuid,
-			'register' => $this->register,
-			'schema' => $this->schema,
-		];
 
-		if ($this->uuid !== null) {
-			$object['id'] = $this->uuid;
-		}
+    /**
+     * Return the object data with 'id' injected from the UUID.
+     *
+     * Mirrors production (lib/Db/ObjectEntity.php:781): the id is prepended via
+     * array_merge, so a payload that carries its own 'id' wins.
+     *
+     * @return array<string,mixed>
+     */
+    public function getObject(): array
+    {
+        return array_merge(['id' => $this->uuid], ($this->object ?? []));
 
-		return $object;
-	}//end jsonSerialize()
+    }//end getObject()
+
+
+    /**
+     * Return a JSON-serialisable representation of the entity.
+     *
+     * Mirrors the shape production emits: the payload, plus an '@self' metadata
+     * envelope, plus a top-level 'id' when the UUID is known.
+     *
+     * @return array<string,mixed>
+     */
+    public function jsonSerialize(): array
+    {
+        $object          = ($this->object ?? []);
+        $object['@self'] = [
+            'id'       => $this->uuid,
+            'name'     => $this->uuid,
+            'register' => $this->register,
+            'schema'   => $this->schema,
+        ];
+
+        if ($this->uuid !== null) {
+            $object['id'] = $this->uuid;
+        }
+
+        return $object;
+
+    }//end jsonSerialize()
+
 
 }//end class

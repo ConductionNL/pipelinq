@@ -38,9 +38,9 @@ $autoloader = require __DIR__ . '/../vendor/autoload.php';
 // autoloader is ever polluted. Loading is lazy, so ordering relative to the
 // OCP/NC registration below is irrelevant.
 if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
-	$autoloader->addPsr4('OCA\\OpenRegister\\', __DIR__ . '/Stubs/');
-	$autoloader->addPsr4('Doctrine\\DBAL\\', __DIR__ . '/Stubs/DBAL/');
-	$autoloader->addPsr4('OC\\', __DIR__ . '/Stubs/OC/');
+    $autoloader->addPsr4('OCA\\OpenRegister\\', __DIR__ . '/Stubs/');
+    $autoloader->addPsr4('Doctrine\\DBAL\\', __DIR__ . '/Stubs/DBAL/');
+    $autoloader->addPsr4('OC\\', __DIR__ . '/Stubs/OC/');
 }
 
 // Register OCP\ and NCU\ namespaces.
@@ -49,19 +49,19 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
 // In CI we fall back to vendor/nextcloud/ocp/OCP.bak which holds the shipped stubs.
 // This MUST happen before any class_exists() call that may trigger autoloading of
 // stub classes that extend OCP\EventDispatcher\Event etc.
-$ocpDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP';
+$ocpDir    = __DIR__ . '/../vendor/nextcloud/ocp/OCP';
 $ocpBakDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP.bak';
-$ncuDir = __DIR__ . '/../vendor/nextcloud/ocp/NCU';
+$ncuDir    = __DIR__ . '/../vendor/nextcloud/ocp/NCU';
 
 if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
-	if (is_dir($ocpDir) === true) {
-		$autoloader->addPsr4('OCP\\', $ocpDir . '/');
-		$autoloader->addPsr4('NCU\\', $ncuDir . '/');
-	} elseif (is_dir($ocpBakDir) === true) {
-		// Bare CI environment — symlink broken, use the shipped backup stubs.
-		$autoloader->addPsr4('OCP\\', $ocpBakDir . '/');
-		$autoloader->addPsr4('NCU\\', $ncuDir . '/');
-	}
+    if (is_dir($ocpDir) === true) {
+        $autoloader->addPsr4('OCP\\', $ocpDir . '/');
+        $autoloader->addPsr4('NCU\\', $ncuDir . '/');
+    } elseif (is_dir($ocpBakDir) === true) {
+        // Bare CI environment — symlink broken, use the shipped backup stubs.
+        $autoloader->addPsr4('OCP\\', $ocpBakDir . '/');
+        $autoloader->addPsr4('NCU\\', $ncuDir . '/');
+    }
 }
 
 // Deterministic OpenRegister-stub precedence (two-mode harness invariant).
@@ -78,78 +78,78 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
 // are incompatible with the unit suite's stub-shaped mocks. So we EAGERLY declare
 // the OR stub classes here, BEFORE the NC bootstrap registers OR's namespace.
 foreach ([
-	'Db/ObjectEntity.php',
-	'Service/ObjectService.php',
-	'Service/Integration/Providers/MessageDispatchProvider.php',
+    'Db/ObjectEntity.php',
+    'Service/ObjectService.php',
+    'Service/Integration/Providers/MessageDispatchProvider.php',
 ] as $stubRelativePath) {
-	$stubFile = __DIR__ . '/Stubs/' . $stubRelativePath;
-	if (is_file($stubFile) === true) {
-		try {
-			require_once $stubFile;
-		} catch (\Throwable $e) {
-			// A stub whose dependency is unavailable in this context is skipped.
-		}
-	}
+    $stubFile = __DIR__ . '/Stubs/' . $stubRelativePath;
+    if (is_file($stubFile) === true) {
+        try {
+            require_once $stubFile;
+        } catch (\Throwable $e) {
+            // A stub whose dependency is unavailable in this context is skipped.
+        }
+    }
 }
 
 // Bootstrap Nextcloud when a full server environment is available.
 // Wrapped in try/catch so that unit tests can run in standalone mode
 // (bare container without an installed NC).
 if (file_exists(__DIR__ . '/../../../lib/base.php') === true) {
-	try {
-		require_once __DIR__ . '/../../../lib/base.php';
-	} catch (\Throwable $e) {
-		// NC not fully installed — unit tests continue with vendor stubs only.
-	}
+    try {
+        require_once __DIR__ . '/../../../lib/base.php';
+    } catch (\Throwable $e) {
+        // NC not fully installed — unit tests continue with vendor stubs only.
+    }
 }
 
 // Register Test\ namespace for NC test classes (only when NC server is present).
 $serverTestsLib = __DIR__ . '/../../../tests/lib/';
 if (is_dir($serverTestsLib) === true) {
-	$loader = new \Composer\Autoload\ClassLoader();
-	$loader->addPsr4('Test\\', $serverTestsLib);
-	$loader->register(true);
+    $loader = new \Composer\Autoload\ClassLoader();
+    $loader->addPsr4('Test\\', $serverTestsLib);
+    $loader->register(true);
 }
 
 // Load remaining stubs via class_exists / interface_exists guards.
 if (interface_exists(\OCA\OpenRegister\Mcp\IMcpToolProvider::class) === false) {
-	$stubFile = __DIR__ . '/Stubs/Mcp/IMcpToolProvider.php';
-	if (file_exists($stubFile) === true) {
-		require_once $stubFile;
-	}
+    $stubFile = __DIR__ . '/Stubs/Mcp/IMcpToolProvider.php';
+    if (file_exists($stubFile) === true) {
+        require_once $stubFile;
+    }
 }
 
 if (class_exists(\OCA\OpenRegister\Service\ObjectService::class) === false) {
-	$stubFile = __DIR__ . '/Stubs/Service/ObjectService.php';
-	if (file_exists($stubFile) === true) {
-		require_once $stubFile;
-	}
+    $stubFile = __DIR__ . '/Stubs/Service/ObjectService.php';
+    if (file_exists($stubFile) === true) {
+        require_once $stubFile;
+    }
 }
 
 if (interface_exists(\OCA\OpenRegister\Lifecycle\LifecycleGuardInterface::class) === false) {
-	$f1 = __DIR__ . '/Stubs/Lifecycle/GuardResult.php';
-	$f2 = __DIR__ . '/Stubs/Lifecycle/LifecycleGuardInterface.php';
-	if (file_exists($f1) === true) {
-		require_once $f1;
-	}
+    $f1 = __DIR__ . '/Stubs/Lifecycle/GuardResult.php';
+    $f2 = __DIR__ . '/Stubs/Lifecycle/LifecycleGuardInterface.php';
+    if (file_exists($f1) === true) {
+        require_once $f1;
+    }
 
-	if (file_exists($f2) === true) {
-		require_once $f2;
-	}
+    if (file_exists($f2) === true) {
+        require_once $f2;
+    }
 }
 
 if (class_exists(\OCA\OpenRegister\Service\Lifecycle\TransitionEngine::class) === false) {
-	$stubFile = __DIR__ . '/Stubs/Service/Lifecycle/TransitionEngine.php';
-	if (file_exists($stubFile) === true) {
-		require_once $stubFile;
-	}
+    $stubFile = __DIR__ . '/Stubs/Service/Lifecycle/TransitionEngine.php';
+    if (file_exists($stubFile) === true) {
+        require_once $stubFile;
+    }
 }
 
 // Portal test helpers.
 if (file_exists(__DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php') === true) {
-	require_once __DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php';
+    require_once __DIR__ . '/Unit/Service/Portal/FakePortalObjectRepository.php';
 }
 
 if (file_exists(__DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php') === true) {
-	require_once __DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php';
+    require_once __DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php';
 }

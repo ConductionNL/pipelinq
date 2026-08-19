@@ -24,8 +24,7 @@
 		<NcLoadingIcon :size="24" />
 	</div>
 	<div v-else-if="hasContent" class="request-conversion-section">
-		<NcButton
-			v-if="showConvertButton"
+		<NcButton v-if="showConvertButton"
 			variant="primary"
 			:disabled="busy"
 			@click="convertToCase">
@@ -40,9 +39,7 @@
 				<span class="request-conversion-section__reference-label">
 					{{ t('pipelinq', 'Case reference') }}
 				</span>
-				<code class="request-conversion-section__reference-value">{{
-					caseReference
-				}}</code>
+				<code class="request-conversion-section__reference-value">{{ caseReference }}</code>
 				<NcButton variant="tertiary" @click="copyReference">
 					{{ t('pipelinq', 'Copy') }}
 				</NcButton>
@@ -52,10 +49,10 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 
 const DEFAULT_AVAILABILITY = {
 	available: false,
@@ -71,11 +68,9 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
-
 	inject: {
 		cnSectionContext: { default: null },
 	},
-
 	props: {
 		/** The request id (token-resolved from @objectId by CnBodySections). */
 		requestId: {
@@ -83,7 +78,6 @@ export default {
 			default: '',
 		},
 	},
-
 	data() {
 		return {
 			loading: false,
@@ -91,7 +85,6 @@ export default {
 			availability: { ...DEFAULT_AVAILABILITY },
 		}
 	},
-
 	computed: {
 		/** The resolved request id — prop wins, else the injected section context. */
 		resolvedId() {
@@ -99,31 +92,25 @@ export default {
 				return this.requestId
 			}
 			const ctx = this.cnSectionContext
-			const bag =
-				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
+			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
-
 		caseReference() {
 			return this.availability.caseReference || ''
 		},
-
 		/** Converted whenever the server reports status converted or a case is already linked. */
 		isConverted() {
 			return this.availability.status === 'converted' || !!this.caseReference
 		},
-
 		/** Shown only when an ns#Case implementer exists AND the request is in_progress. */
 		showConvertButton() {
 			return this.availability.canConvert === true && !this.isConverted
 		},
-
 		/** Whether this section has anything to render at all (else it stays hidden). */
 		hasContent() {
 			return this.showConvertButton || this.isConverted
 		},
 	},
-
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -132,7 +119,6 @@ export default {
 			},
 		},
 	},
-
 	methods: {
 		/**
 		 * Fetch the current conversion availability for this request.
@@ -145,10 +131,7 @@ export default {
 			this.loading = true
 			try {
 				const { data } = await axios.get(
-					generateUrl(
-						'/apps/pipelinq/api/handoff/request/{id}/availability',
-						{ id: this.resolvedId },
-					),
+					generateUrl('/apps/pipelinq/api/handoff/request/{id}/availability', { id: this.resolvedId }),
 				)
 				this.availability = {
 					available: !!data.available,
@@ -162,7 +145,6 @@ export default {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * Convert the request into a case via the semantic handoff endpoint.
 		 */
@@ -173,10 +155,7 @@ export default {
 			this.busy = true
 			try {
 				const { data } = await axios.post(
-					generateUrl(
-						'/apps/pipelinq/api/handoff/request/{id}/convert-to-case',
-						{ id: this.resolvedId },
-					),
+					generateUrl('/apps/pipelinq/api/handoff/request/{id}/convert-to-case', { id: this.resolvedId }),
 					{},
 				)
 				this.availability = {
@@ -189,33 +168,18 @@ export default {
 				this.$emit('converted', { caseReference: data.caseReference || '' })
 			} catch (err) {
 				const body = (err && err.response && err.response.data) || {}
-				if (
-					body.status === 'invalid-status'
-					|| body.status === 'not-available'
-				) {
-					showError(
-						t(
-							'pipelinq',
-							'Conversion is no longer available for this request.',
-						),
-					)
+				if (body.status === 'invalid-status' || body.status === 'not-available') {
+					showError(t('pipelinq', 'Conversion is no longer available for this request.'))
 					await this.loadAvailability()
 				} else if (body.status === 'handoff-failed') {
-					showError(
-						t('pipelinq', 'Could not create the case: {reason}', {
-							reason: body.reason || t('pipelinq', 'unknown error'),
-						}),
-					)
+					showError(t('pipelinq', 'Could not create the case: {reason}', { reason: body.reason || t('pipelinq', 'unknown error') }))
 				} else {
-					showError(
-						t('pipelinq', 'Could not convert this request to a case.'),
-					)
+					showError(t('pipelinq', 'Could not convert this request to a case.'))
 				}
 			} finally {
 				this.busy = false
 			}
 		},
-
 		/**
 		 * Copy the case reference UUID to the clipboard.
 		 */

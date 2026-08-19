@@ -30,63 +30,69 @@ namespace OCA\Pipelinq\Service\Portal;
 /**
  * Per-customer order read facade.
  */
-class PortalOrderService extends AbstractPortalReadFacade {
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @return string The schema key.
-	 */
-	protected function schemaKey(): string {
-		return 'posTransaction';
-	}//end schemaKey()
+class PortalOrderService extends AbstractPortalReadFacade
+{
+    /**
+     * {@inheritDoc}
+     *
+     * @return string The schema key.
+     */
+    protected function schemaKey(): string
+    {
+        return 'posTransaction';
+    }//end schemaKey()
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @return string The scope.
-	 */
-	protected function delegationScope(): string {
-		return 'view-invoices';
-	}//end delegationScope()
+    /**
+     * {@inheritDoc}
+     *
+     * @return string The scope.
+     */
+    protected function delegationScope(): string
+    {
+        return 'view-invoices';
+    }//end delegationScope()
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @param array<string, mixed> $object The raw posTransaction.
-	 *
-	 * @return array{0: string|null, 1: string|null} The [contactId, clientId].
-	 */
-	protected function ownerIds(array $object): array {
-		return [null, $this->readId(value: ($object['client'] ?? null))];
-	}//end ownerIds()
+    /**
+     * {@inheritDoc}
+     *
+     * @param array<string, mixed> $object The raw posTransaction.
+     *
+     * @return array{0: string|null, 1: string|null} The [contactId, clientId].
+     */
+    protected function ownerIds(array $object): array
+    {
+        return [null, $this->readId(value: ($object['client'] ?? null))];
+    }//end ownerIds()
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @param array<string, mixed> $object The raw posTransaction.
-	 * @param string|null $delegatedFrom The grantor id, or null.
-	 *
-	 * @return array<string, mixed> The order row.
-	 */
-	protected function present(array $object, ?string $delegatedFrom): array {
-		return [
-			'id' => $this->objectId(object: $object),
-			'orderNumber' => ($object['reference'] ?? $object['invoiceNumber'] ?? null),
-			'date' => ($object['confirmedAt'] ?? $object['parkedAt'] ?? null),
-			'total' => ($object['total'] ?? null),
-			'status' => ($object['status'] ?? null),
-			'delegatedFrom' => $delegatedFrom,
-		];
-	}//end present()
+    /**
+     * {@inheritDoc}
+     *
+     * @param array<string, mixed> $object        The raw posTransaction.
+     * @param string|null          $delegatedFrom The grantor id, or null.
+     *
+     * @return array<string, mixed> The order row.
+     */
+    protected function present(array $object, ?string $delegatedFrom): array
+    {
+        return [
+            'id'            => $this->objectId(object: $object),
+            'orderNumber'   => ($object['reference'] ?? $object['invoiceNumber'] ?? null),
+            'date'          => ($object['confirmedAt'] ?? $object['parkedAt'] ?? null),
+            'total'         => ($object['total'] ?? null),
+            'status'        => ($object['status'] ?? null),
+            'delegatedFrom' => $delegatedFrom,
+        ];
+    }//end present()
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @param array<string, mixed> $object The raw posTransaction.
-	 *
-	 * @return string The sort key.
-	 */
-	protected function sortKey(array $object): string {
-		return (string)($object['confirmedAt'] ?? $object['parkedAt'] ?? '');
-	}//end sortKey()
+    /**
+     * {@inheritDoc}
+     *
+     * @param array<string, mixed> $object The raw posTransaction.
+     *
+     * @return string The sort key.
+     */
+    protected function sortKey(array $object): string
+    {
+        return (string) ($object['confirmedAt'] ?? $object['parkedAt'] ?? '');
+    }//end sortKey()
 }//end class

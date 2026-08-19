@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 
+import { createApp, h, markRaw } from 'vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
+import { setActivePinia } from 'pinia'
+import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
+import { loadState } from '@nextcloud/initial-state'
+import axios from '@nextcloud/axios'
 import {
 	buildManifest,
 	CnPageRenderer,
@@ -10,10 +17,6 @@ import {
 	registerIcons,
 	registerTranslations,
 } from '@conduction/nextcloud-vue'
-// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
-import { registerBuiltinIntegrations } from '@conduction/nextcloud-vue/integrations/builtin/index.js'
-// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
-import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations/builtin/leaves.js'
 // Import the integration-registry functions from their DEFINITION modules
 // (0 re-export hops) rather than the barrel: pipelinq splits the library into
 // a separate `shared-nc-vue.js` chunk and its 9 entry points have no shared
@@ -21,28 +24,22 @@ import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations
 // `undefined` across the chunk boundary (components, used directly, are fine).
 // eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
 import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
-import axios from '@nextcloud/axios'
-import { loadState } from '@nextcloud/initial-state'
-import {
-	loadTranslations,
-	translatePlural as n,
-	translate as t,
-} from '@nextcloud/l10n'
-import { generateUrl } from '@nextcloud/router'
-import { setActivePinia } from 'pinia'
-import { createApp, h, markRaw } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
+// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
+import { registerBuiltinIntegrations } from '@conduction/nextcloud-vue/integrations/builtin/index.js'
+// eslint-disable-next-line import/no-unresolved -- subpath resolved by webpack alias
+import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations/builtin/leaves.js'
+import pinia from './pinia.js'
 import App from './App.vue'
-import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
-import pinia from './pinia.js'
 import registry from './registry.js'
+import appIcons from './icons.js'
 import { initializeStores, registerObjectTypes } from './store/store.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 // eslint-disable-next-line import/no-unresolved -- CSS subpath resolved by webpack alias, not ESLint's resolver
 import '@conduction/nextcloud-vue/css/index.css'
+
 // gridstack is a REQUIRED peer of @conduction/nextcloud-vue that no consumer
 // declares, and the stylesheet is the silent half of it. Pipelinq ships
 // `type: "dashboard"` manifest pages, and gridstack v12 sizes every grid item
@@ -51,6 +48,7 @@ import '@conduction/nextcloud-vue/css/index.css'
 // NO console error: heights still look correct (those come from JS) while the
 // widths silently collapse. nc-vue's own `css/index.css` does not bundle it.
 import 'gridstack/dist/gridstack.min.css'
+
 import './assets/app.css'
 
 // Register the app's schema icons + lib translations once at bootstrap.
@@ -81,10 +79,7 @@ try {
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
 	// eslint-disable-next-line no-console
-	console.warn(
-		'[pipelinq] registerTranslations failed; falling back to English',
-		e,
-	)
+	console.warn('[pipelinq] registerTranslations failed; falling back to English', e)
 }
 
 // Fire-and-forget translation load. Some Nextcloud installs (including
@@ -95,17 +90,11 @@ try {
 // its callback meant boot silently failed when translations couldn't
 // load. Strings just fall back to their English source on miss; boot
 // MUST not depend on this resolving.
-/**
- *
- */
 function tryLoadTranslations() {
 	try {
 		const result = loadTranslations('pipelinq', () => {})
 		if (result && typeof result.then === 'function') {
-			result.then(
-				() => {},
-				() => {},
-			)
+			result.then(() => {}, () => {})
 		}
 	} catch {
 		// no-op
@@ -147,13 +136,8 @@ function seedDashboardAppConfig(manifest) {
 }
 
 const fragmentCtx = require.context('./manifest.d/', false, /\.json$/)
-const fragments = fragmentCtx
-	.keys()
-	.sort()
-	.map((key) => fragmentCtx(key))
-const mergedManifest = seedDashboardAppConfig(
-	buildManifest(bundledManifest, fragments, menuLayout),
-)
+const fragments = fragmentCtx.keys().sort().map((key) => fragmentCtx(key))
+const mergedManifest = seedDashboardAppConfig(buildManifest(bundledManifest, fragments, menuLayout))
 
 /**
  * Build the vue-router config from the manifest. Each manifest page
@@ -212,29 +196,15 @@ async function loadPersistedOverrides(manifest) {
 			generateUrl('/apps/openbuild/api/app-overrides/pipelinq'),
 			{ timeout: 8000 },
 		)
-		if (
-			data !== null
-			&& typeof data === 'object'
-			&& !Array.isArray(data)
-			&& Object.keys(data).length > 0
-		) {
-			const { manifest: merged, orphanedDeltaPaths } = mergeManifestDelta(
-				manifest,
-				data,
-			)
+		if (data !== null && typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length > 0) {
+			const { manifest: merged, orphanedDeltaPaths } = mergeManifestDelta(manifest, data)
 			if (orphanedDeltaPaths.length > 0) {
-				console.warn(
-					'[pipelinq] Manifest override has orphaned delta paths (base changed since the edit):',
-					orphanedDeltaPaths,
-				)
+				console.warn('[pipelinq] Manifest override has orphaned delta paths (base changed since the edit):', orphanedDeltaPaths)
 			}
 			return merged
 		}
 	} catch (error) {
-		console.warn(
-			'[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.',
-			error,
-		)
+		console.warn('[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.', error)
 	}
 	return manifest
 }
@@ -276,12 +246,11 @@ function mountApp(manifest) {
 	// nesting is silently ignored, which would leave CnAppRoot with no manifest
 	// at all (blank shell, no error).
 	const app = createApp({
-		render: () =>
-			h(App, {
-				manifest,
-				registry: registryProp,
-				pageTypes: pageTypesProp,
-			}),
+		render: () => h(App, {
+			manifest,
+			registry: registryProp,
+			pageTypes: pageTypesProp,
+		}),
 	})
 	// Vue 3 has no global `Vue.mixin` / `Vue.use`; both are per-app-instance.
 	// Pinia is a normal plugin now — `PiniaVuePlugin` was Vue-2 only.

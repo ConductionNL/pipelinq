@@ -27,16 +27,12 @@
 		</header>
 
 		<nav class="performance-dashboard__tabs" role="tablist">
-			<button
-				v-for="tab in tabs"
+			<button v-for="tab in tabs"
 				:key="tab.id"
 				type="button"
 				role="tab"
 				:aria-selected="activeTab === tab.id"
-				class="performance-dashboard__tab"
-				:class="[
-					{ 'performance-dashboard__tab--active': activeTab === tab.id },
-				]"
+				:class="['performance-dashboard__tab', { 'performance-dashboard__tab--active': activeTab === tab.id }]"
 				@click="activeTab = tab.id">
 				{{ tab.label }}
 			</button>
@@ -46,25 +42,20 @@
 
 		<section v-else class="performance-dashboard__body">
 			<!-- Tab 1: Overview -->
-			<section
-				v-if="activeTab === 'overview'"
-				class="performance-dashboard__pane">
+			<section v-if="activeTab === 'overview'" class="performance-dashboard__pane">
 				<p v-if="blasts.length === 0" class="performance-dashboard__empty">
 					{{ t('pipelinq', 'No blasts yet.') }}
 				</p>
 				<table v-else class="performance-dashboard__table">
 					<thead>
 						<tr>
-							<th
-								v-for="col in overviewColumns"
+							<th v-for="col in overviewColumns"
 								:key="col.key"
 								scope="col"
 								:aria-sort="ariaSort(col.key)"
 								@click="onSort(col.key)">
 								{{ col.label }}
-								<span
-									v-if="overviewSortKey === col.key"
-									class="performance-dashboard__sort-indicator">
+								<span v-if="overviewSortKey === col.key" class="performance-dashboard__sort-indicator">
 									{{ overviewSortOrder === 'asc' ? '▲' : '▼' }}
 								</span>
 							</th>
@@ -75,9 +66,7 @@
 							<td>{{ row.name }}</td>
 							<td>{{ row.segmentName }}</td>
 							<td>
-								<CnStatusBadge
-									:status="row.status"
-									:label="statusLabel(row.status)" />
+								<CnStatusBadge :status="row.status" :label="statusLabel(row.status)" />
 							</td>
 							<td class="performance-dashboard__num">
 								{{ row.sent }}
@@ -104,8 +93,7 @@
 				<p v-if="abPairs.length === 0" class="performance-dashboard__empty">
 					{{ t('pipelinq', 'No A/B variant blasts found.') }}
 				</p>
-				<article
-					v-for="pair in abPairs"
+				<article v-for="pair in abPairs"
 					:key="pair.id"
 					class="performance-dashboard__ab-card">
 					<h3 class="performance-dashboard__ab-title">
@@ -147,32 +135,14 @@
 							</dl>
 						</div>
 					</div>
-					<p
-						v-if="!pair.eligible"
-						class="performance-dashboard__ab-pending"
-						role="status">
-						{{
-							t(
-								'pipelinq',
-								'Results not yet available (need >=500 delivered per variant and 24h since send).',
-							)
-						}}
-						<br />
-						{{
-							t(
-								'pipelinq',
-								'Currently A: {a} delivered, B: {b} delivered.',
-								{ a: pair.a.delivered, b: pair.b.delivered },
-							)
-						}}
+					<p v-if="!pair.eligible" class="performance-dashboard__ab-pending" role="status">
+						{{ t('pipelinq', 'Results not yet available (need >=500 delivered per variant and 24h since send).') }}
+						<br>
+						{{ t('pipelinq', 'Currently A: {a} delivered, B: {b} delivered.', { a: pair.a.delivered, b: pair.b.delivered }) }}
 					</p>
-					<p
-						v-else
+					<p v-else
 						class="performance-dashboard__ab-verdict"
-						:class="{
-							'performance-dashboard__ab-verdict--significant':
-								pair.significant,
-						}"
+						:class="{ 'performance-dashboard__ab-verdict--significant': pair.significant }"
 						role="status">
 						<strong>{{ pair.verdictLabel }}</strong>
 						<span class="performance-dashboard__ab-pvalue">
@@ -183,12 +153,8 @@
 			</section>
 
 			<!-- Tab 3: Attribution -->
-			<section
-				v-if="activeTab === 'attribution'"
-				class="performance-dashboard__pane">
-				<p
-					v-if="attributionRows.length === 0"
-					class="performance-dashboard__empty">
+			<section v-if="activeTab === 'attribution'" class="performance-dashboard__pane">
+				<p v-if="attributionRows.length === 0" class="performance-dashboard__empty">
 					{{ t('pipelinq', 'No attribution data yet.') }}
 				</p>
 				<table v-else class="performance-dashboard__table">
@@ -227,10 +193,10 @@
 </template>
 
 <script>
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 const OVERVIEW_LIMIT = 50
 const AB_MIN_DELIVERED = 500
@@ -244,7 +210,6 @@ export default {
 		NcLoadingIcon,
 		CnStatusBadge,
 	},
-
 	data() {
 		return {
 			loading: true,
@@ -257,7 +222,6 @@ export default {
 			overviewSortOrder: 'desc',
 		}
 	},
-
 	computed: {
 		/**
 		 * Tab definitions surfaced in the role="tablist" nav.
@@ -271,7 +235,6 @@ export default {
 				{ id: 'attribution', label: this.t('pipelinq', 'Attribution') },
 			]
 		},
-
 		/**
 		 * Column descriptors for the Overview tab, keyed by the row property
 		 * they sort against.
@@ -290,7 +253,6 @@ export default {
 				{ key: 'unsubscribed', label: this.t('pipelinq', 'Unsubscribed') },
 			]
 		},
-
 		/**
 		 * Flattened Overview rows derived from the loaded blast list — pre-
 		 * computes the open / click rates so the column sort can compare
@@ -306,8 +268,8 @@ export default {
 				const opened = totals.opened || 0
 				const clicked = totals.clicked || 0
 				const unsubscribed = totals.unsubscribed || 0
-				const openRate = delivered > 0 ? opened / delivered : 0
-				const clickRate = delivered > 0 ? clicked / delivered : 0
+				const openRate = delivered > 0 ? (opened / delivered) : 0
+				const clickRate = delivered > 0 ? (clicked / delivered) : 0
 				return {
 					id: blast.id || blast.uuid || blast.slug,
 					name: blast.name || '—',
@@ -323,7 +285,6 @@ export default {
 				}
 			})
 		},
-
 		/**
 		 * Overview rows after applying the column sort selected by the user.
 		 *
@@ -343,7 +304,6 @@ export default {
 			})
 			return rows
 		},
-
 		/**
 		 * Group parent A/B blasts with their variant children and roll up
 		 * the chi-square verdict for each pair.
@@ -364,9 +324,7 @@ export default {
 			}
 			const pairs = []
 			for (const [parentId, variants] of Object.entries(byParent)) {
-				const parent = this.blasts.find(
-					(b) => (b.id || b.uuid || b.slug) === parentId,
-				)
+				const parent = this.blasts.find((b) => (b.id || b.uuid || b.slug) === parentId)
 				if (!parent) {
 					continue
 				}
@@ -376,11 +334,9 @@ export default {
 			return pairs
 		},
 	},
-
 	mounted() {
 		this.fetchAll()
 	},
-
 	methods: {
 		/**
 		 * Load blasts, segments (for name lookup) and per-blast attribution
@@ -391,17 +347,18 @@ export default {
 			this.loading = true
 			this.error = ''
 			try {
-				await Promise.all([this.fetchBlasts(), this.fetchSegments()])
+				await Promise.all([
+					this.fetchBlasts(),
+					this.fetchSegments(),
+				])
 				await this.fetchAttributionRows()
 			} catch (e) {
-				this.error =
-					e?.response?.data?.error
+				this.error = e?.response?.data?.error
 					|| this.t('pipelinq', 'Could not load performance data.')
 			} finally {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * GET /api/blasts — list recent blasts (limit OVERVIEW_LIMIT).
 		 *
@@ -409,12 +366,9 @@ export default {
 		 */
 		async fetchBlasts() {
 			const url = generateUrl('/apps/pipelinq/api/blasts')
-			const { data } = await axios.get(url, {
-				params: { limit: OVERVIEW_LIMIT },
-			})
+			const { data } = await axios.get(url, { params: { limit: OVERVIEW_LIMIT } })
 			this.blasts = data?.data || data?.results || []
 		},
-
 		/**
 		 * GET /api/segments — build an id->name lookup for the Overview
 		 * Segment column. Failure is non-fatal: rows fall back to '—'.
@@ -438,7 +392,6 @@ export default {
 				this.segments = {}
 			}
 		},
-
 		/**
 		 * For every loaded blast, fetch its attribution summary from
 		 * `GET /api/blasts/:id/attribution` and collect non-zero rows into
@@ -454,14 +407,9 @@ export default {
 					continue
 				}
 				try {
-					const url = generateUrl(
-						`/apps/pipelinq/api/blasts/${id}/attribution`,
-					)
+					const url = generateUrl(`/apps/pipelinq/api/blasts/${id}/attribution`)
 					const { data } = await axios.get(url)
-					if (
-						(data?.dealCount || 0) > 0
-						|| (data?.attributedValue || 0) > 0
-					) {
+					if ((data?.dealCount || 0) > 0 || (data?.attributedValue || 0) > 0) {
 						rows.push({
 							id,
 							name: blast.name || id,
@@ -475,7 +423,6 @@ export default {
 			}
 			this.attributionRows = rows
 		},
-
 		/**
 		 * Look up a human-readable segment name; fall back to em-dash.
 		 *
@@ -488,7 +435,6 @@ export default {
 			}
 			return this.segments[segmentId] || segmentId
 		},
-
 		/**
 		 * Toggle sort column / direction on the Overview table.
 		 *
@@ -496,14 +442,12 @@ export default {
 		 */
 		onSort(key) {
 			if (this.overviewSortKey === key) {
-				this.overviewSortOrder =
-					this.overviewSortOrder === 'asc' ? 'desc' : 'asc'
+				this.overviewSortOrder = this.overviewSortOrder === 'asc' ? 'desc' : 'asc'
 			} else {
 				this.overviewSortKey = key
 				this.overviewSortOrder = 'desc'
 			}
 		},
-
 		/**
 		 * ARIA sort attribute for a column header.
 		 *
@@ -516,7 +460,6 @@ export default {
 			}
 			return this.overviewSortOrder === 'asc' ? 'ascending' : 'descending'
 		},
-
 		/**
 		 * Build the per-blast A/B comparison + significance verdict.
 		 *
@@ -529,24 +472,17 @@ export default {
 			const b = this.variantStats(variant)
 			const elapsedMsA = this.elapsedSinceSend(parent)
 			const elapsedMsB = this.elapsedSinceSend(variant)
-			const elapsedOk =
-				elapsedMsA >= AB_MIN_ELAPSED_MS && elapsedMsB >= AB_MIN_ELAPSED_MS
-			const nOk =
-				a.delivered >= AB_MIN_DELIVERED && b.delivered >= AB_MIN_DELIVERED
+			const elapsedOk = (elapsedMsA >= AB_MIN_ELAPSED_MS) && (elapsedMsB >= AB_MIN_ELAPSED_MS)
+			const nOk = a.delivered >= AB_MIN_DELIVERED && b.delivered >= AB_MIN_DELIVERED
 			const eligible = elapsedOk && nOk
 			let pValue = null
 			let significant = false
 			if (eligible) {
-				pValue = this.chiSquarePValue(
-					a.clicked,
-					a.delivered,
-					b.clicked,
-					b.delivered,
-				)
+				pValue = this.chiSquarePValue(a.clicked, a.delivered, b.clicked, b.delivered)
 				significant = pValue !== null && pValue < P_VALUE_ALPHA
 			}
 			return {
-				id: parent.id || parent.uuid || parent.slug,
+				id: (parent.id || parent.uuid || parent.slug),
 				parentName: parent.name || '—',
 				a,
 				b,
@@ -556,7 +492,6 @@ export default {
 				verdictLabel: this.abVerdictLabel(a, b, pValue, significant),
 			}
 		},
-
 		/**
 		 * Extract delivered / clicked / clickRate for one variant.
 		 *
@@ -570,10 +505,9 @@ export default {
 			return {
 				delivered,
 				clicked,
-				clickRate: delivered > 0 ? clicked / delivered : 0,
+				clickRate: delivered > 0 ? (clicked / delivered) : 0,
 			}
 		},
-
 		/**
 		 * Milliseconds since `sentAt` (or `scheduledFor` as fallback) for a
 		 * blast. Returns 0 when no timestamp is set.
@@ -592,7 +526,6 @@ export default {
 			}
 			return Math.max(0, Date.now() - date.getTime())
 		},
-
 		/**
 		 * Pearson chi-square p-value on a 2x2 contingency table of clicks
 		 * vs non-clicks for the two variants. Uses an analytical 1-degree
@@ -622,22 +555,17 @@ export default {
 			const expectedANon = (rowA * colNon) / total
 			const expectedBClicks = (rowB * colClicks) / total
 			const expectedBNon = (rowB * colNon) / total
-			if (
-				expectedAClicks <= 0
-				|| expectedANon <= 0
-				|| expectedBClicks <= 0
-				|| expectedBNon <= 0
-			) {
+			if (expectedAClicks <= 0 || expectedANon <= 0 || expectedBClicks <= 0 || expectedBNon <= 0) {
 				return null
 			}
-			const chi =
-				(aClicks - expectedAClicks) ** 2 / expectedAClicks
-				+ (aNon - expectedANon) ** 2 / expectedANon
-				+ (bClicks - expectedBClicks) ** 2 / expectedBClicks
-				+ (bNon - expectedBNon) ** 2 / expectedBNon
+			const chi = (
+				((aClicks - expectedAClicks) ** 2) / expectedAClicks
+				+ ((aNon - expectedANon) ** 2) / expectedANon
+				+ ((bClicks - expectedBClicks) ** 2) / expectedBClicks
+				+ ((bNon - expectedBNon) ** 2) / expectedBNon
+			)
 			return this.erfc(Math.sqrt(chi / 2))
 		},
-
 		/**
 		 * Abramowitz-Stegun 7.1.26 approximation of erfc(x). Good to
 		 * about 1.5e-7 over x >= 0, more than enough for an A/B verdict.
@@ -650,17 +578,14 @@ export default {
 				return 2 - this.erfc(-x)
 			}
 			const t = 1 / (1 + 0.3275911 * x)
-			const y =
-				1
-				- ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t
-					- 0.284496736)
-					* t
-					+ 0.254829592)
-					* t
-					* Math.exp(-x * x)
+			const y = 1 - (((((
+				1.061405429 * t
+				- 1.453152027) * t)
+				+ 1.421413741) * t
+				- 0.284496736) * t
+				+ 0.254829592) * t * Math.exp(-x * x)
 			return 1 - y
 		},
-
 		/**
 		 * Human-readable A/B verdict line.
 		 *
@@ -681,23 +606,10 @@ export default {
 			// "<" in "p<0.05" to "&lt;" since it reads as a malformed tag;
 			// these are trusted static labels with no markup/vars.
 			if (b.clickRate > a.clickRate) {
-				return this.t(
-					'pipelinq',
-					'Variant B significantly higher (p<0.05).',
-					undefined,
-					undefined,
-					{ sanitize: false },
-				)
+				return this.t('pipelinq', 'Variant B significantly higher (p<0.05).', undefined, undefined, { sanitize: false })
 			}
-			return this.t(
-				'pipelinq',
-				'Variant A significantly higher (p<0.05).',
-				undefined,
-				undefined,
-				{ sanitize: false },
-			)
+			return this.t('pipelinq', 'Variant A significantly higher (p<0.05).', undefined, undefined, { sanitize: false })
 		},
-
 		/**
 		 * Format a 0..1 fraction as a percentage with one decimal place.
 		 *
@@ -710,7 +622,6 @@ export default {
 			}
 			return `${(fraction * 100).toFixed(1)}%`
 		},
-
 		/**
 		 * Format a EUR amount as a localised thousand-separated string.
 		 *
@@ -723,7 +634,6 @@ export default {
 			}
 			return `EUR ${value.toLocaleString('nl-NL', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 		},
-
 		/**
 		 * Localised status badge label for the Overview status column.
 		 *

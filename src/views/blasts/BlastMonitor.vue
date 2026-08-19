@@ -7,8 +7,7 @@
 				{{ t('pipelinq', 'Back to blasts') }}
 			</NcButton>
 			<h2>{{ blast?.name || t('pipelinq', 'Blast') }}</h2>
-			<CnStatusBadge
-				v-if="blast?.status"
+			<CnStatusBadge v-if="blast?.status"
 				:status="blast.status"
 				:label="statusLabel(blast.status)" />
 		</header>
@@ -17,15 +16,12 @@
 
 		<section v-else class="blast-monitor__body">
 			<div class="blast-monitor__progress">
-				<div
-					class="blast-monitor__bar"
+				<div class="blast-monitor__bar"
 					role="progressbar"
 					:aria-valuenow="progressPercent"
 					aria-valuemin="0"
 					aria-valuemax="100">
-					<div
-						class="blast-monitor__bar-fill"
-						:style="{ width: progressPercent + '%' }" />
+					<div class="blast-monitor__bar-fill" :style="{ width: progressPercent + '%' }" />
 				</div>
 				<p class="blast-monitor__progress-meta">
 					<strong>{{ progressPercent }}%</strong>
@@ -37,10 +33,7 @@
 			</div>
 
 			<div class="blast-monitor__totals">
-				<div
-					v-for="key in totalsKeys"
-					:key="key"
-					class="blast-monitor__total">
+				<div v-for="key in totalsKeys" :key="key" class="blast-monitor__total">
 					<span class="blast-monitor__total-label">
 						{{ totalLabel(key) }}
 					</span>
@@ -53,17 +46,12 @@
 			<section class="blast-monitor__timeline">
 				<h3>{{ t('pipelinq', 'Recent events') }}</h3>
 				<ul v-if="timeline.length > 0">
-					<li
-						v-for="event in timeline"
-						:key="event.id || event.timestamp + event.status">
+					<li v-for="event in timeline" :key="event.id || event.timestamp + event.status">
 						<time>{{ formatTime(event.timestamp) }}</time>
-						<CnStatusBadge
-							:status="event.status"
+						<CnStatusBadge :status="event.status"
 							:label="statusLabel(event.status)" />
 						<span class="blast-monitor__event-target">
-							{{
-								event.email || event.phone || event.contactId || '—'
-							}}
+							{{ event.email || event.phone || event.contactId || '—' }}
 						</span>
 					</li>
 				</ul>
@@ -74,11 +62,7 @@
 
 			<footer v-if="canCancel" class="blast-monitor__footer">
 				<NcButton variant="error" :disabled="cancelling" @click="cancel">
-					{{
-						cancelling
-							? t('pipelinq', 'Cancelling…')
-							: t('pipelinq', 'Cancel send')
-					}}
+					{{ cancelling ? t('pipelinq', 'Cancelling…') : t('pipelinq', 'Cancel send') }}
 				</NcButton>
 			</footer>
 			<p v-if="cancelError" class="blast-monitor__error" role="alert">
@@ -89,10 +73,10 @@
 </template>
 
 <script>
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 const POLL_INTERVAL_MS = 2000
 const TIMELINE_MAX = 50
@@ -115,14 +99,12 @@ export default {
 		NcLoadingIcon,
 		CnStatusBadge,
 	},
-
 	props: {
 		id: {
 			type: String,
 			required: true,
 		},
 	},
-
 	data() {
 		return {
 			loading: true,
@@ -134,7 +116,6 @@ export default {
 			startedAt: null,
 		}
 	},
-
 	computed: {
 		/**
 		 * Convenience accessor for the blast's totals counter map.
@@ -144,7 +125,6 @@ export default {
 		totals() {
 			return this.blast?.totals || {}
 		},
-
 		/**
 		 * Stable ordering for the totals grid.
 		 *
@@ -153,19 +133,16 @@ export default {
 		totalsKeys() {
 			return TOTALS_KEYS
 		},
-
 		/**
 		 * Sum of all non-queued totals — used for progress %.
 		 *
 		 * @return {number}
 		 */
 		processed() {
-			return TOTALS_KEYS.filter((k) => k !== 'queued').reduce(
-				(sum, key) => sum + (this.totals[key] || 0),
-				0,
-			)
+			return TOTALS_KEYS
+				.filter((k) => k !== 'queued')
+				.reduce((sum, key) => sum + (this.totals[key] || 0), 0)
 		},
-
 		/**
 		 * Total audience that has ever been in the queue (queued + processed).
 		 *
@@ -174,7 +151,6 @@ export default {
 		audienceTotal() {
 			return this.processed + (this.totals.queued || 0)
 		},
-
 		/**
 		 * Send progress as a percentage 0-100.
 		 *
@@ -184,23 +160,15 @@ export default {
 			if (this.audienceTotal <= 0) {
 				return 0
 			}
-			return Math.min(
-				100,
-				Math.round((this.processed / this.audienceTotal) * 100),
-			)
+			return Math.min(100, Math.round((this.processed / this.audienceTotal) * 100))
 		},
-
 		/**
 		 * Heuristic ETA label computed from polling rate.
 		 *
 		 * @return {string}
 		 */
 		etaLabel() {
-			if (
-				!this.startedAt
-				|| this.audienceTotal === 0
-				|| this.processed === 0
-			) {
+			if (!this.startedAt || this.audienceTotal === 0 || this.processed === 0) {
 				return ''
 			}
 			const elapsedMs = Date.now() - this.startedAt
@@ -209,34 +177,25 @@ export default {
 			if (!isFinite(remaining) || remaining < 1) {
 				return ''
 			}
-			return this.t('pipelinq', 'ETA: ~{seconds}s remaining', {
-				seconds: Math.round(remaining),
-			})
+			return this.t('pipelinq', 'ETA: ~{seconds}s remaining', { seconds: Math.round(remaining) })
 		},
-
 		/**
 		 * Whether the blast is currently in a status that allows cancel.
 		 *
 		 * @return {boolean}
 		 */
 		canCancel() {
-			return (
-				this.blast?.status === 'sending'
-				|| this.blast?.status === 'scheduled'
-			)
+			return this.blast?.status === 'sending' || this.blast?.status === 'scheduled'
 		},
 	},
-
 	mounted() {
 		this.startedAt = Date.now()
 		this.fetchOnce()
 		this.startPolling()
 	},
-
 	beforeUnmount() {
 		this.stopPolling()
 	},
-
 	methods: {
 		/**
 		 * Start the 2-second polling loop.
@@ -247,7 +206,6 @@ export default {
 			}
 			this.pollHandle = setInterval(() => this.fetchOnce(), POLL_INTERVAL_MS)
 		},
-
 		/**
 		 * Stop the polling loop and clear the handle.
 		 */
@@ -257,7 +215,6 @@ export default {
 				this.pollHandle = null
 			}
 		},
-
 		/**
 		 * Fetch the latest blast + its recent deliveries; update totals/timeline.
 		 *
@@ -265,12 +222,9 @@ export default {
 		 */
 		async fetchOnce() {
 			try {
-				const { data } = await axios.get(
-					generateUrl(`/apps/pipelinq/api/blasts/${this.id}`),
-				)
+				const { data } = await axios.get(generateUrl(`/apps/pipelinq/api/blasts/${this.id}`))
 				this.blast = data?.data || data
-				const deliveries =
-					this.blast?.recentDeliveries
+				const deliveries = this.blast?.recentDeliveries
 					|| this.blast?.deliveries
 					|| (await this.fetchDeliveries())
 				this.timeline = this.buildTimeline(deliveries)
@@ -283,7 +237,6 @@ export default {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * Fallback fetch of deliveries when the blast payload does not embed them.
 		 *
@@ -291,18 +244,13 @@ export default {
 		 */
 		async fetchDeliveries() {
 			try {
-				const url = generateUrl(
-					`/apps/pipelinq/api/blasts/${this.id}/deliveries`,
-				)
-				const { data } = await axios.get(url, {
-					params: { limit: TIMELINE_MAX },
-				})
+				const url = generateUrl(`/apps/pipelinq/api/blasts/${this.id}/deliveries`)
+				const { data } = await axios.get(url, { params: { limit: TIMELINE_MAX } })
 				return data?.data || data?.results || data || []
 			} catch (_e) {
 				return []
 			}
 		},
-
 		/**
 		 * Build the reverse-chronological event timeline (capped at 50 entries).
 		 *
@@ -320,20 +268,12 @@ export default {
 					email: d.email,
 					phone: d.phone,
 					status: d.status || 'queued',
-					timestamp:
-						d.clickedAt
-						|| d.openedAt
-						|| d.bouncedAt
-						|| d.deliveredAt
-						|| d.sentAt
-						|| d.updatedAt
-						|| d.createdAt,
+					timestamp: d.clickedAt || d.openedAt || d.bouncedAt || d.deliveredAt || d.sentAt || d.updatedAt || d.createdAt,
 				}))
 				.filter((d) => d.timestamp)
 				.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
 				.slice(0, TIMELINE_MAX)
 		},
-
 		/**
 		 * POST the cancel endpoint and reflect a cancelling status locally.
 		 *
@@ -343,22 +283,18 @@ export default {
 			this.cancelling = true
 			this.cancelError = ''
 			try {
-				await axios.post(
-					generateUrl(`/apps/pipelinq/api/blasts/${this.id}/cancel`),
-				)
+				await axios.post(generateUrl(`/apps/pipelinq/api/blasts/${this.id}/cancel`))
 				if (this.blast) {
 					this.blast = { ...this.blast, status: 'cancelling' }
 				}
 				// Keep polling so the actual status update lands.
 			} catch (e) {
-				this.cancelError =
-					e?.response?.data?.error
+				this.cancelError = e?.response?.data?.error
 					|| this.t('pipelinq', 'Could not cancel this blast.')
 			} finally {
 				this.cancelling = false
 			}
 		},
-
 		/**
 		 * Localised label for a status badge.
 		 *
@@ -385,7 +321,6 @@ export default {
 			}
 			return map[status] || status
 		},
-
 		/**
 		 * Localised label for a totals key (re-uses status labels).
 		 *
@@ -395,7 +330,6 @@ export default {
 		totalLabel(key) {
 			return this.statusLabel(key)
 		},
-
 		/**
 		 * Pretty-print a timestamp for the timeline list.
 		 *

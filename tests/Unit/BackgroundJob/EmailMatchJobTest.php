@@ -41,149 +41,168 @@ use ReflectionMethod;
  * (b) accumulates counts across users, and (c) keeps going when one
  * user's run throws (calling writeStatus with a static error message).
  */
-class EmailMatchJobTest extends TestCase {
+class EmailMatchJobTest extends TestCase
+{
 
-	/**
-	 * Build a test user mock.
-	 *
-	 * @param string $uid The user id.
-	 *
-	 * @return IUser
-	 */
-	private function buildUser(string $uid): IUser {
-		$user = $this->createMock(IUser::class);
-		$user->method('getUID')->willReturn($uid);
-		return $user;
-	}//end buildUser()
 
-	/**
-	 * Build a user manager that iterates a fixed list.
-	 *
-	 * @param array<int,IUser> $users The user list.
-	 *
-	 * @return IUserManager
-	 */
-	private function buildUserManager(array $users): IUserManager {
-		$userManager = $this->createMock(IUserManager::class);
-		$userManager->method('callForAllUsers')->willReturnCallback(
-			static function (callable $cb) use ($users): void {
-				foreach ($users as $user) {
-					$cb($user);
-				}
-			}
-		);
-		return $userManager;
-	}//end buildUserManager()
+    /**
+     * Build a test user mock.
+     *
+     * @param string $uid The user id.
+     *
+     * @return IUser
+     */
+    private function buildUser(string $uid): IUser
+    {
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn($uid);
+        return $user;
 
-	/**
-	 * Invoke the protected `run` method via reflection.
-	 *
-	 * @param EmailMatchJob $job The job instance.
-	 *
-	 * @return void
-	 */
-	private function invokeRun(EmailMatchJob $job): void {
-		$reflection = new ReflectionMethod($job, 'run');
-		$reflection->setAccessible(true);
-		$reflection->invoke($job, null);
+    }//end buildUser()
 
-	}//end invokeRun()
 
-	/**
-	 * The job calls runForUser for each user.
-	 *
-	 * @return void
-	 */
-	public function testCallsRunForUserPerUser(): void {
-		$service = $this->createMock(EmailMatchService::class);
-		$service->expects($this->exactly(2))->method('runForUser')->willReturn(
-			['linked' => 1, 'scanned' => 2]
-		);
+    /**
+     * Build a user manager that iterates a fixed list.
+     *
+     * @param array<int,IUser> $users The user list.
+     *
+     * @return IUserManager
+     */
+    private function buildUserManager(array $users): IUserManager
+    {
+        $userManager = $this->createMock(IUserManager::class);
+        $userManager->method('callForAllUsers')->willReturnCallback(
+            static function (callable $cb) use ($users): void {
+                foreach ($users as $user) {
+                    $cb($user);
+                }
+            }
+        );
+        return $userManager;
 
-		$job = new EmailMatchJob(
-			time: $this->buildTimeFactory(),
-			emailMatchService: $service,
-			userManager: $this->buildUserManager(
-				[$this->buildUser('alice'), $this->buildUser('bob')]
-			),
-			logger: $this->createMock(LoggerInterface::class),
-		);
+    }//end buildUserManager()
 
-		$this->invokeRun(job: $job);
 
-	}//end testCallsRunForUserPerUser()
+    /**
+     * Invoke the protected `run` method via reflection.
+     *
+     * @param EmailMatchJob $job The job instance.
+     *
+     * @return void
+     */
+    private function invokeRun(EmailMatchJob $job): void
+    {
+        $reflection = new ReflectionMethod($job, 'run');
+        $reflection->setAccessible(true);
+        $reflection->invoke($job, null);
 
-	/**
-	 * Per-user failures do not stop the loop and trigger a status write.
-	 *
-	 * @return void
-	 */
-	public function testContinuesOnPerUserFailure(): void {
-		$service = $this->createMock(EmailMatchService::class);
-		$service->method('runForUser')->willReturnCallback(
-			static function (string $userId): array {
-				if ($userId === 'alice') {
-					throw new \RuntimeException('boom');
-				}
+    }//end invokeRun()
 
-				return ['linked' => 3, 'scanned' => 4];
-			}
-		);
 
-		$service->expects($this->once())
-			->method('writeStatus')
-			->with(
-				$this->equalTo('alice'),
-				$this->equalTo(0),
-				$this->equalTo(0),
-				$this->equalTo('Match run failed')
-			);
+    /**
+     * The job calls runForUser for each user.
+     *
+     * @return void
+     */
+    public function testCallsRunForUserPerUser(): void
+    {
+        $service = $this->createMock(EmailMatchService::class);
+        $service->expects($this->exactly(2))->method('runForUser')->willReturn(
+            ['linked' => 1, 'scanned' => 2]
+        );
 
-		$job = new EmailMatchJob(
-			time: $this->buildTimeFactory(),
-			emailMatchService: $service,
-			userManager: $this->buildUserManager(
-				[$this->buildUser('alice'), $this->buildUser('bob')]
-			),
-			logger: $this->createMock(LoggerInterface::class),
-		);
+        $job = new EmailMatchJob(
+            time: $this->buildTimeFactory(),
+            emailMatchService: $service,
+            userManager: $this->buildUserManager(
+                [$this->buildUser('alice'), $this->buildUser('bob')]
+            ),
+            logger: $this->createMock(LoggerInterface::class),
+        );
 
-		$this->invokeRun(job: $job);
+        $this->invokeRun(job: $job);
 
-	}//end testContinuesOnPerUserFailure()
+    }//end testCallsRunForUserPerUser()
 
-	/**
-	 * The job logs the aggregated link / scan / error counts.
-	 *
-	 * @return void
-	 */
-	public function testLogsAggregateSummary(): void {
-		$service = $this->createMock(EmailMatchService::class);
-		$service->method('runForUser')->willReturn(['linked' => 2, 'scanned' => 5]);
 
-		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->atLeastOnce())->method('info');
+    /**
+     * Per-user failures do not stop the loop and trigger a status write.
+     *
+     * @return void
+     */
+    public function testContinuesOnPerUserFailure(): void
+    {
+        $service = $this->createMock(EmailMatchService::class);
+        $service->method('runForUser')->willReturnCallback(
+            static function (string $userId): array {
+                if ($userId === 'alice') {
+                    throw new \RuntimeException('boom');
+                }
 
-		$job = new EmailMatchJob(
-			time: $this->buildTimeFactory(),
-			emailMatchService: $service,
-			userManager: $this->buildUserManager([$this->buildUser('alice')]),
-			logger: $logger,
-		);
+                return ['linked' => 3, 'scanned' => 4];
+            }
+        );
 
-		$this->invokeRun(job: $job);
+        $service->expects($this->once())
+            ->method('writeStatus')
+            ->with(
+                $this->equalTo('alice'),
+                $this->equalTo(0),
+                $this->equalTo(0),
+                $this->equalTo('Match run failed')
+            );
 
-	}//end testLogsAggregateSummary()
+        $job = new EmailMatchJob(
+            time: $this->buildTimeFactory(),
+            emailMatchService: $service,
+            userManager: $this->buildUserManager(
+                [$this->buildUser('alice'), $this->buildUser('bob')]
+            ),
+            logger: $this->createMock(LoggerInterface::class),
+        );
 
-	/**
-	 * Build a stub ITimeFactory.
-	 *
-	 * @return ITimeFactory
-	 */
-	private function buildTimeFactory(): ITimeFactory {
-		$time = $this->createMock(ITimeFactory::class);
-		$time->method('getTime')->willReturn(time());
-		return $time;
-	}//end buildTimeFactory()
+        $this->invokeRun(job: $job);
+
+    }//end testContinuesOnPerUserFailure()
+
+
+    /**
+     * The job logs the aggregated link / scan / error counts.
+     *
+     * @return void
+     */
+    public function testLogsAggregateSummary(): void
+    {
+        $service = $this->createMock(EmailMatchService::class);
+        $service->method('runForUser')->willReturn(['linked' => 2, 'scanned' => 5]);
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->atLeastOnce())->method('info');
+
+        $job = new EmailMatchJob(
+            time: $this->buildTimeFactory(),
+            emailMatchService: $service,
+            userManager: $this->buildUserManager([$this->buildUser('alice')]),
+            logger: $logger,
+        );
+
+        $this->invokeRun(job: $job);
+
+    }//end testLogsAggregateSummary()
+
+
+    /**
+     * Build a stub ITimeFactory.
+     *
+     * @return ITimeFactory
+     */
+    private function buildTimeFactory(): ITimeFactory
+    {
+        $time = $this->createMock(ITimeFactory::class);
+        $time->method('getTime')->willReturn(time());
+        return $time;
+
+    }//end buildTimeFactory()
+
 
 }//end class

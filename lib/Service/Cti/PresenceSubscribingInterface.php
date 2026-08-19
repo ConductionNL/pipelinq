@@ -46,16 +46,17 @@ namespace OCA\Pipelinq\Service\Cti;
  * Implemented by CTI adapters whose platform requires an explicit presence
  * subscription before it will deliver presence events.
  */
-interface PresenceSubscribingInterface {
-	/**
-	 * Subscribe to presence updates for the given user / extension.
-	 *
-	 * @param string $userId NC user UID.
-	 * @param string $extension Agent extension.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/cti-screenpop-adapter/spec.md
-	 */
-	public function subscribeToPresence(string $userId, string $extension): void;
+interface PresenceSubscribingInterface
+{
+    /**
+     * Subscribe to presence updates for the given user / extension.
+     *
+     * @param string $userId    NC user UID.
+     * @param string $extension Agent extension.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/cti-screenpop-adapter/spec.md
+     */
+    public function subscribeToPresence(string $userId, string $extension): void;
 }//end interface

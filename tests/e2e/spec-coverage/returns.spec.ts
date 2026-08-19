@@ -13,18 +13,10 @@
  * "not registered" error no longer fires on this page.
  */
 import { test, expect } from '@playwright/test'
-import {
-	openApp,
-	navClick,
-	assertNoHardError,
-	trackPipelinqErrors,
-	openActionsOverflow,
-} from '../helpers/pipelinq'
+import { openApp, navClick, assertNoHardError, trackPipelinqErrors, openActionsOverflow } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/pos-refund-return/spec.md#returns-page
-test('Returns: navigates from sidebar and mounts the index chrome', async ({
-	page,
-}) => {
+test('Returns: navigates from sidebar and mounts the index chrome', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Returns', /\/pos\/refunds/)
 
@@ -33,9 +25,7 @@ test('Returns: navigates from sidebar and mounts the index chrome', async ({
 })
 
 // @e2e openspec/specs/pos-refund-return/spec.md#returns-add-item
-test('Returns: the create entry point is reachable from the Actions menu', async ({
-	page,
-}) => {
+test('Returns: the create entry point is reachable from the Actions menu', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Returns', /\/pos\/refunds/)
 
@@ -56,15 +46,11 @@ test('Returns: the create entry point is reachable from the Actions menu', async
 	// decided to be wrong, the fix is `showAdd: true` in the manifest and this
 	// test should go back to asserting `cn-cta-primary`.
 	await openActionsOverflow(page)
-	await expect(page.getByText('Nieuwe retour').first()).toBeVisible({
-		timeout: 10000,
-	})
+	await expect(page.getByText('Nieuwe retour').first()).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/pos-refund-return/spec.md#returns-list
-test('Returns: refund list data surface renders without a registration error', async ({
-	page,
-}) => {
+test('Returns: refund list data surface renders without a registration error', async ({ page }) => {
 	// store.js slug-fallback registration (commit a53bc8c5) registers "posRefund"
 	// against the canonical OR schema slug when the app-config numeric id is empty,
 	// so the collection fetch resolves: the index renders its schema-driven data
@@ -86,9 +72,7 @@ test('Returns: refund list data surface renders without a registration error', a
 	// component actually implements.
 	await expect(content.getByRole('button', { name: 'Table' })).toBeVisible()
 	await expect(
-		content
-			.locator('table, .cn-data-table')
-			.first()
+		content.locator('table, .cn-data-table').first()
 			.or(content.getByText(/No items found/i).first()),
 	).toBeVisible()
 	expect(errors().filter((e) => /posRefund.*not registered/i.test(e))).toEqual([])

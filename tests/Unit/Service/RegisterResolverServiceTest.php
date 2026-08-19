@@ -30,116 +30,123 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for RegisterResolverService.
  */
-class RegisterResolverServiceTest extends TestCase {
-	/**
-	 * The app config mock.
-	 *
-	 * @var IAppConfig&MockObject
-	 */
-	private IAppConfig $appConfig;
+class RegisterResolverServiceTest extends TestCase
+{
+    /**
+     * The app config mock.
+     *
+     * @var IAppConfig&MockObject
+     */
+    private IAppConfig $appConfig;
 
-	/**
-	 * Set up the test.
-	 *
-	 * @return void
-	 */
-	protected function setUp(): void {
-		$this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
-	}//end setUp()
+    /**
+     * Set up the test.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        $this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
+    }//end setUp()
 
-	/**
-	 * Test that resolve returns the configured register id.
-	 *
-	 * @return void
-	 */
-	public function testResolveReturnsConfiguredRegisterId(): void {
-		$this->appConfig
-			->method('getValueString')
-			->with(Application::APP_ID, 'register', '')
-			->willReturn('reg-42');
+    /**
+     * Test that resolve returns the configured register id.
+     *
+     * @return void
+     */
+    public function testResolveReturnsConfiguredRegisterId(): void
+    {
+        $this->appConfig
+            ->method('getValueString')
+            ->with(Application::APP_ID, 'register', '')
+            ->willReturn('reg-42');
 
-		$service = new RegisterResolverService(appConfig: $this->appConfig);
+        $service = new RegisterResolverService(appConfig: $this->appConfig);
 
-		$this->assertSame('reg-42', $service->resolve('queue'));
-	}//end testResolveReturnsConfiguredRegisterId()
+        $this->assertSame('reg-42', $service->resolve('queue'));
+    }//end testResolveReturnsConfiguredRegisterId()
 
-	/**
-	 * Test that resolve returns an empty string fallback when unconfigured.
-	 *
-	 * @return void
-	 */
-	public function testResolveReturnsEmptyFallbackWhenUnconfigured(): void {
-		$this->appConfig
-			->method('getValueString')
-			->with(Application::APP_ID, 'register', '')
-			->willReturn('');
+    /**
+     * Test that resolve returns an empty string fallback when unconfigured.
+     *
+     * @return void
+     */
+    public function testResolveReturnsEmptyFallbackWhenUnconfigured(): void
+    {
+        $this->appConfig
+            ->method('getValueString')
+            ->with(Application::APP_ID, 'register', '')
+            ->willReturn('');
 
-		$service = new RegisterResolverService(appConfig: $this->appConfig);
+        $service = new RegisterResolverService(appConfig: $this->appConfig);
 
-		$this->assertSame('', $service->resolve('contact'));
-	}//end testResolveReturnsEmptyFallbackWhenUnconfigured()
+        $this->assertSame('', $service->resolve('contact'));
+    }//end testResolveReturnsEmptyFallbackWhenUnconfigured()
 
-	/**
-	 * Test that every logical name resolves to the same instance-scoped register id.
-	 *
-	 * Behaviour parity: the prior code read the same `register` app-config key
-	 * regardless of the consumer, so the resolver must too.
-	 *
-	 * @return void
-	 */
-	public function testAllLogicalNamesResolveToSameRegister(): void {
-		$this->appConfig
-			->method('getValueString')
-			->with(Application::APP_ID, 'register', '')
-			->willReturn('reg-shared');
+    /**
+     * Test that every logical name resolves to the same instance-scoped register id.
+     *
+     * Behaviour parity: the prior code read the same `register` app-config key
+     * regardless of the consumer, so the resolver must too.
+     *
+     * @return void
+     */
+    public function testAllLogicalNamesResolveToSameRegister(): void
+    {
+        $this->appConfig
+            ->method('getValueString')
+            ->with(Application::APP_ID, 'register', '')
+            ->willReturn('reg-shared');
 
-		$service = new RegisterResolverService(appConfig: $this->appConfig);
+        $service = new RegisterResolverService(appConfig: $this->appConfig);
 
-		$this->assertSame('reg-shared', $service->resolve('queue'));
-		$this->assertSame('reg-shared', $service->resolve('contact'));
-	}//end testAllLogicalNamesResolveToSameRegister()
+        $this->assertSame('reg-shared', $service->resolve('queue'));
+        $this->assertSame('reg-shared', $service->resolve('contact'));
+    }//end testAllLogicalNamesResolveToSameRegister()
 
-	/**
-	 * Test that resolve memoises the result per request (reads app-config once per name).
-	 *
-	 * @return void
-	 */
-	public function testResolveMemoisesPerLogicalName(): void {
-		// The same logical name must hit app-config exactly once, even across
-		// repeated resolve() calls within a request.
-		$this->appConfig
-			->expects($this->once())
-			->method('getValueString')
-			->with(Application::APP_ID, 'register', '')
-			->willReturn('reg-cached');
+    /**
+     * Test that resolve memoises the result per request (reads app-config once per name).
+     *
+     * @return void
+     */
+    public function testResolveMemoisesPerLogicalName(): void
+    {
+        // The same logical name must hit app-config exactly once, even across
+        // repeated resolve() calls within a request.
+        $this->appConfig
+            ->expects($this->once())
+            ->method('getValueString')
+            ->with(Application::APP_ID, 'register', '')
+            ->willReturn('reg-cached');
 
-		$service = new RegisterResolverService(appConfig: $this->appConfig);
+        $service = new RegisterResolverService(appConfig: $this->appConfig);
 
-		$first = $service->resolve('queue');
-		$second = $service->resolve('queue');
+        $first  = $service->resolve('queue');
+        $second = $service->resolve('queue');
 
-		$this->assertSame('reg-cached', $first);
-		$this->assertSame($first, $second);
-	}//end testResolveMemoisesPerLogicalName()
+        $this->assertSame('reg-cached', $first);
+        $this->assertSame($first, $second);
+    }//end testResolveMemoisesPerLogicalName()
 
-	/**
-	 * Test that flush() clears the cache so the next resolve re-reads app-config.
-	 *
-	 * @return void
-	 */
-	public function testFlushClearsCache(): void {
-		$this->appConfig
-			->expects($this->exactly(2))
-			->method('getValueString')
-			->with(Application::APP_ID, 'register', '')
-			->willReturn('reg-refresh');
+    /**
+     * Test that flush() clears the cache so the next resolve re-reads app-config.
+     *
+     * @return void
+     */
+    public function testFlushClearsCache(): void
+    {
+        $this->appConfig
+            ->expects($this->exactly(2))
+            ->method('getValueString')
+            ->with(Application::APP_ID, 'register', '')
+            ->willReturn('reg-refresh');
 
-		$service = new RegisterResolverService(appConfig: $this->appConfig);
+        $service = new RegisterResolverService(appConfig: $this->appConfig);
 
-		$service->resolve('queue');
-		$service->flush();
-		$second = $service->resolve('queue');
+        $service->resolve('queue');
+        $service->flush();
+        $second = $service->resolve('queue');
 
-		$this->assertSame('reg-refresh', $second);
-	}//end testFlushClearsCache()
+        $this->assertSame('reg-refresh', $second);
+    }//end testFlushClearsCache()
 }//end class

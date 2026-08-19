@@ -1,44 +1,33 @@
 <template>
 	<div class="find-client-widget">
 		<div class="search-bar">
-			<NcTextField
-				v-model="searchQuery"
+			<NcTextField v-model="searchQuery"
 				:placeholder="t('pipelinq', 'Search clients...')"
 				:label="t('pipelinq', 'Search')" />
-			<NcButton
-				variant="secondary"
-				@click="showNewClientForm = !showNewClientForm">
+			<NcButton variant="secondary" @click="showNewClientForm = !showNewClientForm">
 				{{ t('pipelinq', 'New client') }}
 			</NcButton>
 		</div>
 
 		<!-- New client mini-form -->
 		<div v-if="showNewClientForm" class="new-client-form">
-			<NcTextField
-				v-model="newClient.name"
+			<NcTextField v-model="newClient.name"
 				:label="t('pipelinq', 'Name')"
 				:placeholder="t('pipelinq', 'Client name (required)')"
 				:error="newClientSubmitted && !newClient.name" />
-			<NcSelect
-				v-model="newClient.type"
+			<NcSelect v-model="newClient.type"
 				:options="typeOptions"
-				:inputLabel="t('pipelinq', 'Type')"
+				:input-label="t('pipelinq', 'Type')"
 				:placeholder="t('pipelinq', 'Type')"
-				inputId="new-client-type" />
-			<NcTextField
-				v-model="newClient.email"
+				input-id="new-client-type" />
+			<NcTextField v-model="newClient.email"
 				:label="t('pipelinq', 'Email')"
 				:placeholder="t('pipelinq', 'Email address')"
 				type="email" />
-			<NcButton
-				variant="primary"
+			<NcButton variant="primary"
 				:disabled="creatingClient"
 				@click="createClient">
-				{{
-					creatingClient
-						? t('pipelinq', 'Creating...')
-						: t('pipelinq', 'Add client')
-				}}
+				{{ creatingClient ? t('pipelinq', 'Creating...') : t('pipelinq', 'Add client') }}
 			</NcButton>
 		</div>
 
@@ -49,66 +38,50 @@
 
 		<!-- Client results -->
 		<div v-else-if="filteredClients.length > 0" class="client-results">
-			<div
-				v-for="client in filteredClients"
+			<div v-for="client in filteredClients"
 				:key="client.id"
 				class="client-row">
-				<div
-					class="client-info"
+				<div class="client-info"
 					role="button"
 					tabindex="0"
-					:aria-label="
-						t('pipelinq', 'Open client {name}', { name: client.name })
-					"
+					:aria-label="t('pipelinq', 'Open client {name}', { name: client.name })"
 					@click="viewClient(client)"
 					@keydown.enter.prevent="viewClient(client)"
 					@keydown.space.prevent="viewClient(client)">
 					<span class="client-icon">
-						<AccountGroup
-							v-if="client.type === 'organization'"
-							:size="18" />
+						<AccountGroup v-if="client.type === 'organization'" :size="18" />
 						<Account v-else :size="18" />
 					</span>
 					<div class="client-details">
-						<span class="client-name">{{
-							toText(client.name) || t('pipelinq', 'Unnamed')
-						}}</span>
+						<span class="client-name">{{ toText(client.name) || t('pipelinq', 'Unnamed') }}</span>
 						<span class="client-contact">
-							{{
-								[toText(client.email), toText(client.phone)]
-									.filter(Boolean)
-									.join(' · ')
-							}}
+							{{ [toText(client.email), toText(client.phone)].filter(Boolean).join(' · ') }}
 						</span>
 					</div>
 				</div>
 				<div class="client-actions">
-					<NcButton
-						variant="tertiary"
+					<NcButton variant="tertiary"
 						:aria-label="t('pipelinq', 'View client')"
 						@click="viewClient(client)">
 						<template #icon>
 							<Eye :size="18" />
 						</template>
 					</NcButton>
-					<NcButton
-						variant="tertiary"
+					<NcButton variant="tertiary"
 						:aria-label="t('pipelinq', 'Create request for this client')"
 						@click="createRequestForClient(client)">
 						<template #icon>
 							<FileDocumentOutline :size="18" />
 						</template>
 					</NcButton>
-					<NcButton
-						variant="tertiary"
+					<NcButton variant="tertiary"
 						:aria-label="t('pipelinq', 'Create lead for this client')"
 						@click="createLeadForClient(client)">
 						<template #icon>
 							<TrendingUp :size="18" />
 						</template>
 					</NcButton>
-					<NcButton
-						v-if="client.email"
+					<NcButton v-if="client.email"
 						variant="tertiary"
 						:aria-label="t('pipelinq', 'Copy email')"
 						@click="copyEmail(client)">
@@ -123,12 +96,9 @@
 		<!-- Empty state -->
 		<div v-else class="empty-state">
 			<p>
-				{{
-					searchQuery
-						? t('pipelinq', 'No clients found for "{query}"', {
-								query: searchQuery,
-							})
-						: t('pipelinq', 'No clients found')
+				{{ searchQuery
+					? t('pipelinq', 'No clients found for "{query}"', { query: searchQuery })
+					: t('pipelinq', 'No clients found')
 				}}
 			</p>
 		</div>
@@ -136,28 +106,19 @@
 		<!-- Inline request/lead creation -->
 		<div v-if="actionClient" class="inline-action">
 			<NcNoteCard type="info">
-				{{
-					actionType === 'request'
-						? t('pipelinq', 'Creating request for {name}', {
-								name: toText(actionClient.name),
-							})
-						: t('pipelinq', 'Creating lead for {name}', {
-								name: toText(actionClient.name),
-							})
+				{{ actionType === 'request'
+					? t('pipelinq', 'Creating request for {name}', { name: toText(actionClient.name) })
+					: t('pipelinq', 'Creating lead for {name}', { name: toText(actionClient.name) })
 				}}
 			</NcNoteCard>
-			<NcTextField
-				v-model="actionTitle"
+			<NcTextField v-model="actionTitle"
 				:label="t('pipelinq', 'Title')"
-				:placeholder="
-					actionType === 'request'
-						? t('pipelinq', 'Request title')
-						: t('pipelinq', 'Lead title')
-				"
+				:placeholder="actionType === 'request'
+					? t('pipelinq', 'Request title')
+					: t('pipelinq', 'Lead title')"
 				@keyup.enter="submitAction" />
 			<div class="action-buttons">
-				<NcButton
-					variant="primary"
+				<NcButton variant="primary"
 					:disabled="!actionTitle || actionSubmitting"
 					@click="submitAction">
 					{{ t('pipelinq', 'Create') }}
@@ -176,22 +137,16 @@
 </template>
 
 <script>
+import { NcTextField, NcButton, NcSelect, NcNoteCard, NcLoadingIcon } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
-import {
-	NcButton,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcSelect,
-	NcTextField,
-} from '@nextcloud/vue'
 import Account from 'vue-material-design-icons/Account.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
-import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
-import { resolveObjectType } from '../../services/pipelineUtils.js'
+import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
 import { initializeStores } from '../../store/store.js'
+import { resolveObjectType } from '../../services/pipelineUtils.js'
 import { toText } from '../../utils/widgetText.js'
 
 export default {
@@ -209,14 +164,12 @@ export default {
 		TrendingUp,
 		ContentCopy,
 	},
-
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
-
 	data() {
 		return {
 			loading: false,
@@ -231,7 +184,6 @@ export default {
 				{ id: 'person', label: t('pipelinq', 'Person') },
 				{ id: 'organization', label: t('pipelinq', 'Organization') },
 			],
-
 			actionClient: null,
 			actionType: '',
 			actionTitle: '',
@@ -239,7 +191,6 @@ export default {
 			copyFeedback: false,
 		}
 	},
-
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-40
@@ -247,25 +198,17 @@ export default {
 		filteredClients() {
 			if (!this.searchQuery) return this.clients.slice(0, 20)
 			const query = this.searchQuery.toLowerCase()
-			return this.clients
-				.filter((client) => {
-					const name = toText(client.name).toLowerCase()
-					const email = toText(client.email).toLowerCase()
-					const phone = toText(client.phone).toLowerCase()
-					return (
-						name.includes(query)
-						|| email.includes(query)
-						|| phone.includes(query)
-					)
-				})
-				.slice(0, 20)
+			return this.clients.filter((client) => {
+				const name = toText(client.name).toLowerCase()
+				const email = toText(client.email).toLowerCase()
+				const phone = toText(client.phone).toLowerCase()
+				return name.includes(query) || email.includes(query) || phone.includes(query)
+			}).slice(0, 20)
 		},
 	},
-
 	async mounted() {
 		await this.fetchData()
 	},
-
 	methods: {
 		toText,
 		/**
@@ -286,7 +229,6 @@ export default {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * @param type
 		 * @param params
@@ -302,13 +244,8 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = generateUrl(
-				'/apps/openregister/api/objects/'
-					+ typeConfig.register
-					+ '/'
-					+ typeConfig.schema
-					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
-			)
+			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
+				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
 
 			const response = await fetch(url, {
 				headers: {
@@ -322,7 +259,6 @@ export default {
 			const data = await response.json()
 			return data.results || data || []
 		},
-
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
@@ -330,7 +266,6 @@ export default {
 		viewClient(client) {
 			window.location.href = generateUrl('/apps/pipelinq/clients/' + client.id)
 		},
-
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-37
@@ -340,7 +275,6 @@ export default {
 			this.actionType = 'request'
 			this.actionTitle = ''
 		},
-
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-36
@@ -350,7 +284,6 @@ export default {
 			this.actionType = 'lead'
 			this.actionTitle = ''
 		},
-
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-34
@@ -359,14 +292,11 @@ export default {
 			try {
 				await navigator.clipboard.writeText(client.email)
 				this.copyFeedback = true
-				setTimeout(() => {
-					this.copyFeedback = false
-				}, 2000)
+				setTimeout(() => { this.copyFeedback = false }, 2000)
 			} catch (err) {
 				console.error('Failed to copy email:', err)
 			}
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-33
 		 */
@@ -375,7 +305,6 @@ export default {
 			this.actionType = ''
 			this.actionTitle = ''
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-41
 		 */
@@ -409,12 +338,8 @@ export default {
 					body.status = 'open'
 				}
 
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema,
-				)
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -432,16 +357,13 @@ export default {
 				// A request is a `ticket` with ticketType=request
 				// (unify-ticket-supertype) and opens on the unified /tickets page.
 				const path = type === 'request' ? 'tickets' : 'leads'
-				window.location.href = generateUrl(
-					'/apps/pipelinq/' + path + '/' + id,
-				)
+				window.location.href = generateUrl('/apps/pipelinq/' + path + '/' + id)
 			} catch (err) {
 				console.error('Action submit error:', err)
 			} finally {
 				this.actionSubmitting = false
 			}
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-35
 		 */
@@ -456,21 +378,16 @@ export default {
 
 				const body = {
 					name: this.newClient.name,
-					type:
-						typeof this.newClient.type === 'object'
-							? this.newClient.type.id
-							: this.newClient.type || 'person',
+					type: typeof this.newClient.type === 'object'
+						? this.newClient.type.id
+						: (this.newClient.type || 'person'),
 				}
 				if (this.newClient.email) {
 					body.email = this.newClient.email
 				}
 
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema,
-				)
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',

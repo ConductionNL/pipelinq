@@ -39,10 +39,7 @@ export function formatCurrency(value, currency = 'EUR') {
 	if (isNaN(num)) return currency + ' 0'
 
 	const locale = getUserLocale()
-	const formatted = num.toLocaleString(locale, {
-		minimumFractionDigits: 0,
-		maximumFractionDigits: 2,
-	})
+	const formatted = num.toLocaleString(locale, { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 	return currency + ' ' + formatted
 }
 

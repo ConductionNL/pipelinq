@@ -20,8 +20,8 @@
 
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
-import { formatEur } from '../../../services/commercialFormat.js'
 import { getAnalyticsTrend } from '../../../services/dashboardData.js'
+import { formatEur } from '../../../services/commercialFormat.js'
 import analyticsPeriodMixin from './analyticsPeriodMixin.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -36,7 +36,6 @@ export default {
 	components: {
 		CnChartWidget,
 	},
-
 	mixins: [analyticsPeriodMixin, dashboardRefreshMixin],
 	data() {
 		return {
@@ -44,32 +43,27 @@ export default {
 			trend: { series: [] },
 		}
 	},
-
 	computed: {
 		/** @return {boolean} Whether there is nothing to plot. */
 		isEmpty() {
 			return (this.trend?.series || []).length === 0
 		},
-
 		/** @return {Array<string>} Category labels. */
 		chartLabels() {
-			return (this.trend?.series || []).map((pt) => pt.date)
+			return (this.trend?.series || []).map(pt => pt.date)
 		},
-
 		/** @return {Array<number>} Per-category revenue values (donut series). */
 		chartValues() {
-			return (this.trend?.series || []).map((pt) => pt.value)
+			return (this.trend?.series || []).map(pt => pt.value)
 		},
-
 		/** @return {object} Donut options with euro tooltip. */
 		chartOptions() {
 			return {
 				legend: { position: 'bottom' },
-				tooltip: { y: { formatter: (value) => formatEur(value, 2) } },
+				tooltip: { y: { formatter: value => formatEur(value, 2) } },
 			}
 		},
 	},
-
 	methods: {
 		/**
 		 * @spec openspec/specs/commercial-dashboard/spec.md
@@ -77,10 +71,7 @@ export default {
 		async load() {
 			this.error = null
 			try {
-				this.trend = (await getAnalyticsTrend(
-					'revenue-by-product-category',
-					this.period,
-				)) || { series: [] }
+				this.trend = await getAnalyticsTrend('revenue-by-product-category', this.period) || { series: [] }
 			} catch (err) {
 				console.error('RevenueByCategoryChartWidget fetch error:', err)
 				this.error = this.t('pipelinq', 'Could not load analytics data.')

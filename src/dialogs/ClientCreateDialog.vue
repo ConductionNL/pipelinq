@@ -7,9 +7,9 @@
 		@closing="$emit('close')">
 		<ClientForm
 			ref="form"
-			:showActions="false"
+			:show-actions="false"
 			@save="onSave"
-			@update:valid="(v) => (valid = v)" />
+			@update:valid="v => (valid = v)" />
 		<template #actions>
 			<NcButton data-testid="client-create-cancel" @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
@@ -26,8 +26,8 @@
 </template>
 
 <script>
-import { showError } from '@nextcloud/dialogs'
 import { NcButton, NcDialog } from '@nextcloud/vue'
+import { showError } from '@nextcloud/dialogs'
 import ClientForm from '../views/clients/ClientForm.vue'
 import { createWithContact } from '../services/contactSyncApi.js'
 
@@ -38,7 +38,6 @@ export default {
 		NcDialog,
 		ClientForm,
 	},
-
 	emits: ['created', 'close'],
 	data() {
 		return {
@@ -46,7 +45,6 @@ export default {
 			saving: false,
 		}
 	},
-
 	methods: {
 		/**
 		 * Trigger the form's own validate-then-emit flow; @save fires onSave.
@@ -54,7 +52,6 @@ export default {
 		submit() {
 			this.$refs.form.onSave()
 		},
-
 		/**
 		 * Contact-FIRST create: the `client` schema marks `contactsUid` REQUIRED
 		 * (the authoritative identity is the Nextcloud addressbook contact, never

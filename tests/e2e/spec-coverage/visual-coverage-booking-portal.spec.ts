@@ -74,9 +74,7 @@ async function openPortalRoute(page: Page, hash: string): Promise<void> {
 
 	// Positive mount signal: PortalApp's root and its <main> landmark.
 	await expect(page.locator('.portal-app')).toHaveCount(1, { timeout: 20000 })
-	await expect(page.locator('main#portal-main-content')).toBeVisible({
-		timeout: 15000,
-	})
+	await expect(page.locator('main#portal-main-content')).toBeVisible({ timeout: 15000 })
 
 	// A SURVIVING HASH IS THE ACCESS PROOF. `installPortalGuard()` rewrites the
 	// route to `/login` for anything without `meta.public`, so a hash that is
@@ -90,9 +88,7 @@ async function openPortalRoute(page: Page, hash: string): Promise<void> {
 }
 
 // ── src/views/portal/BookingPortal.vue — route `/book/:serviceSlug` ───────────
-test('BookingPortal: /book/:serviceSlug mounts src/views/portal/BookingPortal.vue', async ({
-	page,
-}) => {
+test('BookingPortal: /book/:serviceSlug mounts src/views/portal/BookingPortal.vue', async ({ page }) => {
 	await openPortalRoute(page, `/book/${ABSENT_SERVICE_SLUG}`)
 
 	const main = page.locator('main#portal-main-content')
@@ -103,23 +99,18 @@ test('BookingPortal: /book/:serviceSlug mounts src/views/portal/BookingPortal.vu
 	// above is fixed, the only element it renders at all. It is asserted with
 	// `toHaveText` because a skip link is positioned off-screen until focused,
 	// so `toBeVisible` would be testing the CSS, not the render.
-	await expect(main.locator('.booking-portal .booking-skip-link')).toHaveText(
-		'Skip to booking form',
-	)
+	await expect(main.locator('.booking-portal .booking-skip-link'))
+		.toHaveText('Skip to booking form')
 	// The login form must NOT be what we are looking at.
 	await expect(page.locator('#portal-email')).toHaveCount(0)
 })
 
 // ── src/views/portal/BookingConfirmationPage.vue — `/booking-confirmation/:id` ─
-test('BookingConfirmationPage: /booking-confirmation/:bookingId mounts src/views/portal/BookingConfirmationPage.vue', async ({
-	page,
-}) => {
+test('BookingConfirmationPage: /booking-confirmation/:bookingId mounts src/views/portal/BookingConfirmationPage.vue', async ({ page }) => {
 	await openPortalRoute(page, `/booking-confirmation/${ABSENT_BOOKING_ID}`)
 
 	const main = page.locator('main#portal-main-content')
-	await expect(main.locator('.booking-confirmation')).toBeVisible({
-		timeout: 15000,
-	})
+	await expect(main.locator('.booking-confirmation')).toBeVisible({ timeout: 15000 })
 	// Not the login page — proves the public route resolved to this component.
 	await expect(page.locator('#portal-email')).toHaveCount(0)
 

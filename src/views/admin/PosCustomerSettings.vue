@@ -11,12 +11,7 @@
 <template>
 	<NcSettingsSection
 		:name="t('pipelinq', 'POS customer lookup')"
-		:description="
-			t(
-				'pipelinq',
-				'Configure how cashiers search for customers, how much history is shown at checkout, and how marketing consent is synced to the linked contact.',
-			)
-		">
+		:description="t('pipelinq', 'Configure how cashiers search for customers, how much history is shown at checkout, and how marketing consent is synced to the linked contact.')">
 		<NcLoadingIcon v-if="loading" :size="24" />
 
 		<div v-else class="pos-customer-settings">
@@ -26,7 +21,7 @@
 					<input
 						type="checkbox"
 						:checked="form.customerSearchFields.includes(field.id)"
-						@change="toggleField(field.id, $event.target.checked)" />
+						@change="toggleField(field.id, $event.target.checked)">
 					{{ field.label }}
 				</label>
 			</fieldset>
@@ -39,7 +34,7 @@
 						:value="depth"
 						:checked="form.customerHistoryDepth === depth"
 						name="history-depth"
-						@change="form.customerHistoryDepth = depth" />
+						@change="form.customerHistoryDepth = depth">
 					{{ t('pipelinq', 'Last {n} transactions', { n: depth }) }}
 				</label>
 			</fieldset>
@@ -47,24 +42,16 @@
 			<fieldset class="pos-customer-settings__group">
 				<legend>{{ t('pipelinq', 'Pipelinq integration') }}</legend>
 				<label>
-					<input v-model="form.enablePipelinqSync" type="checkbox" />
-					{{
-						t(
-							'pipelinq',
-							'Automatically sync marketing consent to the linked contact.',
-						)
-					}}
+					<input
+						v-model="form.enablePipelinqSync"
+						type="checkbox">
+					{{ t('pipelinq', 'Automatically sync marketing consent to the linked contact.') }}
 				</label>
 				<label>
 					<input
 						v-model="form.requireCustomerForOnAccount"
-						type="checkbox" />
-					{{
-						t(
-							'pipelinq',
-							'Require a customer for on-account transactions.',
-						)
-					}}
+						type="checkbox">
+					{{ t('pipelinq', 'Require a customer for on-account transactions.') }}
 				</label>
 			</fieldset>
 
@@ -90,10 +77,7 @@
 
 <script>
 import { NcButton, NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
-import {
-	getCustomerSettings,
-	updateCustomerSettings,
-} from '../../services/posCustomerApi.js'
+import { getCustomerSettings, updateCustomerSettings } from '../../services/posCustomerApi.js'
 
 const ALL_FIELDS = ['name', 'email', 'phone']
 const ALL_DEPTHS = [10, 20, 50]
@@ -105,7 +89,6 @@ export default {
 		NcLoadingIcon,
 		NcSettingsSection,
 	},
-
 	data() {
 		return {
 			form: {
@@ -114,14 +97,12 @@ export default {
 				enablePipelinqSync: true,
 				requireCustomerForOnAccount: true,
 			},
-
 			loading: false,
 			saving: false,
 			statusMessage: '',
 			statusError: false,
 		}
 	},
-
 	computed: {
 		/**
 		 * Available search-field options with labels.
@@ -135,7 +116,6 @@ export default {
 				{ id: 'phone', label: t('pipelinq', 'Phone') },
 			]
 		},
-
 		/**
 		 * Available history depths.
 		 *
@@ -145,11 +125,9 @@ export default {
 			return ALL_DEPTHS
 		},
 	},
-
 	async mounted() {
 		await this.load()
 	},
-
 	methods: {
 		/**
 		 * Load the persisted settings.
@@ -159,21 +137,14 @@ export default {
 			try {
 				const settings = await getCustomerSettings()
 				this.form = {
-					customerSearchFields:
-						Array.isArray(settings.customerSearchFields)
-						&& settings.customerSearchFields.length
-							? settings.customerSearchFields
-							: [...ALL_FIELDS],
-
-					customerHistoryDepth: ALL_DEPTHS.includes(
-						Number(settings.customerHistoryDepth),
-					)
+					customerSearchFields: Array.isArray(settings.customerSearchFields) && settings.customerSearchFields.length
+						? settings.customerSearchFields
+						: [...ALL_FIELDS],
+					customerHistoryDepth: ALL_DEPTHS.includes(Number(settings.customerHistoryDepth))
 						? Number(settings.customerHistoryDepth)
 						: 10,
-
 					enablePipelinqSync: settings.enablePipelinqSync !== false,
-					requireCustomerForOnAccount:
-						settings.requireCustomerForOnAccount !== false,
+					requireCustomerForOnAccount: settings.requireCustomerForOnAccount !== false,
 				}
 			} catch {
 				this.statusMessage = t('pipelinq', 'Could not load settings.')
@@ -182,7 +153,6 @@ export default {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * Toggle a search field on / off.
 		 *
@@ -196,18 +166,14 @@ export default {
 			} else {
 				current.delete(field)
 			}
-			this.form.customerSearchFields = ALL_FIELDS.filter((f) => current.has(f))
+			this.form.customerSearchFields = ALL_FIELDS.filter(f => current.has(f))
 		},
-
 		/**
 		 * Persist the form.
 		 */
 		async save() {
 			if (this.form.customerSearchFields.length === 0) {
-				this.statusMessage = t(
-					'pipelinq',
-					'At least one search field is required.',
-				)
+				this.statusMessage = t('pipelinq', 'At least one search field is required.')
 				this.statusError = true
 				return
 			}
@@ -219,8 +185,7 @@ export default {
 					customerSearchFields: this.form.customerSearchFields,
 					customerHistoryDepth: this.form.customerHistoryDepth,
 					enablePipelinqSync: this.form.enablePipelinqSync,
-					requireCustomerForOnAccount:
-						this.form.requireCustomerForOnAccount,
+					requireCustomerForOnAccount: this.form.requireCustomerForOnAccount,
 				})
 				this.statusMessage = t('pipelinq', 'Settings saved.')
 			} catch {

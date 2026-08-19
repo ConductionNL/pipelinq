@@ -29,16 +29,18 @@ use OCP\EventDispatcher\Event;
 /**
  * Minimal WebhookService stub.
  */
-class WebhookService {
-	/**
-	 * Dispatch a CloudEvent to registered webhook consumers.
-	 *
-	 * @param Event $_event The originating event.
-	 * @param string $eventName The webhook event name.
-	 * @param array<string, mixed> $payload The CloudEvent payload.
-	 *
-	 * @return void
-	 */
-	public function dispatchEvent(Event $_event, string $eventName, array $payload): void {
-	}//end dispatchEvent()
+class WebhookService
+{
+    /**
+     * Dispatch a CloudEvent to registered webhook consumers.
+     *
+     * @param Event                $_event    The originating event.
+     * @param string               $eventName The webhook event name.
+     * @param array<string, mixed> $payload   The CloudEvent payload.
+     *
+     * @return void
+     */
+    public function dispatchEvent(Event $_event, string $eventName, array $payload): void
+    {
+    }//end dispatchEvent()
 }//end class

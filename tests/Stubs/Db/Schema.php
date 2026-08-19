@@ -26,23 +26,24 @@ namespace OCA\OpenRegister\Db;
 /**
  * Minimal Schema stub exposing a properties map.
  */
-class Schema {
-	/**
-	 * Constructor.
-	 *
-	 * @param array<string, mixed> $properties The schema properties map.
-	 */
-	public function __construct(
-		private array $properties = [],
-	) {
-	}//end __construct()
+class Schema
+{
+    /**
+     * Constructor.
+     *
+     * @param array<string, mixed> $properties The schema properties map.
+     */
+    public function __construct(private array $properties=[])
+    {
+    }//end __construct()
 
-	/**
-	 * The schema properties (column => definition) map.
-	 *
-	 * @return array<string, mixed> The properties.
-	 */
-	public function getProperties(): array {
-		return $this->properties;
-	}//end getProperties()
+    /**
+     * The schema properties (column => definition) map.
+     *
+     * @return array<string, mixed> The properties.
+     */
+    public function getProperties(): array
+    {
+        return $this->properties;
+    }//end getProperties()
 }//end class

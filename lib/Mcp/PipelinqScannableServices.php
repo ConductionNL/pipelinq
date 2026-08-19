@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Pipelinq scannable-services opt-in (ADR-063 chain 3/3).
  *
@@ -46,20 +45,22 @@ use OCA\Pipelinq\Service\TicketService;
  * @spec openspec/specs/crm-mcp-tool-surface/spec.md
  *   (Requirement: Hand-written service tools take precedence over derived tools)
  */
-class PipelinqScannableServices implements IMcpScannableServices {
-	/**
-	 * Returns Pipelinq's `#[McpTool]`-attributed service classes.
-	 *
-	 * @return list<class-string>
-	 *
-	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md
-	 *   (Requirement: Hand-written service tools take precedence over derived tools)
-	 */
-	public function getScannableServiceClasses(): array {
-		return [
-			LeadService::class,
-			TicketService::class,
-		];
+class PipelinqScannableServices implements IMcpScannableServices
+{
+    /**
+     * Returns Pipelinq's `#[McpTool]`-attributed service classes.
+     *
+     * @return list<class-string>
+     *
+     * @spec openspec/specs/crm-mcp-tool-surface/spec.md
+     *   (Requirement: Hand-written service tools take precedence over derived tools)
+     */
+    public function getScannableServiceClasses(): array
+    {
+        return [
+            LeadService::class,
+            TicketService::class,
+        ];
 
-	}//end getScannableServiceClasses()
+    }//end getScannableServiceClasses()
 }//end class

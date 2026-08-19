@@ -13,27 +13,20 @@
   - instead of routing to a detail page and the form opens in a dialog.
   -->
 <template>
-	<NcSettingsSection
-		:name="t('pipelinq', 'POS roles')"
-		:description="
-			t(
-				'pipelinq',
-				'Permission sets a cashier can hold at the register — voiding, refunds, opening the cash drawer.',
-			)
-		">
+	<NcSettingsSection :name="t('pipelinq', 'POS roles')"
+		:description="t('pipelinq', 'Permission sets a cashier can hold at the register — voiding, refunds, opening the cash drawer.')">
 		<PosRoleList :key="reloadKey" @edit="openRole" @create="openNew" />
 
-		<PosRoleFormDialog
-			v-if="dialogOpen"
-			:roleId="editingId"
+		<PosRoleFormDialog v-if="dialogOpen"
+			:role-id="editingId"
 			@done="closeDialog" />
 	</NcSettingsSection>
 </template>
 
 <script>
 import { NcSettingsSection } from '@nextcloud/vue'
-import PosRoleFormDialog from '../../dialogs/PosRoleFormDialog.vue'
 import PosRoleList from '../pos/PosRoleList.vue'
+import PosRoleFormDialog from '../../dialogs/PosRoleFormDialog.vue'
 
 export default {
 	name: 'PosRoleManager',
@@ -42,7 +35,6 @@ export default {
 		PosRoleList,
 		PosRoleFormDialog,
 	},
-
 	data() {
 		return {
 			dialogOpen: false,
@@ -51,7 +43,6 @@ export default {
 			reloadKey: 0,
 		}
 	},
-
 	methods: {
 		/**
 		 * Open an existing role in the dialog.
@@ -63,7 +54,6 @@ export default {
 			this.editingId = id
 			this.dialogOpen = true
 		},
-
 		/**
 		 * Open an empty role form.
 		 *
@@ -73,7 +63,6 @@ export default {
 			this.editingId = ''
 			this.dialogOpen = true
 		},
-
 		/**
 		 * Close the dialog and re-render the list so a save or delete shows up.
 		 *

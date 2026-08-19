@@ -7,7 +7,10 @@
 			{{ t('pipelinq', 'No requests yet') }}
 		</div>
 		<div v-else class="status-chart">
-			<div v-for="row in rows" :key="row.key" class="status-bar-row">
+			<div
+				v-for="row in rows"
+				:key="row.key"
+				class="status-bar-row">
 				<span class="status-bar-label">{{ row.label }}</span>
 				<div class="status-bar-track">
 					<div
@@ -22,7 +25,7 @@
 
 <script>
 import { getRequests } from '../../../services/dashboardData.js'
-import { getStatusColor, getStatusLabel } from '../../../services/requestStatus.js'
+import { getStatusLabel, getStatusColor } from '../../../services/requestStatus.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
 const STATUS_KEYS = ['new', 'in_progress', 'completed', 'rejected', 'converted']
@@ -36,7 +39,6 @@ export default {
 			requests: [],
 		}
 	},
-
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-18
@@ -48,16 +50,17 @@ export default {
 				counts[s] = (counts[s] || 0) + 1
 			}
 			const max = Math.max(...Object.values(counts), 1)
-			return STATUS_KEYS.filter((s) => counts[s] > 0).map((s) => ({
-				key: s,
-				label: getStatusLabel(s),
-				color: getStatusColor(s),
-				count: counts[s],
-				pct: (counts[s] / max) * 100,
-			}))
+			return STATUS_KEYS
+				.filter(s => counts[s] > 0)
+				.map(s => ({
+					key: s,
+					label: getStatusLabel(s),
+					color: getStatusColor(s),
+					count: counts[s],
+					pct: (counts[s] / max) * 100,
+				}))
 		},
 	},
-
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-17

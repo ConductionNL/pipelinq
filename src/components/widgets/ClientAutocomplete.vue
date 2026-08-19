@@ -1,28 +1,21 @@
 <template>
 	<div class="client-autocomplete">
-		<NcTextField
-			v-model="query"
+		<NcTextField v-model="query"
 			:label="label"
 			:placeholder="placeholder"
-			@update:modelValue="onInput" />
+			@update:model-value="onInput" />
 		<div v-if="showDropdown && results.length > 0" class="autocomplete-dropdown">
-			<button
-				v-for="client in results"
+			<button v-for="client in results"
 				:key="client.id"
 				class="autocomplete-item"
 				@click="selectClient(client)">
-				<span class="autocomplete-name">{{
-					client.name || t('pipelinq', 'Unnamed')
-				}}</span>
-				<span v-if="client.email" class="autocomplete-email">{{
-					client.email
-				}}</span>
+				<span class="autocomplete-name">{{ client.name || t('pipelinq', 'Unnamed') }}</span>
+				<span v-if="client.email" class="autocomplete-email">{{ client.email }}</span>
 			</button>
 		</div>
 		<div v-if="selectedClient" class="selected-client">
 			<span class="selected-name">{{ selectedClient.name }}</span>
-			<NcButton
-				variant="tertiary"
+			<NcButton variant="tertiary"
 				:aria-label="t('pipelinq', 'Clear selection')"
 				@click="clearSelection">
 				<template #icon>
@@ -34,8 +27,8 @@
 </template>
 
 <script>
+import { NcTextField, NcButton } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcTextField } from '@nextcloud/vue'
 import Close from 'vue-material-design-icons/Close.vue'
 import { initializeStores } from '../../store/store.js'
 
@@ -46,13 +39,11 @@ export default {
 		NcButton,
 		Close,
 	},
-
 	props: {
 		value: {
 			type: Object,
 			default: null,
 		},
-
 		placeholder: {
 			type: String,
 			/**
@@ -62,7 +53,6 @@ export default {
 				return t('pipelinq', 'Search client...')
 			},
 		},
-
 		label: {
 			type: String,
 			/**
@@ -73,7 +63,6 @@ export default {
 			},
 		},
 	},
-
 	data() {
 		return {
 			query: '',
@@ -84,7 +73,6 @@ export default {
 			debounceTimer: null,
 		}
 	},
-
 	watch: {
 		/**
 		 * @param newVal
@@ -94,7 +82,6 @@ export default {
 			this.selectedClient = newVal
 		},
 	},
-
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-10
 	 */
@@ -106,7 +93,6 @@ export default {
 			console.error('ClientAutocomplete: failed to load config', err)
 		}
 	},
-
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-11
@@ -120,7 +106,6 @@ export default {
 				this.searchClients()
 			}, 300)
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-12
 		 */
@@ -137,14 +122,9 @@ export default {
 					_search: this.query,
 					_limit: '10',
 				})
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema
-						+ '?'
-						+ params.toString(),
-				)
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema
+					+ '?' + params.toString())
 
 				const response = await fetch(url, {
 					headers: {
@@ -164,7 +144,6 @@ export default {
 				this.showDropdown = false
 			}
 		},
-
 		/**
 		 * @param client
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-13
@@ -176,7 +155,6 @@ export default {
 			this.showDropdown = false
 			this.$emit('input', client)
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-8
 		 */

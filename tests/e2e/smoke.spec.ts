@@ -7,6 +7,7 @@ import { test, expect } from '@playwright/test'
 import { assertAppShellServed, nextcloudErrorPage } from './helpers/pipelinq'
 
 test.describe('Smoke', () => {
+
 	test('app loads without server errors', async ({ page }) => {
 		const response = await page.goto('/apps/pipelinq/')
 		await expect(page).toHaveURL(/.*pipelinq/)
@@ -30,9 +31,7 @@ test.describe('Smoke', () => {
 	 * app chrome for an absent app, this test goes red and the smoke test above
 	 * is known to be untrustworthy.
 	 */
-	test('the not-installed detector actually fires on an absent app', async ({
-		page,
-	}) => {
+	test('the not-installed detector actually fires on an absent app', async ({ page }) => {
 		const response = await page.goto('/apps/pipelinq-definitely-not-installed/')
 
 		// The app shell must be absent.
@@ -52,17 +51,12 @@ test.describe('Smoke', () => {
 		} catch {
 			threw = true
 		}
-		expect(
-			threw,
-			'assertAppShellServed must reject for an app that is not installed',
-		).toBe(true)
+		expect(threw, 'assertAppShellServed must reject for an app that is not installed').toBe(true)
 
 		// Belt and braces: on a stock Nextcloud this is the 404 guest chrome.
 		// Kept as a non-blocking observation of WHICH failure mode occurred.
 		// eslint-disable-next-line no-console
-		console.log(
-			`[positive control] status=${response?.status()} ncErrorChrome=${await nextcloudErrorPage(page).count()}`,
-		)
+		console.log(`[positive control] status=${response?.status()} ncErrorChrome=${await nextcloudErrorPage(page).count()}`)
 	})
 
 	/**
@@ -84,8 +78,6 @@ test.describe('Smoke', () => {
 		await page.goto('/apps/pipelinq/')
 		const nav = page.locator('#app-navigation-vue')
 		await expect(nav).toBeVisible({ timeout: 15000 })
-		await expect(nav.locator('a.app-navigation-entry-link').first()).toBeVisible(
-			{ timeout: 15000 },
-		)
+		await expect(nav.locator('a.app-navigation-entry-link').first()).toBeVisible({ timeout: 15000 })
 	})
 })

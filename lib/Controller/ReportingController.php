@@ -30,7 +30,6 @@ namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ReportingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -43,318 +42,296 @@ use OCP\IUserSession;
 /**
  * Controller for reporting endpoints and SLA configuration.
  *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Over the threshold since
- * each reporting endpoint gained its CRM authorization guard. These aggregate
- * across the whole service desk, so the guard is the point rather than an
- * inconvenience; the added complexity is one uniform early return per method.
- *
  * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
  */
-class ReportingController extends Controller {
-	/**
-	 * Constructor.
-	 *
-	 * @param IRequest $request The request.
-	 * @param ReportingService $reportingService The reporting service.
-	 * @param IUserSession $userSession The user session.
-	 */
-	public function __construct(
-		IRequest $request,
-		private ReportingService $reportingService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $accessPolicy,
-	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
-	}//end __construct()
+class ReportingController extends Controller
+{
+    /**
+     * Constructor.
+     *
+     * @param IRequest         $request          The request.
+     * @param ReportingService $reportingService The reporting service.
+     * @param IUserSession     $userSession      The user session.
+     */
+    public function __construct(
+        IRequest $request,
+        private ReportingService $reportingService,
+        private IUserSession $userSession,
+    ) {
+        parent::__construct(appName: Application::APP_ID, request: $request);
+    }//end __construct()
 
-	/**
-	 * Get KPI data for the given date range.
-	 *
-	 * @return JSONResponse Total contacts, FCR %, avg handling time, SLA compliance.
-	 *
-	 * @NoAdminRequired
-	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
-	 */
-	public function getKpis(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
+    /**
+     * Get KPI data for the given date range.
+     *
+     * @return JSONResponse Total contacts, FCR %, avg handling time, SLA compliance.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+     */
+    public function getKpis(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
 
-		// Reporting aggregates across the customer base — a CRM capability.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
+        [$from, $to] = $this->resolvePeriodRange();
 
-		[$from, $to] = $this->resolvePeriodRange();
+        if ($from === '' || $to === '') {
+            return new JSONResponse(['message' => 'Missing required parameters: from, to (or period)'], Http::STATUS_BAD_REQUEST);
+        }
 
-		if ($from === '' || $to === '') {
-			return new JSONResponse(['message' => 'Missing required parameters: from, to (or period)'], Http::STATUS_BAD_REQUEST);
-		}
+        // Validate date format.
+        if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
+            return new JSONResponse(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], Http::STATUS_BAD_REQUEST);
+        }
 
-		// Validate date format.
-		if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
-			return new JSONResponse(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], Http::STATUS_BAD_REQUEST);
-		}
+        try {
+            $kpis = $this->reportingService->getKpis($from, $to);
+            return new JSONResponse($kpis);
+        } catch (\Throwable) {
+            return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end getKpis()
 
-		try {
-			$kpis = $this->reportingService->getKpis($from, $to);
-			return new JSONResponse($kpis);
-		} catch (\Throwable) {
-			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}//end try
-	}//end getKpis()
+    /**
+     * Get channel distribution and trend data.
+     *
+     * @return JSONResponse Channel distribution counts and time-series trend.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+     */
+    public function getChannels(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
 
-	/**
-	 * Get channel distribution and trend data.
-	 *
-	 * @return JSONResponse Channel distribution counts and time-series trend.
-	 *
-	 * @NoAdminRequired
-	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
-	 */
-	public function getChannels(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
+        [$from, $to] = $this->resolvePeriodRange();
+        $granularity = $this->request->getParam('granularity', 'daily');
 
-		// Reporting aggregates across the customer base — a CRM capability.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
+        if ($from === '' || $to === '') {
+            return new JSONResponse(['message' => 'Missing required parameters: from, to (or period)'], Http::STATUS_BAD_REQUEST);
+        }
 
-		[$from, $to] = $this->resolvePeriodRange();
-		$granularity = $this->request->getParam('granularity', 'daily');
+        if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
+            return new JSONResponse(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], Http::STATUS_BAD_REQUEST);
+        }
 
-		if ($from === '' || $to === '') {
-			return new JSONResponse(['message' => 'Missing required parameters: from, to (or period)'], Http::STATUS_BAD_REQUEST);
-		}
+        try {
+            $distribution = $this->reportingService->getChannelDistribution($from, $to);
+            $trend        = $this->reportingService->getChannelTrend($from, $to, $granularity);
 
-		if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
-			return new JSONResponse(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], Http::STATUS_BAD_REQUEST);
-		}
+            return new JSONResponse(
+                    [
+                        'distribution' => $distribution,
+                        'trend'        => $trend,
+                    ]
+                    );
+        } catch (\Throwable) {
+            return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end getChannels()
 
-		try {
-			$distribution = $this->reportingService->getChannelDistribution($from, $to);
-			$trend = $this->reportingService->getChannelTrend($from, $to, $granularity);
+    /**
+     * Get per-agent performance table.
+     *
+     * @return JSONResponse Per-agent metrics: count, FCR %, avg handling time.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
+     */
+    public function getAgents(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
 
-			return new JSONResponse(
-				[
-					'distribution' => $distribution,
-					'trend' => $trend,
-				]
-			);
-		} catch (\Throwable) {
-			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}//end try
-	}//end getChannels()
+        [$from, $to] = $this->resolvePeriodRange();
 
-	/**
-	 * Get per-agent performance table.
-	 *
-	 * @return JSONResponse Per-agent metrics: count, FCR %, avg handling time.
-	 *
-	 * @NoAdminRequired
-	 *
-	 * @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-1
-	 */
-	public function getAgents(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
+        if ($from === '' || $to === '') {
+            return new JSONResponse(['message' => 'Missing required parameters: from, to (or period)'], Http::STATUS_BAD_REQUEST);
+        }
 
-		// Reporting aggregates across the customer base — a CRM capability.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
+        if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
+            return new JSONResponse(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], Http::STATUS_BAD_REQUEST);
+        }
 
-		[$from, $to] = $this->resolvePeriodRange();
+        try {
+            $agents = $this->reportingService->getAgentPerformance($from, $to);
+            return new JSONResponse(['agents' => $agents]);
+        } catch (\Throwable) {
+            return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end getAgents()
 
-		if ($from === '' || $to === '') {
-			return new JSONResponse(['message' => 'Missing required parameters: from, to (or period)'], Http::STATUS_BAD_REQUEST);
-		}
+    /**
+     * Get SLA configuration.
+     *
+     * @return JSONResponse The SLA targets.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
+     */
+    public function getSla(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
 
-		if ($this->isValidDate(date: $from) === false || $this->isValidDate(date: $to) === false) {
-			return new JSONResponse(['message' => 'Invalid date format. Use ISO 8601 (YYYY-MM-DD or full datetime)'], Http::STATUS_BAD_REQUEST);
-		}
+        try {
+            $targets = $this->reportingService->getAllSlaTargets();
+            return new JSONResponse(['targets' => $targets]);
+        } catch (\Throwable) {
+            return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end getSla()
 
-		try {
-			$agents = $this->reportingService->getAgentPerformance($from, $to);
-			return new JSONResponse(['agents' => $agents]);
-		} catch (\Throwable) {
-			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}//end try
-	}//end getAgents()
+    /**
+     * Update SLA configuration.
+     *
+     * Admin-only endpoint (requires admin settings permission).
+     *
+     * @return JSONResponse The updated SLA targets.
+     *
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
+     */
+    #[AuthorizedAdminSetting(Application::APP_ID)]
+    public function updateSla(): JSONResponse
+    {
+        try {
+            $targets = $this->request->getParam('targets', []);
 
-	/**
-	 * Get SLA configuration.
-	 *
-	 * @return JSONResponse The SLA targets.
-	 *
-	 * @NoAdminRequired
-	 *
-	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
-	 */
-	public function getSla(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
+            if (is_array($targets) === false) {
+                return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_BAD_REQUEST);
+            }
 
-		// Reporting aggregates across the customer base — a CRM capability.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
+            $skipped = 0;
+            foreach ($targets as $channel => $metrics) {
+                if (is_array($metrics) === false) {
+                    continue;
+                }
 
-		try {
-			$targets = $this->reportingService->getAllSlaTargets();
-			return new JSONResponse(['targets' => $targets]);
-		} catch (\Throwable) {
-			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}//end try
-	}//end getSla()
+                foreach ($metrics as $metric => $value) {
+                    $accepted = $this->reportingService->setSlaTarget(
+                        channel: $channel,
+                        metric: $metric,
+                        value: (string) $value,
+                    );
+                    if ($accepted === false) {
+                        $skipped++;
+                    }
+                }
+            }
 
-	/**
-	 * Update SLA configuration.
-	 *
-	 * Admin-only endpoint (requires admin settings permission).
-	 *
-	 * @return JSONResponse The updated SLA targets.
-	 *
-	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-sla-configuration
-	 */
-	#[AuthorizedAdminSetting(Application::APP_ID)]
-	public function updateSla(): JSONResponse {
-		try {
-			$targets = $this->request->getParam('targets', []);
+            if ($skipped > 0) {
+                return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_BAD_REQUEST);
+            }
 
-			if (is_array($targets) === false) {
-				return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_BAD_REQUEST);
-			}
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'targets' => $this->reportingService->getAllSlaTargets(),
+                    ]
+                    );
+        } catch (\Throwable) {
+            return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }//end try
+    }//end updateSla()
 
-			$skipped = 0;
-			foreach ($targets as $channel => $metrics) {
-				if (is_array($metrics) === false) {
-					continue;
-				}
+    /**
+     * Export reporting data as CSV.
+     *
+     * @return DataDownloadResponse|JSONResponse The CSV download or error.
+     *
+     * @NoAdminRequired
+     *
+     * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
+     */
+    public function exportCsv(): DataDownloadResponse|JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+        }
 
-				foreach ($metrics as $metric => $value) {
-					$accepted = $this->reportingService->setSlaTarget(
-						channel: $channel,
-						metric: $metric,
-						value: (string)$value,
-					);
-					if ($accepted === false) {
-						$skipped++;
-					}
-				}
-			}
+        // CSV export requires OpenRegister data integration.
+        // Returning 501 until OR contactmoment retrieval is wired.
+        return new JSONResponse(
+            ['message' => 'Export not yet implemented'],
+            Http::STATUS_NOT_IMPLEMENTED,
+        );
+    }//end exportCsv()
 
-			if ($skipped > 0) {
-				return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_BAD_REQUEST);
-			}
+    /**
+     * Resolve an explicit (from, to) pair, defaulting from a relative `period`
+     * token (today / week / month) when both bounds are empty.
+     *
+     * Mirrors the legacy dashboard's client-side semantics so a declarative
+     * type:dashboard can drive the range with a single static `period`
+     * pageFilter instead of computing dates in JS: today = [today, today],
+     * week = [Monday-of-this-week, today], month = [1st-of-month, today]. An
+     * explicit from/to (e.g. the date-range pills) always wins.
+     *
+     * @return array{0: string, 1: string} The [from, to] YYYY-MM-DD pair.
+     */
+    private function resolvePeriodRange(): array
+    {
+        $from = (string) $this->request->getParam('from', '');
+        $to   = (string) $this->request->getParam('to', '');
+        if ($from !== '' || $to !== '') {
+            return [$from, $to];
+        }
 
-			return new JSONResponse(
-				[
-					'success' => true,
-					'targets' => $this->reportingService->getAllSlaTargets(),
-				]
-			);
-		} catch (\Throwable) {
-			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
-		}//end try
-	}//end updateSla()
+        $period = (string) $this->request->getParam('period', '');
+        if ($period === '') {
+            return ['', ''];
+        }
 
-	/**
-	 * Export reporting data as CSV.
-	 *
-	 * @return DataDownloadResponse|JSONResponse The CSV download or error.
-	 *
-	 * @NoAdminRequired
-	 *
-	 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-export-and-bi-integration
-	 */
-	public function exportCsv(): DataDownloadResponse|JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-		}
+        $now = new DateTimeImmutable('now');
+        $fmt = 'Y-m-d';
+        switch ($period) {
+            case 'today':
+                $today = $now->format($fmt);
+                return [$today, $today];
+            case 'week':
+                $dayNum = (int) $now->format('N');
+                $monday = $now->modify('-'.($dayNum - 1).' days');
+                return [$monday->format($fmt), $now->format($fmt)];
+            case 'month':
+                return [$now->format('Y-m-01'), $now->format($fmt)];
+            default:
+                return ['', ''];
+        }//end switch
+    }//end resolvePeriodRange()
 
-		// Reporting aggregates across the customer base — a CRM capability.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
+    /**
+     * Validate that a string is a parseable date or datetime.
+     *
+     * @param string $date The date string to validate.
+     *
+     * @return bool True if parseable, false otherwise.
+     */
+    private function isValidDate(string $date): bool
+    {
+        if ($date === '') {
+            return false;
+        }
 
-		// CSV export requires OpenRegister data integration.
-		// Returning 501 until OR contactmoment retrieval is wired.
-		return new JSONResponse(
-			['message' => 'Export not yet implemented'],
-			Http::STATUS_NOT_IMPLEMENTED,
-		);
-	}//end exportCsv()
-
-	/**
-	 * Resolve an explicit (from, to) pair, defaulting from a relative `period`
-	 * token (today / week / month) when both bounds are empty.
-	 *
-	 * Mirrors the legacy dashboard's client-side semantics so a declarative
-	 * type:dashboard can drive the range with a single static `period`
-	 * pageFilter instead of computing dates in JS: today = [today, today],
-	 * week = [Monday-of-this-week, today], month = [1st-of-month, today]. An
-	 * explicit from/to (e.g. the date-range pills) always wins.
-	 *
-	 * @return array{0: string, 1: string} The [from, to] YYYY-MM-DD pair.
-	 */
-	private function resolvePeriodRange(): array {
-		$from = (string)$this->request->getParam('from', '');
-		$to = (string)$this->request->getParam('to', '');
-		if ($from !== '' || $to !== '') {
-			return [$from, $to];
-		}
-
-		$period = (string)$this->request->getParam('period', '');
-		if ($period === '') {
-			return ['', ''];
-		}
-
-		$now = new DateTimeImmutable('now');
-		$fmt = 'Y-m-d';
-		switch ($period) {
-			case 'today':
-				$today = $now->format($fmt);
-				return [$today, $today];
-			case 'week':
-				$dayNum = (int)$now->format('N');
-				$monday = $now->modify('-' . ($dayNum - 1) . ' days');
-				return [$monday->format($fmt), $now->format($fmt)];
-			case 'month':
-				return [$now->format('Y-m-01'), $now->format($fmt)];
-			default:
-				return ['', ''];
-		}//end switch
-	}//end resolvePeriodRange()
-
-	/**
-	 * Validate that a string is a parseable date or datetime.
-	 *
-	 * @param string $date The date string to validate.
-	 *
-	 * @return bool True if parseable, false otherwise.
-	 */
-	private function isValidDate(string $date): bool {
-		if ($date === '') {
-			return false;
-		}
-
-		try {
-			new DateTimeImmutable($date);
-			return true;
-		} catch (\Exception) {
-			return false;
-		}//end try
-	}//end isValidDate()
+        try {
+            new DateTimeImmutable($date);
+            return true;
+        } catch (\Exception) {
+            return false;
+        }//end try
+    }//end isValidDate()
 }//end class

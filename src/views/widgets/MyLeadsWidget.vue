@@ -1,17 +1,15 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<CnDataTable
-		:rows="items"
+	<CnDataTable :rows="items"
 		:columns="columns"
 		:loading="loading"
-		hideHeader
+		hide-header
 		borderless
-		:emptyText="t('pipelinq', 'No leads assigned to you')"
-		@rowClick="onShow">
+		:empty-text="t('pipelinq', 'No leads assigned to you')"
+		@row-click="onShow">
 		<template #footer>
-			<a
-				class="cn-data-table__view-all"
+			<a class="cn-data-table__view-all"
 				role="button"
 				tabindex="0"
 				@click.prevent="onViewAll"
@@ -36,14 +34,12 @@ export default {
 	components: {
 		CnDataTable,
 	},
-
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
-
 	data() {
 		return {
 			loading: false,
@@ -51,7 +47,6 @@ export default {
 			columns: LIST_COLUMNS,
 		}
 	},
-
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-45
@@ -59,11 +54,8 @@ export default {
 		items() {
 			const now = new Date()
 			return this.leads.map((lead) => {
-				const isOverdue =
-					lead.expectedCloseDate && new Date(lead.expectedCloseDate) < now
-				const priorityLabel = lead.priority
-					? t('pipelinq', lead.priority)
-					: ''
+				const isOverdue = lead.expectedCloseDate && new Date(lead.expectedCloseDate) < now
+				const priorityLabel = lead.priority ? t('pipelinq', lead.priority) : ''
 				const dueStr = lead.expectedCloseDate
 					? formatDate(lead.expectedCloseDate)
 					: ''
@@ -81,11 +73,9 @@ export default {
 			})
 		},
 	},
-
 	async mounted() {
 		await this.fetchData()
 	},
-
 	methods: {
 		/**
 		 * Navigate to the clicked lead in the same tab.
@@ -96,7 +86,6 @@ export default {
 		onShow(item) {
 			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id))
 		},
-
 		/**
 		 * Navigate to the full leads list.
 		 *
@@ -105,7 +94,6 @@ export default {
 		onViewAll() {
 			navigateTo(generateUrl('/apps/pipelinq/leads'))
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-43
 		 */
@@ -127,7 +115,6 @@ export default {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * @param {object} config The object-type registry (register/schema per type).
 		 * @param {string} type The object type to fetch.
@@ -144,13 +131,8 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = generateUrl(
-				'/apps/openregister/api/objects/'
-					+ typeConfig.register
-					+ '/'
-					+ typeConfig.schema
-					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
-			)
+			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
+				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
 
 			const response = await fetch(url, {
 				headers: {

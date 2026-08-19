@@ -118,17 +118,8 @@ export default defineConfig({
 	// and both upload steps.
 	globalTimeout: 38 * 60 * 1000,
 	reporter: [
-		[
-			'html',
-			{
-				open: 'never',
-				outputFolder: path.join(APP_ROOT, 'playwright-report'),
-			},
-		],
-		[
-			'junit',
-			{ outputFile: path.join(APP_ROOT, 'test-results', 'results.xml') },
-		],
+		['html', { open: 'never', outputFolder: path.join(APP_ROOT, 'playwright-report') }],
+		['junit', { outputFile: path.join(APP_ROOT, 'test-results', 'results.xml') }],
 		['list'],
 	],
 	outputDir: path.join(APP_ROOT, 'test-results'),

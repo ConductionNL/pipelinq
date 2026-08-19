@@ -42,15 +42,7 @@ import { test, expect, type Page } from '@playwright/test'
 import * as path from 'path'
 import * as fs from 'fs'
 
-const SHOT_ROOT = path.resolve(
-	__dirname,
-	'..',
-	'..',
-	'docs',
-	'static',
-	'screenshots',
-	'user-guide',
-)
+const SHOT_ROOT = path.resolve(__dirname, '..', '..', 'docs', 'static', 'screenshots', 'user-guide')
 const APP = '/apps/pipelinq'
 
 /**
@@ -59,20 +51,12 @@ const APP = '/apps/pipelinq'
  * Lives under `static/` so Docusaurus copies the PNG into the build
  * root — markdown image refs use `/screenshots/...` (root-absolute).
  */
-async function shoot(
-	page: Page,
-	track: 'user' | 'admin',
-	file: string,
-): Promise<void> {
+async function shoot(page: Page, track: 'user' | 'admin', file: string): Promise<void> {
 	const dir = path.join(SHOT_ROOT, track)
 	if (!fs.existsSync(dir)) {
 		fs.mkdirSync(dir, { recursive: true })
 	}
-	await page.screenshot({
-		path: path.join(dir, file),
-		fullPage: false,
-		type: 'png',
-	})
+	await page.screenshot({ path: path.join(dir, file), fullPage: false, type: 'png' })
 }
 
 /**
@@ -83,9 +67,7 @@ async function shoot(
 async function dismissOverlays(page: Page): Promise<void> {
 	const wizard = page.locator('#firstrunwizard')
 	if (await wizard.isVisible().catch(() => false)) {
-		const close = wizard
-			.getByRole('button', { name: /close|got it|finish|skip/i })
-			.first()
+		const close = wizard.getByRole('button', { name: /close|got it|finish|skip/i }).first()
 		if (await close.isVisible().catch(() => false)) {
 			await close.click().catch(() => {})
 		} else {
@@ -94,12 +76,7 @@ async function dismissOverlays(page: Page): Promise<void> {
 		await wizard.waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {})
 	}
 	const stray = page.locator('[role="dialog"]:not(#firstrunwizard)')
-	if (
-		await stray
-			.first()
-			.isVisible()
-			.catch(() => false)
-	) {
+	if (await stray.first().isVisible().catch(() => false)) {
 		await page.keyboard.press('Escape').catch(() => {})
 		await page.waitForTimeout(300)
 	}
@@ -116,12 +93,8 @@ async function go(page: Page, route: string): Promise<void> {
 		const tail = route.startsWith('/') ? route : `/${route}`
 		url = `${APP}${tail}`
 	}
-	await page.goto(url).catch(() => {
-		/* tolerate a 404 — caller decides */
-	})
-	await page.waitForLoadState('domcontentloaded').catch(() => {
-		/* tolerate a navigation that never settles */
-	})
+	await page.goto(url).catch(() => { /* tolerate a 404 — caller decides */ })
+	await page.waitForLoadState('domcontentloaded').catch(() => { /* tolerate a navigation that never settles */ })
 	await dismissOverlays(page)
 	await page.waitForTimeout(900)
 }
@@ -131,20 +104,14 @@ async function go(page: Page, route: string): Promise<void> {
  * present, screenshot it, and close it again. Returns whether the
  * dialog appeared.
  */
-async function captureCreateDialog(
-	page: Page,
-	track: 'user' | 'admin',
-	file: string,
-): Promise<boolean> {
+async function captureCreateDialog(page: Page, track: 'user' | 'admin', file: string): Promise<boolean> {
 	const addBtn = page.getByRole('button', { name: /Add Item/i }).first()
 	if (!(await addBtn.isVisible().catch(() => false))) {
 		return false
 	}
 	await addBtn.click().catch(() => {})
 	const dialog = page.locator('[role="dialog"]:not(#firstrunwizard)').first()
-	await dialog.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
-		/* no dialog */
-	})
+	await dialog.waitFor({ state: 'visible', timeout: 5000 }).catch(() => { /* no dialog */ })
 	await page.waitForTimeout(400)
 	await shoot(page, track, file)
 	const cancel = dialog.getByRole('button', { name: /Cancel/i }).first()
@@ -356,9 +323,7 @@ test.describe('docs: admin track', () => {
 		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
-		const profiles = page
-			.getByRole('heading', { name: /Agent Profiles/i })
-			.first()
+		const profiles = page.getByRole('heading', { name: /Agent Profiles/i }).first()
 		if (await profiles.isVisible().catch(() => false)) {
 			await profiles.scrollIntoViewIfNeeded().catch(() => {})
 			await page.waitForTimeout(300)
@@ -402,9 +367,7 @@ test.describe('docs: admin track', () => {
 		await page.evaluate(() => window.scrollTo(0, 0))
 		await page.waitForTimeout(200)
 		await shoot(page, 'admin', '06-overview.png')
-		const reg = page
-			.getByRole('heading', { name: /Register Configuration/i })
-			.first()
+		const reg = page.getByRole('heading', { name: /Register Configuration/i }).first()
 		if (await reg.isVisible().catch(() => false)) {
 			await reg.scrollIntoViewIfNeeded().catch(() => {})
 			await page.waitForTimeout(300)

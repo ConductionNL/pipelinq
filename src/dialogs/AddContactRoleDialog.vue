@@ -19,9 +19,7 @@
 <template>
 	<NcDialog :name="t('pipelinq', 'Add contact role')" @closing="$emit('cancel')">
 		<div class="form-group">
-			<label for="add-contact-role-contact"
-				>{{ t('pipelinq', 'Contact') }} *</label
-			>
+			<label for="add-contact-role-contact">{{ t('pipelinq', 'Contact') }} *</label>
 			<NcSelect
 				id="add-contact-role-contact"
 				v-model="form.toContact"
@@ -29,8 +27,8 @@
 				:aria-label-combobox="t('pipelinq', 'Contact')"
 				:placeholder="t('pipelinq', 'Search contacts...')"
 				label="name"
-				:reduce="(opt) => opt.id"
-				@search="(term) => $emit('search-contacts', term)" />
+				:reduce="opt => opt.id"
+				@search="term => $emit('search-contacts', term)" />
 		</div>
 		<div class="form-group">
 			<label for="add-contact-role-type">{{ t('pipelinq', 'Role') }} *</label>
@@ -41,7 +39,7 @@
 				:aria-label-combobox="t('pipelinq', 'Role')"
 				:placeholder="t('pipelinq', 'Select role...')"
 				label="label"
-				:reduce="(opt) => opt.value" />
+				:reduce="opt => opt.value" />
 		</div>
 		<div class="form-group">
 			<label for="add-contact-role-notes">{{ t('pipelinq', 'Notes') }}</label>
@@ -51,10 +49,7 @@
 			<NcButton @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton
-				variant="primary"
-				:disabled="!canSubmit"
-				@click="$emit('submit', { ...form })">
+			<NcButton variant="primary" :disabled="!canSubmit" @click="$emit('submit', { ...form })">
 				{{ t('pipelinq', 'Add') }}
 			</NcButton>
 		</template>
@@ -73,14 +68,12 @@ export default {
 		/** Selectable roles, shape { value, label }. */
 		roleOptions: { type: Array, default: () => [] },
 	},
-
 	emits: ['submit', 'cancel', 'search-contacts'],
 	data() {
 		return {
 			form: { toContact: null, type: null, notes: '' },
 		}
 	},
-
 	computed: {
 		/**
 		 * Both selects are required, matching the button guard the overlay had.

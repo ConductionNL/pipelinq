@@ -44,55 +44,28 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<h2>{{ t('pipelinq', 'Grant access') }}</h2>
 		<form @submit.prevent="grant">
 			<div class="portal-field">
-				<label for="portal-grantee">{{
-					t('pipelinq', 'Colleague email')
-				}}</label>
+				<label for="portal-grantee">{{ t('pipelinq', 'Colleague email') }}</label>
 				<!-- autocomplete="off": this collects a COLLEAGUE's address, not the
 				     signed-in user's own, so offering their own email would be wrong.
 				     WCAG 1.3.5 covers fields about the user; there is no token for
 				     "another person's email". -->
-				<input
-					id="portal-grantee"
+				<input id="portal-grantee"
 					v-model="form.granteeEmail"
 					type="email"
 					autocomplete="off"
-					required />
+					required>
 			</div>
 			<fieldset>
 				<legend>{{ t('pipelinq', 'Scopes') }}</legend>
-				<label
-					><input
-						v-model="form.scopes"
-						type="checkbox"
-						value="view-invoices" />
-					{{ t('pipelinq', 'View invoices') }}</label
-				>
-				<label
-					><input
-						v-model="form.scopes"
-						type="checkbox"
-						value="view-contracts" />
-					{{ t('pipelinq', 'View contracts') }}</label
-				>
-				<label
-					><input
-						v-model="form.scopes"
-						type="checkbox"
-						value="submit-requests" />
-					{{ t('pipelinq', 'Submit requests') }}</label
-				>
+				<label><input v-model="form.scopes" type="checkbox" value="view-invoices"> {{ t('pipelinq', 'View invoices') }}</label>
+				<label><input v-model="form.scopes" type="checkbox" value="view-contracts"> {{ t('pipelinq', 'View contracts') }}</label>
+				<label><input v-model="form.scopes" type="checkbox" value="submit-requests"> {{ t('pipelinq', 'Submit requests') }}</label>
 			</fieldset>
 			<div class="portal-field">
-				<label for="portal-validuntil">{{
-					t('pipelinq', 'Valid until')
-				}}</label>
-				<input
-					id="portal-validuntil"
-					v-model="form.validUntil"
-					type="date" />
+				<label for="portal-validuntil">{{ t('pipelinq', 'Valid until') }}</label>
+				<input id="portal-validuntil" v-model="form.validUntil" type="date">
 			</div>
-			<p
-				v-if="message"
+			<p v-if="message"
 				role="status"
 				aria-live="polite"
 				class="portal-success">
@@ -118,11 +91,9 @@ export default {
 			error: '',
 		}
 	},
-
 	mounted() {
 		this.load()
 	},
-
 	methods: {
 		async load() {
 			try {
@@ -132,7 +103,6 @@ export default {
 				this.error = e.message
 			}
 		},
-
 		async grant() {
 			this.message = ''
 			this.error = ''
@@ -149,11 +119,9 @@ export default {
 				this.error = e.message || t('pipelinq', 'Could not grant access.')
 			}
 		},
-
 		async revoke(delegation) {
 			try {
-				const id =
-					delegation.id || (delegation['@self'] && delegation['@self'].id)
+				const id = delegation.id || (delegation['@self'] && delegation['@self'].id)
 				await portalApi.revokeDelegation(id)
 				await this.load()
 			} catch (e) {

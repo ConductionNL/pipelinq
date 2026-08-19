@@ -34,7 +34,6 @@ export default {
 			default: null,
 		},
 	},
-
 	emits: ['close'],
 	computed: {
 		/**

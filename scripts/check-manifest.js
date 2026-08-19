@@ -26,9 +26,7 @@ try {
 			;(result.errors || []).forEach((e) => console.error(' -', e))
 			process.exit(1)
 		}
-		console.log(
-			`Manifest OK (lib): v${manifest.version} | ${manifest.pages.length} pages`,
-		)
+		console.log(`Manifest OK (lib): v${manifest.version} | ${manifest.pages.length} pages`)
 		process.exit(0)
 	}
 } catch (_) {
@@ -38,13 +36,10 @@ try {
 // --- 2. Structural guard (fallback) ------------------------------------
 const errors = []
 if (!manifest.version) errors.push('Missing: version')
-if (!Array.isArray(manifest.pages) || manifest.pages.length === 0)
-	errors.push('Missing or empty: pages[]')
-if (!Array.isArray(manifest.menu) || manifest.menu.length === 0)
-	errors.push('Missing or empty: menu[]')
+if (!Array.isArray(manifest.pages) || manifest.pages.length === 0) errors.push('Missing or empty: pages[]')
+if (!Array.isArray(manifest.menu) || manifest.menu.length === 0) errors.push('Missing or empty: menu[]')
 if (!Array.isArray(manifest.dependencies)) errors.push('Missing: dependencies[]')
-else if (!manifest.dependencies.includes('openregister'))
-	errors.push('Missing "openregister" in dependencies[]')
+else if (!manifest.dependencies.includes('openregister')) errors.push('Missing "openregister" in dependencies[]')
 
 if (errors.length > 0) {
 	console.error('Manifest validation FAILED:')
@@ -52,6 +47,4 @@ if (errors.length > 0) {
 	process.exit(1)
 }
 
-console.log(
-	`Manifest OK: v${manifest.version} | ${manifest.pages.length} pages | ${manifest.menu.length} menu items | deps: ${(manifest.dependencies || []).join(', ')}`,
-)
+console.log(`Manifest OK: v${manifest.version} | ${manifest.pages.length} pages | ${manifest.menu.length} menu items | deps: ${(manifest.dependencies || []).join(', ')}`)

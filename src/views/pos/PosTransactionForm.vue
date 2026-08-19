@@ -8,13 +8,7 @@
 			<NcButton @click="goBack">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
-			<h2>
-				{{
-					isNew
-						? t('pipelinq', 'New transaction')
-						: transaction.reference || t('pipelinq', 'Transaction')
-				}}
-			</h2>
+			<h2>{{ isNew ? t('pipelinq', 'New transaction') : (transaction.reference || t('pipelinq', 'Transaction')) }}</h2>
 		</div>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
@@ -25,27 +19,27 @@
 					v-model="transaction.terminalId"
 					:label="t('pipelinq', 'Terminal')" />
 				<NcSelect
-					:modelValue="selectedClient"
+					:model-value="selectedClient"
 					:options="clientOptions"
-					:inputLabel="t('pipelinq', 'Client (optional)')"
+					:input-label="t('pipelinq', 'Client (optional)')"
 					label="label"
 					:clearable="true"
-					@update:modelValue="onClientSelect" />
+					@update:model-value="onClientSelect" />
 				<NcSelect
-					:modelValue="selectedPriceMode"
+					:model-value="selectedPriceMode"
 					:options="priceModeOptions"
-					:inputLabel="t('pipelinq', 'Price mode')"
+					:input-label="t('pipelinq', 'Price mode')"
 					label="label"
 					:clearable="false"
-					@update:modelValue="onPriceModeSelect" />
+					@update:model-value="onPriceModeSelect" />
 				<NcSelect
-					:modelValue="selectedTender"
+					:model-value="selectedTender"
 					:options="tenderOptions"
-					:inputLabel="t('pipelinq', 'Tender type')"
+					:input-label="t('pipelinq', 'Tender type')"
 					label="label"
 					:clearable="false"
 					data-testid="tender-type"
-					@update:modelValue="onTenderSelect" />
+					@update:model-value="onTenderSelect" />
 				<NcTextField
 					v-model="transaction.notes"
 					:label="t('pipelinq', 'Notes')" />
@@ -60,29 +54,18 @@
 						@click="openCustomerLookup">
 						{{ t('pipelinq', 'Add customer') }}
 					</NcButton>
-					<span
-						v-if="onAccountError"
-						class="pos-form__customer-error"
-						role="alert">
+					<span v-if="onAccountError" class="pos-form__customer-error" role="alert">
 						{{ onAccountError }}
 					</span>
 				</div>
-				<div
-					v-else
-					class="pos-form__customer-selected"
-					data-testid="selected-customer">
+				<div v-else class="pos-form__customer-selected" data-testid="selected-customer">
 					<span class="pos-form__customer-label">
 						{{ t('pipelinq', 'Customer:') }}
 						<strong>{{ selectedCustomer.name }}</strong>
 						<span
 							v-if="selectedCustomer.doNotContact"
 							class="pos-form__customer-flag"
-							:title="
-								t(
-									'pipelinq',
-									'This customer does not wish to be contacted.',
-								)
-							">
+							:title="t('pipelinq', 'This customer does not wish to be contacted.')">
 							🔒
 						</span>
 					</span>
@@ -98,20 +81,13 @@
 				<PurchaseHistory v-if="selectedCustomer" :rows="history" />
 				<label
 					class="pos-form__consent"
-					:title="
-						!selectedCustomer
-							? t('pipelinq', 'Select a customer first.')
-							: ''
-					">
+					:title="!selectedCustomer ? t('pipelinq', 'Select a customer first.') : ''">
 					<input
 						type="checkbox"
 						:checked="transaction.marketingConsent"
-						:disabled="
-							!selectedCustomer
-							|| (selectedCustomer && selectedCustomer.doNotContact)
-						"
+						:disabled="!selectedCustomer || (selectedCustomer && selectedCustomer.doNotContact)"
 						data-testid="marketing-consent"
-						@change="onConsentChange" />
+						@change="onConsentChange">
 					{{ t('pipelinq', 'I want to receive offers and updates.') }}
 				</label>
 			</div>
@@ -135,7 +111,7 @@
 						:key="line._key"
 						:line="line"
 						:products="products"
-						:priceMode="priceMode"
+						:price-mode="priceMode"
 						@update:line="updateLine(index, $event)"
 						@remove="removeLine(index)" />
 				</tbody>
@@ -148,11 +124,11 @@
 				{{ t('pipelinq', 'Add line') }}
 			</NcButton>
 
-			<PosTotalsPanel :lines="lines" :priceMode="priceMode" />
+			<PosTotalsPanel :lines="lines" :price-mode="priceMode" />
 
 			<PaymentMethodSelector
 				v-model="paymentSelection"
-				:clientSelected="!!transaction.client"
+				:client-selected="!!transaction.client"
 				@change="onPaymentSelectionChange" />
 
 			<div class="pos-form__actions">
@@ -174,23 +150,23 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
+import { NcButton, NcTextField, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
 import { showError, showSuccess, showWarning } from '@nextcloud/dialogs'
-import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
-import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vue'
 import PosLineItemRow from '../../components/pos/PosLineItemRow.vue'
 import PosTotalsPanel from '../../components/pos/PosTotalsPanel.vue'
 import PurchaseHistory from '../../components/pos/PurchaseHistory.vue'
 import CustomerLookupModal from '../../modals/CustomerLookupModal.vue'
+import PaymentMethodSelector from '../../components/pos/PaymentMethodSelector.vue'
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
+import { useObjectStore } from '../../store/modules/object.js'
+import { recalculateLine } from '../../services/posTotals.js'
 import {
 	attachCustomer as apiAttachCustomer,
 	detachCustomer as apiDetachCustomer,
 	getCustomerHistory,
 } from '../../services/posCustomerApi.js'
-import { recalculateLine } from '../../services/posTotals.js'
-import { useObjectStore } from '../../store/modules/object.js'
 
 /**
  * Normalise an object-store collection into a plain rows array.
@@ -223,14 +199,12 @@ export default {
 		CustomerLookupModal,
 		PaymentMethodSelector,
 	},
-
 	props: {
 		posTransactionId: {
 			type: String,
 			default: null,
 		},
 	},
-
 	data() {
 		return {
 			transaction: {
@@ -248,7 +222,6 @@ export default {
 				consentSyncStatus: '',
 				tenderType: 'cash',
 			},
-
 			lines: [],
 			products: [],
 			clients: [],
@@ -264,12 +237,10 @@ export default {
 			paymentMethod: 'cash',
 		}
 	},
-
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
-
 		/**
 		 * The transaction id from the prop or route.
 		 *
@@ -278,7 +249,6 @@ export default {
 		transactionId() {
 			return this.posTransactionId || this.$route.params.id || null
 		},
-
 		/**
 		 * Whether this is a new (unsaved) transaction.
 		 *
@@ -287,28 +257,22 @@ export default {
 		isNew() {
 			return !this.transactionId || this.transactionId === 'new'
 		},
-
 		/**
 		 * Client picker options.
 		 *
 		 * @return {Array<object>} The options.
 		 */
 		clientOptions() {
-			return this.clients.map((c) => ({ id: c.id, label: c.name }))
+			return this.clients.map(c => ({ id: c.id, label: c.name }))
 		},
-
 		/**
 		 * The selected client option.
 		 *
 		 * @return {object|null} The option.
 		 */
 		selectedClient() {
-			return (
-				this.clientOptions.find((o) => o.id === this.transaction.client)
-				|| null
-			)
+			return this.clientOptions.find(o => o.id === this.transaction.client) || null
 		},
-
 		/**
 		 * The current price mode ('excl' default).
 		 *
@@ -317,7 +281,6 @@ export default {
 		priceMode() {
 			return this.transaction.priceMode === 'incl' ? 'incl' : 'excl'
 		},
-
 		/**
 		 * Available price mode options.
 		 *
@@ -329,19 +292,14 @@ export default {
 				{ id: 'incl', label: t('pipelinq', 'Incl. VAT') },
 			]
 		},
-
 		/**
 		 * The selected price mode option.
 		 *
 		 * @return {object} The option.
 		 */
 		selectedPriceMode() {
-			return (
-				this.priceModeOptions.find((o) => o.id === this.priceMode)
-				|| this.priceModeOptions[0]
-			)
+			return this.priceModeOptions.find(o => o.id === this.priceMode) || this.priceModeOptions[0]
 		},
-
 		/**
 		 * Tender type picker options.
 		 *
@@ -354,7 +312,6 @@ export default {
 				{ id: 'onAccount', label: t('pipelinq', 'On account') },
 			]
 		},
-
 		/**
 		 * The selected tender option.
 		 *
@@ -362,11 +319,8 @@ export default {
 		 */
 		selectedTender() {
 			const id = this.transaction.tenderType || 'cash'
-			return (
-				this.tenderOptions.find((o) => o.id === id) || this.tenderOptions[0]
-			)
+			return this.tenderOptions.find(o => o.id === id) || this.tenderOptions[0]
 		},
-
 		/**
 		 * Whether on-account + customer invariant holds (REQ-PCL-005).
 		 *
@@ -378,7 +332,6 @@ export default {
 			}
 			return !!this.selectedCustomer
 		},
-
 		/**
 		 * Aggregate gate for the Checkout button.
 		 *
@@ -387,26 +340,18 @@ export default {
 		checkoutAllowed() {
 			return this.isOnAccountValid
 		},
-
 		/**
 		 * Error message surfaced near the customer picker for on-account misuse.
 		 *
 		 * @return {string} The error or empty string.
 		 */
 		onAccountError() {
-			if (
-				this.transaction.tenderType === 'onAccount'
-				&& !this.selectedCustomer
-			) {
-				return t(
-					'pipelinq',
-					'Customer is required for on-account transactions.',
-				)
+			if (this.transaction.tenderType === 'onAccount' && !this.selectedCustomer) {
+				return t('pipelinq', 'Customer is required for on-account transactions.')
 			}
 			return ''
 		},
 	},
-
 	async mounted() {
 		this.loading = true
 		try {
@@ -419,7 +364,6 @@ export default {
 			this.loading = false
 		}
 	},
-
 	methods: {
 		/**
 		 * Load the product catalog for the picker.
@@ -430,59 +374,42 @@ export default {
 				// getCollection() returns the results ARRAY directly (not a
 				// { results } envelope); reading `.results` off it yielded
 				// undefined → [] and left the product picker permanently empty.
-				this.products = collectionRows(
-					this.objectStore.getCollection('product'),
-				)
+				this.products = collectionRows(this.objectStore.getCollection('product'))
 			} catch {
 				this.products = []
 			}
 		},
-
 		/**
 		 * Load clients for the optional account-sale picker.
 		 */
 		async loadClients() {
 			try {
 				await this.objectStore.fetchCollection('client', { _limit: 500 })
-				this.clients = collectionRows(
-					this.objectStore.getCollection('client'),
-				)
+				this.clients = collectionRows(this.objectStore.getCollection('client'))
 			} catch {
 				this.clients = []
 			}
 		},
-
 		/**
 		 * Load an existing transaction and its lines.
 		 */
 		async loadTransaction() {
-			const tx = await this.objectStore.fetchObject(
-				'posTransaction',
-				this.transactionId,
-			)
+			const tx = await this.objectStore.fetchObject('posTransaction', this.transactionId)
 			this.transaction = {
 				tenderType: 'cash',
 				marketingConsent: false,
 				customer: null,
 				...tx,
 			}
-			await this.objectStore.fetchCollection('posTransactionLine', {
-				transaction: this.transactionId,
-				_limit: 500,
-			})
-			const rows = collectionRows(
-				this.objectStore.getCollection('posTransactionLine'),
-			)
+			await this.objectStore.fetchCollection('posTransactionLine', { transaction: this.transactionId, _limit: 500 })
+			const rows = collectionRows(this.objectStore.getCollection('posTransactionLine'))
 			this.lines = rows
-				.filter((l) => l.transaction === this.transactionId)
+				.filter(l => l.transaction === this.transactionId)
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
-				.map((l) => ({ ...l, _key: this.nextKey() }))
+				.map(l => ({ ...l, _key: this.nextKey() }))
 			if (this.transaction.customer) {
 				try {
-					this.history = await getCustomerHistory(
-						this.transaction.customer,
-						0,
-					)
+					this.history = await getCustomerHistory(this.transaction.customer, 0)
 					// Surface the linked customer in the picker — we do not call
 					// getCustomer (no need for the full row), just enough to
 					// reflect the selection so detach works.
@@ -500,14 +427,10 @@ export default {
 			const method = (tx && tx.paymentMethod) || 'cash'
 			this.paymentProvider = provider
 			this.paymentMethod = method
-			this.paymentSelection =
-				provider === 'cash'
-				|| provider === 'voucher'
-				|| provider === 'account'
-					? provider
-					: provider + ':' + method
+			this.paymentSelection = (provider === 'cash' || provider === 'voucher' || provider === 'account')
+				? provider
+				: provider + ':' + method
 		},
-
 		/**
 		 * Next stable v-for key for a line row.
 		 *
@@ -517,24 +440,20 @@ export default {
 			this.keyCounter += 1
 			return this.keyCounter
 		},
-
 		/**
 		 * Append a blank line.
 		 */
 		addLine() {
-			this.lines.push(
-				recalculateLine({
-					_key: this.nextKey(),
-					description: '',
-					quantity: 1,
-					unitPrice: 0,
-					discount: 0,
-					taxRate: 21,
-					product: null,
-				}),
-			)
+			this.lines.push(recalculateLine({
+				_key: this.nextKey(),
+				description: '',
+				quantity: 1,
+				unitPrice: 0,
+				discount: 0,
+				taxRate: 21,
+				product: null,
+			}))
 		},
-
 		/**
 		 * Replace a line after an edit.
 		 *
@@ -544,7 +463,6 @@ export default {
 		updateLine(index, line) {
 			this.lines[index] = { ...line, _key: this.lines[index]._key }
 		},
-
 		/**
 		 * Remove a line, queueing a delete if it was persisted.
 		 *
@@ -557,7 +475,6 @@ export default {
 			}
 			this.lines.splice(index, 1)
 		},
-
 		/**
 		 * Update local payment provider/method state when the selector changes.
 		 *
@@ -572,15 +489,10 @@ export default {
 			this.paymentMethod = paymentMethod || providerName || 'cash'
 			// Cash / voucher / account settle immediately on confirm — mirror
 			// the selection onto the draft transaction so saveObject persists it.
-			if (
-				this.paymentProvider === 'cash'
-				|| this.paymentProvider === 'voucher'
-				|| this.paymentProvider === 'account'
-			) {
+			if (this.paymentProvider === 'cash' || this.paymentProvider === 'voucher' || this.paymentProvider === 'account') {
 				this.transaction.paymentProvider = this.paymentProvider
 				this.transaction.paymentMethod = this.paymentMethod
-				this.transaction.paymentStatus =
-					this.paymentProvider === 'cash' ? 'settled' : 'pending'
+				this.transaction.paymentStatus = (this.paymentProvider === 'cash' ? 'settled' : 'pending')
 			} else {
 				// Card / online providers — actual session is initiated server-side
 				// by PosPaymentService.initiatePayment AFTER the transaction is
@@ -591,7 +503,6 @@ export default {
 				this.transaction.paymentStatus = 'pending'
 			}
 		},
-
 		/**
 		 * Persist the transaction header and its lines.
 		 *
@@ -601,12 +512,7 @@ export default {
 		 */
 		async save() {
 			if (!this.checkoutAllowed) {
-				showError(
-					t(
-						'pipelinq',
-						'Customer is required for on-account transactions.',
-					),
-				)
+				showError(t('pipelinq', 'Customer is required for on-account transactions.'))
 				return
 			}
 			this.saving = true
@@ -618,14 +524,9 @@ export default {
 					// it to the logged-in user (same pattern as PosRefundForm) so the
 					// OpenRegister POST validates and the sale persists. Preserve any
 					// value already on the (edited) transaction.
-					cashier:
-						this.transaction.cashier
-						|| (window.OC?.getCurrentUser?.()?.uid ?? ''),
+					cashier: this.transaction.cashier || (window.OC?.getCurrentUser?.()?.uid ?? ''),
 				}
-				const savedTx = await this.objectStore.saveObject(
-					'posTransaction',
-					header,
-				)
+				const savedTx = await this.objectStore.saveObject('posTransaction', header)
 				if (!savedTx) {
 					showError(t('pipelinq', 'Failed to save transaction.'))
 					return
@@ -674,38 +575,22 @@ export default {
 				// (the draft + lines are saved) but surface the error.
 				try {
 					await axios.post(
-						generateUrl(
-							'/apps/pipelinq/api/pos-transactions/'
-								+ encodeURIComponent(txId)
-								+ '/confirm',
-						),
+						generateUrl('/apps/pipelinq/api/pos-transactions/' + encodeURIComponent(txId) + '/confirm'),
 					)
 				} catch (confirmError) {
-					showError(
-						t(
-							'pipelinq',
-							'Transaction saved but could not be completed.',
-						),
-					)
-					this.$router.push({
-						name: 'PosTransactionDetail',
-						params: { id: txId },
-					})
+					showError(t('pipelinq', 'Transaction saved but could not be completed.'))
+					this.$router.push({ name: 'PosTransactionDetail', params: { id: txId } })
 					return
 				}
 
 				showSuccess(t('pipelinq', 'Transaction saved.'))
-				this.$router.push({
-					name: 'PosTransactionDetail',
-					params: { id: txId },
-				})
+				this.$router.push({ name: 'PosTransactionDetail', params: { id: txId } })
 			} catch (e) {
 				showError(t('pipelinq', 'Failed to save transaction.'))
 			} finally {
 				this.saving = false
 			}
 		},
-
 		/**
 		 * Apply a client selection.
 		 *
@@ -714,7 +599,6 @@ export default {
 		onClientSelect(option) {
 			this.transaction.client = option ? option.id : null
 		},
-
 		/**
 		 * Apply a price mode selection.
 		 *
@@ -723,7 +607,6 @@ export default {
 		onPriceModeSelect(option) {
 			this.transaction.priceMode = option ? option.id : 'excl'
 		},
-
 		/**
 		 * Apply a tender type selection.
 		 *
@@ -732,7 +615,6 @@ export default {
 		onTenderSelect(option) {
 			this.transaction.tenderType = option ? option.id : 'cash'
 		},
-
 		/**
 		 * Apply a marketing-consent toggle.
 		 *
@@ -741,21 +623,18 @@ export default {
 		onConsentChange(event) {
 			this.transaction.marketingConsent = !!event.target.checked
 		},
-
 		/**
 		 * Open the customer lookup modal.
 		 */
 		openCustomerLookup() {
 			this.showCustomerModal = true
 		},
-
 		/**
 		 * Close the customer lookup modal.
 		 */
 		closeCustomerLookup() {
 			this.showCustomerModal = false
 		},
-
 		/**
 		 * Apply a customer chosen from the lookup modal.
 		 *
@@ -766,14 +645,11 @@ export default {
 			this.transaction.customer = row.id
 			if (row.doNotContact) {
 				this.transaction.marketingConsent = false
-				showWarning(
-					t('pipelinq', 'This customer does not wish to be contacted.'),
-				)
+				showWarning(t('pipelinq', 'This customer does not wish to be contacted.'))
 			}
 			this.showCustomerModal = false
 			await this.loadHistory(row.id)
 		},
-
 		/**
 		 * Clear the selected customer (REQ-PCL-002 Scenario 3).
 		 */
@@ -791,7 +667,6 @@ export default {
 				}
 			}
 		},
-
 		/**
 		 * Load purchase history for the selected customer.
 		 *
@@ -804,7 +679,6 @@ export default {
 				this.history = []
 			}
 		},
-
 		/**
 		 * Attach the customer + consent on the server (called from save).
 		 *
@@ -821,12 +695,9 @@ export default {
 					!!this.transaction.marketingConsent,
 				)
 			} catch {
-				showError(
-					t('pipelinq', 'Could not link customer to the transaction.'),
-				)
+				showError(t('pipelinq', 'Could not link customer to the transaction.'))
 			}
 		},
-
 		/**
 		 * Return to the transaction list.
 		 */

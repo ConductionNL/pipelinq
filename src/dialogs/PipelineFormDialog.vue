@@ -12,70 +12,52 @@
 <template>
 	<NcDialog
 		size="large"
-		:name="
-			isEdit ? t('pipelinq', 'Edit pipeline') : t('pipelinq', 'New pipeline')
-		"
+		:name="isEdit ? t('pipelinq', 'Edit pipeline') : t('pipelinq', 'New pipeline')"
 		@closing="$emit('cancel')">
 		<div class="pipeline-form">
 			<!-- Pipeline properties -->
 			<div class="form-section">
 				<div class="form-group">
-					<NcTextField
-						:modelValue="form.title"
+					<NcTextField :model-value="form.title"
 						:label="t('pipelinq', 'Title')"
 						:error="!!errors.title"
-						:helperText="errors.title"
-						@update:modelValue="(v) => (form.title = v)" />
+						:helper-text="errors.title"
+						@update:model-value="v => form.title = v" />
 				</div>
 
 				<div class="form-group">
-					<NcTextField
-						:modelValue="form.description"
+					<NcTextField :model-value="form.description"
 						:label="t('pipelinq', 'Description')"
-						@update:modelValue="(v) => (form.description = v)" />
+						@update:model-value="v => form.description = v" />
 				</div>
 
 				<div class="form-row">
 					<div class="form-group">
 						<label>{{ t('pipelinq', 'View') }}</label>
-						<NcSelect
-							v-model="form.viewId"
+						<NcSelect v-model="form.viewId"
 							:options="viewOptions"
 							:aria-label-combobox="t('pipelinq', 'View')"
 							:clearable="true"
 							label="label"
-							:reduce="(o) => o.value"
+							:reduce="o => o.value"
 							:loading="loadingViews"
 							:placeholder="t('pipelinq', 'Select a view')" />
-						<span class="help-text">{{
-							t(
-								'pipelinq',
-								'Select a saved view to define which schemas are shown in this pipeline.',
-							)
-						}}</span>
+						<span class="help-text">{{ t('pipelinq', 'Select a saved view to define which schemas are shown in this pipeline.') }}</span>
 					</div>
 
 					<div class="form-group">
-						<NcCheckboxRadioSwitch
-							v-model="form.isDefault"
-							type="switch">
+						<NcCheckboxRadioSwitch v-model="form.isDefault" type="switch">
 							{{ t('pipelinq', 'Default pipeline') }}
 						</NcCheckboxRadioSwitch>
 					</div>
 				</div>
 
 				<div class="form-group">
-					<NcTextField
-						:modelValue="form.totalsLabel"
+					<NcTextField :model-value="form.totalsLabel"
 						:label="t('pipelinq', 'Totals label')"
 						:placeholder="t('pipelinq', 'e.g. EUR, hours, items')"
-						@update:modelValue="(v) => (form.totalsLabel = v)" />
-					<span class="help-text">{{
-						t(
-							'pipelinq',
-							'Label shown next to column totals. Leave empty to hide totals.',
-						)
-					}}</span>
+						@update:model-value="v => form.totalsLabel = v" />
+					<span class="help-text">{{ t('pipelinq', 'Label shown next to column totals. Leave empty to hide totals.') }}</span>
 				</div>
 			</div>
 
@@ -92,71 +74,40 @@
 				</div>
 
 				<span class="help-text mapping-help">
-					{{
-						t(
-							'pipelinq',
-							'Configure which property determines the column placement for each schema, and optionally which property to sum in column totals.',
-						)
-					}}
+					{{ t('pipelinq', 'Configure which property determines the column placement for each schema, and optionally which property to sum in column totals.') }}
 				</span>
 
-				<div
-					v-if="form.propertyMappings.length === 0"
-					class="mappings-empty">
-					{{
-						t(
-							'pipelinq',
-							'No mappings yet. Add at least one to map schema properties to pipeline columns.',
-						)
-					}}
+				<div v-if="form.propertyMappings.length === 0" class="mappings-empty">
+					{{ t('pipelinq', 'No mappings yet. Add at least one to map schema properties to pipeline columns.') }}
 				</div>
 
 				<div v-else class="mappings-list">
-					<div
-						v-for="(mapping, index) in form.propertyMappings"
+					<div v-for="(mapping, index) in form.propertyMappings"
 						:key="index"
 						class="mapping-row">
 						<div class="mapping-fields">
 							<div class="mapping-field">
-								<NcTextField
-									:modelValue="mapping.schemaSlug"
+								<NcTextField :model-value="mapping.schemaSlug"
 									:label="t('pipelinq', 'Schema slug')"
-									:placeholder="
-										t('pipelinq', 'e.g. lead, request')
-									"
-									@update:modelValue="
-										(v) => (mapping.schemaSlug = v)
-									" />
+									:placeholder="t('pipelinq', 'e.g. lead, request')"
+									@update:model-value="v => mapping.schemaSlug = v" />
 							</div>
 							<div class="mapping-field">
-								<NcTextField
-									:modelValue="mapping.columnProperty"
+								<NcTextField :model-value="mapping.columnProperty"
 									:label="t('pipelinq', 'Column property')"
-									:placeholder="
-										t('pipelinq', 'e.g. stage, status')
-									"
-									@update:modelValue="
-										(v) => (mapping.columnProperty = v)
-									" />
+									:placeholder="t('pipelinq', 'e.g. stage, status')"
+									@update:model-value="v => mapping.columnProperty = v" />
 							</div>
 							<div class="mapping-field">
-								<NcTextField
-									:modelValue="mapping.totalsProperty || ''"
+								<NcTextField :model-value="mapping.totalsProperty || ''"
 									:label="t('pipelinq', 'Totals property')"
-									:placeholder="
-										t('pipelinq', 'e.g. value (optional)')
-									"
-									@update:modelValue="
-										(v) => (mapping.totalsProperty = v || null)
-									" />
+									:placeholder="t('pipelinq', 'e.g. value (optional)')"
+									@update:model-value="v => mapping.totalsProperty = v || null" />
 							</div>
 						</div>
-						<NcButton
-							variant="tertiary"
+						<NcButton variant="tertiary"
 							class="mapping-delete"
-							:aria-label="
-								t('pipelinq', 'Remove this property mapping')
-							"
+							:aria-label="t('pipelinq', 'Remove this property mapping')"
 							@click="removeMapping(index)">
 							<template #icon>
 								<Delete :size="20" />
@@ -178,9 +129,7 @@
 					</NcButton>
 				</div>
 
-				<span v-if="errors.stages" class="error-text">{{
-					errors.stages
-				}}</span>
+				<span v-if="errors.stages" class="error-text">{{ errors.stages }}</span>
 
 				<div v-if="form.stages.length === 0" class="stages-empty">
 					{{ t('pipelinq', 'No stages yet. Add at least one stage.') }}
@@ -200,43 +149,28 @@
 					it by `sortedStages` position, so validation messages attached to
 					the wrong row whenever the two orders differed.
 				-->
-				<Draggable
-					v-else
+				<draggable v-else
 					v-model="form.stages"
-					itemKey="order"
+					item-key="order"
 					class="stages-list"
 					handle=".drag-handle"
 					@end="recomputeOrders">
 					<template #item="{ element: stage, index }">
 						<div class="stage-row">
 							<div class="stage-order">
-								<span
-									class="drag-handle"
-									:title="t('pipelinq', 'Drag to reorder')"
-									>&#x2630;</span
-								>
+								<span class="drag-handle" :title="t('pipelinq', 'Drag to reorder')">&#x2630;</span>
 								<div class="stage-reorder-buttons">
-									<NcButton
-										variant="tertiary"
+									<NcButton variant="tertiary"
 										:disabled="index === 0"
-										:aria-label="
-											t('pipelinq', 'Move stage {name} up', {
-												name: stage.name,
-											})
-										"
+										:aria-label="t('pipelinq', 'Move stage {name} up', { name: stage.name })"
 										@click="moveStage(stage, -1)">
 										<template #icon>
 											<ChevronUp :size="16" />
 										</template>
 									</NcButton>
-									<NcButton
-										variant="tertiary"
+									<NcButton variant="tertiary"
 										:disabled="index === form.stages.length - 1"
-										:aria-label="
-											t('pipelinq', 'Move stage {name} down', {
-												name: stage.name,
-											})
-										"
+										:aria-label="t('pipelinq', 'Move stage {name} down', { name: stage.name })"
 										@click="moveStage(stage, 1)">
 										<template #icon>
 											<ChevronDown :size="16" />
@@ -247,70 +181,45 @@
 							</div>
 
 							<div class="stage-fields">
-								<NcTextField
-									:modelValue="stage.name"
+								<NcTextField :model-value="stage.name"
 									:label="t('pipelinq', 'Stage name')"
 									:error="!!stageErrors[index]?.name"
-									:helperText="stageErrors[index]?.name"
+									:helper-text="stageErrors[index]?.name"
 									class="stage-name-field"
-									@update:modelValue="(v) => (stage.name = v)" />
+									@update:model-value="v => stage.name = v" />
 
-								<NcTextField
-									:modelValue="String(stage.probability ?? '')"
+								<NcTextField :model-value="String(stage.probability ?? '')"
 									:label="t('pipelinq', 'Probability %')"
 									type="number"
 									:error="!!stageErrors[index]?.probability"
-									:helperText="
-										stageErrors[index]?.probability || ''
-									"
+									:helper-text="stageErrors[index]?.probability || ''"
 									class="stage-probability-field"
-									@update:modelValue="
-										(v) =>
-											(stage.probability =
-												v === '' ? null : Number(v))
-									" />
+									@update:model-value="v => stage.probability = v === '' ? null : Number(v)" />
 
 								<div class="stage-color-field">
-									<label :for="'stage-color-' + index">{{
-										t('pipelinq', 'Color')
-									}}</label>
-									<input
-										:id="'stage-color-' + index"
+									<label :for="'stage-color-' + index">{{ t('pipelinq', 'Color') }}</label>
+									<input :id="'stage-color-' + index"
 										type="color"
 										:value="stage.color || '#6b7280'"
-										@input="
-											(e) => (stage.color = e.target.value)
-										" />
+										@input="e => stage.color = e.target.value">
 								</div>
 							</div>
 
 							<div class="stage-flags">
-								<NcCheckboxRadioSwitch
-									v-model="stage.isClosed"
-									type="switch">
+								<NcCheckboxRadioSwitch v-model="stage.isClosed" type="switch">
 									{{ t('pipelinq', 'Closed') }}
 								</NcCheckboxRadioSwitch>
-								<NcCheckboxRadioSwitch
-									v-model="stage.isWon"
+								<NcCheckboxRadioSwitch v-model="stage.isWon"
 									:disabled="!stage.isClosed"
 									type="switch">
 									{{ t('pipelinq', 'Won') }}
 								</NcCheckboxRadioSwitch>
-								<span
-									v-if="stageErrors[index]?.isWon"
-									class="error-text"
-									>{{ stageErrors[index].isWon }}</span
-								>
+								<span v-if="stageErrors[index]?.isWon" class="error-text">{{ stageErrors[index].isWon }}</span>
 							</div>
 
-							<NcButton
-								variant="tertiary"
+							<NcButton variant="tertiary"
 								class="stage-delete"
-								:aria-label="
-									t('pipelinq', 'Remove stage {name}', {
-										name: stage.name,
-									})
-								"
+								:aria-label="t('pipelinq', 'Remove stage {name}', { name: stage.name })"
 								@click="removeStage(index)">
 								<template #icon>
 									<Delete :size="20" />
@@ -318,7 +227,7 @@
 							</NcButton>
 						</div>
 					</template>
-				</Draggable>
+				</draggable>
 			</div>
 		</div>
 
@@ -334,13 +243,7 @@
 </template>
 
 <script>
-import {
-	NcButton,
-	NcCheckboxRadioSwitch,
-	NcDialog,
-	NcSelect,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcSelect, NcTextField } from '@nextcloud/vue'
 import draggable from 'vuedraggable'
 import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
@@ -356,20 +259,18 @@ export default {
 		NcDialog,
 		NcSelect,
 		NcTextField,
-		Draggable: draggable,
+		draggable,
 		ChevronDown,
 		ChevronUp,
 		Delete,
 		Plus,
 	},
-
 	props: {
 		pipeline: {
 			type: Object,
 			default: null,
 		},
 	},
-
 	data() {
 		return {
 			form: {
@@ -381,27 +282,23 @@ export default {
 				propertyMappings: [],
 				stages: [],
 			},
-
 			views: [],
 			loadingViews: false,
 		}
 	},
-
 	computed: {
 		isEdit() {
 			return !!this.pipeline
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-43
 		 */
 		viewOptions() {
-			return this.views.map((v) => ({
+			return this.views.map(v => ({
 				value: v.id || v.uuid,
 				label: v.name || v.slug || v.id,
 			}))
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-33
 		 */
@@ -410,58 +307,41 @@ export default {
 			if (!this.form.title.trim()) {
 				errors.title = t('pipelinq', 'Pipeline title is required')
 			}
-			const nonClosedCount = this.form.stages.filter((s) => !s.isClosed).length
+			const nonClosedCount = this.form.stages.filter(s => !s.isClosed).length
 			if (this.form.stages.length > 0 && nonClosedCount === 0) {
-				errors.stages = t(
-					'pipelinq',
-					'Pipeline must have at least one non-closed stage',
-				)
+				errors.stages = t('pipelinq', 'Pipeline must have at least one non-closed stage')
 			}
 			return errors
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-42
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-2.2
 		 */
 		stageErrors() {
-			return this.form.stages.map((stage) => {
+			return this.form.stages.map(stage => {
 				const errors = {}
 				if (!stage.name || !stage.name.trim()) {
 					errors.name = t('pipelinq', 'Stage name is required')
 				}
 				if (stage.isWon && !stage.isClosed) {
-					errors.isWon = t(
-						'pipelinq',
-						'A Won stage must also be marked as Closed',
-					)
+					errors.isWon = t('pipelinq', 'A Won stage must also be marked as Closed')
 				}
-				if (
-					stage.probability != null
-					&& stage.probability !== ''
-					&& (Number(stage.probability) < 0
-						|| Number(stage.probability) > 100)
-				) {
-					errors.probability = t(
-						'pipelinq',
-						'Probability must be between 0 and 100',
-					)
+				if (stage.probability != null && stage.probability !== '' && (Number(stage.probability) < 0 || Number(stage.probability) > 100)) {
+					errors.probability = t('pipelinq', 'Probability must be between 0 and 100')
 				}
 				return Object.keys(errors).length > 0 ? errors : null
 			})
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-34
 		 */
 		isValid() {
 			if (Object.keys(this.errors).length > 0) return false
-			if (this.stageErrors.some((e) => e !== null)) return false
+			if (this.stageErrors.some(e => e !== null)) return false
 			if (this.form.stages.length === 0) return false
 			return true
 		},
 	},
-
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-32
 	 */
@@ -474,11 +354,8 @@ export default {
 				viewId: this.pipeline.viewId || null,
 				isDefault: !!this.pipeline.isDefault,
 				totalsLabel: this.pipeline.totalsLabel || '',
-				propertyMappings: (this.pipeline.propertyMappings || []).map(
-					(m) => ({ ...m }),
-				),
-
-				stages: (this.pipeline.stages || []).map((s) => ({ ...s })),
+				propertyMappings: (this.pipeline.propertyMappings || []).map(m => ({ ...m })),
+				stages: (this.pipeline.stages || []).map(s => ({ ...s })),
 			}
 			// `form.stages` is now the display order (see recomputeOrders): the
 			// vuedraggable v4 item slot iterates the bound list rather than a
@@ -488,7 +365,6 @@ export default {
 		}
 		await this.loadViews()
 	},
-
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-35
@@ -526,10 +402,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-31
 		 */
 		addStage() {
-			const maxOrder = this.form.stages.reduce(
-				(max, s) => Math.max(max, s.order),
-				-1,
-			)
+			const maxOrder = this.form.stages.reduce((max, s) => Math.max(max, s.order), -1)
 			this.form.stages.push({
 				name: '',
 				order: maxOrder + 1,
@@ -539,7 +412,6 @@ export default {
 				color: null,
 			})
 		},
-
 		/**
 		 * @param index
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
@@ -552,7 +424,6 @@ export default {
 			}
 			this.recomputeOrders()
 		},
-
 		/**
 		 * @param stage
 		 * @param direction
@@ -563,12 +434,7 @@ export default {
 			const currentIndex = stages.indexOf(stage)
 			const targetIndex = currentIndex + direction
 
-			if (
-				currentIndex === -1
-				|| targetIndex < 0
-				|| targetIndex >= stages.length
-			)
-				return
+			if (currentIndex === -1 || targetIndex < 0 || targetIndex >= stages.length) return
 
 			// Move the element itself, then renumber. Previously this swapped only
 			// the `order` fields and relied on a sorted render-time copy; now that
@@ -577,7 +443,6 @@ export default {
 			stages.splice(targetIndex, 0, stages.splice(currentIndex, 1)[0])
 			this.recomputeOrders()
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-38
 		 */
@@ -591,7 +456,6 @@ export default {
 				stage.order = i
 			})
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-37
 		 */
@@ -600,13 +464,12 @@ export default {
 
 			const data = {
 				...this.form,
-				propertyMappings: this.form.propertyMappings.map((m) => ({
+				propertyMappings: this.form.propertyMappings.map(m => ({
 					schemaSlug: m.schemaSlug,
 					columnProperty: m.columnProperty,
 					totalsProperty: m.totalsProperty || null,
 				})),
-
-				stages: this.form.stages.map((s) => ({
+				stages: this.form.stages.map(s => ({
 					name: s.name,
 					order: s.order,
 					probability: s.probability,

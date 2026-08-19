@@ -17,24 +17,16 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr
-						v-for="role in sortedContactRoles"
-						:key="role.id"
-						class="viewTableRow">
+					<tr v-for="role in sortedContactRoles" :key="role.id" class="viewTableRow">
 						<td>
 							<router-link
 								class="contact-link"
-								:to="{
-									name: 'ContactDetail',
-									params: { id: role.toContact },
-								}">
+								:to="{ name: 'ContactDetail', params: { id: role.toContact } }">
 								{{ getEntityName(role.toContact) }}
 							</router-link>
 						</td>
 						<td>
-							<span
-								class="role-badge"
-								:class="'role-badge--' + role.type">
+							<span class="role-badge" :class="'role-badge--' + role.type">
 								{{ getRoleLabel(role.type) }}
 							</span>
 						</td>
@@ -56,20 +48,19 @@
 		</div>
 
 		<!-- Add role dialog -->
-		<AddContactRoleDialog
-			v-if="showAddDialog"
-			:contactOptions="contactOptions"
-			:roleOptions="roleOptions"
-			@searchContacts="searchContacts"
+		<AddContactRoleDialog v-if="showAddDialog"
+			:contact-options="contactOptions"
+			:role-options="roleOptions"
+			@search-contacts="searchContacts"
 			@submit="addRole"
 			@cancel="showAddDialog = false" />
 	</div>
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import AddContactRoleDialog from '../dialogs/AddContactRoleDialog.vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { useObjectStore } from '../store/modules/object.js'
 
 const CRM_ROLES = [
@@ -88,14 +79,12 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 	},
-
 	props: {
 		leadId: {
 			type: String,
 			required: true,
 		},
 	},
-
 	data() {
 		return {
 			contactRoles: [],
@@ -106,7 +95,6 @@ export default {
 			searchTimeout: null,
 		}
 	},
-
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-5
@@ -114,30 +102,26 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-7
 		 */
 		roleOptions() {
 			return CRM_ROLES
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-9
 		 */
 		sortedContactRoles() {
 			return [...this.contactRoles].sort((a, b) => {
-				const aOrder = CRM_ROLES.find((r) => r.value === a.type)?.order || 99
-				const bOrder = CRM_ROLES.find((r) => r.value === b.type)?.order || 99
+				const aOrder = CRM_ROLES.find(r => r.value === a.type)?.order || 99
+				const bOrder = CRM_ROLES.find(r => r.value === b.type)?.order || 99
 				return aOrder - bOrder
 			})
 		},
 	},
-
 	async mounted() {
 		await this.fetchRoles()
 	},
-
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-2
@@ -145,14 +129,11 @@ export default {
 		async fetchRoles() {
 			this.loading = true
 			try {
-				const items = await this.objectStore.fetchCollection(
-					'relationship',
-					{
-						_limit: 50,
-						fromContact: this.leadId,
-						category: 'CRM Rol',
-					},
-				)
+				const items = await this.objectStore.fetchCollection('relationship', {
+					_limit: 50,
+					fromContact: this.leadId,
+					category: 'CRM Rol',
+				})
 				this.contactRoles = items || []
 				for (const role of this.contactRoles) {
 					if (role.toContact && !this.entityNameCache[role.toContact]) {
@@ -165,17 +146,13 @@ export default {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * @param entityId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-4
 		 */
 		async loadEntityName(entityId) {
 			try {
-				const entity = await this.objectStore.fetchObject(
-					'contact',
-					entityId,
-				)
+				const entity = await this.objectStore.fetchObject('contact', entityId)
 				if (entity) {
 					this.entityNameCache[entityId] = entity.name || entityId
 				} else {
@@ -185,20 +162,17 @@ export default {
 				this.entityNameCache[entityId] = entityId
 			}
 		},
-
 		getEntityName(entityId) {
 			return this.entityNameCache[entityId] || entityId || '-'
 		},
-
 		/**
 		 * @param roleType
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
 		 */
 		getRoleLabel(roleType) {
-			const role = CRM_ROLES.find((r) => r.value === roleType)
+			const role = CRM_ROLES.find(r => r.value === roleType)
 			return role ? role.label : roleType
 		},
-
 		/**
 		 * @param query
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-8
@@ -213,22 +187,14 @@ export default {
 			}
 			this.searchTimeout = setTimeout(async () => {
 				try {
-					const contacts = await this.objectStore.fetchCollection(
-						'contact',
-						{ _search: query, _limit: 10 },
-					)
-					this.contactOptions = (contacts || []).map((c) => ({
-						id: c.id,
-						name: c.name || c.id,
-					}))
+					const contacts = await this.objectStore.fetchCollection('contact', { _search: query, _limit: 10 })
+					this.contactOptions = (contacts || []).map(c => ({ id: c.id, name: c.name || c.id }))
 				} catch {
 					this.contactOptions = []
 				}
 			}, 300)
 		},
-
 		/**
-		 * @param form
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-1
 		 */
 		async addRole(form) {
@@ -256,7 +222,6 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to add contact role'))
 			}
 		},
-
 		/**
 		 * @param role
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-6
@@ -271,9 +236,7 @@ export default {
 				showSuccess(t('pipelinq', 'Contact role removed'))
 				await this.fetchRoles()
 			} catch (e) {
-				showError(
-					e.message || t('pipelinq', 'Failed to remove contact role'),
-				)
+				showError(e.message || t('pipelinq', 'Failed to remove contact role'))
 			}
 		},
 	},

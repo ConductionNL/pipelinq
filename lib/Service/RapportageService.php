@@ -52,457 +52,477 @@ use RuntimeException;
  *
  * @spec openspec/specs/lead-management/spec.md
  */
-class RapportageService {
-	/**
-	 * Constructor.
-	 *
-	 * @param ContainerInterface $container The DI container (lazy ObjectService lookup).
-	 * @param IAppConfig $appConfig The app config (register/schema slugs).
-	 * @param LoggerInterface $logger Logger for fallback paths.
-	 */
-	public function __construct(
-		private ContainerInterface $container,
-		private IAppConfig $appConfig,
-		private LoggerInterface $logger,
-	) {
-	}//end __construct()
+class RapportageService
+{
+    /**
+     * Constructor.
+     *
+     * @param ContainerInterface $container The DI container (lazy ObjectService lookup).
+     * @param IAppConfig         $appConfig The app config (register/schema slugs).
+     * @param LoggerInterface    $logger    Logger for fallback paths.
+     */
+    public function __construct(
+        private ContainerInterface $container,
+        private IAppConfig $appConfig,
+        private LoggerInterface $logger,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Pipeline value per stage (count, total value, probability-weighted).
-	 *
-	 * @param string|null $pipelineId Optional pipeline filter (matches lead.pipeline).
-	 *
-	 * @return array<int, array{stage: string, count: int, totalValue: float, weightedValue: float}>
-	 *
-	 * @spec openspec/specs/lead-management/spec.md
-	 */
-	public function getStageValues(?string $pipelineId = null): array {
-		$leads = $this->fetchLeads();
-		$buckets = [];
+    /**
+     * Pipeline value per stage (count, total value, probability-weighted).
+     *
+     * @param string|null $pipelineId Optional pipeline filter (matches lead.pipeline).
+     *
+     * @return array<int, array{stage: string, count: int, totalValue: float, weightedValue: float}>
+     *
+     * @spec openspec/specs/lead-management/spec.md
+     */
+    public function getStageValues(?string $pipelineId=null): array
+    {
+        $leads   = $this->fetchLeads();
+        $buckets = [];
 
-		foreach ($leads as $lead) {
-			if ($pipelineId !== null && $pipelineId !== '' && (string)($lead['pipeline'] ?? '') !== $pipelineId) {
-				continue;
-			}
+        foreach ($leads as $lead) {
+            if ($pipelineId !== null && $pipelineId !== '' && (string) ($lead['pipeline'] ?? '') !== $pipelineId) {
+                continue;
+            }
 
-			$stage = (string)($lead['stage'] ?? '');
-			if ($stage === '') {
-				continue;
-			}
+            $stage = (string) ($lead['stage'] ?? '');
+            if ($stage === '') {
+                continue;
+            }
 
-			if (isset($buckets[$stage]) === false) {
-				$buckets[$stage] = ['stage' => $stage, 'count' => 0, 'totalValue' => 0.0, 'weightedValue' => 0.0];
-			}
+            if (isset($buckets[$stage]) === false) {
+                $buckets[$stage] = ['stage' => $stage, 'count' => 0, 'totalValue' => 0.0, 'weightedValue' => 0.0];
+            }
 
-			$value = (float)($lead['value'] ?? 0);
-			$probability = (float)($lead['probability'] ?? 0);
-			$buckets[$stage]['count']++;
-			$buckets[$stage]['totalValue'] += $value;
-			$buckets[$stage]['weightedValue'] += ($value * $probability / 100.0);
-		}
+            $value       = (float) ($lead['value'] ?? 0);
+            $probability = (float) ($lead['probability'] ?? 0);
+            $buckets[$stage]['count']++;
+            $buckets[$stage]['totalValue']    += $value;
+            $buckets[$stage]['weightedValue'] += ($value * $probability / 100.0);
+        }
 
-		return array_values($buckets);
-	}//end getStageValues()
+        return array_values($buckets);
 
-	/**
-	 * Source performance: total / won / conversion / avg-won-value per source.
-	 *
-	 * @param string|null $dateFrom Optional ISO 8601 lower bound (lead created date).
-	 * @param string|null $dateTo Optional ISO 8601 upper bound (lead created date).
-	 *
-	 * @return array<int, array{source: string, total: int, won: int, conversionRate: float, avgWonValue: float}>
-	 *
-	 * @spec openspec/specs/lead-management/spec.md
-	 */
-	public function getSourcePerformance(?string $dateFrom = null, ?string $dateTo = null): array {
-		$leads = $this->fetchLeads();
-		$byCreated = $this->filterByCreated(leads: $leads, from: $dateFrom, to: $dateTo);
+    }//end getStageValues()
 
-		$buckets = [];
-		foreach ($byCreated as $lead) {
-			$source = (string)($lead['source'] ?? 'unknown');
-			if ($source === '') {
-				$source = 'unknown';
-			}
+    /**
+     * Source performance: total / won / conversion / avg-won-value per source.
+     *
+     * @param string|null $dateFrom Optional ISO 8601 lower bound (lead created date).
+     * @param string|null $dateTo   Optional ISO 8601 upper bound (lead created date).
+     *
+     * @return array<int, array{source: string, total: int, won: int, conversionRate: float, avgWonValue: float}>
+     *
+     * @spec openspec/specs/lead-management/spec.md
+     */
+    public function getSourcePerformance(?string $dateFrom=null, ?string $dateTo=null): array
+    {
+        $leads     = $this->fetchLeads();
+        $byCreated = $this->filterByCreated(leads: $leads, from: $dateFrom, to: $dateTo);
 
-			if (isset($buckets[$source]) === false) {
-				$buckets[$source] = ['source' => $source, 'total' => 0, 'won' => 0, 'wonValueSum' => 0.0];
-			}
+        $buckets = [];
+        foreach ($byCreated as $lead) {
+            $source = (string) ($lead['source'] ?? 'unknown');
+            if ($source === '') {
+                $source = 'unknown';
+            }
 
-			$buckets[$source]['total']++;
-			$status = (string)($lead['status'] ?? 'open');
-			if ($status === 'won') {
-				$buckets[$source]['won']++;
-				$buckets[$source]['wonValueSum'] += (float)($lead['value'] ?? 0);
-			}
-		}
+            if (isset($buckets[$source]) === false) {
+                $buckets[$source] = ['source' => $source, 'total' => 0, 'won' => 0, 'wonValueSum' => 0.0];
+            }
 
-		$result = [];
-		foreach ($buckets as $row) {
-			$conversion = round(($row['won'] / $row['total']) * 100.0, 1);
-			$avgWon = 0.0;
+            $buckets[$source]['total']++;
+            $status = (string) ($lead['status'] ?? 'open');
+            if ($status === 'won') {
+                $buckets[$source]['won']++;
+                $buckets[$source]['wonValueSum'] += (float) ($lead['value'] ?? 0);
+            }
+        }
 
-			if ($row['won'] > 0) {
-				$avgWon = round($row['wonValueSum'] / $row['won'], 2);
-			}
+        $result = [];
+        foreach ($buckets as $row) {
+            $conversion = round(($row['won'] / $row['total']) * 100.0, 1);
+            $avgWon     = 0.0;
 
-			$result[] = [
-				'source' => $row['source'],
-				'total' => $row['total'],
-				'won' => $row['won'],
-				'conversionRate' => $conversion,
-				'avgWonValue' => $avgWon,
-			];
-		}
+            if ($row['won'] > 0) {
+                $avgWon = round($row['wonValueSum'] / $row['won'], 2);
+            }
 
-		return $result;
-	}//end getSourcePerformance()
+            $result[] = [
+                'source'         => $row['source'],
+                'total'          => $row['total'],
+                'won'            => $row['won'],
+                'conversionRate' => $conversion,
+                'avgWonValue'    => $avgWon,
+            ];
+        }
 
-	/**
-	 * Aging buckets — distributes open leads across the 4 fixed buckets.
-	 *
-	 * Buckets: 0-7d / 8-14d / 15-30d / >30d, keyed by `_dateModified`.
-	 *
-	 * @return array<int, array{bucket: string, count: int, totalValue: float}>
-	 *
-	 * @spec openspec/specs/lead-management/spec.md
-	 */
-	public function getAgingBuckets(): array {
-		$leads = $this->fetchLeads();
-		$now = time();
+        return $result;
 
-		$buckets = [
-			'0-7d' => ['bucket' => '0-7d',   'count' => 0, 'totalValue' => 0.0],
-			'8-14d' => ['bucket' => '8-14d',  'count' => 0, 'totalValue' => 0.0],
-			'15-30d' => ['bucket' => '15-30d', 'count' => 0, 'totalValue' => 0.0],
-			'30d+' => ['bucket' => '30d+',   'count' => 0, 'totalValue' => 0.0],
-		];
+    }//end getSourcePerformance()
 
-		foreach ($leads as $lead) {
-			$status = (string)($lead['status'] ?? 'open');
-			if ($status === 'won' || $status === 'lost') {
-				continue;
-			}
+    /**
+     * Aging buckets — distributes open leads across the 4 fixed buckets.
+     *
+     * Buckets: 0-7d / 8-14d / 15-30d / >30d, keyed by `_dateModified`.
+     *
+     * @return array<int, array{bucket: string, count: int, totalValue: float}>
+     *
+     * @spec openspec/specs/lead-management/spec.md
+     */
+    public function getAgingBuckets(): array
+    {
+        $leads = $this->fetchLeads();
+        $now   = time();
 
-			$modified = $this->extractTimestamp(lead: $lead, key: '_dateModified');
-			if ($modified === null) {
-				continue;
-			}
+        $buckets = [
+            '0-7d'   => ['bucket' => '0-7d',   'count' => 0, 'totalValue' => 0.0],
+            '8-14d'  => ['bucket' => '8-14d',  'count' => 0, 'totalValue' => 0.0],
+            '15-30d' => ['bucket' => '15-30d', 'count' => 0, 'totalValue' => 0.0],
+            '30d+'   => ['bucket' => '30d+',   'count' => 0, 'totalValue' => 0.0],
+        ];
 
-			$days = (int)floor(($now - $modified) / 86400);
-			if ($days < 0) {
-				$days = 0;
-			}
+        foreach ($leads as $lead) {
+            $status = (string) ($lead['status'] ?? 'open');
+            if ($status === 'won' || $status === 'lost') {
+                continue;
+            }
 
-			$key = '0-7d';
-			if ($days > 30) {
-				$key = '30d+';
-			} elseif ($days > 14) {
-				$key = '15-30d';
-			} elseif ($days > 7) {
-				$key = '8-14d';
-			}
+            $modified = $this->extractTimestamp(lead: $lead, key: '_dateModified');
+            if ($modified === null) {
+                continue;
+            }
 
-			$buckets[$key]['count']++;
-			$buckets[$key]['totalValue'] += (float)($lead['value'] ?? 0);
-		}//end foreach
+            $days = (int) floor(($now - $modified) / 86400);
+            if ($days < 0) {
+                $days = 0;
+            }
 
-		return array_values($buckets);
-	}//end getAgingBuckets()
+            $key = '0-7d';
+            if ($days > 30) {
+                $key = '30d+';
+            } else if ($days > 14) {
+                $key = '15-30d';
+            } else if ($days > 7) {
+                $key = '8-14d';
+            }
 
-	/**
-	 * Win/loss summary for closed leads within the optional date range.
-	 *
-	 * @param string|null $dateFrom Optional ISO 8601 lower bound.
-	 * @param string|null $dateTo Optional ISO 8601 upper bound.
-	 *
-	 * @return array{wonCount:int, lostCount:int, winRate:float, avgWonValue:float, avgLostValue:float, avgDaysToClose:float}
-	 *
-	 * @spec openspec/specs/lead-management/spec.md
-	 */
-	public function getWinLossAnalysis(?string $dateFrom = null, ?string $dateTo = null): array {
-		$leads = $this->fetchLeads();
-		$closed = [];
-		foreach ($leads as $lead) {
-			$status = (string)($lead['status'] ?? '');
-			if ($status === 'won' || $status === 'lost') {
-				$closed[] = $lead;
-			}
-		}
+            $buckets[$key]['count']++;
+            $buckets[$key]['totalValue'] += (float) ($lead['value'] ?? 0);
+        }//end foreach
 
-		$closed = $this->filterByCreated(leads: $closed, from: $dateFrom, to: $dateTo);
-		$totals = $this->accumulateWinLossTotals(leads: $closed);
+        return array_values($buckets);
 
-		return $this->buildWinLossSummary(totals: $totals);
-	}//end getWinLossAnalysis()
+    }//end getAgingBuckets()
 
-	/**
-	 * Accumulate won/lost counts, value sums, and close-duration stats for closed leads.
-	 *
-	 * @param array<int, array<string, mixed>> $leads The closed (won/lost) leads.
-	 *
-	 * @return array{wonCount:int, lostCount:int, wonValueSum:float, lostValueSum:float, daysSum:float, daysCount:int}
-	 */
-	private function accumulateWinLossTotals(array $leads): array {
-		$wonCount = 0;
-		$lostCount = 0;
-		$wonValueSum = 0.0;
-		$lostValueSum = 0.0;
-		$daysSum = 0.0;
-		$daysCount = 0;
+    /**
+     * Win/loss summary for closed leads within the optional date range.
+     *
+     * @param string|null $dateFrom Optional ISO 8601 lower bound.
+     * @param string|null $dateTo   Optional ISO 8601 upper bound.
+     *
+     * @return array{wonCount:int, lostCount:int, winRate:float, avgWonValue:float, avgLostValue:float, avgDaysToClose:float}
+     *
+     * @spec openspec/specs/lead-management/spec.md
+     */
+    public function getWinLossAnalysis(?string $dateFrom=null, ?string $dateTo=null): array
+    {
+        $leads  = $this->fetchLeads();
+        $closed = [];
+        foreach ($leads as $lead) {
+            $status = (string) ($lead['status'] ?? '');
+            if ($status === 'won' || $status === 'lost') {
+                $closed[] = $lead;
+            }
+        }
 
-		foreach ($leads as $lead) {
-			$status = (string)($lead['status'] ?? '');
-			$value = (float)($lead['value'] ?? 0);
+        $closed = $this->filterByCreated(leads: $closed, from: $dateFrom, to: $dateTo);
+        $totals = $this->accumulateWinLossTotals(leads: $closed);
 
-			if ($status === 'won') {
-				$wonCount++;
-				$wonValueSum += $value;
-			}
+        return $this->buildWinLossSummary(totals: $totals);
+    }//end getWinLossAnalysis()
 
-			if ($status !== 'won') {
-				$lostCount++;
-				$lostValueSum += $value;
-			}
+    /**
+     * Accumulate won/lost counts, value sums, and close-duration stats for closed leads.
+     *
+     * @param array<int, array<string, mixed>> $leads The closed (won/lost) leads.
+     *
+     * @return array{wonCount:int, lostCount:int, wonValueSum:float, lostValueSum:float, daysSum:float, daysCount:int}
+     */
+    private function accumulateWinLossTotals(array $leads): array
+    {
+        $wonCount     = 0;
+        $lostCount    = 0;
+        $wonValueSum  = 0.0;
+        $lostValueSum = 0.0;
+        $daysSum      = 0.0;
+        $daysCount    = 0;
 
-			$created = $this->extractTimestamp(lead: $lead, key: '_dateCreated');
-			$modified = $this->extractTimestamp(lead: $lead, key: '_dateModified');
-			if ($created !== null && $modified !== null && $modified >= $created) {
-				$daysSum += (($modified - $created) / 86400);
-				$daysCount++;
-			}
-		}//end foreach
+        foreach ($leads as $lead) {
+            $status = (string) ($lead['status'] ?? '');
+            $value  = (float) ($lead['value'] ?? 0);
 
-		return [
-			'wonCount' => $wonCount,
-			'lostCount' => $lostCount,
-			'wonValueSum' => $wonValueSum,
-			'lostValueSum' => $lostValueSum,
-			'daysSum' => $daysSum,
-			'daysCount' => $daysCount,
-		];
-	}//end accumulateWinLossTotals()
+            if ($status === 'won') {
+                $wonCount++;
+                $wonValueSum += $value;
+            }
 
-	/**
-	 * Turn accumulated win/loss totals into the public summary shape.
-	 *
-	 * @param array{wonCount:int, lostCount:int, wonValueSum:float, lostValueSum:float, daysSum:float, daysCount:int} $totals The accumulated totals.
-	 *
-	 * @return array{wonCount:int, lostCount:int, winRate:float, avgWonValue:float, avgLostValue:float, avgDaysToClose:float}
-	 */
-	private function buildWinLossSummary(array $totals): array {
-		$wonCount = $totals['wonCount'];
-		$lostCount = $totals['lostCount'];
-		$total = ($wonCount + $lostCount);
+            if ($status !== 'won') {
+                $lostCount++;
+                $lostValueSum += $value;
+            }
 
-		$winRate = 0.0;
-		if ($total > 0) {
-			$winRate = round(($wonCount / $total) * 100.0, 1);
-		}
+            $created  = $this->extractTimestamp(lead: $lead, key: '_dateCreated');
+            $modified = $this->extractTimestamp(lead: $lead, key: '_dateModified');
+            if ($created !== null && $modified !== null && $modified >= $created) {
+                $daysSum += (($modified - $created) / 86400);
+                $daysCount++;
+            }
+        }//end foreach
 
-		$avgWon = 0.0;
-		if ($wonCount > 0) {
-			$avgWon = round($totals['wonValueSum'] / $wonCount, 2);
-		}
+        return [
+            'wonCount'     => $wonCount,
+            'lostCount'    => $lostCount,
+            'wonValueSum'  => $wonValueSum,
+            'lostValueSum' => $lostValueSum,
+            'daysSum'      => $daysSum,
+            'daysCount'    => $daysCount,
+        ];
+    }//end accumulateWinLossTotals()
 
-		$avgLost = 0.0;
-		if ($lostCount > 0) {
-			$avgLost = round($totals['lostValueSum'] / $lostCount, 2);
-		}
+    /**
+     * Turn accumulated win/loss totals into the public summary shape.
+     *
+     * @param array{wonCount:int, lostCount:int, wonValueSum:float, lostValueSum:float, daysSum:float, daysCount:int} $totals The accumulated totals.
+     *
+     * @return array{wonCount:int, lostCount:int, winRate:float, avgWonValue:float, avgLostValue:float, avgDaysToClose:float}
+     */
+    private function buildWinLossSummary(array $totals): array
+    {
+        $wonCount  = $totals['wonCount'];
+        $lostCount = $totals['lostCount'];
+        $total     = ($wonCount + $lostCount);
 
-		$avgDays = 0.0;
-		if ($totals['daysCount'] > 0) {
-			$avgDays = round($totals['daysSum'] / $totals['daysCount'], 1);
-		}
+        $winRate = 0.0;
+        if ($total > 0) {
+            $winRate = round(($wonCount / $total) * 100.0, 1);
+        }
 
-		return [
-			'wonCount' => $wonCount,
-			'lostCount' => $lostCount,
-			'winRate' => $winRate,
-			'avgWonValue' => $avgWon,
-			'avgLostValue' => $avgLost,
-			'avgDaysToClose' => $avgDays,
-		];
-	}//end buildWinLossSummary()
+        $avgWon = 0.0;
+        if ($wonCount > 0) {
+            $avgWon = round($totals['wonValueSum'] / $wonCount, 2);
+        }
 
-	/**
-	 * Filter leads by `_dateCreated` within the optional bounds.
-	 *
-	 * @param array<int, array<string, mixed>> $leads The leads.
-	 * @param string|null $from ISO 8601 lower bound (inclusive).
-	 * @param string|null $to ISO 8601 upper bound (inclusive).
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function filterByCreated(array $leads, ?string $from, ?string $to): array {
-		if (($from === null || $from === '') && ($to === null || $to === '')) {
-			return $leads;
-		}
+        $avgLost = 0.0;
+        if ($lostCount > 0) {
+            $avgLost = round($totals['lostValueSum'] / $lostCount, 2);
+        }
 
-		$fromTs = $this->parseDateBound(value: $from);
-		$toTs = $this->parseDateBound(value: $to);
+        $avgDays = 0.0;
+        if ($totals['daysCount'] > 0) {
+            $avgDays = round($totals['daysSum'] / $totals['daysCount'], 1);
+        }
 
-		$result = [];
-		foreach ($leads as $lead) {
-			if ($this->isWithinCreatedBounds(lead: $lead, fromTs: $fromTs, toTs: $toTs) === true) {
-				$result[] = $lead;
-			}
-		}
+        return [
+            'wonCount'       => $wonCount,
+            'lostCount'      => $lostCount,
+            'winRate'        => $winRate,
+            'avgWonValue'    => $avgWon,
+            'avgLostValue'   => $avgLost,
+            'avgDaysToClose' => $avgDays,
+        ];
+    }//end buildWinLossSummary()
 
-		return $result;
-	}//end filterByCreated()
+    /**
+     * Filter leads by `_dateCreated` within the optional bounds.
+     *
+     * @param array<int, array<string, mixed>> $leads The leads.
+     * @param string|null                      $from  ISO 8601 lower bound (inclusive).
+     * @param string|null                      $to    ISO 8601 upper bound (inclusive).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function filterByCreated(array $leads, ?string $from, ?string $to): array
+    {
+        if (($from === null || $from === '') && ($to === null || $to === '')) {
+            return $leads;
+        }
 
-	/**
-	 * Parse an optional ISO-8601 date bound into a unix timestamp.
-	 *
-	 * @param ?string $value The date string, or null/empty for "no bound".
-	 *
-	 * @return int|null The parsed timestamp, or null when absent/unparseable.
-	 */
-	private function parseDateBound(?string $value): ?int {
-		if ($value === null || $value === '') {
-			return null;
-		}
+        $fromTs = $this->parseDateBound(value: $from);
+        $toTs   = $this->parseDateBound(value: $to);
 
-		$parsed = strtotime($value);
-		if ($parsed === false) {
-			return null;
-		}
+        $result = [];
+        foreach ($leads as $lead) {
+            if ($this->isWithinCreatedBounds(lead: $lead, fromTs: $fromTs, toTs: $toTs) === true) {
+                $result[] = $lead;
+            }
+        }
 
-		return $parsed;
-	}//end parseDateBound()
+        return $result;
+    }//end filterByCreated()
 
-	/**
-	 * Whether a lead's `_dateCreated` falls within the optional [from, to] bounds.
-	 *
-	 * @param array<string, mixed> $lead The lead row.
-	 * @param int|null $fromTs Lower bound (inclusive), or null.
-	 * @param int|null $toTs Upper bound (inclusive), or null.
-	 *
-	 * @return bool
-	 */
-	private function isWithinCreatedBounds(array $lead, ?int $fromTs, ?int $toTs): bool {
-		$created = $this->extractTimestamp(lead: $lead, key: '_dateCreated');
-		if ($created === null) {
-			return false;
-		}
+    /**
+     * Parse an optional ISO-8601 date bound into a unix timestamp.
+     *
+     * @param ?string $value The date string, or null/empty for "no bound".
+     *
+     * @return int|null The parsed timestamp, or null when absent/unparseable.
+     */
+    private function parseDateBound(?string $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
 
-		if ($fromTs !== null && $created < $fromTs) {
-			return false;
-		}
+        $parsed = strtotime($value);
+        if ($parsed === false) {
+            return null;
+        }
 
-		if ($toTs !== null && $created > $toTs) {
-			return false;
-		}
+        return $parsed;
+    }//end parseDateBound()
 
-		return true;
-	}//end isWithinCreatedBounds()
+    /**
+     * Whether a lead's `_dateCreated` falls within the optional [from, to] bounds.
+     *
+     * @param array<string, mixed> $lead   The lead row.
+     * @param int|null             $fromTs Lower bound (inclusive), or null.
+     * @param int|null             $toTs   Upper bound (inclusive), or null.
+     *
+     * @return bool
+     */
+    private function isWithinCreatedBounds(array $lead, ?int $fromTs, ?int $toTs): bool
+    {
+        $created = $this->extractTimestamp(lead: $lead, key: '_dateCreated');
+        if ($created === null) {
+            return false;
+        }
 
-	/**
-	 * Extract a unix timestamp from `_dateModified` / `_dateCreated` /
-	 * the OpenRegister `@self.updated` mirror.
-	 *
-	 * @param array<string, mixed> $lead The lead row.
-	 * @param string $key The preferred key.
-	 *
-	 * @return int|null
-	 */
-	private function extractTimestamp(array $lead, string $key): ?int {
-		$candidates = [$lead[$key] ?? null];
+        if ($fromTs !== null && $created < $fromTs) {
+            return false;
+        }
 
-		$self = $lead['@self'] ?? null;
-		if (is_array($self) === true) {
-			if ($key === '_dateModified') {
-				$candidates[] = $self['updated'] ?? null;
-			} elseif ($key === '_dateCreated') {
-				$candidates[] = $self['created'] ?? null;
-			}
-		}
+        if ($toTs !== null && $created > $toTs) {
+            return false;
+        }
 
-		foreach ($candidates as $candidate) {
-			if (is_string($candidate) === true && $candidate !== '') {
-				$timestamp = strtotime($candidate);
-				if ($timestamp !== false) {
-					return $timestamp;
-				}
-			} elseif (is_int($candidate) === true) {
-				return $candidate;
-			}
-		}
+        return true;
+    }//end isWithinCreatedBounds()
 
-		return null;
-	}//end extractTimestamp()
+    /**
+     * Extract a unix timestamp from `_dateModified` / `_dateCreated` /
+     * the OpenRegister `@self.updated` mirror.
+     *
+     * @param array<string, mixed> $lead The lead row.
+     * @param string               $key  The preferred key.
+     *
+     * @return int|null
+     */
+    private function extractTimestamp(array $lead, string $key): ?int
+    {
+        $candidates = [$lead[$key] ?? null];
 
-	/**
-	 * Fetch all lead objects via OpenRegister ObjectService. Returns an
-	 * empty list when OpenRegister is unavailable (no exception leakage).
-	 *
-	 * @return array<int, array<string, mixed>>
-	 */
-	private function fetchLeads(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
-		if ($register === '' || $schema === '') {
-			return [];
-		}
+        $self = $lead['@self'] ?? null;
+        if (is_array($self) === true) {
+            if ($key === '_dateModified') {
+                $candidates[] = $self['updated'] ?? null;
+            } else if ($key === '_dateCreated') {
+                $candidates[] = $self['created'] ?? null;
+            }
+        }
 
-		try {
-			$service = $this->getObjectService();
-			$results = $service->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema]]);
-		} catch (\Throwable $e) {
-			$this->logger->warning('Pipelinq: rapportage lead fetch failed', ['exception' => $e->getMessage()]);
-			return [];
-		}
+        foreach ($candidates as $candidate) {
+            if (is_string($candidate) === true && $candidate !== '') {
+                $timestamp = strtotime($candidate);
+                if ($timestamp !== false) {
+                    return $timestamp;
+                }
+            } else if (is_int($candidate) === true) {
+                return $candidate;
+            }
+        }
 
-		$leads = [];
-		foreach (($results ?? []) as $result) {
-			$leads[] = $this->toArray(object: $result);
-		}
+        return null;
 
-		return $leads;
-	}//end fetchLeads()
+    }//end extractTimestamp()
 
-	/**
-	 * Resolve the OpenRegister ObjectService from the container.
-	 *
-	 * @return object
-	 * @throws RuntimeException When OpenRegister is unavailable.
-	 */
-	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
+    /**
+     * Fetch all lead objects via OpenRegister ObjectService. Returns an
+     * empty list when OpenRegister is unavailable (no exception leakage).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function fetchLeads(): array
+    {
+        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+        $schema   = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
+        if ($register === '' || $schema === '') {
+            return [];
+        }
 
-	}//end getObjectService()
+        try {
+            $service = $this->getObjectService();
+            $results = $service->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema]]);
+        } catch (\Throwable $e) {
+            $this->logger->warning('Pipelinq: rapportage lead fetch failed', ['exception' => $e->getMessage()]);
+            return [];
+        }
 
-	/**
-	 * Normalise an OpenRegister entity (or array) to a plain array.
-	 *
-	 * @param mixed $object The entity or array.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
+        $leads = [];
+        foreach (($results ?? []) as $result) {
+            $leads[] = $this->toArray(object: $result);
+        }
 
-		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			$serialized = $object->jsonSerialize();
-			if (is_array($serialized) === true) {
-				return $serialized;
-			}
-		}
+        return $leads;
 
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (is_array($data) === true) {
-				return $data;
-			}
-		}
+    }//end fetchLeads()
 
-		return [];
-	}//end toArray()
+    /**
+     * Resolve the OpenRegister ObjectService from the container.
+     *
+     * @return object
+     * @throws RuntimeException When OpenRegister is unavailable.
+     */
+    private function getObjectService(): object
+    {
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        } catch (\Throwable $e) {
+            throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
+        }
+
+    }//end getObjectService()
+
+    /**
+     * Normalise an OpenRegister entity (or array) to a plain array.
+     *
+     * @param mixed $object The entity or array.
+     *
+     * @return array<string, mixed>
+     */
+    private function toArray(mixed $object): array
+    {
+        if (is_array($object) === true) {
+            return $object;
+        }
+
+        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+            $serialized = $object->jsonSerialize();
+            if (is_array($serialized) === true) {
+                return $serialized;
+            }
+        }
+
+        if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+            $data = $object->getObject();
+            if (is_array($data) === true) {
+                return $data;
+            }
+        }
+
+        return [];
+
+    }//end toArray()
 }//end class

@@ -25,9 +25,7 @@
 				@keydown.enter="openQueue(queue)">
 				<div class="queue-card__header">
 					<span class="queue-card__title">{{ queue.title }}</span>
-					<span
-						v-if="queue.isActive === false"
-						class="queue-card__badge queue-card__badge--inactive">
+					<span v-if="queue.isActive === false" class="queue-card__badge queue-card__badge--inactive">
 						{{ t('pipelinq', 'Inactive') }}
 					</span>
 				</div>
@@ -41,14 +39,10 @@
 					</div>
 					<div class="stat">
 						<span class="stat__value">{{ getAgentCount(queue) }}</span>
-						<span class="stat__label">{{
-							t('pipelinq', 'agents')
-						}}</span>
+						<span class="stat__label">{{ t('pipelinq', 'agents') }}</span>
 					</div>
 				</div>
-				<div
-					v-if="queue.categories && queue.categories.length"
-					class="queue-card__categories">
+				<div v-if="queue.categories && queue.categories.length" class="queue-card__categories">
 					<span
 						v-for="cat in queue.categories"
 						:key="cat"
@@ -79,14 +73,12 @@ export default {
 		NcLoadingIcon,
 		QueueCreateDialog,
 	},
-
 	data() {
 		return {
 			showCreateDialog: false,
 			itemCounts: {},
 		}
 	},
-
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-19
@@ -94,35 +86,28 @@ export default {
 		queuesStore() {
 			return useQueuesStore()
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-16
 		 */
 		loading() {
 			return this.queuesStore.loading
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-18
 		 */
 		queues() {
 			return this.queuesStore.queues
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-21
 		 */
 		sortedQueues() {
-			return [...this.queues].sort(
-				(a, b) => (a.sortOrder || 0) - (b.sortOrder || 0),
-			)
+			return [...this.queues].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
 		},
 	},
-
 	mounted() {
 		this.queuesStore.fetchQueues()
 	},
-
 	methods: {
 		/**
 		 * @param queue
@@ -131,25 +116,19 @@ export default {
 		openQueue(queue) {
 			this.$router.push({ name: 'QueueDetail', params: { id: queue.id } })
 		},
-
 		getItemCount(queue) {
 			return this.itemCounts[queue.id] || 0
 		},
-
 		getAgentCount(queue) {
 			return (queue.assignedAgents || []).length
 		},
-
 		/**
 		 * @param {object} newQueue Raw form fields emitted by QueueCreateDialog.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-15
 		 */
 		async createQueue(newQueue) {
 			const categories = newQueue.categoriesInput
-				? newQueue.categoriesInput
-						.split(',')
-						.map((c) => c.trim())
-						.filter(Boolean)
+				? newQueue.categoriesInput.split(',').map(c => c.trim()).filter(Boolean)
 				: []
 
 			const data = {
@@ -168,7 +147,6 @@ export default {
 				this.resetCreateForm()
 			}
 		},
-
 		/**
 		 * Close the create dialog. `v-if` unmounts QueueCreateDialog, which owns
 		 * the form state, so closing is what clears the fields.

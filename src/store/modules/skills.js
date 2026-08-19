@@ -11,8 +11,8 @@ export const useSkillsStore = defineStore('skills', {
 		error: null,
 	}),
 	getters: {
-		activeSkills: (state) => state.skills.filter((s) => s.isActive !== false),
-		getSkillById: (state) => (id) => state.skills.find((s) => s.id === id),
+		activeSkills: (state) => state.skills.filter(s => s.isActive !== false),
+		getSkillById: (state) => (id) => state.skills.find(s => s.id === id),
 	},
 	actions: {
 		/**
@@ -23,9 +23,7 @@ export const useSkillsStore = defineStore('skills', {
 			this.error = null
 			try {
 				const objectStore = useObjectStore()
-				const result = await objectStore.fetchCollection('skill', {
-					_limit: 100,
-				})
+				const result = await objectStore.fetchCollection('skill', { _limit: 100 })
 				this.skills = result || []
 			} catch (error) {
 				this.error = error.message
@@ -69,7 +67,7 @@ export const useSkillsStore = defineStore('skills', {
 				const objectStore = useObjectStore()
 				const success = await objectStore.deleteObject('skill', id)
 				if (success) {
-					this.skills = this.skills.filter((s) => s.id !== id)
+					this.skills = this.skills.filter(s => s.id !== id)
 				}
 				return success
 			} catch (error) {

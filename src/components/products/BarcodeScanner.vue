@@ -5,17 +5,14 @@
 				ref="field"
 				class="barcode-scanner__field"
 				:label="t('pipelinq', 'Scan barcode')"
-				:modelValue="value"
+				:model-value="value"
 				:disabled="status === 'loading'"
-				@update:modelValue="onInput"
+				@update:model-value="onInput"
 				@keydown.enter="emitManual" />
 
 			<div class="barcode-scanner__status" aria-live="polite">
 				<NcLoadingIcon v-if="status === 'loading'" :size="20" />
-				<Check
-					v-else-if="status === 'found'"
-					:size="20"
-					class="barcode-scanner__icon--success" />
+				<Check v-else-if="status === 'found'" :size="20" class="barcode-scanner__icon--success" />
 			</div>
 
 			<NcButton
@@ -47,10 +44,7 @@
 			{{ errorMessage }}
 		</NcNoteCard>
 
-		<div
-			v-if="scanning"
-			class="barcode-scanner__overlay"
-			@keydown.esc="onCloseCamera">
+		<div v-if="scanning" class="barcode-scanner__overlay" @keydown.esc="onCloseCamera">
 			<video
 				ref="videoEl"
 				class="barcode-scanner__video"
@@ -107,49 +101,41 @@ export default {
 		Check,
 		Close,
 	},
-
 	props: {
 		/** Autofocus the HID input on mount so a keyboard-wedge scanner types into it. */
 		autofocus: {
 			type: Boolean,
 			default: true,
 		},
-
 		/** Scan lifecycle status: idle | loading | found | error. */
 		status: {
 			type: String,
 			default: 'idle',
 			validator: (v) => ['idle', 'loading', 'found', 'error'].includes(v),
 		},
-
 		/** Error message shown when status is 'error'. */
 		errorMessage: {
 			type: String,
 			default: '',
 		},
 	},
-
 	emits: ['scan'],
 	setup(props, { emit }) {
-		const { supported, scanning, videoEl, startCamera, stopCamera } =
-			useBarcodeScanner((barcode) => {
-				emit('scan', barcode)
-			})
+		const { supported, scanning, videoEl, startCamera, stopCamera } = useBarcodeScanner((barcode) => {
+			emit('scan', barcode)
+		})
 		return { supported, scanning, videoEl, startCamera, stopCamera }
 	},
-
 	data() {
 		return {
 			value: '',
 		}
 	},
-
 	mounted() {
 		if (this.autofocus) {
 			this.focusField()
 		}
 	},
-
 	methods: {
 		/**
 		 * Focus the HID input.
@@ -162,7 +148,6 @@ export default {
 				}
 			})
 		},
-
 		/**
 		 * Track typed / scanned input.
 		 *
@@ -171,7 +156,6 @@ export default {
 		onInput(v) {
 			this.value = v
 		},
-
 		/**
 		 * Emit a manually typed/submitted barcode and reset the field.
 		 */
@@ -184,7 +168,6 @@ export default {
 			this.value = ''
 			this.focusField()
 		},
-
 		/**
 		 * Open the camera viewfinder.
 		 */
@@ -195,7 +178,6 @@ export default {
 				this.$emit('camera-error')
 			}
 		},
-
 		/**
 		 * Close the camera viewfinder without emitting a scan.
 		 */

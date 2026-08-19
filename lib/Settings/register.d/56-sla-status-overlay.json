@@ -62,7 +62,7 @@
                       "title": "Status",
                       "description": "Current lifecycle status of this record."
                     },
-                    "withAt": {
+                    "metAt": {
                       "type": "string",
                       "format": "date-time",
                       "title": "Met At",

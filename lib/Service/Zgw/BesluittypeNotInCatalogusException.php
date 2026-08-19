@@ -32,20 +32,20 @@ namespace OCA\Pipelinq\Service\Zgw;
 /**
  * Besluittype omschrijving not found in ZTC catalogus.
  */
-class BesluittypeNotInCatalogusException extends ZgwException {
-	/**
-	 * Constructor.
-	 *
-	 * @param string $omschrijving The besluittype omschrijving we attempted to resolve.
-	 */
-	public function __construct(
-		public readonly string $omschrijving,
-	) {
-		parent::__construct(
-			message: sprintf(
-				'ZGW: besluittype with omschrijving "%s" not found in catalogus',
-				$omschrijving
-			)
-		);
-	}//end __construct()
+class BesluittypeNotInCatalogusException extends ZgwException
+{
+    /**
+     * Constructor.
+     *
+     * @param string $omschrijving The besluittype omschrijving we attempted to resolve.
+     */
+    public function __construct(public readonly string $omschrijving)
+    {
+        parent::__construct(
+                message: sprintf(
+            'ZGW: besluittype with omschrijving "%s" not found in catalogus',
+            $omschrijving
+        )
+                );
+    }//end __construct()
 }//end class

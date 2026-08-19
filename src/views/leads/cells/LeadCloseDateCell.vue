@@ -2,7 +2,10 @@
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <!-- @spec openspec/specs/customer-360/spec.md -->
 <template>
-	<span class="lead-close-cell" :class="cellClass" :title="srLabel">
+	<span
+		class="lead-close-cell"
+		:class="cellClass"
+		:title="srLabel">
 		<AlertOctagram
 			v-if="state === 'overdue'"
 			:size="16"
@@ -19,8 +22,8 @@
 </template>
 
 <script>
-import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import AlertOctagram from 'vue-material-design-icons/AlertOctagram.vue'
+import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 
 /**
  * Lead expected-close-date cell renderer (Customer 360 / REQ-KB360-014).
@@ -41,7 +44,6 @@ export default {
 		AlertOctagram,
 		AlertCircle,
 	},
-
 	props: {
 		/**
 		 * The raw cell value — typically an ISO-date string.
@@ -53,7 +55,6 @@ export default {
 			default: null,
 		},
 	},
-
 	computed: {
 		/**
 		 * Resolved Date object (or null when the value is empty/invalid).
@@ -61,12 +62,10 @@ export default {
 		 * @return {?Date}
 		 */
 		dateObj() {
-			if (this.value === null || this.value === undefined || this.value === '')
-				return null
+			if (this.value === null || this.value === undefined || this.value === '') return null
 			const d = new Date(this.value)
 			return Number.isNaN(d.getTime()) ? null : d
 		},
-
 		/**
 		 * Visual state: 'overdue' (past), 'soon' (≤7 days), 'ok' (>7 days), 'unknown' (no date).
 		 *
@@ -78,21 +77,17 @@ export default {
 			today.setHours(0, 0, 0, 0)
 			const target = new Date(this.dateObj)
 			target.setHours(0, 0, 0, 0)
-			const diffDays = Math.round(
-				(target.getTime() - today.getTime()) / 86400000,
-			)
+			const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000)
 			if (diffDays < 0) return 'overdue'
 			if (diffDays <= 7) return 'soon'
 			return 'ok'
 		},
-
 		cellClass() {
 			return {
 				'lead-close-cell--overdue': this.state === 'overdue',
 				'lead-close-cell--soon': this.state === 'soon',
 			}
 		},
-
 		formattedDate() {
 			if (!this.dateObj) return '-'
 			try {
@@ -101,7 +96,6 @@ export default {
 				return this.dateObj.toISOString().slice(0, 10)
 			}
 		},
-
 		srLabel() {
 			if (this.state === 'overdue') return this.t('pipelinq', 'Overdue')
 			if (this.state === 'soon') return this.t('pipelinq', 'Closes soon')

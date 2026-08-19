@@ -30,196 +30,204 @@ use OCP\SystemTag\TagAlreadyExistsException;
  *
  * @spec openspec/changes/reverse-2026-05-26-be-tags/tasks.md
  */
-class SystemTagCrudService {
-	/**
-	 * Known pipelinq object types for tag cross-referencing.
-	 *
-	 * @var string[]
-	 */
-	private const PIPELINQ_OBJECT_TYPES = [
-		'pipelinq_lead_source',
-		'pipelinq_request_channel',
-	];
+class SystemTagCrudService
+{
+    /**
+     * Known pipelinq object types for tag cross-referencing.
+     *
+     * @var string[]
+     */
+    private const PIPELINQ_OBJECT_TYPES = [
+        'pipelinq_lead_source',
+        'pipelinq_request_channel',
+    ];
 
-	/**
-	 * Constructor.
-	 *
-	 * @param ISystemTagManager $tagManager The system tag manager.
-	 * @param ISystemTagObjectMapper $tagMapper The system tag object mapper.
-	 */
-	public function __construct(
-		private ISystemTagManager $tagManager,
-		private ISystemTagObjectMapper $tagMapper,
-	) {
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param ISystemTagManager      $tagManager The system tag manager.
+     * @param ISystemTagObjectMapper $tagMapper  The system tag object mapper.
+     */
+    public function __construct(
+        private ISystemTagManager $tagManager,
+        private ISystemTagObjectMapper $tagMapper,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Fetch tag IDs mapped to a given object type.
-	 *
-	 * @param string $objectType The object type.
-	 *
-	 * @return array The tag IDs.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-3
-	 */
-	public function getTagIdsForType(string $objectType): array {
-		$tagIds = $this->tagMapper->getTagIdsForObjects(
-			objIds: [$objectType],
-			objectType: $objectType
-		);
+    /**
+     * Fetch tag IDs mapped to a given object type.
+     *
+     * @param string $objectType The object type.
+     *
+     * @return array The tag IDs.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-3
+     */
+    public function getTagIdsForType(string $objectType): array
+    {
+        $tagIds = $this->tagMapper->getTagIdsForObjects(
+            objIds: [$objectType],
+            objectType: $objectType
+        );
 
-		if (empty($tagIds[$objectType]) === true) {
-			return [];
-		}
+        if (empty($tagIds[$objectType]) === true) {
+            return [];
+        }
 
-		return $tagIds[$objectType];
-	}//end getTagIdsForType()
+        return $tagIds[$objectType];
+    }//end getTagIdsForType()
 
-	/**
-	 * Resolve tag IDs to tag data arrays.
-	 *
-	 * @param array $tagIds The tag IDs to resolve.
-	 *
-	 * @return array The resolved tag data.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-5
-	 */
-	public function resolveTagData(array $tagIds): array {
-		$tags = $this->tagManager->getTagsByIds($tagIds);
+    /**
+     * Resolve tag IDs to tag data arrays.
+     *
+     * @param array $tagIds The tag IDs to resolve.
+     *
+     * @return array The resolved tag data.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-5
+     */
+    public function resolveTagData(array $tagIds): array
+    {
+        $tags = $this->tagManager->getTagsByIds($tagIds);
 
-		$result = [];
-		foreach ($tags as $tag) {
-			$result[] = [
-				'id' => (int)$tag->getId(),
-				'name' => $tag->getName(),
-			];
-		}
+        $result = [];
+        foreach ($tags as $tag) {
+            $result[] = [
+                'id'   => (int) $tag->getId(),
+                'name' => $tag->getName(),
+            ];
+        }
 
-		return $result;
-	}//end resolveTagData()
+        return $result;
+    }//end resolveTagData()
 
-	/**
-	 * Create a new system tag or reuse an existing one with the same name.
-	 *
-	 * @param string $name The tag name.
-	 *
-	 * @return object The system tag.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-2
-	 */
-	public function createOrReuseSystemTag(string $name): object {
-		try {
-			return $this->tagManager->createTag(
-				tagName: $name,
-				userVisible: true,
-				userAssignable: false
-			);
-		} catch (TagAlreadyExistsException $e) {
-			return $this->tagManager->getTag(
-				tagName: $name,
-				userVisible: true,
-				userAssignable: false
-			);
-		}
-	}//end createOrReuseSystemTag()
+    /**
+     * Create a new system tag or reuse an existing one with the same name.
+     *
+     * @param string $name The tag name.
+     *
+     * @return object The system tag.
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-2
+     */
+    public function createOrReuseSystemTag(string $name): object
+    {
+        try {
+            return $this->tagManager->createTag(
+                tagName: $name,
+                userVisible: true,
+                userAssignable: false
+            );
+        } catch (TagAlreadyExistsException $e) {
+            return $this->tagManager->getTag(
+                tagName: $name,
+                userVisible: true,
+                userAssignable: false
+            );
+        }
+    }//end createOrReuseSystemTag()
 
-	/**
-	 * Assign a tag to an object type.
-	 *
-	 * @param string $objectType The object type.
-	 * @param int $tagId The tag ID to assign.
-	 *
-	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-1
-	 */
-	public function assignTag(string $objectType, int $tagId): void {
-		$this->tagMapper->assignTags(
-			objId: $objectType,
-			objectType: $objectType,
-			tagIds: [$tagId]
-		);
-	}//end assignTag()
+    /**
+     * Assign a tag to an object type.
+     *
+     * @param string $objectType The object type.
+     * @param int    $tagId      The tag ID to assign.
+     *
+     * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-1
+     */
+    public function assignTag(string $objectType, int $tagId): void
+    {
+        $this->tagMapper->assignTags(
+            objId: $objectType,
+            objectType: $objectType,
+            tagIds: [$tagId]
+        );
+    }//end assignTag()
 
-	/**
-	 * Unassign a tag from an object type and optionally delete the global tag.
-	 *
-	 * @param string $objectType The object type.
-	 * @param int $tagId The tag ID to remove.
-	 *
-	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-6
-	 */
-	public function unassignAndCleanup(string $objectType, int $tagId): void {
-		$this->tagMapper->unassignTags(
-			objId: $objectType,
-			objectType: $objectType,
-			tagIds: [$tagId]
-		);
+    /**
+     * Unassign a tag from an object type and optionally delete the global tag.
+     *
+     * @param string $objectType The object type.
+     * @param int    $tagId      The tag ID to remove.
+     *
+     * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-6
+     */
+    public function unassignAndCleanup(string $objectType, int $tagId): void
+    {
+        $this->tagMapper->unassignTags(
+            objId: $objectType,
+            objectType: $objectType,
+            tagIds: [$tagId]
+        );
 
-		$stillUsed = $this->isTagUsedByOtherTypes(
-			tagId: $tagId,
-			excludeType: $objectType
-		);
+        $stillUsed = $this->isTagUsedByOtherTypes(
+            tagId: $tagId,
+            excludeType: $objectType
+        );
 
-		if ($stillUsed === false) {
-			$this->tagManager->deleteTags([(string)$tagId]);
-		}
-	}//end unassignAndCleanup()
+        if ($stillUsed === false) {
+            $this->tagManager->deleteTags([(string) $tagId]);
+        }
+    }//end unassignAndCleanup()
 
-	/**
-	 * Rename a system tag, preserving the existing userAssignable value.
-	 *
-	 * The previous implementation hardcoded userAssignable:false on every
-	 * rename, permanently locking the tag from the Nextcloud UI regardless of
-	 * how it was originally created (issue #605).
-	 *
-	 * @param int $tagId The tag ID.
-	 * @param string $newName The new name.
-	 *
-	 * @return void
-	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-4
-	 */
-	public function renameSystemTag(int $tagId, string $newName): void {
-		// Read existing flags so we do not clobber userAssignable on rename.
-		$existingTags = $this->tagManager->getTagsByIds([(string)$tagId]);
-		$userAssignable = false;
-		if (empty($existingTags) === false) {
-			$existingTag = reset($existingTags);
-			$userAssignable = $existingTag->isUserAssignable();
-		}
+    /**
+     * Rename a system tag, preserving the existing userAssignable value.
+     *
+     * The previous implementation hardcoded userAssignable:false on every
+     * rename, permanently locking the tag from the Nextcloud UI regardless of
+     * how it was originally created (issue #605).
+     *
+     * @param int    $tagId   The tag ID.
+     * @param string $newName The new name.
+     *
+     * @return void
+     * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-4
+     */
+    public function renameSystemTag(int $tagId, string $newName): void
+    {
+        // Read existing flags so we do not clobber userAssignable on rename.
+        $existingTags   = $this->tagManager->getTagsByIds([(string) $tagId]);
+        $userAssignable = false;
+        if (empty($existingTags) === false) {
+            $existingTag    = reset($existingTags);
+            $userAssignable = $existingTag->isUserAssignable();
+        }
 
-		$this->tagManager->updateTag(
-			tagId: (string)$tagId,
-			newName: $newName,
-			userVisible: true,
-			userAssignable: $userAssignable,
-			color: null
-		);
-	}//end renameSystemTag()
+        $this->tagManager->updateTag(
+            tagId: (string) $tagId,
+            newName: $newName,
+            userVisible: true,
+            userAssignable: $userAssignable,
+            color: null
+        );
+    }//end renameSystemTag()
 
-	/**
-	 * Check if a tag is still used by other pipelinq object types.
-	 *
-	 * @param int $tagId The tag ID to check.
-	 * @param string $excludeType The object type to exclude from the check.
-	 *
-	 * @return bool True if the tag is still used by another type.
-	 */
-	private function isTagUsedByOtherTypes(int $tagId, string $excludeType): bool {
-		foreach (self::PIPELINQ_OBJECT_TYPES as $otherType) {
-			if ($otherType === $excludeType) {
-				continue;
-			}
+    /**
+     * Check if a tag is still used by other pipelinq object types.
+     *
+     * @param int    $tagId       The tag ID to check.
+     * @param string $excludeType The object type to exclude from the check.
+     *
+     * @return bool True if the tag is still used by another type.
+     */
+    private function isTagUsedByOtherTypes(int $tagId, string $excludeType): bool
+    {
+        foreach (self::PIPELINQ_OBJECT_TYPES as $otherType) {
+            if ($otherType === $excludeType) {
+                continue;
+            }
 
-			$otherTagIds = $this->tagMapper->getTagIdsForObjects(
-				objIds: [$otherType],
-				objectType: $otherType
-			);
+            $otherTagIds = $this->tagMapper->getTagIdsForObjects(
+                objIds: [$otherType],
+                objectType: $otherType
+            );
 
-			if (empty($otherTagIds[$otherType]) === false
-				&& in_array($tagId, $otherTagIds[$otherType], true) === true
-			) {
-				return true;
-			}
-		}
+            if (empty($otherTagIds[$otherType]) === false
+                && in_array($tagId, $otherTagIds[$otherType], true) === true
+            ) {
+                return true;
+            }
+        }
 
-		return false;
-	}//end isTagUsedByOtherTypes()
+        return false;
+    }//end isTagUsedByOtherTypes()
 }//end class

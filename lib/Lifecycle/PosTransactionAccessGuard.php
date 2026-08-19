@@ -42,43 +42,44 @@ use OCA\OpenRegister\Lifecycle\LifecycleGuardInterface;
  *
  * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.2
  */
-class PosTransactionAccessGuard implements LifecycleGuardInterface {
-	/**
-	 * Constructor.
-	 *
-	 * @param PosAccessPolicy $policy The shared POS access policy.
-	 */
-	public function __construct(
-		private PosAccessPolicy $policy,
-	) {
-	}//end __construct()
+class PosTransactionAccessGuard implements LifecycleGuardInterface
+{
+    /**
+     * Constructor.
+     *
+     * @param PosAccessPolicy $policy The shared POS access policy.
+     */
+    public function __construct(private PosAccessPolicy $policy)
+    {
+    }//end __construct()
 
-	/**
-	 * Authorise a cashier-level transition on a transaction.
-	 *
-	 * @param array<string, mixed> $object The posTransaction payload.
-	 * @param string $action The transition action.
-	 * @param string $userId The acting user UID.
-	 *
-	 * @return GuardResult Allow when the user owns the transaction, is a
-	 *                     POS-group member, or is an admin; deny otherwise.
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
-	 *  static allow()/deny() factories mandated by OpenRegister's contract.
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action is part of the
-	 *  LifecycleGuardInterface signature; this guard authorises every
-	 *  cashier-level action identically.
-	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.2
-	 */
-	public function check(array $object, string $action, string $userId): GuardResult {
-		if ($this->policy->canAccessTransaction(object: $object, userId: $userId) === false) {
-			return GuardResult::deny(
-				'U mag deze transactie niet wijzigen. Alleen de eigen kassamedewerker, '
-				. 'een lid van de POS-groep of een beheerder is gemachtigd.'
-			);
-		}
+    /**
+     * Authorise a cashier-level transition on a transaction.
+     *
+     * @param array<string, mixed> $object The posTransaction payload.
+     * @param string               $action The transition action.
+     * @param string               $userId The acting user UID.
+     *
+     * @return GuardResult Allow when the user owns the transaction, is a
+     *                     POS-group member, or is an admin; deny otherwise.
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)          GuardResult exposes only the
+     *  static allow()/deny() factories mandated by OpenRegister's contract.
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $action is part of the
+     *  LifecycleGuardInterface signature; this guard authorises every
+     *  cashier-level action identically.
+     *
+     * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#2.2
+     */
+    public function check(array $object, string $action, string $userId): GuardResult
+    {
+        if ($this->policy->canAccessTransaction(object: $object, userId: $userId) === false) {
+            return GuardResult::deny(
+                'U mag deze transactie niet wijzigen. Alleen de eigen kassamedewerker, '
+                .'een lid van de POS-groep of een beheerder is gemachtigd.'
+            );
+        }
 
-		return GuardResult::allow();
-	}//end check()
+        return GuardResult::allow();
+    }//end check()
 }//end class

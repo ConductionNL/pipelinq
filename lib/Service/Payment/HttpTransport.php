@@ -35,18 +35,19 @@ namespace OCA\Pipelinq\Service\Payment;
  *
  * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
-interface HttpTransport {
-	/**
-	 * Execute an HTTP request and return { status, body }.
-	 *
-	 * @param string $method The HTTP method (GET, POST, ...).
-	 * @param string $url The full URL.
-	 * @param array<string, string> $headers Request headers.
-	 * @param string|null $body Optional raw request body.
-	 *
-	 * @return array{status: int, body: array<string, mixed>, raw: string}
-	 *
-	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
-	 */
-	public function request(string $method, string $url, array $headers = [], ?string $body = null): array;
+interface HttpTransport
+{
+    /**
+     * Execute an HTTP request and return { status, body }.
+     *
+     * @param string                $method  The HTTP method (GET, POST, ...).
+     * @param string                $url     The full URL.
+     * @param array<string, string> $headers Request headers.
+     * @param string|null           $body    Optional raw request body.
+     *
+     * @return array{status: int, body: array<string, mixed>, raw: string}
+     *
+     * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+     */
+    public function request(string $method, string $url, array $headers=[], ?string $body=null): array;
 }//end interface

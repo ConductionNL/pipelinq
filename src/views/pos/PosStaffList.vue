@@ -37,13 +37,7 @@
 					<tr v-for="row in staff" :key="row.id">
 						<td>{{ row.displayName }}</td>
 						<td>{{ roleName(row.posRole) }}</td>
-						<td>
-							{{
-								row.isActive === false
-									? t('pipelinq', 'No')
-									: t('pipelinq', 'Yes')
-							}}
-						</td>
+						<td>{{ row.isActive === false ? t('pipelinq', 'No') : t('pipelinq', 'Yes') }}</td>
 						<td>{{ row.lastLoginAt || '—' }}</td>
 						<td>
 							<NcButton @click="edit(row)">
@@ -76,11 +70,9 @@ export default {
 			errorMessage: '',
 		}
 	},
-
 	async mounted() {
 		await Promise.all([this.loadStaff(), this.loadRoles()])
 	},
-
 	methods: {
 		async loadStaff() {
 			this.loading = true
@@ -90,14 +82,11 @@ export default {
 				const response = await axios.get(url)
 				this.staff = response?.data?.staff || []
 			} catch (error) {
-				this.errorMessage =
-					error?.response?.data?.error
-					|| t('pipelinq', 'Failed to load staff')
+				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to load staff')
 			} finally {
 				this.loading = false
 			}
 		},
-
 		async loadRoles() {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/pos/roles')
@@ -107,12 +96,10 @@ export default {
 				this.roles = []
 			}
 		},
-
 		roleName(id) {
 			const role = this.roles.find((r) => r.id === id)
 			return role?.name || id || '—'
 		},
-
 		/**
 		 * Ask the host to open this row for editing.
 		 *
@@ -127,7 +114,6 @@ export default {
 		edit(row) {
 			this.$emit('edit', row.id)
 		},
-
 		/**
 		 * Ask the host to open an empty form.
 		 *

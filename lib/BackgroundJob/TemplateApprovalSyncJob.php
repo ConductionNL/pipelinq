@@ -37,48 +37,50 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.1
  */
-class TemplateApprovalSyncJob extends TimedJob {
-	/**
-	 * Constructor.
-	 *
-	 * @param ITimeFactory $time Time factory.
-	 * @param TemplateApprovalSyncService $syncService Sync orchestrator.
-	 * @param LoggerInterface $logger Logger.
-	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.1
-	 */
-	public function __construct(
-		ITimeFactory $time,
-		private TemplateApprovalSyncService $syncService,
-		private LoggerInterface $logger,
-	) {
-		parent::__construct(time: $time);
+class TemplateApprovalSyncJob extends TimedJob
+{
+    /**
+     * Constructor.
+     *
+     * @param ITimeFactory                $time        Time factory.
+     * @param TemplateApprovalSyncService $syncService Sync orchestrator.
+     * @param LoggerInterface             $logger      Logger.
+     *
+     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#7.1
+     */
+    public function __construct(
+        ITimeFactory $time,
+        private TemplateApprovalSyncService $syncService,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(time: $time);
 
-		// 1 hour interval (3600 seconds) per design.md decision 4.
-		$this->setInterval(seconds: 3600);
-	}//end __construct()
+        // 1 hour interval (3600 seconds) per design.md decision 4.
+        $this->setInterval(seconds: 3600);
+    }//end __construct()
 
-	/**
-	 * Run the sync.
-	 *
-	 * @param mixed $argument Unused job argument.
-	 *
-	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 */
-	protected function run($argument): void {
-		try {
-			$summary = $this->syncService->syncAll();
-			$this->logger->info(
-				'TemplateApprovalSyncJob complete',
-				$summary,
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'TemplateApprovalSyncJob failed',
-				['exception' => $e->getMessage()]
-			);
-		}
-	}//end run()
+    /**
+     * Run the sync.
+     *
+     * @param mixed $argument Unused job argument.
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     */
+    protected function run($argument): void
+    {
+        try {
+            $summary = $this->syncService->syncAll();
+            $this->logger->info(
+                'TemplateApprovalSyncJob complete',
+                $summary,
+            );
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                'TemplateApprovalSyncJob failed',
+                ['exception' => $e->getMessage()]
+            );
+        }
+    }//end run()
 }//end class

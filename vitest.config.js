@@ -26,15 +26,11 @@ module.exports = {
 		environment: 'node',
 		globals: false,
 		include: ['tests/vitest/**/*.spec.{js,ts}'],
-		exclude: [
-			'tests/e2e/**',
-			'tests/integration/**',
-			'tests/Unit/**',
-			'src/**',
-			'node_modules/**',
-		],
+		exclude: ['tests/e2e/**', 'tests/integration/**', 'tests/Unit/**', 'src/**', 'node_modules/**'],
 	},
 	resolve: {
-		alias: [{ find: '@', replacement: path.resolve(__dirname, 'src') }],
+		alias: [
+			{ find: '@', replacement: path.resolve(__dirname, 'src') },
+		],
 	},
 }

@@ -36,19 +36,20 @@ namespace OCA\Pipelinq\Service\Zgw;
 /**
  * Clock-skew (VNG "JWT verlopen" / "JWT nog niet geldig") error.
  */
-class ClockSkewException extends ZgwException {
-	/**
-	 * Constructor.
-	 *
-	 * @param string $message Human-readable error message.
-	 * @param int $observedTime Locally-observed Unix time (the iat we sent).
-	 * @param int $serverTime Server-reported clock value, or 0 if unknown.
-	 */
-	public function __construct(
-		string $message,
-		public readonly int $observedTime,
-		public readonly int $serverTime = 0,
-	) {
-		parent::__construct(message: $message);
-	}//end __construct()
+class ClockSkewException extends ZgwException
+{
+    /**
+     * Constructor.
+     *
+     * @param string $message      Human-readable error message.
+     * @param int    $observedTime Locally-observed Unix time (the iat we sent).
+     * @param int    $serverTime   Server-reported clock value, or 0 if unknown.
+     */
+    public function __construct(
+        string $message,
+        public readonly int $observedTime,
+        public readonly int $serverTime=0,
+    ) {
+        parent::__construct(message: $message);
+    }//end __construct()
 }//end class

@@ -52,60 +52,62 @@ use Throwable;
  *
  * @spec openspec/specs/time-approval-workflow/spec.md
  */
-class BillingHandoffRetryJob extends TimedJob {
-	/**
-	 * Polling interval in seconds (15 minutes) — matches PosRetryBackoffJob.
-	 *
-	 * @var int
-	 */
-	private const INTERVAL = 900;
+class BillingHandoffRetryJob extends TimedJob
+{
+    /**
+     * Polling interval in seconds (15 minutes) — matches PosRetryBackoffJob.
+     *
+     * @var int
+     */
+    private const INTERVAL = 900;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param ITimeFactory $time The time factory.
-	 * @param TimeBillingHandoffService $handoffService The billing handoff service.
-	 * @param LoggerInterface $logger The logger.
-	 */
-	public function __construct(
-		ITimeFactory $time,
-		private TimeBillingHandoffService $handoffService,
-		private LoggerInterface $logger,
-	) {
-		parent::__construct(time: $time);
-		$this->setInterval(seconds: self::INTERVAL);
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param ITimeFactory              $time           The time factory.
+     * @param TimeBillingHandoffService $handoffService The billing handoff service.
+     * @param LoggerInterface           $logger         The logger.
+     */
+    public function __construct(
+        ITimeFactory $time,
+        private TimeBillingHandoffService $handoffService,
+        private LoggerInterface $logger,
+    ) {
+        parent::__construct(time: $time);
+        $this->setInterval(seconds: self::INTERVAL);
+    }//end __construct()
 
-	/**
-	 * Re-notify administrators for every batch still `failed`.
-	 *
-	 * Best-effort: never throws, so a notification-delivery outage never
-	 * fails the cron run.
-	 *
-	 * @param mixed $argument Optional payload (unused).
-	 *
-	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
-	 *
-	 * @spec openspec/specs/time-approval-workflow/spec.md
-	 */
-	protected function run(mixed $argument): void {
-		try {
-			$batchIds = $this->handoffService->notifyPendingFailures();
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BillingHandoffRetryJob: failed to re-notify pending billing-handoff failures',
-				['exception' => $e->getMessage()]
-			);
-			return;
-		}
+    /**
+     * Re-notify administrators for every batch still `failed`.
+     *
+     * Best-effort: never throws, so a notification-delivery outage never
+     * fails the cron run.
+     *
+     * @param mixed $argument Optional payload (unused).
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+     *
+     * @spec openspec/specs/time-approval-workflow/spec.md
+     */
+    protected function run(mixed $argument): void
+    {
+        try {
+            $batchIds = $this->handoffService->notifyPendingFailures();
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'BillingHandoffRetryJob: failed to re-notify pending billing-handoff failures',
+                ['exception' => $e->getMessage()]
+            );
+            return;
+        }
 
-		if (empty($batchIds) === false) {
-			$this->logger->info(
-				'BillingHandoffRetryJob: re-notified administrators for failed billing-handoff batches',
-				['batchIds' => $batchIds]
-			);
-		}
-	}//end run()
+        if (empty($batchIds) === false) {
+            $this->logger->info(
+                'BillingHandoffRetryJob: re-notified administrators for failed billing-handoff batches',
+                ['batchIds' => $batchIds]
+            );
+        }
+    }//end run()
 }//end class

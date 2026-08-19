@@ -35,94 +35,98 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
  */
-class CmComSmsClient implements SmsProviderClientInterface {
-	use MessageDispatchTrait;
+class CmComSmsClient implements SmsProviderClientInterface
+{
+    use MessageDispatchTrait;
 
-	/**
-	 * CM.com messages send path, relative to the source base URL.
-	 *
-	 * @var string
-	 */
-	private const SEND_PATH = 'messages';
+    /**
+     * CM.com messages send path, relative to the source base URL.
+     *
+     * @var string
+     */
+    private const SEND_PATH = 'messages';
 
-	/**
-	 * Constructor.
-	 *
-	 * @param ContainerInterface $container DI container.
-	 * @param LoggerInterface $logger Logger.
-	 * @param array<string, mixed> $credentials Decoded credentials.
-	 * @param string $fromNumber Sender E.164 / account id.
-	 * @param string $webhookSecret Shared HMAC secret.
-	 * @param string|null $sourceId openconnector source id.
-	 *
-	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
-	 */
-	public function __construct(
-		private ContainerInterface $container,
-		private LoggerInterface $logger,
-		private array $credentials,
-		private string $fromNumber,
-		private string $webhookSecret,
-		private ?string $sourceId = null,
-	) {
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param ContainerInterface   $container     DI container.
+     * @param LoggerInterface      $logger        Logger.
+     * @param array<string, mixed> $credentials   Decoded credentials.
+     * @param string               $fromNumber    Sender E.164 / account id.
+     * @param string               $webhookSecret Shared HMAC secret.
+     * @param string|null          $sourceId      openconnector source id.
+     *
+     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+     */
+    public function __construct(
+        private ContainerInterface $container,
+        private LoggerInterface $logger,
+        private array $credentials,
+        private string $fromNumber,
+        private string $webhookSecret,
+        private ?string $sourceId=null,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Send a single SMS via CM.com.
-	 *
-	 * @param string $toNumber Recipient E.164.
-	 * @param string $body Plain-text body.
-	 *
-	 * @return array{externalMessageId: string, vendor: string} Provider id.
-	 *
-	 * @throws TransientSmsProviderException On 5xx / network.
-	 * @throws PermanentSmsProviderException On 4xx / config.
-	 *
-	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#1.3
-	 */
-	public function send(string $toNumber, string $body): array {
-		$payload = [
-			'from' => $this->fromNumber,
-			'to' => [$toNumber],
-			'body' => $body,
-		];
+    /**
+     * Send a single SMS via CM.com.
+     *
+     * @param string $toNumber Recipient E.164.
+     * @param string $body     Plain-text body.
+     *
+     * @return array{externalMessageId: string, vendor: string} Provider id.
+     *
+     * @throws TransientSmsProviderException On 5xx / network.
+     * @throws PermanentSmsProviderException On 4xx / config.
+     *
+     * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#1.3
+     */
+    public function send(string $toNumber, string $body): array
+    {
+        $payload = [
+            'from' => $this->fromNumber,
+            'to'   => [$toNumber],
+            'body' => $body,
+        ];
 
-		$result = $this->dispatchViaLeaf(
-			source: (string)($this->sourceId ?? ''),
-			body: $payload,
-			path: self::SEND_PATH,
-		);
-		$id = (string)($result['messageId'] ?? ($result['externalMessageId'] ?? ''));
+        $result = $this->dispatchViaLeaf(
+            source: (string) ($this->sourceId ?? ''),
+            body: $payload,
+            path: self::SEND_PATH,
+        );
+        $id     = (string) ($result['messageId'] ?? ($result['externalMessageId'] ?? ''));
 
-		return [
-			'externalMessageId' => $id,
-			'vendor' => $this->getVendor(),
-		];
-	}//end send()
+        return [
+            'externalMessageId' => $id,
+            'vendor'            => $this->getVendor(),
+        ];
+    }//end send()
 
-	/**
-	 * Verify the CM.com signature header.
-	 *
-	 * @param string $rawBody Raw body.
-	 * @param string $signature Header.
-	 *
-	 * @return bool True when authentic.
-	 */
-	public function verifySignature(string $rawBody, string $signature): bool {
-		if ($this->webhookSecret === '' || $signature === '') {
-			return false;
-		}
+    /**
+     * Verify the CM.com signature header.
+     *
+     * @param string $rawBody   Raw body.
+     * @param string $signature Header.
+     *
+     * @return bool True when authentic.
+     */
+    public function verifySignature(string $rawBody, string $signature): bool
+    {
+        if ($this->webhookSecret === '' || $signature === '') {
+            return false;
+        }
 
-		$expected = hash_hmac('sha256', $rawBody, $this->webhookSecret);
-		return hash_equals($expected, $signature);
-	}//end verifySignature()
+        $expected = hash_hmac('sha256', $rawBody, $this->webhookSecret);
+        return hash_equals($expected, $signature);
+    }//end verifySignature()
 
-	/**
-	 * Vendor key.
-	 *
-	 * @return string `cm-com`.
-	 */
-	public function getVendor(): string {
-		return 'cm-com';
-	}//end getVendor()
+    /**
+     * Vendor key.
+     *
+     * @return string `cm-com`.
+     */
+    public function getVendor(): string
+    {
+        return 'cm-com';
+    }//end getVendor()
 }//end class

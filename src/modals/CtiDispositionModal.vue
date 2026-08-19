@@ -22,7 +22,7 @@
 			<NcSelect
 				v-model="form.outcome"
 				:options="outcomeOptions"
-				:inputLabel="t('pipelinq', 'Outcome')"
+				:input-label="t('pipelinq', 'Outcome')"
 				:placeholder="t('pipelinq', 'Choose outcome')"
 				:reduce="(o) => o.value"
 				label="label"
@@ -36,7 +36,7 @@
 				v-if="form.outcome === 'escalated'"
 				v-model="form.queue"
 				:options="queueOptions"
-				:inputLabel="t('pipelinq', 'Escalation queue')"
+				:input-label="t('pipelinq', 'Escalation queue')"
 				:placeholder="t('pipelinq', 'Choose queue')"
 				label="label" />
 		</form>
@@ -52,13 +52,7 @@
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcSelect,
-	NcTextArea,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcButton, NcDialog, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
 
 const OUTCOMES = [
 	{ value: 'resolved', label: 'Resolved' },
@@ -76,7 +70,6 @@ export default {
 		queueOptions: { type: Array, default: () => [] },
 		saving: { type: Boolean, default: false },
 	},
-
 	emits: ['close', 'submit'],
 	data() {
 		return {
@@ -88,22 +81,14 @@ export default {
 			},
 		}
 	},
-
 	computed: {
 		outcomeOptions() {
-			return OUTCOMES.map((o) => ({
-				value: o.value,
-				label: t('pipelinq', o.label),
-			}))
+			return OUTCOMES.map((o) => ({ value: o.value, label: t('pipelinq', o.label) }))
 		},
-
 		valid() {
-			return (
-				this.form.subject.trim().length > 0 && this.form.outcome.length > 0
-			)
+			return this.form.subject.trim().length > 0 && this.form.outcome.length > 0
 		},
 	},
-
 	methods: {
 		submit() {
 			if (!this.valid) {

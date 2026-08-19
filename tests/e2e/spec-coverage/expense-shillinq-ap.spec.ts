@@ -23,26 +23,14 @@
 import { test, expect } from '@playwright/test'
 
 // @e2e openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004
-test('admin settings page renders the Integraties section with the Shillinq AP webhook field', async ({
-	page,
-}) => {
+test('admin settings page renders the Integraties section with the Shillinq AP webhook field', async ({ page }) => {
 	await page.goto('/settings/admin/pipelinq')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
-		timeout: 15000,
-	})
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 15000 })
 	// The Integraties section is a NcSettingsSection; its name is read as text.
 	// We assert one of the labels associated with REQ-AP-004 is present on the page.
 	const sectionTextLocator = page.locator('body')
-	const hasIntegraties = await sectionTextLocator
-		.getByText('Integraties', { exact: false })
-		.first()
-		.isVisible({ timeout: 5000 })
-		.catch(() => false)
-	const hasShillinqLabel = await sectionTextLocator
-		.getByText('Shillinq', { exact: false })
-		.first()
-		.isVisible({ timeout: 5000 })
-		.catch(() => false)
+	const hasIntegraties = await sectionTextLocator.getByText('Integraties', { exact: false }).first().isVisible({ timeout: 5000 }).catch(() => false)
+	const hasShillinqLabel = await sectionTextLocator.getByText('Shillinq', { exact: false }).first().isVisible({ timeout: 5000 }).catch(() => false)
 	expect(hasIntegraties || hasShillinqLabel).toBe(true)
 })
 

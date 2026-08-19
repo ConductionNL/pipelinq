@@ -19,24 +19,27 @@ namespace OC\Security\CSRF;
 /**
  * Stub for OC\Security\CSRF\CsrfTokenManager.
  */
-class CsrfTokenManager {
-	/**
-	 * Return a CSRF token for the current session.
-	 *
-	 * @return CsrfToken The CSRF token.
-	 */
-	public function getToken(): CsrfToken {
-		return new CsrfToken('stub-token');
-	}
+class CsrfTokenManager
+{
+    /**
+     * Return a CSRF token for the current session.
+     *
+     * @return CsrfToken The CSRF token.
+     */
+    public function getToken(): CsrfToken
+    {
+        return new CsrfToken('stub-token');
+    }
 
-	/**
-	 * Check whether the given token is valid.
-	 *
-	 * @param CsrfToken $token The token to validate.
-	 *
-	 * @return bool Always true in this stub.
-	 */
-	public function isTokenValid(CsrfToken $token): bool {
-		return true;
-	}
+    /**
+     * Check whether the given token is valid.
+     *
+     * @param CsrfToken $token The token to validate.
+     *
+     * @return bool Always true in this stub.
+     */
+    public function isTokenValid(CsrfToken $token): bool
+    {
+        return true;
+    }
 }

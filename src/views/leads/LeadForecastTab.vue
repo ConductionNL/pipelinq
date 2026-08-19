@@ -10,19 +10,16 @@
 		<div class="lead-forecast-tab__row">
 			<NcSelect
 				v-model="selected"
-				inputId="forecast-category-select"
-				:inputLabel="t('pipelinq', 'Forecast category')"
+				input-id="forecast-category-select"
+				:input-label="t('pipelinq', 'Forecast category')"
 				:options="categoryOptions"
 				label="label"
 				:disabled="locked"
 				:clearable="false"
-				@update:modelValue="onChange" />
-			<span
-				v-if="locked"
+				@update:model-value="onChange" />
+			<span v-if="locked"
 				class="lead-forecast-tab__lock"
-				:title="
-					t('pipelinq', 'Reopen the deal to change the forecast category')
-				">
+				:title="t('pipelinq', 'Reopen the deal to change the forecast category')">
 				🔒
 			</span>
 		</div>
@@ -60,7 +57,7 @@
 
 		<CommitJustificationModal
 			v-if="showJustification"
-			:initialReason="justification"
+			:initial-reason="justification"
 			@close="cancelJustification"
 			@save="confirmJustification" />
 	</div>
@@ -83,7 +80,6 @@ export default {
 			default: () => ({}),
 		},
 	},
-
 	emits: ['update'],
 	data() {
 		const current = this.objectData?.forecast_category || 'pipeline'
@@ -96,7 +92,6 @@ export default {
 			history: this.objectData?.forecast_category_history || [],
 		}
 	},
-
 	computed: {
 		categoryOptions() {
 			return [
@@ -108,21 +103,17 @@ export default {
 				{ id: 'closed_lost', label: t('pipelinq', 'Closed Lost') },
 			]
 		},
-
 		locked() {
 			return CLOSED.includes(this.objectData?.forecast_category)
 		},
-
 		dealValue() {
 			return Number(this.objectData?.value || 0)
 		},
 	},
-
 	methods: {
 		toOption(id) {
 			return { id, label: this.categoryLabel(id) }
 		},
-
 		categoryLabel(id) {
 			const map = {
 				commit: t('pipelinq', 'Commit'),
@@ -134,41 +125,32 @@ export default {
 			}
 			return map[id] || id
 		},
-
 		onChange(option) {
 			this.errorMessage = ''
 			const id = option?.id
 			if (!id) {
 				return
 			}
-			if (
-				id === 'commit'
-				&& this.dealValue > COMMIT_THRESHOLD
-				&& this.justification.trim().length < 10
-			) {
+			if (id === 'commit' && this.dealValue > COMMIT_THRESHOLD
+				&& this.justification.trim().length < 10) {
 				this.pending = id
 				this.showJustification = true
 				return
 			}
 			this.persist(id, this.justification)
 		},
-
 		confirmJustification(reason) {
 			this.justification = reason
 			this.showJustification = false
 			this.persist(this.pending || 'commit', reason)
 			this.pending = null
 		},
-
 		cancelJustification() {
 			this.showJustification = false
 			this.pending = null
 			// Revert the selector to the persisted value.
-			this.selected = this.toOption(
-				this.objectData?.forecast_category || 'pipeline',
-			)
+			this.selected = this.toOption(this.objectData?.forecast_category || 'pipeline')
 		},
-
 		persist(category, justification) {
 			this.$emit('update', {
 				forecast_category: category,
@@ -180,38 +162,17 @@ export default {
 </script>
 
 <style scoped>
-.lead-forecast-tab {
-	padding: 12px 0;
-}
+.lead-forecast-tab { padding: 12px 0; }
 
-.lead-forecast-tab__row {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
+.lead-forecast-tab__row { display: flex; align-items: center; gap: 8px; }
 
-.lead-forecast-tab__lock {
-	font-size: 1.2em;
-	cursor: help;
-}
+.lead-forecast-tab__lock { font-size: 1.2em; cursor: help; }
 
-.lead-forecast-tab__justification {
-	margin-top: 12px;
-}
+.lead-forecast-tab__justification { margin-top: 12px; }
 
-.lead-forecast-tab__history {
-	margin-top: 16px;
-}
+.lead-forecast-tab__history { margin-top: 16px; }
 
-.lead-forecast-tab__history table {
-	width: 100%;
-	border-collapse: collapse;
-}
+.lead-forecast-tab__history table { width: 100%; border-collapse: collapse; }
 
-.lead-forecast-tab__history th,
-.lead-forecast-tab__history td {
-	text-align: left;
-	padding: 6px 8px;
-	border-bottom: 1px solid var(--color-border);
-}
+.lead-forecast-tab__history th, .lead-forecast-tab__history td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--color-border); }
 </style>

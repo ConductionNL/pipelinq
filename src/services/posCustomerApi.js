@@ -49,17 +49,9 @@ export async function getCustomerHistory(customerId, limit = 0) {
  * @param {boolean} marketingConsent Whether the cashier captured consent.
  * @return {Promise<object>} The updated transaction.
  */
-export async function attachCustomer(
-	transactionId,
-	customerId,
-	marketingConsent = false,
-) {
+export async function attachCustomer(transactionId, customerId, marketingConsent = false) {
 	const { data } = await axios.post(
-		base(
-			'/api/pos-transactions/'
-				+ encodeURIComponent(transactionId)
-				+ '/customer',
-		),
+		base('/api/pos-transactions/' + encodeURIComponent(transactionId) + '/customer'),
 		{ customer: customerId, marketingConsent },
 	)
 	return data?.transaction || null
@@ -73,11 +65,7 @@ export async function attachCustomer(
  */
 export async function detachCustomer(transactionId) {
 	const { data } = await axios.delete(
-		base(
-			'/api/pos-transactions/'
-				+ encodeURIComponent(transactionId)
-				+ '/customer',
-		),
+		base('/api/pos-transactions/' + encodeURIComponent(transactionId) + '/customer'),
 	)
 	return data?.transaction || null
 }
@@ -99,9 +87,6 @@ export async function getCustomerSettings() {
  * @return {Promise<object>} The persisted settings.
  */
 export async function updateCustomerSettings(settings) {
-	const { data } = await axios.post(
-		base('/api/admin/pos-customer-settings'),
-		settings,
-	)
+	const { data } = await axios.post(base('/api/admin/pos-customer-settings'), settings)
 	return data?.settings || {}
 }

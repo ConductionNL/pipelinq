@@ -28,34 +28,32 @@
 				{{ t('pipelinq', 'Report Export') }}
 			</span>
 			<span class="report-export__subtitle">
-				{{
-					t(
-						'pipelinq',
-						'Download CSV / Excel / JSON reports for funders and stakeholders.',
-					)
-				}}
+				{{ t('pipelinq', 'Download CSV / Excel / JSON reports for funders and stakeholders.') }}
 			</span>
 			<span class="report-export__chevron" aria-hidden="true">
 				{{ expanded ? '▾' : '▸' }}
 			</span>
 		</div>
-		<div v-if="expanded" id="report-export-body" class="report-export__body">
+		<div
+			v-if="expanded"
+			id="report-export-body"
+			class="report-export__body">
 			<NcSelect
 				v-model="entityType"
-				:inputLabel="t('pipelinq', 'Entity type')"
+				:input-label="t('pipelinq', 'Entity type')"
 				:options="entityOptions"
 				label="label"
-				trackBy="value"
-				:reduce="(opt) => opt.value"
+				track-by="value"
+				:reduce="opt => opt.value"
 				:clearable="false"
 				class="report-export__field" />
 			<NcSelect
 				v-model="period"
-				:inputLabel="t('pipelinq', 'Period')"
+				:input-label="t('pipelinq', 'Period')"
 				:options="periodOptions"
 				label="label"
-				trackBy="value"
-				:reduce="(opt) => opt.value"
+				track-by="value"
+				:reduce="opt => opt.value"
 				:clearable="false"
 				class="report-export__field" />
 			<NcButton
@@ -69,27 +67,18 @@
 			v-if="showDialog"
 			ref="exportDialog"
 			:items="exportItems"
-			:dialogTitle="
-				t('pipelinq', 'Export {entity} report', {
-					entity: selectedEntityLabel,
-				})
-			"
-			:description="
-				t('pipelinq', 'Generates a {period} report for {entity}.', {
-					period: selectedPeriodLabel,
-					entity: selectedEntityLabel,
-				})
-			"
+			:dialog-title="t('pipelinq', 'Export {entity} report', { entity: selectedEntityLabel })"
+			:description="t('pipelinq', 'Generates a {period} report for {entity}.', { period: selectedPeriodLabel, entity: selectedEntityLabel })"
 			:formats="exportFormats"
-			defaultFormat="excel"
+			default-format="excel"
 			@confirm="onExportConfirm"
 			@close="showDialog = false" />
 	</div>
 </template>
 
 <script>
-import { CnMassExportDialog } from '@conduction/nextcloud-vue'
 import { NcButton, NcSelect } from '@nextcloud/vue'
+import { CnMassExportDialog } from '@conduction/nextcloud-vue'
 
 /**
  * ReportExportPanel — collapsible exporter delegating to ExportService /
@@ -105,7 +94,6 @@ export default {
 		NcSelect,
 		CnMassExportDialog,
 	},
-
 	data() {
 		return {
 			expanded: false,
@@ -119,23 +107,15 @@ export default {
 			],
 		}
 	},
-
 	computed: {
 		entityOptions() {
 			return [
 				{ value: 'leads', label: this.t('pipelinq', 'Leads') },
 				{ value: 'requests', label: this.t('pipelinq', 'Requests') },
-				{
-					value: 'contactmomenten',
-					label: this.t('pipelinq', 'Contact moments'),
-				},
-				{
-					value: 'satisfaction',
-					label: this.t('pipelinq', 'Satisfaction scores'),
-				},
+				{ value: 'contactmomenten', label: this.t('pipelinq', 'Contact moments') },
+				{ value: 'satisfaction', label: this.t('pipelinq', 'Satisfaction scores') },
 			]
 		},
-
 		periodOptions() {
 			return [
 				{ value: 'week', label: this.t('pipelinq', 'This week') },
@@ -144,17 +124,14 @@ export default {
 				{ value: 'year', label: this.t('pipelinq', 'This year') },
 			]
 		},
-
 		selectedEntityLabel() {
-			const opt = this.entityOptions.find((o) => o.value === this.entityType)
+			const opt = this.entityOptions.find(o => o.value === this.entityType)
 			return opt ? opt.label : this.entityType
 		},
-
 		selectedPeriodLabel() {
-			const opt = this.periodOptions.find((o) => o.value === this.period)
+			const opt = this.periodOptions.find(o => o.value === this.period)
 			return opt ? opt.label : this.period
 		},
-
 		/**
 		 * Synthetic items array used to satisfy CnMassExportDialog's items
 		 * prop. The actual export query is built by the consumer in
@@ -166,7 +143,6 @@ export default {
 			return [{ id: this.entityType, title: this.selectedEntityLabel }]
 		},
 	},
-
 	methods: {
 		/**
 		 * Toggle the collapsible body. Wired to click AND keyboard so the
@@ -175,7 +151,6 @@ export default {
 		toggle() {
 			this.expanded = !this.expanded
 		},
-
 		/**
 		 * Open the CnMassExportDialog with the current filters applied.
 		 *
@@ -184,7 +159,6 @@ export default {
 		downloadReport() {
 			this.showDialog = true
 		},
-
 		/**
 		 * Handle the CnMassExportDialog confirm event — delegated to the
 		 * platform ExportService; this method only relays the selection
@@ -198,10 +172,7 @@ export default {
 				period: this.period,
 				format: payload?.format,
 			})
-			if (
-				this.$refs.exportDialog
-				&& typeof this.$refs.exportDialog.setResult === 'function'
-			) {
+			if (this.$refs.exportDialog && typeof this.$refs.exportDialog.setResult === 'function') {
 				this.$refs.exportDialog.setResult({ success: true })
 			}
 		},

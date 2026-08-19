@@ -42,39 +42,27 @@ describe('rateDescription', () => {
 
 describe('recalculateLine', () => {
 	it('adds BTW on top in excl mode', () => {
-		const line = recalculateLine(
-			{ quantity: 2, unitPrice: 10, taxRate: 21 },
-			'excl',
-		)
+		const line = recalculateLine({ quantity: 2, unitPrice: 10, taxRate: 21 }, 'excl')
 		expect(line.net).toBe(20)
 		expect(line.taxAmount).toBe(4.2)
 		expect(line.lineTotal).toBe(24.2)
 	})
 
 	it('extracts BTW out of the price in incl mode', () => {
-		const line = recalculateLine(
-			{ quantity: 1, unitPrice: 121, taxRate: 21 },
-			'incl',
-		)
+		const line = recalculateLine({ quantity: 1, unitPrice: 121, taxRate: 21 }, 'incl')
 		expect(line.net).toBe(100)
 		expect(line.taxAmount).toBe(21)
 		expect(line.lineTotal).toBe(121)
 	})
 
 	it('applies a percentage discount to the net base', () => {
-		const line = recalculateLine(
-			{ quantity: 1, unitPrice: 100, discount: 10, taxRate: 21 },
-			'excl',
-		)
+		const line = recalculateLine({ quantity: 1, unitPrice: 100, discount: 10, taxRate: 21 }, 'excl')
 		expect(line.net).toBe(90)
 		expect(line.taxAmount).toBe(18.9)
 	})
 
 	it('clamps negative inputs and defaults the rate to 21', () => {
-		const line = recalculateLine(
-			{ quantity: -5, unitPrice: -3, discount: 200 },
-			'excl',
-		)
+		const line = recalculateLine({ quantity: -5, unitPrice: -3, discount: 200 }, 'excl')
 		expect(line.quantity).toBe(0)
 		expect(line.unitPrice).toBe(0)
 		expect(line.discount).toBe(100)
@@ -85,32 +73,23 @@ describe('recalculateLine', () => {
 
 describe('computeTotals', () => {
 	it('aggregates mixed-rate lines with a sorted per-rate breakdown', () => {
-		const totals = computeTotals(
-			[
-				{ quantity: 1, unitPrice: 100, taxRate: 21 },
-				{ quantity: 2, unitPrice: 50, taxRate: 9 },
-			],
-			'excl',
-		)
+		const totals = computeTotals([
+			{ quantity: 1, unitPrice: 100, taxRate: 21 },
+			{ quantity: 2, unitPrice: 50, taxRate: 9 },
+		], 'excl')
 		expect(totals.priceMode).toBe('excl')
 		expect(totals.subtotal).toBe(200)
 		expect(totals.totalTax).toBe(30) // 21 + 9
 		expect(totals.total).toBe(230)
 		// breakdown sorted ascending by rate
-		expect(totals.taxBreakdown.map((b) => b.rate)).toEqual([9, 21])
-		expect(totals.invoiceBreakdown[1]).toEqual({
-			rate: 21,
-			base: 100,
-			tax: 21,
-			description: 'Standaardtarief (21%)',
-		})
+		expect(totals.taxBreakdown.map(b => b.rate)).toEqual([9, 21])
+		expect(totals.invoiceBreakdown[1]).toEqual({ rate: 21, base: 100, tax: 21, description: 'Standaardtarief (21%)' })
 	})
 
 	it('accumulates the discount total across lines', () => {
-		const totals = computeTotals(
-			[{ quantity: 1, unitPrice: 100, discount: 25, taxRate: 21 }],
-			'excl',
-		)
+		const totals = computeTotals([
+			{ quantity: 1, unitPrice: 100, discount: 25, taxRate: 21 },
+		], 'excl')
 		expect(totals.subtotal).toBe(75)
 		expect(totals.discountTotal).toBe(25)
 	})
@@ -119,23 +98,13 @@ describe('computeTotals', () => {
 describe('refundLineAmounts', () => {
 	it('returns a proportional share clamped to [0, 1]', () => {
 		const orig = { quantity: 4, taxAmount: 8, lineTotal: 48 }
-		expect(refundLineAmounts(orig, 2)).toEqual({
-			ratio: 0.5,
-			taxAmount: 4,
-			lineTotal: 24,
-		})
+		expect(refundLineAmounts(orig, 2)).toEqual({ ratio: 0.5, taxAmount: 4, lineTotal: 24 })
 		// over-quantity return cannot inflate the refund
-		expect(refundLineAmounts(orig, 10)).toEqual({
-			ratio: 1,
-			taxAmount: 8,
-			lineTotal: 48,
-		})
+		expect(refundLineAmounts(orig, 10)).toEqual({ ratio: 1, taxAmount: 8, lineTotal: 48 })
 	})
 
 	it('returns a zero refund when the original quantity is zero', () => {
-		expect(
-			refundLineAmounts({ quantity: 0, taxAmount: 8, lineTotal: 48 }, 2),
-		).toEqual({ ratio: 0, taxAmount: 0, lineTotal: 0 })
+		expect(refundLineAmounts({ quantity: 0, taxAmount: 8, lineTotal: 48 }, 2)).toEqual({ ratio: 0, taxAmount: 0, lineTotal: 0 })
 	})
 })
 

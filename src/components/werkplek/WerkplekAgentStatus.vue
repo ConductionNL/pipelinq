@@ -22,8 +22,8 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
+import { showError } from '@nextcloud/dialogs'
 
 /**
  * Agent availability toggle button for the KCC Werkplek.
@@ -69,7 +69,6 @@ export default {
 				? this.t('pipelinq', 'Available')
 				: this.t('pipelinq', 'Unavailable')
 		},
-
 		/**
 		 * Aria label describing the toggle action (a11y).
 		 *
@@ -77,14 +76,8 @@ export default {
 		 */
 		ariaLabel() {
 			return this.isAvailable
-				? this.t(
-						'pipelinq',
-						'Currently available — click to mark unavailable',
-					)
-				: this.t(
-						'pipelinq',
-						'Currently unavailable — click to mark available',
-					)
+				? this.t('pipelinq', 'Currently available — click to mark unavailable')
+				: this.t('pipelinq', 'Currently unavailable — click to mark available')
 		},
 	},
 
@@ -104,20 +97,13 @@ export default {
 			// Optimistic update — emit immediately so the parent reflects the toggle.
 			this.$emit('update:isAvailable', next)
 			try {
-				const url = generateUrl(
-					'/apps/pipelinq/api/kcc-werkplek/availability',
-				)
+				const url = generateUrl('/apps/pipelinq/api/kcc-werkplek/availability')
 				await axios.put(url, { isAvailable: next })
 			} catch (e) {
 				// Revert + surface the error.
 				this.$emit('update:isAvailable', !next)
 				try {
-					showError(
-						this.t(
-							'pipelinq',
-							'Could not update availability. Please try again.',
-						),
-					)
+					showError(this.t('pipelinq', 'Could not update availability. Please try again.'))
 				} catch {
 					// dialogs lib may be missing in tests — ignore.
 				}

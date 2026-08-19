@@ -14,7 +14,6 @@ A TimedJob SHALL run every 5 minutes, dispatch queued deliveries for
 single-Blast failure.
 
 #### Scenario: Job dispatches each sending blast
-@e2e exclude cron TimedJob with no UI trigger: BlastSendJobTest::testDispatchSendingBlastsCallsServicePerBlast asserts one dispatchBlastDeliveries + updateBlastTotals per sending blast, and ::testDispatchContinuesOnPerBlastFailure asserts a throwing blast does not abort the run. Both clauses of the scenario are covered; nothing in a browser starts a cron job.
 
 - **GIVEN** Blasts with status "sending" exist
 - **WHEN** BlastSendJob.run() executes
@@ -27,7 +26,6 @@ When an unsubscribe webhook is received, the ConsentRecord SHALL be withdrawn
 within 60 seconds and queued deliveries skipped at dispatch time.
 
 #### Scenario: Webhook unsubscribe updates consent within 60s
-@e2e exclude provider webhook, no browser trigger: WebhookProcessorServiceTest::testUnsubscribeWithdrawsConsent and BlastWorkflowTest::testWithdrawalTransitionsQueuedDeliveriesEndToEnd assert the state transition (queued -> unsubscribed-before-send, sent rows untouched, consentRecord.withdrawnAt set, withdrawnReason=user-unsubscribed). NOT asserted: the literal 60-second latency, which follows from the 5-minute drain cadence rather than from a test.
 
 - **GIVEN** a delivered BlastDelivery for a Contact
 - **WHEN** a SendGrid webhook POSTs an `unsubscribe` event for that Contact
@@ -41,7 +39,6 @@ a threshold (default 5) before withdrawal. Bounced Contacts SHALL be excluded
 from future email Blasts.
 
 #### Scenario: Hard bounce withdraws consent immediately
-@e2e exclude provider webhook, no browser trigger: WebhookProcessorServiceTest asserts recordConsentWithdrawal(contact, email, bounce-hard, blast) exactly once and the delivery row at status=bounced / bounceType=hard.
 
 - **GIVEN** a sent BlastDelivery
 - **WHEN** a hard-bounce webhook is processed
@@ -49,7 +46,6 @@ from future email Blasts.
 - **AND** the ConsentRecord SHALL be withdrawn with reason "bounce-hard"
 
 #### Scenario: Soft bounce increments counter, withdrawal after threshold
-@e2e exclude provider webhook, no browser trigger: WebhookProcessorServiceTest drives five soft-bounce events and asserts recordConsentWithdrawal fires exactly once, with reason bounce-soft-x5 — i.e. the counter and the threshold, not just the end state.
 
 - **GIVEN** a Contact with no prior soft-bounce record
 - **WHEN** soft-bounce webhooks are processed for the Contact 5 times
@@ -61,7 +57,6 @@ Click webhooks SHALL record `firstClickAt`, append to `clickedUrls`, and
 extract the `utm_campaign` parameter for attribution.
 
 #### Scenario: Click event recorded via webhook
-@e2e exclude provider webhook, no browser trigger: WebhookProcessorServiceTest::testClickEventExtractsUtmCampaign asserts the utmCampaign extraction and a single recordClick; AttributionServiceTest::testRecordClickSetsFirstClickAtAndAppendsUrl asserts firstClickAt, the appended URL and the status transition to clicked.
 
 - **GIVEN** a BlastDelivery with a tracked link carrying `utm_campaign=blast-...`
 - **WHEN** a `click` webhook is processed

@@ -45,316 +45,328 @@ use Psr\Log\LoggerInterface;
  * and `unlinkEventsForObject` methods record calls into properties the test
  * inspects — no live Nextcloud or CalDAV needed.
  */
-class AppointmentCalendarLeafProviderTest extends TestCase {
+class AppointmentCalendarLeafProviderTest extends TestCase
+{
 
-	/**
-	 * Build a provider under test with overridable mocks.
-	 *
-	 * @param ObjectService|null $objectService Optional ObjectService mock.
-	 * @param IUserManager|null $userManager Optional user manager mock.
-	 *
-	 * @return array{0: AppointmentCalendarLeafProvider, 1: ObjectService}
-	 */
-	private function buildProvider(
-		?ObjectService $objectService = null,
-		?IUserManager $userManager = null,
-	): array {
-		$objectService = ($objectService ?? $this->createMock(ObjectService::class));
+    /**
+     * Build a provider under test with overridable mocks.
+     *
+     * @param ObjectService|null $objectService Optional ObjectService mock.
+     * @param IUserManager|null  $userManager   Optional user manager mock.
+     *
+     * @return array{0: AppointmentCalendarLeafProvider, 1: ObjectService}
+     */
+    private function buildProvider(
+        ?ObjectService $objectService=null,
+        ?IUserManager $userManager=null,
+    ): array {
+        $objectService = ($objectService ?? $this->createMock(ObjectService::class));
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturn($objectService);
 
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturnCallback(
-			static function (string $app, string $key, string $default = ''): string {
-				$values = [
-					'register' => 'pipelinq',
-					'booking_schema' => 'booking',
-					'service_schema' => 'service',
-					'resource_schema' => 'resource',
-					'contact_schema' => 'contact',
-				];
-				return ($values[$key] ?? $default);
-			}
-		);
+        $appConfig = $this->createMock(IAppConfig::class);
+        $appConfig->method('getValueString')->willReturnCallback(
+            static function (string $app, string $key, string $default=''): string {
+                $values = [
+                    'register'        => 'pipelinq',
+                    'booking_schema'  => 'booking',
+                    'service_schema'  => 'service',
+                    'resource_schema' => 'resource',
+                    'contact_schema'  => 'contact',
+                ];
+                return ($values[$key] ?? $default);
+            }
+        );
 
-		if ($userManager === null) {
-			$userManager = $this->createMock(IUserManager::class);
-			$userManager->method('get')->willReturn(null);
-		}
+        if ($userManager === null) {
+            $userManager = $this->createMock(IUserManager::class);
+            $userManager->method('get')->willReturn(null);
+        }
 
-		$urlGenerator = $this->createMock(IURLGenerator::class);
-		$urlGenerator->method('getAbsoluteURL')->willReturnCallback(
-			static fn (string $path): string => 'https://nc.test' . $path
-		);
+        $urlGenerator = $this->createMock(IURLGenerator::class);
+        $urlGenerator->method('getAbsoluteURL')->willReturnCallback(
+            static fn (string $path): string => 'https://nc.test'.$path
+        );
 
-		$logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
 
-		$provider = new AppointmentCalendarLeafProvider(
-			container: $container,
-			appConfig: $appConfig,
-			userManager: $userManager,
-			urlGenerator: $urlGenerator,
-			logger: $logger,
-		);
+        $provider = new AppointmentCalendarLeafProvider(
+            container: $container,
+            appConfig: $appConfig,
+            userManager: $userManager,
+            urlGenerator: $urlGenerator,
+            logger: $logger,
+        );
 
-		return [$provider, $objectService];
-	}//end buildProvider()
+        return [$provider, $objectService];
+    }//end buildProvider()
 
-	/**
-	 * Build a leaf double that captures createEvent + unlinkEventsForObject calls.
-	 *
-	 * @param array<int, array<string, mixed>> $eventsForObject Optional canned events list.
-	 *
-	 * @return object
-	 */
-	private function buildLeaf(array $eventsForObject = []): object {
-		// phpcs:ignore SlevomatCodingStandard.Classes.RequireSingleLineMethodSignature
-		return new class($eventsForObject) {
-			/**
-			 * Capture of createEvent invocations.
-			 *
-			 * @var array<int, array<string, mixed>>
-			 */
-			public array $creates = [];
+    /**
+     * Build a leaf double that captures createEvent + unlinkEventsForObject calls.
+     *
+     * @param array<int, array<string, mixed>> $eventsForObject Optional canned events list.
+     *
+     * @return object
+     */
+    private function buildLeaf(array $eventsForObject=[]): object
+    {
+        // phpcs:ignore SlevomatCodingStandard.Classes.RequireSingleLineMethodSignature
+        return new class($eventsForObject) {
 
-			/**
-			 * Capture of unlinkEventsForObject invocations.
-			 *
-			 * @var array<int, string>
-			 */
-			public array $unlinks = [];
+            /**
+             * Capture of createEvent invocations.
+             *
+             * @var array<int, array<string, mixed>>
+             */
+            public array $creates = [];
 
-			/**
-			 * Canned event list returned by getEventsForObject.
-			 *
-			 * @var array<int, array<string, mixed>>
-			 */
-			private array $events;
+            /**
+             * Capture of unlinkEventsForObject invocations.
+             *
+             * @var array<int, string>
+             */
+            public array $unlinks = [];
 
-			/**
-			 * @param array<int, array<string, mixed>> $events Canned events.
-			 */
-			public function __construct(array $events) {
-				$this->events = $events;
-			}//end __construct()
+            /**
+             * Canned event list returned by getEventsForObject.
+             *
+             * @var array<int, array<string, mixed>>
+             */
+            private array $events;
 
-			/**
-			 * Stub getEventsForObject — returns the canned list.
-			 *
-			 * @param string $uuid Object UUID.
-			 *
-			 * @return array<int, array<string, mixed>>
-			 */
-			public function getEventsForObject(string $uuid): array {
-				return $this->events;
-			}//end getEventsForObject()
+            /**
+             * @param array<int, array<string, mixed>> $events Canned events.
+             */
+            public function __construct(array $events)
+            {
+                $this->events = $events;
+            }//end __construct()
 
-			/**
-			 * Stub createEvent — records the call.
-			 *
-			 * @param int $registerId Register id.
-			 * @param int $schemaId Schema id.
-			 * @param string $objectUuid Object UUID.
-			 * @param string $objectTitle Object title.
-			 * @param array $data VEVENT payload.
-			 *
-			 * @return array<string, mixed>
-			 */
-			public function createEvent(int $registerId, int $schemaId, string $objectUuid, string $objectTitle, array $data): array {
-				$this->creates[] = [
-					'registerId' => $registerId,
-					'schemaId' => $schemaId,
-					'objectUuid' => $objectUuid,
-					'title' => $objectTitle,
-					'data' => $data,
-				];
-				return ['id' => 'ev-' . count($this->creates)];
-			}//end createEvent()
+            /**
+             * Stub getEventsForObject — returns the canned list.
+             *
+             * @param string $uuid Object UUID.
+             *
+             * @return array<int, array<string, mixed>>
+             */
+            public function getEventsForObject(string $uuid): array
+            {
+                return $this->events;
+            }//end getEventsForObject()
 
-			/**
-			 * Stub unlinkEventsForObject — records the call.
-			 *
-			 * @param string $uuid Object UUID.
-			 *
-			 * @return void
-			 */
-			public function unlinkEventsForObject(string $uuid): void {
-				$this->unlinks[] = $uuid;
-			}//end unlinkEventsForObject()
-		};
-	}//end buildLeaf()
+            /**
+             * Stub createEvent — records the call.
+             *
+             * @param int    $registerId  Register id.
+             * @param int    $schemaId    Schema id.
+             * @param string $objectUuid  Object UUID.
+             * @param string $objectTitle Object title.
+             * @param array  $data        VEVENT payload.
+             *
+             * @return array<string, mixed>
+             */
+            public function createEvent(int $registerId, int $schemaId, string $objectUuid, string $objectTitle, array $data): array
+            {
+                $this->creates[] = [
+                    'registerId' => $registerId,
+                    'schemaId'   => $schemaId,
+                    'objectUuid' => $objectUuid,
+                    'title'      => $objectTitle,
+                    'data'       => $data,
+                ];
+                return ['id' => 'ev-'.count($this->creates)];
+            }//end createEvent()
 
-	/**
-	 * getBlockedTimes returns empty when the resource has no calendarSyncId.
-	 *
-	 * @return void
-	 */
-	public function testGetBlockedTimesEmptyWithoutCalendarSyncId(): void {
-		$object = $this->createMock(ObjectService::class);
-		$object->method('find')->willReturn([
-			'@self' => ['id' => 'res-sarah'],
-			'name' => 'Sarah',
-		]);
+            /**
+             * Stub unlinkEventsForObject — records the call.
+             *
+             * @param string $uuid Object UUID.
+             *
+             * @return void
+             */
+            public function unlinkEventsForObject(string $uuid): void
+            {
+                $this->unlinks[] = $uuid;
+            }//end unlinkEventsForObject()
+        };
+    }//end buildLeaf()
 
-		[$provider] = $this->buildProvider(objectService: $object);
-		$provider->setLeaf(leaf: $this->buildLeaf());
+    /**
+     * getBlockedTimes returns empty when the resource has no calendarSyncId.
+     *
+     * @return void
+     */
+    public function testGetBlockedTimesEmptyWithoutCalendarSyncId(): void
+    {
+        $object = $this->createMock(ObjectService::class);
+        $object->method('find')->willReturn([
+            '@self' => ['id' => 'res-sarah'],
+            'name'  => 'Sarah',
+        ]);
 
-		$blocks = $provider->getBlockedTimes(resourceId: 'res-sarah', date: '2026-06-01');
-		$this->assertSame(expected: [], actual: $blocks);
-	}//end testGetBlockedTimesEmptyWithoutCalendarSyncId()
+        [$provider] = $this->buildProvider(objectService: $object);
+        $provider->setLeaf(leaf: $this->buildLeaf());
 
-	/**
-	 * getBlockedTimes converts overlapping leaf VEVENTs to HH:MM blocks.
-	 *
-	 * @return void
-	 */
-	public function testGetBlockedTimesConvertsLeafEventsToBlocks(): void {
-		$object = $this->createMock(ObjectService::class);
-		$object->method('find')->willReturn([
-			'@self' => ['id' => 'res-sarah'],
-			'name' => 'Sarah',
-			'calendarSyncId' => 'sarah-cal-uuid',
-		]);
+        $blocks = $provider->getBlockedTimes(resourceId: 'res-sarah', date: '2026-06-01');
+        $this->assertSame(expected: [], actual: $blocks);
+    }//end testGetBlockedTimesEmptyWithoutCalendarSyncId()
 
-		$leaf = $this->buildLeaf(eventsForObject: [
-			['dtstart' => '2026-06-01T12:00:00+00:00', 'dtend' => '2026-06-01T13:00:00+00:00'],
-			// Outside the day window — must be dropped.
-			['dtstart' => '2026-06-02T09:00:00+00:00', 'dtend' => '2026-06-02T10:00:00+00:00'],
-		]);
+    /**
+     * getBlockedTimes converts overlapping leaf VEVENTs to HH:MM blocks.
+     *
+     * @return void
+     */
+    public function testGetBlockedTimesConvertsLeafEventsToBlocks(): void
+    {
+        $object = $this->createMock(ObjectService::class);
+        $object->method('find')->willReturn([
+            '@self'          => ['id' => 'res-sarah'],
+            'name'           => 'Sarah',
+            'calendarSyncId' => 'sarah-cal-uuid',
+        ]);
 
-		[$provider] = $this->buildProvider(objectService: $object);
-		$provider->setLeaf(leaf: $leaf);
+        $leaf = $this->buildLeaf(eventsForObject: [
+            ['dtstart' => '2026-06-01T12:00:00+00:00', 'dtend' => '2026-06-01T13:00:00+00:00'],
+            // Outside the day window — must be dropped.
+            ['dtstart' => '2026-06-02T09:00:00+00:00', 'dtend' => '2026-06-02T10:00:00+00:00'],
+        ]);
 
-		date_default_timezone_set('UTC');
-		$blocks = $provider->getBlockedTimes(resourceId: 'res-sarah', date: '2026-06-01');
+        [$provider] = $this->buildProvider(objectService: $object);
+        $provider->setLeaf(leaf: $leaf);
 
-		$this->assertCount(expectedCount: 1, haystack: $blocks);
-		$this->assertSame(expected: '12:00', actual: $blocks[0]['startTime']);
-		$this->assertSame(expected: '13:00', actual: $blocks[0]['endTime']);
-	}//end testGetBlockedTimesConvertsLeafEventsToBlocks()
+        date_default_timezone_set('UTC');
+        $blocks = $provider->getBlockedTimes(resourceId: 'res-sarah', date: '2026-06-01');
 
-	/**
-	 * pushBookingEvent creates one VEVENT per staff resource on the leaf.
-	 *
-	 * @return void
-	 */
-	public function testPushBookingEventCreatesVeventViaLeaf(): void {
-		$booking = [
-			'@self' => ['id' => 'b-1'],
-			'customerId' => 'cust-1',
-			'customerName' => 'Marieke',
-			'serviceId' => 'svc-haircut',
-			'startAt' => '2026-06-15T10:00:00+02:00',
-			'endAt' => '2026-06-15T10:30:00+02:00',
-			'status' => 'confirmed',
-			'resourceAssignments' => [
-				['stepIndex' => 0, 'resourceId' => 'res-sarah', 'startAt' => '2026-06-15T10:00:00+02:00', 'endAt' => '2026-06-15T10:30:00+02:00'],
-			],
-		];
-		$service = [
-			'@self' => ['id' => 'svc-haircut'],
-			'name' => 'Knipbeurt',
-			'description' => 'Een knipbeurt',
-		];
-		$resource = [
-			'@self' => ['id' => 'res-sarah'],
-			'name' => 'Sarah',
-			'userId' => 'sarah',
-		];
+        $this->assertCount(expectedCount: 1, haystack: $blocks);
+        $this->assertSame(expected: '12:00', actual: $blocks[0]['startTime']);
+        $this->assertSame(expected: '13:00', actual: $blocks[0]['endTime']);
+    }//end testGetBlockedTimesConvertsLeafEventsToBlocks()
 
-		$object = $this->createMock(ObjectService::class);
-		$object->method('find')->willReturnCallback(
-			static function (string $id) use ($booking, $service, $resource): array {
-				if ($id === 'b-1') {
-					return $booking;
-				}
+    /**
+     * pushBookingEvent creates one VEVENT per staff resource on the leaf.
+     *
+     * @return void
+     */
+    public function testPushBookingEventCreatesVeventViaLeaf(): void
+    {
+        $booking = [
+            '@self'               => ['id' => 'b-1'],
+            'customerId'          => 'cust-1',
+            'customerName'        => 'Marieke',
+            'serviceId'           => 'svc-haircut',
+            'startAt'             => '2026-06-15T10:00:00+02:00',
+            'endAt'               => '2026-06-15T10:30:00+02:00',
+            'status'              => 'confirmed',
+            'resourceAssignments' => [
+                ['stepIndex' => 0, 'resourceId' => 'res-sarah', 'startAt' => '2026-06-15T10:00:00+02:00', 'endAt' => '2026-06-15T10:30:00+02:00'],
+            ],
+        ];
+        $service = [
+            '@self'       => ['id' => 'svc-haircut'],
+            'name'        => 'Knipbeurt',
+            'description' => 'Een knipbeurt',
+        ];
+        $resource = [
+            '@self'  => ['id' => 'res-sarah'],
+            'name'   => 'Sarah',
+            'userId' => 'sarah',
+        ];
 
-				if ($id === 'svc-haircut') {
-					return $service;
-				}
+        $object = $this->createMock(ObjectService::class);
+        $object->method('find')->willReturnCallback(
+            static function (string $id) use ($booking, $service, $resource): array {
+                if ($id === 'b-1') {
+                    return $booking;
+                }
 
-				if ($id === 'res-sarah') {
-					return $resource;
-				}
+                if ($id === 'svc-haircut') {
+                    return $service;
+                }
 
-				return [];
-			}
-		);
+                if ($id === 'res-sarah') {
+                    return $resource;
+                }
 
-		$user = $this->createMock(IUser::class);
-		$user->method('getEMailAddress')->willReturn('sarah@example.test');
-		$userManager = $this->createMock(IUserManager::class);
-		$userManager->method('get')->willReturn($user);
+                return [];
+            }
+        );
 
-		$leaf = $this->buildLeaf();
+        $user = $this->createMock(IUser::class);
+        $user->method('getEMailAddress')->willReturn('sarah@example.test');
+        $userManager = $this->createMock(IUserManager::class);
+        $userManager->method('get')->willReturn($user);
 
-		[$provider] = $this->buildProvider(objectService: $object, userManager: $userManager);
-		$provider->setLeaf(leaf: $leaf);
+        $leaf = $this->buildLeaf();
 
-		$provider->pushBookingEvent(bookingId: 'b-1');
+        [$provider] = $this->buildProvider(objectService: $object, userManager: $userManager);
+        $provider->setLeaf(leaf: $leaf);
 
-		$this->assertCount(expectedCount: 1, haystack: $leaf->creates);
-		$call = $leaf->creates[0];
-		$this->assertSame(expected: 'b-1', actual: $call['objectUuid']);
-		$this->assertStringContainsString(needle: 'Marieke', haystack: $call['title']);
-		$this->assertStringContainsString(needle: 'Knipbeurt', haystack: $call['title']);
-		$this->assertSame(expected: '2026-06-15T10:00:00+02:00', actual: $call['data']['dtstart']);
-		$this->assertSame(expected: ['sarah@example.test'], actual: $call['data']['attendees']);
-		$this->assertStringContainsString(needle: '/apps/pipelinq/booking/b-1', haystack: $call['data']['description']);
-	}//end testPushBookingEventCreatesVeventViaLeaf()
+        $provider->pushBookingEvent(bookingId: 'b-1');
 
-	/**
-	 * Reschedule semantics: the leaf's existing VEVENTs for the booking UUID
-	 * are dropped first, then a fresh VEVENT is created.
-	 *
-	 * @return void
-	 */
-	public function testPushBookingEventMovesNotDuplicates(): void {
-		$booking = [
-			'@self' => ['id' => 'b-2'],
-			'customerId' => 'cust-1',
-			'serviceId' => 'svc-haircut',
-			'startAt' => '2026-06-15T14:00:00+02:00',
-			'endAt' => '2026-06-15T14:30:00+02:00',
-			'status' => 'confirmed',
-			'resourceAssignments' => [
-				['stepIndex' => 0, 'resourceId' => 'res-sarah', 'startAt' => '2026-06-15T14:00:00+02:00', 'endAt' => '2026-06-15T14:30:00+02:00'],
-			],
-		];
+        $this->assertCount(expectedCount: 1, haystack: $leaf->creates);
+        $call = $leaf->creates[0];
+        $this->assertSame(expected: 'b-1', actual: $call['objectUuid']);
+        $this->assertStringContainsString(needle: 'Marieke', haystack: $call['title']);
+        $this->assertStringContainsString(needle: 'Knipbeurt', haystack: $call['title']);
+        $this->assertSame(expected: '2026-06-15T10:00:00+02:00', actual: $call['data']['dtstart']);
+        $this->assertSame(expected: ['sarah@example.test'], actual: $call['data']['attendees']);
+        $this->assertStringContainsString(needle: '/apps/pipelinq/booking/b-1', haystack: $call['data']['description']);
+    }//end testPushBookingEventCreatesVeventViaLeaf()
 
-		$object = $this->createMock(ObjectService::class);
-		$object->method('find')->willReturn($booking);
+    /**
+     * Reschedule semantics: the leaf's existing VEVENTs for the booking UUID
+     * are dropped first, then a fresh VEVENT is created.
+     *
+     * @return void
+     */
+    public function testPushBookingEventMovesNotDuplicates(): void
+    {
+        $booking = [
+            '@self'               => ['id' => 'b-2'],
+            'customerId'          => 'cust-1',
+            'serviceId'           => 'svc-haircut',
+            'startAt'             => '2026-06-15T14:00:00+02:00',
+            'endAt'               => '2026-06-15T14:30:00+02:00',
+            'status'              => 'confirmed',
+            'resourceAssignments' => [
+                ['stepIndex' => 0, 'resourceId' => 'res-sarah', 'startAt' => '2026-06-15T14:00:00+02:00', 'endAt' => '2026-06-15T14:30:00+02:00'],
+            ],
+        ];
 
-		$leaf = $this->buildLeaf();
+        $object = $this->createMock(ObjectService::class);
+        $object->method('find')->willReturn($booking);
 
-		[$provider] = $this->buildProvider(objectService: $object);
-		$provider->setLeaf(leaf: $leaf);
+        $leaf = $this->buildLeaf();
 
-		$provider->pushBookingEvent(bookingId: 'b-2');
+        [$provider] = $this->buildProvider(objectService: $object);
+        $provider->setLeaf(leaf: $leaf);
 
-		$this->assertSame(expected: ['b-2'], actual: $leaf->unlinks);
-		$this->assertCount(expectedCount: 1, haystack: $leaf->creates);
-	}//end testPushBookingEventMovesNotDuplicates()
+        $provider->pushBookingEvent(bookingId: 'b-2');
 
-	/**
-	 * pushBookingEvent is a no-op when the booking is not confirmed.
-	 *
-	 * @return void
-	 */
-	public function testPushBookingEventSkipsUnconfirmedBookings(): void {
-		$object = $this->createMock(ObjectService::class);
-		$object->method('find')->willReturn([
-			'@self' => ['id' => 'b-pending'],
-			'status' => 'pending-deposit',
-		]);
+        $this->assertSame(expected: ['b-2'], actual: $leaf->unlinks);
+        $this->assertCount(expectedCount: 1, haystack: $leaf->creates);
+    }//end testPushBookingEventMovesNotDuplicates()
 
-		$leaf = $this->buildLeaf();
-		[$provider] = $this->buildProvider(objectService: $object);
-		$provider->setLeaf(leaf: $leaf);
+    /**
+     * pushBookingEvent is a no-op when the booking is not confirmed.
+     *
+     * @return void
+     */
+    public function testPushBookingEventSkipsUnconfirmedBookings(): void
+    {
+        $object = $this->createMock(ObjectService::class);
+        $object->method('find')->willReturn([
+            '@self'  => ['id' => 'b-pending'],
+            'status' => 'pending-deposit',
+        ]);
 
-		$provider->pushBookingEvent(bookingId: 'b-pending');
+        $leaf = $this->buildLeaf();
+        [$provider] = $this->buildProvider(objectService: $object);
+        $provider->setLeaf(leaf: $leaf);
 
-		$this->assertSame(expected: [], actual: $leaf->creates);
-	}//end testPushBookingEventSkipsUnconfirmedBookings()
+        $provider->pushBookingEvent(bookingId: 'b-pending');
+
+        $this->assertSame(expected: [], actual: $leaf->creates);
+    }//end testPushBookingEventSkipsUnconfirmedBookings()
 }//end class

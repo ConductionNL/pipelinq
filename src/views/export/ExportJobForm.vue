@@ -4,81 +4,65 @@
 -->
 <template>
 	<CnDetailPage
-		:title="
-			isEdit
-				? t('pipelinq', 'Edit export job')
-				: t('pipelinq', 'New export job')
-		"
+		:title="isEdit ? t('pipelinq', 'Edit export job') : t('pipelinq', 'New export job')"
 		:loading="loading"
 		@back="goBack">
 		<CnDetailCard :title="t('pipelinq', 'Export job')">
 			<div class="export-form">
-				<NcTextField v-model="model.name" :label="t('pipelinq', 'Name')" />
+				<NcTextField
+					v-model="model.name"
+					:label="t('pipelinq', 'Name')" />
 				<NcTextField
 					v-model="model.description"
 					:label="t('pipelinq', 'Description')" />
 				<NcSelect
-					:modelValue="selectedSchemas"
+					:model-value="selectedSchemas"
 					:options="schemaOptions"
-					:inputLabel="t('pipelinq', 'Source schemas')"
+					:input-label="t('pipelinq', 'Source schemas')"
 					:placeholder="t('pipelinq', 'Choose schemas to export…')"
 					label="label"
 					:multiple="true"
-					:keepOpen="true"
-					@update:modelValue="onSchemasSelect" />
+					:keep-open="true"
+					@update:model-value="onSchemasSelect" />
 				<NcSelect
-					:modelValue="selectedDestination"
+					:model-value="selectedDestination"
 					:options="destinationOptions"
-					:inputLabel="t('pipelinq', 'Destination')"
+					:input-label="t('pipelinq', 'Destination')"
 					:placeholder="t('pipelinq', 'Choose a destination…')"
 					label="label"
 					:clearable="false"
-					@update:modelValue="
-						(o) => (model.destinationId = o ? o.id : '')
-					" />
+					@update:model-value="(o) => model.destinationId = o ? o.id : ''" />
 				<NcSelect
-					:modelValue="selectedFormat"
+					:model-value="selectedFormat"
 					:options="formatOptions"
-					:inputLabel="t('pipelinq', 'Format')"
+					:input-label="t('pipelinq', 'Format')"
 					label="label"
 					:clearable="false"
-					@update:modelValue="(o) => (model.format = o ? o.id : 'csv')" />
+					@update:model-value="(o) => model.format = o ? o.id : 'csv'" />
 				<NcSelect
-					:modelValue="selectedMode"
+					:model-value="selectedMode"
 					:options="modeOptions"
-					:inputLabel="t('pipelinq', 'Mode')"
+					:input-label="t('pipelinq', 'Mode')"
 					label="label"
 					:clearable="false"
-					@update:modelValue="(o) => (model.mode = o ? o.id : 'full')" />
+					@update:model-value="(o) => model.mode = o ? o.id : 'full'" />
 				<NcTextField
 					v-if="model.mode === 'incremental'"
 					v-model="model.incrementalWatermarkColumn"
 					:label="t('pipelinq', 'Watermark column')"
-					:helperText="
-						t(
-							'pipelinq',
-							'Column used to detect changed rows (e.g. updatedAt)',
-						)
-					" />
+					:helper-text="t('pipelinq', 'Column used to detect changed rows (e.g. updatedAt)')" />
 				<NcTextField
 					v-model="model.scheduleCron"
 					:label="t('pipelinq', 'Schedule (cron)')"
-					placeholder="0 2 * * *" />
+					:placeholder="'0 2 * * *'" />
 				<NcTextField
 					v-model="model.rowFilterExpression"
 					:label="t('pipelinq', 'Row filter (optional)')"
 					placeholder="status = 'open'" />
 				<NcTextField
 					v-model="allowlistText"
-					:label="
-						t('pipelinq', 'Column allowlist (optional, comma-separated)')
-					"
-					:helperText="
-						t(
-							'pipelinq',
-							'Limit exported columns to minimise PII; leave empty to export all columns',
-						)
-					" />
+					:label="t('pipelinq', 'Column allowlist (optional, comma-separated)')"
+					:helper-text="t('pipelinq', 'Limit exported columns to minimise PII; leave empty to export all columns')" />
 			</div>
 
 			<template #actions>
@@ -89,10 +73,7 @@
 					@click="openTestRunModal">
 					{{ t('pipelinq', 'Test run') }}
 				</NcButton>
-				<NcButton
-					variant="primary"
-					:disabled="busy || !model.name"
-					@click="save">
+				<NcButton variant="primary" :disabled="busy || !model.name" @click="save">
 					{{ t('pipelinq', 'Save') }}
 				</NcButton>
 				<NcButton variant="secondary" @click="goBack">
@@ -102,17 +83,17 @@
 		</CnDetailCard>
 		<ExportTestRunModal
 			v-if="testRunOpen"
-			:jobId="jobId"
+			:job-id="jobId"
 			@close="testRunOpen = false" />
 	</CnDetailPage>
 </template>
 
 <script>
-import { CnDetailCard, CnDetailPage } from '@conduction/nextcloud-vue'
+import { NcButton, NcTextField, NcSelect } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
-import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
+import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import ExportTestRunModal from '../../modals/ExportTestRunModal.vue'
 
 // The pipelinq schemas the export pipeline may read. `ticket` is the unified
 // supertype (unify-ticket-supertype): the former `request`, `complaint` and
@@ -133,23 +114,19 @@ export default {
 		CnDetailCard,
 		ExportTestRunModal,
 	},
-
 	props: {
 		exportJobId: {
 			type: String,
 			default: null,
 		},
-
 		id: {
 			type: String,
 			default: null,
 		},
 	},
-
 	setup() {
 		return { objectStore: useObjectStore() }
 	},
-
 	data() {
 		return {
 			loading: false,
@@ -172,7 +149,6 @@ export default {
 			},
 		}
 	},
-
 	computed: {
 		/**
 		 * The resolved job id from either prop name.
@@ -182,7 +158,6 @@ export default {
 		jobId() {
 			return this.exportJobId || this.id || this.$route?.params?.id || null
 		},
-
 		/**
 		 * Whether the form is editing an existing job.
 		 *
@@ -191,7 +166,6 @@ export default {
 		isEdit() {
 			return !!this.jobId
 		},
-
 		/**
 		 * Source schema options.
 		 *
@@ -200,18 +174,14 @@ export default {
 		schemaOptions() {
 			return EXPORTABLE_SCHEMAS.map((id) => ({ id, label: id }))
 		},
-
 		/**
 		 * The currently selected schema options.
 		 *
 		 * @return {Array<object>} The selected options.
 		 */
 		selectedSchemas() {
-			return this.schemaOptions.filter((o) =>
-				(this.model.sourceSchemas || []).includes(o.id),
-			)
+			return this.schemaOptions.filter((o) => (this.model.sourceSchemas || []).includes(o.id))
 		},
-
 		/**
 		 * Destination dropdown options.
 		 *
@@ -220,26 +190,17 @@ export default {
 		destinationOptions() {
 			return this.destinations.map((d) => ({
 				id: d.id,
-				label:
-					d.validationStatus === 'valid'
-						? `${d.name} (${d.type})`
-						: `${d.name} (${d.type} — ${this.t('pipelinq', 'unverified')})`,
+				label: d.validationStatus === 'valid' ? `${d.name} (${d.type})` : `${d.name} (${d.type} — ${this.t('pipelinq', 'unverified')})`,
 			}))
 		},
-
 		/**
 		 * The selected destination option.
 		 *
 		 * @return {object|null} The option.
 		 */
 		selectedDestination() {
-			return (
-				this.destinationOptions.find(
-					(o) => o.id === this.model.destinationId,
-				) || null
-			)
+			return this.destinationOptions.find((o) => o.id === this.model.destinationId) || null
 		},
-
 		/**
 		 * Format options.
 		 *
@@ -248,7 +209,6 @@ export default {
 		formatOptions() {
 			return FORMATS.map((id) => ({ id, label: id }))
 		},
-
 		/**
 		 * The selected format option.
 		 *
@@ -257,22 +217,14 @@ export default {
 		selectedFormat() {
 			return this.formatOptions.find((o) => o.id === this.model.format) || null
 		},
-
 		/**
 		 * Mode options.
 		 *
 		 * @return {Array<object>} The options.
 		 */
 		modeOptions() {
-			return MODES.map((id) => ({
-				id,
-				label: this.t(
-					'pipelinq',
-					id === 'full' ? 'Full refresh' : 'Incremental',
-				),
-			}))
+			return MODES.map((id) => ({ id, label: this.t('pipelinq', id === 'full' ? 'Full refresh' : 'Incremental') }))
 		},
-
 		/**
 		 * The selected mode option.
 		 *
@@ -282,46 +234,34 @@ export default {
 			return this.modeOptions.find((o) => o.id === this.model.mode) || null
 		},
 	},
-
 	async mounted() {
 		await this.loadDestinations()
 		if (this.isEdit) {
 			await this.load()
 		}
 	},
-
 	methods: {
 		/**
 		 * Load destinations for the dropdown.
 		 */
 		async loadDestinations() {
 			try {
-				await this.objectStore.fetchCollection('exportDestination', {
-					_limit: 200,
-				})
-				this.destinations =
-					this.objectStore.getCollection('exportDestination')?.results
-					|| []
+				await this.objectStore.fetchCollection('exportDestination', { _limit: 200 })
+				this.destinations = this.objectStore.getCollection('exportDestination')?.results || []
 			} catch (e) {
 				this.destinations = []
 			}
 		},
-
 		/**
 		 * Load the job for editing.
 		 */
 		async load() {
 			this.loading = true
 			try {
-				const existing = await this.objectStore.fetchObject(
-					'exportJob',
-					this.jobId,
-				)
+				const existing = await this.objectStore.fetchObject('exportJob', this.jobId)
 				if (existing) {
 					this.model = { ...this.model, ...existing }
-					this.allowlistText = (this.model.columnAllowlist || []).join(
-						', ',
-					)
+					this.allowlistText = (this.model.columnAllowlist || []).join(', ')
 				}
 			} catch (e) {
 				showError(this.t('pipelinq', 'Could not load the job'))
@@ -329,7 +269,6 @@ export default {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * Track the multi-select schema choice.
 		 *
@@ -338,7 +277,6 @@ export default {
 		onSchemasSelect(options) {
 			this.model.sourceSchemas = (options || []).map((o) => o.id)
 		},
-
 		/**
 		 * Parse the comma-separated allowlist text into an array.
 		 *
@@ -350,17 +288,13 @@ export default {
 				.map((s) => s.trim())
 				.filter((s) => s.length > 0)
 		},
-
 		/**
 		 * Persist the job via the shared object store.
 		 */
 		async save() {
 			this.busy = true
 			try {
-				const payload = {
-					...this.model,
-					columnAllowlist: this.parsedAllowlist(),
-				}
+				const payload = { ...this.model, columnAllowlist: this.parsedAllowlist() }
 				if (this.isEdit) {
 					payload.id = this.jobId
 				}
@@ -373,7 +307,6 @@ export default {
 				this.busy = false
 			}
 		},
-
 		/**
 		 * Open the dedicated test-run modal, which auto-executes the run.
 		 *
@@ -387,7 +320,6 @@ export default {
 			}
 			this.testRunOpen = true
 		},
-
 		/**
 		 * Navigate back to the job list.
 		 */

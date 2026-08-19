@@ -35,107 +35,112 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests for SettingsController.
  */
-class SettingsControllerTest extends TestCase {
+class SettingsControllerTest extends TestCase
+{
 
-	/**
-	 * The controller under test.
-	 *
-	 * @var SettingsController
-	 */
-	private SettingsController $controller;
+    /**
+     * The controller under test.
+     *
+     * @var SettingsController
+     */
+    private SettingsController $controller;
 
-	/**
-	 * Mock settings service.
-	 *
-	 * @var SettingsService
-	 */
-	private SettingsService $settingsService;
+    /**
+     * Mock settings service.
+     *
+     * @var SettingsService
+     */
+    private SettingsService $settingsService;
 
-	/**
-	 * Set up the test.
-	 *
-	 * @return void
-	 */
-	protected function setUp(): void {
-		$request = $this->createMock(originalClassName: IRequest::class);
-		$container = $this->createMock(originalClassName: ContainerInterface::class);
-		$appManager = $this->createMock(originalClassName: IAppManager::class);
-		$groupManager = $this->createMock(originalClassName: IGroupManager::class);
-		$this->settingsService = $this->createMock(originalClassName: SettingsService::class);
-		$userSession = $this->createMock(originalClassName: IUserSession::class);
-		$l10n = $this->createMock(originalClassName: IL10N::class);
+    /**
+     * Set up the test.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        $request      = $this->createMock(originalClassName: IRequest::class);
+        $container    = $this->createMock(originalClassName: ContainerInterface::class);
+        $appManager   = $this->createMock(originalClassName: IAppManager::class);
+        $groupManager = $this->createMock(originalClassName: IGroupManager::class);
+        $this->settingsService = $this->createMock(originalClassName: SettingsService::class);
+        $userSession           = $this->createMock(originalClassName: IUserSession::class);
+        $l10n = $this->createMock(originalClassName: IL10N::class);
 
-		$appManager->method('getInstalledApps')->willReturn(['openregister']);
-		$groupManager->method('isAdmin')->willReturn(true);
+        $appManager->method('getInstalledApps')->willReturn(['openregister']);
+        $groupManager->method('isAdmin')->willReturn(true);
 
-		$user = $this->createMock(originalClassName: IUser::class);
-		$user->method('getUID')->willReturn('admin');
-		$userSession->method('getUser')->willReturn($user);
-		$l10n->method('t')->willReturnArgument(0);
-		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+        $user = $this->createMock(originalClassName: IUser::class);
+        $user->method('getUID')->willReturn('admin');
+        $userSession->method('getUser')->willReturn($user);
+        $l10n->method('t')->willReturnArgument(0);
+        $logger = $this->createMock(originalClassName: LoggerInterface::class);
 
-		$this->controller = new SettingsController(
-			request: $request,
-			container: $container,
-			appManager: $appManager,
-			groupManager: $groupManager,
-			settingsService: $this->settingsService,
-			userSession: $userSession,
-			l10n: $l10n,
-			logger: $logger,
-		);
-	}//end setUp()
+        $this->controller = new SettingsController(
+            request: $request,
+            container: $container,
+            appManager: $appManager,
+            groupManager: $groupManager,
+            settingsService: $this->settingsService,
+            userSession: $userSession,
+            l10n: $l10n,
+            logger: $logger,
+        );
+    }//end setUp()
 
-	/**
-	 * Test index returns settings.
-	 *
-	 * @return void
-	 */
-	public function testIndexReturnsSettings(): void {
-		$this->settingsService->method('getSettings')->willReturn(['register' => '1']);
+    /**
+     * Test index returns settings.
+     *
+     * @return void
+     */
+    public function testIndexReturnsSettings(): void
+    {
+        $this->settingsService->method('getSettings')->willReturn(['register' => '1']);
 
-		$response = $this->controller->index();
+        $response = $this->controller->index();
 
-		$this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
-		$data = $response->getData();
-		$this->assertTrue(condition: $data['success']);
-		$this->assertTrue(condition: $data['isAdmin']);
-		$this->assertArrayHasKey(key: 'config', array: $data);
-	}//end testIndexReturnsSettings()
+        $this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
+        $data = $response->getData();
+        $this->assertTrue(condition: $data['success']);
+        $this->assertTrue(condition: $data['isAdmin']);
+        $this->assertArrayHasKey(key: 'config', array: $data);
+    }//end testIndexReturnsSettings()
 
-	/**
-	 * Test getUserSettings returns user settings.
-	 *
-	 * @return void
-	 */
-	public function testGetUserSettingsReturnsSettings(): void {
-		$this->settingsService->method('getUserSettings')->willReturn(
-			[
-				'notify_assignments' => true,
-			]
-		);
+    /**
+     * Test getUserSettings returns user settings.
+     *
+     * @return void
+     */
+    public function testGetUserSettingsReturnsSettings(): void
+    {
+        $this->settingsService->method('getUserSettings')->willReturn(
+                [
+                    'notify_assignments' => true,
+                ]
+                );
 
-		$response = $this->controller->getUserSettings();
+        $response = $this->controller->getUserSettings();
 
-		$data = $response->getData();
-		$this->assertTrue(condition: $data['notify_assignments']);
-	}//end testGetUserSettingsReturnsSettings()
+        $data = $response->getData();
+        $this->assertTrue(condition: $data['notify_assignments']);
+    }//end testGetUserSettingsReturnsSettings()
 
-	/**
-	 * Test that the settings read payload no longer carries the removed
-	 * REST API token / OAuth admin maps (remove-dead-rest-api-auth).
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/remove-dead-rest-api-auth/tasks.md#task-4.2
-	 */
-	public function testIndexExcludesRemovedTokenAndOauthMaps(): void {
-		$this->settingsService->method('getSettings')->willReturn(['register' => '1']);
+    /**
+     * Test that the settings read payload no longer carries the removed
+     * REST API token / OAuth admin maps (remove-dead-rest-api-auth).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/remove-dead-rest-api-auth/tasks.md#task-4.2
+     */
+    public function testIndexExcludesRemovedTokenAndOauthMaps(): void
+    {
+        $this->settingsService->method('getSettings')->willReturn(['register' => '1']);
 
-		$response = $this->controller->index();
+        $response = $this->controller->index();
 
-		$data = $response->getData();
-		$this->assertArrayNotHasKey(key: 'apiTokens', array: $data);
-		$this->assertArrayNotHasKey(key: 'oauthConfig', array: $data);
-	}//end testIndexExcludesRemovedTokenAndOauthMaps()
+        $data = $response->getData();
+        $this->assertArrayNotHasKey(key: 'apiTokens', array: $data);
+        $this->assertArrayNotHasKey(key: 'oauthConfig', array: $data);
+    }//end testIndexExcludesRemovedTokenAndOauthMaps()
 }//end class

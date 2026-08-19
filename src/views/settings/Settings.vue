@@ -4,32 +4,25 @@
 		<NcSettingsSection
 			:name="t('pipelinq', 'Pipelinq Settings')"
 			:description="t('pipelinq', 'Configure your Pipelinq installation')"
-			docUrl="https://pipelinq.conduction.nl/docs/intro" />
+			doc-url="https://pipelinq.conduction.nl/docs/intro" />
 
 		<!-- Version Information -->
 		<CnVersionInfoCard
-			appName="Pipelinq"
-			:appVersion="appVersion"
-			:isUpToDate="true"
-			:showUpdateButton="true"
+			:app-name="'Pipelinq'"
+			:app-version="appVersion"
+			:is-up-to-date="true"
+			:show-update-button="true"
 			:title="t('pipelinq', 'Version Information')"
-			:description="
-				t('pipelinq', 'Information about the current Pipelinq installation')
-			">
+			:description="t('pipelinq', 'Information about the current Pipelinq installation')">
 			<template #actions>
-				<NcButton
-					variant="primary"
+				<NcButton variant="primary"
 					:disabled="reimporting"
 					@click="reimport">
 					<template #icon>
 						<NcLoadingIcon v-if="reimporting" :size="20" />
 						<Refresh v-else :size="20" />
 					</template>
-					{{
-						reimporting
-							? t('pipelinq', 'Importing...')
-							: t('pipelinq', 'Re-import configuration')
-					}}
+					{{ reimporting ? t('pipelinq', 'Importing...') : t('pipelinq', 'Re-import configuration') }}
 				</NcButton>
 			</template>
 			<template #footer>
@@ -37,17 +30,10 @@
 					<h4>{{ t('pipelinq', 'Support') }}</h4>
 					<p>
 						{{ t('pipelinq', 'For support, contact us at') }}
-						<a href="mailto:support@conduction.nl"
-							>support@conduction.nl</a
-						>
+						<a href="mailto:support@conduction.nl">support@conduction.nl</a>
 					</p>
 					<p>
-						{{
-							t(
-								'pipelinq',
-								'For a Service Level Agreement (SLA), contact',
-							)
-						}}
+						{{ t('pipelinq', 'For a Service Level Agreement (SLA), contact') }}
 						<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
 					</p>
 				</div>
@@ -57,12 +43,7 @@
 		<!-- Register & Schema Mapping -->
 		<CnRegisterMapping
 			:name="t('pipelinq', 'Register Configuration')"
-			:description="
-				t(
-					'pipelinq',
-					'Map Pipelinq object types to OpenRegister registers and schemas',
-				)
-			"
+			:description="t('pipelinq', 'Map Pipelinq object types to OpenRegister registers and schemas')"
 			:groups="registerGroups"
 			:configuration="config"
 			:saving="saving"
@@ -87,27 +68,25 @@
 		<ForecastSettings v-if="isConfigured" />
 
 		<!-- Lead Sources -->
-		<TagManager
-			v-if="isConfigured"
+		<TagManager v-if="isConfigured"
 			:title="t('pipelinq', 'Lead Sources')"
 			:tags="leadSourceTags"
 			:loading="leadSourcesLoading"
-			:addLabel="t('pipelinq', '+ Add Source')"
-			:addPlaceholder="t('pipelinq', 'Enter source name...')"
-			:usageCheck="checkLeadSourceUsage"
+			:add-label="t('pipelinq', '+ Add Source')"
+			:add-placeholder="t('pipelinq', 'Enter source name...')"
+			:usage-check="checkLeadSourceUsage"
 			@add="addLeadSource"
 			@remove="removeLeadSource"
 			@rename="renameLeadSource" />
 
 		<!-- Request Channels -->
-		<TagManager
-			v-if="isConfigured"
+		<TagManager v-if="isConfigured"
 			:title="t('pipelinq', 'Request Channels')"
 			:tags="requestChannelTags"
 			:loading="requestChannelsLoading"
-			:addLabel="t('pipelinq', '+ Add Channel')"
-			:addPlaceholder="t('pipelinq', 'Enter channel name...')"
-			:usageCheck="checkRequestChannelUsage"
+			:add-label="t('pipelinq', '+ Add Channel')"
+			:add-placeholder="t('pipelinq', 'Enter channel name...')"
+			:usage-check="checkRequestChannelUsage"
 			@add="addRequestChannel"
 			@remove="removeRequestChannel"
 			@rename="renameRequestChannel" />
@@ -116,35 +95,21 @@
 		<ProspectSettings v-if="isConfigured" />
 
 		<!-- BI Export Configuration -->
-		<ExportConfigurationSettings
-			v-if="isAdmin"
+		<ExportConfigurationSettings v-if="isAdmin"
 			:config="config"
 			@saved="onExportConfigSaved" />
 
 		<!-- Lead Management — stale threshold (REQ-LM-002).
 		     Persisted via IAppConfig under key `lead_stale_threshold_days`. -->
-		<NcSettingsSection
-			v-if="isAdmin"
+		<NcSettingsSection v-if="isAdmin"
 			:name="t('pipelinq', 'Lead Management')"
-			:description="
-				t(
-					'pipelinq',
-					'Tune lead staleness detection for kanban badges and the lead list filter.',
-				)
-			">
-			<NcTextField
-				v-model="staleThresholdInput"
+			:description="t('pipelinq', 'Tune lead staleness detection for kanban badges and the lead list filter.')">
+			<NcTextField v-model="staleThresholdInput"
 				type="number"
 				:label="t('pipelinq', 'Stale after (days)')"
 				placeholder="14"
-				:helperText="
-					t(
-						'pipelinq',
-						'Number of days a lead can stay untouched before it is flagged as stale. Default: 14.',
-					)
-				" />
-			<NcButton
-				variant="primary"
+				:helper-text="t('pipelinq', 'Number of days a lead can stay untouched before it is flagged as stale. Default: 14.')" />
+			<NcButton variant="primary"
 				:disabled="savingStale"
 				@click="saveStaleThreshold">
 				<template #icon>
@@ -158,57 +123,29 @@
 		</NcSettingsSection>
 
 		<!-- Shillinq Integration -->
-		<NcSettingsSection
-			v-if="isAdmin"
+		<NcSettingsSection v-if="isAdmin"
 			:name="t('pipelinq', 'Shillinq Integration')"
-			:description="
-				t(
-					'pipelinq',
-					'The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.',
-				)
-			">
-			<NcTextField
-				v-model="config.shillinq_ledger_webhook_url"
+			:description="t('pipelinq', 'The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.')">
+			<NcTextField v-model="config.shillinq_ledger_webhook_url"
 				:label="t('pipelinq', 'Shillinq Ledger Webhook URL')"
 				placeholder="https://shillinq.example.com/ledger/webhook"
 				:error="shillinqUrlInvalid"
-				:helperText="
-					shillinqUrlInvalid
-						? t('pipelinq', 'Please enter a valid HTTPS URL')
-						: ''
-				" />
-			<NcTextField
-				v-model="config.shillinq_wip_webhook_url"
+				:helper-text="shillinqUrlInvalid ? t('pipelinq', 'Please enter a valid HTTPS URL') : ''" />
+			<NcTextField v-model="config.shillinq_wip_webhook_url"
 				:label="t('pipelinq', 'Shillinq WIP webhook URL')"
 				placeholder="https://shillinq.example.com/api/wip/events"
 				:error="wipUrlInvalid"
-				:helperText="
-					wipUrlInvalid
-						? t('pipelinq', 'Please enter a valid HTTPS URL')
-						: ''
-				" />
+				:helper-text="wipUrlInvalid ? t('pipelinq', 'Please enter a valid HTTPS URL') : ''" />
 			<!-- Real time-intake emit (time-billing-handoff-emit). Default off — an
 			     unconfigured install keeps the deep-link-only handoff unchanged. -->
 			<NcCheckboxRadioSwitch v-model="shillinqTimeIntakeEnabled" type="switch">
-				{{
-					t(
-						'pipelinq',
-						'Send approved hours to Shillinq as draft invoices',
-					)
-				}}
+				{{ t('pipelinq', 'Send approved hours to Shillinq as draft invoices') }}
 			</NcCheckboxRadioSwitch>
-			<NcTextField
-				v-model="config.billing_handoff_manager_group"
+			<NcTextField v-model="config.billing_handoff_manager_group"
 				:label="t('pipelinq', 'Billing handoff manager group')"
 				placeholder="billing-managers"
-				:helperText="
-					t(
-						'pipelinq',
-						'Nextcloud group allowed to trigger \'Send to billing\'. Leave empty to restrict it to Nextcloud administrators.',
-					)
-				" />
-			<NcButton
-				variant="primary"
+				:helper-text="t('pipelinq', 'Nextcloud group allowed to trigger \'Send to billing\'. Leave empty to restrict it to Nextcloud administrators.')" />
+			<NcButton variant="primary"
 				:disabled="savingShillinq || shillinqUrlInvalid || wipUrlInvalid"
 				@click="saveShillinq">
 				<template #icon>
@@ -222,30 +159,15 @@
 		</NcSettingsSection>
 
 		<!-- Integraties — Shillinq AP webhook (REQ-AP-004) -->
-		<NcSettingsSection
-			v-if="isAdmin"
+		<NcSettingsSection v-if="isAdmin"
 			:name="t('pipelinq', 'Integrations')"
-			:description="
-				t(
-					'pipelinq',
-					'Enter the webhook URL for the Shillinq AP integration. Leave empty to keep it disabled.',
-				)
-			">
-			<NcTextField
-				v-model="config.shillinq_ap_webhook_url"
+			:description="t('pipelinq', 'Enter the webhook URL for the Shillinq AP integration. Leave empty to keep it disabled.')">
+			<NcTextField v-model="config.shillinq_ap_webhook_url"
 				:label="t('pipelinq', 'Shillinq AP webhook URL')"
 				placeholder="https://shillinq.example.com/ap-webhook"
 				:error="shillinqApUrlInvalid"
-				:helperText="
-					shillinqApUrlInvalid
-						? t(
-								'pipelinq',
-								'Enter a valid HTTPS URL, e.g. https://shillinq.example.com/webhook',
-							)
-						: ''
-				" />
-			<NcButton
-				variant="primary"
+				:helper-text="shillinqApUrlInvalid ? t('pipelinq', 'Enter a valid HTTPS URL, e.g. https://shillinq.example.com/webhook') : ''" />
+			<NcButton variant="primary"
 				:disabled="savingShillinqAp || shillinqApUrlInvalid"
 				@click="saveShillinqAp">
 				<template #icon>
@@ -259,83 +181,38 @@
 		</NcSettingsSection>
 
 		<!-- xWiki Integration (xwiki-integration) -->
-		<NcSettingsSection
-			v-if="isAdmin"
+		<NcSettingsSection v-if="isAdmin"
 			:name="t('pipelinq', 'xWiki integration')"
-			:description="
-				t(
-					'pipelinq',
-					'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. When the xWiki Nextcloud app is installed its settings take precedence over the fallback URL below.',
-				)
-			">
-			<NcNoteCard
-				v-if="xwikiStatus"
-				:type="xwikiStatus.available ? 'success' : 'warning'">
+			:description="t('pipelinq', 'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. When the xWiki Nextcloud app is installed its settings take precedence over the fallback URL below.')">
+			<NcNoteCard v-if="xwikiStatus" :type="xwikiStatus.available ? 'success' : 'warning'">
 				<span v-if="xwikiStatus.available">
-					{{
-						t('pipelinq', 'xWiki reachable at {url}', {
-							url: xwikiStatus.baseUrl,
-						})
-					}}
+					{{ t('pipelinq', 'xWiki reachable at {url}', { url: xwikiStatus.baseUrl }) }}
 					<template v-if="xwikiStatus.version">
-						({{
-							t('pipelinq', 'version {ver}', {
-								ver: xwikiStatus.version,
-							})
-						}})
+						({{ t('pipelinq', 'version {ver}', { ver: xwikiStatus.version }) }})
 					</template>
 				</span>
 				<span v-else>
-					{{
-						t(
-							'pipelinq',
-							'xWiki not reachable. The xWiki Nextcloud app is not installed and the direct URL is empty or unreachable.',
-						)
-					}}
+					{{ t('pipelinq', 'xWiki not reachable. The xWiki Nextcloud app is not installed and the direct URL is empty or unreachable.') }}
 				</span>
 			</NcNoteCard>
 			<NcNoteCard v-if="!xwikiAppInstalled" type="warning">
-				{{
-					t(
-						'pipelinq',
-						'The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.',
-					)
-				}}
+				{{ t('pipelinq', 'The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.') }}
 			</NcNoteCard>
-			<NcTextField
-				v-model="config.xwiki_default_space"
+			<NcTextField v-model="config.xwiki_default_space"
 				:label="t('pipelinq', 'Default xWiki space')"
 				placeholder="Kennisbank"
-				:helperText="
-					t(
-						'pipelinq',
-						'Space name pre-selected by the dashboard widget. Leave empty to search across all spaces.',
-					)
-				" />
-			<NcTextField
-				v-model="config.xwiki_cache_ttl"
+				:helper-text="t('pipelinq', 'Space name pre-selected by the dashboard widget. Leave empty to search across all spaces.')" />
+			<NcTextField v-model="config.xwiki_cache_ttl"
 				type="number"
 				:label="t('pipelinq', 'Cache TTL (seconds)')"
 				placeholder="300"
-				:helperText="
-					t(
-						'pipelinq',
-						'How long search and page results are cached server-side. Default: 300.',
-					)
-				" />
-			<NcTextField
-				v-model="config.xwiki_direct_url"
+				:helper-text="t('pipelinq', 'How long search and page results are cached server-side. Default: 300.')" />
+			<NcTextField v-model="config.xwiki_direct_url"
 				:label="t('pipelinq', 'Direct xWiki URL (fallback)')"
 				placeholder="http://xwiki:8080/xwiki"
-				:helperText="
-					t(
-						'pipelinq',
-						'Used only when the xWiki Nextcloud app is unavailable. Should point at the xWiki base URL without trailing slash.',
-					)
-				" />
+				:helper-text="t('pipelinq', 'Used only when the xWiki Nextcloud app is unavailable. Should point at the xWiki base URL without trailing slash.')" />
 			<div class="xwiki-actions">
-				<NcButton
-					variant="primary"
+				<NcButton variant="primary"
 					:disabled="savingXwiki"
 					@click="saveXwiki">
 					<template #icon>
@@ -343,8 +220,7 @@
 					</template>
 					{{ t('pipelinq', 'Save xWiki settings') }}
 				</NcButton>
-				<NcButton
-					variant="secondary"
+				<NcButton variant="secondary"
 					:disabled="testingXwiki"
 					@click="testXwiki">
 					<template #icon>
@@ -382,40 +258,33 @@
 </template>
 
 <script>
-import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
+import { CnRegisterMapping, CnVersionInfoCard } from '@conduction/nextcloud-vue'
+import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSettingsSection, NcTextField } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
-import {
-	NcButton,
-	NcCheckboxRadioSwitch,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcSettingsSection,
-	NcTextField,
-} from '@nextcloud/vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
-import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
-import ForecastSettings from '../../components/admin/ForecastSettings.vue'
+import { useSettingsStore } from '../../store/modules/settings.js'
+import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
+import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
+import { useObjectStore } from '../../store/modules/object.js'
+import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
+import PipelineManager from './PipelineManager.vue'
+import ProductCategoryManager from './ProductCategoryManager.vue'
+import ProspectSettings from './ProspectSettings.vue'
+import TagManager from './TagManager.vue'
 import QueueSettings from '../../components/admin/QueueSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
-import CtiPage from './CtiPage.vue'
+import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
+import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
+import CtiPage from './CtiPage.vue'
 import PaymentSettingsForm from './PaymentSettingsForm.vue'
-import PipelineManager from './PipelineManager.vue'
-import PosRoleManager from './PosRoleManager.vue'
-import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
-import ProductCategoryManager from './ProductCategoryManager.vue'
-import ProspectSettings from './ProspectSettings.vue'
-import TagManager from './TagManager.vue'
-import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
-import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
-import { useObjectStore } from '../../store/modules/object.js'
-import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
-import { useSettingsStore } from '../../store/modules/settings.js'
+import PosStaffManager from './PosStaffManager.vue'
+import PosRoleManager from './PosRoleManager.vue'
 
 export default {
 	name: 'Settings',
@@ -445,7 +314,6 @@ export default {
 		ForecastSettings,
 		ExportConfigurationSettings,
 	},
-
 	data() {
 		return {
 			config: {},
@@ -477,7 +345,6 @@ export default {
 			xwikiAppInstalled: true,
 		}
 	},
-
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-87
@@ -485,32 +352,27 @@ export default {
 		settingsStore() {
 			return useSettingsStore()
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-74
 		 */
 		leadSourcesStore() {
 			return useLeadSourcesStore()
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-85
 		 */
 		requestChannelsStore() {
 			return useRequestChannelsStore()
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-76
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
-
 		isConfigured() {
 			return !!this.config.register
 		},
-
 		/**
 		 * The real time-intake emit flag (time-billing-handoff-emit), converted
 		 * between the backend's string 'true'/'false' config value and a
@@ -522,15 +384,10 @@ export default {
 			get() {
 				return this.config.shillinq_time_intake_enabled === 'true'
 			},
-
 			set(value) {
-				this.config = {
-					...this.config,
-					shillinq_time_intake_enabled: value ? 'true' : 'false',
-				}
+				this.config = { ...this.config, shillinq_time_intake_enabled: value ? 'true' : 'false' }
 			},
 		},
-
 		/**
 		 * Whether the entered Shillinq webhook URL is present but not a valid HTTPS URL.
 		 * An empty value is valid (disables the integration).
@@ -546,7 +403,6 @@ export default {
 				return true
 			}
 		},
-
 		/**
 		 * Whether the entered Shillinq WIP webhook URL is present but not a valid HTTPS URL.
 		 * An empty value is valid (disables the integration).
@@ -564,7 +420,6 @@ export default {
 				return true
 			}
 		},
-
 		/**
 		 * Whether the entered Shillinq AP webhook URL is present but not a valid HTTPS URL.
 		 * An empty value is valid (disables the integration). REQ-AP-004 Scenario 13.
@@ -582,35 +437,30 @@ export default {
 				return true
 			}
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-72
 		 */
 		leadSourceTags() {
 			return this.leadSourcesStore.tags
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-73
 		 */
 		leadSourcesLoading() {
 			return this.leadSourcesStore.loading
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-83
 		 */
 		requestChannelTags() {
 			return this.requestChannelsStore.tags
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-84
 		 */
 		requestChannelsLoading() {
 			return this.requestChannelsStore.loading
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-77
 		 */
@@ -623,16 +473,11 @@ export default {
 					registerConfigKey: group.registerConfigKey,
 					types: types
 						.filter((type) => type.group === group.key)
-						.map(({ slug, label, description }) => ({
-							slug,
-							label,
-							description,
-						})),
+						.map(({ slug, label, description }) => ({ slug, label, description })),
 				}))
 				.filter((group) => group.types.length > 0)
 		},
 	},
-
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-75
 	 */
@@ -644,8 +489,7 @@ export default {
 			// Seed the stale-threshold input from the persisted config
 			// (REQ-LM-002). Falls back to 14 days when unset.
 			const parsed = parseInt(this.config.lead_stale_threshold_days, 10)
-			this.staleThresholdInput =
-				Number.isFinite(parsed) && parsed > 0 ? parsed : 14
+			this.staleThresholdInput = Number.isFinite(parsed) && parsed > 0 ? parsed : 14
 		}
 
 		if (this.isConfigured) {
@@ -659,7 +503,6 @@ export default {
 			this.testXwiki()
 		}
 	},
-
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-78
@@ -669,26 +512,20 @@ export default {
 			this.message = ''
 
 			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/settings/reimport'),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
+				const response = await fetch(generateUrl('/apps/pipelinq/api/settings/reimport'), {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken: OC.requestToken,
+						'OCS-APIREQUEST': 'true',
 					},
-				)
+				})
 
 				const data = await response.json()
 
 				if (data.success) {
 					this.config = data.config || {}
-					this.message = t(
-						'pipelinq',
-						'Configuration re-imported successfully',
-					)
+					this.message = t('pipelinq', 'Configuration re-imported successfully')
 					this.messageType = 'success'
 				} else {
 					this.message = data.message || t('pipelinq', 'Re-import failed')
@@ -701,7 +538,6 @@ export default {
 				this.reimporting = false
 			}
 		},
-
 		/**
 		 * @param configuration
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-86
@@ -717,7 +553,6 @@ export default {
 			}
 			this.saving = false
 		},
-
 		/**
 		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-67
@@ -725,7 +560,6 @@ export default {
 		async addLeadSource(name) {
 			await this.leadSourcesStore.addSource(name)
 		},
-
 		/**
 		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-79
@@ -733,7 +567,6 @@ export default {
 		async removeLeadSource(id) {
 			await this.leadSourcesStore.removeSource(id)
 		},
-
 		/**
 		 * @param id
 		 * @param name
@@ -742,7 +575,6 @@ export default {
 		async renameLeadSource(id, name) {
 			await this.leadSourcesStore.renameSource(id, name)
 		},
-
 		/**
 		 * @param name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-68
@@ -750,7 +582,6 @@ export default {
 		async addRequestChannel(name) {
 			await this.requestChannelsStore.addChannel(name)
 		},
-
 		/**
 		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-80
@@ -758,7 +589,6 @@ export default {
 		async removeRequestChannel(id) {
 			await this.requestChannelsStore.removeChannel(id)
 		},
-
 		/**
 		 * @param id
 		 * @param name
@@ -767,7 +597,6 @@ export default {
 		async renameRequestChannel(id, name) {
 			await this.requestChannelsStore.renameChannel(id, name)
 		},
-
 		/**
 		 * @param sourceName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-69
@@ -775,7 +604,6 @@ export default {
 		async checkLeadSourceUsage(sourceName) {
 			return this.countObjectsWithField('lead', 'source', sourceName)
 		},
-
 		/**
 		 * @param channelName
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
@@ -783,11 +611,8 @@ export default {
 		async checkRequestChannelUsage(channelName) {
 			// A request is a `ticket` narrowed by ticketType (unify-ticket-supertype),
 			// so the usage count must exclude complaints and contactmomenten.
-			return this.countObjectsWithField('ticket', 'channel', channelName, {
-				ticketType: 'request',
-			})
+			return this.countObjectsWithField('ticket', 'channel', channelName, { ticketType: 'request' })
 		},
-
 		/**
 		 * Persist the Shillinq ledger webhook URL through the standard settings endpoint.
 		 *
@@ -802,12 +627,8 @@ export default {
 			try {
 				const result = await this.settingsStore.saveSettings({
 					...this.config,
-					shillinq_ledger_webhook_url: (
-						this.config.shillinq_ledger_webhook_url || ''
-					).trim(),
-					shillinq_wip_webhook_url: (
-						this.config.shillinq_wip_webhook_url || ''
-					).trim(),
+					shillinq_ledger_webhook_url: (this.config.shillinq_ledger_webhook_url || '').trim(),
+					shillinq_wip_webhook_url: (this.config.shillinq_wip_webhook_url || '').trim(),
 				})
 				if (result) {
 					this.config = this.settingsStore.config || result
@@ -815,15 +636,12 @@ export default {
 				this.shillinqMessage = t('pipelinq', 'Shillinq configuration saved.')
 				this.shillinqMessageType = 'success'
 			} catch (e) {
-				this.shillinqMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save Shillinq configuration.')
+				this.shillinqMessage = e.response?.data?.message || t('pipelinq', 'Failed to save Shillinq configuration.')
 				this.shillinqMessageType = 'error'
 			} finally {
 				this.savingShillinq = false
 			}
 		},
-
 		/**
 		 * Reflect a saved export-configuration payload back into local state.
 		 *
@@ -835,7 +653,6 @@ export default {
 				this.config = { ...this.config, ...updated }
 			}
 		},
-
 		/**
 		 * Persist the Shillinq AP webhook URL through the standard settings endpoint.
 		 *
@@ -850,28 +667,20 @@ export default {
 			try {
 				const result = await this.settingsStore.saveSettings({
 					...this.config,
-					shillinq_ap_webhook_url: (
-						this.config.shillinq_ap_webhook_url || ''
-					).trim(),
+					shillinq_ap_webhook_url: (this.config.shillinq_ap_webhook_url || '').trim(),
 				})
 				if (result) {
 					this.config = this.settingsStore.config || result
 				}
-				this.shillinqApMessage = t(
-					'pipelinq',
-					'Shillinq AP configuration saved.',
-				)
+				this.shillinqApMessage = t('pipelinq', 'Shillinq AP configuration saved.')
 				this.shillinqApMessageType = 'success'
 			} catch (e) {
-				this.shillinqApMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save Shillinq AP configuration.')
+				this.shillinqApMessage = e.response?.data?.message || t('pipelinq', 'Failed to save Shillinq AP configuration.')
 				this.shillinqApMessageType = 'error'
 			} finally {
 				this.savingShillinqAp = false
 			}
 		},
-
 		/**
 		 * Persist the lead stale threshold through the standard settings endpoint.
 		 *
@@ -882,10 +691,7 @@ export default {
 			this.staleMessage = ''
 			const days = parseInt(this.staleThresholdInput, 10)
 			if (!Number.isFinite(days) || days <= 0) {
-				this.staleMessage = t(
-					'pipelinq',
-					'Stale threshold must be a positive number of days.',
-				)
+				this.staleMessage = t('pipelinq', 'Stale threshold must be a positive number of days.')
 				this.staleMessageType = 'error'
 				this.savingStale = false
 				return
@@ -901,15 +707,12 @@ export default {
 				this.staleMessage = t('pipelinq', 'Lead settings saved.')
 				this.staleMessageType = 'success'
 			} catch (e) {
-				this.staleMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save lead settings.')
+				this.staleMessage = e.response?.data?.message || t('pipelinq', 'Failed to save lead settings.')
 				this.staleMessageType = 'error'
 			} finally {
 				this.savingStale = false
 			}
 		},
-
 		/**
 		 * Persist xWiki integration settings (xwiki-integration).
 		 *
@@ -921,9 +724,7 @@ export default {
 			try {
 				const result = await this.settingsStore.saveSettings({
 					...this.config,
-					xwiki_default_space: (
-						this.config.xwiki_default_space || ''
-					).trim(),
+					xwiki_default_space: (this.config.xwiki_default_space || '').trim(),
 					xwiki_cache_ttl: String(this.config.xwiki_cache_ttl || 300),
 					xwiki_direct_url: (this.config.xwiki_direct_url || '').trim(),
 				})
@@ -934,15 +735,12 @@ export default {
 				this.xwikiMessageType = 'success'
 				await this.testXwiki()
 			} catch (e) {
-				this.xwikiMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save xWiki settings.')
+				this.xwikiMessage = e.response?.data?.message || t('pipelinq', 'Failed to save xWiki settings.')
 				this.xwikiMessageType = 'error'
 			} finally {
 				this.savingXwiki = false
 			}
 		},
-
 		/**
 		 * Test the xWiki connection via /api/xwiki/status.
 		 *
@@ -951,18 +749,12 @@ export default {
 		async testXwiki() {
 			this.testingXwiki = true
 			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/xwiki/status'),
-					{
-						headers: {
-							requesttoken:
-								typeof OC !== 'undefined' && OC.requestToken
-									? OC.requestToken
-									: '',
-							'OCS-APIREQUEST': 'true',
-						},
+				const response = await fetch(generateUrl('/apps/pipelinq/api/xwiki/status'), {
+					headers: {
+						requesttoken: typeof OC !== 'undefined' && OC.requestToken ? OC.requestToken : '',
+						'OCS-APIREQUEST': 'true',
 					},
-				)
+				})
 				const data = await response.json()
 				this.xwikiStatus = data
 				this.xwikiAppInstalled = data && data.source === 'xwiki-app'
@@ -970,22 +762,16 @@ export default {
 					this.xwikiMessage = t('pipelinq', 'xWiki connection successful.')
 					this.xwikiMessageType = 'success'
 				} else {
-					this.xwikiMessage = t(
-						'pipelinq',
-						'xWiki connection failed. Check the direct URL or install the xWiki Nextcloud app.',
-					)
+					this.xwikiMessage = t('pipelinq', 'xWiki connection failed. Check the direct URL or install the xWiki Nextcloud app.')
 					this.xwikiMessageType = 'warning'
 				}
 			} catch (e) {
-				this.xwikiMessage =
-					e.message
-					|| t('pipelinq', 'Failed to reach the xWiki status endpoint.')
+				this.xwikiMessage = e.message || t('pipelinq', 'Failed to reach the xWiki status endpoint.')
 				this.xwikiMessageType = 'error'
 			} finally {
 				this.testingXwiki = false
 			}
 		},
-
 		/**
 		 * @param type
 		 * @param field
@@ -1001,9 +787,7 @@ export default {
 			const extra = Object.entries(extraFilters)
 				.map(([k, v]) => `${k}=${encodeURIComponent(v)}&`)
 				.join('')
-			const url = generateUrl(
-				`/apps/openregister/api/objects/${config.register}/${config.schema}?${extra}${field}=${encodeURIComponent(value)}&_limit=1`,
-			)
+			const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?${extra}${field}=${encodeURIComponent(value)}&_limit=1`)
 			const response = await fetch(url, {
 				headers: {
 					'Content-Type': 'application/json',

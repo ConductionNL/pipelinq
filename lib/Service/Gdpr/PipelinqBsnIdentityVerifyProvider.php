@@ -54,148 +54,152 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
  */
-class PipelinqBsnIdentityVerifyProvider implements IdentityVerifyProvider {
-	/**
-	 * Stable provider id — the single source of truth for the value the NL
-	 * policy pack's `identityVerifyProvider` selector must name.
-	 *
-	 * @var string
-	 */
-	public const PROVIDER_ID = 'pipelinq-bsn-brp';
+class PipelinqBsnIdentityVerifyProvider implements IdentityVerifyProvider
+{
+    /**
+     * Stable provider id — the single source of truth for the value the NL
+     * policy pack's `identityVerifyProvider` selector must name.
+     *
+     * @var string
+     */
+    public const PROVIDER_ID = 'pipelinq-bsn-brp';
 
-	/**
-	 * Case payload keys probed for a BSN-shaped subject identifier, in order.
-	 *
-	 * @var array<int, string>
-	 */
-	private const SUBJECT_KEYS = [
-		'bsn',
-		'subjectBsn',
-		'subjectIdentifier',
-		'subjectId',
-		'subject',
-		'verzoekerBsn',
-	];
+    /**
+     * Case payload keys probed for a BSN-shaped subject identifier, in order.
+     *
+     * @var array<int, string>
+     */
+    private const SUBJECT_KEYS = [
+        'bsn',
+        'subjectBsn',
+        'subjectIdentifier',
+        'subjectId',
+        'subject',
+        'verzoekerBsn',
+    ];
 
-	/**
-	 * Constructor.
-	 *
-	 * @param BsnValidationService $bsnValidation The 11-proef / BSN formatter.
-	 * @param HaalCentraalClient $brpClient The Haal Centraal BRP lookup.
-	 * @param LoggerInterface $logger The logger.
-	 */
-	public function __construct(
-		private readonly BsnValidationService $bsnValidation,
-		private readonly HaalCentraalClient $brpClient,
-		private readonly LoggerInterface $logger,
-	) {
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param BsnValidationService $bsnValidation The 11-proef / BSN formatter.
+     * @param HaalCentraalClient   $brpClient     The Haal Centraal BRP lookup.
+     * @param LoggerInterface      $logger        The logger.
+     */
+    public function __construct(
+        private readonly BsnValidationService $bsnValidation,
+        private readonly HaalCentraalClient $brpClient,
+        private readonly LoggerInterface $logger,
+    ) {
+    }//end __construct()
 
-	/**
-	 * The stable provider id addressed by the NL pack selector.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
-	 */
-	public function getProviderId(): string {
-		return self::PROVIDER_ID;
-	}//end getProviderId()
+    /**
+     * The stable provider id addressed by the NL pack selector.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
+     */
+    public function getProviderId(): string
+    {
+        return self::PROVIDER_ID;
+    }//end getProviderId()
 
-	/**
-	 * Verify the data-subject's identity for a DSAR case via BSN + BRP.
-	 *
-	 * Three-state, fail-closed:
-	 * - no BSN in the payload            -> `needs-more` (cannot verify yet)
-	 * - BSN present but 11-proef fails   -> `failed`
-	 * - BSN valid, BRP unconfigured      -> `needs-more`
-	 * - BSN valid, BRP resolves a person -> `verified`
-	 * - BSN valid, BRP no-match / error  -> `failed`
-	 *
-	 * @param string $caseUuid The DSAR case object uuid.
-	 * @param array<string, mixed> $case The case's serialised payload.
-	 *
-	 * @return IdentityVerifyResult The three-state verification outcome.
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) OR's IdentityVerifyResult is a value
-	 *  object constructed only through its named static factories.
-	 *
-	 * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
-	 */
-	public function verify(string $caseUuid, array $case): IdentityVerifyResult {
-		$bsn = $this->extractBsn(case: $case);
-		if ($bsn === null) {
-			return IdentityVerifyResult::needsMore(
-				providerId: self::PROVIDER_ID,
-				message: 'No BSN present on the case; identity cannot be established yet.'
-			);
-		}
+    /**
+     * Verify the data-subject's identity for a DSAR case via BSN + BRP.
+     *
+     * Three-state, fail-closed:
+     * - no BSN in the payload            -> `needs-more` (cannot verify yet)
+     * - BSN present but 11-proef fails   -> `failed`
+     * - BSN valid, BRP unconfigured      -> `needs-more`
+     * - BSN valid, BRP resolves a person -> `verified`
+     * - BSN valid, BRP no-match / error  -> `failed`
+     *
+     * @param string               $caseUuid The DSAR case object uuid.
+     * @param array<string, mixed> $case     The case's serialised payload.
+     *
+     * @return IdentityVerifyResult The three-state verification outcome.
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) OR's IdentityVerifyResult is a value
+     *  object constructed only through its named static factories.
+     *
+     * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
+     */
+    public function verify(string $caseUuid, array $case): IdentityVerifyResult
+    {
+        $bsn = $this->extractBsn(case: $case);
+        if ($bsn === null) {
+            return IdentityVerifyResult::needsMore(
+                providerId: self::PROVIDER_ID,
+                message: 'No BSN present on the case; identity cannot be established yet.'
+            );
+        }
 
-		$validation = $this->bsnValidation->validate(bsnInput: $bsn);
-		if ($validation['isFormalValid'] === false) {
-			return IdentityVerifyResult::failed(
-				providerId: self::PROVIDER_ID,
-				message: 'BSN failed the 11-proef (' . $validation['maskedBsn'] . ').'
-			);
-		}
+        $validation = $this->bsnValidation->validate(bsnInput: $bsn);
+        if ($validation['isFormeelGeldig'] === false) {
+            return IdentityVerifyResult::failed(
+                providerId: self::PROVIDER_ID,
+                message: 'BSN failed the 11-proef ('.$validation['maskedBsn'].').'
+            );
+        }
 
-		if ($this->brpClient->isConfigured() === false) {
-			return IdentityVerifyResult::needsMore(
-				providerId: self::PROVIDER_ID,
-				message: 'BSN is formally valid but the BRP (Haal Centraal) client is not configured; '
-					. 'positive identity requires a BRP match.'
-			);
-		}
+        if ($this->brpClient->isConfigured() === false) {
+            return IdentityVerifyResult::needsMore(
+                providerId: self::PROVIDER_ID,
+                message: 'BSN is formally valid but the BRP (Haal Centraal) client is not configured; '
+                    .'positive identity requires a BRP match.'
+            );
+        }
 
-		try {
-			$person = $this->brpClient->lookupPersoon(bsn: $bsn, requestIdContext: $caseUuid);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'Pipelinq identity verify: BRP lookup failed',
-				['case' => $caseUuid, 'exception' => $e->getMessage()]
-			);
-			return IdentityVerifyResult::failed(
-				providerId: self::PROVIDER_ID,
-				message: 'BRP lookup errored; identity not established (fail-closed).'
-			);
-		}
+        try {
+            $persoon = $this->brpClient->lookupPersoon(bsn: $bsn, verzoekIdContext: $caseUuid);
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Pipelinq identity verify: BRP lookup failed',
+                ['case' => $caseUuid, 'exception' => $e->getMessage()]
+            );
+            return IdentityVerifyResult::failed(
+                providerId: self::PROVIDER_ID,
+                message: 'BRP lookup errored; identity not established (fail-closed).'
+            );
+        }
 
-		if ($person === null || $person === []) {
-			return IdentityVerifyResult::failed(
-				providerId: self::PROVIDER_ID,
-				message: 'No BRP record matched the supplied BSN.'
-			);
-		}
+        if ($persoon === null || $persoon === []) {
+            return IdentityVerifyResult::failed(
+                providerId: self::PROVIDER_ID,
+                message: 'No BRP record matched the supplied BSN.'
+            );
+        }
 
-		return IdentityVerifyResult::verified(
-			providerId: self::PROVIDER_ID,
-			message: 'BSN passed the 11-proef and a BRP record was resolved.'
-		);
-	}//end verify()
+        return IdentityVerifyResult::verified(
+            providerId: self::PROVIDER_ID,
+            message: 'BSN passed the 11-proef and a BRP record was resolved.'
+        );
+    }//end verify()
 
-	/**
-	 * Extract a BSN-shaped subject identifier from the case payload.
-	 *
-	 * Probes the known subject keys and returns the first value that is a
-	 * 9-digit numeric string (BSN shape). Never logs the raw value.
-	 *
-	 * @param array<string, mixed> $case The case's serialised payload.
-	 *
-	 * @return string|null The BSN, or null when none is present.
-	 */
-	private function extractBsn(array $case): ?string {
-		foreach (self::SUBJECT_KEYS as $key) {
-			$value = ($case[$key] ?? null);
-			if (is_string($value) === false && is_int($value) === false) {
-				continue;
-			}
+    /**
+     * Extract a BSN-shaped subject identifier from the case payload.
+     *
+     * Probes the known subject keys and returns the first value that is a
+     * 9-digit numeric string (BSN shape). Never logs the raw value.
+     *
+     * @param array<string, mixed> $case The case's serialised payload.
+     *
+     * @return string|null The BSN, or null when none is present.
+     */
+    private function extractBsn(array $case): ?string
+    {
+        foreach (self::SUBJECT_KEYS as $key) {
+            $value = ($case[$key] ?? null);
+            if (is_string($value) === false && is_int($value) === false) {
+                continue;
+            }
 
-			$candidate = trim((string)$value);
-			if (strlen($candidate) === 9 && ctype_digit($candidate) === true) {
-				return $candidate;
-			}
-		}
+            $candidate = trim((string) $value);
+            if (strlen($candidate) === 9 && ctype_digit($candidate) === true) {
+                return $candidate;
+            }
+        }
 
-		return null;
-	}//end extractBsn()
+        return null;
+    }//end extractBsn()
 }//end class

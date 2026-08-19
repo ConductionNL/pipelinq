@@ -14,46 +14,42 @@ a Booking completes (member 04 -> member 09).
 	<div class="walkin-queue-panel">
 		<header class="walkin-queue-panel__header">
 			<h2>{{ t('pipelinq', 'Walk-in queue') }}</h2>
-			<NcButton variant="primary" :disabled="!canCallNext" @click="onCallNext">
+			<NcButton variant="primary"
+				:disabled="!canCallNext"
+				@click="onCallNext">
 				{{ t('pipelinq', 'Call next') }}
 			</NcButton>
 		</header>
 
-		<p v-if="loadError" class="walkin-queue-panel__error" role="alert">
+		<p v-if="loadError"
+			class="walkin-queue-panel__error"
+			role="alert">
 			{{ loadError }}
 		</p>
 
-		<div
-			v-if="loading && !tickets.length"
+		<div v-if="loading && !tickets.length"
 			class="walkin-queue-panel__loading"
 			role="status"
 			aria-live="polite">
 			{{ t('pipelinq', 'Loading queue…') }}
 		</div>
 
-		<div
-			v-else-if="!sortedTickets.length"
+		<div v-else-if="!sortedTickets.length"
 			class="walkin-queue-panel__empty"
 			role="status">
 			<p>{{ t('pipelinq', 'The walk-in queue is empty.') }}</p>
 		</div>
 
 		<ul v-else class="walkin-queue-panel__list" role="list">
-			<li
-				v-for="ticket in sortedTickets"
+			<li v-for="ticket in sortedTickets"
 				:key="ticketKey(ticket)"
 				class="walkin-queue-ticket"
-				:class="{
-					'walkin-queue-ticket--called': ticket.status === 'called',
-				}">
+				:class="{ 'walkin-queue-ticket--called': ticket.status === 'called' }">
 				<div class="walkin-queue-ticket__primary">
 					<span class="walkin-queue-ticket__name">
-						{{
-							ticket.displayName || t('pipelinq', 'Anonymous customer')
-						}}
+						{{ ticket.displayName || t('pipelinq', 'Anonymous customer') }}
 					</span>
-					<span
-						v-if="ticket.serviceName"
+					<span v-if="ticket.serviceName"
 						class="walkin-queue-ticket__service">
 						{{ ticket.serviceName }}
 					</span>
@@ -63,8 +59,7 @@ a Booking completes (member 04 -> member 09).
 						<dt>{{ t('pipelinq', 'Arrived') }}</dt>
 						<dd>{{ formatTime(ticket.arrivedAt) }}</dd>
 					</div>
-					<div
-						v-if="ticket.estimatedReadyAt"
+					<div v-if="ticket.estimatedReadyAt"
 						class="walkin-queue-ticket__meta-item">
 						<dt>{{ t('pipelinq', 'Ready at') }}</dt>
 						<dd>{{ formatTime(ticket.estimatedReadyAt) }}</dd>
@@ -75,21 +70,18 @@ a Booking completes (member 04 -> member 09).
 					</div>
 				</dl>
 				<div class="walkin-queue-ticket__actions">
-					<NcButton
-						v-if="ticket.status === 'waiting'"
+					<NcButton v-if="ticket.status === 'waiting'"
 						:disabled="busyTicketId === ticketKey(ticket)"
 						@click="onCallTicket(ticket)">
 						{{ t('pipelinq', 'Call') }}
 					</NcButton>
-					<NcButton
-						v-if="ticket.status === 'called'"
+					<NcButton v-if="ticket.status === 'called'"
 						variant="primary"
 						:disabled="busyTicketId === ticketKey(ticket)"
 						@click="onServe(ticket)">
 						{{ t('pipelinq', 'Serve') }}
 					</NcButton>
-					<NcButton
-						variant="tertiary"
+					<NcButton variant="tertiary"
 						:disabled="busyTicketId === ticketKey(ticket)"
 						@click="onAbandon(ticket)">
 						{{ t('pipelinq', 'Abandon') }}
@@ -101,9 +93,9 @@ a Booking completes (member 04 -> member 09).
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
+import axios from '@nextcloud/axios'
 
 /**
  * Pipelinq walk-in queue operator panel.
@@ -121,7 +113,6 @@ export default {
 			type: String,
 			required: true,
 		},
-
 		/**
 		 * OpenRegister schema slug/id for the walkInTicket schema.
 		 */
@@ -129,7 +120,6 @@ export default {
 			type: String,
 			required: true,
 		},
-
 		/**
 		 * Refresh interval in milliseconds (default 10s per design).
 		 */
@@ -138,7 +128,6 @@ export default {
 			default: 10000,
 		},
 	},
-
 	data() {
 		return {
 			tickets: [],
@@ -148,7 +137,6 @@ export default {
 			refreshTimer: null,
 		}
 	},
-
 	computed: {
 		/**
 		 * Tickets sorted by arrivedAt ascending (oldest first).
@@ -157,8 +145,7 @@ export default {
 		 */
 		sortedTickets() {
 			const open = this.tickets.filter(
-				(ticket) =>
-					ticket.status === 'waiting' || ticket.status === 'called',
+				(ticket) => ticket.status === 'waiting' || ticket.status === 'called',
 			)
 			return open.slice().sort((left, right) => {
 				const leftIso = String(left.arrivedAt || '')
@@ -167,7 +154,6 @@ export default {
 				return leftIso < rightIso ? -1 : 1
 			})
 		},
-
 		/**
 		 * True when at least one waiting ticket exists.
 		 *
@@ -177,22 +163,16 @@ export default {
 			return this.sortedTickets.some((ticket) => ticket.status === 'waiting')
 		},
 	},
-
 	mounted() {
 		this.fetchTickets()
-		this.refreshTimer = window.setInterval(
-			this.fetchTickets,
-			this.refreshInterval,
-		)
+		this.refreshTimer = window.setInterval(this.fetchTickets, this.refreshInterval)
 	},
-
 	beforeUnmount() {
 		if (this.refreshTimer) {
 			window.clearInterval(this.refreshTimer)
 			this.refreshTimer = null
 		}
 	},
-
 	methods: {
 		/**
 		 * Build the OpenRegister objects URL for the walkInTicket schema.
@@ -205,12 +185,10 @@ export default {
 			return generateUrl(
 				'/apps/openregister/api/objects/'
 					+ encodeURIComponent(this.register)
-					+ '/'
-					+ encodeURIComponent(this.schema)
+					+ '/' + encodeURIComponent(this.schema)
 					+ tail,
 			)
 		},
-
 		/**
 		 * A stable key for a ticket row.
 		 *
@@ -219,13 +197,11 @@ export default {
 		 */
 		ticketKey(ticket) {
 			if (!ticket) return ''
-			if (ticket['@self'] && ticket['@self'].id)
-				return String(ticket['@self'].id)
+			if (ticket['@self'] && ticket['@self'].id) return String(ticket['@self'].id)
 			if (ticket.id) return String(ticket.id)
 			if (ticket.uuid) return String(ticket.uuid)
 			return ''
 		},
-
 		/**
 		 * Format an ISO datetime as a local short time (HH:MM).
 		 *
@@ -236,12 +212,8 @@ export default {
 			if (!iso) return '—'
 			const date = new Date(iso)
 			if (Number.isNaN(date.getTime())) return '—'
-			return date.toLocaleTimeString([], {
-				hour: '2-digit',
-				minute: '2-digit',
-			})
+			return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 		},
-
 		/**
 		 * Translate the raw status enum to a human-readable label.
 		 *
@@ -255,7 +227,6 @@ export default {
 			if (raw === 'abandoned') return t('pipelinq', 'Abandoned')
 			return raw || ''
 		},
-
 		/**
 		 * Fetch the open queue (waiting + called) from OpenRegister.
 		 *
@@ -267,39 +238,29 @@ export default {
 			try {
 				const params = new URLSearchParams()
 				params.set('_limit', '200')
-				const response = await axios.get(
-					this.buildUrl() + '?' + params.toString(),
-				)
+				const response = await axios.get(this.buildUrl() + '?' + params.toString())
 				const payload = response && response.data ? response.data : {}
 				const list = payload.results || payload.objects || payload || []
 				this.tickets = Array.isArray(list) ? list : []
 				this.loadError = ''
 			} catch (err) {
-				this.loadError = t(
-					'pipelinq',
-					'Could not load the walk-in queue. Retrying in {seconds} seconds.',
-					{
-						seconds: Math.round(this.refreshInterval / 1000),
-					},
-				)
+				this.loadError = t('pipelinq', 'Could not load the walk-in queue. Retrying in {seconds} seconds.', {
+					seconds: Math.round(this.refreshInterval / 1000),
+				})
 			} finally {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * Call the next waiting ticket (oldest arrivedAt).
 		 *
 		 * @return {Promise<void>} Resolves when transition completes.
 		 */
 		async onCallNext() {
-			const next = this.sortedTickets.find(
-				(ticket) => ticket.status === 'waiting',
-			)
+			const next = this.sortedTickets.find((ticket) => ticket.status === 'waiting')
 			if (!next) return
 			await this.onCallTicket(next)
 		},
-
 		/**
 		 * Transition a specific ticket from `waiting` to `called`.
 		 *
@@ -309,7 +270,6 @@ export default {
 		async onCallTicket(ticket) {
 			await this.updateStatus(ticket, 'called', {})
 		},
-
 		/**
 		 * Transition a ticket to `served` (sets actualServedAt locally).
 		 *
@@ -320,7 +280,6 @@ export default {
 			const nowIso = new Date().toISOString()
 			await this.updateStatus(ticket, 'served', { actualServedAt: nowIso })
 		},
-
 		/**
 		 * Transition a ticket to `abandoned`.
 		 *
@@ -330,7 +289,6 @@ export default {
 		async onAbandon(ticket) {
 			await this.updateStatus(ticket, 'abandoned', {})
 		},
-
 		/**
 		 * Update a ticket via OpenRegister PUT and refresh the panel.
 		 *
@@ -344,21 +302,14 @@ export default {
 			if (!key) return
 			this.busyTicketId = key
 			try {
-				const payload = {
-					...ticket,
-					status: nextStatus,
-					...(extra || {}),
-				}
+				const payload = Object.assign({}, ticket, { status: nextStatus }, extra || {})
 				if (payload['@self']) {
 					delete payload['@self']
 				}
 				await axios.put(this.buildUrl(key), payload)
 				await this.fetchTickets()
 			} catch (err) {
-				this.loadError = t(
-					'pipelinq',
-					'Could not update the ticket. Please try again.',
-				)
+				this.loadError = t('pipelinq', 'Could not update the ticket. Please try again.')
 			} finally {
 				this.busyTicketId = ''
 			}

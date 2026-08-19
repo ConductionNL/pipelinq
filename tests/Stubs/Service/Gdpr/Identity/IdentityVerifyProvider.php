@@ -24,17 +24,18 @@ namespace OCA\OpenRegister\Service\Gdpr\Identity;
 /**
  * Stub of OR's registerable identity-verification provider.
  */
-interface IdentityVerifyProvider {
-	/**
-	 * @return string
-	 */
-	public function getProviderId(): string;
+interface IdentityVerifyProvider
+{
+    /**
+     * @return string
+     */
+    public function getProviderId(): string;
 
-	/**
-	 * @param string $caseUuid The case object uuid.
-	 * @param array<string, mixed> $case The case's serialised payload.
-	 *
-	 * @return IdentityVerifyResult
-	 */
-	public function verify(string $caseUuid, array $case): IdentityVerifyResult;
+    /**
+     * @param string               $caseUuid The case object uuid.
+     * @param array<string, mixed> $case     The case's serialised payload.
+     *
+     * @return IdentityVerifyResult
+     */
+    public function verify(string $caseUuid, array $case): IdentityVerifyResult;
 }

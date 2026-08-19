@@ -16,38 +16,32 @@
 				<div class="product-revenue__info">
 					<span class="product-revenue__name">{{ item.name }}</span>
 					<span class="product-revenue__count">
-						{{
-							t('pipelinq', '{count} leads', { count: item.leadCount })
-						}}
+						{{ t('pipelinq', '{count} leads', { count: item.leadCount }) }}
 					</span>
 				</div>
-				<span class="product-revenue__value">{{
-					formatCurrency(item.totalValue)
-				}}</span>
+				<span class="product-revenue__value">{{ formatCurrency(item.totalValue) }}</span>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
-import { generateUrl } from '@nextcloud/router'
 import { NcLoadingIcon } from '@nextcloud/vue'
-import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
+import { generateUrl } from '@nextcloud/router'
 import { useObjectStore } from '../store/modules/object.js'
+import { formatCurrency as formatLocaleCurrency } from '../services/localeUtils.js'
 
 export default {
 	name: 'ProductRevenue',
 	components: {
 		NcLoadingIcon,
 	},
-
 	data() {
 		return {
 			loading: false,
 			topProducts: [],
 		}
 	},
-
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-3
@@ -56,11 +50,9 @@ export default {
 			return useObjectStore()
 		},
 	},
-
 	async mounted() {
 		await this.fetchData()
 	},
-
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-1
@@ -75,9 +67,7 @@ export default {
 				}
 
 				// Fetch all lead products
-				const lpUrl = generateUrl(
-					`/apps/openregister/api/objects/${config.leadProduct.register}/${config.leadProduct.schema}?_limit=500`,
-				)
+				const lpUrl = generateUrl(`/apps/openregister/api/objects/${config.leadProduct.register}/${config.leadProduct.schema}?_limit=500`)
 				const lpResponse = await fetch(lpUrl, {
 					headers: {
 						'Content-Type': 'application/json',
@@ -104,12 +94,7 @@ export default {
 					if (!productId) continue
 					const total = Number(item.total) || 0
 					if (!productMap[productId]) {
-						productMap[productId] = {
-							productId,
-							totalValue: 0,
-							leadCount: 0,
-							leads: new Set(),
-						}
+						productMap[productId] = { productId, totalValue: 0, leadCount: 0, leads: new Set() }
 					}
 					productMap[productId].totalValue += total
 					if (item.lead) {
@@ -131,12 +116,8 @@ export default {
 				// Fetch product names
 				for (const entry of sorted) {
 					try {
-						const product = await this.objectStore.fetchObject(
-							'product',
-							entry.productId,
-						)
-						entry.name =
-							product?.name || t('pipelinq', 'Unknown Product')
+						const product = await this.objectStore.fetchObject('product', entry.productId)
+						entry.name = product?.name || t('pipelinq', 'Unknown Product')
 					} catch {
 						entry.name = t('pipelinq', 'Unknown Product')
 					}
@@ -149,7 +130,6 @@ export default {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * @param value
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-2

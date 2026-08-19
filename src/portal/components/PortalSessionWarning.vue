@@ -3,14 +3,11 @@ SPDX-License-Identifier: EUPL-1.2
 SPDX-FileCopyrightText: 2026 Conduction B.V.
 -->
 <template>
-	<div
-		v-if="visible"
+	<div v-if="visible"
 		class="portal-session-warning"
 		role="alert"
 		aria-live="polite">
-		<span>{{
-			t('pipelinq', 'Your session expires in {seconds} seconds.', { seconds })
-		}}</span>
+		<span>{{ t('pipelinq', 'Your session expires in {seconds} seconds.', { seconds }) }}</span>
 		<button class="portal-button-link" @click="logout">
 			{{ t('pipelinq', 'Log out') }}
 		</button>
@@ -21,13 +18,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 </template>
 
 <script>
-import {
-	clearToken,
-	getExpiry,
-	getToken,
-	portalApi,
-	setToken,
-} from '../portalApi.js'
+import { portalApi, getExpiry, setToken, getToken, clearToken } from '../portalApi.js'
 
 const WARN_AT_SECONDS = 60
 
@@ -36,17 +27,14 @@ export default {
 	data() {
 		return { seconds: WARN_AT_SECONDS, visible: false, timer: null }
 	},
-
 	mounted() {
 		this.timer = window.setInterval(this.tick, 1000)
 	},
-
 	beforeUnmount() {
 		if (this.timer) {
 			window.clearInterval(this.timer)
 		}
 	},
-
 	methods: {
 		tick() {
 			if (!getToken()) {
@@ -65,7 +53,6 @@ export default {
 				this.visible = false
 			}
 		},
-
 		async extend() {
 			try {
 				const result = await portalApi.extendSession()
@@ -75,7 +62,6 @@ export default {
 				this.expire()
 			}
 		},
-
 		async logout() {
 			try {
 				await portalApi.logout()
@@ -84,7 +70,6 @@ export default {
 			}
 			this.expire()
 		},
-
 		expire() {
 			clearToken()
 			this.visible = false

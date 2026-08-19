@@ -37,239 +37,257 @@ use RuntimeException;
 /**
  * Tests for AppointmentPaymentWebhookController.
  */
-class AppointmentPaymentWebhookControllerTest extends TestCase {
+class AppointmentPaymentWebhookControllerTest extends TestCase
+{
 
-	/**
-	 * In-memory app config store.
-	 *
-	 * @var array<string, string>
-	 */
-	private array $appConfigStore = [];
+    /**
+     * In-memory app config store.
+     *
+     * @var array<string, string>
+     */
+    private array $appConfigStore = [];
 
-	/**
-	 * Request mock.
-	 *
-	 * @var IRequest
-	 */
-	private IRequest $request;
+    /**
+     * Request mock.
+     *
+     * @var IRequest
+     */
+    private IRequest $request;
 
-	/**
-	 * App-config mock.
-	 *
-	 * @var IAppConfig
-	 */
-	private IAppConfig $appConfig;
+    /**
+     * App-config mock.
+     *
+     * @var IAppConfig
+     */
+    private IAppConfig $appConfig;
 
-	/**
-	 * Deposit-service mock.
-	 *
-	 * @var AppointmentDepositService
-	 */
-	private AppointmentDepositService $deposit;
+    /**
+     * Deposit-service mock.
+     *
+     * @var AppointmentDepositService
+     */
+    private AppointmentDepositService $deposit;
 
-	/**
-	 * Logger mock.
-	 *
-	 * @var LoggerInterface
-	 */
-	private LoggerInterface $logger;
+    /**
+     * Logger mock.
+     *
+     * @var LoggerInterface
+     */
+    private LoggerInterface $logger;
 
-	/**
-	 * Set up shared mocks.
-	 *
-	 * @return void
-	 */
-	protected function setUp(): void {
-		$this->request = $this->createMock(originalClassName: IRequest::class);
-		$this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
-		$this->deposit = $this->createMock(originalClassName: AppointmentDepositService::class);
-		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
+    /**
+     * Set up shared mocks.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        $this->request   = $this->createMock(originalClassName: IRequest::class);
+        $this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
+        $this->deposit   = $this->createMock(originalClassName: AppointmentDepositService::class);
+        $this->logger    = $this->createMock(originalClassName: LoggerInterface::class);
 
-		$this->appConfig->method('getValueString')->willReturnCallback(
-			function (string $app, string $key, string $default = ''): string {
-				return ($this->appConfigStore[$key] ?? $default);
-			}
-		);
-	}//end setUp()
+        $this->appConfig->method('getValueString')->willReturnCallback(
+            function (string $app, string $key, string $default=''): string {
+                return ($this->appConfigStore[$key] ?? $default);
+            }
+        );
+    }//end setUp()
 
-	/**
-	 * Build a controller subclass that returns a fixed raw body so the
-	 * test never depends on `php://input`.
-	 *
-	 * @param string $rawBody Raw body to inject.
-	 *
-	 * @return AppointmentPaymentWebhookController
-	 */
-	private function buildController(string $rawBody = ''): AppointmentPaymentWebhookController {
-		return new class($this->request, $this->appConfig, $this->deposit, $this->logger, $rawBody) extends AppointmentPaymentWebhookController {
-			/**
-			 * Raw body to return from readRawBody().
-			 *
-			 * @var string
-			 */
-			private string $stubBody;
+    /**
+     * Build a controller subclass that returns a fixed raw body so the
+     * test never depends on `php://input`.
+     *
+     * @param string $rawBody Raw body to inject.
+     *
+     * @return AppointmentPaymentWebhookController
+     */
+    private function buildController(string $rawBody=''): AppointmentPaymentWebhookController
+    {
+        return new class(
+            $this->request,
+            $this->appConfig,
+            $this->deposit,
+            $this->logger,
+            $rawBody
+        ) extends AppointmentPaymentWebhookController {
 
-			/**
-			 * Subclass constructor that captures the raw-body override.
-			 *
-			 * @param IRequest $request The request.
-			 * @param IAppConfig $appConfig App config.
-			 * @param AppointmentDepositService $deposit Deposit service.
-			 * @param LoggerInterface $logger Logger.
-			 * @param string $stubBody Raw body fixture.
-			 */
-			public function __construct(
-				IRequest $request,
-				IAppConfig $appConfig,
-				AppointmentDepositService $deposit,
-				LoggerInterface $logger,
-				string $stubBody,
-			) {
-				parent::__construct(
-					request: $request,
-					appConfig: $appConfig,
-					deposit: $deposit,
-					logger: $logger
-				);
-				$this->stubBody = $stubBody;
-			}//end __construct()
+            /**
+             * Raw body to return from readRawBody().
+             *
+             * @var string
+             */
+            private string $stubBody;
 
-			/**
-			 * Return the captured raw body fixture.
-			 *
-			 * @return string
-			 */
-			protected function readRawBody(): string {
-				return $this->stubBody;
-			}//end readRawBody()
-		};
-	}//end buildController()
+            /**
+             * Subclass constructor that captures the raw-body override.
+             *
+             * @param IRequest                  $request   The request.
+             * @param IAppConfig                $appConfig App config.
+             * @param AppointmentDepositService $deposit   Deposit service.
+             * @param LoggerInterface           $logger    Logger.
+             * @param string                    $stubBody  Raw body fixture.
+             */
+            public function __construct(
+                IRequest $request,
+                IAppConfig $appConfig,
+                AppointmentDepositService $deposit,
+                LoggerInterface $logger,
+                string $stubBody,
+            ) {
+                parent::__construct(
+                    request: $request,
+                    appConfig: $appConfig,
+                    deposit: $deposit,
+                    logger: $logger
+                );
+                $this->stubBody = $stubBody;
+            }//end __construct()
 
-	/**
-	 * Missing signature → 422 + never delegates to the deposit service.
-	 *
-	 * @return void
-	 */
-	public function testCallbackReturns422WhenSignatureMissing(): void {
-		$this->request->method('getHeader')->willReturn('');
-		$this->deposit->expects($this->never())->method('handlePaymentCallback');
+            /**
+             * Return the captured raw body fixture.
+             *
+             * @return string
+             */
+            protected function readRawBody(): string
+            {
+                return $this->stubBody;
+            }//end readRawBody()
+        };
+    }//end buildController()
 
-		$response = $this->buildController(rawBody: '{"bookingId":"b-1","status":"paid"}')->callback();
-		$this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
+    /**
+     * Missing signature → 422 + never delegates to the deposit service.
+     *
+     * @return void
+     */
+    public function testCallbackReturns422WhenSignatureMissing(): void
+    {
+        $this->request->method('getHeader')->willReturn('');
+        $this->deposit->expects($this->never())->method('handlePaymentCallback');
 
-	}//end testCallbackReturns422WhenSignatureMissing()
+        $response = $this->buildController(rawBody: '{"bookingId":"b-1","status":"paid"}')->callback();
+        $this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
 
-	/**
-	 * Invalid signature → 422 + never delegates.
-	 *
-	 * @return void
-	 */
-	public function testCallbackReturns422OnInvalidSignature(): void {
-		$this->appConfigStore['appointment_payment_webhook_secret'] = 'real-secret';
-		$this->request->method('getHeader')->willReturn('totally-wrong-signature');
-		$this->deposit->expects($this->never())->method('handlePaymentCallback');
+    }//end testCallbackReturns422WhenSignatureMissing()
 
-		$response = $this->buildController(rawBody: '{"bookingId":"b-1","status":"paid"}')->callback();
-		$this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
+    /**
+     * Invalid signature → 422 + never delegates.
+     *
+     * @return void
+     */
+    public function testCallbackReturns422OnInvalidSignature(): void
+    {
+        $this->appConfigStore['appointment_payment_webhook_secret'] = 'real-secret';
+        $this->request->method('getHeader')->willReturn('totally-wrong-signature');
+        $this->deposit->expects($this->never())->method('handlePaymentCallback');
 
-	}//end testCallbackReturns422OnInvalidSignature()
+        $response = $this->buildController(rawBody: '{"bookingId":"b-1","status":"paid"}')->callback();
+        $this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
 
-	/**
-	 * Configured-secret empty → 422 (fail-closed). We never permit a
-	 * webhook to be processed when the operator forgot to set the secret.
-	 *
-	 * @return void
-	 */
-	public function testCallbackReturns422WhenSecretUnconfigured(): void {
-		$rawBody = '{"bookingId":"b-1","status":"paid"}';
-		$sig = hash_hmac('sha256', $rawBody, 'whatever');
-		$this->request->method('getHeader')->willReturn($sig);
-		$this->deposit->expects($this->never())->method('handlePaymentCallback');
+    }//end testCallbackReturns422OnInvalidSignature()
 
-		$response = $this->buildController(rawBody: $rawBody)->callback();
-		$this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
+    /**
+     * Configured-secret empty → 422 (fail-closed). We never permit a
+     * webhook to be processed when the operator forgot to set the secret.
+     *
+     * @return void
+     */
+    public function testCallbackReturns422WhenSecretUnconfigured(): void
+    {
+        $rawBody = '{"bookingId":"b-1","status":"paid"}';
+        $sig     = hash_hmac('sha256', $rawBody, 'whatever');
+        $this->request->method('getHeader')->willReturn($sig);
+        $this->deposit->expects($this->never())->method('handlePaymentCallback');
 
-	}//end testCallbackReturns422WhenSecretUnconfigured()
+        $response = $this->buildController(rawBody: $rawBody)->callback();
+        $this->assertSame(expected: Http::STATUS_UNPROCESSABLE_ENTITY, actual: $response->getStatus());
 
-	/**
-	 * Valid signature + paid status → 200 with outcome=confirmed.
-	 *
-	 * @return void
-	 */
-	public function testCallbackAcceptsValidSignatureAndConfirms(): void {
-		$secret = 'shared';
-		$rawBody = '{"bookingId":"b-1","status":"paid","providerReference":"sess-1"}';
-		$sig = hash_hmac('sha256', $rawBody, $secret);
-		$this->appConfigStore['appointment_payment_webhook_secret'] = $secret;
+    }//end testCallbackReturns422WhenSecretUnconfigured()
 
-		$this->request->method('getHeader')->willReturn($sig);
+    /**
+     * Valid signature + paid status → 200 with outcome=confirmed.
+     *
+     * @return void
+     */
+    public function testCallbackAcceptsValidSignatureAndConfirms(): void
+    {
+        $secret  = 'shared';
+        $rawBody = '{"bookingId":"b-1","status":"paid","providerReference":"sess-1"}';
+        $sig     = hash_hmac('sha256', $rawBody, $secret);
+        $this->appConfigStore['appointment_payment_webhook_secret'] = $secret;
 
-		$this->deposit->expects($this->once())
-			->method('handlePaymentCallback')
-			->with($this->equalTo(value: 'b-1'), $this->equalTo(value: 'paid'))
-			->willReturn('confirmed');
+        $this->request->method('getHeader')->willReturn($sig);
 
-		$response = $this->buildController(rawBody: $rawBody)->callback();
-		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
-		$this->assertSame(expected: ['ok' => true, 'outcome' => 'confirmed'], actual: $response->getData());
+        $this->deposit->expects($this->once())
+            ->method('handlePaymentCallback')
+            ->with($this->equalTo(value: 'b-1'), $this->equalTo(value: 'paid'))
+            ->willReturn('confirmed');
 
-	}//end testCallbackAcceptsValidSignatureAndConfirms()
+        $response = $this->buildController(rawBody: $rawBody)->callback();
+        $this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+        $this->assertSame(expected: ['ok' => true, 'outcome' => 'confirmed'], actual: $response->getData());
 
-	/**
-	 * Malformed JSON → 400.
-	 *
-	 * @return void
-	 */
-	public function testCallbackReturns400OnMalformedJson(): void {
-		$secret = 'shared';
-		$rawBody = 'not-json';
-		$sig = hash_hmac('sha256', $rawBody, $secret);
-		$this->appConfigStore['appointment_payment_webhook_secret'] = $secret;
+    }//end testCallbackAcceptsValidSignatureAndConfirms()
 
-		$this->request->method('getHeader')->willReturn($sig);
+    /**
+     * Malformed JSON → 400.
+     *
+     * @return void
+     */
+    public function testCallbackReturns400OnMalformedJson(): void
+    {
+        $secret  = 'shared';
+        $rawBody = 'not-json';
+        $sig     = hash_hmac('sha256', $rawBody, $secret);
+        $this->appConfigStore['appointment_payment_webhook_secret'] = $secret;
 
-		$response = $this->buildController(rawBody: $rawBody)->callback();
-		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
+        $this->request->method('getHeader')->willReturn($sig);
 
-	}//end testCallbackReturns400OnMalformedJson()
+        $response = $this->buildController(rawBody: $rawBody)->callback();
+        $this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
 
-	/**
-	 * Missing bookingId / status → 400.
-	 *
-	 * @return void
-	 */
-	public function testCallbackReturns400WhenFieldsMissing(): void {
-		$secret = 'shared';
-		$rawBody = '{"providerReference":"sess-1"}';
-		$sig = hash_hmac('sha256', $rawBody, $secret);
-		$this->appConfigStore['appointment_payment_webhook_secret'] = $secret;
+    }//end testCallbackReturns400OnMalformedJson()
 
-		$this->request->method('getHeader')->willReturn($sig);
+    /**
+     * Missing bookingId / status → 400.
+     *
+     * @return void
+     */
+    public function testCallbackReturns400WhenFieldsMissing(): void
+    {
+        $secret  = 'shared';
+        $rawBody = '{"providerReference":"sess-1"}';
+        $sig     = hash_hmac('sha256', $rawBody, $secret);
+        $this->appConfigStore['appointment_payment_webhook_secret'] = $secret;
 
-		$response = $this->buildController(rawBody: $rawBody)->callback();
-		$this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
+        $this->request->method('getHeader')->willReturn($sig);
 
-	}//end testCallbackReturns400WhenFieldsMissing()
+        $response = $this->buildController(rawBody: $rawBody)->callback();
+        $this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
 
-	/**
-	 * A deposit-service throw is caught and returned as 200/deferred so
-	 * openconnector does not retry indefinitely on a transient OR fault.
-	 *
-	 * @return void
-	 */
-	public function testCallbackReturns200WhenDepositHandlerThrows(): void {
-		$secret = 'shared';
-		$rawBody = '{"bookingId":"b-x","status":"paid"}';
-		$sig = hash_hmac('sha256', $rawBody, $secret);
-		$this->appConfigStore['appointment_payment_webhook_secret'] = $secret;
+    }//end testCallbackReturns400WhenFieldsMissing()
 
-		$this->request->method('getHeader')->willReturn($sig);
-		$this->deposit->method('handlePaymentCallback')->willThrowException(new RuntimeException('OR down'));
+    /**
+     * A deposit-service throw is caught and returned as 200/deferred so
+     * openconnector does not retry indefinitely on a transient OR fault.
+     *
+     * @return void
+     */
+    public function testCallbackReturns200WhenDepositHandlerThrows(): void
+    {
+        $secret  = 'shared';
+        $rawBody = '{"bookingId":"b-x","status":"paid"}';
+        $sig     = hash_hmac('sha256', $rawBody, $secret);
+        $this->appConfigStore['appointment_payment_webhook_secret'] = $secret;
 
-		$response = $this->buildController(rawBody: $rawBody)->callback();
-		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
-		$data = $response->getData();
-		$this->assertSame(expected: 'deferred', actual: $data['outcome']);
+        $this->request->method('getHeader')->willReturn($sig);
+        $this->deposit->method('handlePaymentCallback')->willThrowException(new RuntimeException('OR down'));
 
-	}//end testCallbackReturns200WhenDepositHandlerThrows()
+        $response = $this->buildController(rawBody: $rawBody)->callback();
+        $this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+        $data = $response->getData();
+        $this->assertSame(expected: 'deferred', actual: $data['outcome']);
+
+    }//end testCallbackReturns200WhenDepositHandlerThrows()
 }//end class

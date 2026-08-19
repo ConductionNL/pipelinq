@@ -33,56 +33,59 @@ use RuntimeException;
  *
  * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-003
  */
-class HaalCentraalException extends RuntimeException {
+class HaalCentraalException extends RuntimeException
+{
 
-	/**
-	 * HTTP status returned by HaalCentraal (or 0 on transport / config errors).
-	 *
-	 * @var integer
-	 */
-	private int $statusCode;
+    /**
+     * HTTP status returned by HaalCentraal (or 0 on transport / config errors).
+     *
+     * @var integer
+     */
+    private int $statusCode;
 
-	/**
-	 * Correlation ID returned by HaalCentraal (when known).
-	 *
-	 * @var string|null
-	 */
-	private ?string $correlationId;
+    /**
+     * Correlation ID returned by HaalCentraal (when known).
+     *
+     * @var string|null
+     */
+    private ?string $correlationId;
 
-	/**
-	 * Constructor.
-	 *
-	 * @param string $message The error message (callers may surface this; never include BSN).
-	 * @param int $statusCode HTTP status code from HaalCentraal (0 on transport failure).
-	 * @param string|null $correlationId Optional correlation ID for audit / support.
-	 * @param \Throwable $previous Optional cause.
-	 */
-	public function __construct(
-		string $message,
-		int $statusCode = 0,
-		?string $correlationId = null,
-		?\Throwable $previous = null,
-	) {
-		parent::__construct(message: $message, code: $statusCode, previous: $previous);
-		$this->statusCode = $statusCode;
-		$this->correlationId = $correlationId;
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param string      $message       The error message (callers may surface this; never include BSN).
+     * @param int         $statusCode    HTTP status code from HaalCentraal (0 on transport failure).
+     * @param string|null $correlationId Optional correlation ID for audit / support.
+     * @param \Throwable  $previous      Optional cause.
+     */
+    public function __construct(
+        string $message,
+        int $statusCode=0,
+        ?string $correlationId=null,
+        ?\Throwable $previous=null,
+    ) {
+        parent::__construct(message: $message, code: $statusCode, previous: $previous);
+        $this->statusCode    = $statusCode;
+        $this->correlationId = $correlationId;
+    }//end __construct()
 
-	/**
-	 * Get the HTTP status code (0 = transport error).
-	 *
-	 * @return int
-	 */
-	public function getStatusCode(): int {
-		return $this->statusCode;
-	}//end getStatusCode()
+    /**
+     * Get the HTTP status code (0 = transport error).
+     *
+     * @return int
+     */
+    public function getStatusCode(): int
+    {
+        return $this->statusCode;
+    }//end getStatusCode()
 
-	/**
-	 * Get the correlation ID (or null).
-	 *
-	 * @return string|null
-	 */
-	public function getCorrelationId(): ?string {
-		return $this->correlationId;
-	}//end getCorrelationId()
+    /**
+     * Get the correlation ID (or null).
+     *
+     * @return string|null
+     */
+    public function getCorrelationId(): ?string
+    {
+        return $this->correlationId;
+    }//end getCorrelationId()
 }//end class

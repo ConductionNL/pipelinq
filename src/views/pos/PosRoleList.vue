@@ -10,35 +10,30 @@
 	<div>
 		<CnIndexPage
 			:title="t('pipelinq', 'POS roles')"
-			:description="
-				t(
-					'pipelinq',
-					'Permission matrix for cashiers, supervisors and managers',
-				)
-			"
+			:description="t('pipelinq', 'Permission matrix for cashiers, supervisors and managers')"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
 			:refreshing="refreshing"
-			:sortKey="sortKey"
-			:sortOrder="sortOrder"
+			:sort-key="sortKey"
+			:sort-order="sortOrder"
 			:selectable="true"
-			:includeColumns="visibleColumns"
-			:emptyTitle="t('pipelinq', 'No POS roles defined yet')"
-			:emptyActionLabel="t('pipelinq', 'New role')"
+			:include-columns="visibleColumns"
+			:empty-title="t('pipelinq', 'No POS roles defined yet')"
+			:empty-action-label="t('pipelinq', 'New role')"
 			@add="createNew"
-			@emptyAction="createNew"
+			@empty-action="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
 			@view="openRole"
-			@pageChanged="onPageChange" />
+			@page-changed="onPageChange" />
 	</div>
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 import { inject } from 'vue'
+import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -49,25 +44,16 @@ export default {
 		const objectStore = useObjectStore()
 		return useListView('posRole', { sidebarState, objectStore })
 	},
-
 	data() {
 		return {
 			refreshing: false,
 		}
 	},
-
 	computed: {
 		visibleColumns() {
-			return [
-				'name',
-				'canVoid',
-				'maxDiscountPercent',
-				'canRefund',
-				'canNoSale',
-			]
+			return ['name', 'canVoid', 'maxDiscountPercent', 'canRefund', 'canNoSale']
 		},
 	},
-
 	methods: {
 		/**
 		 * Refresh handler for the Actions-menu Refresh item. Drives the
@@ -83,7 +69,6 @@ export default {
 				this.refreshing = false
 			}
 		},
-
 		/**
 		 * Ask the host to open this role for editing.
 		 *
@@ -98,7 +83,6 @@ export default {
 		openRole(row) {
 			this.$emit('edit', row.id)
 		},
-
 		/**
 		 * Ask the host to open an empty form.
 		 *

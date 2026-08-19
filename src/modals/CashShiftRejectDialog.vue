@@ -9,23 +9,12 @@
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-reject">
-			<p>
-				{{
-					t(
-						'pipelinq',
-						'This rejects the cash difference and reopens the shift for a recount. Enter a reason.',
-					)
-				}}
-			</p>
+			<p>{{ t('pipelinq', 'This rejects the cash difference and reopens the shift for a recount. Enter a reason.') }}</p>
 			<NcTextArea
 				v-model="reason"
 				:label="t('pipelinq', 'Rejection reason')"
 				:error="showError"
-				:helperText="
-					showError
-						? t('pipelinq', 'Enter a reason for the rejection')
-						: ''
-				" />
+				:helper-text="showError ? t('pipelinq', 'Enter a reason for the rejection') : ''" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
@@ -39,7 +28,7 @@
 </template>
 
 <script>
-import { NcButton, NcDialog, NcTextArea } from '@nextcloud/vue'
+import { NcDialog, NcButton, NcTextArea } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftRejectDialog',
@@ -48,14 +37,12 @@ export default {
 		NcButton,
 		NcTextArea,
 	},
-
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
-
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -63,7 +50,6 @@ export default {
 			showError: false,
 		}
 	},
-
 	methods: {
 		/**
 		 * Validate and emit the rejection reason.

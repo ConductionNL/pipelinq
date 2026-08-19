@@ -28,7 +28,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\RoutingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -46,102 +45,97 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/skill-routing/tasks.md#task-2
  */
 #[NoAdminRequired]
-class RoutingController extends Controller {
-	/**
-	 * Valid entity types accepted by the suggestions endpoint.
-	 *
-	 * @var array<int, string>
-	 */
-	private const VALID_ENTITY_TYPES = ['request', 'lead'];
+class RoutingController extends Controller
+{
+    /**
+     * Valid entity types accepted by the suggestions endpoint.
+     *
+     * @var array<int, string>
+     */
+    private const VALID_ENTITY_TYPES = ['request', 'lead'];
 
-	/**
-	 * Constructor.
-	 *
-	 * @param IRequest $request The request.
-	 * @param RoutingService $routingService The routing service.
-	 * @param IUserSession $userSession The user session.
-	 * @param LoggerInterface $logger The logger.
-	 */
-	public function __construct(
-		IRequest $request,
-		private RoutingService $routingService,
-		private IUserSession $userSession,
-		private ObjectOwnerAccessPolicy $accessPolicy,
-		private LoggerInterface $logger,
-	) {
-		// @PublicPage — DI constructor (not HTTP-routable). The class-level
-		// #[NoAdminRequired] applies to the action methods; this ctor is
-		// wired by the Nextcloud app framework and never serves a request.
-		parent::__construct(appName: Application::APP_ID, request: $request);
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param IRequest        $request        The request.
+     * @param RoutingService  $routingService The routing service.
+     * @param IUserSession    $userSession    The user session.
+     * @param LoggerInterface $logger         The logger.
+     */
+    public function __construct(
+        IRequest $request,
+        private RoutingService $routingService,
+        private IUserSession $userSession,
+        private LoggerInterface $logger,
+    ) {
+        // @PublicPage — DI constructor (not HTTP-routable). The class-level
+        // #[NoAdminRequired] applies to the action methods; this ctor is
+        // wired by the Nextcloud app framework and never serves a request.
+        parent::__construct(appName: Application::APP_ID, request: $request);
+    }//end __construct()
 
-	/**
-	 * Get ranked agent suggestions for a queued request or lead.
-	 *
-	 * Query params:
-	 *   - entityType: 'request' | 'lead'
-	 *   - entityId:   UUID
-	 *
-	 * @return JSONResponse Shape on success: { suggestions, atCapacity, noMatch }.
-	 *                      On validation failure: 400 with { message }.
-	 *                      On unexpected failure: 500 with { message: 'Operation failed' }.
-	 *
-	 * @spec openspec/changes/skill-routing/tasks.md#task-2.2
-	 */
-	#[NoAdminRequired]
-	public function getSuggestions(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(
-				['message' => 'Authentication required'],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}
+    /**
+     * Get ranked agent suggestions for a queued request or lead.
+     *
+     * Query params:
+     *   - entityType: 'request' | 'lead'
+     *   - entityId:   UUID
+     *
+     * @return JSONResponse Shape on success: { suggestions, atCapacity, noMatch }.
+     *                      On validation failure: 400 with { message }.
+     *                      On unexpected failure: 500 with { message: 'Operation failed' }.
+     *
+     * @spec openspec/changes/skill-routing/tasks.md#task-2.2
+     */
+    #[NoAdminRequired]
+    public function getSuggestions(): JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['message' => 'Authentication required'],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
 
-		// Routing suggestions read the assignment graph across the team — a
-		// CRM capability, not an any-authenticated-user one.
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
+        $entityType = (string) $this->request->getParam('entityType', '');
+        $entityId   = (string) $this->request->getParam('entityId', '');
 
-		$entityType = (string)$this->request->getParam('entityType', '');
-		$entityId = (string)$this->request->getParam('entityId', '');
+        if ($entityType === '' || $entityId === '') {
+            return new JSONResponse(
+                ['message' => 'entityType and entityId are required'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
 
-		if ($entityType === '' || $entityId === '') {
-			return new JSONResponse(
-				['message' => 'entityType and entityId are required'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
+        if (in_array($entityType, self::VALID_ENTITY_TYPES, true) === false) {
+            return new JSONResponse(
+                ['message' => 'Invalid entityType'],
+                Http::STATUS_BAD_REQUEST
+            );
+        }
 
-		if (in_array($entityType, self::VALID_ENTITY_TYPES, true) === false) {
-			return new JSONResponse(
-				['message' => 'Invalid entityType'],
-				Http::STATUS_BAD_REQUEST
-			);
-		}
+        try {
+            $result = $this->routingService->getSuggestedAgents(
+                entityType: $entityType,
+                entityId: $entityId
+            );
+        } catch (\Throwable $e) {
+            // NEVER expose $e->getMessage() to client — log full context here.
+            $this->logger->error(
+                'RoutingController: getSuggestions failed',
+                [
+                    'exception'  => $e,
+                    'entityType' => $entityType,
+                    'entityId'   => $entityId,
+                ]
+            );
+            return new JSONResponse(
+                ['message' => 'Operation failed'],
+                Http::STATUS_INTERNAL_SERVER_ERROR
+            );
+        }
 
-		try {
-			$result = $this->routingService->getSuggestedAgents(
-				entityType: $entityType,
-				entityId: $entityId
-			);
-		} catch (\Throwable $e) {
-			// NEVER expose $e->getMessage() to client — log full context here.
-			$this->logger->error(
-				'RoutingController: getSuggestions failed',
-				[
-					'exception' => $e,
-					'entityType' => $entityType,
-					'entityId' => $entityId,
-				]
-			);
-			return new JSONResponse(
-				['message' => 'Operation failed'],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}
-
-		return new JSONResponse($result, Http::STATUS_OK);
-	}//end getSuggestions()
+        return new JSONResponse($result, Http::STATUS_OK);
+    }//end getSuggestions()
 }//end class

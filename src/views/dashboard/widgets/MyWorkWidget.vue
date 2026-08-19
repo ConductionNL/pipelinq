@@ -12,26 +12,22 @@
 	per-row destination (ConductionNL/nextcloud-vue#91 Wave 2 gap).
 -->
 <template>
-	<CnDataTable
-		:rows="items"
+	<CnDataTable :rows="items"
 		:columns="columns"
 		:loading="!loaded"
-		:loadingText="t('pipelinq', 'Loading…')"
-		hideHeader
+		:loading-text="t('pipelinq', 'Loading…')"
+		hide-header
 		borderless
-		:emptyText="t('pipelinq', 'No items assigned to you')"
-		:rowClass="rowClass"
-		@rowClick="openItem">
+		:empty-text="t('pipelinq', 'No items assigned to you')"
+		:row-class="rowClass"
+		@row-click="openItem">
 		<template #column-entityType="{ row }">
 			<span class="entity-badge" :class="'badge--' + row.entityType">
 				{{ row.entityType === 'lead' ? 'LEAD' : 'REQ' }}
 			</span>
 		</template>
 		<template #column-dueDate="{ row }">
-			<span
-				v-if="row.dueDate"
-				class="my-work-due"
-				:class="{ overdue: row.isOverdue }">
+			<span v-if="row.dueDate" class="my-work-due" :class="{ overdue: row.isOverdue }">
 				{{ formatDate(row.dueDate) }}
 			</span>
 		</template>
@@ -49,8 +45,8 @@
 
 <script>
 import { CnDataTable } from '@conduction/nextcloud-vue'
-import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
 import { formatDate } from '../../../services/localeUtils.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -76,7 +72,6 @@ export default {
 		CnDataTable,
 		NcButton,
 	},
-
 	mixins: [dashboardRefreshMixin],
 	data() {
 		return {
@@ -91,7 +86,6 @@ export default {
 			],
 		}
 	},
-
 	methods: {
 		formatDate,
 		/**
@@ -103,7 +97,6 @@ export default {
 		rowClass(row) {
 			return row.isOverdue ? 'my-work-row--overdue' : ''
 		},
-
 		/**
 		 * Fetch the current user's top-N worklist from the canonical
 		 * server-side union endpoint (leads + requests, pre-sorted by
@@ -115,9 +108,7 @@ export default {
 		async load() {
 			try {
 				const response = await fetch(
-					generateUrl(
-						'/apps/pipelinq/api/worklist/mine?limit=' + WIDGET_LIMIT,
-					),
+					generateUrl('/apps/pipelinq/api/worklist/mine?limit=' + WIDGET_LIMIT),
 					{
 						headers: {
 							'Content-Type': 'application/json',
@@ -136,7 +127,6 @@ export default {
 				this.loaded = true
 			}
 		},
-
 		/**
 		 * Navigate to the row's detail page. The route differs per row
 		 * (LeadDetail vs TicketDetail); the server-side worklist row carries
@@ -149,9 +139,7 @@ export default {
 		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 		 */
 		openItem(item) {
-			const raw =
-				item.routeName
-				|| (item.entityType === 'lead' ? 'LeadDetail' : 'TicketDetail')
+			const raw = item.routeName || (item.entityType === 'lead' ? 'LeadDetail' : 'TicketDetail')
 			const name = LEGACY_ROUTE_MAP[raw] || raw
 			this.$router.push({ name, params: { id: item.id } })
 		},

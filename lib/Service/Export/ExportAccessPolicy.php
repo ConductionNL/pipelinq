@@ -43,53 +43,55 @@ use OCP\IGroupManager;
  *
  * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
  */
-class ExportAccessPolicy {
-	/**
-	 * App-config key for the export-analyst group.
-	 *
-	 * @var string
-	 */
-	public const ANALYST_GROUP_KEY = 'export_analyst_group';
+class ExportAccessPolicy
+{
+    /**
+     * App-config key for the export-analyst group.
+     *
+     * @var string
+     */
+    public const ANALYST_GROUP_KEY = 'export_analyst_group';
 
-	/**
-	 * Constructor.
-	 *
-	 * @param IAppConfig $appConfig The app config.
-	 * @param IGroupManager $groupManager The group manager.
-	 */
-	public function __construct(
-		private IAppConfig $appConfig,
-		private IGroupManager $groupManager,
-	) {
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param IAppConfig    $appConfig    The app config.
+     * @param IGroupManager $groupManager The group manager.
+     */
+    public function __construct(
+        private IAppConfig $appConfig,
+        private IGroupManager $groupManager,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Whether a user may configure or operate the export pipeline.
-	 *
-	 * Grants access to a Nextcloud admin or a member of the configured
-	 * export-analyst group. Fails closed for an empty user or an unconfigured
-	 * group (admins only).
-	 *
-	 * @param string $userId The acting user UID.
-	 *
-	 * @return bool Whether the user may use the export surface.
-	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
-	 */
-	public function isExportAdmin(string $userId): bool {
-		if ($userId === '') {
-			return false;
-		}
+    /**
+     * Whether a user may configure or operate the export pipeline.
+     *
+     * Grants access to a Nextcloud admin or a member of the configured
+     * export-analyst group. Fails closed for an empty user or an unconfigured
+     * group (admins only).
+     *
+     * @param string $userId The acting user UID.
+     *
+     * @return bool Whether the user may use the export surface.
+     *
+     * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
+     */
+    public function isExportAdmin(string $userId): bool
+    {
+        if ($userId === '') {
+            return false;
+        }
 
-		if ($this->groupManager->isAdmin($userId) === true) {
-			return true;
-		}
+        if ($this->groupManager->isAdmin($userId) === true) {
+            return true;
+        }
 
-		$group = $this->appConfig->getValueString(Application::APP_ID, self::ANALYST_GROUP_KEY, '');
-		if ($group === '') {
-			return false;
-		}
+        $group = $this->appConfig->getValueString(Application::APP_ID, self::ANALYST_GROUP_KEY, '');
+        if ($group === '') {
+            return false;
+        }
 
-		return $this->groupManager->isInGroup($userId, $group);
-	}//end isExportAdmin()
+        return $this->groupManager->isInGroup($userId, $group);
+    }//end isExportAdmin()
 }//end class

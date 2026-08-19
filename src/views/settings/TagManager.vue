@@ -13,43 +13,35 @@
 		</div>
 
 		<div v-else class="tag-manager__list">
-			<div
-				v-for="tag in tags"
+			<div v-for="tag in tags"
 				:key="tag.id"
 				class="tag-chip"
 				:class="{ 'tag-chip--editing': editingId === tag.id }">
 				<template v-if="editingId === tag.id">
-					<input
-						ref="editInput"
+					<input ref="editInput"
 						v-model="editName"
 						class="tag-chip__input"
-						:aria-label="
-							t('pipelinq', 'Rename tag {name}', { name: tag.name })
-						"
+						:aria-label="t('pipelinq', 'Rename tag {name}', { name: tag.name })"
 						@keyup.enter="saveRename(tag.id)"
-						@keyup.escape="cancelEdit" />
-					<button
-						class="tag-chip__action tag-chip__action--save"
+						@keyup.escape="cancelEdit">
+					<button class="tag-chip__action tag-chip__action--save"
 						:title="t('pipelinq', 'Save')"
 						@click="saveRename(tag.id)">
 						&#10003;
 					</button>
-					<button
-						class="tag-chip__action tag-chip__action--cancel"
+					<button class="tag-chip__action tag-chip__action--cancel"
 						:title="t('pipelinq', 'Cancel')"
 						@click="cancelEdit">
 						&#10005;
 					</button>
 				</template>
 				<template v-else>
-					<span
-						class="tag-chip__label"
+					<span class="tag-chip__label"
 						:title="t('pipelinq', 'Double-click to rename')"
 						@dblclick="startEditing(tag)">
 						{{ tag.name }}
 					</span>
-					<button
-						class="tag-chip__remove"
+					<button class="tag-chip__remove"
 						:title="t('pipelinq', 'Remove')"
 						@click="confirmRemove(tag)">
 						&times;
@@ -59,22 +51,19 @@
 
 			<!-- Inline add form -->
 			<div v-if="adding" class="tag-chip tag-chip--adding">
-				<input
-					ref="addInput"
+				<input ref="addInput"
 					v-model="newName"
 					class="tag-chip__input"
 					:placeholder="addPlaceholder"
 					:aria-label="addPlaceholder"
 					@keyup.enter="saveNew"
-					@keyup.escape="cancelAdding" />
-				<button
-					class="tag-chip__action tag-chip__action--save"
+					@keyup.escape="cancelAdding">
+				<button class="tag-chip__action tag-chip__action--save"
 					:title="t('pipelinq', 'Add')"
 					@click="saveNew">
 					&#10003;
 				</button>
-				<button
-					class="tag-chip__action tag-chip__action--cancel"
+				<button class="tag-chip__action tag-chip__action--cancel"
 					:title="t('pipelinq', 'Cancel')"
 					@click="cancelAdding">
 					&#10005;
@@ -100,49 +89,38 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
-
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
-
 		tags: {
 			type: Array,
 			default: () => [],
 		},
-
 		loading: {
 			type: Boolean,
 			default: false,
 		},
-
 		addLabel: {
 			type: String,
 			/**
 			 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
 			 */
-			default() {
-				return t('pipelinq', '+ Add')
-			},
+			default() { return t('pipelinq', '+ Add') },
 		},
-
 		addPlaceholder: {
 			type: String,
 			/**
 			 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
 			 */
-			default() {
-				return t('pipelinq', 'Enter name...')
-			},
+			default() { return t('pipelinq', 'Enter name...') },
 		},
-
 		usageCheck: {
 			type: Function,
 			default: null,
 		},
 	},
-
 	data() {
 		return {
 			adding: false,
@@ -152,7 +130,6 @@ export default {
 			error: null,
 		}
 	},
-
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-94
@@ -165,7 +142,6 @@ export default {
 				this.$refs.addInput?.focus()
 			})
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-88
 		 */
@@ -174,7 +150,6 @@ export default {
 			this.newName = ''
 			this.error = null
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-92
 		 */
@@ -184,14 +159,10 @@ export default {
 
 			// Check for duplicate names.
 			const duplicate = this.tags.some(
-				(tag) => tag.name.toLowerCase() === name.toLowerCase(),
+				tag => tag.name.toLowerCase() === name.toLowerCase(),
 			)
 			if (duplicate) {
-				this.error = t(
-					'pipelinq',
-					'An item with the name "{name}" already exists.',
-					{ name },
-				)
+				this.error = t('pipelinq', 'An item with the name "{name}" already exists.', { name })
 				return
 			}
 
@@ -206,7 +177,6 @@ export default {
 				this.error = e.message
 			}
 		},
-
 		/**
 		 * @param tag
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-95
@@ -219,7 +189,6 @@ export default {
 				this.$refs.editInput?.[0]?.focus()
 			})
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-89
 		 */
@@ -228,7 +197,6 @@ export default {
 			this.editName = ''
 			this.error = null
 		},
-
 		/**
 		 * @param id
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-93
@@ -239,15 +207,10 @@ export default {
 
 			// Check for duplicate names (excluding the item being renamed).
 			const duplicate = this.tags.some(
-				(tag) =>
-					tag.id !== id && tag.name.toLowerCase() === name.toLowerCase(),
+				tag => tag.id !== id && tag.name.toLowerCase() === name.toLowerCase(),
 			)
 			if (duplicate) {
-				this.error = t(
-					'pipelinq',
-					'An item with the name "{name}" already exists.',
-					{ name },
-				)
+				this.error = t('pipelinq', 'An item with the name "{name}" already exists.', { name })
 				return
 			}
 
@@ -262,27 +225,18 @@ export default {
 				this.error = e.message
 			}
 		},
-
 		/**
 		 * @param tag
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-90
 		 */
 		async confirmRemove(tag) {
-			let message = t(
-				'pipelinq',
-				'Are you sure you want to remove "{name}"?',
-				{ name: tag.name },
-			)
+			let message = t('pipelinq', 'Are you sure you want to remove "{name}"?', { name: tag.name })
 
 			if (this.usageCheck) {
 				try {
 					const count = await this.usageCheck(tag.name)
 					if (count > 0) {
-						message = t(
-							'pipelinq',
-							'{count} items currently use "{name}". They will retain their value, but it will no longer be available for new items.',
-							{ count, name: tag.name },
-						)
+						message = t('pipelinq', '{count} items currently use "{name}". They will retain their value, but it will no longer be available for new items.', { count, name: tag.name })
 					}
 				} catch (e) {
 					// Non-blocking — proceed with generic message

@@ -18,20 +18,11 @@ test('pipeline page renders with sidebar', async ({ page }) => {
 })
 
 // @e2e openspec/specs/pipeline/spec.md#view-stage-list-in-sidebar
-test('pipeline sidebar shows Details and Stages tabs or empty state', async ({
-	page,
-}) => {
+test('pipeline sidebar shows Details and Stages tabs or empty state', async ({ page }) => {
 	await page.goto('/apps/pipelinq/#/pipeline')
 	// Either pipeline selector is present or we see empty state
-	const hasSelector = await page
-		.locator('select, [role="combobox"]')
-		.first()
-		.isVisible()
-		.catch(() => false)
-	const hasEmptyState = await page
-		.getByText(/No pipeline|pipeline selected|no pipeline/i)
-		.isVisible()
-		.catch(() => false)
+	const hasSelector = await page.locator('select, [role="combobox"]').first().isVisible().catch(() => false)
+	const hasEmptyState = await page.getByText(/No pipeline|pipeline selected|no pipeline/i).isVisible().catch(() => false)
 	expect(hasSelector || hasEmptyState).toBe(true)
 })
 
@@ -46,9 +37,7 @@ test('pipeline page main content area is accessible', async ({ page }) => {
 // @e2e openspec/specs/pipeline/spec.md#kanban-card-display---request-card
 test('pipeline page loads without error', async ({ page }) => {
 	await page.goto('/apps/pipelinq/#/pipeline')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
-		timeout: 10000,
-	})
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Uncaught Error')
 })
 
@@ -59,9 +48,7 @@ test('pipeline navigation item exists in sidebar', async ({ page }) => {
 	// present in the DOM but not visible until the group is expanded. Assert the
 	// entry exists and points at the #/pipeline route.
 	const entry = page
-		.locator(
-			'#app-navigation-vue a.app-navigation-entry-link[href$="#/pipeline"]',
-		)
+		.locator('#app-navigation-vue a.app-navigation-entry-link[href$="#/pipeline"]')
 		.filter({ hasText: /^\s*Pipeline\s*$/ })
 	await expect(entry).toHaveCount(1, { timeout: 10000 })
 	await expect(entry.first()).toHaveAttribute('href', /#\/pipeline$/)
@@ -74,9 +61,7 @@ test('pipeline page navigates from dashboard nav', async ({ page }) => {
 })
 
 // @e2e openspec/specs/pipeline/spec.md#mixed-entity-kanban
-test('pipeline page renders without server error after navigation', async ({
-	page,
-}) => {
+test('pipeline page renders without server error after navigation', async ({ page }) => {
 	await page.goto('/apps/pipelinq/#/pipeline')
 	await page.waitForTimeout(2000)
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
@@ -88,9 +73,7 @@ test('pipeline value KPI widget visible on dashboard', async ({ page }) => {
 	// The Commercial overview dashboard exposes the pipeline-value KPI as the
 	// "Open Pipeline" tile (relabelled in the IA restructure). Wait for the
 	// KPI surface to settle before asserting to avoid a fetch race.
-	await expect(
-		page.locator('#content-vue').getByText('Open Pipeline').first(),
-	).toBeVisible({ timeout: 15000 })
+	await expect(page.locator('#content-vue').getByText('Open Pipeline').first()).toBeVisible({ timeout: 15000 })
 })
 
 /*

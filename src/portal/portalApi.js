@@ -104,11 +104,7 @@ export async function portalFetch(method, path, body = null) {
 	}
 
 	if (!response.ok) {
-		const err = Object.assign(
-			new Error(payload.message || `HTTP ${response.status}`),
-			{ status: response.status },
-			payload,
-		)
+		const err = Object.assign(new Error(payload.message || `HTTP ${response.status}`), { status: response.status }, payload)
 		throw err
 	}
 	return payload
@@ -116,14 +112,11 @@ export async function portalFetch(method, path, body = null) {
 
 export const portalApi = {
 	tenantConfig: () => portalFetch('GET', '/tenant-config'),
-	login: (email, password, totpCode) =>
-		portalFetch('POST', '/auth/login', { email, password, totpCode }),
+	login: (email, password, totpCode) => portalFetch('POST', '/auth/login', { email, password, totpCode }),
 	logout: () => portalFetch('POST', '/auth/logout'),
 	extendSession: () => portalFetch('POST', '/auth/extend-session'),
-	passwordResetRequest: (email) =>
-		portalFetch('POST', '/auth/password-reset-request', { email }),
-	passwordReset: (token, password) =>
-		portalFetch('POST', '/auth/password-reset', { token, password }),
+	passwordResetRequest: (email) => portalFetch('POST', '/auth/password-reset-request', { email }),
+	passwordReset: (token, password) => portalFetch('POST', '/auth/password-reset', { token, password }),
 	mfaEnroll: () => portalFetch('POST', '/auth/mfa-enroll'),
 	mfaVerify: (code) => portalFetch('POST', '/auth/mfa-verify', { code }),
 	profile: () => portalFetch('GET', '/accounts/profile'),
@@ -134,16 +127,11 @@ export const portalApi = {
 	requests: (page = 1) => portalFetch('GET', `/requests?page=${page}`),
 	request: (id) => portalFetch('GET', `/requests/${encodeURIComponent(id)}`),
 	submitRequest: (payload) => portalFetch('POST', '/requests', payload),
-	replyRequest: (id, message) =>
-		portalFetch('POST', `/requests/${encodeURIComponent(id)}/reply`, {
-			message,
-		}),
-	signDocument: (objectId, objectType) =>
-		portalFetch('POST', '/documents/sign', { objectId, objectType }),
+	replyRequest: (id, message) => portalFetch('POST', `/requests/${encodeURIComponent(id)}/reply`, { message }),
+	signDocument: (objectId, objectType) => portalFetch('POST', '/documents/sign', { objectId, objectType }),
 	delegations: () => portalFetch('GET', '/delegations'),
 	grantDelegation: (payload) => portalFetch('POST', '/delegations', payload),
-	revokeDelegation: (id) =>
-		portalFetch('DELETE', `/delegations/${encodeURIComponent(id)}`),
+	revokeDelegation: (id) => portalFetch('DELETE', `/delegations/${encodeURIComponent(id)}`),
 	requestExport: () => portalFetch('POST', '/exports'),
 	requestClose: () => portalFetch('POST', '/accounts/close'),
 }

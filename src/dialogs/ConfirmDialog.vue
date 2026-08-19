@@ -47,7 +47,6 @@ export default {
 		/** NcButton variant for the confirming button. */
 		variant: { type: String, default: 'error' },
 	},
-
 	emits: ['confirm', 'cancel'],
 }
 </script>

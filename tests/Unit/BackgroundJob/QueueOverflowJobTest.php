@@ -32,143 +32,150 @@ use RuntimeException;
 /**
  * Tests for QueueOverflowJob.
  */
-class QueueOverflowJobTest extends TestCase {
+class QueueOverflowJobTest extends TestCase
+{
 
-	/**
-	 * The time factory mock.
-	 *
-	 * @var ITimeFactory&MockObject
-	 */
-	private ITimeFactory $timeFactory;
+    /**
+     * The time factory mock.
+     *
+     * @var ITimeFactory&MockObject
+     */
+    private ITimeFactory $timeFactory;
 
-	/**
-	 * The queue service mock.
-	 *
-	 * @var QueueService&MockObject
-	 */
-	private QueueService $queueService;
+    /**
+     * The queue service mock.
+     *
+     * @var QueueService&MockObject
+     */
+    private QueueService $queueService;
 
-	/**
-	 * The settings service mock.
-	 *
-	 * @var SettingsService&MockObject
-	 */
-	private SettingsService $settingsService;
+    /**
+     * The settings service mock.
+     *
+     * @var SettingsService&MockObject
+     */
+    private SettingsService $settingsService;
 
-	/**
-	 * The logger mock.
-	 *
-	 * @var LoggerInterface&MockObject
-	 */
-	private LoggerInterface $logger;
+    /**
+     * The logger mock.
+     *
+     * @var LoggerInterface&MockObject
+     */
+    private LoggerInterface $logger;
 
-	/**
-	 * Set up test fixtures.
-	 *
-	 * @return void
-	 */
-	protected function setUp(): void {
-		$this->timeFactory = $this->createMock(originalClassName: ITimeFactory::class);
-		$this->queueService = $this->createMock(originalClassName: QueueService::class);
-		$this->settingsService = $this->createMock(originalClassName: SettingsService::class);
-		$this->logger = $this->createMock(originalClassName: LoggerInterface::class);
+    /**
+     * Set up test fixtures.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        $this->timeFactory     = $this->createMock(originalClassName: ITimeFactory::class);
+        $this->queueService    = $this->createMock(originalClassName: QueueService::class);
+        $this->settingsService = $this->createMock(originalClassName: SettingsService::class);
+        $this->logger          = $this->createMock(originalClassName: LoggerInterface::class);
 
-		$this->settingsService->method('getIntValue')->willReturnCallback(
-			static fn (string $key, int $default): int => $default
-		);
+        $this->settingsService->method('getIntValue')->willReturnCallback(
+            static fn (string $key, int $default): int => $default
+        );
 
-		$this->timeFactory->method('getTime')->willReturn(time());
-	}//end setUp()
+        $this->timeFactory->method('getTime')->willReturn(time());
+    }//end setUp()
 
-	/**
-	 * Build the job under test.
-	 *
-	 * @return QueueOverflowJob
-	 */
-	private function buildJob(): QueueOverflowJob {
-		return new QueueOverflowJob(
-			time: $this->timeFactory,
-			queueService: $this->queueService,
-			settingsService: $this->settingsService,
-			logger: $this->logger,
-		);
-	}//end buildJob()
+    /**
+     * Build the job under test.
+     *
+     * @return QueueOverflowJob
+     */
+    private function buildJob(): QueueOverflowJob
+    {
+        return new QueueOverflowJob(
+            time: $this->timeFactory,
+            queueService: $this->queueService,
+            settingsService: $this->settingsService,
+            logger: $this->logger,
+        );
+    }//end buildJob()
 
-	/**
-	 * Test that the job can be instantiated.
-	 *
-	 * @return void
-	 */
-	public function testJobCanBeInstantiated(): void {
-		$this->assertInstanceOf(expected: QueueOverflowJob::class, actual: $this->buildJob());
-	}//end testJobCanBeInstantiated()
+    /**
+     * Test that the job can be instantiated.
+     *
+     * @return void
+     */
+    public function testJobCanBeInstantiated(): void
+    {
+        $this->assertInstanceOf(expected: QueueOverflowJob::class, actual: $this->buildJob());
+    }//end testJobCanBeInstantiated()
 
-	/**
-	 * Test that the job calls processOverflow and logs when items are moved.
-	 *
-	 * @return void
-	 */
-	public function testJobMovesOverflowItems(): void {
-		$this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
+    /**
+     * Test that the job calls processOverflow and logs when items are moved.
+     *
+     * @return void
+     */
+    public function testJobMovesOverflowItems(): void
+    {
+        $this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
 
-		$this->queueService
-			->expects($this->once())
-			->method('processOverflow')
-			->willReturn(5);
+        $this->queueService
+            ->expects($this->once())
+            ->method('processOverflow')
+            ->willReturn(5);
 
-		$this->logger
-			->expects($this->atLeastOnce())
-			->method('info');
+        $this->logger
+            ->expects($this->atLeastOnce())
+            ->method('info');
 
-		$job = $this->buildJob();
-		$ref = new ReflectionMethod(objectOrMethod: $job, method: 'run');
-		$ref->setAccessible(accessible: true);
-		$ref->invoke(object: $job, args: null);
-	}//end testJobMovesOverflowItems()
+        $job = $this->buildJob();
+        $ref = new ReflectionMethod(objectOrMethod: $job, method: 'run');
+        $ref->setAccessible(accessible: true);
+        $ref->invoke(object: $job, args: null);
+    }//end testJobMovesOverflowItems()
 
-	/**
-	 * Test that the job logs debug when no items are moved.
-	 *
-	 * @return void
-	 */
-	public function testJobLogsDebugWhenNoOverflow(): void {
-		$this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
+    /**
+     * Test that the job logs debug when no items are moved.
+     *
+     * @return void
+     */
+    public function testJobLogsDebugWhenNoOverflow(): void
+    {
+        $this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
 
-		$this->queueService
-			->expects($this->once())
-			->method('processOverflow')
-			->willReturn(0);
+        $this->queueService
+            ->expects($this->once())
+            ->method('processOverflow')
+            ->willReturn(0);
 
-		$this->logger
-			->expects($this->atLeastOnce())
-			->method('debug');
+        $this->logger
+            ->expects($this->atLeastOnce())
+            ->method('debug');
 
-		$job = $this->buildJob();
-		$ref = new ReflectionMethod(objectOrMethod: $job, method: 'run');
-		$ref->setAccessible(accessible: true);
-		$ref->invoke(object: $job, args: null);
-	}//end testJobLogsDebugWhenNoOverflow()
+        $job = $this->buildJob();
+        $ref = new ReflectionMethod(objectOrMethod: $job, method: 'run');
+        $ref->setAccessible(accessible: true);
+        $ref->invoke(object: $job, args: null);
+    }//end testJobLogsDebugWhenNoOverflow()
 
-	/**
-	 * Test that the job logs error on exception.
-	 *
-	 * @return void
-	 */
-	public function testJobLogsErrorOnException(): void {
-		$this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
+    /**
+     * Test that the job logs error on exception.
+     *
+     * @return void
+     */
+    public function testJobLogsErrorOnException(): void
+    {
+        $this->markTestSkipped(message: 'See https://github.com/ConductionNL/pipelinq/issues/286 — QueueService ObjectService API mismatch.');
 
-		$this->queueService
-			->expects($this->once())
-			->method('processOverflow')
-			->willThrowException(new RuntimeException('service error'));
+        $this->queueService
+            ->expects($this->once())
+            ->method('processOverflow')
+            ->willThrowException(new RuntimeException('service error'));
 
-		$this->logger
-			->expects($this->atLeastOnce())
-			->method('error');
+        $this->logger
+            ->expects($this->atLeastOnce())
+            ->method('error');
 
-		$job = $this->buildJob();
-		$ref = new ReflectionMethod(objectOrMethod: $job, method: 'run');
-		$ref->setAccessible(accessible: true);
-		$ref->invoke(object: $job, args: null);
-	}//end testJobLogsErrorOnException()
+        $job = $this->buildJob();
+        $ref = new ReflectionMethod(objectOrMethod: $job, method: 'run');
+        $ref->setAccessible(accessible: true);
+        $ref->invoke(object: $job, args: null);
+    }//end testJobLogsErrorOnException()
 }//end class

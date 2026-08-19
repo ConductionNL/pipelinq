@@ -21,7 +21,7 @@
           "actorUuid",
           "actorType",
           "nextcloudUserId",
-          "name"
+          "naam"
         ],
         "properties": {
           "actorUuid": {
@@ -49,7 +49,7 @@
             "facetable": true,
             "title": "Nextcloud User ID"
           },
-          "name": {
+          "naam": {
             "type": "string",
             "description": "Human-readable display name of the actor.",
             "maxLength": 200,
@@ -73,56 +73,56 @@
         "description": "Declarative binding config referencing the OpenConnector `vng-klantinteracties-adapter` change's frozen Endpoint and Rule slugs verbatim (as-built; see vng-klantinteracties-leaf design.md and its 'Slug corrections' note for the drift versus this leaf's original design assumptions). One Endpoint object per HTTP method exists on the adapter side (its `endpoint.method` property is single-valued, not a comma-list), so list/create/update/patch are separate slug fields here. No pipelinq PHP reads this schema directly today; it documents and freezes the cross-repo wiring for the gateway and for future pipelinq-side tooling.",
         "x-schema-org": "schema:SoftwareApplication",
         "required": [
-          "customerContactsListEndpoint",
-          "partiesListEndpoint",
-          "createCustomerContactEndpoint",
+          "klantcontactenListEndpoint",
+          "partijenListEndpoint",
+          "maakKlantcontactEndpoint",
           "avgBsnPolicyRule",
-          "referenceNumberRule"
+          "referentienummerRule"
         ],
         "properties": {
-          "customerContactsListEndpoint": {
+          "klantcontactenListEndpoint": {
             "type": "string",
             "description": "OpenConnector Endpoint slug for GET klantcontacten (adapter as-built: vng-klantcontacten-list).",
             "maxLength": 128,
             "title": "Klantcontacten List Endpoint"
           },
-          "customerContactsCreateEndpoint": {
+          "klantcontactenCreateEndpoint": {
             "type": "string",
             "description": "OpenConnector Endpoint slug for POST klantcontacten (adapter as-built: vng-klantcontacten-create).",
             "maxLength": 128,
             "title": "Klantcontacten Create Endpoint"
           },
-          "customerContactsUpdateEndpoint": {
+          "klantcontactenUpdateEndpoint": {
             "type": "string",
             "description": "OpenConnector Endpoint slug for PUT klantcontacten (adapter as-built: vng-klantcontacten-update).",
             "maxLength": 128,
             "title": "Klantcontacten Update Endpoint"
           },
-          "customerContactsPatchEndpoint": {
+          "klantcontactenPatchEndpoint": {
             "type": "string",
             "description": "OpenConnector Endpoint slug for PATCH klantcontacten (adapter as-built: vng-klantcontacten-patch).",
             "maxLength": 128,
             "title": "Klantcontacten Patch Endpoint"
           },
-          "partiesListEndpoint": {
+          "partijenListEndpoint": {
             "type": "string",
             "description": "OpenConnector Endpoint slug for GET partijen (adapter as-built: vng-partijen-list).",
             "maxLength": 128,
             "title": "Partijen List Endpoint"
           },
-          "partiesCreateEndpoint": {
+          "partijenCreateEndpoint": {
             "type": "string",
             "description": "OpenConnector Endpoint slug for POST partijen (adapter as-built: vng-partijen-create).",
             "maxLength": 128,
             "title": "Partijen Create Endpoint"
           },
-          "involvedPartiesListEndpoint": {
+          "betrokkenenListEndpoint": {
             "type": "string",
             "description": "OpenConnector Endpoint slug for GET betrokkenen (adapter as-built: vng-betrokkenen-list).",
             "maxLength": 128,
             "title": "Betrokkenen List Endpoint"
           },
-          "involvedPartiesCreateEndpoint": {
+          "betrokkenenCreateEndpoint": {
             "type": "string",
             "description": "OpenConnector Endpoint slug for POST betrokkenen (adapter as-built: vng-betrokkenen-create).",
             "maxLength": 128,
@@ -140,13 +140,13 @@
             "maxLength": 128,
             "title": "Digitaleadressen Create Endpoint"
           },
-          "createCustomerContactEndpoint": {
+          "maakKlantcontactEndpoint": {
             "type": "string",
             "description": "OpenConnector Endpoint slug for the composite POST maak-klantcontact (adapter as-built: vng-maak-klantcontact).",
             "maxLength": 128,
             "title": "Maak Klantcontact Endpoint"
           },
-          "createCustomerContactCompositeRule": {
+          "maakKlantcontactCompositeRule": {
             "type": "string",
             "description": "OpenConnector Rule slug that fans out the composite maak-klantcontact write (adapter as-built: vng-maak-klantcontact-composite).",
             "maxLength": 128,
@@ -170,7 +170,7 @@
             "maxLength": 128,
             "title": "Self URL HAL Rule"
           },
-          "referenceNumberRule": {
+          "referentienummerRule": {
             "type": "string",
             "description": "OpenConnector Rule slug generating the scheme-overridable UUIDv4 referentienummer (adapter as-built: vng-referentienummer).",
             "maxLength": 128,
@@ -197,7 +197,7 @@
         "actorUuid": "00000000-0000-0000-0000-00000000ac01",
         "actorType": "medewerker",
         "nextcloudUserId": "annelies",
-        "name": "Annelies de Wit (KCC)",
+        "naam": "Annelies de Wit (KCC)",
         "actief": true
       },
       {
@@ -210,7 +210,7 @@
         "actorUuid": "00000000-0000-0000-0000-00000000ac02",
         "actorType": "geautomatiseerdeActor",
         "nextcloudUserId": "pipelinq",
-        "name": "Pipelinq systeemactor",
+        "naam": "Pipelinq systeemactor",
         "actief": true
       },
       {
@@ -223,7 +223,7 @@
         "actorUuid": "00000000-0000-0000-0000-00000000ac03",
         "actorType": "organisatorischeEenheid",
         "nextcloudUserId": "team-vth",
-        "name": "Afdeling VTH",
+        "naam": "Afdeling VTH",
         "actief": true
       },
       {
@@ -233,22 +233,22 @@
           "slug": "binding-default",
           "id": "e5a1c0d0-vngb-4001-a001-000000000001"
         },
-        "customerContactsListEndpoint": "vng-klantcontacten-list",
-        "customerContactsCreateEndpoint": "vng-klantcontacten-create",
-        "customerContactsUpdateEndpoint": "vng-klantcontacten-update",
-        "customerContactsPatchEndpoint": "vng-klantcontacten-patch",
-        "partiesListEndpoint": "vng-partijen-list",
-        "partiesCreateEndpoint": "vng-partijen-create",
-        "involvedPartiesListEndpoint": "vng-betrokkenen-list",
-        "involvedPartiesCreateEndpoint": "vng-betrokkenen-create",
+        "klantcontactenListEndpoint": "vng-klantcontacten-list",
+        "klantcontactenCreateEndpoint": "vng-klantcontacten-create",
+        "klantcontactenUpdateEndpoint": "vng-klantcontacten-update",
+        "klantcontactenPatchEndpoint": "vng-klantcontacten-patch",
+        "partijenListEndpoint": "vng-partijen-list",
+        "partijenCreateEndpoint": "vng-partijen-create",
+        "betrokkenenListEndpoint": "vng-betrokkenen-list",
+        "betrokkenenCreateEndpoint": "vng-betrokkenen-create",
         "digitaleadressenListEndpoint": "vng-digitaleadressen-list",
         "digitaleadressenCreateEndpoint": "vng-digitaleadressen-create",
-        "createCustomerContactEndpoint": "vng-maak-klantcontact",
-        "createCustomerContactCompositeRule": "vng-maak-klantcontact-composite",
+        "maakKlantcontactEndpoint": "vng-maak-klantcontact",
+        "maakKlantcontactCompositeRule": "vng-maak-klantcontact-composite",
         "avgBsnPolicyRule": "vng-avg-bsn-policy",
         "avgBsnPolicyOutboundGuardRule": "vng-avg-bsn-policy-outbound-guard",
         "selfUrlHalRule": "vng-selfurl-hal",
-        "referenceNumberRule": "vng-referentienummer",
+        "referentienummerRule": "vng-referentienummer",
         "actief": true
       }
     ]

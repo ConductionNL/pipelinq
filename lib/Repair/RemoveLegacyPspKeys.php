@@ -51,76 +51,79 @@ use Throwable;
 /**
  * Removes the retired, app-held PSP keys from app config.
  */
-class RemoveLegacyPspKeys implements IRepairStep {
-	/**
-	 * Constructor.
-	 *
-	 * @param IAppConfig $appConfig The app config.
-	 * @param LoggerInterface $logger The logger.
-	 */
-	public function __construct(
-		private IAppConfig $appConfig,
-		private LoggerInterface $logger,
-	) {
-	}//end __construct()
+class RemoveLegacyPspKeys implements IRepairStep
+{
+    /**
+     * Constructor.
+     *
+     * @param IAppConfig      $appConfig The app config.
+     * @param LoggerInterface $logger    The logger.
+     */
+    public function __construct(
+        private IAppConfig $appConfig,
+        private LoggerInterface $logger,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Get the name of this repair step.
-	 *
-	 * @return string
-	 */
-	public function getName(): string {
-		return 'Remove the legacy app-held PSP API keys (they live in the credential broker now)';
-	}//end getName()
+    /**
+     * Get the name of this repair step.
+     *
+     * @return string
+     */
+    public function getName(): string
+    {
+        return 'Remove the legacy app-held PSP API keys (they live in the credential broker now)';
+    }//end getName()
 
-	/**
-	 * Delete every retired PSP credential row.
-	 *
-	 * @param IOutput $output The output interface.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/pos-psp-keys-via-broker/tasks.md#task-4-delete-the-legacy-keys
-	 */
-	public function run(IOutput $output): void {
-		$removed = 0;
+    /**
+     * Delete every retired PSP credential row.
+     *
+     * @param IOutput $output The output interface.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/pos-psp-keys-via-broker/tasks.md#task-4-delete-the-legacy-keys
+     */
+    public function run(IOutput $output): void
+    {
+        $removed = 0;
 
-		foreach (PosPaymentService::PROVIDERS as $provider) {
-			foreach (PosPaymentService::RETIRED_SECRET_FIELDS as $field) {
-				$key = PosPaymentService::CONFIG_PREFIX . $provider . '.' . $field;
+        foreach (PosPaymentService::PROVIDERS as $provider) {
+            foreach (PosPaymentService::RETIRED_SECRET_FIELDS as $field) {
+                $key = PosPaymentService::CONFIG_PREFIX.$provider.'.'.$field;
 
-				$stored = $this->appConfig->getValueString(Application::APP_ID, $key, '');
-				if ($stored === '') {
-					continue;
-				}
+                $stored = $this->appConfig->getValueString(Application::APP_ID, $key, '');
+                if ($stored === '') {
+                    continue;
+                }
 
-				try {
-					$this->appConfig->deleteKey(Application::APP_ID, $key);
-					$removed++;
-				} catch (Throwable $e) {
-					// Never fatal: failing to delete leaves the row exactly as it was,
-					// which is the pre-existing state, not a regression. But it IS a
-					// secret we meant to remove, so say so at error level.
-					$output->warning('Could not remove the legacy PSP key for ' . $provider . ': ' . $e->getMessage());
-					$this->logger->error(
-						'Pipelinq: could not remove a legacy PSP key; it is still stored',
-						[
-							'provider' => $provider,
-							'field' => $field,
-						]
-					);
-				}//end try
-			}//end foreach
-		}//end foreach
+                try {
+                    $this->appConfig->deleteKey(Application::APP_ID, $key);
+                    $removed++;
+                } catch (Throwable $e) {
+                    // Never fatal: failing to delete leaves the row exactly as it was,
+                    // which is the pre-existing state, not a regression. But it IS a
+                    // secret we meant to remove, so say so at error level.
+                    $output->warning('Could not remove the legacy PSP key for '.$provider.': '.$e->getMessage());
+                    $this->logger->error(
+                        'Pipelinq: could not remove a legacy PSP key; it is still stored',
+                        [
+                            'provider' => $provider,
+                            'field'    => $field,
+                        ]
+                    );
+                }//end try
+            }//end foreach
+        }//end foreach
 
-		if ($removed === 0) {
-			$output->info('No legacy PSP keys stored; nothing to remove.');
-			return;
-		}
+        if ($removed === 0) {
+            $output->info('No legacy PSP keys stored; nothing to remove.');
+            return;
+        }
 
-		$output->info(
-			'Removed ' . $removed . ' legacy PSP key(s). Select a credential from the broker in the POS '
-			. 'payment settings to re-enable each provider.'
-		);
-	}//end run()
+        $output->info(
+            'Removed '.$removed.' legacy PSP key(s). Select a credential from the broker in the POS '
+            .'payment settings to re-enable each provider.'
+        );
+    }//end run()
 }//end class

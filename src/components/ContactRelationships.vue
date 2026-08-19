@@ -2,15 +2,11 @@
 	<div class="contact-relationships">
 		<NcLoadingIcon v-if="loading" :size="24" />
 
-		<NcEmptyContent
-			v-else-if="relationships.length === 0"
+		<NcEmptyContent v-else-if="relationships.length === 0"
 			:description="t('pipelinq', 'No relationships yet.')" />
 
 		<div v-else>
-			<div
-				v-for="group in groupedRelationships"
-				:key="group.category"
-				class="relationship-group">
+			<div v-for="group in groupedRelationships" :key="group.category" class="relationship-group">
 				<h4 class="relationship-group__title">
 					{{ group.category }}
 				</h4>
@@ -19,9 +15,7 @@
 						<thead>
 							<tr>
 								<th scope="col">{{ t('pipelinq', 'Name') }}</th>
-								<th scope="col">
-									{{ t('pipelinq', 'Relationship') }}
-								</th>
+								<th scope="col">{{ t('pipelinq', 'Relationship') }}</th>
 								<th scope="col">{{ t('pipelinq', 'Status') }}</th>
 								<th scope="col" />
 							</tr>
@@ -36,26 +30,18 @@
 								<td>{{ getEntityName(rel.toContact) }}</td>
 								<td>{{ rel.type }}</td>
 								<td>
-									<span
-										v-if="isEnded(rel)"
-										class="relationship-status relationship-status--ended">
+									<span v-if="isEnded(rel)" class="relationship-status relationship-status--ended">
 										{{ t('pipelinq', 'Ended') }}
 									</span>
-									<span
-										v-else
-										class="relationship-status relationship-status--active">
+									<span v-else class="relationship-status relationship-status--active">
 										{{ t('pipelinq', 'Active') }}
 									</span>
 								</td>
 								<td class="relationship-actions" @click.stop>
-									<NcButton
-										variant="tertiary"
-										@click="editRelationship(rel)">
+									<NcButton variant="tertiary" @click="editRelationship(rel)">
 										{{ t('pipelinq', 'Edit') }}
 									</NcButton>
-									<NcButton
-										variant="tertiary"
-										@click="removeRelationship(rel)">
+									<NcButton variant="tertiary" @click="removeRelationship(rel)">
 										{{ t('pipelinq', 'Remove') }}
 									</NcButton>
 								</td>
@@ -86,13 +72,7 @@
 		<div v-if="showAddDialog" class="create-overlay">
 			<div class="create-dialog">
 				<div class="create-dialog__header">
-					<h3>
-						{{
-							editingRelationship
-								? t('pipelinq', 'Edit relationship')
-								: t('pipelinq', 'Add relationship')
-						}}
-					</h3>
+					<h3>{{ editingRelationship ? t('pipelinq', 'Edit relationship') : t('pipelinq', 'Add relationship') }}</h3>
 					<NcButton variant="tertiary" @click="closeDialog">
 						&times;
 					</NcButton>
@@ -104,11 +84,9 @@
 							v-model="addForm.toContact"
 							:options="entityOptions"
 							:aria-label-combobox="t('pipelinq', 'Related entity')"
-							:placeholder="
-								t('pipelinq', 'Search contacts and clients...')
-							"
+							:placeholder="t('pipelinq', 'Search contacts and clients...')"
 							label="name"
-							:reduce="(opt) => opt.id"
+							:reduce="opt => opt.id"
 							@search="searchEntities" />
 					</div>
 					<div class="form-group">
@@ -119,36 +97,21 @@
 							:aria-label-combobox="t('pipelinq', 'Relationship type')"
 							:placeholder="t('pipelinq', 'Select type...')"
 							label="label"
-							:reduce="(opt) => opt.value"
-							@update:modelValue="onTypeSelect" />
+							:reduce="opt => opt.value"
+							@update:model-value="onTypeSelect" />
 					</div>
 					<div class="form-group">
-						<label for="contact-relationship-notes">{{
-							t('pipelinq', 'Notes')
-						}}</label>
-						<textarea
-							id="contact-relationship-notes"
-							v-model="addForm.notes"
-							rows="2" />
+						<label for="contact-relationship-notes">{{ t('pipelinq', 'Notes') }}</label>
+						<textarea id="contact-relationship-notes" v-model="addForm.notes" rows="2" />
 					</div>
 					<div class="form-row">
 						<div class="form-group">
-							<label for="contact-relationship-start-date">{{
-								t('pipelinq', 'Start date')
-							}}</label>
-							<input
-								id="contact-relationship-start-date"
-								v-model="addForm.startDate"
-								type="date" />
+							<label for="contact-relationship-start-date">{{ t('pipelinq', 'Start date') }}</label>
+							<input id="contact-relationship-start-date" v-model="addForm.startDate" type="date">
 						</div>
 						<div class="form-group">
-							<label for="contact-relationship-end-date">{{
-								t('pipelinq', 'End date')
-							}}</label>
-							<input
-								id="contact-relationship-end-date"
-								v-model="addForm.endDate"
-								type="date" />
+							<label for="contact-relationship-end-date">{{ t('pipelinq', 'End date') }}</label>
+							<input id="contact-relationship-end-date" v-model="addForm.endDate" type="date">
 						</div>
 					</div>
 					<div class="form-group">
@@ -159,18 +122,14 @@
 							:aria-label-combobox="t('pipelinq', 'Strength')"
 							:placeholder="t('pipelinq', 'Select strength...')"
 							label="label"
-							:reduce="(opt) => opt.value" />
+							:reduce="opt => opt.value" />
 					</div>
 					<div class="form-actions">
 						<NcButton
 							variant="primary"
 							:disabled="!addForm.toContact || !addForm.type"
 							@click="saveRelationship">
-							{{
-								editingRelationship
-									? t('pipelinq', 'Save')
-									: t('pipelinq', 'Add')
-							}}
+							{{ editingRelationship ? t('pipelinq', 'Save') : t('pipelinq', 'Add') }}
 						</NcButton>
 						<NcButton @click="closeDialog">
 							{{ t('pipelinq', 'Cancel') }}
@@ -183,111 +142,33 @@
 		<!-- Delete confirmation dialog — own file per ADR-004 (modal-isolation). -->
 		<RemoveRelationshipDialog
 			v-if="showDeleteDialog"
-			:fromName="entityName"
-			:toName="getEntityName(deletingRelationship?.toContact)"
+			:from-name="entityName"
+			:to-name="getEntityName(deletingRelationship?.toContact)"
 			@close="showDeleteDialog = false"
 			@confirm="confirmRemove" />
 	</div>
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import RemoveRelationshipDialog from '../dialogs/RemoveRelationshipDialog.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
 const DEFAULT_RELATIONSHIP_TYPES = [
-	{
-		value: 'partner',
-		inverse: 'partner',
-		category: 'Familie',
-		label: 'Partner',
-		symmetric: true,
-	},
-	{
-		value: 'ouder',
-		inverse: 'kind',
-		category: 'Familie',
-		label: 'Ouder',
-		symmetric: false,
-	},
-	{
-		value: 'kind',
-		inverse: 'ouder',
-		category: 'Familie',
-		label: 'Kind',
-		symmetric: false,
-	},
-	{
-		value: 'broer/zus',
-		inverse: 'broer/zus',
-		category: 'Familie',
-		label: 'Broer/Zus',
-		symmetric: true,
-	},
-	{
-		value: 'werkgever',
-		inverse: 'werknemer',
-		category: 'Professioneel',
-		label: 'Werkgever',
-		symmetric: false,
-	},
-	{
-		value: 'werknemer',
-		inverse: 'werkgever',
-		category: 'Professioneel',
-		label: 'Werknemer',
-		symmetric: false,
-	},
-	{
-		value: 'collega',
-		inverse: 'collega',
-		category: 'Professioneel',
-		label: 'Collega',
-		symmetric: true,
-	},
-	{
-		value: 'contactpersoon',
-		inverse: 'organisatie',
-		category: 'Professioneel',
-		label: 'Contactpersoon',
-		symmetric: false,
-	},
-	{
-		value: 'organisatie',
-		inverse: 'contactpersoon',
-		category: 'Professioneel',
-		label: 'Organisatie',
-		symmetric: false,
-	},
-	{
-		value: 'moederorganisatie',
-		inverse: 'dochterorganisatie',
-		category: 'Organisatie',
-		label: 'Moederorganisatie',
-		symmetric: false,
-	},
-	{
-		value: 'dochterorganisatie',
-		inverse: 'moederorganisatie',
-		category: 'Organisatie',
-		label: 'Dochterorganisatie',
-		symmetric: false,
-	},
-	{
-		value: 'mentor',
-		inverse: 'mentee',
-		category: 'Professioneel',
-		label: 'Mentor',
-		symmetric: false,
-	},
-	{
-		value: 'mentee',
-		inverse: 'mentor',
-		category: 'Professioneel',
-		label: 'Mentee',
-		symmetric: false,
-	},
+	{ value: 'partner', inverse: 'partner', category: 'Familie', label: 'Partner', symmetric: true },
+	{ value: 'ouder', inverse: 'kind', category: 'Familie', label: 'Ouder', symmetric: false },
+	{ value: 'kind', inverse: 'ouder', category: 'Familie', label: 'Kind', symmetric: false },
+	{ value: 'broer/zus', inverse: 'broer/zus', category: 'Familie', label: 'Broer/Zus', symmetric: true },
+	{ value: 'werkgever', inverse: 'werknemer', category: 'Professioneel', label: 'Werkgever', symmetric: false },
+	{ value: 'werknemer', inverse: 'werkgever', category: 'Professioneel', label: 'Werknemer', symmetric: false },
+	{ value: 'collega', inverse: 'collega', category: 'Professioneel', label: 'Collega', symmetric: true },
+	{ value: 'contactpersoon', inverse: 'organisatie', category: 'Professioneel', label: 'Contactpersoon', symmetric: false },
+	{ value: 'organisatie', inverse: 'contactpersoon', category: 'Professioneel', label: 'Organisatie', symmetric: false },
+	{ value: 'moederorganisatie', inverse: 'dochterorganisatie', category: 'Organisatie', label: 'Moederorganisatie', symmetric: false },
+	{ value: 'dochterorganisatie', inverse: 'moederorganisatie', category: 'Organisatie', label: 'Dochterorganisatie', symmetric: false },
+	{ value: 'mentor', inverse: 'mentee', category: 'Professioneel', label: 'Mentor', symmetric: false },
+	{ value: 'mentee', inverse: 'mentor', category: 'Professioneel', label: 'Mentee', symmetric: false },
 ]
 
 export default {
@@ -299,25 +180,21 @@ export default {
 		NcSelect,
 		RemoveRelationshipDialog,
 	},
-
 	props: {
 		entityId: {
 			type: String,
 			required: true,
 		},
-
 		entityType: {
 			type: String,
 			required: true,
 			validator: (value) => ['contact', 'client'].includes(value),
 		},
-
 		entityName: {
 			type: String,
 			default: '',
 		},
 	},
-
 	data() {
 		return {
 			relationships: [],
@@ -339,7 +216,6 @@ export default {
 			},
 		}
 	},
-
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-12
@@ -347,12 +223,11 @@ export default {
 		objectStore() {
 			return useObjectStore()
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-18
 		 */
 		typeOptions() {
-			return DEFAULT_RELATIONSHIP_TYPES.map((t) => ({
+			return DEFAULT_RELATIONSHIP_TYPES.map(t => ({
 				value: t.value,
 				label: `${t.label} (${t.category})`,
 				inverse: t.inverse,
@@ -360,7 +235,6 @@ export default {
 				symmetric: t.symmetric,
 			}))
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-17
 		 */
@@ -371,7 +245,6 @@ export default {
 				{ value: 'weak', label: t('pipelinq', 'Weak') },
 			]
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-8
 		 */
@@ -385,10 +258,9 @@ export default {
 				groups[cat].items.push(rel)
 			}
 			// Sort: Organisatie first for client entity type, Familie first for contacts
-			const order =
-				this.entityType === 'client'
-					? ['Organisatie', 'Professioneel', 'Familie', 'CRM Rol']
-					: ['Familie', 'Professioneel', 'Organisatie', 'CRM Rol']
+			const order = this.entityType === 'client'
+				? ['Organisatie', 'Professioneel', 'Familie', 'CRM Rol']
+				: ['Familie', 'Professioneel', 'Organisatie', 'CRM Rol']
 			return Object.values(groups).sort((a, b) => {
 				const ai = order.indexOf(a.category)
 				const bi = order.indexOf(b.category)
@@ -396,11 +268,9 @@ export default {
 			})
 		},
 	},
-
 	async mounted() {
 		await this.fetchRelationships()
 	},
-
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-7
@@ -408,13 +278,10 @@ export default {
 		async fetchRelationships() {
 			this.loading = true
 			try {
-				const items = await this.objectStore.fetchCollection(
-					'relationship',
-					{
-						_limit: 100,
-						fromContact: this.entityId,
-					},
-				)
+				const items = await this.objectStore.fetchCollection('relationship', {
+					_limit: 100,
+					fromContact: this.entityId,
+				})
 				this.relationships = items || []
 				// Pre-cache entity names
 				for (const rel of this.relationships) {
@@ -428,7 +295,6 @@ export default {
 				this.loading = false
 			}
 		},
-
 		/**
 		 * @param entityId
 		 * @param entityType
@@ -447,11 +313,9 @@ export default {
 				this.entityNameCache[entityId] = entityId
 			}
 		},
-
 		getEntityName(entityId) {
 			return this.entityNameCache[entityId] || entityId || '-'
 		},
-
 		/**
 		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-9
@@ -462,7 +326,6 @@ export default {
 			}
 			return new Date(rel.endDate) < new Date()
 		},
-
 		/**
 		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
@@ -471,22 +334,18 @@ export default {
 			const type = rel.toType === 'client' ? 'ClientDetail' : 'ContactDetail'
 			this.$router.push({ name: type, params: { id: rel.toContact } })
 		},
-
 		/**
 		 * @param typeValue
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
 		 */
 		onTypeSelect(typeValue) {
-			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(
-				(t) => t.value === typeValue,
-			)
+			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(t => t.value === typeValue)
 			if (typeObj) {
 				this.addForm._inverse = typeObj.inverse
 				this.addForm._category = typeObj.category
 				this.addForm._symmetric = typeObj.symmetric
 			}
 		},
-
 		/**
 		 * @param query
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-16
@@ -502,33 +361,18 @@ export default {
 			this.searchTimeout = setTimeout(async () => {
 				try {
 					const [contacts, clients] = await Promise.all([
-						this.objectStore.fetchCollection('contact', {
-							_search: query,
-							_limit: 10,
-						}),
-						this.objectStore.fetchCollection('client', {
-							_search: query,
-							_limit: 10,
-						}),
+						this.objectStore.fetchCollection('contact', { _search: query, _limit: 10 }),
+						this.objectStore.fetchCollection('client', { _search: query, _limit: 10 }),
 					])
 					this.entityOptions = [
-						...(contacts || []).map((c) => ({
-							id: c.id,
-							name: c.name + ' (contact)',
-							entityType: 'contact',
-						})),
-						...(clients || []).map((c) => ({
-							id: c.id,
-							name: c.name + ' (client)',
-							entityType: 'client',
-						})),
-					].filter((e) => e.id !== this.entityId)
+						...(contacts || []).map(c => ({ id: c.id, name: c.name + ' (contact)', entityType: 'contact' })),
+						...(clients || []).map(c => ({ id: c.id, name: c.name + ' (client)', entityType: 'client' })),
+					].filter(e => e.id !== this.entityId)
 				} catch {
 					this.entityOptions = []
 				}
 			}, 300)
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-15
 		 */
@@ -540,9 +384,7 @@ export default {
 			// Check for duplicate
 			if (!this.editingRelationship) {
 				const existing = this.relationships.find(
-					(r) =>
-						r.toContact === this.addForm.toContact
-						&& r.type === this.addForm.type,
+					r => r.toContact === this.addForm.toContact && r.type === this.addForm.type,
 				)
 				if (existing) {
 					showError(t('pipelinq', 'This relationship already exists'))
@@ -550,17 +392,11 @@ export default {
 				}
 			}
 
-			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(
-				(t) => t.value === this.addForm.type,
-			)
+			const typeObj = DEFAULT_RELATIONSHIP_TYPES.find(t => t.value === this.addForm.type)
 			const inverseType = typeObj ? typeObj.inverse : this.addForm.type
 			const category = typeObj ? typeObj.category : ''
-			const toEntityOption = this.entityOptions.find(
-				(e) => e.id === this.addForm.toContact,
-			)
-			const toEntityType = toEntityOption
-				? toEntityOption.entityType
-				: 'contact'
+			const toEntityOption = this.entityOptions.find(e => e.id === this.addForm.toContact)
+			const toEntityType = toEntityOption ? toEntityOption.entityType : 'contact'
 
 			try {
 				if (this.editingRelationship) {
@@ -627,7 +463,6 @@ export default {
 				showError(e.message || t('pipelinq', 'Failed to save relationship'))
 			}
 		},
-
 		/**
 		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-6
@@ -636,8 +471,7 @@ export default {
 			this.editingRelationship = { ...rel }
 			// Find the inverse relationship to track it
 			const inverseRels = this.relationships.filter(
-				(r) =>
-					r.toContact === this.entityId && r.fromContact === rel.toContact,
+				r => r.toContact === this.entityId && r.fromContact === rel.toContact,
 			)
 			if (inverseRels.length > 0) {
 				this.editingRelationship._inverseId = inverseRels[0].id
@@ -653,7 +487,6 @@ export default {
 			}
 			this.showAddDialog = true
 		},
-
 		/**
 		 * @param rel
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-14
@@ -662,7 +495,6 @@ export default {
 			this.deletingRelationship = rel
 			this.showDeleteDialog = true
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-5
 		 */
@@ -673,21 +505,15 @@ export default {
 
 			try {
 				// Delete the primary relationship
-				await this.objectStore.deleteObject(
-					'relationship',
-					this.deletingRelationship.id,
-				)
+				await this.objectStore.deleteObject('relationship', this.deletingRelationship.id)
 
 				// Find and delete inverse relationship
-				const inverseRels = await this.objectStore.fetchCollection(
-					'relationship',
-					{
-						_limit: 10,
-						fromContact: this.deletingRelationship.toContact,
-						toContact: this.entityId,
-					},
-				)
-				for (const inv of inverseRels || []) {
+				const inverseRels = await this.objectStore.fetchCollection('relationship', {
+					_limit: 10,
+					fromContact: this.deletingRelationship.toContact,
+					toContact: this.entityId,
+				})
+				for (const inv of (inverseRels || [])) {
 					await this.objectStore.deleteObject('relationship', inv.id)
 				}
 
@@ -696,12 +522,9 @@ export default {
 				this.deletingRelationship = null
 				await this.fetchRelationships()
 			} catch (e) {
-				showError(
-					e.message || t('pipelinq', 'Failed to remove relationship'),
-				)
+				showError(e.message || t('pipelinq', 'Failed to remove relationship'))
 			}
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-4
 		 */

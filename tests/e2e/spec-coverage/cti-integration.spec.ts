@@ -32,24 +32,18 @@ import { nextcloudErrorPage } from '../helpers/pipelinq'
 const ADMIN_SETTINGS = '/settings/admin/pipelinq'
 
 // @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-settings-page
-test('CTI integration: the settings section renders on the pipelinq admin page', async ({
-	page,
-}) => {
+test('CTI integration: the settings section renders on the pipelinq admin page', async ({ page }) => {
 	const response = await page.goto(ADMIN_SETTINGS)
 	expect(response?.status(), 'admin settings page must be served').toBe(200)
 	await expect(nextcloudErrorPage(page)).toHaveCount(0)
 
 	const section = page.locator('#pipelinq-settings')
 	await expect(section).toBeVisible({ timeout: 15000 })
-	await expect(section.getByText('CTI integration').first()).toBeVisible({
-		timeout: 15000,
-	})
+	await expect(section.getByText('CTI integration').first()).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-settings-actions
-test('CTI integration: exposes Test connection + Save controls', async ({
-	page,
-}) => {
+test('CTI integration: exposes Test connection + Save controls', async ({ page }) => {
 	await page.goto(ADMIN_SETTINGS)
 	const section = page.locator('#pipelinq-settings')
 	await expect(section).toBeVisible({ timeout: 15000 })
@@ -63,30 +57,20 @@ test('CTI integration: exposes Test connection + Save controls', async ({
 	// NcSettingsSection is named "CTI integration" instead.
 	const cti = section.locator('[data-testid="cti-settings"]')
 	await expect(cti).toBeVisible({ timeout: 15000 })
-	await expect(cti.getByRole('button', { name: 'Test connection' })).toBeVisible({
-		timeout: 15000,
-	})
-	await expect(
-		cti.getByRole('button', { name: 'Save', exact: true }).first(),
-	).toBeVisible()
+	await expect(cti.getByRole('button', { name: 'Test connection' })).toBeVisible({ timeout: 15000 })
+	await expect(cti.getByRole('button', { name: 'Save', exact: true }).first()).toBeVisible()
 })
 
 // @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-event-log-page
-test('CTI event log: the event-log section and its table render', async ({
-	page,
-}) => {
+test('CTI event log: the event-log section and its table render', async ({ page }) => {
 	await page.goto(ADMIN_SETTINGS)
 	const section = page.locator('#pipelinq-settings')
 	await expect(section).toBeVisible({ timeout: 15000 })
 
-	await expect(section.getByText('CTI webhook event log').first()).toBeVisible({
-		timeout: 15000,
-	})
+	await expect(section.getByText('CTI webhook event log').first()).toBeVisible({ timeout: 15000 })
 	// CtiEventLog.vue renders its own table with a stable test id, so this is a
 	// positive signal about THAT component rather than about any table.
-	await expect(
-		section.locator('[data-testid="cti-event-log-table"]'),
-	).toBeVisible()
+	await expect(section.locator('[data-testid="cti-event-log-table"]')).toBeVisible()
 })
 
 // @e2e openspec/changes/cti-screenpop-adapter/specs.md#cti-event-log-reload
@@ -95,9 +79,7 @@ test('CTI event log: exposes a Reload action', async ({ page }) => {
 	const section = page.locator('#pipelinq-settings')
 	await expect(section).toBeVisible({ timeout: 15000 })
 
-	await expect(section.getByRole('button', { name: 'Reload' })).toBeVisible({
-		timeout: 15000,
-	})
+	await expect(section.getByRole('button', { name: 'Reload' })).toBeVisible({ timeout: 15000 })
 })
 
 /*

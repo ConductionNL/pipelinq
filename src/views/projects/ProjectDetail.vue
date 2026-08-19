@@ -25,14 +25,12 @@
 		<CnFormDialog
 			v-if="showProjectForm"
 			ref="projectForm"
-			:dialogTitle="
-				isNew ? t('pipelinq', 'New project') : t('pipelinq', 'Edit project')
-			"
+			:dialog-title="isNew ? t('pipelinq', 'New project') : t('pipelinq', 'Edit project')"
 			:fields="projectFields"
-			:initialData="projectFormInitial"
-			:confirmLabel="t('pipelinq', 'Save')"
-			:cancelLabel="t('pipelinq', 'Cancel')"
-			nameField="name"
+			:initial-data="projectFormInitial"
+			:confirm-label="t('pipelinq', 'Save')"
+			:cancel-label="t('pipelinq', 'Cancel')"
+			name-field="name"
 			@confirm="onProjectSaved"
 			@close="cancelEdit" />
 	</div>
@@ -41,13 +39,13 @@
 		v-else
 		:title="projectData.name || t('pipelinq', 'Project')"
 		:subtitle="t('pipelinq', 'Project')"
-		:backRoute="{ name: 'Projects' }"
-		:backLabel="t('pipelinq', 'Back to list')"
+		:back-route="{ name: 'Projects' }"
+		:back-label="t('pipelinq', 'Back to list')"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
-		objectType="pipelinq_project"
-		:objectId="projectId"
-		:sidebarProps="sidebarProps">
+		object-type="pipelinq_project"
+		:object-id="projectId"
+		:sidebar-props="sidebarProps">
 		<template #actions>
 			<NcButton variant="primary" @click="startEdit">
 				{{ t('pipelinq', 'Edit') }}
@@ -67,44 +65,27 @@
 					<router-link
 						v-if="projectData.client"
 						class="client-link"
-						:to="{
-							name: 'ClientDetail',
-							params: { id: projectData.client },
-						}">
+						:to="{ name: 'ClientDetail', params: { id: projectData.client } }">
 						{{ clientName }}
 					</router-link>
 					<span v-else>-</span>
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Status') }}</label>
-					<span
-						class="status-pill"
-						:class="'status-pill--' + (projectData.status || 'open')">
+					<span class="status-pill" :class="'status-pill--' + (projectData.status || 'open')">
 						{{ statusLabel(projectData.status) }}
 					</span>
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Billable') }}</label>
 					<span>
-						<span
-							class="billable-dot"
-							:class="[
-								projectData.billable === false
-									? 'billable-dot--off'
-									: 'billable-dot--on',
-							]" />
-						{{
-							projectData.billable === false
-								? t('pipelinq', 'Non-billable')
-								: t('pipelinq', 'Billable')
-						}}
+						<span :class="['billable-dot', projectData.billable === false ? 'billable-dot--off' : 'billable-dot--on']" />
+						{{ projectData.billable === false ? t('pipelinq', 'Non-billable') : t('pipelinq', 'Billable') }}
 					</span>
 				</div>
 				<div v-if="projectData.color" class="info-field">
 					<label>{{ t('pipelinq', 'Color') }}</label>
-					<span
-						class="color-swatch"
-						:style="{ backgroundColor: projectData.color }" />
+					<span class="color-swatch" :style="{ backgroundColor: projectData.color }" />
 					<span>{{ projectData.color }}</span>
 				</div>
 				<div class="info-field">
@@ -136,15 +117,11 @@
 					<div class="kpi-card__label">
 						{{ t('pipelinq', 'Logged hours') }}
 					</div>
-					<div
-						class="kpi-card__value"
-						:class="{ 'kpi-card__value--warn': overBudget }">
+					<div class="kpi-card__value" :class="{ 'kpi-card__value--warn': overBudget }">
 						{{ formatHours(loggedHours) }}
 						<small v-if="overBudget">
-							/ {{ formatHours(plannedHours) }} ({{
-								Math.round(loggedHours - plannedHours)
-							}}
-							{{ t('pipelinq', 'hours over budget') }})
+							/ {{ formatHours(plannedHours) }}
+							({{ Math.round(loggedHours - plannedHours) }} {{ t('pipelinq', 'hours over budget') }})
 						</small>
 					</div>
 				</div>
@@ -208,18 +185,12 @@
 					</label>
 					<span>{{ formatDateTime(ledgerSyncedAt) }}</span>
 				</div>
-				<div
-					v-if="ledgerSyncStatus === 'failed'"
-					class="ledger-card__row ledger-card__row--actions">
+				<div v-if="ledgerSyncStatus === 'failed'" class="ledger-card__row ledger-card__row--actions">
 					<NcButton
 						variant="primary"
 						:disabled="ledgerRetrying"
 						@click="retryLedgerSync">
-						{{
-							ledgerRetrying
-								? t('pipelinq', 'Retrying...')
-								: t('pipelinq', 'Retry Sync')
-						}}
+						{{ ledgerRetrying ? t('pipelinq', 'Retrying...') : t('pipelinq', 'Retry Sync') }}
 					</NcButton>
 				</div>
 			</div>
@@ -231,21 +202,21 @@
 				:phases="phases"
 				:tasks="tasks"
 				:activities="activities"
-				@addPhase="openPhaseDialog()"
-				@addTask="openTaskDialog($event.phase)"
-				@addActivity="openActivityDialog($event.task, $event.phase)" />
+				@add-phase="openPhaseDialog()"
+				@add-task="openTaskDialog($event.phase)"
+				@add-activity="openActivityDialog($event.task, $event.phase)" />
 		</CnDetailCard>
 
 		<!-- Fase dialog -->
 		<CnFormDialog
 			v-if="showPhaseDialog"
 			ref="phaseDialog"
-			:dialogTitle="t('pipelinq', 'Add phase')"
+			:dialog-title="t('pipelinq', 'Add phase')"
 			:fields="phaseFields"
-			:initialData="phaseInitial"
-			:confirmLabel="t('pipelinq', 'Save')"
-			:cancelLabel="t('pipelinq', 'Cancel')"
-			nameField="name"
+			:initial-data="phaseInitial"
+			:confirm-label="t('pipelinq', 'Save')"
+			:cancel-label="t('pipelinq', 'Cancel')"
+			name-field="name"
 			@confirm="onPhaseSaved"
 			@close="showPhaseDialog = false" />
 
@@ -253,12 +224,12 @@
 		<CnFormDialog
 			v-if="showTaskDialog"
 			ref="taskDialog"
-			:dialogTitle="t('pipelinq', 'Add task')"
+			:dialog-title="t('pipelinq', 'Add task')"
 			:fields="taskFields"
-			:initialData="taskInitial"
-			:confirmLabel="t('pipelinq', 'Save')"
-			:cancelLabel="t('pipelinq', 'Cancel')"
-			nameField="name"
+			:initial-data="taskInitial"
+			:confirm-label="t('pipelinq', 'Save')"
+			:cancel-label="t('pipelinq', 'Cancel')"
+			name-field="name"
 			@confirm="onTaskSaved"
 			@close="showTaskDialog = false" />
 
@@ -266,38 +237,32 @@
 		<CnFormDialog
 			v-if="showActivityDialog"
 			ref="activityDialog"
-			:dialogTitle="t('pipelinq', 'Time entry')"
+			:dialog-title="t('pipelinq', 'Time entry')"
 			:fields="activityFields"
-			:initialData="activityInitial"
-			:confirmLabel="t('pipelinq', 'Save')"
-			:cancelLabel="t('pipelinq', 'Cancel')"
-			nameField="description"
+			:initial-data="activityInitial"
+			:confirm-label="t('pipelinq', 'Save')"
+			:cancel-label="t('pipelinq', 'Cancel')"
+			name-field="description"
 			@confirm="onActivitySaved"
 			@close="showActivityDialog = false" />
-		<ConfirmDialog
-			v-if="showDeleteProjectConfirm"
+		<ConfirmDialog v-if="showDeleteProjectConfirm"
 			:name="t('pipelinq', 'Delete project')"
 			:message="t('pipelinq', 'Are you sure you want to delete this project?')"
-			:confirmLabel="t('pipelinq', 'Delete')"
+			:confirm-label="t('pipelinq', 'Delete')"
 			@confirm="performDeleteProject"
 			@cancel="showDeleteProjectConfirm = false" />
 	</CnDetailPage>
 </template>
 
 <script>
-import {
-	CnDetailCard,
-	CnDetailPage,
-	CnFormDialog,
-	useObjectSubscription,
-} from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
-import { computed } from 'vue'
-import ProjectWbsTree from '../../components/ProjectWbsTree.vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { computed } from 'vue'
+import { CnDetailPage, CnDetailCard, CnFormDialog, useObjectSubscription } from '@conduction/nextcloud-vue'
+import ProjectWbsTree from '../../components/ProjectWbsTree.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -310,19 +275,16 @@ export default {
 		CnFormDialog,
 		ProjectWbsTree,
 	},
-
 	props: {
 		id: {
 			type: String,
 			default: null,
 		},
-
 		projectIdProp: {
 			type: String,
 			default: null,
 		},
 	},
-
 	/**
 	 * Live updates for the viewed project (nc-vue liveUpdatesPlugin,
 	 * default-on since beta.212): subscribe to or-object-{uuid}. Events
@@ -344,15 +306,10 @@ export default {
 			return id && id !== 'new' ? id : null
 		})
 		useObjectSubscription(objectStore, 'project', liveObjectId, {
-			enabled: computed(() =>
-				Boolean(
-					liveObjectId.value && objectStore.objectTypeRegistry.project,
-				),
-			),
+			enabled: computed(() => Boolean(liveObjectId.value && objectStore.objectTypeRegistry.project)),
 		})
 		return {}
 	},
-
 	data() {
 		return {
 			editing: false,
@@ -374,29 +331,23 @@ export default {
 			ledgerRetrying: false,
 		}
 	},
-
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
-
 		projectId() {
 			return this.id || this.projectIdProp || null
 		},
-
 		isNew() {
 			return !this.projectId || this.projectId === 'new'
 		},
-
 		loading() {
 			return this.objectStore.loading.project || false
 		},
-
 		projectData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('project', this.projectId) || {}
 		},
-
 		projectFormInitial() {
 			if (this.isNew) {
 				return {
@@ -406,7 +357,6 @@ export default {
 			}
 			return { ...this.projectData }
 		},
-
 		sidebarProps() {
 			const config = this.objectStore.objectTypeRegistry.project || {}
 			return {
@@ -416,7 +366,6 @@ export default {
 				hiddenTabs: ['tasks'],
 			}
 		},
-
 		/**
 		 * CnFormDialog fields for creating / editing a project. Mirrors the
 		 * schema in lib/Settings/register.d/60-project-ledger.json so the
@@ -427,183 +376,53 @@ export default {
 		 */
 		projectFields() {
 			return [
-				{
-					key: 'name',
-					label: t('pipelinq', 'Name'),
-					widget: 'text',
-					required: true,
-				},
-				{
-					key: 'client',
-					label: t('pipelinq', 'Client'),
-					widget: 'select',
-					enum: this.loadClientOptions,
-				},
-				{
-					key: 'description',
-					label: t('pipelinq', 'Description'),
-					widget: 'textarea',
-				},
-				{
-					key: 'status',
-					label: t('pipelinq', 'Status'),
-					widget: 'select',
-					options: this.statusOptions,
-				},
-				{
-					key: 'billable',
-					label: t('pipelinq', 'Billable'),
-					widget: 'checkbox',
-				},
-				{
-					key: 'budgetHours',
-					label: t('pipelinq', 'Budget hours'),
-					widget: 'number',
-				},
-				{
-					key: 'budgetAmount',
-					label: t('pipelinq', 'Budget amount (EUR)'),
-					widget: 'number',
-				},
-				{
-					key: 'hourlyRate',
-					label: t('pipelinq', 'Hourly rate'),
-					widget: 'number',
-				},
-				{
-					key: 'startDate',
-					label: t('pipelinq', 'Start date'),
-					widget: 'date',
-				},
+				{ key: 'name', label: t('pipelinq', 'Name'), widget: 'text', required: true },
+				{ key: 'client', label: t('pipelinq', 'Client'), widget: 'select', enum: this.loadClientOptions },
+				{ key: 'description', label: t('pipelinq', 'Description'), widget: 'textarea' },
+				{ key: 'status', label: t('pipelinq', 'Status'), widget: 'select', options: this.statusOptions },
+				{ key: 'billable', label: t('pipelinq', 'Billable'), widget: 'checkbox' },
+				{ key: 'budgetHours', label: t('pipelinq', 'Budget hours'), widget: 'number' },
+				{ key: 'budgetAmount', label: t('pipelinq', 'Budget amount (EUR)'), widget: 'number' },
+				{ key: 'hourlyRate', label: t('pipelinq', 'Hourly rate'), widget: 'number' },
+				{ key: 'startDate', label: t('pipelinq', 'Start date'), widget: 'date' },
 				{ key: 'endDate', label: t('pipelinq', 'End date'), widget: 'date' },
-				{
-					key: 'color',
-					label: t('pipelinq', 'Color (hex)'),
-					widget: 'text',
-				},
+				{ key: 'color', label: t('pipelinq', 'Color (hex)'), widget: 'text' },
 			]
 		},
-
 		phaseFields() {
 			return [
-				{
-					key: 'name',
-					label: t('pipelinq', 'Name'),
-					widget: 'text',
-					required: true,
-				},
-				{
-					key: 'description',
-					label: t('pipelinq', 'Description'),
-					widget: 'textarea',
-				},
-				{
-					key: 'status',
-					label: t('pipelinq', 'Status'),
-					widget: 'select',
-					options: this.statusOptions,
-				},
-				{
-					key: 'billable',
-					label: t('pipelinq', 'Billable (leave empty to inherit)'),
-					widget: 'checkbox',
-				},
-				{
-					key: 'budgetHours',
-					label: t('pipelinq', 'Budget hours'),
-					widget: 'number',
-				},
+				{ key: 'name', label: t('pipelinq', 'Name'), widget: 'text', required: true },
+				{ key: 'description', label: t('pipelinq', 'Description'), widget: 'textarea' },
+				{ key: 'status', label: t('pipelinq', 'Status'), widget: 'select', options: this.statusOptions },
+				{ key: 'billable', label: t('pipelinq', 'Billable (leave empty to inherit)'), widget: 'checkbox' },
+				{ key: 'budgetHours', label: t('pipelinq', 'Budget hours'), widget: 'number' },
 				{ key: 'sequence', label: t('pipelinq', 'Order'), widget: 'number' },
-				{
-					key: 'startDate',
-					label: t('pipelinq', 'Start date'),
-					widget: 'date',
-				},
+				{ key: 'startDate', label: t('pipelinq', 'Start date'), widget: 'date' },
 				{ key: 'endDate', label: t('pipelinq', 'End date'), widget: 'date' },
 			]
 		},
-
 		taskFields() {
 			return [
-				{
-					key: 'name',
-					label: t('pipelinq', 'Name'),
-					widget: 'text',
-					required: true,
-				},
-				{
-					key: 'description',
-					label: t('pipelinq', 'Description'),
-					widget: 'textarea',
-				},
-				{
-					key: 'status',
-					label: t('pipelinq', 'Status'),
-					widget: 'select',
-					options: this.statusOptions,
-				},
-				{
-					key: 'billable',
-					label: t('pipelinq', 'Billable (leave empty to inherit)'),
-					widget: 'checkbox',
-				},
-				{
-					key: 'estimatedHours',
-					label: t('pipelinq', 'Estimated hours'),
-					widget: 'number',
-				},
-				{
-					key: 'assignee',
-					label: t('pipelinq', 'Assigned to (user UID)'),
-					widget: 'text',
-				},
-				{
-					key: 'deadline',
-					label: t('pipelinq', 'Deadline'),
-					widget: 'date',
-				},
+				{ key: 'name', label: t('pipelinq', 'Name'), widget: 'text', required: true },
+				{ key: 'description', label: t('pipelinq', 'Description'), widget: 'textarea' },
+				{ key: 'status', label: t('pipelinq', 'Status'), widget: 'select', options: this.statusOptions },
+				{ key: 'billable', label: t('pipelinq', 'Billable (leave empty to inherit)'), widget: 'checkbox' },
+				{ key: 'estimatedHours', label: t('pipelinq', 'Estimated hours'), widget: 'number' },
+				{ key: 'assignee', label: t('pipelinq', 'Assigned to (user UID)'), widget: 'text' },
+				{ key: 'deadline', label: t('pipelinq', 'Deadline'), widget: 'date' },
 				{ key: 'sequence', label: t('pipelinq', 'Order'), widget: 'number' },
 			]
 		},
-
 		activityFields() {
 			return [
-				{
-					key: 'date',
-					label: t('pipelinq', 'Date'),
-					widget: 'date',
-					required: true,
-				},
-				{
-					key: 'durationMinutes',
-					label: t('pipelinq', 'Duration (minutes)'),
-					widget: 'number',
-					required: true,
-				},
-				{
-					key: 'description',
-					label: t('pipelinq', 'Description'),
-					widget: 'textarea',
-				},
-				{
-					key: 'user',
-					label: t('pipelinq', 'User (UID)'),
-					widget: 'text',
-					required: true,
-				},
-				{
-					key: 'billable',
-					label: t('pipelinq', 'Billable (leave empty to inherit)'),
-					widget: 'checkbox',
-				},
-				{
-					key: 'hourlyRate',
-					label: t('pipelinq', 'Hourly rate override'),
-					widget: 'number',
-				},
+				{ key: 'date', label: t('pipelinq', 'Date'), widget: 'date', required: true },
+				{ key: 'durationMinutes', label: t('pipelinq', 'Duration (minutes)'), widget: 'number', required: true },
+				{ key: 'description', label: t('pipelinq', 'Description'), widget: 'textarea' },
+				{ key: 'user', label: t('pipelinq', 'User (UID)'), widget: 'text', required: true },
+				{ key: 'billable', label: t('pipelinq', 'Billable (leave empty to inherit)'), widget: 'checkbox' },
+				{ key: 'hourlyRate', label: t('pipelinq', 'Hourly rate override'), widget: 'number' },
 			]
 		},
-
 		statusOptions() {
 			return [
 				{ value: 'open', label: t('pipelinq', 'Open') },
@@ -613,7 +432,6 @@ export default {
 				{ value: 'cancelled', label: t('pipelinq', 'Cancelled') },
 			]
 		},
-
 		/**
 		 * Sum of logged hours across all project activities (REQ-PTH-007
 		 * Scenario 27 / REQ-PTH-008 Scenario 31).
@@ -621,13 +439,9 @@ export default {
 		 * @return {number}
 		 */
 		loggedHours() {
-			const minutes = this.activities.reduce(
-				(sum, a) => sum + (Number(a.durationMinutes) || 0),
-				0,
-			)
+			const minutes = this.activities.reduce((sum, a) => sum + (Number(a.durationMinutes) || 0), 0)
 			return Math.round((minutes / 60) * 10) / 10
 		},
-
 		/**
 		 * Hours marked billable (with task/phase/project inheritance
 		 * applied) — REQ-PTH-008 Scenario 32.
@@ -637,7 +451,6 @@ export default {
 		billableHours() {
 			return this.computeBillableHours(true)
 		},
-
 		/**
 		 * Hours marked non-billable (with inheritance applied).
 		 *
@@ -646,15 +459,12 @@ export default {
 		nonBillableHours() {
 			return this.computeBillableHours(false)
 		},
-
 		plannedHours() {
 			return Number(this.projectData.budgetHours || 0)
 		},
-
 		overBudget() {
 			return this.plannedHours > 0 && this.loggedHours > this.plannedHours
 		},
-
 		/**
 		 * Convenience accessor for the ledger sync status on the project
 		 * payload (REQ-PLG-005). The shared object store preserves this
@@ -665,7 +475,6 @@ export default {
 		ledgerSyncStatus() {
 			return this.projectData.ledgerSyncStatus || null
 		},
-
 		/**
 		 * ISO timestamp of the last successful ledger dispatch.
 		 *
@@ -675,7 +484,6 @@ export default {
 			return this.projectData.ledgerSyncedAt || null
 		},
 	},
-
 	async mounted() {
 		if (this.isNew) {
 			this.showProjectForm = true
@@ -687,7 +495,6 @@ export default {
 			this.loadLedgerWebhookStatus()
 		}
 	},
-
 	methods: {
 		/**
 		 * Load phases / tasks / activities scoped to this project in
@@ -697,43 +504,27 @@ export default {
 		 */
 		async fetchRelations() {
 			const tasks = [
-				this.objectStore.fetchCollection('projectPhase', {
-					_limit: 200,
-					project: this.projectId,
-				}),
-				this.objectStore.fetchCollection('projectTask', {
-					_limit: 500,
-					project: this.projectId,
-				}),
-				this.objectStore.fetchCollection('projectActivity', {
-					_limit: 1000,
-					project: this.projectId,
-				}),
+				this.objectStore.fetchCollection('projectPhase', { _limit: 200, project: this.projectId }),
+				this.objectStore.fetchCollection('projectTask', { _limit: 500, project: this.projectId }),
+				this.objectStore.fetchCollection('projectActivity', { _limit: 1000, project: this.projectId }),
 			]
 			const [phases, taskRows, activities] = await Promise.allSettled(tasks)
 			this.phases = (phases.status === 'fulfilled' && phases.value) || []
 			this.tasks = (taskRows.status === 'fulfilled' && taskRows.value) || []
-			this.activities =
-				(activities.status === 'fulfilled' && activities.value) || []
+			this.activities = (activities.status === 'fulfilled' && activities.value) || []
 		},
-
 		async loadClientName() {
 			if (!this.projectData.client) {
 				this.clientName = '-'
 				return
 			}
 			try {
-				const client = await this.objectStore.fetchObject(
-					'client',
-					this.projectData.client,
-				)
-				this.clientName =
-					client?.name || t('pipelinq', '[Verwijderde client]')
+				const client = await this.objectStore.fetchObject('client', this.projectData.client)
+				this.clientName = client?.name || t('pipelinq', '[Verwijderde client]')
 			} catch {
 				this.clientName = t('pipelinq', '[Verwijderde client]')
 			}
 		},
-
 		/**
 		 * Resolve the effective billable value for an activity walking up
 		 * task → phase → project (REQ-PTH-005 Scenarios 19..21). Returns
@@ -746,11 +537,11 @@ export default {
 			if (activity && typeof activity.billable === 'boolean') {
 				return activity.billable
 			}
-			const task = this.tasks.find((t) => t.id === activity.task)
+			const task = this.tasks.find(t => t.id === activity.task)
 			if (task && typeof task.billable === 'boolean') {
 				return task.billable
 			}
-			const phase = task ? this.phases.find((p) => p.id === task.phase) : null
+			const phase = task ? this.phases.find(p => p.id === task.phase) : null
 			if (phase && typeof phase.billable === 'boolean') {
 				return phase.billable
 			}
@@ -759,7 +550,6 @@ export default {
 			}
 			return true
 		},
-
 		/**
 		 * Sum logged hours across activities whose resolved billable
 		 * value equals the requested filter (REQ-PTH-008 Scenario 32).
@@ -769,16 +559,14 @@ export default {
 		 */
 		computeBillableHours(wantBillable) {
 			const minutes = this.activities
-				.filter((a) => this.resolveActivityBillable(a) === wantBillable)
+				.filter(a => this.resolveActivityBillable(a) === wantBillable)
 				.reduce((sum, a) => sum + (Number(a.durationMinutes) || 0), 0)
 			return Math.round((minutes / 60) * 10) / 10
 		},
-
 		startEdit() {
 			this.showProjectForm = true
 			this.editing = true
 		},
-
 		cancelEdit() {
 			this.showProjectForm = false
 			this.editing = false
@@ -786,7 +574,6 @@ export default {
 				this.$router.push({ name: 'Projects' })
 			}
 		},
-
 		async onProjectSaved(formData) {
 			const payload = this.isNew
 				? { ...formData }
@@ -797,25 +584,15 @@ export default {
 				this.showProjectForm = false
 				this.editing = false
 				if (this.isNew) {
-					this.$router.push({
-						name: 'ProjectDetail',
-						params: { id: result.id },
-					})
+					this.$router.push({ name: 'ProjectDetail', params: { id: result.id } })
 				} else {
 					await this.objectStore.fetchObject('project', this.projectId)
 				}
 			} else {
 				const error = this.objectStore.getError('project')
-				showError(
-					error?.message
-						|| t(
-							'pipelinq',
-							'Could not save project. Please try again.',
-						),
-				)
+				showError(error?.message || t('pipelinq', 'Could not save project. Please try again.'))
 			}
 		},
-
 		/**
 		 * Open the project delete confirmation.
 		 *
@@ -826,7 +603,6 @@ export default {
 		confirmDelete() {
 			this.showDeleteProjectConfirm = true
 		},
-
 		/**
 		 * Delete the project once the dialog confirms.
 		 *
@@ -836,32 +612,19 @@ export default {
 		 */
 		async performDeleteProject() {
 			this.showDeleteProjectConfirm = false
-			const success = await this.objectStore.deleteObject(
-				'project',
-				this.projectId,
-			)
+			const success = await this.objectStore.deleteObject('project', this.projectId)
 			if (success) {
 				this.$router.push({ name: 'Projects' })
 			} else {
 				const error = this.objectStore.getError('project')
-				showError(
-					error?.message || t('pipelinq', 'Could not delete project.'),
-				)
+				showError(error?.message || t('pipelinq', 'Could not delete project.'))
 			}
 		},
-
 		goToActivities() {
-			this.$router.push({
-				name: 'ProjectActivities',
-				params: { id: this.projectId },
-			})
+			this.$router.push({ name: 'ProjectActivities', params: { id: this.projectId } })
 		},
-
 		openPhaseDialog() {
-			const maxSequence = this.phases.reduce(
-				(m, p) => Math.max(m, Number(p.sequence || 0)),
-				0,
-			)
+			const maxSequence = this.phases.reduce((m, p) => Math.max(m, Number(p.sequence || 0)), 0)
 			this.phaseInitial = {
 				project: this.projectId,
 				status: 'open',
@@ -869,7 +632,6 @@ export default {
 			}
 			this.showPhaseDialog = true
 		},
-
 		async onPhaseSaved(formData) {
 			const payload = { ...formData, project: this.projectId }
 			const result = await this.objectStore.saveObject('projectPhase', payload)
@@ -881,13 +643,9 @@ export default {
 				showError(t('pipelinq', 'Could not save phase. Please try again.'))
 			}
 		},
-
 		openTaskDialog(phase) {
-			const phaseTasks = this.tasks.filter((t) => t.phase === phase.id)
-			const maxSequence = phaseTasks.reduce(
-				(m, t) => Math.max(m, Number(t.sequence || 0)),
-				0,
-			)
+			const phaseTasks = this.tasks.filter(t => t.phase === phase.id)
+			const maxSequence = phaseTasks.reduce((m, t) => Math.max(m, Number(t.sequence || 0)), 0)
 			this.taskInitial = {
 				phase: phase.id,
 				project: this.projectId,
@@ -896,7 +654,6 @@ export default {
 			}
 			this.showTaskDialog = true
 		},
-
 		async onTaskSaved(formData) {
 			const payload = {
 				...formData,
@@ -911,7 +668,6 @@ export default {
 				showError(t('pipelinq', 'Could not save task. Please try again.'))
 			}
 		},
-
 		openActivityDialog(task) {
 			this.activityInitial = {
 				task: task.id,
@@ -924,28 +680,21 @@ export default {
 			}
 			this.showActivityDialog = true
 		},
-
 		async onActivitySaved(formData) {
 			const payload = {
 				...formData,
 				project: this.projectId,
 				durationMinutes: Number(formData.durationMinutes) || 0,
 			}
-			const result = await this.objectStore.saveObject(
-				'projectActivity',
-				payload,
-			)
+			const result = await this.objectStore.saveObject('projectActivity', payload)
 			if (result) {
 				showSuccess(t('pipelinq', 'Time entry saved.'))
 				this.showActivityDialog = false
 				await this.fetchRelations()
 			} else {
-				showError(
-					t('pipelinq', 'Could not save time entry. Please try again.'),
-				)
+				showError(t('pipelinq', 'Could not save time entry. Please try again.'))
 			}
 		},
-
 		/**
 		 * Async option loader for the project's client select.
 		 *
@@ -959,7 +708,7 @@ export default {
 					name: query || undefined,
 				})
 				this.availableClients = clients || []
-				return (clients || []).map((c) => ({
+				return (clients || []).map(c => ({
 					value: c.id,
 					label: c.name || c.id,
 				}))
@@ -967,7 +716,6 @@ export default {
 				return []
 			}
 		},
-
 		statusLabel(status) {
 			const map = {
 				open: t('pipelinq', 'Open'),
@@ -976,9 +724,8 @@ export default {
 				completed: t('pipelinq', 'Completed'),
 				cancelled: t('pipelinq', 'Cancelled'),
 			}
-			return map[status] || status || '-'
+			return map[status] || (status || '-')
 		},
-
 		formatDate(dateStr) {
 			if (!dateStr) return '-'
 			try {
@@ -987,19 +734,16 @@ export default {
 				return dateStr
 			}
 		},
-
 		formatHours(value) {
 			const n = Number(value)
 			if (Number.isNaN(n)) return '0u'
 			return n + 'u'
 		},
-
 		formatEur(value) {
 			const n = Number(value || 0)
 			if (Number.isNaN(n)) return '€ 0'
 			return '€ ' + n.toLocaleString('nl-NL', { maximumFractionDigits: 0 })
 		},
-
 		/**
 		 * Localised label for the ledger sync status (REQ-PLG-005). The
 		 * three keys are English source strings — Dutch translations live
@@ -1014,9 +758,8 @@ export default {
 				pending: t('pipelinq', 'Ledger pending'),
 				failed: t('pipelinq', 'Ledger sync failed'),
 			}
-			return map[status] || status || '-'
+			return map[status] || (status || '-')
 		},
-
 		/**
 		 * Modifier class for the ledger card pill (mirrors the ProjectList
 		 * pill colours for visual consistency).
@@ -1027,7 +770,6 @@ export default {
 		ledgerPillClass(status) {
 			return 'ledger-card__pill--' + (status || 'unknown')
 		},
-
 		/**
 		 * Format an ISO timestamp as a locale date/time string, or "-" when
 		 * the value is missing.
@@ -1043,7 +785,6 @@ export default {
 				return value
 			}
 		},
-
 		/**
 		 * Resolve whether the admin has configured the Shillinq ledger
 		 * webhook URL. Drives the v-if on the ledger card (REQ-PLG-005-04:
@@ -1053,9 +794,7 @@ export default {
 		 */
 		async loadLedgerWebhookStatus() {
 			try {
-				const { data } = await axios.get(
-					generateUrl('/apps/pipelinq/api/settings'),
-				)
+				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/settings'))
 				const url = (data?.config?.shillinq_ledger_webhook_url || '').trim()
 				this.ledgerWebhookConfigured = url !== ''
 			} catch {
@@ -1063,7 +802,6 @@ export default {
 				this.ledgerWebhookConfigured = false
 			}
 		},
-
 		/**
 		 * Manually re-dispatch this project to the Shillinq ledger via
 		 * POST /apps/pipelinq/api/ledger/retry/{projectId} (REQ-PLG-005-03).
@@ -1076,22 +814,15 @@ export default {
 			if (this.ledgerRetrying || !this.projectId) return
 			this.ledgerRetrying = true
 			try {
-				const url = generateUrl(
-					`/apps/pipelinq/api/ledger/retry/${encodeURIComponent(this.projectId)}`,
-				)
+				const url = generateUrl(`/apps/pipelinq/api/ledger/retry/${encodeURIComponent(this.projectId)}`)
 				const { data } = await axios.post(url, {})
 				if (data?.ledgerSyncStatus === 'synced') {
 					showSuccess(t('pipelinq', 'Ledger sync retried successfully.'))
 				} else {
-					showError(
-						data?.error
-							|| t('pipelinq', 'Could not retry the ledger sync.'),
-					)
+					showError(data?.error || t('pipelinq', 'Could not retry the ledger sync.'))
 				}
 			} catch (e) {
-				const message =
-					e?.response?.data?.error
-					|| t('pipelinq', 'Could not retry the ledger sync.')
+				const message = e?.response?.data?.error || t('pipelinq', 'Could not retry the ledger sync.')
 				showError(message)
 			} finally {
 				this.ledgerRetrying = false
@@ -1172,30 +903,15 @@ export default {
 	background: var(--color-background-dark);
 }
 
-.status-pill--open {
-	background: #e3f2fd;
-	color: #0d47a1;
-}
+.status-pill--open { background: #e3f2fd; color: #0d47a1; }
 
-.status-pill--in_progress {
-	background: #fff8e1;
-	color: #6d4c00;
-}
+.status-pill--in_progress { background: #fff8e1; color: #6d4c00; }
 
-.status-pill--on_hold {
-	background: #ede7f6;
-	color: #4527a0;
-}
+.status-pill--on_hold { background: #ede7f6; color: #4527a0; }
 
-.status-pill--completed {
-	background: #e8f5e9;
-	color: #1b5e20;
-}
+.status-pill--completed { background: #e8f5e9; color: #1b5e20; }
 
-.status-pill--cancelled {
-	background: #fbe9e7;
-	color: #b71c1c;
-}
+.status-pill--cancelled { background: #fbe9e7; color: #b71c1c; }
 
 .billable-dot {
 	display: inline-block;
@@ -1206,13 +922,9 @@ export default {
 	vertical-align: middle;
 }
 
-.billable-dot--on {
-	background: #43a047;
-}
+.billable-dot--on { background: #43a047; }
 
-.billable-dot--off {
-	background: #b0bec5;
-}
+.billable-dot--off { background: #b0bec5; }
 
 .color-swatch {
 	display: inline-block;
@@ -1262,20 +974,11 @@ export default {
 	width: max-content;
 }
 
-.ledger-card__pill--synced {
-	background: #e8f5e9;
-	color: #1b5e20;
-}
+.ledger-card__pill--synced { background: #e8f5e9; color: #1b5e20; }
 
-.ledger-card__pill--pending {
-	background: #fff8e1;
-	color: #6d4c00;
-}
+.ledger-card__pill--pending { background: #fff8e1; color: #6d4c00; }
 
-.ledger-card__pill--failed {
-	background: #fbe9e7;
-	color: #b71c1c;
-}
+.ledger-card__pill--failed { background: #fbe9e7; color: #b71c1c; }
 
 .ledger-card__dash {
 	color: var(--color-text-maxcontrast);

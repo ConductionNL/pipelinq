@@ -21,47 +21,49 @@ namespace OCA\OpenRegister\Service\Integration\Providers;
 /**
  * Minimal MessageDispatchProvider stub.
  */
-class MessageDispatchProvider {
-	/**
-	 * Captured dispatch calls (source, body, path, headers).
-	 *
-	 * @var array<int, array<string, mixed>>
-	 */
-	public array $calls = [];
+class MessageDispatchProvider
+{
+    /**
+     * Captured dispatch calls (source, body, path, headers).
+     *
+     * @var array<int, array<string, mixed>>
+     */
+    public array $calls = [];
 
-	/**
-	 * The next envelope dispatch() should return.
-	 *
-	 * @var array<string, mixed>|null
-	 */
-	public ?array $nextResult = null;
+    /**
+     * The next envelope dispatch() should return.
+     *
+     * @var array<string, mixed>|null
+     */
+    public ?array $nextResult = null;
 
-	/**
-	 * Record the call and return the scripted envelope.
-	 *
-	 * @param string $source Source slug.
-	 * @param array<string, mixed> $body Vendor-shaped body.
-	 * @param string $path Send path.
-	 * @param array<string, string> $headers Extra headers.
-	 *
-	 * @return array<string, mixed>
-	 */
-	public function dispatch(string $source, array $body, string $path, array $headers = []): array {
-		$this->calls[] = [
-			'source' => $source,
-			'body' => $body,
-			'path' => $path,
-			'headers' => $headers,
-		];
+    /**
+     * Record the call and return the scripted envelope.
+     *
+     * @param string                $source  Source slug.
+     * @param array<string, mixed>  $body    Vendor-shaped body.
+     * @param string                $path    Send path.
+     * @param array<string, string> $headers Extra headers.
+     *
+     * @return array<string, mixed>
+     */
+    public function dispatch(string $source, array $body, string $path, array $headers=[]): array
+    {
+        $this->calls[] = [
+            'source'  => $source,
+            'body'    => $body,
+            'path'    => $path,
+            'headers' => $headers,
+        ];
 
-		if ($this->nextResult !== null) {
-			return $this->nextResult;
-		}
+        if ($this->nextResult !== null) {
+            return $this->nextResult;
+        }
 
-		return [
-			'status' => 'sent',
-			'source' => $source,
-			'response' => [],
-		];
-	}//end dispatch()
+        return [
+            'status'   => 'sent',
+            'source'   => $source,
+            'response' => [],
+        ];
+    }//end dispatch()
 }//end class

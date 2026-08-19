@@ -11,24 +11,20 @@
 		<div class="receipt-modal">
 			<NcSelect
 				v-model="selectedTemplate"
-				:inputLabel="t('pipelinq', 'Receipt Template')"
+				:input-label="t('pipelinq', 'Receipt Template')"
 				:options="templateOptions"
 				:placeholder="t('pipelinq', 'Select template')"
 				label="label"
 				:clearable="false"
-				@update:modelValue="loadPreview" />
+				@update:model-value="loadPreview" />
 
 			<p v-if="printerDevice" class="receipt-modal__device">
-				{{ t('pipelinq', 'Configured printer:') }}
-				<strong>{{ printerDevice }}</strong>
+				{{ t('pipelinq', 'Configured printer:') }} <strong>{{ printerDevice }}</strong>
 			</p>
 
 			<ReceiptPreviewPane :content="previewText" :loading="previewLoading" />
 
-			<p
-				v-if="statusMessage"
-				class="receipt-modal__status"
-				:class="statusClass">
+			<p v-if="statusMessage" class="receipt-modal__status" :class="statusClass">
 				{{ statusMessage }}
 			</p>
 		</div>
@@ -36,7 +32,9 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton variant="primary" :disabled="printing" @click="print">
+			<NcButton variant="primary"
+				:disabled="printing"
+				@click="print">
 				{{ t('pipelinq', 'Print') }}
 			</NcButton>
 		</template>
@@ -44,8 +42,8 @@
 </template>
 
 <script>
+import { NcDialog, NcButton, NcSelect } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
 import ReceiptPreviewPane from '../components/pos/ReceiptPreviewPane.vue'
 
 export default {
@@ -56,19 +54,16 @@ export default {
 		NcSelect,
 		ReceiptPreviewPane,
 	},
-
 	props: {
 		transactionId: {
 			type: String,
 			required: true,
 		},
-
 		templates: {
 			type: Array,
 			default: () => [],
 		},
 	},
-
 	emits: ['close', 'printed'],
 	data() {
 		return {
@@ -81,7 +76,6 @@ export default {
 			statusType: '',
 		}
 	},
-
 	computed: {
 		/**
 		 * Template options for the NcSelect dropdown.
@@ -89,12 +83,8 @@ export default {
 		 * @return {Array} The options.
 		 */
 		templateOptions() {
-			return this.templates.map((tpl) => ({
-				id: tpl.id,
-				label: tpl.name || tpl.id,
-			}))
+			return this.templates.map(tpl => ({ id: tpl.id, label: tpl.name || tpl.id }))
 		},
-
 		/**
 		 * CSS class for the status message.
 		 *
@@ -107,11 +97,9 @@ export default {
 			}
 		},
 	},
-
 	async mounted() {
 		await this.loadPreview()
 	},
-
 	methods: {
 		/**
 		 * Load the rendered receipt preview.
@@ -120,19 +108,10 @@ export default {
 			this.previewLoading = true
 			this.statusMessage = ''
 			try {
-				const params = this.selectedTemplate
-					? `?template=${encodeURIComponent(this.selectedTemplate.id)}`
-					: ''
+				const params = this.selectedTemplate ? `?template=${encodeURIComponent(this.selectedTemplate.id)}` : ''
 				const response = await fetch(
-					generateUrl(
-						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/preview${params}`,
-					),
-					{
-						headers: {
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-					},
+					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/preview${params}`),
+					{ headers: { requesttoken: OC.requestToken, 'OCS-APIREQUEST': 'true' } },
 				)
 				const data = await response.json().catch(() => ({}))
 				if (response.ok && data.receipt) {
@@ -142,7 +121,6 @@ export default {
 				this.previewLoading = false
 			}
 		},
-
 		/**
 		 * Request the ESC/POS byte stream for the transaction.
 		 *
@@ -160,9 +138,7 @@ export default {
 					body.template = this.selectedTemplate.id
 				}
 				const response = await fetch(
-					generateUrl(
-						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/print`,
-					),
+					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.transactionId}/receipt/print`),
 					{
 						method: 'POST',
 						headers: {
@@ -176,25 +152,16 @@ export default {
 				const data = await response.json().catch(() => ({}))
 				if (!response.ok) {
 					this.statusType = 'error'
-					this.statusMessage =
-						data.error
-						|| t('pipelinq', 'Error printing receipt: {error}', {
-							error: '',
-						})
+					this.statusMessage = data.error || t('pipelinq', 'Error printing receipt: {error}', { error: '' })
 					return
 				}
-				this.printerDevice =
-					(data.receipt && data.receipt.printerDevice) || ''
+				this.printerDevice = (data.receipt && data.receipt.printerDevice) || ''
 				this.statusType = 'success'
 				this.statusMessage = t('pipelinq', 'Receipt sent to printer')
 				this.$emit('printed', data.receipt)
 			} catch (e) {
 				this.statusType = 'error'
-				this.statusMessage = t(
-					'pipelinq',
-					'Error printing receipt: {error}',
-					{ error: e.message },
-				)
+				this.statusMessage = t('pipelinq', 'Error printing receipt: {error}', { error: e.message })
 			} finally {
 				this.printing = false
 			}

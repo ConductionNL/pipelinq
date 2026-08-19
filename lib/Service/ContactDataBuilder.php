@@ -26,109 +26,114 @@ namespace OCA\Pipelinq\Service;
 /**
  * Service for building import data arrays from Nextcloud contact data.
  */
-class ContactDataBuilder {
-	/**
-	 * Build client data from a Nextcloud contact.
-	 *
-	 * @param array $ncContact The Nextcloud contact data.
-	 * @param string $uid The contact UID.
-	 *
-	 * @return array The client data ready for saving.
-	 *
-	 * @spec openspec/specs/contacts-sync/spec.md
-	 */
-	public function buildClientImportData(array $ncContact, string $uid): array {
-		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
-		$org = $this->extractFirstValue(value: ($ncContact['ORG'] ?? ''));
+class ContactDataBuilder
+{
+    /**
+     * Build client data from a Nextcloud contact.
+     *
+     * @param array  $ncContact The Nextcloud contact data.
+     * @param string $uid       The contact UID.
+     *
+     * @return array The client data ready for saving.
+     *
+     * @spec openspec/specs/contacts-sync/spec.md
+     */
+    public function buildClientImportData(array $ncContact, string $uid): array
+    {
+        $name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
+        $org  = $this->extractFirstValue(value: ($ncContact['ORG'] ?? ''));
 
-		$clientType = $this->determineClientType(name: $name, org: $org);
+        $clientType = $this->determineClientType(name: $name, org: $org);
 
-		if ($name === '' && $org !== '') {
-			$name = $org;
-		}
+        if ($name === '' && $org !== '') {
+            $name = $org;
+        }
 
-		$industry = '';
-		if ($clientType === 'person') {
-			$industry = $org;
-		}
+        $industry = '';
+        if ($clientType === 'person') {
+            $industry = $org;
+        }
 
-		$data = [
-			'name' => $name,
-			'type' => $clientType,
-			'email' => $this->extractFirstValue(value: ($ncContact['EMAIL'] ?? '')),
-			'phone' => $this->extractFirstValue(value: ($ncContact['TEL'] ?? '')),
-			'website' => $this->extractFirstValue(value: ($ncContact['URL'] ?? '')),
-			'industry' => $industry,
-			'contactsUid' => $uid,
-		];
+        $data = [
+            'name'        => $name,
+            'type'        => $clientType,
+            'email'       => $this->extractFirstValue(value: ($ncContact['EMAIL'] ?? '')),
+            'phone'       => $this->extractFirstValue(value: ($ncContact['TEL'] ?? '')),
+            'website'     => $this->extractFirstValue(value: ($ncContact['URL'] ?? '')),
+            'industry'    => $industry,
+            'contactsUid' => $uid,
+        ];
 
-		$data = array_filter($data, fn ($v) => $v !== '' && $v !== null);
-		$data['name'] = $name;
-		$data['type'] = $clientType;
+        $data         = array_filter($data, fn($v) => $v !== '' && $v !== null);
+        $data['name'] = $name;
+        $data['type'] = $clientType;
 
-		return $data;
-	}//end buildClientImportData()
+        return $data;
+    }//end buildClientImportData()
 
-	/**
-	 * Build contact person data from a Nextcloud contact.
-	 *
-	 * @param array $ncContact The Nextcloud contact data.
-	 * @param string $uid The contact UID.
-	 * @param ?string $clientId The optional client ID.
-	 *
-	 * @return array The contact data ready for saving.
-	 *
-	 * @spec openspec/specs/contacts-sync/spec.md
-	 */
-	public function buildContactImportData(array $ncContact, string $uid, ?string $clientId): array {
-		$name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
+    /**
+     * Build contact person data from a Nextcloud contact.
+     *
+     * @param array   $ncContact The Nextcloud contact data.
+     * @param string  $uid       The contact UID.
+     * @param ?string $clientId  The optional client ID.
+     *
+     * @return array The contact data ready for saving.
+     *
+     * @spec openspec/specs/contacts-sync/spec.md
+     */
+    public function buildContactImportData(array $ncContact, string $uid, ?string $clientId): array
+    {
+        $name = $this->extractFirstValue(value: ($ncContact['FN'] ?? 'Unknown'));
 
-		$data = [
-			'name' => $name,
-			'email' => $this->extractFirstValue(value: ($ncContact['EMAIL'] ?? '')),
-			'phone' => $this->extractFirstValue(value: ($ncContact['TEL'] ?? '')),
-			'role' => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
-			'contactsUid' => $uid,
-		];
+        $data = [
+            'name'        => $name,
+            'email'       => $this->extractFirstValue(value: ($ncContact['EMAIL'] ?? '')),
+            'phone'       => $this->extractFirstValue(value: ($ncContact['TEL'] ?? '')),
+            'role'        => $this->extractFirstValue(value: ($ncContact['ROLE'] ?? $ncContact['TITLE'] ?? '')),
+            'contactsUid' => $uid,
+        ];
 
-		if ($clientId !== null && $clientId !== '') {
-			$data['client'] = $clientId;
-		}
+        if ($clientId !== null && $clientId !== '') {
+            $data['client'] = $clientId;
+        }
 
-		$data = array_filter($data, fn ($v) => $v !== '' && $v !== null);
-		$data['name'] = $name;
+        $data         = array_filter($data, fn($v) => $v !== '' && $v !== null);
+        $data['name'] = $name;
 
-		return $data;
-	}//end buildContactImportData()
+        return $data;
+    }//end buildContactImportData()
 
-	/**
-	 * Determine the client type based on name and org fields.
-	 *
-	 * @param string $name The contact name.
-	 * @param string $org The organization name.
-	 *
-	 * @return string The client type (person or organization).
-	 */
-	private function determineClientType(string $name, string $org): string {
-		if ($org !== '' && ($org === $name || $name === '')) {
-			return 'organization';
-		}
+    /**
+     * Determine the client type based on name and org fields.
+     *
+     * @param string $name The contact name.
+     * @param string $org  The organization name.
+     *
+     * @return string The client type (person or organization).
+     */
+    private function determineClientType(string $name, string $org): string
+    {
+        if ($org !== '' && ($org === $name || $name === '')) {
+            return 'organization';
+        }
 
-		return 'person';
-	}//end determineClientType()
+        return 'person';
+    }//end determineClientType()
 
-	/**
-	 * Extract first value from a vCard property that may be an array or string.
-	 *
-	 * @param mixed $value The value to extract from.
-	 *
-	 * @return string The extracted string value.
-	 */
-	private function extractFirstValue(mixed $value): string {
-		if (is_array($value) === true) {
-			return (string)($value[0] ?? '');
-		}
+    /**
+     * Extract first value from a vCard property that may be an array or string.
+     *
+     * @param mixed $value The value to extract from.
+     *
+     * @return string The extracted string value.
+     */
+    private function extractFirstValue(mixed $value): string
+    {
+        if (is_array($value) === true) {
+            return (string) ($value[0] ?? '');
+        }
 
-		return (string)$value;
-	}//end extractFirstValue()
+        return (string) $value;
+    }//end extractFirstValue()
 }//end class

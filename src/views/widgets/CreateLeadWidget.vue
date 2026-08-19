@@ -1,52 +1,40 @@
 <template>
 	<div class="create-lead-widget">
 		<div v-if="!success" class="widget-form">
-			<NcTextField
-				v-model="form.title"
+			<NcTextField v-model="form.title"
 				:label="t('pipelinq', 'Title')"
-				:placeholder="
-					t(
-						'pipelinq',
-						'Lead title (required) — press Enter for quick add',
-					)
-				"
+				:placeholder="t('pipelinq', 'Lead title (required) — press Enter for quick add')"
 				:error="submitted && !form.title"
 				@keyup.enter="onQuickAdd" />
 
-			<ClientAutocomplete
-				:value="selectedClient"
+			<ClientAutocomplete :value="selectedClient"
 				:placeholder="t('pipelinq', 'Search client...')"
 				:label="t('pipelinq', 'Client')"
 				@input="onClientSelected" />
 
-			<NcSelect
-				v-model="form.pipeline"
+			<NcSelect v-model="form.pipeline"
 				:options="pipelineOptions"
-				:inputLabel="t('pipelinq', 'Pipeline')"
+				:input-label="t('pipelinq', 'Pipeline')"
 				:placeholder="t('pipelinq', 'Pipeline')"
 				label="label"
-				trackBy="id"
-				inputId="lead-pipeline" />
+				track-by="id"
+				input-id="lead-pipeline" />
 
-			<NcTextField
-				v-model="form.value"
+			<NcTextField v-model="form.value"
 				:label="t('pipelinq', 'Value')"
 				:placeholder="t('pipelinq', 'Estimated value (EUR)')"
 				type="number" />
 
-			<NcSelect
-				v-model="form.source"
+			<NcSelect v-model="form.source"
 				:options="sourceOptions"
-				:inputLabel="t('pipelinq', 'Source')"
+				:input-label="t('pipelinq', 'Source')"
 				:placeholder="t('pipelinq', 'Source')"
-				inputId="lead-source" />
+				input-id="lead-source" />
 
-			<NcButton variant="primary" :disabled="submitting" @click="onSubmit">
-				{{
-					submitting
-						? t('pipelinq', 'Creating...')
-						: t('pipelinq', 'Create lead')
-				}}
+			<NcButton variant="primary"
+				:disabled="submitting"
+				@click="onSubmit">
+				{{ submitting ? t('pipelinq', 'Creating...') : t('pipelinq', 'Create lead') }}
 			</NcButton>
 		</div>
 
@@ -63,8 +51,8 @@
 </template>
 
 <script>
+import { NcTextField, NcButton, NcSelect, NcNoteCard } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
@@ -78,14 +66,12 @@ export default {
 		NcNoteCard,
 		ClientAutocomplete,
 	},
-
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
-
 	data() {
 		return {
 			config: null,
@@ -96,7 +82,6 @@ export default {
 				value: '',
 				source: null,
 			},
-
 			selectedClient: null,
 			submitted: false,
 			submitting: false,
@@ -112,7 +97,6 @@ export default {
 			],
 		}
 	},
-
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-26
@@ -125,7 +109,6 @@ export default {
 			}))
 		},
 	},
-
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-22
 	 */
@@ -138,7 +121,6 @@ export default {
 			console.error('CreateLeadWidget init error:', err)
 		}
 	},
-
 	methods: {
 		/**
 		 * @param client
@@ -147,7 +129,6 @@ export default {
 		onClientSelected(client) {
 			this.selectedClient = client
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-20
 		 */
@@ -155,13 +136,9 @@ export default {
 			if (!this.config?.pipeline) return
 			try {
 				const typeConfig = this.config.pipeline
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema
-						+ '?_limit=50',
-				)
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema
+					+ '?_limit=50')
 
 				const response = await fetch(url, {
 					headers: {
@@ -183,7 +160,6 @@ export default {
 				console.error('Failed to fetch pipelines:', err)
 			}
 		},
-
 		/**
 		 * @param pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-21
@@ -191,12 +167,9 @@ export default {
 		getFirstStage(pipeline) {
 			const stages = pipeline?.stages || []
 			if (stages.length === 0) return { name: '', order: 1 }
-			const sorted = [...stages].sort(
-				(a, b) => (a.order || 0) - (b.order || 0),
-			)
+			const sorted = [...stages].sort((a, b) => (a.order || 0) - (b.order || 0))
 			return sorted[0]
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-24
 		 */
@@ -205,7 +178,6 @@ export default {
 				this.onSubmit()
 			}
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-25
 		 */
@@ -242,18 +214,13 @@ export default {
 					body.value = parseFloat(this.form.value) || 0
 				}
 				if (this.form.source) {
-					body.source =
-						typeof this.form.source === 'object'
-							? this.form.source.id
-							: this.form.source
+					body.source = typeof this.form.source === 'object'
+						? this.form.source.id
+						: this.form.source
 				}
 
-				const url = generateUrl(
-					'/apps/openregister/api/objects/'
-						+ typeConfig.register
-						+ '/'
-						+ typeConfig.schema,
-				)
+				const url = generateUrl('/apps/openregister/api/objects/'
+					+ typeConfig.register + '/' + typeConfig.schema)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -276,16 +243,13 @@ export default {
 				this.submitting = false
 			}
 		},
-
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-27
 		 */
 		resetForm() {
 			this.form = {
 				title: '',
-				pipeline:
-					this.pipelineOptions.length > 0 ? this.pipelineOptions[0] : null,
-
+				pipeline: this.pipelineOptions.length > 0 ? this.pipelineOptions[0] : null,
 				value: '',
 				source: null,
 			}

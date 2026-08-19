@@ -25,22 +25,23 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Mcp;
 
 if (interface_exists(IMcpScannableServices::class) === false) {
-	/**
-	 * Stub interface for IMcpScannableServices — used only in standalone unit tests.
-	 *
-	 * Deferred until openregister PR #363 (or-mcp-tool-attribute) ships the
-	 * real interface. Pipelinq implements this stub in production; the stub
-	 * is replaced by the real interface when the openregister app is
-	 * installed.
-	 */
-	interface IMcpScannableServices {
+    /**
+     * Stub interface for IMcpScannableServices — used only in standalone unit tests.
+     *
+     * Deferred until openregister PR #363 (or-mcp-tool-attribute) ships the
+     * real interface. Pipelinq implements this stub in production; the stub
+     * is replaced by the real interface when the openregister app is
+     * installed.
+     */
+    interface IMcpScannableServices
+    {
 
-		/**
-		 * The app's own service classes eligible for `#[McpTool]` reflection.
-		 *
-		 * @return list<class-string> Fully-qualified service class names owned by this app.
-		 */
-		public function getScannableServiceClasses(): array;
+        /**
+         * The app's own service classes eligible for `#[McpTool]` reflection.
+         *
+         * @return list<class-string> Fully-qualified service class names owned by this app.
+         */
+        public function getScannableServiceClasses(): array;
 
-	}//end interface
+    }//end interface
 }//end if

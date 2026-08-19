@@ -21,74 +21,46 @@
 			<NcSelect
 				v-model="channel"
 				:options="channelOptions"
-				:inputLabel="t('pipelinq', 'Channel')"
+				:input-label="t('pipelinq', 'Channel')"
 				label="label"
 				:reduce="(o) => o.value" />
 
 			<template v-if="channel">
-				<div
-					class="send-message__consent"
-					:class="
-						consentOk
-							? 'send-message__consent--ok'
-							: 'send-message__consent--warn'
-					">
+				<div class="send-message__consent" :class="consentOk ? 'send-message__consent--ok' : 'send-message__consent--warn'">
 					<p>
-						{{
-							t('pipelinq', 'Consent for {channel}: {state}', {
-								channel: channelLabel,
-								state: consentLabel,
-							})
-						}}
+						{{ t('pipelinq', 'Consent for {channel}: {state}', { channel: channelLabel, state: consentLabel }) }}
 					</p>
 					<template v-if="!consentOk">
 						<NcTextField
 							v-model="consentEvidence"
 							:label="t('pipelinq', 'Evidence (required)')"
-							:placeholder="
-								t(
-									'pipelinq',
-									'e.g. verbal confirmation during call on {date}',
-									{ date: today },
-								)
-							" />
+							:placeholder="t('pipelinq', 'e.g. verbal confirmation during call on {date}', { date: today })" />
 						<NcSelect
 							v-model="consentLegalBasis"
 							:options="legalBasisOptions"
-							:inputLabel="t('pipelinq', 'Legal basis')"
+							:input-label="t('pipelinq', 'Legal basis')"
 							label="label"
 							:reduce="(o) => o.value" />
 						<NcButton
 							variant="secondary"
 							:disabled="!consentEvidence || recordingConsent"
 							@click="recordConsent">
-							{{
-								recordingConsent
-									? t('pipelinq', 'Recording…')
-									: t('pipelinq', 'Record opt-in')
-							}}
+							{{ recordingConsent ? t('pipelinq', 'Recording…') : t('pipelinq', 'Record opt-in') }}
 						</NcButton>
 					</template>
 				</div>
 
 				<template v-if="whatsappNeedsTemplate">
 					<p class="send-message__hint">
-						{{
-							t(
-								'pipelinq',
-								'The 24-hour WhatsApp session window is closed — an approved template is required to start a new business-initiated message.',
-							)
-						}}
+						{{ t('pipelinq', 'The 24-hour WhatsApp session window is closed — an approved template is required to start a new business-initiated message.') }}
 					</p>
 					<NcSelect
 						v-model="templateId"
 						:options="templateOptions"
-						:inputLabel="t('pipelinq', 'Template')"
+						:input-label="t('pipelinq', 'Template')"
 						label="label"
 						:reduce="(o) => o.value" />
-					<p
-						v-if="selectedTemplate"
-						class="send-message__template-preview">
+					<p v-if="selectedTemplate" class="send-message__template-preview">
 						{{ selectedTemplate.body }}
 					</p>
 					<NcTextField
@@ -105,10 +77,7 @@
 				</template>
 			</template>
 
-			<p
-				v-if="sendResult && sendResult.status !== 'sent'"
-				class="send-message__result"
-				role="alert">
+			<p v-if="sendResult && sendResult.status !== 'sent'" class="send-message__result" role="alert">
 				{{ resultMessage }}
 			</p>
 
@@ -125,10 +94,10 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { showError, showSuccess } from '@nextcloud/dialogs'
-import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcModal, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 
 export default {
 	name: 'SendMessageModal',
@@ -139,18 +108,15 @@ export default {
 		NcTextArea,
 		NcTextField,
 	},
-
 	props: {
 		contactId: {
 			type: String,
 			required: true,
 		},
-
 		clientId: {
 			type: String,
 			default: '',
 		},
-
 		preflight: {
 			type: Object,
 			default: () => ({
@@ -161,7 +127,6 @@ export default {
 			}),
 		},
 	},
-
 	emits: ['sent', 'close'],
 	data() {
 		return {
@@ -177,12 +142,10 @@ export default {
 			localConsent: null,
 		}
 	},
-
 	computed: {
 		today() {
 			return new Date().toLocaleDateString()
 		},
-
 		channelOptions() {
 			const options = []
 			if (this.preflight.channels && this.preflight.channels.sms) {
@@ -193,42 +156,27 @@ export default {
 			}
 			return options
 		},
-
 		channelLabel() {
-			return this.channel === 'sms'
-				? t('pipelinq', 'SMS')
-				: t('pipelinq', 'WhatsApp')
+			return this.channel === 'sms' ? t('pipelinq', 'SMS') : t('pipelinq', 'WhatsApp')
 		},
-
 		whatsappNeedsTemplate() {
 			return this.channel === 'whatsapp' && !this.preflight.whatsappSessionOpen
 		},
-
 		templateOptions() {
 			return (this.preflight.templates || []).map((tpl) => ({
 				value: tpl.id,
 				label: `${tpl.externalId} (${tpl.language})`,
 			}))
 		},
-
 		selectedTemplate() {
-			return (
-				(this.preflight.templates || []).find(
-					(tpl) => tpl.id === this.templateId,
-				) || null
-			)
+			return (this.preflight.templates || []).find((tpl) => tpl.id === this.templateId) || null
 		},
-
 		effectiveConsentState() {
 			if (this.localConsent && this.localConsent.channel === this.channel) {
 				return this.localConsent.state
 			}
-			return (
-				(this.preflight.consent && this.preflight.consent[this.channel])
-				|| 'unknown'
-			)
+			return (this.preflight.consent && this.preflight.consent[this.channel]) || 'unknown'
 		},
-
 		consentLabel() {
 			const labels = {
 				'opted-in': t('pipelinq', 'opted in'),
@@ -237,7 +185,6 @@ export default {
 			}
 			return labels[this.effectiveConsentState] || labels.unknown
 		},
-
 		/**
 		 * Whether the currently selected channel's consent state is
 		 * acceptable for a business-initiated send: a WhatsApp template send
@@ -255,18 +202,13 @@ export default {
 			}
 			return this.effectiveConsentState !== 'opted-out'
 		},
-
 		legalBasisOptions() {
 			return [
 				{ value: 'consent', label: t('pipelinq', 'Consent') },
 				{ value: 'contract', label: t('pipelinq', 'Contract') },
-				{
-					value: 'legitimate-interest',
-					label: t('pipelinq', 'Legitimate interest'),
-				},
+				{ value: 'legitimate-interest', label: t('pipelinq', 'Legitimate interest') },
 			]
 		},
-
 		canSend() {
 			if (this.sending || !this.channel || !this.consentOk) {
 				return false
@@ -276,50 +218,21 @@ export default {
 			}
 			return this.body.trim() !== ''
 		},
-
 		resultMessage() {
 			if (!this.sendResult) {
 				return ''
 			}
 			const messages = {
-				'consent-missing': t(
-					'pipelinq',
-					'The server refused to send: consent is missing for this channel.',
-				),
-
-				'budget-exceeded': t(
-					'pipelinq',
-					'The server refused to send: the messaging budget for this period is exceeded.',
-				),
-
-				'template-required': t(
-					'pipelinq',
-					'The server refused to send: the WhatsApp session window has expired and a template is required.',
-				),
-
-				'template-invalid': t(
-					'pipelinq',
-					'The server refused to send: the selected template is invalid ({reason}).',
-					{ reason: this.sendResult.reason || t('pipelinq', 'unknown') },
-				),
-
-				'no-provider': t(
-					'pipelinq',
-					'The server refused to send: no active provider is configured for this channel.',
-				),
-
-				failed: t(
-					'pipelinq',
-					'The message could not be delivered by the provider.',
-				),
+				'consent-missing': t('pipelinq', 'The server refused to send: consent is missing for this channel.'),
+				'budget-exceeded': t('pipelinq', 'The server refused to send: the messaging budget for this period is exceeded.'),
+				'template-required': t('pipelinq', 'The server refused to send: the WhatsApp session window has expired and a template is required.'),
+				'template-invalid': t('pipelinq', 'The server refused to send: the selected template is invalid ({reason}).', { reason: this.sendResult.reason || t('pipelinq', 'unknown') }),
+				'no-provider': t('pipelinq', 'The server refused to send: no active provider is configured for this channel.'),
+				failed: t('pipelinq', 'The message could not be delivered by the provider.'),
 			}
-			return (
-				messages[this.sendResult.status]
-				|| t('pipelinq', 'The server could not process this send request.')
-			)
+			return messages[this.sendResult.status] || t('pipelinq', 'The server could not process this send request.')
 		},
 	},
-
 	watch: {
 		channel() {
 			this.sendResult = null
@@ -327,7 +240,6 @@ export default {
 			this.templateId = null
 			this.templateParams = []
 		},
-
 		selectedTemplate(tpl) {
 			if (!tpl) {
 				this.templateParams = []
@@ -338,7 +250,6 @@ export default {
 			this.templateParams = new Array(count).fill('')
 		},
 	},
-
 	methods: {
 		async recordConsent() {
 			if (!this.consentEvidence) {
@@ -346,21 +257,15 @@ export default {
 			}
 			this.recordingConsent = true
 			try {
-				const { data } = await axios.post(
-					generateUrl('/apps/pipelinq/api/messaging/consent'),
-					{
-						contactId: this.contactId,
-						channel: this.channel,
-						action: 'opt-in',
-						source: 'admin-override',
-						evidence: this.consentEvidence,
-						legalBasis: this.consentLegalBasis,
-					},
-				)
-				this.localConsent = {
+				const { data } = await axios.post(generateUrl('/apps/pipelinq/api/messaging/consent'), {
+					contactId: this.contactId,
 					channel: this.channel,
-					state: data.state || 'opted-in',
-				}
+					action: 'opt-in',
+					source: 'admin-override',
+					evidence: this.consentEvidence,
+					legalBasis: this.consentLegalBasis,
+				})
+				this.localConsent = { channel: this.channel, state: data.state || 'opted-in' }
 				showSuccess(t('pipelinq', 'Consent recorded.'))
 			} catch (e) {
 				showError(t('pipelinq', 'Failed to record consent.'))
@@ -368,7 +273,6 @@ export default {
 				this.recordingConsent = false
 			}
 		},
-
 		async send() {
 			if (!this.canSend) {
 				return
@@ -376,21 +280,14 @@ export default {
 			this.sending = true
 			this.sendResult = null
 			try {
-				const { data } = await axios.post(
-					generateUrl('/apps/pipelinq/api/messaging/send'),
-					{
-						contactId: this.contactId,
-						channel: this.channel,
-						body: this.whatsappNeedsTemplate ? '' : this.body,
-						templateId: this.whatsappNeedsTemplate
-							? this.templateId
-							: null,
-						parameters: this.whatsappNeedsTemplate
-							? this.templateParams
-							: [],
-						clientId: this.clientId,
-					},
-				)
+				const { data } = await axios.post(generateUrl('/apps/pipelinq/api/messaging/send'), {
+					contactId: this.contactId,
+					channel: this.channel,
+					body: this.whatsappNeedsTemplate ? '' : this.body,
+					templateId: this.whatsappNeedsTemplate ? this.templateId : null,
+					parameters: this.whatsappNeedsTemplate ? this.templateParams : [],
+					clientId: this.clientId,
+				})
 				this.sendResult = data
 				if (data.status === 'sent') {
 					showSuccess(t('pipelinq', 'Message sent.'))
@@ -398,9 +295,7 @@ export default {
 					this.$emit('close')
 				}
 			} catch (e) {
-				this.sendResult = (e.response && e.response.data) || {
-					status: 'failed',
-				}
+				this.sendResult = (e.response && e.response.data) || { status: 'failed' }
 			} finally {
 				this.sending = false
 			}

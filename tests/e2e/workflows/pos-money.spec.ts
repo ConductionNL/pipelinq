@@ -24,12 +24,7 @@
  * not a test defect).
  */
 import { test, expect, Page, Locator } from '@playwright/test'
-import {
-	openApp,
-	navClick,
-	dismissSupportDialog,
-	clickHeaderAction,
-} from '../helpers/pipelinq'
+import { openApp, navClick, dismissSupportDialog, clickHeaderAction } from '../helpers/pipelinq'
 import { FixtureSession } from './helpers/fixtures'
 
 /** Set a numeric input to an exact value and let Vue's @update:value fire. */
@@ -74,17 +69,9 @@ async function openPosForm(page: Page): Promise<void> {
  * are: product picker | description | qty | unitPrice | discount% | VAT | total.
  * The three numeric inputs are qty / unitPrice / discount.
  */
-async function fillLine(
-	page: Page,
-	index: number,
-	opts: {
-		description: string
-		qty: string
-		unitPrice: string
-		discount?: string
-		vat?: '0' | '9' | '21'
-	},
-): Promise<Locator> {
+async function fillLine(page: Page, index: number, opts: {
+	description: string, qty: string, unitPrice: string, discount?: string, vat?: '0' | '9' | '21',
+}): Promise<Locator> {
 	const row = page.locator('.pos-form__lines tbody tr').nth(index)
 	await row.locator('.pos-line-row__description input').fill(opts.description)
 	const nums = row.locator('.pos-line-row__num input[type="number"]')
@@ -93,17 +80,10 @@ async function fillLine(
 	if (opts.discount) await setNum(page, nums.nth(2), opts.discount)
 	if (opts.vat) {
 		// VAT is an NcSelect in the row; default is 21%. Only switch if needed.
-		const vatCombo = row
-			.locator('.pos-line-row__num')
-			.last()
-			.getByRole('combobox')
+		const vatCombo = row.locator('.pos-line-row__num').last().getByRole('combobox')
 		await vatCombo.click()
 		await page.waitForTimeout(250)
-		await page
-			.locator('li[role="option"], .vs__dropdown-option')
-			.filter({ hasText: `${opts.vat}%` })
-			.first()
-			.click()
+		await page.locator('li[role="option"], .vs__dropdown-option').filter({ hasText: `${opts.vat}%` }).first().click()
 		await page.waitForTimeout(250)
 	}
 	return row
@@ -111,15 +91,11 @@ async function fillLine(
 
 /** Read the totals panel as a single normalised string. */
 async function totalsText(page: Page): Promise<string> {
-	return (await page.locator('.pos-totals').innerText())
-		.replace(/\s+/g, ' ')
-		.trim()
+	return (await page.locator('.pos-totals').innerText()).replace(/\s+/g, ' ').trim()
 }
 
-test.describe('POS — PosTransactionForm money workflow computes correct totals', () => {
-	test('cart line totals, subtotal, per-rate VAT and grand total are exact', async ({
-		page,
-	}) => {
+test.describe('POS — money workflow computes correct totals', () => {
+	test('cart line totals, subtotal, per-rate VAT and grand total are exact', async ({ page }) => {
 		test.setTimeout(120000)
 		await openApp(page)
 		await openPosForm(page)
@@ -127,44 +103,27 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 		// --- Case A: 2 × €10.00 @ 21% ----------------------------------------
 		await page.getByRole('button', { name: /Add line/i }).click()
 		await page.waitForTimeout(400)
-		const rowA = await fillLine(page, 0, {
-			description: 'Widget A',
-			qty: '2',
-			unitPrice: '10',
-		})
+		const rowA = await fillLine(page, 0, { description: 'Widget A', qty: '2', unitPrice: '10' })
 		await expect(rowA.locator('.pos-line-row__total')).toHaveText('€ 24,20')
 
 		let totals = await totalsText(page)
 		expect(totals, 'subtotal after case A').toContain('Subtotal € 20,00')
-		expect(totals, 'VAT 21% line after case A').toContain(
-			'VAT 21% (base € 20,00) € 4,20',
-		)
+		expect(totals, 'VAT 21% line after case A').toContain('VAT 21% (base € 20,00) € 4,20')
 		expect(totals, 'grand total after case A').toContain('Total € 24,20')
 
 		// --- Case B: add 3 × €4.00 @ 9% (second rate bucket) ------------------
 		await page.getByRole('button', { name: /Add line/i }).click()
 		await page.waitForTimeout(400)
-		const rowB = await fillLine(page, 1, {
-			description: 'Snack B',
-			qty: '3',
-			unitPrice: '4',
-			vat: '9',
-		})
+		const rowB = await fillLine(page, 1, { description: 'Snack B', qty: '3', unitPrice: '4', vat: '9' })
 		// net 12.00, tax 9% = 1.08, line total 13.08
 		await expect(rowB.locator('.pos-line-row__total')).toHaveText('€ 13,08')
 
 		totals = await totalsText(page)
-		expect(totals, 'subtotal sums both lines (20 + 12)').toContain(
-			'Subtotal € 32,00',
-		)
-		expect(totals, '21% bucket unchanged').toContain(
-			'VAT 21% (base € 20,00) € 4,20',
-		)
+		expect(totals, 'subtotal sums both lines (20 + 12)').toContain('Subtotal € 32,00')
+		expect(totals, '21% bucket unchanged').toContain('VAT 21% (base € 20,00) € 4,20')
 		expect(totals, '9% bucket present').toContain('VAT 9% (base € 12,00) € 1,08')
 		// grand total = 32.00 + 4.20 + 1.08 = 37.28
-		expect(totals, 'grand total = subtotal + both VAT buckets').toContain(
-			'Total € 37,28',
-		)
+		expect(totals, 'grand total = subtotal + both VAT buckets').toContain('Total € 37,28')
 
 		// --- Case C: a discounted line on a fresh cart ------------------------
 		// Reload to a clean form so the discount case asserts in isolation.
@@ -172,22 +131,13 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 		await page.getByRole('button', { name: /Add line/i }).click()
 		await page.waitForTimeout(400)
 		// 1 × €100.00 @ 21% with 10% discount → net 90.00, VAT 18.90, total 108.90
-		const rowC = await fillLine(page, 0, {
-			description: 'Service C',
-			qty: '1',
-			unitPrice: '100',
-			discount: '10',
-		})
+		const rowC = await fillLine(page, 0, { description: 'Service C', qty: '1', unitPrice: '100', discount: '10' })
 		await expect(rowC.locator('.pos-line-row__total')).toHaveText('€ 108,90')
 
 		totals = await totalsText(page)
-		expect(totals, 'discounted subtotal is the net base').toContain(
-			'Subtotal € 90,00',
-		)
+		expect(totals, 'discounted subtotal is the net base').toContain('Subtotal € 90,00')
 		expect(totals, 'discount line surfaced').toContain('Discount')
-		expect(totals, 'VAT on the discounted net').toContain(
-			'VAT 21% (base € 90,00) € 18,90',
-		)
+		expect(totals, 'VAT on the discounted net').toContain('VAT 21% (base € 90,00) € 18,90')
 		expect(totals, 'discounted grand total').toContain('Total € 108,90')
 	})
 
@@ -220,19 +170,13 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 	 * The fixture now addresses the OR object API by the same slug the app uses
 	 * (helpers/fixtures.ts), so reads hit exactly the register checkout writes to.
 	 */
-	test('completing the sale persists a transaction with the correct line total', async ({
-		page,
-	}) => {
+	test('completing the sale persists a transaction with the correct line total', async ({ page }) => {
 		test.setTimeout(120000)
 		const fx = new FixtureSession(page)
 		await openApp(page)
 		await openPosForm(page)
 		await page.getByRole('button', { name: /Add line/i }).click()
-		await fillLine(page, 0, {
-			description: 'Widget A',
-			qty: '2',
-			unitPrice: '10',
-		})
+		await fillLine(page, 0, { description: 'Widget A', qty: '2', unitPrice: '10' })
 		await page.locator('[data-testid="checkout"]').click()
 		// The sale persisted and the app navigated to the new transaction detail.
 		await page.waitForURL(/pos\/[0-9a-f-]{36}/i, { timeout: 10000 })
@@ -254,18 +198,13 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 		// (The OR object search is slow for this filter on the dev box — allow it
 		// a generous poll window so a multi-second response never flakes the read.)
 		let lines: any[] = []
-		await expect
-			.poll(
-				async () => {
-					lines = await fx.list('posTransactionLine', {
-						transaction: txId,
-						_limit: 10,
-					})
-					return lines.length
-				},
-				{ timeout: 30000, intervals: [1000, 2000, 3000] },
-			)
-			.toBe(1)
+		await expect.poll(
+			async () => {
+				lines = await fx.list('posTransactionLine', { transaction: txId, _limit: 10 })
+				return lines.length
+			},
+			{ timeout: 30000, intervals: [1000, 2000, 3000] },
+		).toBe(1)
 		for (const l of lines) fx.track('posTransactionLine', l.id || l['@self']?.id)
 		expect(Number(lines[0].lineTotal)).toBe(24.2)
 		await fx.cleanup()
@@ -288,9 +227,7 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 	 * app picker reads the `pipelinq` slug (register 16). The fixture now seeds +
 	 * lists via the slug, matching the picker's register.
 	 */
-	test('selecting a catalogue product prefills the line price + VAT', async ({
-		page,
-	}) => {
+	test('selecting a catalogue product prefills the line price + VAT', async ({ page }) => {
 		test.setTimeout(120000)
 		const fx = new FixtureSession(page)
 		await openApp(page)
@@ -309,15 +246,10 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 		// Wait until the freshly-seeded product is returned by the same collection
 		// query the picker uses, so the dropdown is guaranteed to list it (the OR
 		// object search does not surface a just-written object instantly).
-		await expect
-			.poll(
-				async () =>
-					(await fx.list('product', { _limit: 500 })).some(
-						(p: any) => p.sku === sku,
-					),
-				{ timeout: 30000, intervals: [500, 1000, 2000] },
-			)
-			.toBe(true)
+		await expect.poll(
+			async () => (await fx.list('product', { _limit: 500 })).some((p: any) => p.sku === sku),
+			{ timeout: 30000, intervals: [500, 1000, 2000] },
+		).toBe(true)
 
 		await openPosForm(page)
 		await page.getByRole('button', { name: /Add line/i }).click()
@@ -330,18 +262,12 @@ test.describe('POS — PosTransactionForm money workflow computes correct totals
 		await page.waitForTimeout(300)
 		await picker.fill(sku)
 		await page.waitForTimeout(800)
-		await page
-			.locator('li[role="option"], .vs__dropdown-option')
-			.filter({ hasText: sku })
-			.first()
-			.click()
+		await page.locator('li[role="option"], .vs__dropdown-option').filter({ hasText: sku }).first().click()
 		await page.waitForTimeout(500)
 
 		// The line's unit price prefills from the product (€7.50) and the line
 		// total reflects the product's 9% VAT (7.50 + 9% = €8,18 for qty 1).
-		const unitPrice = row
-			.locator('.pos-line-row__num input[type="number"]')
-			.nth(1)
+		const unitPrice = row.locator('.pos-line-row__num input[type="number"]').nth(1)
 		await expect(unitPrice).toHaveValue('7.5')
 		await expect(row.locator('.pos-line-row__total')).toHaveText('€ 8,18')
 

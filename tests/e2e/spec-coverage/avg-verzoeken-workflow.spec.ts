@@ -41,34 +41,27 @@ import { openApp } from '../helpers/pipelinq'
 
 const APP = '/index.php/apps/pipelinq'
 
-interface Probe {
-	status: number
-	type: string
-	body: string
-}
+interface Probe { status: number, type: string, body: string }
 
 /** GET/POST a path from inside the authenticated page, reporting status + content-type. */
 async function probe(page: Page, method: string, path: string): Promise<Probe> {
-	return await page.evaluate(
-		async ({ method, path }) => {
-			const res = await fetch(path, {
-				method,
-				headers: {
-					'Content-Type': 'application/json',
-					// eslint-disable-next-line no-undef
-					requesttoken: (window as any).OC?.requestToken || '',
-					'OCS-APIREQUEST': 'true',
-				},
-				body: method === 'POST' ? '{}' : undefined,
-			})
-			return {
-				status: res.status,
-				type: res.headers.get('content-type') || '',
-				body: (await res.text()).slice(0, 200),
-			}
-		},
-		{ method, path },
-	)
+	return await page.evaluate(async ({ method, path }) => {
+		const res = await fetch(path, {
+			method,
+			headers: {
+				'Content-Type': 'application/json',
+				// eslint-disable-next-line no-undef
+				requesttoken: (window as any).OC?.requestToken || '',
+				'OCS-APIREQUEST': 'true',
+			},
+			body: method === 'POST' ? '{}' : undefined,
+		})
+		return {
+			status: res.status,
+			type: res.headers.get('content-type') || '',
+			body: (await res.text()).slice(0, 200),
+		}
+	}, { method, path })
 }
 
 /* The route families REQ-AVG-014 requires to be gone, in the shapes the retired
@@ -88,22 +81,15 @@ test('no pipelinq-side DSAR route is served', async ({ page }) => {
 	// Without these, "no JSON here" and "POST is refused" would both be
 	// satisfied by an instance where nothing works at all.
 	const liveGet = await probe(page, 'GET', `${APP}/api/setup/status`)
-	expect(
-		liveGet.status,
-		'control: a live pipelinq GET route must answer 200',
-	).toBe(200)
-	expect(
-		liveGet.type,
-		'control: a live pipelinq API route must answer JSON',
-	).toContain('application/json')
+	expect(liveGet.status, 'control: a live pipelinq GET route must answer 200').toBe(200)
+	expect(liveGet.type, 'control: a live pipelinq API route must answer JSON')
+		.toContain('application/json')
 
 	// `saveConfig()` iterates the posted params and skips `_route`, so an empty
 	// body writes nothing — a routable POST that mutates no state.
 	const livePost = await probe(page, 'POST', `${APP}/api/setup/config`)
-	expect(
-		livePost.status,
-		'control: a live pipelinq POST route must be routable',
-	).toBeLessThan(400)
+	expect(livePost.status, 'control: a live pipelinq POST route must be routable')
+		.toBeLessThan(400)
 
 	// ---- THE ASSERTION ------------------------------------------------------
 	for (const path of RETIRED) {

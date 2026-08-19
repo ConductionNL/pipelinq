@@ -1,16 +1,2 @@
-# Revisions to skip in `git blame`.
-#
-# Enable locally, once:
-#   git config blame.ignoreRevsFile .git-blame-ignore-revs
-#
-# GitHub reads this file automatically. Your terminal does not, until you run
-# the line above.
-#
-# Only ever add commits that change formatting and NOTHING else. A commit listed
-# here becomes invisible to blame, so a behaviour change hidden inside one would
-# be very hard to find later.
-
-# style: reformat with nextcloud/coding-standard — whitespace only
-# The fleet-wide move from a PEAR-derived PHPCS ruleset (4 spaces, next-line
-# braces) to Nextcloud's own standard (tabs, same-line braces).
-1435ef0bf7f2835ebf248742acce2343d6f85947
+# Retrofit annotation commit (opsx-annotate, 2026-05-24)
+5cdb10e806e7b677a29a1a874296b224b8a79e77

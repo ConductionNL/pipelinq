@@ -6,35 +6,21 @@
  * (/loyalty/reporting). Maps to openspec/changes/loyalty-program/specs.md.
  */
 import { test, expect } from '@playwright/test'
-import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
-	assertNoHardError,
-} from '../helpers/pipelinq'
+import { openApp, navClick, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
 
 // @e2e openspec/changes/loyalty-program/specs.md#loyalty-reporting-page
-test('Loyalty: navigates from sidebar and shows the reporting surface', async ({
-	page,
-}) => {
+test('Loyalty: navigates from sidebar and shows the reporting surface', async ({ page }) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
 	await navClick(page, 'Loyalty', /\/loyalty\/reporting/)
 
-	await expect(
-		page
-			.locator('#content-vue')
-			.getByRole('heading', { name: 'Loyalty programme reporting' })
-			.first(),
-	).toBeVisible()
+	await expect(page.locator('#content-vue').getByRole('heading', { name: 'Loyalty programme reporting' }).first()).toBeVisible()
 	await assertNoHardError(page)
 	expect(errs(), `pipelinq console errors: ${errs().join(' || ')}`).toEqual([])
 })
 
 // @e2e openspec/changes/loyalty-program/specs.md#loyalty-reporting-content
-test('Loyalty: reporting content area renders below the heading', async ({
-	page,
-}) => {
+test('Loyalty: reporting content area renders below the heading', async ({ page }) => {
 	await openApp(page)
 	await navClick(page, 'Loyalty', /\/loyalty\/reporting/)
 

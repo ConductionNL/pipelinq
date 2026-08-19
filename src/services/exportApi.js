@@ -34,10 +34,7 @@ async function request(path, method, body) {
 		options.body = JSON.stringify(body)
 	}
 
-	const response = await fetch(
-		generateUrl(`/apps/pipelinq/api/export${path}`),
-		options,
-	)
+	const response = await fetch(generateUrl(`/apps/pipelinq/api/export${path}`), options)
 	const data = await response.json().catch(() => ({}))
 	if (!response.ok) {
 		throw new Error(data.error || 'Export request failed')

@@ -26,37 +26,39 @@ namespace OCA\Pipelinq\Service\Cti\Result;
 /**
  * Service-level outcome of an outbound click-to-dial originate call.
  */
-final class OriginateResult {
-	/**
-	 * Constructor.
-	 *
-	 * @param bool $success Whether the originate request was accepted.
-	 * @param string|null $externalCallId Platform's call UUID when allocated.
-	 * @param string|null $contactmomentId Pre-created contactmoment UUID.
-	 * @param string|null $error Error message when $success is false.
-	 * @param string|null $platform Active CTI platform identifier.
-	 */
-	public function __construct(
-		public readonly bool $success,
-		public readonly ?string $externalCallId = null,
-		public readonly ?string $contactmomentId = null,
-		public readonly ?string $error = null,
-		public readonly ?string $platform = null,
-	) {
-	}//end __construct()
+final class OriginateResult
+{
+    /**
+     * Constructor.
+     *
+     * @param bool        $success         Whether the originate request was accepted.
+     * @param string|null $externalCallId  Platform's call UUID when allocated.
+     * @param string|null $contactmomentId Pre-created contactmoment UUID.
+     * @param string|null $error           Error message when $success is false.
+     * @param string|null $platform        Active CTI platform identifier.
+     */
+    public function __construct(
+        public readonly bool $success,
+        public readonly ?string $externalCallId=null,
+        public readonly ?string $contactmomentId=null,
+        public readonly ?string $error=null,
+        public readonly ?string $platform=null,
+    ) {
+    }//end __construct()
 
-	/**
-	 * Convert to an array for a JSONResponse.
-	 *
-	 * @return array<string,mixed>
-	 */
-	public function toArray(): array {
-		return [
-			'success' => $this->success,
-			'externalCallId' => $this->externalCallId,
-			'contactmomentId' => $this->contactmomentId,
-			'error' => $this->error,
-			'platform' => $this->platform,
-		];
-	}//end toArray()
+    /**
+     * Convert to an array for a JSONResponse.
+     *
+     * @return array<string,mixed>
+     */
+    public function toArray(): array
+    {
+        return [
+            'success'         => $this->success,
+            'externalCallId'  => $this->externalCallId,
+            'contactmomentId' => $this->contactmomentId,
+            'error'           => $this->error,
+            'platform'        => $this->platform,
+        ];
+    }//end toArray()
 }//end class

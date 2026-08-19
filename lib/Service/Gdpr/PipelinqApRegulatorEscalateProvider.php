@@ -53,118 +53,122 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
  */
-class PipelinqApRegulatorEscalateProvider implements RegulatorEscalateProvider {
-	/**
-	 * Stable provider id — the single source of truth for the value the NL
-	 * policy pack's `regulatorEscalateProvider` selector must name.
-	 *
-	 * @var string
-	 */
-	public const PROVIDER_ID = 'pipelinq-ap-complaint';
+class PipelinqApRegulatorEscalateProvider implements RegulatorEscalateProvider
+{
+    /**
+     * Stable provider id — the single source of truth for the value the NL
+     * policy pack's `regulatorEscalateProvider` selector must name.
+     *
+     * @var string
+     */
+    public const PROVIDER_ID = 'pipelinq-ap-complaint';
 
-	/**
-	 * The official Autoriteit Persoonsgegevens complaint (klacht) route.
-	 *
-	 * @var string
-	 */
-	public const AP_COMPLAINT_URL = 'https://autoriteitpersoonsgegevens.nl/nl/zelf-doen/gebruik-uw-privacyrechten/klacht-melden-bij-de-ap';
+    /**
+     * The official Autoriteit Persoonsgegevens complaint (klacht) route.
+     *
+     * @var string
+     */
+    public const AP_COMPLAINT_URL = 'https://autoriteitpersoonsgegevens.nl/nl/zelf-doen/gebruik-uw-privacyrechten/klacht-melden-bij-de-ap';
 
-	/**
-	 * Case payload keys probed for a human case reference, in order.
-	 *
-	 * @var array<int, string>
-	 */
-	private const REFERENCE_KEYS = [
-		'kenmerk',
-		'reference',
-		'caseNumber',
-		'dossierNummer',
-	];
+    /**
+     * Case payload keys probed for a human case reference, in order.
+     *
+     * @var array<int, string>
+     */
+    private const REFERENCE_KEYS = [
+        'kenmerk',
+        'reference',
+        'caseNumber',
+        'dossierNummer',
+    ];
 
-	/**
-	 * Constructor.
-	 *
-	 * @param LoggerInterface $logger The logger.
-	 */
-	public function __construct(
-		private readonly LoggerInterface $logger,
-	) {
-	}//end __construct()
+    /**
+     * Constructor.
+     *
+     * @param LoggerInterface $logger The logger.
+     */
+    public function __construct(
+        private readonly LoggerInterface $logger,
+    ) {
+    }//end __construct()
 
-	/**
-	 * The stable provider id addressed by the NL pack selector.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
-	 */
-	public function getProviderId(): string {
-		return self::PROVIDER_ID;
-	}//end getProviderId()
+    /**
+     * The stable provider id addressed by the NL pack selector.
+     *
+     * @return string
+     *
+     * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
+     */
+    public function getProviderId(): string
+    {
+        return self::PROVIDER_ID;
+    }//end getProviderId()
 
-	/**
-	 * Escalate a DSAR case to the Autoriteit Persoonsgegevens (AP).
-	 *
-	 * Builds a jurisdiction-stable AP-complaint reference from the case kenmerk
-	 * (falling back to the case uuid) and returns it with the official AP klacht
-	 * route. Fail-closed: with no usable identifier the outcome is `refused`.
-	 *
-	 * @param string $caseUuid The DSAR case object uuid.
-	 * @param array<string, mixed> $case The case's serialised payload.
-	 *
-	 * @return RegulatorEscalateResult The escalation outcome (reference + status).
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) OR's RegulatorEscalateResult is a value
-	 *  object constructed only through its named static factories.
-	 *
-	 * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
-	 */
-	public function escalate(string $caseUuid, array $case): RegulatorEscalateResult {
-		$kenmerk = $this->extractReference(case: $case);
-		if ($kenmerk === null) {
-			$kenmerk = trim($caseUuid);
-		}
+    /**
+     * Escalate a DSAR case to the Autoriteit Persoonsgegevens (AP).
+     *
+     * Builds a jurisdiction-stable AP-complaint reference from the case kenmerk
+     * (falling back to the case uuid) and returns it with the official AP klacht
+     * route. Fail-closed: with no usable identifier the outcome is `refused`.
+     *
+     * @param string               $caseUuid The DSAR case object uuid.
+     * @param array<string, mixed> $case     The case's serialised payload.
+     *
+     * @return RegulatorEscalateResult The escalation outcome (reference + status).
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess) OR's RegulatorEscalateResult is a value
+     *  object constructed only through its named static factories.
+     *
+     * @spec openspec/changes/avg-consume-or-workflow/specs/avg-or-seam-bindings/spec.md
+     */
+    public function escalate(string $caseUuid, array $case): RegulatorEscalateResult
+    {
+        $kenmerk = $this->extractReference(case: $case);
+        if ($kenmerk === null) {
+            $kenmerk = trim($caseUuid);
+        }
 
-		if ($kenmerk === '') {
-			return RegulatorEscalateResult::refused(
-				providerId: self::PROVIDER_ID,
-				message: 'Case carries no kenmerk or uuid; AP-complaint escalation not performed (fail-closed).'
-			);
-		}
+        if ($kenmerk === '') {
+            return RegulatorEscalateResult::refused(
+                providerId: self::PROVIDER_ID,
+                message: 'Case carries no kenmerk or uuid; AP-complaint escalation not performed (fail-closed).'
+            );
+        }
 
-		$reference = 'AP-KLACHT/' . $kenmerk;
-		$this->logger->info(
-			'Pipelinq regulator escalate: AP-complaint reference issued',
-			['case' => $caseUuid, 'reference' => $reference]
-		);
+        $reference = 'AP-KLACHT/'.$kenmerk;
+        $this->logger->info(
+            'Pipelinq regulator escalate: AP-complaint reference issued',
+            ['case' => $caseUuid, 'reference' => $reference]
+        );
 
-		return RegulatorEscalateResult::escalated(
-			providerId: self::PROVIDER_ID,
-			reference: $reference,
-			message: 'AP-complaint dossier prepared. Klacht melden bij de AP via ' . self::AP_COMPLAINT_URL
-		);
-	}//end escalate()
+        return RegulatorEscalateResult::escalated(
+            providerId: self::PROVIDER_ID,
+            reference: $reference,
+            message: 'AP-complaint dossier prepared. Klacht melden bij de AP via '.self::AP_COMPLAINT_URL
+        );
+    }//end escalate()
 
-	/**
-	 * Extract a human case reference from the case payload.
-	 *
-	 * @param array<string, mixed> $case The case's serialised payload.
-	 *
-	 * @return string|null The reference, or null when none is present.
-	 */
-	private function extractReference(array $case): ?string {
-		foreach (self::REFERENCE_KEYS as $key) {
-			$value = ($case[$key] ?? null);
-			if (is_string($value) === false && is_int($value) === false) {
-				continue;
-			}
+    /**
+     * Extract a human case reference from the case payload.
+     *
+     * @param array<string, mixed> $case The case's serialised payload.
+     *
+     * @return string|null The reference, or null when none is present.
+     */
+    private function extractReference(array $case): ?string
+    {
+        foreach (self::REFERENCE_KEYS as $key) {
+            $value = ($case[$key] ?? null);
+            if (is_string($value) === false && is_int($value) === false) {
+                continue;
+            }
 
-			$candidate = trim((string)$value);
-			if ($candidate !== '') {
-				return $candidate;
-			}
-		}
+            $candidate = trim((string) $value);
+            if ($candidate !== '') {
+                return $candidate;
+            }
+        }
 
-		return null;
-	}//end extractReference()
+        return null;
+    }//end extractReference()
 }//end class

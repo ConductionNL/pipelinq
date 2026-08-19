@@ -13,13 +13,13 @@
  * Validate a BSN against the 11-proef.
  *
  * @param {string} bsnInput Raw 9-digit BSN.
- * @return {{isFormalValid: boolean, errorCode: ?string, errorMessage: ?string, maskedBsn: string}}
+ * @return {{isFormeelGeldig: boolean, errorCode: ?string, errorMessage: ?string, maskedBsn: string}}
  */
 export function validateBsn(bsnInput) {
 	const input = String(bsnInput || '')
 	if (input.length !== 9 || !/^\d{9}$/.test(input)) {
 		return {
-			isFormalValid: false,
+			isFormeelGeldig: false,
 			errorCode: 'length',
 			errorMessage: 'Een BSN bestaat uit exact 9 cijfers',
 			maskedBsn: maskBsn(input),
@@ -33,14 +33,14 @@ export function validateBsn(bsnInput) {
 	const modulo = sum % 11
 	if (modulo !== 0) {
 		return {
-			isFormalValid: false,
+			isFormeelGeldig: false,
 			errorCode: 'checksum',
 			errorMessage: 'Dit BSN voldoet niet aan de 11-proef',
 			maskedBsn: maskBsn(input),
 		}
 	}
 	return {
-		isFormalValid: true,
+		isFormeelGeldig: true,
 		errorCode: null,
 		errorMessage: null,
 		maskedBsn: maskBsn(input),

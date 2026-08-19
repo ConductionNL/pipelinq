@@ -6,29 +6,24 @@
 	<div>
 		<CnIndexPage
 			:title="t('pipelinq', 'Cash drawer')"
-			:description="
-				t(
-					'pipelinq',
-					'Manage cash shifts: opening float, drops, blind counting and reconciliation',
-				)
-			"
+			:description="t('pipelinq', 'Manage cash shifts: opening float, drops, blind counting and reconciliation')"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
 			:refreshing="refreshing"
-			:sortKey="sortKey"
-			:sortOrder="sortOrder"
+			:sort-key="sortKey"
+			:sort-order="sortOrder"
 			:selectable="true"
-			:includeColumns="visibleColumns"
-			:emptyTitle="t('pipelinq', 'No shifts found')"
-			:emptyActionLabel="t('pipelinq', 'Open shift')"
+			:include-columns="visibleColumns"
+			:empty-title="t('pipelinq', 'No shifts found')"
+			:empty-action-label="t('pipelinq', 'Open shift')"
 			@add="openShift"
-			@emptyAction="openShift"
+			@empty-action="openShift"
 			@refresh="onRefresh"
 			@sort="onSort"
 			@view="openDetail"
-			@pageChanged="onPageChange" />
+			@page-changed="onPageChange" />
 
 		<CashShiftOpenDialog
 			v-if="showOpen"
@@ -39,12 +34,12 @@
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { inject } from 'vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { inject } from 'vue'
-import CashShiftOpenDialog from '../../modals/CashShiftOpenDialog.vue'
+import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import CashShiftOpenDialog from '../../modals/CashShiftOpenDialog.vue'
 
 export default {
 	name: 'CashShiftList',
@@ -52,13 +47,11 @@ export default {
 		CnIndexPage,
 		CashShiftOpenDialog,
 	},
-
 	setup() {
 		const sidebarState = inject('sidebarState', null)
 		const objectStore = useObjectStore()
 		return useListView('cashShift', { sidebarState, objectStore })
 	},
-
 	data() {
 		return {
 			showOpen: false,
@@ -66,7 +59,6 @@ export default {
 			refreshing: false,
 		}
 	},
-
 	computed: {
 		/**
 		 * Columns shown on the list, in order.
@@ -74,18 +66,9 @@ export default {
 		 * @return {Array<string>} The column keys.
 		 */
 		visibleColumns() {
-			return [
-				'reference',
-				'drawer',
-				'operator',
-				'floatAmount',
-				'status',
-				'floatAt',
-				'closedAt',
-			]
+			return ['reference', 'drawer', 'operator', 'floatAmount', 'status', 'floatAt', 'closedAt']
 		},
 	},
-
 	methods: {
 		/**
 		 * Refresh handler for the Actions-menu Refresh item. Drives the
@@ -101,7 +84,6 @@ export default {
 				this.refreshing = false
 			}
 		},
-
 		/**
 		 * Navigate to a shift's detail.
 		 *
@@ -110,14 +92,12 @@ export default {
 		openDetail(row) {
 			this.$router.push({ name: 'CashShiftDetail', params: { id: row.id } })
 		},
-
 		/**
 		 * Open the float-declaration dialog to start a new shift.
 		 */
 		openShift() {
 			this.showOpen = true
 		},
-
 		/**
 		 * Create a new shift via the server-authoritative open endpoint.
 		 *

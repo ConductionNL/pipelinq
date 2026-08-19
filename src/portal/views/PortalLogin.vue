@@ -7,40 +7,32 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 		<h1>{{ t('pipelinq', 'Sign in to the portal') }}</h1>
 		<form @submit.prevent="onSubmit">
 			<div class="portal-field">
-				<label for="portal-email">{{
-					t('pipelinq', 'Email address')
-				}}</label>
-				<input
-					id="portal-email"
+				<label for="portal-email">{{ t('pipelinq', 'Email address') }}</label>
+				<input id="portal-email"
 					v-model="email"
 					type="email"
 					autocomplete="email"
 					required
-					:aria-describedby="error ? 'portal-login-error' : null" />
+					:aria-describedby="error ? 'portal-login-error' : null">
 			</div>
 			<div class="portal-field">
 				<label for="portal-password">{{ t('pipelinq', 'Password') }}</label>
-				<input
-					id="portal-password"
+				<input id="portal-password"
 					v-model="password"
 					type="password"
 					autocomplete="current-password"
-					required />
+					required>
 			</div>
 			<div v-if="mfaRequired" class="portal-field">
-				<label for="portal-totp">{{
-					t('pipelinq', 'Verification code')
-				}}</label>
-				<input
-					id="portal-totp"
+				<label for="portal-totp">{{ t('pipelinq', 'Verification code') }}</label>
+				<input id="portal-totp"
 					v-model="totpCode"
 					type="text"
 					inputmode="numeric"
 					autocomplete="one-time-code"
-					maxlength="6" />
+					maxlength="6">
 			</div>
-			<p
-				v-if="error"
+			<p v-if="error"
 				id="portal-login-error"
 				role="alert"
 				class="portal-error">
@@ -51,9 +43,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			</button>
 		</form>
 		<p>
-			<a href="#/password-reset">{{
-				t('pipelinq', 'Forgotten your password?')
-			}}</a>
+			<a href="#/password-reset">{{ t('pipelinq', 'Forgotten your password?') }}</a>
 		</p>
 	</div>
 </template>
@@ -73,17 +63,12 @@ export default {
 			loading: false,
 		}
 	},
-
 	methods: {
 		async onSubmit() {
 			this.error = ''
 			this.loading = true
 			try {
-				const result = await portalApi.login(
-					this.email,
-					this.password,
-					this.totpCode || null,
-				)
+				const result = await portalApi.login(this.email, this.password, this.totpCode || null)
 				if (result.status === 'authenticated' && result.token) {
 					setToken(result.token, result.expiresAt)
 					this.$router.push('/dashboard')
@@ -91,17 +76,12 @@ export default {
 				}
 				if (result.mfaRequired) {
 					this.mfaRequired = true
-					this.error =
-						result.status === 'mfa-enrollment-required'
-							? t(
-									'pipelinq',
-									'Two-factor authentication setup is required.',
-								)
-							: t('pipelinq', 'Enter your verification code.')
+					this.error = result.status === 'mfa-enrollment-required'
+						? t('pipelinq', 'Two-factor authentication setup is required.')
+						: t('pipelinq', 'Enter your verification code.')
 				}
 			} catch (e) {
-				this.error =
-					e.message || t('pipelinq', 'Email or password is incorrect.')
+				this.error = e.message || t('pipelinq', 'Email or password is incorrect.')
 			} finally {
 				this.loading = false
 			}

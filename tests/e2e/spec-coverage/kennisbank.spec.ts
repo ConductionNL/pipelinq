@@ -35,19 +35,13 @@
  */
 import { test, expect, APIResponse } from '@playwright/test'
 
-import {
-	openApp,
-	dismissWalkthrough,
-	dismissSupportDialog,
-	assertNoHardError,
-} from '../helpers/pipelinq'
+import { openApp, dismissWalkthrough, dismissSupportDialog, assertNoHardError } from '../helpers/pipelinq'
 
 /** The xWiki proxy endpoints the knowledge-base surface is built on. */
 const XWIKI_STATUS = '/apps/pipelinq/api/xwiki/status'
 const XWIKI_SEARCH = '/apps/pipelinq/api/xwiki/search'
 const XWIKI_PAGES = '/apps/pipelinq/api/xwiki/pages'
-const XWIKI_PAGE =
-	'/apps/pipelinq/api/xwiki/page/xwiki/Kennisbank.NoSuchPage.WebHome'
+const XWIKI_PAGE = '/apps/pipelinq/api/xwiki/page/xwiki/Kennisbank.NoSuchPage.WebHome'
 
 /**
  * Assert an xWiki proxy response is a real JSON answer from the controller and
@@ -59,10 +53,7 @@ const XWIKI_PAGE =
  * asserting `application/json`, a mistyped or removed endpoint would sail
  * through every assertion below as "the page loaded".
  */
-async function readJson(
-	response: APIResponse,
-	label: string,
-): Promise<Record<string, unknown>> {
+async function readJson(response: APIResponse, label: string): Promise<Record<string, unknown>> {
 	expect(response.status(), `${label} must answer 200`).toBe(200)
 	expect(
 		response.headers()['content-type'] ?? '',
@@ -73,18 +64,14 @@ async function readJson(
 
 /** Assert the standard `{results, total, limit, offset}` proxy envelope. */
 function expectSearchEnvelope(body: Record<string, unknown>, label: string): void {
-	expect(Array.isArray(body.results), `${label}: results must be an array`).toBe(
-		true,
-	)
+	expect(Array.isArray(body.results), `${label}: results must be an array`).toBe(true)
 	expect(typeof body.total, `${label}: total must be a number`).toBe('number')
 	expect(typeof body.limit, `${label}: limit must be a number`).toBe('number')
 	expect(typeof body.offset, `${label}: offset must be a number`).toBe('number')
 }
 
 // @e2e openspec/specs/kennisbank/spec.md#documented-operations-are-available
-test('the knowledge-base surface is reachable: the widget mounts and the proxy answers', async ({
-	page,
-}) => {
+test('the knowledge-base surface is reachable: the widget mounts and the proxy answers', async ({ page }) => {
 	await openApp(page)
 
 	// The knowledge-base widget lives on the Operational overview dashboard
@@ -105,14 +92,8 @@ test('the knowledge-base surface is reachable: the widget mounts and the proxy a
 	 * are correct behaviour — a widget stuck on neither would be the failure.
 	 */
 	await expect(
-		page
-			.getByText('Knowledge base', { exact: false })
-			.first()
-			.or(
-				page
-					.getByText('xWiki integration unavailable', { exact: false })
-					.first(),
-			)
+		page.getByText('Knowledge base', { exact: false }).first()
+			.or(page.getByText('xWiki integration unavailable', { exact: false }).first())
 			.first(),
 	).toBeVisible({ timeout: 20000 })
 
@@ -120,30 +101,19 @@ test('the knowledge-base surface is reachable: the widget mounts and the proxy a
 	// controller (see readJson on why the media type matters).
 	await readJson(await page.request.get(XWIKI_STATUS), 'GET /api/xwiki/status')
 	expectSearchEnvelope(
-		await readJson(
-			await page.request.get(`${XWIKI_SEARCH}?q=paspoort`),
-			'GET /api/xwiki/search',
-		),
+		await readJson(await page.request.get(`${XWIKI_SEARCH}?q=paspoort`), 'GET /api/xwiki/search'),
 		'search',
 	)
-	await readJson(
-		await page.request.get(`${XWIKI_PAGES}?space=Kennisbank`),
-		'GET /api/xwiki/pages',
-	)
+	await readJson(await page.request.get(`${XWIKI_PAGES}?space=Kennisbank`), 'GET /api/xwiki/pages')
 
 	await assertNoHardError(page)
 })
 
 // @e2e openspec/specs/kennisbank/spec.md#results-reflect-live-state
-test('knowledge-base results are derived from live integration state, not canned', async ({
-	page,
-}) => {
+test('knowledge-base results are derived from live integration state, not canned', async ({ page }) => {
 	await openApp(page)
 
-	const status = await readJson(
-		await page.request.get(XWIKI_STATUS),
-		'GET /api/xwiki/status',
-	)
+	const status = await readJson(await page.request.get(XWIKI_STATUS), 'GET /api/xwiki/status')
 
 	// The status envelope is computed per request from the resolved base URL
 	// (XWikiService::getStatus), so its fields are types, not constants.
@@ -161,14 +131,8 @@ test('knowledge-base results are derived from live integration state, not canned
 	 * the live reachability probe instead.
 	 */
 	if (status.baseUrl === '') {
-		expect(
-			status.available,
-			'an unresolved base URL cannot report an available integration',
-		).toBe(false)
-		expect(
-			status.source,
-			'an unresolved base URL must be reported as unconfigured',
-		).toBe('unconfigured')
+		expect(status.available, 'an unresolved base URL cannot report an available integration').toBe(false)
+		expect(status.source, 'an unresolved base URL must be reported as unconfigured').toBe('unconfigured')
 	}
 
 	// The search envelope's counters are computed from the actual result set
@@ -180,66 +144,45 @@ test('knowledge-base results are derived from live integration state, not canned
 	)
 	expectSearchEnvelope(search, 'search')
 	const results = search.results as unknown[]
-	expect(
+	expect(results.length, 'the page of results cannot exceed the requested limit').toBeLessThanOrEqual(
+		search.limit as number,
+	)
+	expect(search.total as number, 'total counts the full match set, so it cannot be below the page').toBeGreaterThanOrEqual(
 		results.length,
-		'the page of results cannot exceed the requested limit',
-	).toBeLessThanOrEqual(search.limit as number)
-	expect(
-		search.total as number,
-		'total counts the full match set, so it cannot be below the page',
-	).toBeGreaterThanOrEqual(results.length)
+	)
 
 	// And the two operations agree with each other about the same live state:
 	// a proxy that reports itself unusable cannot also be handing back articles.
 	if (status.available === false) {
-		expect(
-			results.length,
-			'an unavailable integration must not return articles',
-		).toBe(0)
+		expect(results.length, 'an unavailable integration must not return articles').toBe(0)
 	}
 })
 
 // @e2e openspec/specs/kennisbank/spec.md#missing-input-does-not-crash-the-flow
-test('knowledge-base operations tolerate absent or unresolvable input', async ({
-	page,
-}) => {
+test('knowledge-base operations tolerate absent or unresolvable input', async ({ page }) => {
 	await openApp(page)
 
 	// No query at all — the search operation must still return its envelope.
 	expectSearchEnvelope(
-		await readJson(
-			await page.request.get(XWIKI_SEARCH),
-			'GET /api/xwiki/search (no params)',
-		),
+		await readJson(await page.request.get(XWIKI_SEARCH), 'GET /api/xwiki/search (no params)'),
 		'search without params',
 	)
 
 	// No space — `getPages('')` returns the empty envelope rather than building
 	// a malformed upstream URL.
 	expectSearchEnvelope(
-		await readJson(
-			await page.request.get(XWIKI_PAGES),
-			'GET /api/xwiki/pages (no space)',
-		),
+		await readJson(await page.request.get(XWIKI_PAGES), 'GET /api/xwiki/pages (no space)'),
 		'pages without a space',
 	)
 
 	// An unresolvable page reference — the operation must answer the documented
 	// six-field shape, not throw. Both the unconfigured short-circuit and the
 	// controller's Throwable handler produce it (the latter adds `error`).
-	const pageBody = await readJson(
-		await page.request.get(XWIKI_PAGE),
-		'GET /api/xwiki/page/{wiki}/{page}',
-	)
+	const pageBody = await readJson(await page.request.get(XWIKI_PAGE), 'GET /api/xwiki/page/{wiki}/{page}')
 	for (const key of ['title', 'content', 'url', 'modified', 'space', 'id']) {
-		expect(
-			pageBody,
-			`an unresolvable page must still carry "${key}"`,
-		).toHaveProperty(key)
+		expect(pageBody, `an unresolvable page must still carry "${key}"`).toHaveProperty(key)
 	}
-	expect(typeof pageBody.content, 'content must be a string, never null').toBe(
-		'string',
-	)
+	expect(typeof pageBody.content, 'content must be a string, never null').toBe('string')
 
 	// The surrounding flow survives it: the dashboard that hosts the widget
 	// still renders, with no server error or uncaught render failure.
