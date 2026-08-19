@@ -87,6 +87,7 @@ class PointsExpiryBatchJob extends TimedJob {
 	 * @return void
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-005
 	 */
 	protected function run($argument): void {
 		$programmes = $this->getActiveProgrammes();

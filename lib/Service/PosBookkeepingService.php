@@ -134,6 +134,8 @@ class PosBookkeepingService {
 	 * @param IMailer $mailer The mailer (alert dispatch).
 	 * @param PosAccessPolicy $policy The shared POS access policy.
 	 * @param LoggerInterface $logger The logger.
+	 * @param WebhookService $webhookService Dispatches POS webhooks.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

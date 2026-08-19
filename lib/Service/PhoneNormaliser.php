@@ -93,6 +93,7 @@ class PhoneNormaliser {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $orgId is a reserved parameter
 	 *  of the public contract (see method summary) for future per-org normalisation
 	 *  overrides; CtiService already passes it.
+	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.2
 	 */
 	public function normaliseForOrg(string $rawNumber, ?string $orgId = null): array {
 		$raw = trim($rawNumber);

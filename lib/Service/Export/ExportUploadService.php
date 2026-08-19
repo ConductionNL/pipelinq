@@ -24,7 +24,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+ * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use RuntimeException;
 /**
  * Destination upload with path resolution, retries and manifest building.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+ * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
  */
 class ExportUploadService extends AbstractExportService {
 	/**
@@ -50,6 +50,32 @@ class ExportUploadService extends AbstractExportService {
 	 * @var array<int, int>
 	 */
 	public const BACKOFF_SECONDS = [1, 2, 4, 8, 16];
+
+	/**
+	 * OpenConnector's own OpenRegister register slug. Source objects
+	 * (formerly served by the now-removed `SourceService`) live here, not
+	 * in pipelinq's own `register` app-config register.
+	 *
+	 * @var string
+	 */
+	private const OPENCONNECTOR_REGISTER_SLUG = 'openconnector';
+
+	/**
+	 * OpenConnector's Source schema slug within {@see OPENCONNECTOR_REGISTER_SLUG}.
+	 *
+	 * @var string
+	 */
+	private const OPENCONNECTOR_SOURCE_SCHEMA_SLUG = 'source';
+
+	/**
+	 * Legacy write-only credential fields still present on some Source
+	 * objects (`configuration.authentication.credentialRef`-based sources
+	 * resolve their secret through OpenConnector's own credential broker at
+	 * call time and are not extractable here — ADR-005).
+	 *
+	 * @var array<int, string>
+	 */
+	private const OPENCONNECTOR_LEGACY_SECRET_FIELDS = ['apikey', 'secret', 'password', 'jwt'];
 
 	/**
 	 * Constructor.
@@ -92,6 +118,8 @@ class ExportUploadService extends AbstractExportService {
 	 * @return void
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — a single on/off test seam.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
 	 */
 	public function setSleepBetweenRetries(bool $sleep): void {
 		$this->sleepBetweenRetries = $sleep;
@@ -107,7 +135,7 @@ class ExportUploadService extends AbstractExportService {
 	 * @return array<string, mixed> UploadResult: status (all_succeeded|partial|all_failed),
 	 *                              manifest, byte_count, file_count, destination_ack, error_message.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
 	 */
 	public function uploadFiles(array $destination, array $files, array $context = []): array {
 		$type = (string)($destination['type'] ?? '');
@@ -180,7 +208,7 @@ class ExportUploadService extends AbstractExportService {
 	 *
 	 * @throws \RuntimeException When all attempts fail.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-02
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
 	 */
 	private function uploadWithRetry(
 		object $sink,
@@ -223,7 +251,7 @@ class ExportUploadService extends AbstractExportService {
 	 *
 	 * @return string The resolved remote path.
 	 *
-	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-01
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
 	 */
 	public function resolvePath(array $destination, array $file, array $context): string {
 		$schema = (string)($file['schema'] ?? 'data');
@@ -255,6 +283,15 @@ class ExportUploadService extends AbstractExportService {
 	/**
 	 * Resolve credentials for the destination's OpenConnector source.
 	 *
+	 * `OCA\OpenConnector\Service\SourceService` — the class this used to
+	 * resolve credentials through — no longer exists; Source objects moved
+	 * onto OpenRegister's generic object API (register `openconnector`,
+	 * schema `source`). A RENDERED read strips every write-only secret field
+	 * unconditionally (admins included); only `_render: false` survives that
+	 * boundary — the same raw re-read OpenConnector's own CallService /
+	 * RawSourceResolver use internally (ocon#242). `_rbac`/`_multitenancy`
+	 * stay true, so this is access-neutral, not a widened read.
+	 *
 	 * Never returns the credentials to a client — they are consumed only inside
 	 * the sink adapter. When OC is unavailable an empty map is returned and the
 	 * upload fails closed.
@@ -262,6 +299,8 @@ class ExportUploadService extends AbstractExportService {
 	 * @param array<string, mixed> $destination The destination configuration.
 	 *
 	 * @return array<string, mixed> The resolved credentials (empty when unavailable).
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
 	 */
 	private function resolveCredentials(array $destination): array {
 		$sourceId = (string)($destination['connectorSourceId'] ?? '');
@@ -270,34 +309,55 @@ class ExportUploadService extends AbstractExportService {
 		}
 
 		try {
-			$sourceService = $this->container->get('OCA\OpenConnector\Service\SourceService');
-		} catch (\Throwable $e) {
-			return [];
-		}
-
-		try {
-			if (method_exists($sourceService, 'getCredentials') === true) {
-				$credentials = $sourceService->getCredentials($sourceId);
-				if (is_array($credentials) === true) {
-					return $credentials;
-				}
-
-				return [];
-			}
-
-			if (method_exists($sourceService, 'find') === true) {
-				$source = $sourceService->find($sourceId);
-				return $this->toArray(object: $source);
-			}
+			$source = $this->getObjectService()->find(
+				id: $sourceId,
+				register: self::OPENCONNECTOR_REGISTER_SLUG,
+				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
+				_rbac: true,
+				_multitenancy: true,
+				_render: false,
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq: failed to resolve export credentials',
 				['sourceId' => $sourceId, 'error' => $e->getMessage()]
 			);
-		}//end try
+			return [];
+		}
 
-		return [];
+		if ($source === null) {
+			return [];
+		}
+
+		return $this->extractSourceCredentials(source: $this->toArray(object: $source));
 	}//end resolveCredentials()
+
+	/**
+	 * Extract the legacy write-only credential fields (and any non-secret
+	 * broker authentication config) from a raw OpenConnector Source.
+	 *
+	 * @param array<string, mixed> $source The raw (unrendered) Source object.
+	 *
+	 * @return array<string, mixed> The extracted credentials.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
+	 */
+	private function extractSourceCredentials(array $source): array {
+		$credentials = [];
+		foreach (self::OPENCONNECTOR_LEGACY_SECRET_FIELDS as $field) {
+			$value = $source[$field] ?? null;
+			if (is_string($value) === true && $value !== '') {
+				$credentials[$field] = $value;
+			}
+		}
+
+		$authentication = $source['configuration']['authentication'] ?? null;
+		if (is_array($authentication) === true && $authentication !== []) {
+			$credentials['authentication'] = $authentication;
+		}
+
+		return $credentials;
+	}//end extractSourceCredentials()
 
 	/**
 	 * Build the UploadResult envelope from per-file outcomes.

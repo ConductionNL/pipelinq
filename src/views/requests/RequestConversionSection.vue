@@ -94,6 +94,9 @@ export default {
 
 	computed: {
 		/** The resolved request id — prop wins, else the injected section context. */
+		/**
+		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+		 */
 		resolvedId() {
 			if (this.requestId) {
 				return this.requestId
@@ -104,6 +107,9 @@ export default {
 			return (bag && bag.objectId) || ''
 		},
 
+		/**
+		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+		 */
 		caseReference() {
 			return this.availability.caseReference || ''
 		},
@@ -127,6 +133,9 @@ export default {
 	watch: {
 		resolvedId: {
 			immediate: true,
+			/**
+			 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
+			 */
 			handler() {
 				this.loadAvailability()
 			},
@@ -165,6 +174,7 @@ export default {
 
 		/**
 		 * Convert the request into a case via the semantic handoff endpoint.
+		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 		 */
 		async convertToCase() {
 			if (!this.resolvedId || this.busy) {
@@ -218,6 +228,7 @@ export default {
 
 		/**
 		 * Copy the case reference UUID to the clipboard.
+		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 		 */
 		async copyReference() {
 			try {

@@ -160,6 +160,9 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/pos-split-tender/tasks.md#7.2
+		 */
 		canEdit() {
 			return (
 				this.transactionStatus !== 'settled'

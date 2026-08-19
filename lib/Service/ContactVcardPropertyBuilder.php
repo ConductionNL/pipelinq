@@ -35,6 +35,7 @@ class ContactVcardPropertyBuilder {
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

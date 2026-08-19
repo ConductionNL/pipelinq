@@ -87,6 +87,7 @@ class BrpMutationWebhookListener {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::mask() is a
 	 *  pure static log-masking helper with no instance state.
+	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#2.6
 	 */
 	public function handle(string $rawBody, string $signature): array {
 		$secret = $this->appConfig->getValueString(

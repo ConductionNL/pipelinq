@@ -73,6 +73,7 @@ class ForecastService {
 	 * @param QuotaService $quotaService The quota service.
 	 * @param ForecastRollupService $rollup The pure roll-up math service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

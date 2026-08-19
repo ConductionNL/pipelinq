@@ -283,6 +283,7 @@ class LogiusConnector {
 	 * @return void
 	 *
 	 * @throws RuntimeException On any validation failure (with reason).
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-bbk-010
 	 */
 	public function validateOutboundPayload(array $message): void {
 		$subject = (string)($message['subject'] ?? '');
@@ -451,6 +452,7 @@ class LogiusConnector {
 	 *                        may consume the stream when parsing).
 	 *
 	 * @return bool True iff the signature is valid.
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-bbk-010
 	 */
 	public function handleWebhookSignature(IRequest $request, string $rawBody): bool {
 		$secret = $this->appConfig->getValueString(
