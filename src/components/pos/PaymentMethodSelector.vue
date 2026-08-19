@@ -84,10 +84,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 */
 		selection() {
 			return this.modelValue || null
 		},
 
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 */
 		combinedOptions() {
 			const opts = STATIC_OPTIONS.filter(
 				(o) => o.value !== 'account' || this.clientSelected,
@@ -179,6 +185,9 @@ export default {
 			return idx === -1 ? combined : combined.slice(idx + 1)
 		},
 
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 */
 		onSelect(value) {
 			const combined = value && typeof value === 'object' ? value.value : value
 			const providerName = this.providerOf(combined)

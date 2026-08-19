@@ -55,7 +55,7 @@ class ActivityTimelineController extends Controller {
 	 * @param IUserSession $userSession The user session.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ContainerInterface $container The DI container.
-	 * @param ObjectOwnerAccessPolicy $policy The owner-based access policy.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -87,7 +87,7 @@ class ActivityTimelineController extends Controller {
 	 * denies, and the warning still records the outage.
 	 *
 	 * @param string $entityId The OR object UUID.
-	 * @param string $userId The uid of the caller whose access is being checked.
+	 * @param string $userId The uid the access check is made for.
 	 *
 	 * @return bool Whether the object could be verified.
 	 */
@@ -139,14 +139,19 @@ class ActivityTimelineController extends Controller {
 				$payload = $object->jsonSerialize();
 			}
 
-			$objectArray = [];
+			// A NEW name rather than reusing `$object`: that variable still holds
+			// the service's return value a few lines up, and re-binding it inside
+			// an IDOR guard makes the reader re-derive which shape is in scope.
+			// Written as plain assignments rather than a ternary because phpcs
+			// forbids the inline IF and phpmd forbids the else.
+			$attributes = [];
 			if (is_array($payload) === true) {
-				$objectArray = $payload;
+				$attributes = $payload;
 			}
 
 			return $this->policy->mayAccess(
 				uid: $userId,
-				object: $objectArray,
+				object: $attributes,
 				ownerField: 'ownerId'
 			);
 		} catch (\Throwable $e) {

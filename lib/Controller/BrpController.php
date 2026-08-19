@@ -82,7 +82,7 @@ class BrpController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param IUserSession $userSession Current user.
-	 * @param ObjectOwnerAccessPolicy $accessPolicy Owner-or-privileged-group authorization.
+	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
 	 * @param IGroupManager $groupManager Group manager.
 	 * @param IL10N $l10n i18n.
 	 * @param IAppConfig $appConfig App config.
@@ -528,10 +528,9 @@ class BrpController extends Controller {
 	 *
 	 * Public (no NC session) — but HMAC-SHA256-verified inside the listener.
 	 *
-	 * The AnonRateLimit below is a volume ceiling only, for BRP mutation
-	 * notifications: the sender authenticates by its own credential, and
-	 * refusing a citizen-record mutation because of a rate limit would leave
-	 * this app's data silently stale.
+	 * The rate limit is a volume ceiling only: the sender authenticates by its
+	 * own credential, and refusing a citizen-record mutation because of a rate
+	 * limit would leave this app's data silently stale.
 	 *
 	 * @return JSONResponse
 	 *

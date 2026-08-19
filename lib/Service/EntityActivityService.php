@@ -101,7 +101,7 @@ class EntityActivityService {
 	 *                                     supertype — both the contactmoment
 	 *                                     source and the `request` entity are
 	 *                                     tickets after unify-ticket-supertype.
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,

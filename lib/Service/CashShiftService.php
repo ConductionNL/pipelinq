@@ -104,9 +104,9 @@ class CashShiftService {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param PosAccessPolicy $policy The shared POS access policy.
 	 * @param LoggerInterface $logger The logger.
-	 * @param WebhookService $webhookService OpenRegister webhook service (CloudEvent dispatch).
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
-	 * @param AggregationRunner $aggregationRunner OpenRegister ad-hoc aggregation runner.
+	 * @param WebhookService $webhookService Dispatches POS webhooks.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param AggregationRunner $aggregationRunner Runs the shift aggregations.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

@@ -291,6 +291,9 @@ class PosPaymentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
+	 * The rate-limit ceiling is loose because this is a POS payment provider
+	 * callback.
+	 *
 	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	#[PublicPage]

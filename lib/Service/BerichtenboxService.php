@@ -95,7 +95,7 @@ class BerichtenboxService {
 	 * @param DutchHolidayCalendar $holidayCalendar Working-day helper.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
 	 * @param LoggerInterface $logger NC logger.
-	 * @param ObjectServiceInterface $objectService OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 *
 	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
 	 *
@@ -371,6 +371,7 @@ class BerichtenboxService {
 	 * @return array The created BerichtenboxReply payload.
 	 *
 	 * @throws RuntimeException If the parent cannot be found.
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
 	 */
 	public function handleInboundReply(
 		string $parentMessageId,
@@ -445,6 +446,7 @@ class BerichtenboxService {
 	 * @param string $tenantId Tenant id.
 	 *
 	 * @return int Number of rows shredded across all schemas.
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-outbound-001
 	 */
 	public function cryptoShred(string $bsn, string $tenantId): int {
 		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);

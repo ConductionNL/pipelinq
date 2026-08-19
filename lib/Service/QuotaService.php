@@ -77,7 +77,7 @@ class QuotaService {
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ObjectServiceInterface $objectService OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

@@ -48,7 +48,7 @@ class BerichtenboxAdminController extends Controller {
 	 *
 	 * @param IRequest $request Request.
 	 * @param IAppConfig $appConfig App config.
-	 * @param ObjectServiceInterface $objectService OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		IRequest $request,

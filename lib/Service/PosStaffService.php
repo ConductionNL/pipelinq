@@ -83,7 +83,7 @@ class PosStaffService {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param PosRoleService $posRoleService The POS role service (for permission lookup).
 	 * @param LoggerInterface $logger The logger.
-	 * @param ObjectServiceInterface $objectService OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

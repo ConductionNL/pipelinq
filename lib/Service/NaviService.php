@@ -94,7 +94,7 @@ class NaviService {
 	 * @param LoggerInterface $logger Logger.
 	 * @param TicketService $ticketService Resolver for the unified ticket schema.
 	 * @param NaviConversationStore $conversationStore User-scoped store of conversation turns.
-	 * @param ObjectServiceInterface $objectService OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

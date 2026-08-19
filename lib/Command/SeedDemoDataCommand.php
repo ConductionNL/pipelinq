@@ -64,6 +64,7 @@ class SeedDemoDataCommand extends Command {
 	 * Define command name, description and the --remove option.
 	 *
 	 * @return void
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	protected function configure(): void {
 		$this->setName(name: 'pipelinq:demo:seed')

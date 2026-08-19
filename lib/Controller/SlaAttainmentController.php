@@ -54,7 +54,7 @@ class SlaAttainmentController extends Controller {
 	 * @param IRequest $request HTTP request.
 	 * @param SlaAttainmentService $attainment Attainment service.
 	 * @param IUserSession $userSession Active session.
-	 * @param ObjectOwnerAccessPolicy $accessPolicy Owner-based access policy.
+	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(

@@ -78,9 +78,9 @@ class ZgwNotificationController extends Controller {
 	/**
 	 * POST /api/zgw/notificaties/inbox — NRC callback ingest.
 	 *
-	 * The AnonRateLimit below sizes the ZGW notification receiver (Notificaties
-	 * API). The publisher fans out to every subscriber and retries on failure,
-	 * so bursts are the norm.
+	 * ZGW notification receiver (Notificaties API). The publisher fans out to
+	 * every subscriber and retries on failure, so bursts are the norm and the
+	 * rate-limit ceiling is generous.
 	 *
 	 * @return JSONResponse 202 on success, 401 on bad bearer, 400 on bad body.
 	 */

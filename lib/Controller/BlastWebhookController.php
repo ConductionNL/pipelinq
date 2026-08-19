@@ -102,10 +102,9 @@ class BlastWebhookController extends Controller {
 	 * docs; we fall back to a configured static-secret HMAC for tests
 	 * and on-prem operators using a reverse proxy.
 	 *
-	 * The AnonRateLimit below sizes email/SMS event webhooks. These BATCH —
-	 * SendGrid in particular posts many events per request and bursts hard
-	 * after a send — so the ceiling is deliberately loose. Too tight and a
-	 * campaign's delivery events are lost.
+	 * The rate-limit ceiling is deliberately loose: these event webhooks BATCH —
+	 * SendGrid in particular posts many events per request and bursts hard after
+	 * a send. Too tight and a campaign's delivery events are lost.
 	 *
 	 * @return JSONResponse Acknowledgement (`accepted` count).
 	 *

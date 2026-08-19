@@ -83,6 +83,9 @@ class MessagingWebhookController extends Controller {
 	 *
 	 * @return JSONResponse Outcome.
 	 *
+	 * Inbound message + delivery-status webhooks. The rate-limit ceiling is
+	 * generous because a conversation burst is normal traffic here, not abuse.
+	 *
 	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#6.1
 	 */
 	#[PublicPage]

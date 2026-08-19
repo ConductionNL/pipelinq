@@ -158,6 +158,9 @@ export default {
 			return validateBsn(this.rawBsn)
 		},
 
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
+		 */
 		bsnFeedback() {
 			if (!this.rawBsn) return ''
 
@@ -176,6 +179,9 @@ export default {
 			return this.t('pipelinq', 'BSN passes the 11-check')
 		},
 
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
+		 */
 		canLookup() {
 			return this.validation.isFormallyValid && this.lookupState !== 'loading'
 		},
@@ -190,6 +196,9 @@ export default {
 			return parts.join(' ')
 		},
 
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
+		 */
 		address() {
 			if (!this.persoon) return null
 			if (this.persoon.indicationSecret === '1' && !this.revealedAddress)
@@ -206,6 +215,9 @@ export default {
 			this.showModal = true
 		},
 
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
+		 */
 		async onLookup(payload) {
 			this.showModal = false
 			this.lookupState = 'loading'
@@ -241,6 +253,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
+		 */
 		async revealAddress() {
 			try {
 				const url = generateUrl(

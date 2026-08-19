@@ -60,7 +60,7 @@ class BsnAuditService {
 	 * @param IAppConfig $appConfig App config for register/schema resolution.
 	 * @param IRequest $request Request scope for IP / UA enrichment.
 	 * @param LoggerInterface $logger Logger (raw BSN MUST never appear here).
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

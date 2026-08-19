@@ -51,7 +51,7 @@ class LoyaltyReportingController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param LoyaltyReportingService $reportingService The reporting service.
 	 * @param IUserSession $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy $policy Owner-based access policy.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,

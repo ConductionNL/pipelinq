@@ -55,7 +55,7 @@ class BlastController extends Controller {
 	 * @param BlastService $blastService Blast orchestration service.
 	 * @param AttributionService $attributionService Attribution roll-up service (member 04).
 	 * @param IUserSession $userSession Current user session.
-	 * @param ObjectOwnerAccessPolicy $policy Owner-based access policy.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,

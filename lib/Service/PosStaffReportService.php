@@ -53,8 +53,8 @@ class PosStaffReportService {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param PosStaffService $posStaffService The POS staff service (for name lookup).
 	 * @param LoggerInterface $logger The logger.
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
-	 * @param AggregationRunner $aggregationRunner The OpenRegister ad-hoc aggregation runner.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param AggregationRunner $aggregationRunner Runs the staff-report aggregations.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

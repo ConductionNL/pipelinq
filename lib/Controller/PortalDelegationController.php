@@ -81,6 +81,9 @@ class PortalDelegationController extends PortalApiController {
 	 * The AnonRateLimit below is deliberately tight: a delegation grants another
 	 * party access to this account.
 	 *
+	 * The rate limit is deliberately tight: a delegation grants another party
+	 * access to this account.
+	 *
 	 * @return JSONResponse The created delegation.
 	 *
 	 * @NoAdminRequired

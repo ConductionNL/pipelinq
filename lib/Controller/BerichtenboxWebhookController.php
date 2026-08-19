@@ -76,8 +76,8 @@ class BerichtenboxWebhookController extends Controller {
 	 *     "readAt": "ISO 8601 timestamp"
 	 *   }
 	 *
-	 * The AnonRateLimit below sizes Berichtenbox delivery callbacks — same
-	 * posture as every receiver here.
+	 * Berichtenbox delivery callbacks — the rate-limit ceiling takes the same
+	 * posture as every other receiver here.
 	 *
 	 * @return JSONResponse 200 on success; 422 on signature failure;
 	 *                      400 on malformed payload.
@@ -138,6 +138,7 @@ class BerichtenboxWebhookController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the created contactmomentId; 422 on
 	 *                      signature failure; 400 on malformed payload.
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-receipt-005
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

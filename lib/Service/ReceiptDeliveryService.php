@@ -81,7 +81,7 @@ class ReceiptDeliveryService {
 	 * @param PosAccessPolicy $policy The shared POS access policy.
 	 * @param IL10N $l10n The localization service.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ObjectServiceInterface $objectService OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private ReceiptService $receiptService,

@@ -87,6 +87,9 @@ class PortalDocumentController extends PortalApiController {
 	 *
 	 * @return JSONResponse The signed link descriptor.
 	 *
+	 * The rate limit is deliberately tight: signing is a legally meaningful act,
+	 * and the token that authorises it is the only barrier.
+	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage

@@ -383,8 +383,8 @@ class DemoSeedService {
 	 * Resolve the ObjectService, register id, schema ids and seed definitions.
 	 *
 	 * @return array{0: object, 1: string, 2: array<string, string>, 3: array<string, array<int, array<string, mixed>>>}|null
-	 *         Null when the register/schemas are not provisioned or the seed file is
-	 *         unreadable.
+	 *         Null when the register/schemas are not provisioned, or the seed
+	 *         file is unreadable.
 	 */
 	private function resolveContext(): ?array {
 		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

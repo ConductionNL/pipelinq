@@ -55,7 +55,7 @@ class ContactmomentService {
 	 * @param TicketService $ticketService The unified ticket resolver.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private TicketService $ticketService,

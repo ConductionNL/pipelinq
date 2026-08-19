@@ -64,7 +64,7 @@ class CtiController extends Controller {
 	 * @param IRequest $request The HTTP request.
 	 * @param CtiService $ctiService The CTI service.
 	 * @param IUserSession $userSession The user session.
-	 * @param ObjectOwnerAccessPolicy $policy The owner-based access policy.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
 	 */
@@ -91,6 +91,9 @@ class CtiController extends Controller {
 	 * @param string $platform Platform identifier from the URL.
 	 *
 	 * @return JSONResponse Acknowledgement.
+	 *
+	 * Telephony platform events — one per call state change, so a busy contact
+	 * centre generates these steadily and the rate-limit ceiling is generous.
 	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
 	 */
