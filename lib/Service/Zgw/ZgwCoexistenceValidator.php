@@ -96,6 +96,7 @@ class ZgwCoexistenceValidator {
 	 * throws rather than returning, so wiring it changes behaviour on a live
 	 * ZGW/StUF coexistence path and is a decision, not a refactor. Pending in
 	 * pipelinq#764.
+	 * @spec openspec/changes/archive/2026-06-14-zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-008
 	 */
 	public function validateWritePath(string $municipalityCode): void {
 		if ($municipalityCode === '') {

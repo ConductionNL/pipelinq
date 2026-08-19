@@ -171,6 +171,7 @@ class RedemptionService {
 	 * @param string $code The beloningCode.
 	 *
 	 * @return array{valid: bool, redemption: ?array<string, mixed>, reason: ?string}
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
 	 */
 	public function validateCode(string $code): array {
 		$redemption = $this->findByCode(code: $code);
@@ -201,6 +202,7 @@ class RedemptionService {
 	 * @param ?string $posTransactionId Optional POS transaction id.
 	 *
 	 * @return array<string, mixed> The updated redemption.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-004
 	 */
 	public function markRedemptionUsed(string $redemptionId, ?string $posTransactionId = null): array {
 		$redemption = $this->getRedemption(redemptionId: $redemptionId);
