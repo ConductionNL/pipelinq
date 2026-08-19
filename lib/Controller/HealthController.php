@@ -113,13 +113,15 @@ class HealthController extends Controller {
 	 * disabled — the endpoint still answers (the whole point of a health
 	 * probe): `status: degraded`, `checks.openregister: unavailable`, HTTP 200.
 	 *
+	 * The rate-limit ceiling is generous because this is a liveness probe,
+	 * polled on a schedule by monitoring.
+	 *
 	 * @return JSONResponse `{status, app, version, checks}` with HTTP code per policy.
 	 *
 	 * @spec openspec/changes/adopt-apphost/tasks.md#task-2.3
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Liveness probe — polled on a schedule by monitoring.
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function index(): JSONResponse {
 		$engine = $this->engineResult();

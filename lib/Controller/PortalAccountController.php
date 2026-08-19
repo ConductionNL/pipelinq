@@ -119,13 +119,15 @@ class PortalAccountController extends PortalApiController {
 	/**
 	 * Verify a pending email change with a token.
 	 *
+	 * The rate limit is deliberately tight: a verification token is guessable in
+	 * bulk without a ceiling.
+	 *
 	 * @return JSONResponse The result.
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
-	// Tight: a verification token is guessable in bulk without a ceiling.
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function verifyEmail(): JSONResponse {
 		return $this->guarded(
@@ -144,14 +146,15 @@ class PortalAccountController extends PortalApiController {
 	/**
 	 * Request an AVG data export.
 	 *
+	 * The rate limit is deliberately tight: an export is expensive to produce,
+	 * so this is a cheap request that buys the caller a lot of server work.
+	 *
 	 * @return JSONResponse The export download descriptor.
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
-	// Tight: an export is expensive to produce, so this is a cheap request that
-	// buys the caller a lot of server work.
 	#[AnonRateLimit(limit: 10, period: 60)]
 	public function requestExport(): JSONResponse {
 		return $this->guarded(

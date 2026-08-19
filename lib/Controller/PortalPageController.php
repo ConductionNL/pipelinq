@@ -88,12 +88,13 @@ class PortalPageController extends Controller {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 *
+	 * The rate-limit ceiling is generous, like index(): these two serve the
+	 * portal's own HTML shell, and a tight ceiling here would break an ordinary
+	 * browsing session rather than an attack.
+	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $path is a route-binding
 	 *  placeholder; the SPA shell is identical for every sub-path.
 	 */
-	// Generous, like index(): these two serve the portal's own HTML shell, and a
-	// tight ceiling here would break an ordinary browsing session rather than an
-	// attack.
 	#[AnonRateLimit(limit: 240, period: 60)]
 	public function subpath(string $path = ''): TemplateResponse {
 		return $this->index();

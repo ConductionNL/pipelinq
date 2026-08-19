@@ -88,12 +88,13 @@ class CtiController extends Controller {
 	 *
 	 * @return JSONResponse Acknowledgement.
 	 *
+	 * Telephony platform events — one per call state change, so a busy contact
+	 * centre generates these steadily and the rate-limit ceiling is generous.
+	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Telephony platform events — one per call state change, so a busy contact
-	// centre generates these steadily.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function webhook(string $platform): JSONResponse {
 		$rawBody = (string)file_get_contents('php://input');
