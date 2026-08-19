@@ -66,6 +66,7 @@ class LoyaltyController extends Controller {
 	 * @param RedemptionService $redemptionService The redemption service.
 	 * @param GiftCardService $giftCardService The gift card service.
 	 * @param LoyaltyProgrammeService $programmeService The programme service.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n The localiser.
 	 */
