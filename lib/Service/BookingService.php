@@ -169,6 +169,7 @@ class BookingService {
 	 * @param EligibilityService $eligibilityService Member 03 — skill-eligible resource filter.
 	 * @param LoggerInterface $logger The logger.
 	 * @param IJobList $jobList The background-job list (member 09 rebalance is deferred to it).
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
