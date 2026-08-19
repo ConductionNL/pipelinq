@@ -83,6 +83,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 	 * @param array<string,mixed> $message BBK 1.7 envelope.
 	 *
 	 * @return BerichtenboxResult The dispatch outcome.
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
 	 */
 	public function dispatchMessage(array $message): BerichtenboxResult {
 		$sanitised = $message;
@@ -134,6 +135,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 	 * @param array<string,string> $headers Inbound headers.
 	 *
 	 * @return BerichtenboxResult The verification outcome.
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
 	 */
 	public function verifyDeliveryWebhook(string $rawBody, array $headers): BerichtenboxResult {
 		$signature = $headers['X-Logius-Signature'] ?? ($headers['x-logius-signature'] ?? '');
@@ -177,6 +179,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 	 * @orphan-auth exclude belongs to the log-only Berichtenbox adapter, the stand-in used until a real
 	 * mailbox integration lands; the method is the shape that integration will
 	 * call. Pending in pipelinq#764.
+	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md
 	 */
 	public function checkMailbox(string $bsn): BerichtenboxResult {
 		$reference = 'bbk-mbox-log-' . bin2hex(random_bytes(6));

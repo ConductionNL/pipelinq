@@ -95,6 +95,9 @@
 							</td>
 							<td class="messaging-settings__webhook-cell">
 								<code class="messaging-settings__webhook-url">{{
+									/**
+									 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+									 */
 									webhookUrl(provider)
 								}}</code>
 								<NcButton
@@ -579,6 +582,9 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
@@ -613,6 +619,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		vendorOptions() {
 			return [
 				{ value: 'meta', label: t('pipelinq', 'Meta') },
@@ -624,6 +633,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		periodOptions() {
 			return [
 				{ value: 'daily', label: t('pipelinq', 'Daily') },
@@ -637,6 +649,9 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+	 */
 	async mounted() {
 		await Promise.all([
 			this.fetchProviders(),
@@ -646,6 +661,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		kindLabel(kind) {
 			return KIND_LABELS[kind] || kind || '—'
 		},
@@ -664,17 +682,26 @@ export default {
 			return labels[status] || status || '—'
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		templateStatusClass(status) {
 			return (
 				TEMPLATE_STATUS_CLASSES[status] || 'messaging-settings__badge--off'
 			)
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		providerDisplayName(providerId) {
 			const provider = this.providers.find((p) => p.id === providerId)
 			return provider ? provider.displayName : providerId || '—'
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		formatDate(value) {
 			if (!value) {
 				return '—'
@@ -698,6 +725,9 @@ export default {
 			return window.location.origin + path
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		async copyWebhookUrl(provider) {
 			try {
 				await navigator.clipboard.writeText(this.webhookUrl(provider))
@@ -722,18 +752,27 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		startNewProvider() {
 			this.editingProvider = null
 			this.providerForm = DEFAULT_PROVIDER_FORM()
 			this.showProviderForm = true
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		editProvider(provider) {
 			this.editingProvider = provider
 			this.providerForm = { ...DEFAULT_PROVIDER_FORM(), ...provider }
 			this.showProviderForm = true
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		cancelProviderForm() {
 			this.showProviderForm = false
 			this.editingProvider = null
@@ -800,6 +839,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		async testProviderConnection(provider) {
 			this.testingProviderId = provider.id
 			try {
@@ -820,6 +862,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		async fetchBudgets() {
 			this.loadingBudgets = true
 			try {
@@ -835,6 +880,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		startNewBudget() {
 			this.budgetForm = DEFAULT_BUDGET_FORM()
 			this.showBudgetForm = true
@@ -875,6 +923,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		async saveBudget(budget) {
 			this.savingBudgetId = budget.id
 			try {
@@ -922,6 +973,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
+		 */
 		async fetchTemplates() {
 			this.loadingTemplates = true
 			try {

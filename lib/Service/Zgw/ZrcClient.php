@@ -138,6 +138,7 @@ class ZrcClient {
 	 * @param array<string, mixed> $statusData Body for POST /statussen.
 	 *
 	 * @return string URL of the created status.
+	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
 	 */
 	public function addStatus(array $endpoint, array $caseMap, array $statusData): string {
 		$client = $this->requireClient(endpoint: $endpoint);
@@ -192,6 +193,7 @@ class ZrcClient {
 	 * @param string $roltoelichting Free-text role description.
 	 *
 	 * @return string Rol URL (existing or newly created).
+	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
 	 */
 	public function linkInitiator(
 		array $endpoint,
@@ -262,6 +264,7 @@ class ZrcClient {
 	 * @param array<string, mixed> $contact Pipelinq Contact payload.
 	 *
 	 * @return array{0:string,1:array<string,mixed>} [betrokkeneType, ident]
+	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-002
 	 */
 	public static function contactIdentification(array $contact): array {
 		$bsn = (string)($contact['bsn'] ?? '');

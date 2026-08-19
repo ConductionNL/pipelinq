@@ -115,6 +115,9 @@ export default {
 			return Math.round(this.report.errorRate * 100)
 		},
 
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#6.1
+		 */
 		certStatusLabel() {
 			if (!this.cert) return ''
 			if (this.cert.status === 'ok') return this.t('pipelinq', 'OK')
@@ -131,6 +134,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#6.1
+		 */
 		async load() {
 			this.loading = true
 			this.loadError = ''
