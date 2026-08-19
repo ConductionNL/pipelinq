@@ -1,0 +1,53 @@
+name: Release
+
+# ONE release workflow for the whole fleet.
+#
+# Every app used to carry three caller files (`release-development.yml`,
+# `release-beta.yml`, `release-stable.yml`) pointing at two different shared
+# workflows. Those two drifted: the pair edited `appinfo/info.xml` in the
+# working tree only, so their tags named commits still showing the PREVIOUS
+# version — harmless for a timestamped dev build, wrong for a stable release,
+# because Nextcloud's release template asserts
+#     [ "$APP_VERSION" = "v$(xpath info.xml //version)" ]
+#
+# `release.yml` is the strict one and is now the only one. It commits the bump
+# to a `release/v<version>` branch, tags THAT commit, and opens a pull request
+# to bring the integration branch up — so the tag and the package agree without
+# anything pushing at a protected branch.
+
+on:
+  push:
+    branches: [main, beta, development]
+  workflow_dispatch:
+
+# Releases publish artifacts. A cancelled release is neither a success nor a
+# rollback — it is a half-published version — so queued runs wait rather than
+# cancelling the one in flight.
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  unstable:
+    if: github.ref == 'refs/heads/development'
+    uses: ConductionNL/.github/.github/workflows/release.yml@main
+    with:
+      release-type: unstable
+      app-name: pipelinq
+    secrets: inherit
+
+  beta:
+    if: github.ref == 'refs/heads/beta'
+    uses: ConductionNL/.github/.github/workflows/release.yml@main
+    with:
+      release-type: beta
+      app-name: pipelinq
+    secrets: inherit
+
+  stable:
+    if: github.ref == 'refs/heads/main'
+    uses: ConductionNL/.github/.github/workflows/release.yml@main
+    with:
+      release-type: stable
+      app-name: pipelinq
+    secrets: inherit

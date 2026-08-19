@@ -55,6 +55,7 @@ export default {
 		 * True when the raw value is missing or non-numeric.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/specs/lead-scoring-win-probability/spec.md#requirement-win-probability-is-surfaced-on-the-pipeline-list-and-deal-detail
 		 */
 		isEmpty() {
 			return (

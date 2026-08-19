@@ -109,6 +109,9 @@ export default {
 			return this.transaction.paymentStatus || ''
 		},
 
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
 		providerLabel() {
 			const map = {
 				mollie: 'Mollie',
@@ -122,6 +125,9 @@ export default {
 			return map[this.provider] || this.provider
 		},
 
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
 		methodLabel() {
 			const map = {
 				ideal: 'iDEAL',
@@ -171,6 +177,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 */
 		async onCapture() {
 			this.busy = true
 			try {
