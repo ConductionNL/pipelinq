@@ -139,14 +139,19 @@ class ActivityTimelineController extends Controller {
 				$payload = $object->jsonSerialize();
 			}
 
-			$object = [];
+			// A NEW name rather than reusing `$object`: that variable still holds
+			// the service's return value a few lines up, and re-binding it inside
+			// an IDOR guard makes the reader re-derive which shape is in scope.
+			// Written as plain assignments rather than a ternary because phpcs
+			// forbids the inline IF and phpmd forbids the else.
+			$attributes = [];
 			if (is_array($payload) === true) {
-				$object = $payload;
+				$attributes = $payload;
 			}
 
 			return $this->policy->mayAccess(
 				uid: $userId,
-				object: $object,
+				object: $attributes,
 				ownerField: 'ownerId'
 			);
 		} catch (\Throwable $e) {

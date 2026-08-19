@@ -444,4 +444,71 @@ class ActivityTimelineControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 		$this->assertSame(['message' => 'Authentication required'], $response->getData());
 	}//end testCreateWorklogRequiresAuthentication()
+
+	/**
+	 * 🔴 The access decision is made on the object's ATTRIBUTES, and a caller
+	 * the policy refuses gets 404 — not the timeline.
+	 *
+	 * `objectAccessible()` is the IDOR guard for this endpoint. Its own docblock
+	 * records that it once `return true`d from the catch, "so a temporary OR
+	 * outage does not block the timeline surface" — which made an unavailable
+	 * object service indistinguishable from a successful check (CWE-863). It is
+	 * the only thing standing between a caller-supplied `entityId` and someone
+	 * else's merged contactmoment/worklog/note history.
+	 *
+	 * The existing suite pins `mayAccess => true` in its shared builder, so
+	 * every other test exercises only the ALLOW path. This is the control: with
+	 * the same fixture and the policy answering false, the endpoint must refuse.
+	 *
+	 * ⚠️ It refuses with 404 rather than 403 deliberately — a 403 would confirm
+	 * the id names something real, turning the endpoint into an existence oracle
+	 * over every id in the instance.
+	 *
+	 * @return void
+	 */
+	public function testAnObjectThePolicyRefusesIsNotReadableAndLooksAbsent(): void {
+		$this->signIn();
+		$this->objects->store['client-9'] = ['id' => 'client-9', 'ownerId' => 'someone-else'];
+		$this->withParams(['entityType' => 'client', 'entityId' => 'client-9']);
+		$this->service->expects($this->never())->method('getTimeline');
+
+		$policy = $this->createMock(ObjectOwnerAccessPolicy::class);
+		$policy->method('isPrivileged')->willReturn(false);
+		$policy->expects($this->once())
+			->method('mayAccess')
+			->with(
+				// The uid comes from the SESSION, never the request.
+				'agent-1',
+				// The stored row itself — the decision is made on the object's
+				// attributes, not on the fact that the id resolved.
+				['id' => 'client-9', 'ownerId' => 'someone-else'],
+				'ownerId'
+			)
+			->willReturn(false);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			function (string $id): object {
+				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+					return $this->objects;
+				}
+
+				throw new \RuntimeException('not registered: ' . $id);
+			}
+		);
+
+		$controller = new ActivityTimelineController(
+			request: $this->request,
+			service: $this->service,
+			userSession: $this->userSession,
+			logger: $this->createMock(LoggerInterface::class),
+			container: $container,
+			policy: $policy,
+		);
+
+		$response = $controller->getTimeline();
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertSame(['message' => 'Entity not found'], $response->getData());
+	}//end testAnObjectThePolicyRefusesIsNotReadableAndLooksAbsent()
 }//end class
