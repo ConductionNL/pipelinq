@@ -82,6 +82,7 @@ class BrpController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param IUserSession $userSession Current user.
+	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
 	 * @param IGroupManager $groupManager Group manager.
 	 * @param IL10N $l10n i18n.
 	 * @param IAppConfig $appConfig App config.
@@ -92,6 +93,7 @@ class BrpController extends Controller {
 	 * @param OptOutService $optOut Opt-out service.
 	 * @param BrpMutationWebhookListener $webhookListener Webhook listener.
 	 * @param LoggerInterface $logger Logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Standard NC constructor injection; each
 	 *   parameter is a distinct collaborator wired by the DI container.
@@ -526,15 +528,16 @@ class BrpController extends Controller {
 	 *
 	 * Public (no NC session) — but HMAC-SHA256-verified inside the listener.
 	 *
+	 * The rate limit is a volume ceiling only: the sender authenticates by its
+	 * own credential, and refusing a citizen-record mutation because of a rate
+	 * limit would leave this app's data silently stale.
+	 *
 	 * @return JSONResponse
 	 *
 	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-004-03
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// BRP mutation notifications. Volume ceiling only: the sender authenticates
-	// by its own credential, and refusing a citizen-record mutation because of
-	// a rate limit would leave this app's data silently stale.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function mutationWebhook(): JSONResponse {
 		$rawBody = (string)file_get_contents('php://input');

@@ -64,6 +64,7 @@ class MessagingController extends Controller {
 	 * @param ChannelProviderRepository $providerRepo Provider read-side.
 	 * @param ConsentService $consentService Consent records.
 	 * @param IUserSession $userSession User session.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,
