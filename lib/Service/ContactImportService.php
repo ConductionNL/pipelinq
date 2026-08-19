@@ -37,6 +37,7 @@ class ContactImportService {
 	 *
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ContactDataBuilder $dataBuilder The data builder.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

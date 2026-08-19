@@ -54,6 +54,7 @@ class ContactVcardService {
 	 * @param ContactVcardPropertyBuilder $propBuilder The property builder.
 	 * @param LoggerInterface $logger The logger.
 	 * @param RegisterResolverService $registerResolver The register resolver.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IContactsManager $contactsManager,

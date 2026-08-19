@@ -132,6 +132,9 @@ export default {
 			this.emit(a)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-3
+		 */
 		setOpt(i, oi, v) {
 			const a = [...this.questions]
 			const opts = [...(a[i].options || [])]

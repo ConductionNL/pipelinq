@@ -349,6 +349,7 @@ class CtiService {
 	 * @param string $targetNumber Destination number (E.164 preferred).
 	 *
 	 * @return OriginateResult The outcome (success/failure, external call id, pre-created contactmoment id).
+	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
 	 */
 	public function originateCall(string $userId, string $extension, string $targetNumber): OriginateResult {
 		$platform = $this->activePlatform();
@@ -966,6 +967,7 @@ class CtiService {
 	 * @param string $notes Notes.
 	 *
 	 * @return array{outcome: string, interactionId: string, taskId: string|null}
+	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
 	 */
 	public function processDisposition(string $interactionId, string $subject, string $outcome, string $notes): array {
 		return $this->dispositionService->processDisposition(
