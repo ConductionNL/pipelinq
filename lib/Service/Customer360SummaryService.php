@@ -89,6 +89,7 @@ class Customer360SummaryService {
 	 * @param TicketService $ticketService Unified ticket resolver (unify-ticket-supertype).
 	 * @param ActivityTimelineService $activityTimeline Merged activity timeline (last-activity lookup).
 	 * @param LoggerInterface $logger Logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private readonly RegisterResolverService $registerResolver,

@@ -80,13 +80,15 @@ class PortalDelegationController extends PortalApiController {
 	/**
 	 * Grant a delegation to a colleague.
 	 *
+	 * The rate limit is deliberately tight: a delegation grants another party
+	 * access to this account.
+	 *
 	 * @return JSONResponse The created delegation.
 	 *
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 */
-	// Tight: a delegation grants another party access to this account.
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function create(): JSONResponse {
 		return $this->guarded(

@@ -149,6 +149,7 @@ class LoyaltyAccountService {
 	 * @return array<string, mixed> The existing or newly-created account.
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $optIn passes through the REQ-LOY-010 opt-in flag to createAccount(); not a behaviour switch.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function getOrCreateAccount(
 		string $customerId,
@@ -176,6 +177,7 @@ class LoyaltyAccountService {
 	 * @param string $programmeId The programme UUID.
 	 *
 	 * @return array<string, mixed>|null The account, or null.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function findAccountByKlantAndProgramme(string $customerId, string $programmeId): ?array {
 		[$register, $schema] = $this->config();
@@ -214,6 +216,7 @@ class LoyaltyAccountService {
 	 * @param string $reason Free-text reason (logged).
 	 *
 	 * @return array<string, mixed>|null The updated account, or null.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function disableAccount(string $accountId, string $reason): ?array {
 		$account = $this->getAccount(accountId: $accountId);
@@ -281,6 +284,7 @@ class LoyaltyAccountService {
 	 * @param ?string $tierValidTo Scheduled downgrade date.
 	 *
 	 * @return array<string, mixed>|null The updated account.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function setTier(
 		string $accountId,
@@ -313,6 +317,7 @@ class LoyaltyAccountService {
 	 * @param int $offset Pagination offset.
 	 *
 	 * @return array<int, array<string, mixed>> The accounts.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-002
 	 */
 	public function listAccountsForProgramme(string $programmeId, int $limit = 1000, int $offset = 0): array {
 		[$register, $schema] = $this->config();

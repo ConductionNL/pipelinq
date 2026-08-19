@@ -61,6 +61,7 @@ export default {
 		 * CnFormDialog field definitions for the task schema.
 		 *
 		 * @return {Array<object>}
+		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3
 		 */
 		fields() {
 			return [
@@ -120,6 +121,7 @@ export default {
 		 * Initial values for the dialog (pre-filled context).
 		 *
 		 * @return {object}
+		 * @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3
 		 */
 		initialValues() {
 			return {
