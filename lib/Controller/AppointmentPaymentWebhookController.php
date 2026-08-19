@@ -91,14 +91,16 @@ class AppointmentPaymentWebhookController extends Controller {
 	 * @return JSONResponse Acknowledgement (HTTP 200 + status), 422 on
 	 *                      invalid signature, 400 on malformed payload.
 	 *
+	 * Inbound provider webhook: the caller is a payment provider retrying on its
+	 * own schedule, authenticated by its own signature. The rate-limit ceiling is
+	 * generous — dropping a payment notification is a worse failure than
+	 * absorbing a burst, and it would land on the provider's side where we
+	 * cannot see it.
+	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Inbound provider webhook: the caller is a payment provider retrying on
-	// its own schedule, authenticated by its own signature. Generous ceiling —
-	// dropping a payment notification is a worse failure than absorbing a
-	// burst, and it would land on the provider's side where we cannot see it.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function callback(): JSONResponse {
 		$rawBody = $this->readRawBody();

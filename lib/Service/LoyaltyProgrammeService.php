@@ -49,6 +49,7 @@ class LoyaltyProgrammeService {
 	 *
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 * @param SchemaLifecycleGraph $lifecycleGraph Reads the programme status graph from its schema.
 	 */
 	public function __construct(
@@ -106,6 +107,7 @@ class LoyaltyProgrammeService {
 	 * @return array<string, mixed> The activated programme.
 	 *
 	 * @throws RuntimeException When validation fails.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-001
 	 */
 	public function activate(string $programmeId, string $activatedBy): array {
 		$programme = $this->getProgramme(programmeId: $programmeId);

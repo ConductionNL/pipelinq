@@ -183,10 +183,12 @@ class PortalController extends Controller {
 	 * @PublicPage
 	 * @CORS
 	 *
+	 * The rate limit is deliberately tight: a booking consumes a real slot, so an
+	 * unbounded caller can exhaust availability for everyone else without ever
+	 * authenticating.
+	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
-	// Tight: a booking consumes a real slot, so an unbounded caller can exhaust
-	// availability for everyone else without ever authenticating.
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function book(): JSONResponse {
 		$params = $this->collectBookParams();

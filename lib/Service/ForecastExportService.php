@@ -53,6 +53,7 @@ class ForecastExportService {
 	 * @param ForecastService $forecastService The forecast computation service.
 	 * @param ReportingService $reportingService The CSV rendering service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

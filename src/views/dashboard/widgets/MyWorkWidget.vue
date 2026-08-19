@@ -99,6 +99,7 @@ export default {
 		 *
 		 * @param {object} row - Work item row.
 		 * @return {string} CSS class for the row.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 		 */
 		rowClass(row) {
 			return row.isOverdue ? 'my-work-row--overdue' : ''

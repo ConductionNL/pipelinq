@@ -82,6 +82,7 @@ class ActivityTimelineService {
 	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype —
 	 *                                     contactmomenten (incl. worklogs) are tickets with
 	 *                                     `ticketType=contactmoment`, not their own schema.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

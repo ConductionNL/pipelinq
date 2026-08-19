@@ -137,6 +137,9 @@ export default {
 
 	computed: {
 		/** The resolved client id — prop wins, else the injected section context. */
+		/**
+		 * @spec openspec/specs/time-approval-workflow/spec.md
+		 */
 		resolvedId() {
 			if (this.clientId) {
 				return this.clientId
@@ -147,6 +150,9 @@ export default {
 			return (bag && bag.objectId) || ''
 		},
 
+		/**
+		 * @spec openspec/specs/time-approval-workflow/spec.md
+		 */
 		deepLinkUrl() {
 			return this.availability.deepLinkUrl
 		},
@@ -164,6 +170,9 @@ export default {
 			return this.showSendControls || !!this.deepLinkUrl
 		},
 
+		/**
+		 * @spec openspec/specs/time-approval-workflow/spec.md
+		 */
 		lastResultType() {
 			if (!this.lastResult) {
 				return 'success'
@@ -180,6 +189,9 @@ export default {
 			return 'error'
 		},
 
+		/**
+		 * @spec openspec/specs/time-approval-workflow/spec.md
+		 */
 		lastResultMessage() {
 			if (!this.lastResult) {
 				return ''
@@ -230,6 +242,9 @@ export default {
 	watch: {
 		resolvedId: {
 			immediate: true,
+			/**
+			 * @spec openspec/specs/time-approval-workflow/spec.md
+			 */
 			handler() {
 				this.lastResult = null
 				this.loadAvailability()
@@ -260,6 +275,7 @@ export default {
 
 		/**
 		 * Send the selected period's approved, un-billed entries to billing.
+		 * @spec openspec/specs/time-approval-workflow/spec.md
 		 */
 		async send() {
 			if (
