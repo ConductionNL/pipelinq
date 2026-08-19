@@ -56,6 +56,7 @@ abstract class AbstractExportService {
 	 *
 	 * @param ContainerInterface $container The DI container.
 	 * @param IAppConfig $appConfig The app config.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		protected ContainerInterface $container,
@@ -183,6 +184,7 @@ abstract class AbstractExportService {
 	 * @return object The object service.
 	 *
 	 * @throws RuntimeException If OpenRegister is not available.
+	 * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-001
 	 */
 	protected function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

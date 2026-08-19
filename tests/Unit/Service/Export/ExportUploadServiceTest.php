@@ -10,6 +10,16 @@
  * type, and the path-template/naming-convention resolution. The mock sink lets
  * us assert retry behaviour without real wall-clock delays.
  *
+ * Also covers real credential resolution (`resolveCredentials()`):
+ * `OCA\OpenConnector\Service\SourceService` — the class this used to resolve
+ * credentials through — does not exist, so every call used to throw, get
+ * swallowed, and silently resolve to an empty map. The tests below configure
+ * a real `ObjectServiceInterface` mock returning a raw Source payload and
+ * assert both the exact register/schema/`_render` lookup shape and that the
+ * extracted credentials reach the sink's `upload()` call — not a test that
+ * mocks resolution away, which is exactly the shape of test that shipped
+ * alongside the original bug.
+ *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service\Export
  *
@@ -26,6 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Export;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
@@ -44,21 +55,21 @@ class ExportUploadServiceTest extends TestCase {
 	 * Build the upload service wired to a registry holding one mock sink.
 	 *
 	 * @param ExportSinkInterface $sink The mock sink to register.
+	 * @param ObjectServiceInterface|null $objectService The (mock) OpenRegister object service. Defaults to an unconfigured mock — no OpenConnector source, credentials resolve to an empty map.
 	 *
 	 * @return ExportUploadService The service under test.
 	 */
-	private function service(ExportSinkInterface $sink): ExportUploadService {
+	private function service(ExportSinkInterface $sink, ?ObjectServiceInterface $objectService = null): ExportUploadService {
 		$registry = new ExportSinkRegistry([$sink]);
 
 		$container = $this->createMock(ContainerInterface::class);
-		// No OpenConnector source -> credentials resolve to an empty map.
 		$appConfig = $this->createMock(IAppConfig::class);
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$service = new ExportUploadService(
 			container: $container,
 			appConfig: $appConfig,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			objectService: $objectService ?? $this->createMock(ObjectServiceInterface::class),
 			sinks: $registry,
 			logger: $logger,
 		);
@@ -67,6 +78,22 @@ class ExportUploadServiceTest extends TestCase {
 
 		return $service;
 	}//end service()
+
+	/**
+	 * Build a Source entity mock whose `getObject()` returns the given raw
+	 * (unrendered) field set.
+	 *
+	 * @param array<string, mixed> $fields The raw source fields.
+	 *
+	 * @return ObjectEntityInterface The mock source entity.
+	 */
+	private function sourceEntity(array $fields): ObjectEntityInterface {
+		$entity = $this->createMock(ObjectEntityInterface::class);
+		$entity->method('jsonSerialize')->willReturn(null);
+		$entity->method('getObject')->willReturn($fields);
+
+		return $entity;
+	}//end sourceEntity()
 
 	/**
 	 * A sink that always succeeds, recording each upload.
@@ -316,4 +343,109 @@ class ExportUploadServiceTest extends TestCase {
 
 		$this->assertSame('warehouse/2026/client/client_r9_20260101T000000Z.parquet', $path);
 	}//end testResolvePathSubstitutesPlaceholders()
+
+	/**
+	 * A sink that records the credentials it receives on each upload().
+	 *
+	 * @return ExportSinkInterface The recording mock sink.
+	 */
+	private function credentialRecordingSink(): ExportSinkInterface {
+		return new class implements ExportSinkInterface {
+			/** @var array<int, array<string, mixed>> */
+			public array $uploads = [];
+
+			public function getType(): string {
+				return 's3';
+			}
+
+			public function testConnection(array $credentials, array $destination): bool {
+				return true;
+			}
+
+			public function upload(array $credentials, array $destination, string $remotePath, string $contents): string {
+				$this->uploads[] = $credentials;
+				return 'etag-recorded';
+			}
+		};
+	}//end credentialRecordingSink()
+
+	/**
+	 * A legacy inline `apikey` on the referenced OpenConnector source reaches
+	 * the sink adapter's upload() credentials argument, and the Source is
+	 * looked up with the exact register/schema/`_render` shape — the same
+	 * raw read OpenConnector's own CallService / RawSourceResolver use
+	 * internally to survive the write-only field strip on a rendered read.
+	 *
+	 * @return void
+	 */
+	public function testUploadResolvesLegacyCredentialsFromRawSourceRead(): void {
+		$calls = [];
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('find')->willReturnCallback(
+			function (
+				$id,
+				$_extend = [],
+				$files = false,
+				$register = null,
+				$schema = null,
+				$_rbac = true,
+				$_multitenancy = true,
+				$_render = true,
+				$_audit = true,
+			) use (&$calls) {
+				$calls[] = ['id' => $id, 'register' => $register, 'schema' => $schema, '_render' => $_render];
+				return $this->sourceEntity(['apikey' => 'super-secret-key']);
+			}
+		);
+
+		$sink = $this->credentialRecordingSink();
+		$service = $this->service($sink, $objectService);
+
+		$destination = $this->destination();
+		$destination['connectorSourceId'] = 'oc-source-1';
+
+		$result = $service->uploadFiles(
+			destination: $destination,
+			files: [$this->file()],
+			context: ['run_id' => 'run-cred']
+		);
+
+		$this->assertSame('all_succeeded', $result['status']);
+		$this->assertCount(1, $sink->uploads);
+		$this->assertSame('super-secret-key', $sink->uploads[0]['apikey']);
+
+		$this->assertNotEmpty($calls);
+		foreach ($calls as $call) {
+			$this->assertSame('openconnector', $call['register']);
+			$this->assertSame('source', $call['schema']);
+			$this->assertFalse($call['_render'], 'the source must be read RAW so write-only secret fields survive');
+		}
+	}//end testUploadResolvesLegacyCredentialsFromRawSourceRead()
+
+	/**
+	 * A source lookup that throws fails closed: the upload still runs with
+	 * an empty credentials map (and whatever the sink itself then does with
+	 * that — e.g. reject the connection — is the sink's own concern).
+	 *
+	 * @return void
+	 */
+	public function testUploadResolvesEmptyCredentialsWhenSourceLookupThrows(): void {
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('find')->willThrowException(new RuntimeException('OpenConnector unavailable'));
+
+		$sink = $this->credentialRecordingSink();
+		$service = $this->service($sink, $objectService);
+
+		$destination = $this->destination();
+		$destination['connectorSourceId'] = 'oc-source-missing';
+
+		$result = $service->uploadFiles(
+			destination: $destination,
+			files: [$this->file()],
+			context: ['run_id' => 'run-cred-fail']
+		);
+
+		$this->assertSame('all_succeeded', $result['status']);
+		$this->assertSame([], $sink->uploads[0]);
+	}//end testUploadResolvesEmptyCredentialsWhenSourceLookupThrows()
 }//end class

@@ -71,6 +71,9 @@ export default {
 			return [this.data?.wonCount || 0, this.data?.lostCount || 0]
 		},
 
+		/**
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
 		statsCards() {
 			return [
 				{
@@ -106,6 +109,9 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec openspec/specs/lead-management/spec.md
+	 */
 	mounted() {
 		this.selectedRange =
 			this.rangeOptions.find((o) => o.value === 'all') || this.rangeOptions[0]
