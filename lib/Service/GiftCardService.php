@@ -247,6 +247,7 @@ class GiftCardService {
 	 * @param ?string $posTransactionId Optional POS transaction id.
 	 *
 	 * @return array<string, mixed> The updated card.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
 	 */
 	public function refundGiftCard(
 		string $giftCardId,
@@ -291,6 +292,7 @@ class GiftCardService {
 	 * @param string $reason Free-text reason.
 	 *
 	 * @return ?array<string, mixed>
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
 	 */
 	public function blockGiftCard(string $giftCardId, string $reason): ?array {
 		$card = $this->getCard(giftCardId: $giftCardId);
@@ -329,6 +331,7 @@ class GiftCardService {
 	 * @return array{balance: float, status: string, expiryDate: ?string}
 	 *
 	 * @throws RuntimeException On invalid PIN.
+	 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-006
 	 */
 	public function getCardDetails(string $giftCardId, string $pin): array {
 		$card = $this->getCard(giftCardId: $giftCardId);

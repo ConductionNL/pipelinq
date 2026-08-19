@@ -49,6 +49,7 @@ final class OriginateResult {
 	 * Convert to an array for a JSONResponse.
 	 *
 	 * @return array<string,mixed>
+	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-2.1
 	 */
 	public function toArray(): array {
 		return [
