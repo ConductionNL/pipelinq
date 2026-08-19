@@ -116,6 +116,8 @@ class LeadService {
 	 */
 	#[McpTool(
 		name: 'createLead',
+		subject: 'lead',
+		action: 'create',
 		description: 'Create a new sales lead. Only "title" is required; client, value, source and assignee are optional.',
 		readOnlyHint: false,
 		destructiveHint: false,
@@ -190,6 +192,11 @@ class LeadService {
 	 */
 	#[McpTool(
 		name: 'pipelineForecast',
+		// `forecast`, not `get`: it derives a projection across the whole
+		// pipeline rather than returning one stored record, so it exposes
+		// aggregate commercial data a single-record read does not.
+		subject: 'pipeline',
+		action: 'forecast',
 		description: 'Per-stage totals over open leads: lead count, summed value, weighted value, plus a grand total.',
 		readOnlyHint: true,
 		destructiveHint: false,

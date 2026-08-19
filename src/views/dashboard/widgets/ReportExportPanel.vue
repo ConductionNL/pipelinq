@@ -121,6 +121,9 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/specs/dashboard/spec.md
+		 */
 		entityOptions() {
 			return [
 				{ value: 'leads', label: this.t('pipelinq', 'Leads') },
