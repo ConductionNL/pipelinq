@@ -128,6 +128,7 @@ export default {
 		 * in place. The `.value` branch supports a raw-ref holder.
 		 *
 		 * @param {string} value Queue slug/id, or '' for all.
+		 * @spec openspec/changes/pipelinq-werkplek-declarative/tasks.md#task-3
 		 */
 		select(value) {
 			const holder = this.cnWorkspaceContext

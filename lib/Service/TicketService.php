@@ -121,6 +121,7 @@ class TicketService {
 	 *
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
@@ -369,6 +370,8 @@ class TicketService {
 	 */
 	#[McpTool(
 		name: 'logContactmoment',
+		subject: 'contactMoment',
+		action: 'create',
 		description: 'Log a client interaction as a contactmoment (client, channel and title are required; outcome and notes are optional).',
 		readOnlyHint: false,
 		destructiveHint: false,

@@ -178,6 +178,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#8.2
+		 */
 		async save() {
 			this.saving = true
 			this.errorMessage = ''
