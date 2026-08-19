@@ -51,6 +51,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\TenderPostedEvent;
 use OCP\AppFramework\OCS\OCSBadRequestException;
@@ -60,7 +61,6 @@ use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -116,13 +116,18 @@ class PosTenderService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (resolves OR services).
+	 * @param ContainerInterface $container The DI container — retained ONLY for the
+	 *                                      OPTIONAL OR WebhookService, whose lookup
+	 *                                      degrades when absent (ADR-083 rule 1 exception).
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service
+	 *                                      (ADR-083 rule 1 / ADR-084).
 	 * @param IAppConfig $appConfig App configuration (schema-key + register lookups).
 	 * @param IEventDispatcher $eventDispatcher Event dispatcher for TenderPostedEvent.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
 		private IAppConfig $appConfig,
 		private IEventDispatcher $eventDispatcher,
 		private LoggerInterface $logger,
@@ -150,7 +155,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTenderType_schema');
 
 		try {
-			$results = $this->getObjectService()->findAll(
+			$results = $this->objectService->findAll(
 				config: [
 					'filters' => [],
 					'register' => $register,
@@ -203,7 +208,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTenderType_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->objectService->find(id: $id, register: $register, schema: $schema);
 		} catch (Throwable $e) {
 			$object = null;
 		}
@@ -317,7 +322,7 @@ class PosTenderService {
 
 		try {
 			// The parameter is `$uuid`; `id:` is `Error: Unknown named parameter`.
-			$this->getObjectService()->deleteObject(uuid: $id, register: $register, schema: $schema);
+			$this->objectService->deleteObject(uuid: $id, register: $register, schema: $schema);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq POS tender: failed to delete tender type',
@@ -362,7 +367,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
 
 		try {
-			$results = $this->getObjectService()->findAll(
+			$results = $this->objectService->findAll(
 				config: [
 					'filters' => [
 						'transaction' => $transactionId,
@@ -517,7 +522,7 @@ class PosTenderService {
 
 		try {
 			// The parameter is `$uuid`; `id:` is `Error: Unknown named parameter`.
-			$this->getObjectService()->deleteObject(uuid: $tenderId, register: $register, schema: $schema);
+			$this->objectService->deleteObject(uuid: $tenderId, register: $register, schema: $schema);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Pipelinq POS tender: failed to delete tender',
@@ -826,7 +831,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
 
 		try {
-			$results = $this->getObjectService()->findAll(
+			$results = $this->objectService->findAll(
 				config: [
 					'filters' => [],
 					'register' => $register,
@@ -917,7 +922,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
 
 		try {
-			$results = $this->getObjectService()->findAll(
+			$results = $this->objectService->findAll(
 				config: [
 					'filters' => ['tenderType' => $tenderTypeId],
 					'register' => $register,
@@ -958,7 +963,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTenderType_schema');
 
 		try {
-			$saved = $this->getObjectService()->saveObject(
+			$saved = $this->objectService->saveObject(
 				object: $payload,
 				extend: [],
 				register: $register,
@@ -988,7 +993,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
 
 		try {
-			$saved = $this->getObjectService()->saveObject(
+			$saved = $this->objectService->saveObject(
 				object: $payload,
 				extend: [],
 				register: $register,
@@ -1023,7 +1028,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTender_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->objectService->find(id: $id, register: $register, schema: $schema);
 		} catch (Throwable $e) {
 			$object = null;
 		}
@@ -1068,7 +1073,7 @@ class PosTenderService {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->objectService->find(id: $id, register: $register, schema: $schema);
 		} catch (Throwable $e) {
 			return null;
 		}
@@ -1099,21 +1104,6 @@ class PosTenderService {
 
 		return [$register, $schema];
 	}//end config()
-
-	/**
-	 * Resolve the OR ObjectService.
-	 *
-	 * @return object The OR ObjectService.
-	 *
-	 * @throws RuntimeException When OR is not available.
-	 */
-	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister is not available');
-		}
-	}//end getObjectService()
 
 	/**
 	 * Best-effort CloudEvent dispatch through OR WebhookService.

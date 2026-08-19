@@ -30,10 +30,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -67,8 +68,14 @@ class KccWerkplekService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container DI container — used to resolve the
-	 *                                      OpenRegister `ObjectService` lazily.
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service
+	 *                                      (ADR-083 rule 1 / ADR-084 published contract).
+	 * @param AggregationRunner $aggregationRunner OpenRegister's ad-hoc aggregation
+	 *                                      runner, so grouped COUNT work is pushed
+	 *                                      down into OpenRegister (ADR-022). Typed
+	 *                                      CONCRETELY because ADR-084 publishes no
+	 *                                      contract for it yet; `PointsLedgerService`
+	 *                                      already carries the same dependency this way.
 	 * @param IAppConfig $appConfig App config — used to read the
 	 *                              register slug and schema slugs.
 	 * @param LoggerInterface $logger Logger.
@@ -80,59 +87,13 @@ class KccWerkplekService {
 	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
 	 */
 	public function __construct(
-		private ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
+		private readonly AggregationRunner $aggregationRunner,
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private TicketService $ticketService,
 	) {
 	}//end __construct()
-
-	/**
-	 * Resolve the OpenRegister ObjectService lazily.
-	 *
-	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface The OpenRegister object service.
-	 *
-	 * @throws RuntimeException If the OpenRegister app is not installed.
-	 *
-	 * @spec openspec/changes/kcc-werkplek/tasks.md#task-2
-	 */
-	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException(
-				'OpenRegister ObjectService is not available',
-				0,
-				$e
-			);
-		}
-	}//end getObjectService()
-
-	/**
-	 * Resolve the OpenRegister ad-hoc AggregationRunner lazily.
-	 *
-	 * Resolved from the DI container the same way the ObjectService is, so the
-	 * workspace can push grouped COUNT work (open requests per queue) down into
-	 * OpenRegister (ADR-022) instead of hydrating every request and counting in
-	 * PHP.
-	 *
-	 * @return object The OpenRegister aggregation runner.
-	 *
-	 * @throws RuntimeException If the OpenRegister app is not installed.
-	 *
-	 * @spec openspec/changes/pipelinq-query-pushdown-batch-3/tasks.md#task-2.1
-	 */
-	private function getAggregationRunner(): object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\Aggregation\\AggregationRunner');
-		} catch (\Throwable $e) {
-			throw new RuntimeException(
-				'OpenRegister AggregationRunner is not available',
-				0,
-				$e
-			);
-		}
-	}//end getAggregationRunner()
 
 	/**
 	 * Read a schema slug from the app config, falling back to a static key.
@@ -222,7 +183,7 @@ class KccWerkplekService {
 		}
 
 		try {
-			$results = $this->getObjectService()->findAll(
+			$results = $this->objectService->findAll(
 				config: ['filters' => ['register' => $register, 'schema' => $schema]]
 			);
 		} catch (\Throwable $e) {
@@ -269,7 +230,7 @@ class KccWerkplekService {
 		}
 
 		try {
-			$results = $this->getObjectService()->findAll(
+			$results = $this->objectService->findAll(
 				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)]
 			);
 		} catch (\Throwable $e) {
@@ -355,7 +316,7 @@ class KccWerkplekService {
 				],
 				groupBy: ['field' => 'queue'],
 			);
-			$result = $this->getAggregationRunner()->runAdhocByRef(
+			$result = $this->aggregationRunner->runAdhocByRef(
 				registerRef: $register,
 				schemaRef: $schema,
 				query: $query
@@ -523,7 +484,7 @@ class KccWerkplekService {
 			throw new RuntimeException('agentProfile schema is not configured');
 		}
 
-		$objectService = $this->getObjectService();
+		$objectService = $this->objectService;
 
 		// Try to find an existing profile for this user.
 		$existingId = '';

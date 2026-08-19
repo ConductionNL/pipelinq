@@ -332,7 +332,8 @@ class QueryPushdownBatch3Test extends TestCase {
 		);
 
 		$service = new KccWerkplekService(
-			container: $container,
+			objectService: $objectService,
+			aggregationRunner: $runner,
 			appConfig: $appConfig,
 			logger: $logger,
 			ticketService: $ticketService

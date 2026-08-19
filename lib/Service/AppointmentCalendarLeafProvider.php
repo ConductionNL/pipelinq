@@ -29,13 +29,13 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -107,7 +107,10 @@ class AppointmentCalendarLeafProvider {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OR leaf lookup).
+	 * @param ContainerInterface $container The DI container — retained ONLY for the
+	 *  OPTIONAL OR CalendarEventService leaf, whose lookup degrades when absent
+	 *  (ADR-083 rule 1 exception) and which tests replace via setLeafOverride().
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-083 rule 1 / ADR-084).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param IUserManager $userManager For Resource.userId → email resolution.
 	 * @param IURLGenerator $urlGenerator For the deep-link back to the Booking.
@@ -115,6 +118,7 @@ class AppointmentCalendarLeafProvider {
 	 */
 	public function __construct(
 		private ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
 		private IAppConfig $appConfig,
 		private IUserManager $userManager,
 		private IURLGenerator $urlGenerator,
@@ -399,7 +403,7 @@ class AppointmentCalendarLeafProvider {
 		}
 
 		try {
-			$found = $this->getObjectService()->find(
+			$found = $this->objectService->find(
 				id: $customerId,
 				register: $register,
 				schema: $schema
@@ -641,7 +645,7 @@ class AppointmentCalendarLeafProvider {
 		}
 
 		try {
-			$found = $this->getObjectService()->find(
+			$found = $this->objectService->find(
 				id: $bookingId,
 				register: $register,
 				schema: $schema
@@ -669,7 +673,7 @@ class AppointmentCalendarLeafProvider {
 		}
 
 		try {
-			$found = $this->getObjectService()->find(
+			$found = $this->objectService->find(
 				id: $resourceId,
 				register: $register,
 				schema: $schema
@@ -700,7 +704,7 @@ class AppointmentCalendarLeafProvider {
 		}
 
 		try {
-			$found = $this->getObjectService()->find(
+			$found = $this->objectService->find(
 				id: $serviceId,
 				register: $register,
 				schema: $schema
@@ -843,18 +847,4 @@ class AppointmentCalendarLeafProvider {
 		return 0;
 	}//end schemaNumeric()
 
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
-	 */
-	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
-	}//end getObjectService()
 }//end class

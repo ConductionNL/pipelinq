@@ -26,6 +26,8 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
@@ -38,7 +40,6 @@ use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
-use RuntimeException;
 
 /**
  * Service for POS transaction business operations.
@@ -116,7 +117,17 @@ class PosTransactionService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container.
+	 * @param ContainerInterface $container The DI container — retained for the OPTIONAL
+	 *                                      lookups whose absence degrades gracefully:
+	 *                                      OR WebhookService, OR SchemaMapper, the sibling
+	 *                                      PosTenderService, and Shillinq's
+	 *                                      AdministrationContextService (ADR-083 rule 1 exception).
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service
+	 *                                      (ADR-083 rule 1 / ADR-084).
+	 * @param TransitionEngine $transitionEngine OpenRegister's lifecycle transition engine.
+	 *                                      Typed CONCRETELY because ADR-084 publishes no
+	 *                                      contract for it yet; a double exists at
+	 *                                      tests/Stubs/Service/Lifecycle/TransitionEngine.php.
 	 * @param IAppConfig $appConfig The app config.
 	 * @param PosAccessPolicy $policy The shared POS access policy.
 	 * @param LoggerInterface $logger The logger.
@@ -124,6 +135,8 @@ class PosTransactionService {
 	 */
 	public function __construct(
 		private ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
+		private readonly TransitionEngine $transitionEngine,
 		private IAppConfig $appConfig,
 		private PosAccessPolicy $policy,
 		private LoggerInterface $logger,
@@ -796,7 +809,7 @@ class PosTransactionService {
 		}
 
 		try {
-			$product = $this->getObjectService()->find(id: $productId, register: $register, schema: $schema);
+			$product = $this->objectService->find(id: $productId, register: $register, schema: $schema);
 		} catch (\Throwable $e) {
 			return ['', ''];
 		}
@@ -995,7 +1008,7 @@ class PosTransactionService {
 		$this->sanitizeForTransition(id: $id);
 
 		try {
-			$saved = $this->getTransitionEngine()->transition(objectId: $id, action: $action);
+			$saved = $this->transitionEngine->transition(objectId: $id, action: $action);
 		} catch (\Throwable $e) {
 			throw $this->mapTransitionError(e: $e);
 		}
@@ -1215,7 +1228,7 @@ class PosTransactionService {
 		[$register, $schema] = $this->config(schemaKey: 'posTransaction_schema');
 
 		try {
-			$object = $this->getObjectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->objectService->find(id: $id, register: $register, schema: $schema);
 		} catch (\Throwable $e) {
 			$object = null;
 		}
@@ -1246,7 +1259,7 @@ class PosTransactionService {
 			// and silently return zero rows — the bug that left the cart "empty"
 			// and every total at 0). Custom property filters (transaction) stay at
 			// the top of the filters array.
-			$results = $this->getObjectService()->findAll(
+			$results = $this->objectService->findAll(
 				config: [
 					'filters' => [
 						'@self' => [
@@ -1295,7 +1308,7 @@ class PosTransactionService {
 		}
 
 		try {
-			$results = $this->getObjectService()->findAll(config: ['filters' => $filters]);
+			$results = $this->objectService->findAll(config: ['filters' => $filters]);
 		} catch (\Throwable $e) {
 			$this->logger->warning('Pipelinq: failed to fetch POS transactions', ['exception' => $e->getMessage()]);
 			return [];
@@ -1338,7 +1351,7 @@ class PosTransactionService {
 			static fn ($value): bool => $value !== null
 		);
 
-		$saved = $this->getObjectService()->saveObject(
+		$saved = $this->objectService->saveObject(
 			object: $transaction,
 			extend: [],
 			register: $register,
@@ -1437,39 +1450,6 @@ class PosTransactionService {
 	}//end resolveSchemaIdBySlug()
 
 	/**
-	 * Get the OpenRegister ObjectService.
-	 *
-	 * @return object The object service.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
-	 *
-	 * @spec openspec/changes/pos-transaction-core/tasks.md#2.1
-	 */
-	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister service is not available.');
-		}
-	}//end getObjectService()
-
-	/**
-	 * Get the OpenRegister lifecycle TransitionEngine.
-	 *
-	 * @return object The transition engine.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
-	 *
-	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.1
-	 */
-	private function getTransitionEngine(): object {
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\Lifecycle\TransitionEngine');
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister TransitionEngine is not available.');
-		}
-	}//end getTransitionEngine()
-
 	/**
 	 * Normalise an OR object (entity or array) into a plain array.
 	 *

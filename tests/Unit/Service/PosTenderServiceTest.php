@@ -352,6 +352,7 @@ class PosTenderServiceTest extends TestCase {
 
 		$this->service = new PosTenderService(
 			container: $container,
+			objectService: $this->objects,
 			appConfig: $appConfig,
 			eventDispatcher: $dispatcher,
 			logger: $this->createMock(LoggerInterface::class),

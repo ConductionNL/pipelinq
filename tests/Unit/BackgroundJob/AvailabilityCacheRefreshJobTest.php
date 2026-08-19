@@ -31,7 +31,6 @@ use OCA\Pipelinq\Service\AvailabilityService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -60,9 +59,6 @@ class AvailabilityCacheRefreshJobTest extends TestCase {
 		$objectService = ($objectService ?? $this->createMock(ObjectServiceInterface::class));
 		$availability = ($availability ?? $this->createMock(AvailabilityService::class));
 
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn($objectService);
-
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			static function (string $app, string $key, string $default = ''): string {
@@ -78,7 +74,7 @@ class AvailabilityCacheRefreshJobTest extends TestCase {
 
 		$job = new AvailabilityCacheRefreshJob(
 			time: $time,
-			container: $container,
+			objectService: $objectService,
 			appConfig: $appConfig,
 			availabilityService: $availability,
 			logger: $logger,

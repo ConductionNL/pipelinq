@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosTransactionService;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -245,6 +246,8 @@ class PosTransactionServicePhase0Test extends TestCase {
 		);
 
 		return new PosTransactionService($container,
+			$objects,
+			$this->createMock(TransitionEngine::class),
 			$appConfig,
 			$policy,
 			$this->createMock(LoggerInterface::class),

@@ -24,10 +24,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use InvalidArgumentException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -66,13 +66,13 @@ class CtiDispositionService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container Container for OR lookups.
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-083 rule 1 / ADR-084).
 	 * @param IAppConfig $appConfig App config.
 	 * @param TicketService $ticketService Unified ticket resolver.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
-		private ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
 		private IAppConfig $appConfig,
 		private TicketService $ticketService,
 		private LoggerInterface $logger,
@@ -201,8 +201,7 @@ class CtiDispositionService {
 		}
 
 		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$saved = $objectService->saveObject(
+			$saved = $this->objectService->saveObject(
 				array_filter(
 					[
 						'type' => $type,

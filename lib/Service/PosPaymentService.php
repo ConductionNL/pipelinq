@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter;
 use OCA\Pipelinq\Service\Payment\AdyenAdapter;
@@ -158,7 +159,11 @@ class PosPaymentService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContainerInterface $container The DI container (OR services).
+	 * @param ContainerInterface $container The DI container — retained ONLY for the
+	 *                                     OPTIONAL OR WebhookService, whose lookup
+	 *                                     degrades when absent (ADR-083 rule 1 exception).
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service
+	 *                                     (ADR-083 rule 1 / ADR-084).
 	 * @param IAppConfig $appConfig App configuration.
 	 * @param ICrypto $crypto Encryption service (webhookSecret only —
 	 *                        the PSP keys live in the broker now).
@@ -170,6 +175,7 @@ class PosPaymentService {
 	 */
 	public function __construct(
 		private ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
 		private IAppConfig $appConfig,
 		private ICrypto $crypto,
 		private IGroupManager $groupMgr,
@@ -1123,11 +1129,7 @@ class PosPaymentService {
 			throw new OCSNotFoundException('Transaction not found');
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			throw new OCSNotFoundException('Transaction storage unavailable');
-		}
+		$objectService = $this->objectService;
 
 		try {
 			$found = $objectService->find(
@@ -1178,11 +1180,7 @@ class PosPaymentService {
 			return null;
 		}
 
-		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			return null;
-		}
+		$objectService = $this->objectService;
 
 		try {
 			$result = $objectService->findAll(
@@ -1272,8 +1270,7 @@ class PosPaymentService {
 		}
 
 		try {
-			$objectService = $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-			$saved = $objectService->saveObject(
+			$saved = $this->objectService->saveObject(
 				object: $current,
 				extend: [],
 				register: $register,

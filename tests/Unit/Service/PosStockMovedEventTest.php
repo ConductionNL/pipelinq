@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
 use OCA\Pipelinq\Event\PosStockMovedEvent;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Service\PosTransactionService;
@@ -194,6 +195,8 @@ class PosStockMovedEventTest extends TestCase {
 
 		return new PosTransactionService(
 			container: $container,
+			objectService: $this->objects,
+			transitionEngine: $this->createMock(TransitionEngine::class),
 			appConfig: $appConfig,
 			policy: $policy,
 			logger: $this->createMock(LoggerInterface::class),

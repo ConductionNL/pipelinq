@@ -292,11 +292,7 @@ class PosPaymentServiceTest extends TestCase {
 
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			callback: function (string $id) use ($object, $webhooks): mixed {
-				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
-					return $object;
-				}
-
+			callback: function (string $id) use ($webhooks): mixed {
 				if ($id === 'OCA\\OpenRegister\\Service\\WebhookService' && $webhooks !== null) {
 					return $webhooks;
 				}
@@ -348,6 +344,7 @@ class PosPaymentServiceTest extends TestCase {
 
 		return new PosPaymentService(
 			container: $container,
+			objectService: $object,
 			appConfig: $appConfig,
 			crypto: $crypto,
 			groupMgr: $groupMgr,

@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Controller\ActivityTimelineController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ActivityTimelineService;
@@ -34,7 +35,6 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -66,11 +66,25 @@ class ActivityTimelineControllerTest extends TestCase {
 	private IUserSession $userSession;
 
 	/**
-	 * In-memory OpenRegister ObjectService double used by the existence probe.
+	 * Rows the object-service double resolves, keyed by id.
 	 *
-	 * @var object
+	 * Backs the ObjectServiceInterface mock built in buildController(). It is a
+	 * property of the test rather than of an anonymous double because the
+	 * controller now type-hints OpenRegister's PUBLISHED contract (ADR-083 rule
+	 * 1 / ADR-084), and a bare anonymous class cannot satisfy that type.
+	 *
+	 * @var array<string, array<string, mixed>>
 	 */
-	private object $objects;
+	private array $store = [];
+
+	/**
+	 * When true the object-service double throws instead of answering.
+	 *
+	 * Models "the check could not be completed" — see the #801 regression test.
+	 *
+	 * @var bool
+	 */
+	private bool $findThrows = false;
 
 	/**
 	 * Set up the doubles.
@@ -81,28 +95,8 @@ class ActivityTimelineControllerTest extends TestCase {
 		$this->request = $this->createMock(IRequest::class);
 		$this->service = $this->createMock(ActivityTimelineService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
-
-		$this->objects = new class {
-			/**
-			 * Rows keyed by id.
-			 *
-			 * @var array<string, array<string, mixed>>
-			 */
-			public array $store = [];
-
-			/**
-			 * Read one row.
-			 *
-			 * @param int|string $id Object id.
-			 * @param array|null $_extend Extend list.
-			 * @param bool $files Include files.
-			 *
-			 * @return array<string, mixed>|null
-			 */
-			public function find(int|string $id, ?array $_extend = [], bool $files = false): ?array {
-				return ($this->store[(string)$id] ?? null);
-			}//end find()
-		};
+		$this->store = [];
+		$this->findThrows = false;
 	}//end setUp()
 
 	/**
@@ -111,14 +105,14 @@ class ActivityTimelineControllerTest extends TestCase {
 	 * @return ActivityTimelineController
 	 */
 	private function buildController(): ActivityTimelineController {
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(
-			function (string $id): object {
-				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
-					return $this->objects;
+		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects->method('find')->willReturnCallback(
+			function (int|string $id): ?array {
+				if ($this->findThrows === true) {
+					throw new \RuntimeException('object service unavailable');
 				}
 
-				throw new \RuntimeException('not registered: ' . $id);
+				return ($this->store[(string)$id] ?? null);
 			}
 		);
 
@@ -127,7 +121,7 @@ class ActivityTimelineControllerTest extends TestCase {
 			service: $this->service,
 			userSession: $this->userSession,
 			logger: $this->createMock(LoggerInterface::class),
-			container: $container,
+			objectService: $objects,
 			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 	}//end buildController()
@@ -164,7 +158,7 @@ class ActivityTimelineControllerTest extends TestCase {
 	 */
 	public function testGetTimelineReturnsOkWithThePaginatedEnvelope(): void {
 		$this->signIn();
-		$this->objects->store['client-1'] = ['id' => 'client-1'];
+		$this->store['client-1'] = ['id' => 'client-1'];
 		$this->withParams(['entityType' => 'client', 'entityId' => 'client-1']);
 
 		$this->service->method('getTimeline')->willReturn(
@@ -236,22 +230,7 @@ class ActivityTimelineControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetTimelineDeniesWhenTheEntityCheckCannotBeCompleted(): void {
-		$this->objects = new class {
-			/**
-			 * Stand in for an object service that is unavailable.
-			 *
-			 * @param int|string $id Object id.
-			 * @param array|null $_extend Extend directives.
-			 * @param bool $files Include files.
-			 *
-			 * @return array<string, mixed>|null
-			 *
-			 * @throws \RuntimeException Always.
-			 */
-			public function find(int|string $id, ?array $_extend = [], bool $files = false): ?array {
-				throw new \RuntimeException('object service unavailable');
-			}//end find()
-		};
+		$this->findThrows = true;
 
 		$this->signIn();
 		$this->withParams(['entityType' => 'client', 'entityId' => 'someone-elses-client']);
@@ -272,7 +251,7 @@ class ActivityTimelineControllerTest extends TestCase {
 	 */
 	public function testGetTimelineMapsServiceFailureToAStaticServerError(): void {
 		$this->signIn();
-		$this->objects->store['client-1'] = ['id' => 'client-1'];
+		$this->store['client-1'] = ['id' => 'client-1'];
 		$this->withParams(['entityType' => 'client', 'entityId' => 'client-1']);
 		$this->service->method('getTimeline')->willThrowException(new \RuntimeException('db credentials rejected'));
 
@@ -304,7 +283,7 @@ class ActivityTimelineControllerTest extends TestCase {
 	 */
 	public function testGetWorklogReturnsOkWithTotalDuration(): void {
 		$this->signIn();
-		$this->objects->store['req-1'] = ['id' => 'req-1'];
+		$this->store['req-1'] = ['id' => 'req-1'];
 		$this->withParams(['entityType' => 'request', 'entityId' => 'req-1']);
 
 		$this->service->method('getWorklog')->willReturn(
@@ -363,7 +342,7 @@ class ActivityTimelineControllerTest extends TestCase {
 	 */
 	public function testCreateWorklogReturnsCreatedWithTheNewEntry(): void {
 		$this->signIn();
-		$this->objects->store['req-1'] = ['id' => 'req-1'];
+		$this->store['req-1'] = ['id' => 'req-1'];
 		$this->withParams(
 			[
 				'entityType' => 'request',
@@ -399,7 +378,7 @@ class ActivityTimelineControllerTest extends TestCase {
 	 */
 	public function testCreateWorklogRejectsAMissingDuration(): void {
 		$this->signIn();
-		$this->objects->store['req-1'] = ['id' => 'req-1'];
+		$this->store['req-1'] = ['id' => 'req-1'];
 		$this->withParams(['entityType' => 'request', 'entityId' => 'req-1']);
 		$this->service->expects($this->never())->method('createWorklog');
 
@@ -419,7 +398,7 @@ class ActivityTimelineControllerTest extends TestCase {
 	 */
 	public function testCreateWorklogMapsServiceFailureToAStaticServerError(): void {
 		$this->signIn();
-		$this->objects->store['req-1'] = ['id' => 'req-1'];
+		$this->store['req-1'] = ['id' => 'req-1'];
 		$this->withParams(['entityType' => 'request', 'entityId' => 'req-1', 'duration' => 'PT10M']);
 		$this->service->method('createWorklog')->willThrowException(new \RuntimeException('schema not provisioned'));
 

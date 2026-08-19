@@ -93,6 +93,7 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 
 		$provider = new AppointmentCalendarLeafProvider(
 			container: $container,
+			objectService: $objectService,
 			appConfig: $appConfig,
 			userManager: $userManager,
 			urlGenerator: $urlGenerator,

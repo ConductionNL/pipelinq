@@ -30,14 +30,13 @@ namespace OCA\Pipelinq\BackgroundJob;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -78,14 +77,14 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $time The time factory.
-	 * @param ContainerInterface $container The DI container (OR lookup).
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-083 rule 1 / ADR-084).
 	 * @param IAppConfig $appConfig The app configuration.
 	 * @param AvailabilityService $availabilityService Member 02 — invalidation target.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
 		private IAppConfig $appConfig,
 		private AvailabilityService $availabilityService,
 		private LoggerInterface $logger,
@@ -170,7 +169,7 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 		}
 
 		try {
-			$rows = $this->getObjectService()->findAll(
+			$rows = $this->objectService->findAll(
 				config: [
 					'filters' => [
 						'register' => $register,
@@ -330,18 +329,4 @@ class AvailabilityCacheRefreshJob extends TimedJob {
 		return (array)$object;
 	}//end objectToArray()
 
-	/**
-	 * Resolve the OpenRegister ObjectService via the DI container.
-	 *
-	 * @return object The ObjectService instance.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
-	 */
-	private function getObjectService(): object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\ObjectService');
-		} catch (Throwable $e) {
-			throw new RuntimeException('OpenRegister ObjectService is unavailable.', 0, $e);
-		}
-	}//end getObjectService()
 }//end class

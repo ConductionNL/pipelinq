@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ActivityTimelineService;
@@ -36,7 +37,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -54,14 +54,14 @@ class ActivityTimelineController extends Controller {
 	 * @param ActivityTimelineService $service The activity timeline service.
 	 * @param IUserSession $userSession The user session.
 	 * @param LoggerInterface $logger The logger.
-	 * @param ContainerInterface $container The DI container.
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service (ADR-083 rule 1 / ADR-084).
 	 */
 	public function __construct(
 		IRequest $request,
 		private ActivityTimelineService $service,
 		private IUserSession $userSession,
 		private LoggerInterface $logger,
-		private ContainerInterface $container,
+		private readonly ObjectServiceInterface $objectService,
 		private ObjectOwnerAccessPolicy $policy,
 	) {
 		// @PublicPage — DI constructor (not HTTP-routable). The actual auth
@@ -91,8 +91,7 @@ class ActivityTimelineController extends Controller {
 	 */
 	private function objectAccessible(string $entityId, string $userId): bool {
 		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$object = $objectService->find($entityId, []);
+			$object = $this->objectService->find($entityId, []);
 			if ($object === null) {
 				return false;
 			}
@@ -114,14 +113,15 @@ class ActivityTimelineController extends Controller {
 			// the schema has no such field mayAccess() falls through to the
 			// privileged-group check, which is the only answer available for
 			// the 23 of 27 schemas that record no owner at all.
-			// The object service is pulled from the container BY STRING, so
-			// this seam is untyped: OpenRegister's find() hands back an
-			// ObjectEntity, but nothing here can enforce that and a plain array
-			// is what several doubles (and older OR versions) return. Calling
-			// jsonSerialize() unconditionally fataled on the array shape, and
-			// the catch below turned that into a silent "deny" — a 404 that
-			// looked like an authorization decision and was really a type
-			// error.
+			// The object service is now an injected ObjectServiceInterface
+			// (ADR-083 rule 1 / ADR-084) rather than a container lookup by
+			// string, so the seam is typed. The shape it RETURNS still is not:
+			// OpenRegister's find() hands back an ObjectEntity, but a plain
+			// array is what several doubles (and older OR versions) return.
+			// Calling jsonSerialize() unconditionally fataled on the array
+			// shape, and the catch below turned that into a silent "deny" — a
+			// 404 that looked like an authorization decision and was really a
+			// type error. The normalisation below stays for that reason.
 			$payload = $object;
 			if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
 				$payload = $object->jsonSerialize();

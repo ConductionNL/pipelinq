@@ -26,11 +26,19 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Fake aggregation runner backed by an in-memory row list.
+ *
+ * EXTENDS the autoloaded OR stub rather than duck-typing it, because ADR-083
+ * rule 1 turned KccWerkplekService's lazy `getAggregationRunner()` lookup into a
+ * typed constructor property — so the double now has to satisfy that type. This
+ * mirrors what `QueryPushdownBatch3Test::fakeObjectService()` already does for
+ * the object service. The stub's own `class_exists` guard means this resolves to
+ * the REAL AggregationRunner when openregister is installed.
  */
-class FakeAggregationRunner {
+class FakeAggregationRunner extends AggregationRunner {
 	/**
 	 * @var array<int, array<string, mixed>> The rows to aggregate over.
 	 */
