@@ -366,15 +366,9 @@ class PosStaffReportService {
 	 * instead of hydrating every transaction and reducing in PHP.
 	 *
 	 * @return object The aggregation runner.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getAggregationRunner(): object {
-		try {
-			return $this->aggregationRunner;
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister aggregation runner is not available.');
-		}
+		return $this->aggregationRunner;
 	}//end getAggregationRunner()
 
 	/**

@@ -32,7 +32,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\LoyaltyController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
@@ -190,10 +193,10 @@ class LoyaltyControllerTest extends TestCase {
 		$appConfig = $this->appConfig();
 		$logger = $this->createMock(LoggerInterface::class);
 		$accountService = new LoyaltyAccountService($appConfig, $logger,
-			objectService: $key,
+			objectService: $store,
 		);
 		$ledgerService = new PointsLedgerService($appConfig, $accountService, $logger,
-			objectService: $key,
+			objectService: $store,
 			aggregationRunner: $this->createMock(AggregationRunner::class),
 		);
 
@@ -201,7 +204,7 @@ class LoyaltyControllerTest extends TestCase {
 			accountService: $accountService,
 			ledgerService: $ledgerService,
 			redemptionService: new RedemptionService($appConfig, $accountService, $ledgerService, $logger,
-			objectService: $key,
+			objectService: $store,
 		),
 			params: $params
 		);
@@ -219,7 +222,7 @@ class LoyaltyControllerTest extends TestCase {
 		return $this->buildController(
 			giftCardService: new GiftCardService($this->appConfig(),
 				$this->createMock(LoggerInterface::class),
-			objectService: $key,
+			objectService: $store,
 		),
 			params: $params
 		);
@@ -1398,16 +1401,58 @@ class LoyaltyObjectStoreFake extends ObjectService {
 	}//end rows()
 
 	/**
-	 * Find a single object by UUID within a schema.
+	 * Hydrate a stored row into the entity the contract requires.
 	 *
-	 * @param string $id The object UUID.
-	 * @param string $register The register id (unused; single-register fake).
+	 * The fake stores plain arrays (that is what `row()`/`rows()` assert on),
+	 * but ObjectServiceInterface publishes find()/saveObject() as returning an
+	 * ObjectEntityInterface, so the boundary has to hand back an entity.
+	 *
+	 * @param array<string, mixed> $payload The stored row.
+	 * @param string $uuid The object UUID.
 	 * @param string $schema The schema key.
 	 *
-	 * @return array<string, mixed>|object|null
+	 * @return ObjectEntity The hydrated entity.
 	 */
-	public function find(string $id, string $register = '', string $schema = ''): array|object|null {
-		return ($this->tables[$schema][$id] ?? null);
+	private function hydrate(array $payload, string $uuid, string $schema): ObjectEntity {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setSchema($schema);
+		$entity->setObject($payload);
+		return $entity;
+	}//end hydrate()
+
+	/**
+	 * Find a single object by UUID within a schema.
+	 *
+	 * @param int|string $id The object UUID.
+	 * @param ?array $_extend Unused.
+	 * @param bool $files Unused.
+	 * @param string|int|null $register Unused (single-register fake).
+	 * @param string|int|null $schema The schema key.
+	 * @param bool $_rbac Unused.
+	 * @param bool $_multitenancy Unused.
+	 * @param bool $_render Unused.
+	 * @param bool $_audit Unused.
+	 *
+	 * @return ?ObjectEntityInterface The object, or null.
+	 */
+	public function find(
+		int|string $id,
+		?array $_extend=[],
+		bool $files=false,
+		string|int|null $register=null,
+		string|int|null $schema=null,
+		bool $_rbac=true,
+		bool $_multitenancy=true,
+		bool $_render=true,
+		bool $_audit=true
+	): ?ObjectEntityInterface {
+		$row = ($this->tables[(string)$schema][(string)$id] ?? null);
+		if ($row === null) {
+			return null;
+		}
+
+		return $this->hydrate($row, (string)$id, (string)$schema);
 	}//end find()
 
 	/**
@@ -1444,7 +1489,7 @@ class LoyaltyObjectStoreFake extends ObjectService {
 	/**
 	 * Upsert an object into a schema table.
 	 *
-	 * @param array<string, mixed>|object $object The payload.
+	 * @param array<string, mixed> $object The payload.
 	 * @param array<string, mixed>|null $extend Unused.
 	 * @param string|int|null $register Unused.
 	 * @param string|int|null $schema The schema key.
@@ -1452,25 +1497,29 @@ class LoyaltyObjectStoreFake extends ObjectService {
 	 * @param bool $_rbac Unused.
 	 * @param bool $_multitenancy Unused.
 	 * @param bool $silent Unused.
+	 * @param bool $_validation Unused.
 	 * @param array<string, mixed>|null $uploadedFiles Unused.
-	 * @param object|null $currentUser Unused.
+	 * @param ?IUser $currentUser Unused.
+	 * @param bool $failIfExists Unused.
 	 *
-	 * @return array<string, mixed>|object
+	 * @return ObjectEntityInterface The saved object.
 	 */
 	public function saveObject(
-		array|object $object,
-		?array $extend = [],
-		string|int|null $register = null,
-		string|int|null $schema = null,
-		?string $uuid = null,
-		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $silent = false,
-		?array $uploadedFiles = null,
-		?object $currentUser = null,
-	): array|object {
+		array $object,
+		?array $extend=[],
+		string|int|null $register=null,
+		string|int|null $schema=null,
+		?string $uuid=null,
+		bool $_rbac=true,
+		bool $_multitenancy=true,
+		bool $silent=false,
+		bool $_validation=true,
+		?array $uploadedFiles=null,
+		?IUser $currentUser=null,
+		bool $failIfExists=false
+	): ObjectEntityInterface {
 		$schemaKey = (string)$schema;
-		$payload = (array)$object;
+		$payload = $object;
 
 		$key = $uuid;
 		if ($key === null || $key === '') {
@@ -1481,7 +1530,7 @@ class LoyaltyObjectStoreFake extends ObjectService {
 		$payload['@self'] = ['id' => $key];
 		$this->tables[$schemaKey][$key] = $payload;
 
-		return $payload;
+		return $this->hydrate($payload, $key, $schemaKey);
 	}//end saveObject()
 
 	/**
@@ -1490,10 +1539,24 @@ class LoyaltyObjectStoreFake extends ObjectService {
 	 * @param string $uuid The object UUID.
 	 * @param string|int|null $register Unused.
 	 * @param string|int|null $schema The schema key.
+	 * @param bool $_rbac Unused.
+	 * @param bool $_multitenancy Unused.
+	 * @param bool $_retentionSweep Unused.
+	 * @param ?IUser $currentUser Unused.
+	 * @param bool $permanent Unused.
 	 *
 	 * @return bool
 	 */
-	public function deleteObject(string $uuid, string|int|null $register = null, string|int|null $schema = null): bool {
+	public function deleteObject(
+		string $uuid,
+		string|int|null $register=null,
+		string|int|null $schema=null,
+		bool $_rbac=true,
+		bool $_multitenancy=true,
+		bool $_retentionSweep=false,
+		?IUser $currentUser=null,
+		bool $permanent=false
+	): bool {
 		unset($this->tables[(string)$schema][$uuid]);
 		return true;
 	}//end deleteObject()

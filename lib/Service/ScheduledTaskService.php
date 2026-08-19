@@ -37,10 +37,10 @@ use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
-use OCA\OpenRegister\Service\LanguageService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
@@ -117,15 +117,18 @@ class ScheduledTaskService {
 	 * @param IUserSession $userSession User session (createdBy derivation).
 	 * @param IGroupManager $groupManager Group manager (admin + group checks).
 	 * @param NotificationService $notificationService Notification dispatch.
+	 * @param ContainerInterface $container Container for the OPTIONAL
+	 *                                      OpenRegister LanguageService lookup.
 	 * @param LoggerInterface $logger Logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister object store.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly NotificationService $notificationService,
+		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly LanguageService $languageService,
 		private readonly ObjectServiceInterface $objectService,
 	) {
 	}//end __construct()
@@ -871,8 +874,15 @@ class ScheduledTaskService {
 		}
 
 		try {
+			// LanguageService is NOT on the published OpenRegister contract
+			// (ADR-084 covers ObjectServiceInterface / ObjectEntityInterface
+			// only), and this path is explicitly optional. Injecting it would
+			// make the whole service unconstructable wherever OR's
+			// LanguageService is absent — gate-66's own rule is that a guarded
+			// lookup is the correct shape and converting it is a regression.
+			$languageService = $this->container->get('OCA\OpenRegister\Service\LanguageService');
 			$lang = $this->parsePreferredLanguage(headerValue: $acceptLanguage);
-			$this->languageService->setPreferredLanguage(language: $lang);
+			$languageService->setPreferredLanguage(language: $lang);
 		} catch (\Throwable $e) {
 			$this->logger->debug(
 				message: 'applyAcceptLanguage: OR LanguageService unavailable.',

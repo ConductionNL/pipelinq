@@ -565,7 +565,7 @@ class NaviService {
 		}
 
 		$objects = [];
-		foreach (($results ?? []) as $result) {
+		foreach ($results as $result) {
 			$normalized = $this->normalizeFindObjectsResult(result: $result);
 			if ($normalized !== null) {
 				$objects[] = $normalized;

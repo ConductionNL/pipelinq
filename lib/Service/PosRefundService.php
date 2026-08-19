@@ -792,16 +792,10 @@ class PosRefundService {
 	 *
 	 * @return object The transition engine.
 	 *
-	 * @throws RuntimeException If OpenRegister is not available.
-	 *
 	 * @spec openspec/changes/pos-lifecycle-guard-adoption/tasks.md#3.2
 	 */
 	private function getTransitionEngine(): object {
-		try {
-			return $this->transitionEngine;
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister TransitionEngine is not available.');
-		}
+		return $this->transitionEngine;
 	}//end getTransitionEngine()
 
 	/**

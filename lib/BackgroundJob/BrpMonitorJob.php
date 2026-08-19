@@ -114,7 +114,7 @@ class BrpMonitorJob extends TimedJob {
 				]
 			);
 
-			$audit = $this->aggregateAuditRecords(records: ($records ?? []), window: $window);
+			$audit = $this->aggregateAuditRecords(records: $records, window: $window);
 			$total = $audit['total'];
 			$errors = $audit['errors'];
 			$hits = $audit['hits'];
@@ -259,7 +259,7 @@ class BrpMonitorJob extends TimedJob {
 				],
 			]
 		);
-		foreach (($verzoeken ?? []) as $rec) {
+		foreach ($verzoeken as $rec) {
 			$arr = $this->recordToArray(rec: $rec);
 			$moment = (string)($arr['requestMoment'] ?? '');
 			try {

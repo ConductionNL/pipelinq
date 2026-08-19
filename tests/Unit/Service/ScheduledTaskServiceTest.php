@@ -24,7 +24,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\ScheduledTaskService;
 use OCP\AppFramework\OCS\OCSForbiddenException;
@@ -76,12 +79,28 @@ class ScheduledTaskServiceTest extends TestCase {
 	private LoggerInterface $logger;
 
 	/**
+	 * The object-service double the service under test is constructed with.
+	 *
+	 * Held as a property so a test can assert on the SAME instance the service
+	 * writes through. Building a second stub for the assertions would observe a
+	 * double nothing ever called, and read as a pass.
+	 *
+	 * @var object
+	 */
+	private object $objectServiceStub;
+
+	/**
 	 * Build a fresh stub ObjectService double for each test.
 	 *
 	 * @return object Stub object exposing the methods we exercise.
 	 */
 	private function makeObjectServiceStub(): object {
-		return new class {
+		// Extends the ObjectService stub, which itself `implements
+		// ObjectServiceInterface` against the REAL vendored contract. That is
+		// what makes this double satisfy the production type-hint, and it means
+		// a contract change breaks this file loudly instead of letting it go on
+		// asserting against a signature nobody ships.
+		return new class extends ObjectService {
 			/**
 			 * @var array<string, mixed>
 			 */
@@ -103,21 +122,24 @@ class ScheduledTaskServiceTest extends TestCase {
 			}//end findAll()
 
 			/**
-			 * @param array<string, mixed>|object $object
+			 * @param array<string, mixed> $object
 			 * @param array<int|string, mixed> $extend
-			 * @return mixed
+			 * @return ObjectEntityInterface
 			 */
 			public function saveObject(
-				array|object $object,
-				?array $extend = [],
-				$register = null,
-				$schema = null,
-				?string $uuid = null,
-				bool $_rbac = true,
-				bool $_multitenancy = true,
-				bool $silent = false,
-				?array $uploadedFiles = null,
-			) {
+				array $object,
+				?array $extend=[],
+				string|int|null $register=null,
+				string|int|null $schema=null,
+				?string $uuid=null,
+				bool $_rbac=true,
+				bool $_multitenancy=true,
+				bool $silent=false,
+				bool $_validation=true,
+				?array $uploadedFiles=null,
+				?\OCP\IUser $currentUser=null,
+				bool $failIfExists=false
+			): ObjectEntityInterface {
 				$this->lastSaveArgs = [
 					'object' => $object,
 					'register' => $register,
@@ -125,29 +147,18 @@ class ScheduledTaskServiceTest extends TestCase {
 					'uuid' => $uuid,
 				];
 
-				if ($this->saveReturn === []) {
-					return $object;
+				$payload = $object;
+				if ($this->saveReturn !== []) {
+					$payload = (array)$this->saveReturn;
 				}
 
-				return $this->saveReturn;
+				// saveObject() is declared `: ObjectEntityInterface`, so the
+				// double must hand back an entity, not the raw payload.
+				$entity = new ObjectEntity();
+				$entity->setUuid($uuid);
+				$entity->setObject($payload);
+				return $entity;
 			}//end saveObject()
-
-			/**
-			 * @return mixed
-			 */
-			public function findObject(
-				string $id,
-				$register,
-				$schema,
-				bool $_rbac = true,
-				bool $_multitenancy = true,
-			) {
-				return null;
-			}//end findObject()
-
-			public function deleteObject(string $id, bool $_rbac = true, bool $_multitenancy = true): bool {
-				return true;
-			}//end deleteObject()
 		};
 	}//end makeObjectServiceStub()
 
@@ -163,6 +174,7 @@ class ScheduledTaskServiceTest extends TestCase {
 		$this->notificationService = $this->createMock(NotificationService::class);
 		$this->container = $this->createMock(ContainerInterface::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->objectServiceStub = $this->makeObjectServiceStub();
 
 		$this->appConfig->method('getValueString')->willReturnCallback(
 			static function (string $app, string $key, string $default = ''): string {
@@ -189,7 +201,7 @@ class ScheduledTaskServiceTest extends TestCase {
 			$this->notificationService,
 			$this->container,
 			$this->logger,
-			objectService: $stub,
+			objectService: $this->objectServiceStub,
 		);
 	}//end makeService()
 
@@ -203,7 +215,7 @@ class ScheduledTaskServiceTest extends TestCase {
 		$user->method('getUID')->willReturn('alice');
 		$this->userSession->method('getUser')->willReturn($user);
 
-		$stub = $this->makeObjectServiceStub();
+		$stub = $this->objectServiceStub;
 		$this->container->method('get')->willReturn($stub);
 
 		$service = $this->makeService();
@@ -264,7 +276,7 @@ class ScheduledTaskServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetPendingTasksReturnsItems(): void {
-		$stub = $this->makeObjectServiceStub();
+		$stub = $this->objectServiceStub;
 		$stub->findAllReturn = [
 			['id' => '1', 'status' => 'open', 'subject' => 'A'],
 			['id' => '2', 'status' => 'open', 'subject' => 'B'],
@@ -363,7 +375,7 @@ class ScheduledTaskServiceTest extends TestCase {
 		// Task with a deadline 24 hours in the past — well past the expiryCut of 4 h.
 		$pastDeadline = (new \DateTimeImmutable('-24 hours'))->format(\DateTimeInterface::ATOM);
 
-		$stub = $this->makeObjectServiceStub();
+		$stub = $this->objectServiceStub;
 
 		// findAll is called twice: once for getOverdueTasks (returns our task),
 		// once for getPendingTasks (returns empty, all future).

@@ -1,0 +1,6 @@
+includes:
+    - phpstan.neon
+parameters:
+    parallel:
+        processTimeout: 1800.0
+        maximumNumberOfProcesses: 2

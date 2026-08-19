@@ -27,7 +27,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\RoutingController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\RoutingService;
@@ -119,19 +121,43 @@ class RoutingControllerTest extends TestCase {
 			/**
 			 * Read one row.
 			 *
-			 * @param string|int $id Object id.
-			 * @param mixed $arg2 Extend list (upstream) or register (stub).
-			 * @param mixed $arg3 Files flag (upstream) or schema (stub).
+			 * The `$arg2`/`$arg3` hedge this used to carry existed because the
+			 * upstream signature was ambiguous to the test author. The published
+			 * contract settles it: argument 2 is `$_extend` and argument 3 is
+			 * `$files`; register and schema are arguments 4 and 5.
 			 *
-			 * @return array<string, mixed>|object|null
+			 * @param string|int $id Object id.
+			 * @param ?array $_extend Relations to expand (unused).
+			 * @param bool $files Include file metadata (unused).
+			 * @param string|int|null $register Register slug (unused).
+			 * @param string|int|null $schema Schema slug (unused).
+			 * @param bool $_rbac RBAC posture.
+			 * @param bool $_multitenancy Tenancy posture.
+			 * @param bool $_render Render posture.
+			 * @param bool $_audit Audit posture.
+			 *
+			 * @return ?ObjectEntityInterface The row, or null.
 			 */
-			public function find(string|int $id, mixed $arg2 = '', mixed $arg3 = ''): array|object|null {
+			public function find(
+				int|string $id,
+				?array $_extend=[],
+				bool $files=false,
+				string|int|null $register=null,
+				string|int|null $schema=null,
+				bool $_rbac=true,
+				bool $_multitenancy=true,
+				bool $_render=true,
+				bool $_audit=true
+			): ?ObjectEntityInterface {
 				$row = ($this->store[(string)$id] ?? null);
 				if ($row === null || ($row['_deleted'] ?? null) !== null) {
 					return null;
 				}
 
-				return $row;
+				$entity = new ObjectEntity();
+				$entity->setUuid((string)$id);
+				$entity->setObject($row);
+				return $entity;
 			}//end find()
 
 			/**

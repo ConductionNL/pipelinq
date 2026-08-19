@@ -281,7 +281,7 @@ class TicketService {
 	 * @param array<string, mixed> $payload The ticket fields.
 	 * @param string|null $uuid Existing ticket uuid, or null to create.
 	 *
-	 * @return \OCA\OpenRegister\Db\ObjectEntity The saved ticket.
+	 * @return \OCA\OpenRegister\Contract\ObjectEntityInterface The saved ticket.
 	 *
 	 * @throws RuntimeException If the ticket surface is unconfigured.
 	 *

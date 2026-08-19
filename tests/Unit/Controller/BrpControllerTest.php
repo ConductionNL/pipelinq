@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\BrpController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Listener\BrpMutationWebhookListener;
@@ -852,7 +853,7 @@ class BrpControllerTest extends TestCase {
 		);
 
 		$rows = ($persons ?? []);
-		$objectService = new class($rows) {
+		$objectService = new class($rows) extends ObjectService {
 			/**
 			 * @param array<int, array<string, mixed>> $rows Stored BRP persons.
 			 */
@@ -865,10 +866,12 @@ class BrpControllerTest extends TestCase {
 			 * Return the stored rows.
 			 *
 			 * @param array<string, mixed> $config The findAll config.
+			 * @param bool $_rbac RBAC posture.
+			 * @param bool $_multitenancy Tenancy posture.
 			 *
 			 * @return array<int, array<string, mixed>> The rows.
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 				return $this->rows;
 			}//end findAll()
 		};
@@ -951,9 +954,8 @@ class BrpControllerTest extends TestCase {
 			$this->createMock(BsnAuditService::class),
 			$this->createMock(OptOutService::class),
 			$listener,
-			$this->createMock(ContainerInterface::class),
 			$logger,
-			objectService: $objectService,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildWebhookController()
 }//end class

@@ -132,13 +132,12 @@ class AppointmentEmailServiceTest extends TestCase {
 	 * @return AppointmentEmailService
 	 */
 	private function buildService(): AppointmentEmailService {
-		return new AppointmentEmailService($this->container,
-			$this->appConfig,
+		return new AppointmentEmailService($this->appConfig,
 			$this->mailer,
 			$this->urlGenerator,
 			$this->l10n,
 			$this->logger,
-			objectService: $default,
+			objectService: $this->createMock(ObjectServiceInterface::class),
 		);
 	}//end buildService()
 

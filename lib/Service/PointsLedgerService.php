@@ -552,14 +552,8 @@ class PointsLedgerService {
 	 * hydrating the whole ledger and reducing in PHP.
 	 *
 	 * @return object The aggregation runner.
-	 *
-	 * @throws RuntimeException If OpenRegister is unavailable.
 	 */
 	private function getAggregationRunner(): object {
-		try {
-			return $this->aggregationRunner;
-		} catch (\Throwable $e) {
-			throw new RuntimeException('OpenRegister aggregation runner is unavailable.', 0, $e);
-		}
+		return $this->aggregationRunner;
 	}//end getAggregationRunner()
 }//end class

@@ -255,10 +255,12 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 				return '';
 			}
 
-			$data = $row;
-			if (is_array($row) === false) {
-				$data = ($row->getObject() ?? []);
-			}
+			// find() is declared `: ?ObjectEntityInterface` (the null case is
+			// handled above), and getObject() is declared `: array`. The
+			// pre-contract code had to cope with find() handing back either a
+			// raw row or an entity; the contract settles that, so normalising
+			// is now a single declared accessor rather than a type test.
+			$data = $row->getObject();
 
 			return (string)($data['bsn'] ?? '');
 		} catch (\Throwable $e) {
