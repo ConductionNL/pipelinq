@@ -186,6 +186,9 @@ export default {
 		)
 	},
 
+	/**
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
 	beforeUnmount() {
 		if (this.refreshTimer) {
 			window.clearInterval(this.refreshTimer)
@@ -338,6 +341,7 @@ export default {
 		 * @param {string} nextStatus Target status enum.
 		 * @param {object} extra Extra fields to write alongside the status.
 		 * @return {Promise<void>} Resolves when refresh completes.
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		async updateStatus(ticket, nextStatus, extra) {
 			const key = this.ticketKey(ticket)

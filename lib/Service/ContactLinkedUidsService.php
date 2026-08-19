@@ -35,6 +35,7 @@ class ContactLinkedUidsService {
 	 *
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

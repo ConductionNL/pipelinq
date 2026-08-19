@@ -106,6 +106,7 @@ class PortalProfileService {
 	 * @param array<string, mixed> $changes The requested changes.
 	 *
 	 * @return array<string, mixed> The updated safe profile.
+	 * @spec openspec/changes/customer-portal/specs.md#REQ-007
 	 */
 	public function update(array $account, string $tenantId, array $changes): array {
 		$accountId = (string)$this->repository->idOf(object: $account);

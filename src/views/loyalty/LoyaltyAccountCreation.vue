@@ -99,6 +99,9 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 */
 		programmeOptions() {
 			return this.programmes.map((p) => ({
 				id: p.id,
@@ -111,6 +114,9 @@ export default {
 			return this.selectedProgramme && this.selectedProgramme.termsUrl
 		},
 
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 */
 		canSubmit() {
 			return this.optInAccepted && this.customerId && this.selectedProgramme
 		},
@@ -132,6 +138,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 */
 		async loadProgrammes() {
 			try {
 				const response = await axios.get(

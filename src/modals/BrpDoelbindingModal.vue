@@ -86,6 +86,9 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 */
 		reasonOptions() {
 			return [
 				{
@@ -114,6 +117,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 */
 		bindingOptions() {
 			return [
 				{
@@ -135,6 +141,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 */
 		valid() {
 			return (
 				Boolean(this.form.verzoekreden) && Boolean(this.form.purposeBinding)
@@ -143,6 +152,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.3
+		 */
 		submit() {
 			if (!this.valid) return
 			const reden =

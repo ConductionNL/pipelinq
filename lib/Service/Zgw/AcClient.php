@@ -303,6 +303,7 @@ class AcClient {
 	 * @return void
 	 *
 	 * @throws InsufficientScopeException When the scope is not granted.
+	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-006
 	 */
 	public function require(array $endpoint, string $resourceUrl, string $scope): void {
 		if ($this->hasScope(endpoint: $endpoint, resourceUrl: $resourceUrl, scope: $scope) === true) {
