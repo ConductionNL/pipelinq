@@ -322,6 +322,7 @@ export default {
 		 * Available price mode options.
 		 *
 		 * @return {Array<object>} The options.
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		priceModeOptions() {
 			return [
@@ -540,6 +541,7 @@ export default {
 		 *
 		 * @param {number} index The line index.
 		 * @param {object} line The updated line.
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		updateLine(index, line) {
 			this.lines[index] = { ...line, _key: this.lines[index]._key }
@@ -719,6 +721,7 @@ export default {
 		 * Apply a price mode selection.
 		 *
 		 * @param {object|null} option The chosen price mode.
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		onPriceModeSelect(option) {
 			this.transaction.priceMode = option ? option.id : 'excl'
@@ -737,6 +740,7 @@ export default {
 		 * Apply a marketing-consent toggle.
 		 *
 		 * @param {Event} event The change event.
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		onConsentChange(event) {
 			this.transaction.marketingConsent = !!event.target.checked
@@ -760,6 +764,7 @@ export default {
 		 * Apply a customer chosen from the lookup modal.
 		 *
 		 * @param {object} row The selected contact.
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		async onCustomerSelected(row) {
 			this.selectedCustomer = row
@@ -776,6 +781,7 @@ export default {
 
 		/**
 		 * Clear the selected customer (REQ-PCL-002 Scenario 3).
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		async clearCustomer() {
 			this.selectedCustomer = null

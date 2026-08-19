@@ -95,6 +95,9 @@ export default {
 
 	computed: {
 		/** The resolved contract id — prop wins, else the injected section context. */
+		/**
+		 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+		 */
 		resolvedId() {
 			if (this.contractId) {
 				return this.contractId
@@ -119,6 +122,9 @@ export default {
 	watch: {
 		resolvedId: {
 			immediate: true,
+			/**
+			 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
+			 */
 			handler() {
 				this.lastInvoiceReference = ''
 				this.loadAvailability()
@@ -157,6 +163,7 @@ export default {
 
 		/**
 		 * Send the active contract to the invoicing handoff endpoint.
+		 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
 		 */
 		async sendToInvoicing() {
 			if (!this.resolvedId || this.busy) {
@@ -210,6 +217,7 @@ export default {
 
 		/**
 		 * Copy the invoice reference UUID to the clipboard.
+		 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
 		 */
 		async copyReference() {
 			try {

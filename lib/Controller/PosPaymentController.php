@@ -288,11 +288,13 @@ class PosPaymentController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
+	 * The rate-limit ceiling is loose because this is a POS payment provider
+	 * callback.
+	 *
 	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-006
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// POS payment provider callback.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function webhook(string $provider): JSONResponse {
 		$rawBody = $this->readRawBody();

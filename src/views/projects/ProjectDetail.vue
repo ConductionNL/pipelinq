@@ -424,6 +424,7 @@ export default {
 		 * schema (REQ-PTH-001).
 		 *
 		 * @return {Array<object>}
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		projectFields() {
 			return [
@@ -484,6 +485,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		phaseFields() {
 			return [
 				{
@@ -523,6 +527,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		taskFields() {
 			return [
 				{
@@ -566,6 +573,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		activityFields() {
 			return [
 				{
@@ -604,6 +614,9 @@ export default {
 			]
 		},
 
+		/**
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		statusOptions() {
 			return [
 				{ value: 'open', label: t('pipelinq', 'Open') },
@@ -787,6 +800,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		async onProjectSaved(formData) {
 			const payload = this.isNew
 				? { ...formData }
@@ -870,6 +886,9 @@ export default {
 			this.showPhaseDialog = true
 		},
 
+		/**
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		async onPhaseSaved(formData) {
 			const payload = { ...formData, project: this.projectId }
 			const result = await this.objectStore.saveObject('projectPhase', payload)
@@ -897,6 +916,9 @@ export default {
 			this.showTaskDialog = true
 		},
 
+		/**
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		async onTaskSaved(formData) {
 			const payload = {
 				...formData,
@@ -925,6 +947,9 @@ export default {
 			this.showActivityDialog = true
 		},
 
+		/**
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		async onActivitySaved(formData) {
 			const payload = {
 				...formData,
@@ -968,6 +993,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/specs/realtime-updates-ui/spec.md
+		 */
 		statusLabel(status) {
 			const map = {
 				open: t('pipelinq', 'Open'),

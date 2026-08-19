@@ -100,6 +100,9 @@ class PosRefundService {
 	 *
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
+	 * @param WebhookService $webhookService Dispatches POS webhooks.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param TransitionEngine $transitionEngine Runs the refund status transitions.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,

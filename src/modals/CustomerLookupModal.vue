@@ -135,6 +135,9 @@ export default {
 		})
 	},
 
+	/**
+	 * @spec openspec/changes/pos-customer-link/specs.md#REQ-PCL-001
+	 */
 	beforeUnmount() {
 		if (this.debounceHandle) {
 			clearTimeout(this.debounceHandle)

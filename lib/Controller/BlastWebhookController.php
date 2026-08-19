@@ -102,15 +102,16 @@ class BlastWebhookController extends Controller {
 	 * docs; we fall back to a configured static-secret HMAC for tests
 	 * and on-prem operators using a reverse proxy.
 	 *
+	 * The rate-limit ceiling is deliberately loose: these event webhooks BATCH —
+	 * SendGrid in particular posts many events per request and bursts hard after
+	 * a send. Too tight and a campaign's delivery events are lost.
+	 *
 	 * @return JSONResponse Acknowledgement (`accepted` count).
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
-	// Email/SMS event webhooks. These BATCH — SendGrid in particular posts
-	// many events per request and bursts hard after a send — so the ceiling is
-	// deliberately loose. Too tight and a campaign's delivery events are lost.
 	#[AnonRateLimit(limit: 300, period: 60)]
 	public function sendgrid(): JSONResponse {
 		$rawBody = $this->readRawBody();

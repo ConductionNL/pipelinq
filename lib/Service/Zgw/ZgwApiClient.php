@@ -96,6 +96,7 @@ class ZgwApiClient {
 	 * @return string Compact JWT.
 	 *
 	 * @throws ZgwException When the vault reference cannot be resolved.
+	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-001
 	 */
 	public function mintJwt(array $client, int $expiresIn = 3600): string {
 		$secret = $this->resolveClientSecret(reference: (string)($client['secretVaultRef'] ?? ''));
