@@ -73,6 +73,7 @@ class NrcSubscriptionService {
 	 * @return array<string, mixed> Saved NrcAbonnement record.
 	 *
 	 * @throws NrcSubscriptionFailedException On HTTP failure.
+	 * @spec openspec/changes/zgw-api-bridge/specs/zgw-api-bridge/spec.md#req-zgw-007
 	 */
 	public function registerAbonnement(array $endpoint, array $kanalen, string $callbackUrl): array {
 		$client = $this->registers->findClientForEndpoint($endpoint);

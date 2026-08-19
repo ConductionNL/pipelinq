@@ -328,6 +328,7 @@ export default {
 	methods: {
 		/**
 		 * Load entries from the bespoke audit endpoint.
+		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
 		 */
 		async refresh() {
 			this.loading = true
@@ -475,6 +476,7 @@ export default {
 		 *
 		 * @param {boolean|null} verified The flag.
 		 * @return {string} The localised label.
+		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
 		 */
 		verifyLabel(verified) {
 			if (verified === true) {
@@ -506,6 +508,7 @@ export default {
 		 * Download the Belastingdienst export pack and stream it to disk.
 		 *
 		 * @param {object} payload The selected from / to / format.
+		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
 		 */
 		async downloadExport(payload) {
 			this.exporting = true

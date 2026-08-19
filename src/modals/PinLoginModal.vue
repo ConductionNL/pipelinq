@@ -125,6 +125,9 @@ export default {
 				.map((s) => ({ value: s.id, label: s.displayName || s.id }))
 		},
 
+		/**
+		 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#7.1
+		 */
 		canSubmit() {
 			return (
 				!!this.selectedStaffId
